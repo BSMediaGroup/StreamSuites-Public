@@ -672,8 +672,8 @@ body {
 
 .creator .avatar.fallback {
   background-color: var(--text-secondary);
-  -webkit-mask: url("../assets/icons/ui/profile.svg") center/70% no-repeat;
-  mask: url("../assets/icons/ui/profile.svg") center/70% no-repeat;
+  -webkit-mask: url("/assets/icons/ui/profile.svg") center/70% no-repeat;
+  mask: url("/assets/icons/ui/profile.svg") center/70% no-repeat;
   border-color: rgba(255, 255, 255, 0.06);
 }
 

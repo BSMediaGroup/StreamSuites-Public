@@ -3,7 +3,7 @@
   const tallyId = params.get("id");
   const tally = window.publicTallyMap?.[tallyId] || (window.publicTallies || [])[0];
   const defaultPalette = ["#8cc736", "#ffae00", "#5bc0de", "#7e03aa"];
-  const defaultLogoPath = "../assets/logos/logocircle.png";
+  const defaultLogoPath = "/assets/logos/logocircle.png";
 
   const metaEl = document.getElementById("tally-meta");
   const tallyListEl = document.getElementById("tally-list");

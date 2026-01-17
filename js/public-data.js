@@ -27,7 +27,7 @@
       duration: "05:12",
       date: "03/27/2024",
       url: "https://youtube.com/@StreamSuites",
-      thumbnail: "./assets/backgrounds/seodash.jpg",
+      thumbnail: "/assets/backgrounds/seodash.jpg",
       summary: "Short primer showing how scoreboard overlays are configured.",
     },
     {
@@ -57,7 +57,7 @@
       duration: "03:48",
       date: "03/29/2024",
       url: "https://rumble.com/streamsuites",
-      thumbnail: "./assets/logos/LOG2-3D-SML.png",
+      thumbnail: "/assets/logos/LOG2-3D-SML.png",
       summary: "Quick-start overview for routing creator clips into the hub.",
     },
     {

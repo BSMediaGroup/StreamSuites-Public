@@ -123,7 +123,7 @@
 
   function buildCard(entry) {
     const percent = Math.max(0, Math.min(100, Number(entry.percent) || 0));
-    const icon = resolveAssetPath(entry.icon || "assets/icons/ui/widget.svg");
+    const icon = resolveAssetPath(entry.icon || "/assets/icons/ui/widget.svg");
     const isPaused = entry.status === "paused" || entry.id === "rumble-sse";
     const statusBadge = isPaused
       ? '<span class="public-roadmap-status paused">Paused</span>'
