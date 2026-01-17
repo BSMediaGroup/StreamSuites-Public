@@ -247,12 +247,12 @@
   function renderMeta(version, lastUpdated, build) {
     const versionEl = document.getElementById("public-about-version-meta");
     if (versionEl) {
-      versionEl.textContent = version || "Unavailable";
+      versionEl.textContent = version || "Version unavailable";
     }
 
     const buildEl = document.getElementById("public-about-build-meta");
     if (buildEl) {
-      buildEl.textContent = build || "Unknown";
+      buildEl.textContent = build || "Build unavailable";
     }
 
     const updatedEl = document.getElementById("public-about-updated-meta");

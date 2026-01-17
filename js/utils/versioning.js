@@ -1,22 +1,14 @@
 (() => {
   "use strict";
 
-  const VERSION_URL = "/version.json";
+  const VERSION_URL = "/runtime/exports/version.json";
   const VERSION_TIMEOUT_MS = 4000;
   let cachedVersionPromise = null;
 
-  const VERSION_KEYS = ["displayVersion", "version", "tag", "semver", "release", "buildVersion"];
-  const BUILD_KEYS = ["build", "buildNumber", "buildId", "buildHash", "buildVersion", "buildTag"];
-  const PRODUCT_KEYS = ["product", "productName", "app", "name", "title"];
-  const COPYRIGHT_KEYS = ["copyright", "copyrightNotice"];
-  const OWNER_KEYS = ["owner", "organization", "company"];
+  const UNAVAILABLE_LABEL = "Version unavailable";
 
-  function getFirstValue(info, keys) {
-    if (!info) return "";
-    for (const key of keys) {
-      if (info[key]) return info[key];
-    }
-    return "";
+  function getValue(value) {
+    return value ? String(value) : "";
   }
 
   function normalizeVersionLabel(label) {
@@ -27,34 +19,36 @@
   }
 
   function formatDisplayVersion(info) {
-    const rawVersion = getFirstValue(info, VERSION_KEYS);
+    const rawVersion = getValue(info?.version);
     const normalized = normalizeVersionLabel(rawVersion);
-    return normalized || "Unknown";
+    return normalized;
   }
 
   function formatFooterVersion(info) {
     const displayVersion = formatDisplayVersion(info);
-    if (displayVersion === "Unknown") return "StreamSuites™";
-
+    const project = getValue(info?.project) || "StreamSuites™";
+    if (!displayVersion) return project;
     if (/StreamSuites/i.test(displayVersion)) return displayVersion;
-
-    const product = getFirstValue(info, PRODUCT_KEYS) || "StreamSuites™";
-    return `${product} ${displayVersion}`.trim();
+    return `${project} ${displayVersion}`.trim();
   }
 
   function getBuildLabel(info) {
-    return getFirstValue(info, BUILD_KEYS) || "Unknown";
+    return getValue(info?.build);
   }
 
   function formatVersionWithBuild(info) {
     const versionLabel = formatDisplayVersion(info);
     const buildLabel = getBuildLabel(info);
+    if (!versionLabel && !buildLabel) return UNAVAILABLE_LABEL;
+    if (!buildLabel) return versionLabel || UNAVAILABLE_LABEL;
+    if (!versionLabel) return `Build ${buildLabel}`;
     return `${versionLabel} • ${buildLabel}`;
   }
 
   function formatFooterVersionWithBuild(info) {
     const footerLabel = formatFooterVersion(info);
     const buildLabel = getBuildLabel(info);
+    if (!buildLabel) return footerLabel || UNAVAILABLE_LABEL;
     return `${footerLabel} • Build ${buildLabel}`;
   }
 
@@ -115,27 +109,23 @@
 
       if (resolvedSelectors.build) {
         const buildLabel = getBuildLabel(info);
-        document.querySelectorAll(resolvedSelectors.build).forEach((el) => {
-          el.textContent = buildLabel;
+        if (buildLabel) {
+          document.querySelectorAll(resolvedSelectors.build).forEach((el) => {
+            el.textContent = buildLabel;
+          });
+        }
+      }
+
+      if (resolvedSelectors.copyright && info?.copyright) {
+        document.querySelectorAll(resolvedSelectors.copyright).forEach((el) => {
+          el.textContent = String(info.copyright);
         });
       }
 
-      if (resolvedSelectors.copyright) {
-        const copyrightLabel = getFirstValue(info, COPYRIGHT_KEYS);
-        if (copyrightLabel) {
-          document.querySelectorAll(resolvedSelectors.copyright).forEach((el) => {
-            el.textContent = copyrightLabel;
-          });
-        }
-      }
-
-      if (resolvedSelectors.owner) {
-        const ownerLabel = getFirstValue(info, OWNER_KEYS);
-        if (ownerLabel) {
-          document.querySelectorAll(resolvedSelectors.owner).forEach((el) => {
-            el.textContent = ownerLabel;
-          });
-        }
+      if (resolvedSelectors.owner && info?.owner) {
+        document.querySelectorAll(resolvedSelectors.owner).forEach((el) => {
+          el.textContent = String(info.owner);
+        });
       }
 
       return info;
@@ -150,6 +140,7 @@
     formatVersionWithBuild,
     formatFooterVersionWithBuild,
     resolveBasePath,
-    applyVersionToElements
+    applyVersionToElements,
+    UNAVAILABLE_LABEL
   };
 })();
