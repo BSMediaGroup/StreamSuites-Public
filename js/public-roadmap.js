@@ -4,19 +4,9 @@
   const basePath =
     (window.Versioning && window.Versioning.resolveBasePath &&
       window.Versioning.resolveBasePath()) ||
-    (() => {
-      const parts = window.location.pathname.split("/").filter(Boolean);
-      if (!parts.length) return "";
-      const docsIndex = parts.indexOf("docs");
-      if (docsIndex === -1) {
-        return `/${parts[0]}`;
-      }
+    "";
 
-      const rootParts = parts.slice(0, docsIndex + 1);
-      return `/${rootParts.join("/")}`;
-    })();
-
-  const dataPath = "https://admin.streamsuites.app/docs/data/roadmap.json";
+  const dataPath = "/data/roadmap.json";
   const fillGradient = "linear-gradient(90deg, #57b9ff, #63ffa2)";
   const pausedGradient = "linear-gradient(90deg, #ff5f6d, #ffc371)";
   const animationDuration = 1200;
@@ -106,7 +96,8 @@
     if (!asset) return "";
     if (/^(https?:)?\/\//.test(asset) || asset.startsWith("/")) return asset;
     const trimmed = asset.replace(/^\.\//, "");
-    return `${basePath || ""}/${trimmed}`.replace(/\/+/g, "/");
+    const prefix = basePath ? basePath.replace(/\/+$/, "") : "";
+    return `${prefix}/${trimmed}`.replace(/\/+/g, "/");
   }
 
   async function loadData() {

@@ -140,9 +140,7 @@
 
   async function loadChangelog() {
     try {
-      const { loadMergedChangelog } = await import(
-        "https://admin.streamsuites.app/js/changelog-merge.js"
-      );
+      const { loadMergedChangelog } = await import("/js/changelog-merge.js");
       const entries = await loadMergedChangelog();
       return Array.isArray(entries) ? entries : [];
     } catch (err) {

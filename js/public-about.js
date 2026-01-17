@@ -83,8 +83,9 @@
 
   function buildAboutPath(path) {
     if (window.AboutData?.buildUrl) return AboutData.buildUrl(path);
-    const base = window.AboutData?.resolveBasePath?.() || "";
-    return `${base || ""}/${path}`.replace(/\\+/g, "/");
+    const base = window.AboutData?.resolveBasePath?.() || "/about";
+    const trimmed = String(path || "").replace(/^\/+/, "");
+    return `${base}/${trimmed}`.replace(/\\+/g, "/");
   }
 
   async function fetchJson(url) {
@@ -97,7 +98,7 @@
 
   async function loadScopedSections() {
     try {
-      const manifest = await fetchJson(buildAboutPath("about/about.manifest.json"));
+      const manifest = await fetchJson(buildAboutPath("about.manifest.json"));
       const sources = Array.isArray(manifest?.sources) ? manifest.sources : [];
 
       const scopedSections = [];
@@ -105,7 +106,7 @@
       for (const source of sources) {
         let payload;
         try {
-          payload = await fetchJson(buildAboutPath(`about/${source}`));
+          payload = await fetchJson(buildAboutPath(source));
         } catch (err) {
           console.warn(`[PublicAbout] Failed to load scoped source ${source}`, err);
           continue;
@@ -277,8 +278,8 @@
       }
 
       const buildEl = document.getElementById("public-about-build-meta");
-      if (buildEl && info.build) {
-        buildEl.textContent = info.build;
+      if (buildEl && window.Versioning.getBuildLabel) {
+        buildEl.textContent = window.Versioning.getBuildLabel(info);
       }
 
       const versionEl = document.getElementById("public-about-version-meta");
