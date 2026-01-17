@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION_URL = "https://admin.streamsuites.app/version.json";
+  const VERSION_URL = "https://admin.streamsuites.app/docs/version.json";
   let cachedVersionPromise = null;
 
   const VERSION_KEYS = ["displayVersion", "version", "tag", "semver", "release", "buildVersion"];
