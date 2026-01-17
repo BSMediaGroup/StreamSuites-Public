@@ -31,12 +31,12 @@
   function platformIcon(platform = "") {
     const normalized = platform.toLowerCase();
     const iconMap = {
-      rumble: "./assets/icons/rumble.svg",
-      youtube: "./assets/icons/youtube.svg",
-      twitch: "./assets/icons/twitch.svg",
-      twitter: "./assets/icons/twitter.svg",
+      rumble: "/assets/icons/rumble.svg",
+      youtube: "/assets/icons/youtube.svg",
+      twitch: "/assets/icons/twitch.svg",
+      twitter: "/assets/icons/twitter.svg",
     };
-    return iconMap[normalized] || "./assets/icons/pilled.svg";
+    return iconMap[normalized] || "/assets/icons/pilled.svg";
   }
 
   function buildAvatar(creator = {}) {
