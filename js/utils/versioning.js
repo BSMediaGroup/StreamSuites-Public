@@ -1,7 +1,8 @@
 (() => {
   "use strict";
 
-  const VERSION_URL = "https://admin.streamsuites.app/docs/version.json";
+  const VERSION_URL = "https://admin.streamsuites.app/version.json";
+  const VERSION_TIMEOUT_MS = 4000;
   let cachedVersionPromise = null;
 
   const VERSION_KEYS = ["displayVersion", "version", "tag", "semver", "release", "buildVersion"];
@@ -47,12 +48,24 @@
 
   function loadVersion() {
     if (!cachedVersionPromise) {
-      cachedVersionPromise = fetch(VERSION_URL, { cache: "no-store" })
+      const controller =
+        typeof AbortController !== "undefined" ? new AbortController() : null;
+      const timeoutId = controller
+        ? setTimeout(() => controller.abort(), VERSION_TIMEOUT_MS)
+        : null;
+
+      cachedVersionPromise = fetch(VERSION_URL, {
+        cache: "no-store",
+        signal: controller ? controller.signal : undefined
+      })
         .then((response) => {
           if (!response.ok) return null;
           return response.json();
         })
-        .catch(() => null);
+        .catch(() => null)
+        .finally(() => {
+          if (timeoutId) clearTimeout(timeoutId);
+        });
     }
 
     return cachedVersionPromise;
