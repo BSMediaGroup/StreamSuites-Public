@@ -21,8 +21,8 @@
 
   function extractMeta(manifest) {
     return {
-      version: manifest?.version || "",
-      build: manifest?.build || "",
+      version: "",
+      build: "",
       lastUpdated: manifest?.lastUpdated || manifest?.updated || ""
     };
   }

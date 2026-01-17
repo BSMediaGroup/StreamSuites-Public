@@ -4,7 +4,7 @@
     "date": "2026-02-03",
     "title": "Desktop Admin log viewer highlighted",
     "description": "Public feature copy now notes that the Desktop Admin can oversee multiple runtimes with inline stdout/stderr visibility, with an optional external terminal handoff.",
-    "version": "0.2.3-alpha",
+    "version": "0.2.3",
     "scope": "public",
     "tags": ["public-pages", "desktop-admin", "operations"]
   },
@@ -13,7 +13,7 @@
     "date": "2026-01-06",
     "title": "⭐ Architecture and authority clarified",
     "description": "Documented the two-repository architecture: the runtime remains the sole authority with a privileged local WinForms admin control plane and a downstream read-only web dashboard. Path configuration groundwork continues without altering runtime behavior.",
-    "version": "0.2.3-alpha",
+    "version": "0.2.3",
     "scope": "runtime",
     "tags": ["architecture", "authority", "admin"]
   },
@@ -21,8 +21,8 @@
     "id": "2026-01-alpha-metadata-corrected",
     "date": "2026-01-06",
     "title": "Alpha metadata corrected",
-    "description": "Updated v0.2.3-alpha metadata while preserving historical entries at their original versions and aligning export shapes for downstream readers.",
-    "version": "0.2.3-alpha",
+    "description": "Updated v0.2.3 metadata while preserving historical entries at their original versions and aligning export shapes for downstream readers.",
+    "version": "0.2.3",
     "scope": "runtime",
     "tags": ["alpha", "metadata", "exports"]
   },

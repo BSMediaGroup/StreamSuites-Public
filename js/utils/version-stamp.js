@@ -7,14 +7,16 @@
     window.Versioning
       .loadVersion()
       .then((info) => {
-        if (!info) return;
-
-        const versionBadge = window.Versioning.formatVersionWithBuild(info);
+        const versionBadge = info
+          ? window.Versioning.formatVersionWithBuild(info)
+          : window.Versioning.UNAVAILABLE_LABEL || "Version unavailable";
         document.querySelectorAll(".version-badge").forEach((el) => {
           el.textContent = versionBadge;
         });
 
-        const footerLabel = window.Versioning.formatFooterVersionWithBuild(info);
+        const footerLabel = info
+          ? window.Versioning.formatFooterVersionWithBuild(info)
+          : window.Versioning.UNAVAILABLE_LABEL || "Version unavailable";
         document.querySelectorAll(".footer-version").forEach((el) => {
           el.textContent = footerLabel;
         });

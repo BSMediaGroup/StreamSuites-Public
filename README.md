@@ -5,11 +5,12 @@ Public StreamSuites™ website repository.
 - Hosts the public-only StreamSuites website served from the repository root.
 - Deployed via GitHub Pages to https://streamsuites.app.
 - Public, static surface that consumes runtime exports for read-only displays and does not mutate state.
+- Does not define version or build numbers locally; version/build are provided by runtime exports.
 - Does not host the Admin or Creator dashboards (those live in separate repos/apps).
 - Links to the Creator dashboard at https://creator.streamsuites.app using absolute URLs.
 - Loads CSS, JS, and static assets with root-absolute paths (for example: `/css/theme-dark.css`, `/js/public-data.js`, `/assets/logos/logo.png`).
 - Stores all CSS, JS, and static assets locally in this repository (no cross-repo or external asset hosting).
-- Fetches public version/build metadata from same-origin `/version.json`.
+- Fetches public version/build metadata from runtime exports at `/runtime/exports/version.json` (single source of truth).
 
 ## Repo Structure:
 ```
@@ -26,7 +27,6 @@ StreamSuites-Public/
 ├── privacy.html
 ├── accessibility.html
 ├── postmortem.html
-├── version.json
 ├── about/
 │   ├── about.manifest.json
 │   ├── about_part1_core.json
