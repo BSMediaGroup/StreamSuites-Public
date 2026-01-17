@@ -1,0 +1,218 @@
+/* ======================================================================
+   StreamSuites Dashboard — updates.css
+   Purpose:
+   - Styles for the Updates view
+   - GitHub-like diff presentation for latest commit previews
+   ====================================================================== */
+
+.updates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.updates-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.updates-label {
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.updates-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.updates-author {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+}
+
+.updates-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+  display: none;
+}
+
+.updates-avatar.has-image {
+  display: inline-flex;
+}
+
+.updates-author-name {
+  color: var(--text-primary);
+}
+
+.updates-description {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-panel-alt);
+  border: 1px dashed var(--border-subtle);
+  color: var(--text-primary);
+  white-space: pre-wrap;
+}
+
+.updates-diff {
+  margin-top: 12px;
+}
+
+.updates-diff pre {
+  background: var(--bg-panel-alt);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  overflow-x: auto;
+  white-space: pre;
+  max-height: 420px;
+}
+
+.updates-diff code {
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.updates-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.updates-status {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.updates-cache-timestamp {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.updates-last-updated {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-panel-alt);
+  color: var(--text-muted);
+  font-size: 12px;
+  width: fit-content;
+}
+
+.updates-status-error {
+  color: var(--accent-danger);
+}
+
+.updates-diff-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 6px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.updates-diff-summary-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.updates-diff-count {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.updates-diff-add {
+  color: #2fa36d;
+  font-weight: 600;
+}
+
+.updates-diff-remove {
+  color: #c44c4c;
+  font-weight: 600;
+}
+
+.updates-diff-summary-muted {
+  color: var(--text-muted);
+}
+
+.updates-file-list {
+  margin: 0 0 4px;
+  padding-left: 16px;
+  color: var(--text-muted);
+  font-size: 12px;
+  list-style: disc;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.updates-file-item {
+  margin: 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.diff-line {
+  display: block;
+  padding: 0 6px;
+  border-left: 3px solid transparent;
+}
+
+.diff-add {
+  color: #b6f0c0;
+  background: rgba(82, 183, 136, 0.08);
+  border-left-color: rgba(82, 183, 136, 0.8);
+}
+
+.diff-remove {
+  color: #f2b6b6;
+  background: rgba(201, 82, 82, 0.08);
+  border-left-color: rgba(201, 82, 82, 0.8);
+}
+
+.diff-hunk {
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.02);
+  border-left-color: var(--border-subtle);
+}
+
+.updates-link {
+  color: var(--accent-primary);
+  text-decoration: none;
+}
+
+.updates-link:hover {
+  text-decoration: underline;
+}
+
+.updates-error,
+.updates-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 8px 0;
+}

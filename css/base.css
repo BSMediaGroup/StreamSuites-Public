@@ -1,0 +1,596 @@
+/* ============================================================
+   StreamSuites Dashboard — BASE STYLES
+   Purpose: Layout, structure, typography (NO THEME COLORS)
+   ============================================================ */
+
+/* ------------------------------
+   CSS Reset / Normalization
+   ------------------------------ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  font-family: "SuiGenerisRg", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+/* ------------------------------
+   Snapshot Health Banner
+   ------------------------------ */
+
+#snapshot-health-banner {
+  display: none;
+  position: sticky;
+  top: 0;
+  width: 100%;
+  z-index: 1200;
+  padding: 10px 16px;
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  background: linear-gradient(135deg, rgba(225, 172, 30, 0.9), rgba(225, 172, 30, 0.8));
+  color: var(--text-primary, #0e0f12);
+}
+
+#snapshot-health-banner.snapshot-health-stale {
+  background: linear-gradient(135deg, rgba(225, 172, 30, 0.95), rgba(249, 193, 76, 0.9));
+}
+
+#snapshot-health-banner.snapshot-health-missing,
+#snapshot-health-banner.snapshot-health-invalid {
+  background: linear-gradient(135deg, rgba(217, 83, 79, 0.95), rgba(217, 83, 79, 0.85));
+  color: #fff;
+}
+
+/* ------------------------------
+   Root App Container
+   ------------------------------ */
+
+#app {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  height: 100vh;
+  width: 100%;
+}
+
+/* ------------------------------
+   Header
+   ------------------------------ */
+
+#app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid transparent;
+}
+
+.header-left a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.header-left a:hover,
+.header-left a:focus-visible {
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+}
+
+.header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.header-status-row {
+  order: 1;
+}
+
+.header-auth-row {
+  order: 2;
+}
+
+.header-guild-row {
+  order: 3;
+}
+
+.discord-auth {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-height: 32px;
+}
+
+.discord-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.discord-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.discord-username {
+  font-size: 12px;
+  letter-spacing: 0.03em;
+}
+
+.discord-login-icon {
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.discord-auth-status {
+  font-size: 11px;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.discord-guild-selector {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  min-width: 220px;
+}
+
+.discord-guild-selector label {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.discord-guild-selector select {
+  min-width: 220px;
+}
+
+.discord-guild-status {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-align: right;
+  max-width: 240px;
+}
+
+body.discord-guild-no-access .discord-guild-status {
+  color: var(--status-warning, #ffb347);
+}
+
+body.discord-guild-unauthorized .discord-guild-status {
+  color: var(--status-critical, #ff6b6b);
+}
+
+body.discord-guild-missing .discord-guild-status {
+  color: var(--status-warning, #ffb347);
+}
+
+.discord-guild-message {
+  display: none;
+}
+
+body.discord-guild-missing .discord-guild-message[data-state="missing"],
+body.discord-guild-unauthorized .discord-guild-message[data-state="unauthorized"] {
+  display: block;
+}
+
+body.discord-guild-unauthorized [data-discord-guild-locked],
+body.discord-guild-missing [data-discord-guild-locked] {
+  opacity: 0.85;
+}
+
+body.discord-auth-required [data-discord-locked] {
+  opacity: 0.55;
+  filter: grayscale(0.3);
+  pointer-events: none;
+}
+
+body.discord-auth-required [data-discord-locked].is-locked,
+body.discord-auth-required [data-discord-nav] {
+  pointer-events: none;
+}
+
+[data-discord-nav].is-locked {
+  pointer-events: none;
+  opacity: 0.55;
+  filter: grayscale(0.3);
+}
+
+.ss-auth-lock {
+  margin-bottom: 16px;
+}
+
+body.discord-authenticated .ss-auth-lock {
+  display: none;
+}
+
+/* Logo alignment: nudge down to visually align with title baseline */
+.header-left img {
+  position: relative;
+  top: 0.18em;
+}
+
+.app-title {
+  font-family: "RechargeBd", sans-serif;
+  font-size: 22px;
+  letter-spacing: 0.5px;
+}
+
+.app-subtitle {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.status-indicator {
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  user-select: none;
+}
+
+/* ------------------------------
+   Navigation
+   ------------------------------ */
+
+#app-nav {
+  border-bottom: 1px solid transparent;
+}
+
+#app-nav .nav-shell {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 5px 12px;
+  min-width: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  width: 100%;
+  overflow: visible;
+  white-space: nowrap;
+  position: relative;
+}
+
+#app-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  overflow: visible;
+}
+
+#app-nav li {
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  user-select: none;
+  white-space: nowrap;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s ease, background 0.2s ease;
+  flex-shrink: 0;
+}
+
+#app-nav li.nav-disabled,
+#app-nav .nav-overflow-menu li.nav-disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  pointer-events: auto;
+}
+
+#app-nav .nav-overflow {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 10;
+  display: none;
+  align-items: stretch;
+}
+
+#app-nav .nav-more-toggle {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+#app-nav .nav-overflow-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  min-width: 190px;
+  display: none;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+#app-nav .nav-overflow-menu.open {
+  display: block;
+}
+
+#app-nav .is-hidden {
+  display: none !important;
+}
+
+/* ------------------------------
+   Navigation — mobile collapse
+   ------------------------------ */
+
+#app-nav .nav-toggle {
+  top: 10px;
+  left: 12px;
+}
+
+#app-nav .nav-toggle-trigger {
+  display: none;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-panel);
+  color: var(--text-primary);
+}
+
+@media (max-width: 960px) {
+  #app-header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  #app-nav .nav-shell {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  #app-nav .nav-toggle-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #app-nav ul {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+    background: linear-gradient(139deg, rgba(36, 40, 50, 1) 0%, rgba(37, 28, 40, 1) 100%);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 12px 10px;
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.4);
+  }
+
+  #app-nav ul li {
+    width: 100%;
+  }
+
+  #app-nav .nav-overflow {
+    display: none;
+  }
+
+  #app-nav .nav-toggle:checked ~ ul {
+    display: flex;
+  }
+}
+
+@media (min-width: 961px) {
+  #app-nav .nav-toggle-trigger {
+    display: none;
+  }
+}
+
+/* ------------------------------
+   Main Content Area
+   ------------------------------ */
+
+#app-main {
+  overflow: auto;
+}
+
+#view-container {
+  padding: 20px;
+  min-height: 100%;
+}
+
+/* ------------------------------
+   Footer
+   ------------------------------ */
+
+#app-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 11px;
+  opacity: 0.7;
+  border-top: 1px solid transparent;
+}
+
+.footer-sep {
+  opacity: 0.5;
+}
+
+/* ------------------------------
+   Utility Classes
+   ------------------------------ */
+
+.hidden {
+  display: none !important;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gap-xs { gap: 4px; }
+.gap-sm { gap: 8px; }
+.gap-md { gap: 16px; }
+.gap-lg { gap: 24px; }
+
+/* ------------------------------
+   Typography Helpers
+   ------------------------------ */
+
+h1, h2, h3, h4, h5 {
+  font-family: "RechargeBd", sans-serif;
+  font-weight: 700;
+}
+
+p {
+  margin-bottom: 0.75em;
+}
+
+small {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+/* ------------------------------
+   Tables (base only)
+   ------------------------------ */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th,
+td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid transparent;
+}
+
+th {
+  font-weight: 600;
+}
+
+/* ------------------------------
+   Forms (structure only)
+   ------------------------------ */
+
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+  font-size: 13px;
+}
+
+input,
+select,
+textarea {
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  outline: none;
+}
+
+button {
+  padding: 6px 12px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: none;
+}
+
+/* ------------------------------
+   Scrollbars (neutral baseline)
+   ------------------------------ */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+
+
+.snapshot-health-banner {
+  background: #5c1a1a;
+  color: #fff;
+  padding: 8px 12px;
+  font-size: 13px;
+  text-align: center;
+  z-index: 9999;
+}

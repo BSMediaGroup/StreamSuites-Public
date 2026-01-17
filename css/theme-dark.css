@@ -1,0 +1,403 @@
+/* ======================================================================
+   StreamSuites Dashboard — Dark Theme
+   Influenced by Map.css (contrast-first, low-noise, long-session safe)
+   ====================================================================== */
+
+/* ----------------------------------------------------------------------
+   Font Faces
+   ---------------------------------------------------------------------- */
+
+@font-face {
+  font-family: "RechargeBd";
+  src: url("https://raw.githubusercontent.com/BSMediaGroup/Resources/master/FONTS/Recharge%20Bd.otf")
+       format("opentype");
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: "SuiGenerisRg";
+  src: url("https://raw.githubusercontent.com/BSMediaGroup/Resources/master/FONTS/Sui%20Generis%20Rg.otf")
+       format("opentype");
+  font-weight: 400;
+}
+
+/* ----------------------------------------------------------------------
+   CSS Variables — Dark Theme Palette
+   ---------------------------------------------------------------------- */
+
+:root {
+  --bg-root: #0e0f12;
+  --bg-panel: #14161b;
+  --bg-panel-alt: #1b1e24;
+  --bg-hover: #222632;
+
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  --text-primary: #e6e8eb;
+  --text-secondary: #a9adb5;
+  --text-muted: #6e737c;
+
+  --accent-primary: #8cc736; /* StreamSuites green */
+  --accent-warning: #e1ac1e;
+  --accent-danger: #d9534f;
+  --accent-info: #5bc0de;
+
+  --glow-soft: rgba(140, 199, 54, 0.25);
+  --glow-hard: rgba(140, 199, 54, 0.45);
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+
+  /* ------------------------------------------------------------
+     ADDITIVE: Dashboard requested overrides
+     ------------------------------------------------------------ */
+  --link-accent: #F49900;
+  --status-active: #84C642;
+  --status-idle: #DF2323;
+}
+
+/* ----------------------------------------------------------------------
+   Global Overrides
+   ---------------------------------------------------------------------- */
+
+body {
+  background-color: var(--bg-root);
+  color: var(--text-primary);
+}
+
+::selection {
+  background: rgba(140, 199, 54, 0.25);
+  color: #fff;
+}
+
+/* ----------------------------------------------------------------------
+   Header / App Chrome
+   ---------------------------------------------------------------------- */
+
+#app-header {
+  border-bottom: 2px solid var(--border-subtle);
+}
+
+#app-status.status-indicator.active {
+  color: var(--status-active);
+}
+
+#app-status.status-indicator.idle {
+  color: var(--status-idle);
+}
+
+/* ----------------------------------------------------------------------
+   Links / Clickable elements
+   ---------------------------------------------------------------------- */
+
+a,
+a:visited {
+  color: var(--link-accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+#app-nav {
+  background: rgba(14, 16, 21, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.32);
+}
+
+#app-nav .nav-shell {
+  background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.025),
+      rgba(255, 255, 255, 0.01)
+    ),
+    rgba(10, 12, 16, 0.62);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 10px 26px rgba(0, 0, 0, 0.35);
+}
+
+#app-nav li {
+  color: var(--text-secondary);
+}
+
+#app-nav li.nav-disabled,
+#app-nav .nav-overflow-menu li.nav-disabled {
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.01);
+}
+
+#app-nav li:hover {
+  color: var(--link-accent);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+#app-nav li.active {
+  color: var(--link-accent);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 -2px 0 var(--link-accent);
+}
+
+#app-nav .nav-more-toggle {
+  color: var(--text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.01);
+}
+
+#app-nav .nav-more-toggle:hover,
+#app-nav .nav-more-toggle:focus-visible {
+  color: var(--link-accent);
+  background: rgba(255, 255, 255, 0.03);
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+#app-nav .nav-more-toggle.active {
+  color: var(--link-accent);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 -2px 0 var(--link-accent);
+}
+
+#app-nav .nav-overflow-menu {
+  background: rgba(12, 14, 18, 0.9);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+#app-nav .nav-overflow-menu li {
+  color: var(--text-secondary);
+  padding: 10px 16px;
+}
+
+#app-nav .nav-overflow-menu li:hover {
+  color: var(--link-accent);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+#app-nav .nav-overflow-menu li.active {
+  color: var(--link-accent);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ----------------------------------------------------------------------
+   Panels / Containers
+   ---------------------------------------------------------------------- */
+
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.panel.alt {
+  background: var(--bg-panel-alt);
+}
+
+.panel + .panel {
+  margin-top: 16px;
+}
+
+/* ----------------------------------------------------------------------
+   Headings
+   ---------------------------------------------------------------------- */
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: "RechargeBd", sans-serif;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+}
+
+h1 {
+  font-size: 26px;
+}
+
+h2 {
+  font-size: 20px;
+}
+
+h3 {
+  font-size: 16px;
+}
+
+/* ----------------------------------------------------------------------
+   Text
+   ---------------------------------------------------------------------- */
+
+p {
+  color: var(--text-secondary);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-accent {
+  color: var(--accent-primary);
+}
+
+/* ----------------------------------------------------------------------
+   Navigation / Sidebar (future-ready)
+   ---------------------------------------------------------------------- */
+
+.nav {
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border-subtle);
+}
+
+.nav-item {
+  padding: 10px 14px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nav-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.nav-item.active {
+  background: linear-gradient(
+    90deg,
+    rgba(140, 199, 54, 0.15),
+    transparent
+  );
+  color: var(--accent-primary);
+  box-shadow: inset 3px 0 0 var(--accent-primary);
+}
+
+/* ----------------------------------------------------------------------
+   Buttons
+   ---------------------------------------------------------------------- */
+
+.button {
+  background: var(--bg-panel-alt);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.button:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+.button.primary {
+  background: linear-gradient(
+    180deg,
+    rgba(140, 199, 54, 0.85),
+    rgba(140, 199, 54, 0.65)
+  );
+  border-color: rgba(140, 199, 54, 0.9);
+  color: #0b1205;
+  box-shadow: 0 0 12px var(--glow-soft);
+}
+
+.button.primary:hover {
+  box-shadow: 0 0 18px var(--glow-hard);
+}
+
+/* ----------------------------------------------------------------------
+   Inputs / Forms
+   ---------------------------------------------------------------------- */
+
+input,
+select,
+textarea {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 1px var(--accent-primary);
+}
+
+/* ----------------------------------------------------------------------
+   Tables (Creators / Triggers / Jobs)
+   ---------------------------------------------------------------------- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  font-family: "RechargeBd", sans-serif;
+  color: var(--text-secondary);
+  text-align: left;
+  padding: 10px;
+  border-bottom: 1px solid var(--border-strong);
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+}
+
+tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* ----------------------------------------------------------------------
+   Status Badges
+   ---------------------------------------------------------------------- */
+
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.badge.online {
+  background: rgba(140, 199, 54, 0.2);
+  color: var(--accent-primary);
+}
+
+.badge.offline {
+  background: rgba(217, 83, 79, 0.2);
+  color: var(--accent-danger);
+}
+
+/* ----------------------------------------------------------------------
+   Scrollbars — Dark Theme
+   ---------------------------------------------------------------------- */
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+/* ----------------------------------------------------------------------
+   Footer / Meta
+   ---------------------------------------------------------------------- */
+
+.footer {
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: center;
+  padding: 12px;
+}
