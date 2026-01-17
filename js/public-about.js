@@ -264,8 +264,23 @@
   function renderRuntimeMetaFromVersioning() {
     if (!window.Versioning) return;
 
-    Versioning.loadVersion().then((info) => {
-      if (!info) return;
+    Versioning.loadVersion().then((result) => {
+      const hadError = !result || result.error;
+      const versionEl = document.getElementById("public-about-version-meta");
+      const buildEl = document.getElementById("public-about-build-meta");
+
+      if (hadError) {
+        if (versionEl) {
+          versionEl.textContent = Versioning.UNAVAILABLE_LABEL || "Version unavailable";
+        }
+        if (buildEl) {
+          buildEl.textContent = "Build unavailable";
+        }
+        return;
+      }
+
+      if (!result.info) return;
+      const info = result.info;
 
       const ownerEl = document.getElementById("public-about-owner-meta");
       if (ownerEl && info.owner) {
@@ -277,17 +292,11 @@
         copyrightEl.textContent = info.copyright;
       }
 
-      const buildEl = document.getElementById("public-about-build-meta");
       if (buildEl && window.Versioning.getBuildLabel) {
         buildEl.textContent = window.Versioning.getBuildLabel(info);
       }
 
-      const versionEl = document.getElementById("public-about-version-meta");
-      const currentVersionText = versionEl ? versionEl.textContent.trim() : "";
-      if (
-        versionEl &&
-        (!currentVersionText || currentVersionText === "Unavailable" || currentVersionText.includes("Loading"))
-      ) {
+      if (versionEl) {
         versionEl.textContent = Versioning.formatDisplayVersion(info);
       }
     });

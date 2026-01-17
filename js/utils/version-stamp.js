@@ -4,28 +4,28 @@
   if (!window.Versioning || !window.Versioning.applyVersionToElements) return;
 
   const applyStamp = () => {
-    window.Versioning
-      .loadVersion()
-      .then((info) => {
-        const versionBadge = info
-          ? window.Versioning.formatVersionWithBuild(info)
-          : window.Versioning.UNAVAILABLE_LABEL || "Version unavailable";
-        document.querySelectorAll(".version-badge").forEach((el) => {
-          el.textContent = versionBadge;
-        });
+    window.Versioning.loadVersion().then((result) => {
+      const hadError = !result || result.error;
+      const info = result ? result.info : null;
+      const versionBadge = hadError
+        ? window.Versioning.UNAVAILABLE_LABEL || "Version unavailable"
+        : window.Versioning.formatVersionWithBuild(info);
+      const footerLabel = hadError
+        ? window.Versioning.UNAVAILABLE_LABEL || "Version unavailable"
+        : window.Versioning.formatFooterVersionWithBuild(info);
 
-        const footerLabel = info
-          ? window.Versioning.formatFooterVersionWithBuild(info)
-          : window.Versioning.UNAVAILABLE_LABEL || "Version unavailable";
-        document.querySelectorAll(".footer-version").forEach((el) => {
-          el.textContent = footerLabel;
-        });
-      })
-      .finally(() => {
-        window.Versioning.applyVersionToElements({
-          copyright: ".footer-copyright"
-        });
+      document.querySelectorAll(".version-badge").forEach((el) => {
+        el.textContent = versionBadge;
       });
+
+      document.querySelectorAll(".footer-version").forEach((el) => {
+        el.textContent = footerLabel;
+      });
+
+      window.Versioning.applyVersionToElements({
+        copyright: ".footer-copyright"
+      });
+    });
   };
 
   applyStamp();
