@@ -48,7 +48,7 @@
   function buildTalliesCard(tally) {
     const link = document.createElement("a");
     link.className = "card-link";
-    link.href = `./tallies/detail.html?id=${encodeURIComponent(tally.id)}`;
+    link.href = `/tallies/detail.html?id=${encodeURIComponent(tally.id)}`;
 
     const card = document.createElement("article");
     card.className = "card";

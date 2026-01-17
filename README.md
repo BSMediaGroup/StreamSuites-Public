@@ -1,5 +1,11 @@
 # StreamSuites-Public
-Public surfaces for StreamSuites™
+Public StreamSuites™ website repository.
+
+## Purpose
+- Hosts the public StreamSuites website.
+- Deployed via GitHub Pages to https://streamsuites.app.
+- Consumes runtime exports for read-only displays and does not mutate state.
+- Links to the Creator dashboard at https://creator.streamsuites.app and the Admin dashboard at https://admin.streamsuites.app using absolute URLs.
 
 ## Repo Structure:
 ```
