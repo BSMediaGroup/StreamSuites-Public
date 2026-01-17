@@ -1,3 +1,23 @@
 {
-  "sections": []
+  "sections": [
+    {
+      "id": "desktop-admin",
+      "order": 10,
+      "title": "Desktop Admin",
+      "entries": [
+        {
+          "id": "runtime-operations",
+          "order": 10,
+          "consumer": {
+            "title": "Operations oversight",
+            "body": "<ul><li>Manage multiple runtimes from the Desktop Admin and view live stdout/stderr logs inline.</li><li>Advanced option: open streams in an external terminal when deeper inspection is needed.</li></ul>"
+          },
+          "developer": {
+            "title": "Operational visibility",
+            "body": "Highlights multi-runtime oversight and live log visibility at a high level without exposing implementation details."
+          }
+        }
+      ]
+    }
+  ]
 }

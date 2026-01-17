@@ -1,5 +1,14 @@
 [
   {
+    "id": "2026-02-desktop-admin-log-viewer",
+    "date": "2026-02-03",
+    "title": "Desktop Admin log viewer highlighted",
+    "description": "Public feature copy now notes that the Desktop Admin can oversee multiple runtimes with inline stdout/stderr visibility, with an optional external terminal handoff.",
+    "version": "0.2.3-alpha",
+    "scope": "public",
+    "tags": ["public-pages", "desktop-admin", "operations"]
+  },
+  {
     "id": "2026-01-architecture-authority",
     "date": "2026-01-06",
     "title": "⭐ Architecture and authority clarified",
