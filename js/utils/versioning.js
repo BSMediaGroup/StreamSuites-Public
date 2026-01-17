@@ -39,8 +39,8 @@
   function formatVersionWithBuild(info) {
     const versionLabel = formatDisplayVersion(info);
     const buildLabel = getBuildLabel(info);
-    if (!versionLabel && !buildLabel) return UNAVAILABLE_LABEL;
-    if (!buildLabel) return versionLabel || UNAVAILABLE_LABEL;
+    if (!versionLabel && !buildLabel) return "";
+    if (!buildLabel) return versionLabel;
     if (!versionLabel) return `Build ${buildLabel}`;
     return `${versionLabel} • ${buildLabel}`;
   }
@@ -48,12 +48,17 @@
   function formatFooterVersionWithBuild(info) {
     const footerLabel = formatFooterVersion(info);
     const buildLabel = getBuildLabel(info);
-    if (!buildLabel) return footerLabel || UNAVAILABLE_LABEL;
+    if (!buildLabel) return footerLabel;
     return `${footerLabel} • Build ${buildLabel}`;
   }
 
   function resolveBasePath() {
     return "";
+  }
+
+  function resolveVersionUrl() {
+    const origin = window.location ? window.location.origin : "";
+    return new URL(VERSION_URL, origin || window.location.href).toString();
   }
 
   function loadVersion() {
@@ -64,15 +69,23 @@
         ? setTimeout(() => controller.abort(), VERSION_TIMEOUT_MS)
         : null;
 
-      cachedVersionPromise = fetch(VERSION_URL, {
+      const versionUrl = resolveVersionUrl();
+
+      cachedVersionPromise = fetch(versionUrl, {
         cache: "no-store",
         signal: controller ? controller.signal : undefined
       })
         .then((response) => {
-          if (!response.ok) return null;
+          if (!response.ok) {
+            throw new Error(`Version metadata request failed (${response.status})`);
+          }
           return response.json();
         })
-        .catch(() => null)
+        .then((info) => ({ info, error: null }))
+        .catch((error) => {
+          console.error("[Versioning] Unable to load runtime version metadata.", error);
+          return { info: null, error };
+        })
         .finally(() => {
           if (timeoutId) clearTimeout(timeoutId);
         });
@@ -90,8 +103,9 @@
       owner: selectors.owner || null
     };
 
-    return loadVersion().then((info) => {
-      if (!info) return null;
+    return loadVersion().then((result) => {
+      if (!result || result.error || !result.info) return null;
+      const info = result.info;
 
       if (resolvedSelectors.version) {
         const versionLabel = formatDisplayVersion(info);
