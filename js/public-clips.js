@@ -1,6 +1,6 @@
 (() => {
   const CLIP_INTERVAL_MS = 12000;
-  const RUNTIME_CLIP_PATH = "./shared/state/clips.json";
+  const RUNTIME_CLIP_PATH = "/shared/state/clips.json";
 
   const grid = document.getElementById("clips-grid");
   const emptyState = document.getElementById("clips-empty");

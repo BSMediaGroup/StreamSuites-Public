@@ -1,6 +1,6 @@
 (() => {
   const POLL_INTERVAL_MS = 12000;
-  const RUNTIME_POLL_PATH = "./shared/state/polls.json";
+  const RUNTIME_POLL_PATH = "/shared/state/polls.json";
 
   const grid = document.getElementById("polls-grid");
   const emptyState = document.getElementById("polls-empty");

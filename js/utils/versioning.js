@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION_URL = "https://admin.streamsuites.app/version.json";
+  const VERSION_URL = "/version.json";
   const VERSION_TIMEOUT_MS = 4000;
   let cachedVersionPromise = null;
 
@@ -40,6 +40,22 @@
 
     const product = getFirstValue(info, PRODUCT_KEYS) || "StreamSuites™";
     return `${product} ${displayVersion}`.trim();
+  }
+
+  function getBuildLabel(info) {
+    return getFirstValue(info, BUILD_KEYS) || "Unknown";
+  }
+
+  function formatVersionWithBuild(info) {
+    const versionLabel = formatDisplayVersion(info);
+    const buildLabel = getBuildLabel(info);
+    return `${versionLabel} • ${buildLabel}`;
+  }
+
+  function formatFooterVersionWithBuild(info) {
+    const footerLabel = formatFooterVersion(info);
+    const buildLabel = getBuildLabel(info);
+    return `${footerLabel} • Build ${buildLabel}`;
   }
 
   function resolveBasePath() {
@@ -98,12 +114,10 @@
       }
 
       if (resolvedSelectors.build) {
-        const buildLabel = getFirstValue(info, BUILD_KEYS);
-        if (buildLabel) {
-          document.querySelectorAll(resolvedSelectors.build).forEach((el) => {
-            el.textContent = buildLabel;
-          });
-        }
+        const buildLabel = getBuildLabel(info);
+        document.querySelectorAll(resolvedSelectors.build).forEach((el) => {
+          el.textContent = buildLabel;
+        });
       }
 
       if (resolvedSelectors.copyright) {
@@ -130,8 +144,11 @@
 
   window.Versioning = {
     loadVersion,
+    getBuildLabel,
     formatDisplayVersion,
     formatFooterVersion,
+    formatVersionWithBuild,
+    formatFooterVersionWithBuild,
     resolveBasePath,
     applyVersionToElements
   };

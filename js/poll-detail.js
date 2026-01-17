@@ -1,7 +1,7 @@
 (() => {
   const params = new URLSearchParams(window.location.search);
   const pollId = params.get("id");
-  const RUNTIME_POLL_PATH = "../shared/state/polls.json";
+  const RUNTIME_POLL_PATH = "/shared/state/polls.json";
   const POLL_REFRESH_MS = 12000;
   let poll = null;
   let pollTimer = null;
