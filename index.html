@@ -595,6 +595,233 @@
       text-decoration: none;
     }
 
+    .cta-auth-actions {
+      display: grid;
+      gap: 12px;
+    }
+
+    .cta-secondary-auth {
+      display: block;
+      width: 100%;
+      border-radius: 1em;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      padding: 0.95em 3em;
+      text-transform: uppercase;
+      text-decoration: none;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .cta-secondary-auth:hover {
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: translateY(-1px);
+      box-shadow: 0 0 18px rgba(255, 255, 255, 0.2);
+    }
+
+    /* ===============================
+       AUTH MODAL
+       =============================== */
+
+    body.modal-open {
+      overflow: hidden;
+    }
+
+    .auth-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 8, 12, 0.72);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      z-index: 50;
+    }
+
+    .auth-modal-backdrop.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .auth-modal {
+      width: min(520px, 92vw);
+      background: rgba(17, 20, 26, 0.98);
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 28px;
+      position: relative;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+    }
+
+    .auth-modal-header {
+      margin-bottom: 18px;
+    }
+
+    .auth-modal-eyebrow {
+      margin: 0 0 6px;
+      font-size: 11px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .auth-modal h2 {
+      margin: 0 0 6px;
+      font-size: 24px;
+    }
+
+    .auth-modal-subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .auth-modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      border: 0;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    .auth-panel {
+      display: none;
+    }
+
+    .auth-modal[data-state="login"] .auth-panel[data-state="login"],
+    .auth-modal[data-state="signup"] .auth-panel[data-state="signup"] {
+      display: block;
+    }
+
+    .auth-oauth-grid {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .auth-oauth-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      text-decoration: none;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .auth-oauth-button:hover {
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: translateY(-1px);
+      box-shadow: 0 0 16px rgba(255, 255, 255, 0.2);
+    }
+
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      margin: 12px 0;
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .auth-form {
+      display: grid;
+      gap: 12px;
+    }
+
+    .auth-form label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+    }
+
+    .auth-form input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(8, 10, 14, 0.7);
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .auth-form button[type="submit"] {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px;
+      background: var(--accent);
+      color: #0b0c10;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .auth-form button[type="submit"]:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 18px rgba(140, 199, 54, 0.5);
+    }
+
+    .auth-form button[disabled] {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .auth-error {
+      min-height: 18px;
+      color: #ff8a8a;
+      font-size: 12px;
+    }
+
+    .auth-toggle {
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .auth-toggle button {
+      border: 0;
+      background: none;
+      color: var(--accent-strong);
+      cursor: pointer;
+      font-weight: 700;
+      padding: 0;
+    }
+
 
 
     /* ===============================
@@ -768,8 +995,11 @@
       </p>
 
       <div class="cta-login">
-        <p class="cta-login-label">Creator onboarding</p>
-        <a class="cta-primary" href="https://api.streamsuites.app/auth/login/google?surface=creator">Creator Login</a>
+        <p class="cta-login-label">Creator access</p>
+        <div class="cta-auth-actions">
+          <button class="cta-primary auth-trigger" type="button" data-auth-trigger="login">Log in</button>
+          <button class="cta-secondary-auth auth-trigger" type="button" data-auth-trigger="signup">Sign up</button>
+        </div>
         <div class="cta-admin">
           <p class="cta-login-label">Administrator access</p>
           <div class="cta-admin-row">
@@ -905,6 +1135,66 @@
     © 2026 Brainstream Media Group
   </a>
 
+  <div class="auth-modal-backdrop" id="auth-modal" aria-hidden="true">
+    <div class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title" data-state="login">
+      <button class="auth-modal-close" type="button" aria-label="Close">×</button>
+
+      <div class="auth-modal-header">
+        <p class="auth-modal-eyebrow">Creator access</p>
+        <h2 id="auth-modal-title" data-auth-title>Log in to StreamSuites</h2>
+        <p class="auth-modal-subtitle" data-auth-subtitle>Use OAuth or your email to continue.</p>
+      </div>
+
+      <div class="auth-panel" data-state="login">
+        <div class="auth-oauth-grid">
+          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/login/google?surface=creator">Continue with Google</a>
+          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/login/github?surface=creator">Continue with GitHub</a>
+          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/login/discord?surface=creator">Continue with Discord</a>
+        </div>
+
+        <div class="auth-divider">Or email</div>
+
+        <form class="auth-form" data-auth-form="login">
+          <label for="login-email">Email</label>
+          <input id="login-email" name="email" type="email" autocomplete="email" required />
+          <label for="login-password">Password</label>
+          <input id="login-password" name="password" type="password" autocomplete="current-password" required />
+          <div class="auth-error" role="alert" aria-live="polite"></div>
+          <button type="submit">Log in</button>
+        </form>
+
+        <div class="auth-toggle">
+          Don’t have an account yet?
+          <button type="button" data-auth-toggle="signup">Sign up</button>
+        </div>
+      </div>
+
+      <div class="auth-panel" data-state="signup">
+        <div class="auth-oauth-grid">
+          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/login/google?surface=creator">Continue with Google</a>
+          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/login/github?surface=creator">Continue with GitHub</a>
+          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/login/discord?surface=creator">Continue with Discord</a>
+        </div>
+
+        <div class="auth-divider">Or email</div>
+
+        <form class="auth-form" data-auth-form="signup">
+          <label for="signup-email">Email</label>
+          <input id="signup-email" name="email" type="email" autocomplete="email" required />
+          <label for="signup-password">Password</label>
+          <input id="signup-password" name="password" type="password" autocomplete="new-password" required />
+          <div class="auth-error" role="alert" aria-live="polite"></div>
+          <button type="submit">Create account</button>
+        </form>
+
+        <div class="auth-toggle">
+          Already have an account?
+          <button type="button" data-auth-toggle="login">Log in</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function () {
       const containers = Array.from(document.querySelectorAll('.supported-tooltip-container'));
@@ -936,6 +1226,162 @@
       };
 
       containers.forEach(bindPlacement);
+    })();
+  </script>
+
+  <script>
+    (function () {
+      const authModalBackdrop = document.getElementById('auth-modal');
+      const authModal = authModalBackdrop?.querySelector('.auth-modal');
+      const authTitle = authModal?.querySelector('[data-auth-title]');
+      const authSubtitle = authModal?.querySelector('[data-auth-subtitle]');
+      const authClose = authModal?.querySelector('.auth-modal-close');
+      const authTriggers = Array.from(document.querySelectorAll('[data-auth-trigger]'));
+      const authToggles = Array.from(document.querySelectorAll('[data-auth-toggle]'));
+      const authForms = Array.from(document.querySelectorAll('[data-auth-form]'));
+
+      if (!authModalBackdrop || !authModal) return;
+
+      const CREATOR_DASHBOARD_URL = 'https://creator.streamsuites.app';
+      const CREATOR_ONBOARDING_URL = 'https://creator.streamsuites.app/onboarding';
+      const AUTH_API_BASE = 'https://api.streamsuites.app/auth';
+      const AUTH_TITLES = {
+        login: {
+          title: 'Log in to StreamSuites',
+          subtitle: 'Use OAuth or your email to continue.',
+        },
+        signup: {
+          title: 'Create your StreamSuites account',
+          subtitle: 'Start with OAuth or email to continue.',
+        },
+      };
+
+      const setAuthState = (state) => {
+        authModal.dataset.state = state;
+        if (authTitle && AUTH_TITLES[state]) {
+          authTitle.textContent = AUTH_TITLES[state].title;
+        }
+        if (authSubtitle && AUTH_TITLES[state]) {
+          authSubtitle.textContent = AUTH_TITLES[state].subtitle;
+        }
+      };
+
+      const openModal = (state = 'login') => {
+        setAuthState(state);
+        authModalBackdrop.classList.add('is-open');
+        authModalBackdrop.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+      };
+
+      const closeModal = () => {
+        authModalBackdrop.classList.remove('is-open');
+        authModalBackdrop.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('modal-open');
+      };
+
+      authTriggers.forEach((trigger) => {
+        trigger.addEventListener('click', () => openModal(trigger.dataset.authTrigger));
+      });
+
+      authToggles.forEach((toggle) => {
+        toggle.addEventListener('click', () => setAuthState(toggle.dataset.authToggle));
+      });
+
+      authClose?.addEventListener('click', closeModal);
+      authModalBackdrop.addEventListener('click', (event) => {
+        if (event.target === authModalBackdrop) {
+          closeModal();
+        }
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && authModalBackdrop.classList.contains('is-open')) {
+          closeModal();
+        }
+      });
+
+      const resolveRedirect = (payload) => {
+        if (payload?.redirect_url) {
+          return payload.redirect_url;
+        }
+        if (payload?.onboarding_required) {
+          return CREATOR_ONBOARDING_URL;
+        }
+        return CREATOR_DASHBOARD_URL;
+      };
+
+      const renderError = (form, message) => {
+        const errorEl = form.querySelector('.auth-error');
+        if (errorEl) {
+          errorEl.textContent = message;
+        }
+      };
+
+      const clearError = (form) => {
+        renderError(form, '');
+      };
+
+      authForms.forEach((form) => {
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+
+          const mode = form.dataset.authForm;
+          const email = form.querySelector('input[name="email"]')?.value?.trim();
+          const password = form.querySelector('input[name="password"]')?.value || '';
+          const submitButton = form.querySelector('button[type="submit"]');
+
+          clearError(form);
+
+          if (!email || !password) {
+            renderError(form, 'Please provide an email and password.');
+            return;
+          }
+
+          const endpoint = mode === 'signup' ? `${AUTH_API_BASE}/signup` : `${AUTH_API_BASE}/login`;
+
+          if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.setAttribute('aria-busy', 'true');
+          }
+
+          try {
+            const response = await fetch(endpoint, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              credentials: 'include',
+              body: JSON.stringify({
+                email,
+                password,
+                surface: 'creator',
+              }),
+            });
+
+            let payload = null;
+            try {
+              payload = await response.json();
+            } catch (error) {
+              payload = null;
+            }
+
+            if (!response.ok) {
+              const message = payload?.message || 'Unable to authenticate. Please check your details and try again.';
+              renderError(form, message);
+              return;
+            }
+
+            window.location.href = resolveRedirect(payload);
+          } catch (error) {
+            renderError(form, 'Network error. Please try again.');
+          } finally {
+            if (submitButton) {
+              submitButton.disabled = false;
+              submitButton.removeAttribute('aria-busy');
+            }
+          }
+        });
+      });
     })();
   </script>
 
