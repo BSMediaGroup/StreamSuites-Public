@@ -902,6 +902,52 @@ body {
   align-items: center;
 }
 
+.public-footer .login-primary {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-primary);
+  background: rgba(140, 199, 54, 0.12);
+  color: #fff;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.public-footer .login-primary:hover {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 12px rgba(140, 199, 54, 0.4);
+  text-decoration: none;
+}
+
+.public-footer .login-admin-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.public-footer .login-admin-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.public-footer .login-admin {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.public-footer .login-admin:hover {
+  color: var(--text-primary);
+  text-decoration: underline;
+}
+
 /* ------------------------------
    Detail pages
    ------------------------------ */
