@@ -526,6 +526,32 @@
         inset 0 0 18px rgba(164,223,79,0.85);
     }
 
+    .cta-login {
+      margin-bottom: 22px;
+    }
+
+    .cta-login-label {
+      margin: 0 0 10px;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      opacity: 0.8;
+    }
+
+    .cta-login-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .cta-login-button {
+      flex: 1 1 220px;
+      width: auto;
+      margin-bottom: 0;
+      text-align: center;
+    }
+
     .cta-secondary-row {
       display: flex;
       gap: 10px;
@@ -714,7 +740,13 @@
         </a>
       </p>
 
-      <a class="cta-primary" href="https://creator.streamsuites.app">CREATOR DASHBOARD</a>
+      <div class="cta-login">
+        <p class="cta-login-label">Choose your login surface</p>
+        <div class="cta-login-row">
+          <a class="cta-primary cta-login-button" href="https://auth.streamsuites.app/login?surface=creator">Creator Login</a>
+          <a class="cta-primary cta-login-button" href="https://auth.streamsuites.app/login?surface=admin">Admin Login</a>
+        </div>
+      </div>
 
       <!-- CTA row + right-aligned platform metadata -->
       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; flex-wrap:wrap; gap:12px;">
