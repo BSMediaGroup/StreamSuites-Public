@@ -539,17 +539,37 @@
       opacity: 0.8;
     }
 
-    .cta-login-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
+    .cta-admin {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    .cta-login-button {
-      flex: 1 1 220px;
-      width: auto;
-      margin-bottom: 0;
+    .cta-admin-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .cta-admin-button {
+      flex: 1 1 180px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      padding: 10px 16px;
+      text-transform: uppercase;
+      text-decoration: none;
       text-align: center;
+      transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .cta-admin-button:hover {
+      border-color: rgba(255, 255, 255, 0.4);
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.12);
+      transform: translateY(-1px);
     }
 
     .cta-secondary-row {
@@ -741,10 +761,14 @@
       </p>
 
       <div class="cta-login">
-        <p class="cta-login-label">Choose your login surface</p>
-        <div class="cta-login-row">
-          <a class="cta-primary cta-login-button" href="https://auth.streamsuites.app/login?surface=creator">Creator Login</a>
-          <a class="cta-primary cta-login-button" href="https://auth.streamsuites.app/login?surface=admin">Admin Login</a>
+        <p class="cta-login-label">Creator onboarding</p>
+        <a class="cta-primary" href="https://api.streamsuites.app/auth/login/google?surface=creator">Creator Login</a>
+        <div class="cta-admin">
+          <p class="cta-login-label">Administrator access</p>
+          <div class="cta-admin-row">
+            <a class="cta-admin-button" href="https://api.streamsuites.app/auth/login/google?surface=admin">Admin Login (Google)</a>
+            <a class="cta-admin-button" href="https://api.streamsuites.app/auth/login/github?surface=admin">Admin Login (GitHub)</a>
+          </div>
         </div>
       </div>
 

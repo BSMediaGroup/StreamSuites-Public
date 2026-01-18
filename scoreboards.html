@@ -122,13 +122,17 @@
       </article>
     </div>
 
-    <footer class="public-footer">
-      <span>StreamSuites™ Media Surface • Scoreboards</span>
-      <nav class="footer-login">
-        <a href="https://auth.streamsuites.app/login?surface=creator">Creator Login</a>
-        <a href="https://auth.streamsuites.app/login?surface=admin">Admin Login</a>
-      </nav>
-    </footer>
+      <footer class="public-footer">
+        <span>StreamSuites™ Media Surface • Scoreboards</span>
+        <nav class="footer-login">
+        <a class="login-primary" href="https://api.streamsuites.app/auth/login/google?surface=creator">Creator Login</a>
+        <span class="login-admin-group" aria-label="Administrator login options">
+          <span class="login-admin-label">Admin</span>
+          <a class="login-admin" href="https://api.streamsuites.app/auth/login/google?surface=admin">Google</a>
+          <a class="login-admin" href="https://api.streamsuites.app/auth/login/github?surface=admin">GitHub</a>
+        </span>
+        </nav>
+      </footer>
   </div>
 
   <script src="/js/utils/versioning.js"></script>
