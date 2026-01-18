@@ -7,7 +7,7 @@ Public StreamSuites™ website repository.
 - Public, static surface that consumes runtime exports for read-only displays and does not mutate state.
 - Does not define version or build numbers locally; version/build are provided by runtime exports.
 - Does not host the Admin or Creator dashboards (those live in separate repos/apps).
-- Links to the Creator dashboard at https://creator.streamsuites.app using absolute URLs.
+- Links to Creator and Admin login surfaces via the auth API (https://auth.streamsuites.app/login?surface=creator|admin) using absolute URLs.
 - Loads CSS, JS, and static assets with root-absolute paths (for example: `/css/theme-dark.css`, `/js/public-data.js`, `/assets/logos/logo.png`).
 - Stores all CSS, JS, and static assets locally in this repository (no cross-repo or external asset hosting).
 - Fetches public version/build metadata from runtime exports at `/runtime/exports/version.json` (single source of truth).
