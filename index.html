@@ -558,17 +558,6 @@
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      max-height: 0;
-      overflow: hidden;
-      opacity: 0;
-      transform: translateY(-6px);
-      transition: max-height 0.25s ease, opacity 0.25s ease, transform 0.25s ease;
-    }
-
-    .cta-admin-row.is-expanded {
-      max-height: 200px;
-      opacity: 1;
-      transform: translateY(0);
     }
 
     .cta-admin-button {
@@ -594,27 +583,6 @@
       width: 14px;
       height: 14px;
       flex-shrink: 0;
-    }
-
-    .cta-admin-toggle {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      border: 0;
-      background: none;
-      color: var(--text);
-      font-size: 10px;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      cursor: pointer;
-      opacity: 0.75;
-      padding: 0;
-    }
-
-    .cta-admin-toggle:focus-visible {
-      outline: 2px solid rgba(255, 255, 255, 0.4);
-      outline-offset: 4px;
-      border-radius: 999px;
     }
 
     .cta-admin-button:hover {
@@ -885,6 +853,12 @@
       padding: 0;
     }
 
+    .auth-panel[data-state="login"] .auth-toggle button,
+    .auth-panel[data-state="signup"] .auth-toggle button {
+      font-family: "SuiGenerisRg", system-ui, -apple-system, sans-serif;
+      font-weight: 400;
+    }
+
 
 
     /* ===============================
@@ -1065,10 +1039,7 @@
           <button class="cta-secondary-auth auth-trigger" type="button" data-auth-trigger="signup">Sign up</button>
         </div>
         <div class="cta-admin">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-            <p class="cta-login-label" style="margin:0;">Administrator access</p>
-            <button class="cta-admin-toggle" type="button" aria-expanded="false" aria-controls="admin-access-row">Toggle</button>
-          </div>
+          <p class="cta-login-label" style="margin:0 0 8px;">Administrator access</p>
           <div class="cta-admin-row" id="admin-access-row">
             <a class="cta-admin-button" href="https://api.streamsuites.app/auth/login/google?surface=admin">
               <img src="/assets/icons/google-silver.svg" alt="" />
@@ -1224,7 +1195,7 @@
         <p class="auth-modal-eyebrow">Creator access</p>
         <h2 id="auth-modal-title" class="auth-modal-title">
           <img src="/assets/logos/logocircle.png" alt="StreamSuites logo" />
-          <span data-auth-title-text>Log in to StreamSuites</span>
+          <span data-auth-title-text>Log in to StreamSuites™</span>
         </h2>
         <p class="auth-modal-subtitle" data-auth-subtitle>Use OAuth or your email to continue.</p>
       </div>
@@ -1333,27 +1304,6 @@
 
   <script>
     (function () {
-      const toggle = document.querySelector('.cta-admin-toggle');
-      const row = document.getElementById('admin-access-row');
-
-      if (!toggle || !row) return;
-
-      const setExpanded = (expanded) => {
-        toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-        row.classList.toggle('is-expanded', expanded);
-      };
-
-      setExpanded(false);
-
-      toggle.addEventListener('click', () => {
-        const expanded = toggle.getAttribute('aria-expanded') === 'true';
-        setExpanded(!expanded);
-      });
-    })();
-  </script>
-
-  <script>
-    (function () {
       const authModalBackdrop = document.getElementById('auth-modal');
       const authModal = authModalBackdrop?.querySelector('.auth-modal');
       const authTitle = authModal?.querySelector('[data-auth-title-text]');
@@ -1370,11 +1320,11 @@
       const AUTH_API_BASE = 'https://api.streamsuites.app/auth';
       const AUTH_TITLES = {
         login: {
-          title: 'Log in to StreamSuites',
+          title: 'Log in to StreamSuites™',
           subtitle: 'Use OAuth or your email to continue.',
         },
         signup: {
-          title: 'Create your StreamSuites account',
+          title: 'Sign up to StreamSuites™',
           subtitle: 'Start with OAuth or email to continue.',
         },
       };
