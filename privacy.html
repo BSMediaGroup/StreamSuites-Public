@@ -52,40 +52,51 @@
 
       <section class="public-hero public-glass-panel">
         <div class="section-heading">
-          <h2>Privacy policy (provisional)</h2>
+          <h2>Privacy policy</h2>
           <span class="public-badge">Static surface</span>
         </div>
-        <p class="muted">StreamSuites limits data collection on public pages. Creator authentication and secrets stay inside the dashboard runtime, never on these static views.</p>
+        <p class="muted">StreamSuites limits data collection on public pages. Creator authentication happens in the dashboard. This page summarizes what we collect, how we use it, and your choices.</p>
       </section>
 
       <section class="public-stack" aria-label="Privacy statements">
         <article class="public-glass-card">
-          <h3>Data collection</h3>
-          <p class="muted">We do not run trackers on public pages. Basic server logs and CDN metrics may capture IP, user agent, and timestamp solely for uptime and abuse detection.</p>
+          <h3>Data we collect</h3>
+          <p class="muted">When you create a StreamSuites account, we collect basic account identifiers and login signals needed to run the service.</p>
           <ul class="public-list">
-            <li>Public HTML is static and cache-friendly.</li>
-            <li>No third-party analytics pixels are embedded.</li>
-            <li>Dashboard authentication happens in the protected admin area.</li>
+            <li>Account data: email address, display name, and a hashed password if you use a direct login.</li>
+            <li>OAuth data: provider IDs from Google, GitHub, and Discord (plus the associated email if the provider shares it).</li>
+            <li>Operational data: login timestamps, IP address, user agent, and security events for abuse prevention.</li>
+            <li>Public pages: static HTML with basic server and CDN logs for uptime and performance.</li>
           </ul>
         </article>
 
         <article class="public-glass-card">
-          <h3>Content ownership</h3>
-          <p class="muted">Creators retain rights to uploaded clips and metadata. Public previews reference media locations without exposing private storage keys.</p>
+          <h3>Authentication, sessions, and storage</h3>
+          <p class="muted">We use secure, HTTP-only session cookies to keep you signed in to the dashboard. Account data and workspace settings are stored in our database.</p>
           <ul class="public-list">
-            <li>Links point to platform-native destinations (YouTube, Twitch, Rumble).</li>
-            <li>Temporary thumbnails and artwork respect creator ownership.</li>
-            <li>Removal requests: <a href="mailto:privacy@stream.suites">privacy@stream.suites</a></li>
+            <li>OAuth providers supported today: Google, GitHub, and Discord.</li>
+            <li>Session cookies are used for authentication and are not used for advertising.</li>
+            <li>Dashboard secrets and tokens remain in the protected admin area, not on public pages.</li>
           </ul>
         </article>
 
         <article class="public-glass-card">
-          <h3>Retention & controls</h3>
-          <p class="muted">Logs that include personal data are purged on a rolling basis. Public caches may refresh slowly; critical removals are prioritized via manual invalidation.</p>
+          <h3>Access, admin visibility, and your rights</h3>
+          <p class="muted">Authorized StreamSuites administrators may access account records to provide support, resolve abuse, and maintain the service.</p>
           <ul class="public-list">
-            <li>Runtime keys and tokens are never shipped to the browser.</li>
-            <li>Dashboard exports stay within creator control.</li>
-            <li>Future updates will enumerate retention windows per region.</li>
+            <li>You can request access to your account data or ask for corrections.</li>
+            <li>You can request account deletion or an onboarding reset that clears setup state.</li>
+            <li>Contact us at <a href="mailto:privacy@stream.suites">privacy@stream.suites</a> for privacy requests.</li>
+          </ul>
+        </article>
+
+        <article class="public-glass-card">
+          <h3>Retention, deletion, and security</h3>
+          <p class="muted">We keep account data while your account is active and retain limited logs for security and reliability.</p>
+          <ul class="public-list">
+            <li>Deletion requests trigger a soft-delete period before data is fully removed from active systems.</li>
+            <li>Backups may retain data for a limited time while they cycle out.</li>
+            <li>We use industry-standard security practices, but no system is guaranteed to be 100% secure.</li>
           </ul>
         </article>
       </section>
