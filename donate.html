@@ -62,8 +62,15 @@
         <article class="public-glass-card" id="donate">
           <h3>One-time donation</h3>
           <p class="muted">Your support helps us keep StreamSuites reliable and continuously improving for the community.</p>
-          <div class="hero-actions">
-            <a class="cta-link" href="#donate">Donate</a>
+          <div class="hero-actions donate-actions">
+            <button class="cta-link donate-option" type="button" data-amount="5">$5</button>
+            <button class="cta-link donate-option" type="button" data-amount="10">$10</button>
+            <button class="cta-link donate-option" type="button" data-amount="25">$25</button>
+          </div>
+          <div class="donate-custom">
+            <label class="sr-only" for="donate-custom-amount">Custom amount</label>
+            <input id="donate-custom-amount" type="number" min="1" step="1" inputmode="decimal" placeholder="Custom amount (USD)" />
+            <button class="cta-link donate-option" type="button" data-action="custom">Donate custom amount</button>
           </div>
           <p class="helper-text">Donations are optional and never required to use StreamSuites.</p>
           <p class="helper-text donate-error" role="alert" hidden>Sorry, we couldn't start the donation checkout. Please try again in a moment.</p>
@@ -92,21 +99,48 @@
   <script src="/js/utils/version-stamp.js"></script>
   <script>
     (function () {
-      var donateLink = document.querySelector(".public-glass-card#donate .cta-link");
-      if (!donateLink) {
+      var donateCard = document.querySelector(".public-glass-card#donate");
+      if (!donateCard) {
         return;
       }
 
-      var donateCard = donateLink.closest(".public-glass-card");
-      var statusMessage = donateCard ? donateCard.querySelector(".donate-error") : null;
+      var statusMessage = donateCard.querySelector(".donate-error");
+      var presetButtons = donateCard.querySelectorAll(".donate-option[data-amount]");
+      var customButton = donateCard.querySelector(".donate-option[data-action=\"custom\"]");
+      var customInput = donateCard.querySelector("#donate-custom-amount");
 
       var endpoint = "https://api.streamsuites.app/billing/donate/session";
 
-      donateLink.addEventListener("click", function (event) {
-        event.preventDefault();
+      function setStatusMessage(message) {
+        if (!statusMessage) {
+          return;
+        }
+        statusMessage.textContent = message;
+        statusMessage.hidden = false;
+      }
 
-        donateLink.setAttribute("aria-busy", "true");
-        donateLink.textContent = "Redirecting...";
+      function setBusyState(isBusy, activeButton, label) {
+        var buttons = donateCard.querySelectorAll(".donate-option");
+        buttons.forEach(function (button) {
+          if (!button.dataset.label) {
+            button.dataset.label = button.textContent;
+          }
+          button.disabled = isBusy;
+          if (button === activeButton) {
+            button.setAttribute("aria-busy", isBusy ? "true" : "false");
+            button.textContent = isBusy ? label : button.dataset.label;
+          } else if (!isBusy) {
+            button.textContent = button.dataset.label;
+            button.removeAttribute("aria-busy");
+          }
+        });
+        if (customInput) {
+          customInput.disabled = isBusy;
+        }
+      }
+
+      function startDonation(amount, activeButton) {
+        setBusyState(true, activeButton, "Redirecting...");
         if (statusMessage) {
           statusMessage.hidden = true;
         }
@@ -114,8 +148,13 @@
         fetch(endpoint, {
           method: "POST",
           headers: {
-            "Accept": "application/json"
-          }
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            amount: amount,
+            source: "public"
+          })
         })
           .then(function (response) {
             if (!response.ok) {
@@ -130,13 +169,32 @@
             window.location.assign(data.checkout_url);
           })
           .catch(function () {
-            donateLink.removeAttribute("aria-busy");
-            donateLink.textContent = "Donate";
-            if (statusMessage) {
-              statusMessage.hidden = false;
-            }
+            setBusyState(false);
+            setStatusMessage("Sorry, we couldn't start the donation checkout. Please try again in a moment.");
           });
+      }
+
+      presetButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          var amount = Number(button.dataset.amount);
+          if (!Number.isFinite(amount) || amount <= 0) {
+            setStatusMessage("Please choose a valid donation amount.");
+            return;
+          }
+          startDonation(amount, button);
+        });
       });
+
+      if (customButton && customInput) {
+        customButton.addEventListener("click", function () {
+          var amount = Number(customInput.value);
+          if (!Number.isFinite(amount) || amount <= 0) {
+            setStatusMessage("Please enter a valid donation amount.");
+            return;
+          }
+          startDonation(amount, customButton);
+        });
+      }
     })();
   </script>
 </body>
