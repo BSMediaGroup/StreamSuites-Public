@@ -2192,6 +2192,41 @@ body.viz-expanded {
 
 .public-stack { display: flex; flex-direction: column; gap: 12px; }
 
+.support-hub .support-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 8px 0 12px;
+}
+
+.support-hub .support-links {
+  margin-top: 10px;
+}
+
+.support-hub .placeholder-link {
+  color: var(--link-accent);
+  text-decoration: underline dotted;
+  opacity: 0.72;
+  cursor: default;
+}
+
+.support-hub .support-embed-frame {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(12, 17, 26, 0.85));
+  border: 1px solid rgba(120, 195, 255, 0.28);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.support-hub .support-embed-frame iframe {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  background: #0b0f17;
+}
+
 @media (max-width: 720px) {
   .public-topbar {
     align-items: flex-start;
