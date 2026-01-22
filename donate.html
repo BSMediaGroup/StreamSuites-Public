@@ -66,6 +66,7 @@
             <a class="cta-link" href="#donate">Donate</a>
           </div>
           <p class="helper-text">Donations are optional and never required to use StreamSuites.</p>
+          <p class="helper-text donate-error" role="alert" hidden>Sorry, we couldn't start the donation checkout. Please try again in a moment.</p>
         </article>
       </section>
 
@@ -96,13 +97,7 @@
       }
 
       var donateCard = donateLink.closest(".public-glass-card");
-      var statusMessage = document.createElement("p");
-      statusMessage.className = "helper-text";
-      statusMessage.setAttribute("role", "alert");
-      statusMessage.style.display = "none";
-      if (donateCard) {
-        donateCard.appendChild(statusMessage);
-      }
+      var statusMessage = donateCard ? donateCard.querySelector(".donate-error") : null;
 
       var endpoint = "https://api.streamsuites.app/billing/donate/session";
 
@@ -111,8 +106,9 @@
 
         donateLink.setAttribute("aria-busy", "true");
         donateLink.textContent = "Redirecting...";
-        statusMessage.style.display = "none";
-        statusMessage.textContent = "";
+        if (statusMessage) {
+          statusMessage.hidden = true;
+        }
 
         fetch(endpoint, {
           method: "POST",
@@ -135,8 +131,9 @@
           .catch(function () {
             donateLink.removeAttribute("aria-busy");
             donateLink.textContent = "Donate";
-            statusMessage.textContent = "Sorry, we couldn't start the donation checkout. Please try again in a moment.";
-            statusMessage.style.display = "block";
+            if (statusMessage) {
+              statusMessage.hidden = false;
+            }
           });
       });
     })();
