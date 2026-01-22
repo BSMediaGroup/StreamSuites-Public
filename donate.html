@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<!-- StreamSuites - Public Donation Page -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Support StreamSuites</title>
+  <meta name="description" content="Make an optional, one-time donation to support StreamSuites." />
+  <link rel="canonical" href="https://streamsuites.app/donate.html" />
+  <meta property="og:title" content="Support StreamSuites" />
+  <meta property="og:description" content="Make an optional, one-time donation to support StreamSuites." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://streamsuites.app/donate.html" />
+  <meta property="og:image" content="/assets/backgrounds/seoshare.jpg" />
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="/css/theme-dark.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/public-pages.css" />
+</head>
+<body>
+  <div class="public-bg" aria-hidden="true"></div>
+  <div class="public-surface">
+    <div class="public-shell">
+      <header class="public-topbar">
+        <a class="public-brand" href="/">
+          <img src="/assets/logos/logo.png" alt="StreamSuites" />
+          <div>
+            <h1>StreamSuites</h1>
+            <p class="brand-subtitle">Public surface</p>
+          </div>
+        </a>
+        <div class="public-nav-wrapper">
+          <input type="checkbox" id="public-nav-toggle" class="nav-toggle" aria-label="Toggle navigation" />
+          <label class="hamburger" for="public-nav-toggle">
+            <span class="sr-only">Toggle navigation</span>
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+              <path class="line line-top-bottom" d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22"></path>
+              <path class="line" d="M7 16 27 16"></path>
+            </svg>
+          </label>
+          <div class="public-nav">
+            <span class="version-pill version-badge">Loading version...</span>
+            <a href="/about.html">About</a>
+            <a href="/tools.html">Tools</a>
+            <a href="/support.html">Support</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="/changelog.html">Changelog</a>
+            <a href="/accessibility.html">Accessibility</a>
+          </div>
+        </div>
+      </header>
+
+      <section class="public-hero public-glass-panel">
+        <div class="section-heading">
+          <h2>Support StreamSuites</h2>
+          <span class="public-badge">Public surface</span>
+        </div>
+        <p class="muted">StreamSuites stays focused on creators, fast public tools, and an ad-free experience. If you would like to help, you can make a voluntary one-time donation.</p>
+      </section>
+
+      <section class="public-stack" aria-label="Donation options">
+        <article class="public-glass-card" id="donate">
+          <h3>One-time donation</h3>
+          <p class="muted">Your support helps us keep StreamSuites reliable and continuously improving for the community.</p>
+          <div class="hero-actions">
+            <a class="cta-link" href="#donate">Donate</a>
+          </div>
+          <p class="helper-text">Donations are optional and never required to use StreamSuites.</p>
+        </article>
+      </section>
+
+      <footer class="public-footer">
+        <div>
+          <span class="footer-version">Version</span>
+          <span class="footer-copyright">(c)</span>
+        </div>
+        <nav aria-label="Public footer navigation">
+          <a href="/about.html">About</a>
+          <a href="/tools.html">Tools</a>
+          <a href="/support.html">Support</a>
+          <a href="/privacy.html">Privacy</a>
+          <a href="/changelog.html">Changelog</a>
+          <a href="/accessibility.html">Accessibility</a>
+        </nav>
+      </footer>
+    </div>
+  </div>
+
+  <script src="/js/utils/versioning.js"></script>
+  <script src="/js/utils/version-stamp.js"></script>
+  <script>
+    (function () {
+      var donateLink = document.querySelector(".public-glass-card#donate .cta-link");
+      if (!donateLink) {
+        return;
+      }
+
+      var donateCard = donateLink.closest(".public-glass-card");
+      var statusMessage = document.createElement("p");
+      statusMessage.className = "helper-text";
+      statusMessage.setAttribute("role", "alert");
+      statusMessage.style.display = "none";
+      if (donateCard) {
+        donateCard.appendChild(statusMessage);
+      }
+
+      var endpoint = "https://api.streamsuites.app/billing/donate/session";
+
+      donateLink.addEventListener("click", function (event) {
+        event.preventDefault();
+
+        donateLink.setAttribute("aria-busy", "true");
+        donateLink.textContent = "Redirecting...";
+        statusMessage.style.display = "none";
+        statusMessage.textContent = "";
+
+        fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Accept": "application/json"
+          }
+        })
+          .then(function (response) {
+            if (!response.ok) {
+              throw new Error("Donation request failed.");
+            }
+            return response.json();
+          })
+          .then(function (data) {
+            if (!data || typeof data.checkout_url !== "string" || !data.checkout_url.length) {
+              throw new Error("Donation session was not returned.");
+            }
+            window.location.assign(data.checkout_url);
+          })
+          .catch(function () {
+            donateLink.removeAttribute("aria-busy");
+            donateLink.textContent = "Donate";
+            statusMessage.textContent = "Sorry, we couldn't start the donation checkout. Please try again in a moment.";
+            statusMessage.style.display = "block";
+          });
+      });
+    })();
+  </script>
+</body>
+</html>
