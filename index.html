@@ -1542,6 +1542,12 @@
         renderError(form, '');
       };
 
+      const showSignupPendingVerification = (form, email) => {
+        renderError(form, 'Check your email to verify your account.');
+        setResendEmail(form, email || '');
+        setResendState(form, { visible: true, message: 'Need another verification email? Resend below.' });
+      };
+
       authForms.forEach((form) => {
         const strengthEl = form.querySelector('[data-auth-strength]');
         const passwordInput = form.querySelector('input[name="password"]');
@@ -1614,6 +1620,23 @@
             }
 
             if (!response.ok) {
+              if (mode === 'signup') {
+                if (response.status === 401) {
+                  renderError(form, 'Unable to sign up with those details. Please try again.');
+                  setResendState(form, { visible: false });
+                  return;
+                }
+                if (response.status === 429) {
+                  renderError(form, 'Too many signup attempts. Please wait and try again.');
+                  setResendState(form, { visible: false });
+                  return;
+                }
+                if (response.status === 500 || response.status === 502) {
+                  renderError(form, 'Signup is unavailable right now. Please try again shortly.');
+                  setResendState(form, { visible: false });
+                  return;
+                }
+              }
               const message = payload?.message || 'Unable to authenticate. Please check your details and try again.';
               renderError(form, message);
               const verificationRequired =
@@ -1628,6 +1651,11 @@
               return;
             }
 
+            if (mode === 'signup') {
+              showSignupPendingVerification(form, email);
+              return;
+            }
+
             if (payload?.verification_required) {
               renderError(form, 'Check your email to verify your account before logging in.');
               setResendEmail(form, email || '');
@@ -1637,7 +1665,11 @@
 
             window.location.href = resolveRedirect(payload);
           } catch (error) {
-            renderError(form, 'Network error. Please try again.');
+            if (mode === 'signup') {
+              renderError(form, 'Network error during signup. Please check your connection and try again.');
+            } else {
+              renderError(form, 'Network error. Please try again.');
+            }
           } finally {
             if (submitButton) {
               submitButton.disabled = false;
