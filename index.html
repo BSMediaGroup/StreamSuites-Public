@@ -1225,6 +1225,12 @@
           <input id="login-password" name="password" type="password" autocomplete="current-password" required />
           <div class="auth-error" role="alert" aria-live="polite"></div>
           <button type="submit">Log in</button>
+          <div class="auth-resend" data-auth-resend="login" hidden>
+            <button type="button" class="auth-resend-button" data-auth-resend-button>
+              Resend verification email
+            </button>
+            <p class="muted auth-resend-status" data-auth-resend-status aria-live="polite"></p>
+          </div>
         </form>
 
         <div class="auth-toggle">
@@ -1261,6 +1267,12 @@
           <p class="muted auth-strength" data-auth-strength>Strength: Weak</p>
           <div class="auth-error" role="alert" aria-live="polite"></div>
           <button type="submit">Create account</button>
+          <div class="auth-resend" data-auth-resend="signup" hidden>
+            <button type="button" class="auth-resend-button" data-auth-resend-button>
+              Resend verification email
+            </button>
+            <p class="muted auth-resend-status" data-auth-resend-status aria-live="polite"></p>
+          </div>
         </form>
 
         <p class="auth-legal muted">
@@ -1325,6 +1337,7 @@
       const CREATOR_DASHBOARD_URL = 'https://creator.streamsuites.app';
       const CREATOR_ONBOARDING_URL = 'https://creator.streamsuites.app/onboarding';
       const AUTH_API_BASE = 'https://api.streamsuites.app/auth';
+      const RESEND_ENDPOINT = `${AUTH_API_BASE}/verify/resend`;
       const PASSWORD_MIN_LENGTH = 8;
 
       const hasSpecialCharacter = (value) => /[^A-Za-z0-9]/.test(value);
@@ -1374,6 +1387,89 @@
         document.body.classList.remove('modal-open');
       };
 
+      const getResendContainer = (form) => form?.querySelector('[data-auth-resend]') || null;
+
+      const setResendState = (form, { visible = false, message = '', disabled = false } = {}) => {
+        const container = getResendContainer(form);
+        if (!container) return;
+        container.hidden = !visible;
+        const status = container.querySelector('[data-auth-resend-status]');
+        if (status) {
+          status.textContent = message || '';
+        }
+        const button = container.querySelector('[data-auth-resend-button]');
+        if (button) {
+          button.disabled = !!disabled;
+        }
+      };
+
+      const setResendEmail = (form, email) => {
+        if (!form) return;
+        form.dataset.resendEmail = email || '';
+      };
+
+      const getResendEmail = (form) => {
+        if (!form) return '';
+        const stored = form.dataset.resendEmail || '';
+        const emailInput = form.querySelector('input[name="email"]');
+        const value = stored || (emailInput ? emailInput.value : '');
+        return value.trim();
+      };
+
+      const wireResendButton = (form) => {
+        const container = getResendContainer(form);
+        if (!container || container.dataset.resendWired === 'true') return;
+        container.dataset.resendWired = 'true';
+        const button = container.querySelector('[data-auth-resend-button]');
+        if (!button) return;
+        button.addEventListener('click', async (event) => {
+          event.preventDefault();
+          const email = getResendEmail(form);
+          if (!email || !email.includes('@')) {
+            setResendState(form, {
+              visible: true,
+              message: 'Enter a valid email to resend the verification link.',
+            });
+            return;
+          }
+          setResendState(form, { visible: true, message: 'Sending verification email...', disabled: true });
+          try {
+            const response = await fetch(RESEND_ENDPOINT, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+              body: JSON.stringify({
+                email,
+                surface: 'public',
+              }),
+            });
+            let payload = null;
+            try {
+              payload = await response.json();
+            } catch (error) {
+              payload = null;
+            }
+            if (response.ok && payload?.status === 'already_verified') {
+              setResendState(form, { visible: true, message: 'Email already verified. Log in to continue.' });
+              return;
+            }
+            if (response.ok) {
+              setResendState(form, { visible: true, message: payload?.message || 'Verification email sent.' });
+              return;
+            }
+            if (response.status === 429 || payload?.status === 'rate_limited') {
+              setResendState(form, { visible: true, message: 'Too many resend requests. Please wait and try again.' });
+              return;
+            }
+            setResendState(form, { visible: true, message: payload?.error || 'Unable to resend verification email.' });
+          } catch (error) {
+            setResendState(form, { visible: true, message: 'Unable to resend verification email.' });
+          }
+        });
+      };
+
       const maybeOpenFromQuery = () => {
         const params = new URLSearchParams(window.location.search);
         const verified = params.get('verified');
@@ -1382,6 +1478,18 @@
           openModal('login');
           if (authSubtitle) {
             authSubtitle.textContent = 'Email verified. Log in to continue.';
+          }
+          return;
+        }
+        const reason = params.get('reason');
+        if (reason === 'verification-expired') {
+          openModal('login');
+          if (authSubtitle) {
+            authSubtitle.textContent = 'Your verification link expired. Resend a new email below.';
+          }
+          const loginForm = authModal.querySelector('[data-auth-form="login"]');
+          if (loginForm) {
+            setResendState(loginForm, { visible: true, message: 'Need a new link? Resend below.' });
           }
           return;
         }
@@ -1445,6 +1553,8 @@
           updateStrength();
         }
 
+        wireResendButton(form);
+
         form.addEventListener('submit', async (event) => {
           event.preventDefault();
 
@@ -1506,11 +1616,22 @@
             if (!response.ok) {
               const message = payload?.message || 'Unable to authenticate. Please check your details and try again.';
               renderError(form, message);
+              const verificationRequired =
+                payload?.verification_required === true ||
+                /not verified/i.test(message);
+              if (verificationRequired) {
+                setResendEmail(form, email || '');
+                setResendState(form, { visible: true, message: 'Need a new link? Resend below.' });
+              } else {
+                setResendState(form, { visible: false });
+              }
               return;
             }
 
             if (payload?.verification_required) {
               renderError(form, 'Check your email to verify your account before logging in.');
+              setResendEmail(form, email || '');
+              setResendState(form, { visible: true, message: 'Need another verification email? Resend below.' });
               return;
             }
 
