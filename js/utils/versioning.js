@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION_URL = "/runtime/exports/version.json";
+  const VERSION_URL = "https://admin.streamsuites.app/docs/runtime/exports/version.json";
   const VERSION_TIMEOUT_MS = 4000;
   let cachedVersionPromise = null;
 
