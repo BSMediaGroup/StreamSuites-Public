@@ -1256,6 +1256,9 @@
           <input id="signup-email" name="email" type="email" autocomplete="email" required />
           <label for="signup-password">Password</label>
           <input id="signup-password" name="password" type="password" autocomplete="new-password" required />
+          <label for="signup-confirm-password">Confirm password</label>
+          <input id="signup-confirm-password" name="confirmPassword" type="password" autocomplete="new-password" required />
+          <p class="muted auth-strength" data-auth-strength>Strength: Weak</p>
           <div class="auth-error" role="alert" aria-live="polite"></div>
           <button type="submit">Create account</button>
         </form>
@@ -1322,6 +1325,21 @@
       const CREATOR_DASHBOARD_URL = 'https://creator.streamsuites.app';
       const CREATOR_ONBOARDING_URL = 'https://creator.streamsuites.app/onboarding';
       const AUTH_API_BASE = 'https://api.streamsuites.app/auth';
+      const PASSWORD_MIN_LENGTH = 8;
+
+      const hasSpecialCharacter = (value) => /[^A-Za-z0-9]/.test(value);
+
+      const evaluatePasswordStrength = (password) => {
+        if (!password) return 'Weak';
+        let score = 0;
+        if (password.length >= PASSWORD_MIN_LENGTH) score += 1;
+        if (password.length >= 12) score += 1;
+        if (hasSpecialCharacter(password)) score += 1;
+        if (/[A-Z]/.test(password) && /[a-z]/.test(password) && /\d/.test(password)) score += 1;
+        if (score <= 1) return 'Weak';
+        if (score <= 3) return 'Moderate';
+        return 'Strong';
+      };
       const AUTH_TITLES = {
         login: {
           title: 'Log in to StreamSuites™',
@@ -1356,6 +1374,22 @@
         document.body.classList.remove('modal-open');
       };
 
+      const maybeOpenFromQuery = () => {
+        const params = new URLSearchParams(window.location.search);
+        const verified = params.get('verified');
+        const auth = params.get('auth');
+        if (verified === '1') {
+          openModal('login');
+          if (authSubtitle) {
+            authSubtitle.textContent = 'Email verified. Log in to continue.';
+          }
+          return;
+        }
+        if (auth === 'login' || auth === 'signup') {
+          openModal(auth);
+        }
+      };
+
       authTriggers.forEach((trigger) => {
         trigger.addEventListener('click', () => openModal(trigger.dataset.authTrigger));
       });
@@ -1376,6 +1410,8 @@
           closeModal();
         }
       });
+
+      maybeOpenFromQuery();
 
       const resolveRedirect = (payload) => {
         if (payload?.redirect_url) {
@@ -1399,12 +1435,23 @@
       };
 
       authForms.forEach((form) => {
+        const strengthEl = form.querySelector('[data-auth-strength]');
+        const passwordInput = form.querySelector('input[name="password"]');
+        if (strengthEl && passwordInput instanceof HTMLInputElement) {
+          const updateStrength = () => {
+            strengthEl.textContent = `Strength: ${evaluatePasswordStrength(passwordInput.value)}`;
+          };
+          passwordInput.addEventListener('input', updateStrength);
+          updateStrength();
+        }
+
         form.addEventListener('submit', async (event) => {
           event.preventDefault();
 
           const mode = form.dataset.authForm;
           const email = form.querySelector('input[name="email"]')?.value?.trim();
           const password = form.querySelector('input[name="password"]')?.value || '';
+          const confirmPassword = form.querySelector('input[name="confirmPassword"]')?.value || '';
           const submitButton = form.querySelector('button[type="submit"]');
 
           clearError(form);
@@ -1414,7 +1461,21 @@
             return;
           }
 
-          const endpoint = mode === 'signup' ? `${AUTH_API_BASE}/signup` : `${AUTH_API_BASE}/login`;
+          if (mode === 'signup') {
+            if (password.length < PASSWORD_MIN_LENGTH || !hasSpecialCharacter(password)) {
+              renderError(form, 'Passwords must be at least 8 characters and include a special character.');
+              return;
+            }
+            if (password !== confirmPassword) {
+              renderError(form, 'Passwords do not match.');
+              return;
+            }
+          }
+
+          const endpoint =
+            mode === 'signup'
+              ? `${AUTH_API_BASE}/signup/email`
+              : `${AUTH_API_BASE}/login/password`;
 
           if (submitButton) {
             submitButton.disabled = true;
@@ -1431,7 +1492,7 @@
               body: JSON.stringify({
                 email,
                 password,
-                surface: 'creator',
+                surface: mode === 'signup' ? 'public' : 'creator',
               }),
             });
 
@@ -1445,6 +1506,11 @@
             if (!response.ok) {
               const message = payload?.message || 'Unable to authenticate. Please check your details and try again.';
               renderError(form, message);
+              return;
+            }
+
+            if (payload?.verification_required) {
+              renderError(form, 'Check your email to verify your account before logging in.');
               return;
             }
 
