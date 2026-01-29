@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Diagonal Background Proof</title>
+  <style>
+    :root{
+      /* ====== TUNING KNOBS ====== */
+      --angle: -67deg;
+
+      /* Diagonal panel position (masked along --angle axis) */
+      --panel-start: 58%;
+      --panel-end: 86%;
+
+      /* Orange pinstripe */
+      --pin: rgba(185, 125, 72, 0.95);   /* ~#B97D48 */
+      --pin-soft: rgba(185, 125, 72, 0.35);
+
+      /* Base palette */
+      --ink: rgb(2, 2, 4);
+      --bg-deep: rgb(10, 10, 14);
+      --bg-mid: rgb(20, 20, 30);
+      --blue-haze: rgba(80, 86, 118, 0.55);
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--ink);
+    }
+
+    .bg {
+      position: relative;
+      min-height: 100vh;
+      overflow: hidden;
+
+      /* ====== BASE (left bluish haze + vignette + faint diagonal bands) ====== */
+      background:
+        /* subtle wide diagonal shading bands */
+        repeating-linear-gradient(
+          var(--angle),
+          rgba(255,255,255,0.035) 0px,
+          rgba(255,255,255,0.010) 120px,
+          rgba(0,0,0,0.045) 240px
+        ),
+        /* left-side blue haze bloom */
+        radial-gradient(
+          1100px 900px at 36% 50%,
+          var(--blue-haze) 0%,
+          rgba(80, 86, 118, 0.25) 28%,
+          rgba(20, 20, 30, 0.05) 55%,
+          rgba(2, 2, 4, 0.0) 72%
+        ),
+        /* global vignette / depth */
+        radial-gradient(
+          1400px 1100px at 60% 45%,
+          rgba(0,0,0,0.0) 0%,
+          rgba(0,0,0,0.25) 55%,
+          rgba(0,0,0,0.72) 100%
+        ),
+        linear-gradient(180deg, var(--bg-deep), var(--ink));
+    }
+
+    /* ====== DIAGONAL PANEL (masked region) ====== */
+    .bg::before{
+      content:"";
+      position:absolute;
+      inset: -20% -20%;
+      pointer-events:none;
+
+      /* The mask defines the diagonal panel band */
+      -webkit-mask-image: linear-gradient(
+        var(--angle),
+        transparent 0%,
+        transparent var(--panel-start),
+        #000 var(--panel-start),
+        #000 var(--panel-end),
+        transparent var(--panel-end),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        var(--angle),
+        transparent 0%,
+        transparent var(--panel-start),
+        #000 var(--panel-start),
+        #000 var(--panel-end),
+        transparent var(--panel-end),
+        transparent 100%
+      );
+
+      /* Panel fill: dark glass + subtle internal diamond texture + mild diagonal sheen */
+      background:
+        /* big soft sheen across panel */
+        linear-gradient(
+          var(--angle),
+          rgba(0,0,0,0.72) 0%,
+          rgba(0,0,0,0.28) 38%,
+          rgba(0,0,0,0.60) 78%,
+          rgba(0,0,0,0.82) 100%
+        ),
+
+        /* faint “diamond” pattern (two crossed line sets) */
+        repeating-linear-gradient(
+          45deg,
+          rgba(255,255,255,0.035) 0px,
+          rgba(255,255,255,0.035) 2px,
+          rgba(255,255,255,0.0) 2px,
+          rgba(255,255,255,0.0) 86px
+        ),
+        repeating-linear-gradient(
+          -45deg,
+          rgba(255,255,255,0.030) 0px,
+          rgba(255,255,255,0.030) 2px,
+          rgba(255,255,255,0.0) 2px,
+          rgba(255,255,255,0.0) 86px
+        ),
+
+        /* subtle horizontal banding inside panel (very faint) */
+        repeating-linear-gradient(
+          180deg,
+          rgba(255,255,255,0.020) 0px,
+          rgba(255,255,255,0.010) 80px,
+          rgba(0,0,0,0.030) 160px
+        );
+      opacity: 1;
+    }
+
+    /* ====== ORANGE PINSTRIPES (panel edges) + overall noise ====== */
+    .bg::after{
+      content:"";
+      position:absolute;
+      inset: 0;
+      pointer-events:none;
+
+      background:
+        /* right-side edge pinstripe (and slight glow) */
+        linear-gradient(
+          var(--angle),
+          transparent 0%,
+          transparent calc(var(--panel-end) - 0.35%),
+          var(--pin) calc(var(--panel-end) - 0.35%),
+          var(--pin) calc(var(--panel-end) - 0.12%),
+          var(--pin-soft) calc(var(--panel-end) - 0.12%),
+          transparent var(--panel-end)
+        ),
+        /* left-side edge pinstripe (and slight glow) */
+        linear-gradient(
+          var(--angle),
+          transparent 0%,
+          transparent calc(var(--panel-start) - 0.35%),
+          var(--pin) calc(var(--panel-start) - 0.35%),
+          var(--pin) calc(var(--panel-start) - 0.12%),
+          var(--pin-soft) calc(var(--panel-start) - 0.12%),
+          transparent var(--panel-start)
+        ),
+
+        /* procedural film grain (SVG turbulence) */
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+
+      background-size:
+        cover,
+        cover,
+        260px 260px;
+
+      /* grain strength */
+      opacity: 0.22;
+
+      /* keep pinstripes crisp even with grain layer present */
+      mix-blend-mode: normal;
+    }
+
+    /* Demo content area (optional) */
+    .demo {
+      position: relative;
+      z-index: 1;
+      height: 100vh;
+      display: grid;
+      place-items: center;
+      color: rgba(255,255,255,0.65);
+      font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      letter-spacing: 0.02em;
+      text-shadow: 0 1px 12px rgba(0,0,0,0.7);
+    }
+    .demo span{
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(6px);
+    }
+  </style>
+</head>
+<body>
+  <div class="bg">
+    <div class="demo"><span>CSS Proof of Concept — background only</span></div>
+  </div>
+</body>
+</html>
