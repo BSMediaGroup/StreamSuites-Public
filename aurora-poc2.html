@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Aurora POC – Dual Motif Test</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<style>
+:root {
+  --bg: #050507;
+
+  /* locked base palette */
+  --purple: rgba(140,121,255,0.85);
+  --magenta: rgba(193,130,255,0.8);
+  --blue: rgba(106,123,255,0.75);
+  --electric: rgba(155,145,255,0.7);
+
+  --line: rgba(255,255,255,0.22);
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  overflow: hidden;
+  font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+  color: white;
+}
+
+.stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+}
+
+/* ----------------------------------------------------
+   WORDMARK — TOP THIRD, +15% SCALE
+---------------------------------------------------- */
+.wordmark {
+  position: absolute;
+  top: 22%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  pointer-events: none;
+}
+
+.wordmark img {
+  width: clamp(320px, 44vw, 600px); /* +15% */
+  height: auto;
+  display: block;
+}
+
+/* ----------------------------------------------------
+   LEFT BRAND MOTIF
+---------------------------------------------------- */
+.logo-shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0.12;
+
+  background-image: url("./assets/backgrounds/ssframe-shine.svg");
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 85vh;
+}
+
+/* ----------------------------------------------------
+   RIGHT GRID MOTIF
+---------------------------------------------------- */
+.grid-motif {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 45%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 4;
+  opacity: 0.18;
+
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-position: right center;
+
+  /* fade inward */
+  mask-image: linear-gradient(
+    to left,
+    rgba(0,0,0,1) 0%,
+    rgba(0,0,0,0.7) 30%,
+    rgba(0,0,0,0.3) 55%,
+    rgba(0,0,0,0) 75%
+  );
+  -webkit-mask-image: linear-gradient(
+    to left,
+    rgba(0,0,0,1) 0%,
+    rgba(0,0,0,0.7) 30%,
+    rgba(0,0,0,0.3) 55%,
+    rgba(0,0,0,0) 75%
+  );
+}
+
+/* ----------------------------------------------------
+   AURORA FIELD
+---------------------------------------------------- */
+.aurora {
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.blob {
+  position: absolute;
+  width: 60vmax;
+  height: 60vmax;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.9;
+}
+
+.blob.purple {
+  background: var(--purple);
+  animation: moveA 12s linear infinite alternate;
+}
+
+.blob.magenta {
+  background: var(--magenta);
+  animation: moveB 14s linear infinite alternate;
+}
+
+.blob.blue {
+  background: var(--blue);
+  animation: moveC 10s linear infinite alternate;
+}
+
+.blob.purple.secondary {
+  background: var(--purple);
+  opacity: 0.6;
+  animation: moveD 16s linear infinite alternate;
+}
+
+.blob.accent {
+  background: var(--electric);
+  width: 42vmax;
+  height: 42vmax;
+  opacity: 0.55;
+  filter: blur(70px);
+  animation: moveE 9s linear infinite alternate;
+}
+
+/* MOTION PATHS */
+@keyframes moveA {
+  from { transform: translate(10vw, 60vh); }
+  to   { transform: translate(40vw, 20vh); }
+}
+@keyframes moveB {
+  from { transform: translate(60vw, 70vh); }
+  to   { transform: translate(20vw, 30vh); }
+}
+@keyframes moveC {
+  from { transform: translate(30vw, 80vh); }
+  to   { transform: translate(70vw, 35vh); }
+}
+@keyframes moveD {
+  from { transform: translate(80vw, 65vh); }
+  to   { transform: translate(50vw, 25vh); }
+}
+@keyframes moveE {
+  from { transform: translate(45vw, 75vh); }
+  to   { transform: translate(65vw, 45vh); }
+}
+
+/* ----------------------------------------------------
+   HEAVY BLACK FALLOFF — LOCKED
+---------------------------------------------------- */
+.fade {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,0.55) 25%,
+    rgba(0,0,0,0.82) 42%,
+    rgba(0,0,0,0.95) 58%,
+    rgba(0,0,0,0.99) 72%,
+    rgba(0,0,0,1) 100%
+  );
+}
+
+/* ----------------------------------------------------
+   CONTENT PLACEHOLDER
+---------------------------------------------------- */
+.content {
+  position: relative;
+  z-index: 10;
+  height: 100%;
+}
+</style>
+</head>
+
+<body>
+  <div class="stage">
+
+    <!-- Wordmark -->
+    <div class="wordmark">
+      <img src="./assets/logos/wordmarkchromefull.webp" alt="StreamSuites" />
+    </div>
+
+    <!-- Left motif -->
+    <div class="logo-shine"></div>
+
+    <!-- Right grid motif -->
+    <div class="grid-motif"></div>
+
+    <!-- Aurora -->
+    <div class="aurora">
+      <div class="blob purple"></div>
+      <div class="blob magenta"></div>
+      <div class="blob blue"></div>
+      <div class="blob purple secondary"></div>
+      <div class="blob accent"></div>
+    </div>
+
+    <!-- Black falloff -->
+    <div class="fade"></div>
+
+    <div class="content"></div>
+  </div>
+</body>
+</html>

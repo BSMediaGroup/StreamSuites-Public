@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>StreamSuites™ — Hero POC</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<style>
+:root {
+  --bg: #050507;
+
+  /* aurora palette */
+  --purple: rgba(140,121,255,0.85);
+  --magenta: rgba(193,130,255,0.8);
+  --blue: rgba(106,123,255,0.75);
+  --electric: rgba(155,145,255,0.7);
+
+  /* footer glass */
+  --glass-bg: rgba(18, 22, 28, 0.55);
+  --glass-border: rgba(255,255,255,0.16);
+  --text-muted: rgba(230,232,235,0.72);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  overflow: hidden;
+  font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+  color: #e6e8eb;
+}
+
+.stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+}
+
+/* ======================================================
+   WORDMARK
+====================================================== */
+.wordmark {
+  position: absolute;
+  top: 22%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  pointer-events: none;
+}
+
+.wordmark img {
+  width: clamp(320px, 44vw, 600px);
+  height: auto;
+}
+
+/* ======================================================
+   LEFT BRAND MOTIF
+====================================================== */
+.logo-shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0.12;
+
+  background-image: url("./assets/backgrounds/ssframe-shine.svg");
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 85vh;
+}
+
+/* ======================================================
+   RIGHT GRID MOTIF
+====================================================== */
+.grid-motif {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+  opacity: 0.18;
+
+  background-image:
+    linear-gradient(rgba(255,255,255,0.22) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.22) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-position: right top;
+
+  mask-image: linear-gradient(
+    to left,
+    rgba(0,0,0,1) 0%,
+    rgba(0,0,0,0.6) 35%,
+    rgba(0,0,0,0) 65%
+  );
+  -webkit-mask-image: linear-gradient(
+    to left,
+    rgba(0,0,0,1) 0%,
+    rgba(0,0,0,0.6) 35%,
+    rgba(0,0,0,0) 65%
+  );
+}
+
+/* ======================================================
+   AURORA
+====================================================== */
+.aurora {
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.blob {
+  position: absolute;
+  width: 60vmax;
+  height: 60vmax;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.9;
+}
+
+.blob.purple { background: var(--purple); animation: a 12s linear infinite alternate; }
+.blob.magenta { background: var(--magenta); animation: b 14s linear infinite alternate; }
+.blob.blue { background: var(--blue); animation: c 10s linear infinite alternate; }
+.blob.secondary { background: var(--purple); opacity: 0.6; animation: d 16s linear infinite alternate; }
+.blob.accent {
+  background: var(--electric);
+  width: 42vmax;
+  height: 42vmax;
+  opacity: 0.55;
+  filter: blur(70px);
+  animation: e 9s linear infinite alternate;
+}
+
+@keyframes a { from { transform: translate(10vw,60vh);} to { transform: translate(40vw,20vh);} }
+@keyframes b { from { transform: translate(60vw,70vh);} to { transform: translate(20vw,30vh);} }
+@keyframes c { from { transform: translate(30vw,80vh);} to { transform: translate(70vw,35vh);} }
+@keyframes d { from { transform: translate(80vw,65vh);} to { transform: translate(50vw,25vh);} }
+@keyframes e { from { transform: translate(45vw,75vh);} to { transform: translate(65vw,45vh);} }
+
+/* ======================================================
+   BLACK FALLOFF
+====================================================== */
+.fade {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,0.55) 25%,
+    rgba(0,0,0,0.82) 42%,
+    rgba(0,0,0,0.95) 58%,
+    rgba(0,0,0,0.99) 72%,
+    rgba(0,0,0,1) 100%
+  );
+}
+
+/* ======================================================
+   SLIM PLATFORM FOOTER MARQUEE
+====================================================== */
+.platform-footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 64px;
+  z-index: 15;
+
+  background: var(--glass-bg);
+  border-top: 1px solid var(--glass-border);
+  backdrop-filter: blur(18px);
+  overflow: hidden;
+}
+
+.platform-track {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  width: max-content;
+  gap: 36px;
+  padding: 0 36px;
+
+  animation: scroll 42s linear infinite;
+}
+
+.platform {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.platform img {
+  height: 20px;
+  width: auto;
+  opacity: 0.7;
+  filter: grayscale(1) brightness(1.15);
+}
+
+@keyframes scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+</style>
+</head>
+
+<body>
+<div class="stage">
+
+  <div class="wordmark">
+    <img src="./assets/logos/wordmarkchromefull.webp" alt="StreamSuites™" />
+  </div>
+
+  <div class="logo-shine"></div>
+  <div class="grid-motif"></div>
+
+  <div class="aurora">
+    <div class="blob purple"></div>
+    <div class="blob magenta"></div>
+    <div class="blob blue"></div>
+    <div class="blob secondary"></div>
+    <div class="blob accent"></div>
+  </div>
+
+  <div class="fade"></div>
+
+  <div class="platform-footer">
+    <div class="platform-track">
+      <div class="platform"><img src="/assets/icons/rumble-silver.svg">Rumble</div>
+      <div class="platform"><img src="/assets/icons/youtube-silver.svg">YouTube</div>
+      <div class="platform"><img src="/assets/icons/twitch-silver.svg">Twitch</div>
+      <div class="platform"><img src="/assets/icons/kick-silver.svg">Kick</div>
+      <div class="platform"><img src="/assets/icons/discord-silver.svg">Discord</div>
+      <div class="platform"><img src="/assets/icons/obs-silver.svg">OBS</div>
+
+      <!-- duplicate for seamless loop -->
+      <div class="platform"><img src="/assets/icons/rumble-silver.svg">Rumble</div>
+      <div class="platform"><img src="/assets/icons/youtube-silver.svg">YouTube</div>
+      <div class="platform"><img src="/assets/icons/twitch-silver.svg">Twitch</div>
+      <div class="platform"><img src="/assets/icons/kick-silver.svg">Kick</div>
+      <div class="platform"><img src="/assets/icons/discord-silver.svg">Discord</div>
+      <div class="platform"><img src="/assets/icons/obs-silver.svg">OBS</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
