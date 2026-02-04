@@ -16,9 +16,9 @@
   --electric: rgba(155,145,255,0.7);
 
   /* footer glass */
-  --glass-bg: rgba(18, 22, 28, 0.55);
-  --glass-border: rgba(255,255,255,0.16);
-  --text-muted: rgba(230,232,235,0.72);
+  --glass-bg: rgba(18,22,28,0.48);
+  --glass-border: rgba(255,255,255,0.14);
+  --text-muted: rgba(230,232,235,0.68);
 }
 
 * { box-sizing: border-box; }
@@ -52,7 +52,7 @@ html, body {
 }
 
 .wordmark img {
-  width: clamp(320px, 44vw, 600px);
+  width: clamp(360px, 50vw, 690px);
   height: auto;
 }
 
@@ -80,7 +80,7 @@ html, body {
   inset: 0;
   pointer-events: none;
   z-index: 4;
-  opacity: 0.18;
+  opacity: 0.16;
 
   background-image:
     linear-gradient(rgba(255,255,255,0.22) 1px, transparent 1px),
@@ -91,14 +91,14 @@ html, body {
   mask-image: linear-gradient(
     to left,
     rgba(0,0,0,1) 0%,
-    rgba(0,0,0,0.6) 35%,
-    rgba(0,0,0,0) 65%
+    rgba(0,0,0,0.55) 38%,
+    rgba(0,0,0,0) 68%
   );
   -webkit-mask-image: linear-gradient(
     to left,
     rgba(0,0,0,1) 0%,
-    rgba(0,0,0,0.6) 35%,
-    rgba(0,0,0,0) 65%
+    rgba(0,0,0,0.55) 38%,
+    rgba(0,0,0,0) 68%
   );
 }
 
@@ -159,31 +159,53 @@ html, body {
 }
 
 /* ======================================================
-   SLIM PLATFORM FOOTER MARQUEE
+   PLATFORM FOOTER (SLIM, SHIFT/HOLD)
 ====================================================== */
 .platform-footer {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 64px;
+  height: 36px;
   z-index: 15;
 
   background: var(--glass-bg);
   border-top: 1px solid var(--glass-border);
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(16px);
+
   overflow: hidden;
+}
+
+.platform-mask {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+
+  mask-image: linear-gradient(
+    to right,
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,1) 12%,
+    rgba(0,0,0,1) 88%,
+    rgba(0,0,0,0) 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,1) 12%,
+    rgba(0,0,0,1) 88%,
+    rgba(0,0,0,0) 100%
+  );
 }
 
 .platform-track {
   display: flex;
   align-items: center;
   height: 100%;
+  gap: 56px;
+  padding: 0 56px;
   width: max-content;
-  gap: 36px;
-  padding: 0 36px;
 
-  animation: scroll 42s linear infinite;
+  animation: shiftHold 24s cubic-bezier(0.4,0,0.2,1) infinite;
 }
 
 .platform {
@@ -191,22 +213,43 @@ html, body {
   align-items: center;
   gap: 10px;
   white-space: nowrap;
-  font-size: 12px;
-  letter-spacing: 0.14em;
+  font-size: 11px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
 
 .platform img {
-  height: 20px;
+  height: 18px;
   width: auto;
-  opacity: 0.7;
+  opacity: 0.65;
   filter: grayscale(1) brightness(1.15);
 }
 
-@keyframes scroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+@keyframes shiftHold {
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(-20%); }
+  35%  { transform: translateX(-20%); }
+  55%  { transform: translateX(-40%); }
+  70%  { transform: translateX(-40%); }
+  90%  { transform: translateX(-60%); }
+  100% { transform: translateX(-60%); }
+}
+
+/* ======================================================
+   COPYRIGHT / VERSION
+====================================================== */
+.meta-stamp {
+  position: absolute;
+  right: 14px;
+  bottom: 42px;
+  z-index: 18;
+
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(230,232,235,0.55);
+  pointer-events: none;
 }
 </style>
 </head>
@@ -231,22 +274,27 @@ html, body {
 
   <div class="fade"></div>
 
-  <div class="platform-footer">
-    <div class="platform-track">
-      <div class="platform"><img src="/assets/icons/rumble-silver.svg">Rumble</div>
-      <div class="platform"><img src="/assets/icons/youtube-silver.svg">YouTube</div>
-      <div class="platform"><img src="/assets/icons/twitch-silver.svg">Twitch</div>
-      <div class="platform"><img src="/assets/icons/kick-silver.svg">Kick</div>
-      <div class="platform"><img src="/assets/icons/discord-silver.svg">Discord</div>
-      <div class="platform"><img src="/assets/icons/obs-silver.svg">OBS</div>
+  <div class="meta-stamp">
+    © 2026 Brainstream Media Group · v0.3.0-alpha
+  </div>
 
-      <!-- duplicate for seamless loop -->
-      <div class="platform"><img src="/assets/icons/rumble-silver.svg">Rumble</div>
-      <div class="platform"><img src="/assets/icons/youtube-silver.svg">YouTube</div>
-      <div class="platform"><img src="/assets/icons/twitch-silver.svg">Twitch</div>
-      <div class="platform"><img src="/assets/icons/kick-silver.svg">Kick</div>
-      <div class="platform"><img src="/assets/icons/discord-silver.svg">Discord</div>
-      <div class="platform"><img src="/assets/icons/obs-silver.svg">OBS</div>
+  <div class="platform-footer">
+    <div class="platform-mask">
+      <div class="platform-track">
+        <div class="platform"><img src="/assets/icons/rumble-silver.svg">Rumble</div>
+        <div class="platform"><img src="/assets/icons/youtube-silver.svg">YouTube</div>
+        <div class="platform"><img src="/assets/icons/twitch-silver.svg">Twitch</div>
+        <div class="platform"><img src="/assets/icons/kick-silver.svg">Kick</div>
+        <div class="platform"><img src="/assets/icons/discord-silver.svg">Discord</div>
+        <div class="platform"><img src="/assets/icons/obs-silver.svg">OBS</div>
+
+        <div class="platform"><img src="/assets/icons/rumble-silver.svg">Rumble</div>
+        <div class="platform"><img src="/assets/icons/youtube-silver.svg">YouTube</div>
+        <div class="platform"><img src="/assets/icons/twitch-silver.svg">Twitch</div>
+        <div class="platform"><img src="/assets/icons/kick-silver.svg">Kick</div>
+        <div class="platform"><img src="/assets/icons/discord-silver.svg">Discord</div>
+        <div class="platform"><img src="/assets/icons/obs-silver.svg">OBS</div>
+      </div>
     </div>
   </div>
 
