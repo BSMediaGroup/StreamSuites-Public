@@ -9,13 +9,11 @@
 :root {
   --bg: #050507;
 
-  /* aurora palette */
   --purple: rgba(140,121,255,0.85);
   --magenta: rgba(193,130,255,0.8);
   --blue: rgba(106,123,255,0.75);
   --electric: rgba(155,145,255,0.7);
 
-  /* footer glass */
   --glass-bg: rgba(18,22,28,0.48);
   --glass-border: rgba(255,255,255,0.14);
   --text-muted: rgba(230,232,235,0.68);
@@ -29,19 +27,15 @@ html, body {
   background: var(--bg);
   overflow: hidden;
   font-family: system-ui, -apple-system, Segoe UI, sans-serif;
-  color: #e6e8eb;
 }
 
 .stage {
   position: relative;
   width: 100%;
   height: 100%;
-  background: var(--bg);
 }
 
-/* ======================================================
-   WORDMARK
-====================================================== */
+/* ---------------- WORDMARK ---------------- */
 .wordmark {
   position: absolute;
   top: 22%;
@@ -53,62 +47,37 @@ html, body {
 
 .wordmark img {
   width: clamp(360px, 50vw, 690px);
-  height: auto;
 }
 
-/* ======================================================
-   LEFT BRAND MOTIF
-====================================================== */
+/* ---------------- MOTIFS ---------------- */
 .logo-shine {
   position: absolute;
   inset: 0;
-  pointer-events: none;
   z-index: 5;
   opacity: 0.12;
-
-  background-image: url("./assets/backgrounds/ssframe-shine.svg");
-  background-repeat: no-repeat;
-  background-position: left center;
-  background-size: 85vh;
+  background: url("./assets/backgrounds/ssframe-shine.svg") no-repeat left center / 85vh;
+  pointer-events: none;
 }
 
-/* ======================================================
-   RIGHT GRID MOTIF
-====================================================== */
 .grid-motif {
   position: absolute;
   inset: 0;
-  pointer-events: none;
   z-index: 4;
   opacity: 0.16;
-
   background-image:
     linear-gradient(rgba(255,255,255,0.22) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,0.22) 1px, transparent 1px);
   background-size: 48px 48px;
   background-position: right top;
-
-  mask-image: linear-gradient(
-    to left,
-    rgba(0,0,0,1) 0%,
-    rgba(0,0,0,0.55) 38%,
-    rgba(0,0,0,0) 68%
-  );
-  -webkit-mask-image: linear-gradient(
-    to left,
-    rgba(0,0,0,1) 0%,
-    rgba(0,0,0,0.55) 38%,
-    rgba(0,0,0,0) 68%
-  );
+  mask-image: linear-gradient(to left, black 0%, black 40%, transparent 70%);
+  -webkit-mask-image: linear-gradient(to left, black 0%, black 40%, transparent 70%);
+  pointer-events: none;
 }
 
-/* ======================================================
-   AURORA
-====================================================== */
+/* ---------------- AURORA ---------------- */
 .aurora {
   position: absolute;
   inset: -20%;
-  pointer-events: none;
   z-index: 1;
 }
 
@@ -118,20 +87,19 @@ html, body {
   height: 60vmax;
   border-radius: 50%;
   filter: blur(90px);
-  opacity: 0.9;
 }
 
-.blob.purple { background: var(--purple); animation: a 12s linear infinite alternate; }
-.blob.magenta { background: var(--magenta); animation: b 14s linear infinite alternate; }
-.blob.blue { background: var(--blue); animation: c 10s linear infinite alternate; }
-.blob.secondary { background: var(--purple); opacity: 0.6; animation: d 16s linear infinite alternate; }
+.blob.purple { background: var(--purple); animation: a 12s infinite alternate; }
+.blob.magenta { background: var(--magenta); animation: b 14s infinite alternate; }
+.blob.blue { background: var(--blue); animation: c 10s infinite alternate; }
+.blob.secondary { background: var(--purple); opacity: 0.6; animation: d 16s infinite alternate; }
 .blob.accent {
   background: var(--electric);
   width: 42vmax;
   height: 42vmax;
-  opacity: 0.55;
   filter: blur(70px);
-  animation: e 9s linear infinite alternate;
+  opacity: 0.55;
+  animation: e 9s infinite alternate;
 }
 
 @keyframes a { from { transform: translate(10vw,60vh);} to { transform: translate(40vw,20vh);} }
@@ -140,27 +108,26 @@ html, body {
 @keyframes d { from { transform: translate(80vw,65vh);} to { transform: translate(50vw,25vh);} }
 @keyframes e { from { transform: translate(45vw,75vh);} to { transform: translate(65vw,45vh);} }
 
-/* ======================================================
-   BLACK FALLOFF
-====================================================== */
+/* ---------------- FALLOFF ---------------- */
 .fade {
   position: absolute;
   inset: 0;
   z-index: 2;
-  background: linear-gradient(
-    to top,
-    rgba(0,0,0,0) 0%,
-    rgba(0,0,0,0.55) 25%,
-    rgba(0,0,0,0.82) 42%,
-    rgba(0,0,0,0.95) 58%,
-    rgba(0,0,0,0.99) 72%,
-    rgba(0,0,0,1) 100%
-  );
+  background: linear-gradient(to top, transparent 0%, rgba(0,0,0,1) 100%);
 }
 
-/* ======================================================
-   PLATFORM FOOTER (SLIM, SHIFT/HOLD)
-====================================================== */
+/* ---------------- META ---------------- */
+.meta-stamp {
+  position: absolute;
+  right: 14px;
+  bottom: 42px;
+  z-index: 18;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: rgba(230,232,235,0.55);
+}
+
+/* ---------------- FOOTER MARQUEE ---------------- */
 .platform-footer {
   position: absolute;
   left: 0;
@@ -168,88 +135,44 @@ html, body {
   bottom: 0;
   height: 36px;
   z-index: 15;
-
   background: var(--glass-bg);
   border-top: 1px solid var(--glass-border);
   backdrop-filter: blur(16px);
-
   overflow: hidden;
 }
 
 .platform-mask {
-  height: 100%;
   width: 100%;
-  overflow: hidden;
-
-  mask-image: linear-gradient(
-    to right,
-    rgba(0,0,0,0) 0%,
-    rgba(0,0,0,1) 12%,
-    rgba(0,0,0,1) 88%,
-    rgba(0,0,0,0) 100%
-  );
-  -webkit-mask-image: linear-gradient(
-    to right,
-    rgba(0,0,0,0) 0%,
-    rgba(0,0,0,1) 12%,
-    rgba(0,0,0,1) 88%,
-    rgba(0,0,0,0) 100%
-  );
+  height: 100%;
+  mask-image: linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%);
 }
 
 .platform-track {
   display: flex;
   align-items: center;
   height: 100%;
-  gap: 56px;
-  padding: 0 56px;
-  width: max-content;
-
-  animation: shiftHold 24s cubic-bezier(0.4,0,0.2,1) infinite;
+  gap: 84px; /* INCREASED SPACING */
+  padding: 0 84px;
+  position: absolute;
+  will-change: transform;
 }
 
 .platform {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  white-space: nowrap;
   font-size: 11px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .platform img {
   height: 18px;
-  width: auto;
   opacity: 0.65;
   filter: grayscale(1) brightness(1.15);
-}
-
-@keyframes shiftHold {
-  0%   { transform: translateX(0); }
-  20%  { transform: translateX(-20%); }
-  35%  { transform: translateX(-20%); }
-  55%  { transform: translateX(-40%); }
-  70%  { transform: translateX(-40%); }
-  90%  { transform: translateX(-60%); }
-  100% { transform: translateX(-60%); }
-}
-
-/* ======================================================
-   COPYRIGHT / VERSION
-====================================================== */
-.meta-stamp {
-  position: absolute;
-  right: 14px;
-  bottom: 42px;
-  z-index: 18;
-
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(230,232,235,0.55);
-  pointer-events: none;
 }
 </style>
 </head>
@@ -258,7 +181,7 @@ html, body {
 <div class="stage">
 
   <div class="wordmark">
-    <img src="./assets/logos/wordmarkchromefull.webp" alt="StreamSuites™" />
+    <img src="./assets/logos/wordmarkchromefull.webp" alt="StreamSuites™">
   </div>
 
   <div class="logo-shine"></div>
@@ -280,14 +203,7 @@ html, body {
 
   <div class="platform-footer">
     <div class="platform-mask">
-      <div class="platform-track">
-        <div class="platform"><img src="/assets/icons/rumble-silver.svg">Rumble</div>
-        <div class="platform"><img src="/assets/icons/youtube-silver.svg">YouTube</div>
-        <div class="platform"><img src="/assets/icons/twitch-silver.svg">Twitch</div>
-        <div class="platform"><img src="/assets/icons/kick-silver.svg">Kick</div>
-        <div class="platform"><img src="/assets/icons/discord-silver.svg">Discord</div>
-        <div class="platform"><img src="/assets/icons/obs-silver.svg">OBS</div>
-
+      <div class="platform-track" id="trackA">
         <div class="platform"><img src="/assets/icons/rumble-silver.svg">Rumble</div>
         <div class="platform"><img src="/assets/icons/youtube-silver.svg">YouTube</div>
         <div class="platform"><img src="/assets/icons/twitch-silver.svg">Twitch</div>
@@ -295,9 +211,79 @@ html, body {
         <div class="platform"><img src="/assets/icons/discord-silver.svg">Discord</div>
         <div class="platform"><img src="/assets/icons/obs-silver.svg">OBS</div>
       </div>
+      <div class="platform-track" id="trackB"></div>
     </div>
   </div>
 
 </div>
+
+<script>
+(() => {
+  const trackA = document.getElementById('trackA');
+  const trackB = document.getElementById('trackB');
+
+  // duplicate content for seamless wrap
+  trackB.innerHTML = trackA.innerHTML;
+
+  const items = Array.from(trackA.children);
+  const itemCount = items.length;
+
+  let currentIndex = 0;
+
+  function getItemCenterOffset(index) {
+    const item = items[index];
+    const trackRect = trackA.getBoundingClientRect();
+    const itemRect = item.getBoundingClientRect();
+
+    const trackCenter = trackRect.width / 2;
+    const itemCenter =
+      item.offsetLeft + item.offsetWidth / 2;
+
+    return trackCenter - itemCenter;
+  }
+
+  function moveToIndex(index) {
+    const offset = getItemCenterOffset(index);
+
+    trackA.style.transition =
+      'transform 420ms cubic-bezier(0.22, 1, 0.36, 1)';
+    trackB.style.transition =
+      'transform 420ms cubic-bezier(0.22, 1, 0.36, 1)';
+
+    trackA.style.transform = `translateX(${offset}px)`;
+    trackB.style.transform = `translateX(${offset + trackA.offsetWidth}px)`;
+  }
+
+  function step() {
+    moveToIndex(currentIndex);
+
+    currentIndex++;
+
+    if (currentIndex >= itemCount) {
+      currentIndex = 0;
+
+      // after the animation completes, hard-reset transforms
+      // so the loop remains invisible
+      setTimeout(() => {
+        trackA.style.transition = 'none';
+        trackB.style.transition = 'none';
+
+        trackA.style.transform = 'translateX(0)';
+        trackB.style.transform = `translateX(${trackA.offsetWidth}px)`;
+      }, 460);
+    }
+
+    setTimeout(step, 2200); // HOLD TIME
+  }
+
+  // init positions
+  trackA.style.transform = 'translateX(0)';
+  trackB.style.transform = `translateX(${trackA.offsetWidth}px)`;
+
+  // start after initial settle
+  setTimeout(step, 1200);
+})();
+</script>
+
 </body>
 </html>
