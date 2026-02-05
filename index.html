@@ -24,7 +24,7 @@
 
       <p class="hero-about">
         StreamSuites is a modular livestream automation and interaction platform built for creators who demand
-        reliability, control, and scale. <a href="#more">See more</a>
+        reliability, control, and scale. <a href="#more" data-about-toggle>See more</a>
       </p>
 
       <div class="platform-stack" aria-label="Supported platforms">
@@ -61,6 +61,24 @@
         <p class="cta-signup">No account? <button type="button" data-auth-trigger="signup">sign up</button> in seconds!</p>
       </div>
     </main>
+
+    <section class="about-panel" aria-label="About StreamSuites">
+      <p class="about-eyebrow muted">About StreamSuites</p>
+      <h2 class="about-title">Automation that stays out of your way.</h2>
+      <p class="about-body muted">
+        Orchestrate overlays, chat interactions, and real-time graphics from a single control surface. StreamSuites
+        connects your tools, normalizes your data, and keeps your stream consistent under pressure.
+      </p>
+      <div class="about-placeholder">
+        <div class="about-placeholder-frame"></div>
+        <div class="about-placeholder-note muted">Product showcase placeholder</div>
+      </div>
+      <div class="about-points muted">
+        <span>Modular scenes</span>
+        <span>Live audience input</span>
+        <span>Broadcast-grade reliability</span>
+      </div>
+    </section>
 
     <div class="logo-shine"></div>
     <div class="grid-motif"></div>
@@ -605,5 +623,16 @@
   <script src="/js/utils/versioning.js"></script>
   <script src="/js/utils/version-stamp.js"></script>
   <script src="/js/status-widget.js" defer></script>
+
+  <script>
+    (function () {
+      const toggle = document.querySelector('[data-about-toggle]');
+      if (!toggle) return;
+      toggle.addEventListener('click', (event) => {
+        event.preventDefault();
+        document.body.classList.toggle('about-open');
+      });
+    })();
+  </script>
 </body>
 </html>

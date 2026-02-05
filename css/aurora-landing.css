@@ -67,6 +67,13 @@ textarea {
   text-align: center;
   gap: 18px;
   width: min(860px, 92vw);
+  transition:
+    top 0.65s ease,
+    left 0.65s ease,
+    transform 0.65s ease,
+    width 0.65s ease,
+    gap 0.65s ease;
+  will-change: transform, top, left, width;
 }
 
 .wordmark {
@@ -76,6 +83,8 @@ textarea {
 .wordmark img {
   width: clamp(352px, 49vw, 674px);
   height: auto;
+  transform-origin: left bottom;
+  transition: transform 0.65s ease;
 }
 
 .hero-about {
@@ -84,6 +93,9 @@ textarea {
   font-size: 13px;
   line-height: 1.55;
   color: var(--text-muted);
+  max-height: 160px;
+  overflow: hidden;
+  transition: opacity 0.45s ease, transform 0.6s ease, max-height 0.65s ease;
 }
 
 .hero-about a {
@@ -111,6 +123,9 @@ textarea {
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  max-height: 140px;
+  overflow: hidden;
+  transition: opacity 0.45s ease, transform 0.6s ease, max-height 0.65s ease;
 }
 
 .platform-label {
@@ -214,6 +229,7 @@ textarea {
   align-items: center;
   gap: 14px;
   margin-top: 12px;
+  transition: transform 0.6s ease;
 }
 
 .cta-primary-wrap {
@@ -290,6 +306,9 @@ textarea {
   margin: 0;
   font-size: 12px;
   color: rgba(230,232,235,0.6);
+  max-height: 40px;
+  overflow: hidden;
+  transition: opacity 0.45s ease, transform 0.6s ease, max-height 0.65s ease;
 }
 
 .cta-signup button {
@@ -347,6 +366,11 @@ textarea {
     rgba(0,0,0,0.55) 38%,
     rgba(0,0,0,0) 68%
   );
+  transition:
+    transform 0.65s ease,
+    opacity 0.65s ease,
+    background-position 0.65s ease,
+    background-size 0.65s ease;
 }
 
 /* ======================================================
@@ -357,6 +381,7 @@ textarea {
   inset: -20%;
   pointer-events: none;
   z-index: 1;
+  transition: transform 0.65s ease;
 }
 
 .blob {
@@ -421,6 +446,145 @@ textarea {
   width: max-content;
   max-width: calc(100% - (var(--footer-padding-x) * 2));
   transform: translateX(-50%);
+  transition: opacity 0.45s ease, transform 0.6s ease;
+}
+
+/* ======================================================
+   ABOUT PANEL (MORPH TARGET)
+====================================================== */
+.about-panel {
+  position: absolute;
+  top: clamp(12%, 14vh, 22%);
+  right: clamp(28px, 6vw, 80px);
+  width: min(520px, 40vw);
+  z-index: 19;
+  opacity: 0;
+  transform: translateX(36px) translateY(8px);
+  pointer-events: none;
+  transition: opacity 0.55s ease, transform 0.65s ease;
+}
+
+.about-eyebrow {
+  margin: 0 0 10px;
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.about-title {
+  margin: 0 0 12px;
+  font-size: clamp(22px, 3.2vw, 30px);
+}
+
+.about-body {
+  margin: 0 0 18px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.about-placeholder {
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.16);
+  padding: 18px;
+  background: rgba(12, 15, 20, 0.48);
+  box-shadow: inset 0 0 16px rgba(255,255,255,0.06);
+  margin-bottom: 14px;
+}
+
+.about-placeholder-frame {
+  height: 180px;
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, rgba(140,121,255,0.16), rgba(106,123,255,0.08)),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255,255,255,0.08) 0,
+      rgba(255,255,255,0.08) 12px,
+      rgba(255,255,255,0) 12px,
+      rgba(255,255,255,0) 24px
+    );
+}
+
+.about-placeholder-note {
+  margin: 10px 0 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.about-points {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ======================================================
+   MORPH STATE
+====================================================== */
+body.about-open .hero {
+  top: auto;
+  left: clamp(28px, 6vw, 72px);
+  bottom: calc(var(--footer-bar-height) + 78px);
+  transform: none;
+  width: min(520px, 86vw);
+  align-items: flex-start;
+  text-align: left;
+  gap: 12px;
+}
+
+body.about-open .wordmark {
+  order: 2;
+}
+
+body.about-open .wordmark img {
+  transform: scale(0.62);
+}
+
+body.about-open .cta-block {
+  order: 1;
+  transform: translateY(8px);
+  align-items: flex-start;
+}
+
+body.about-open .cta-signup {
+  opacity: 0;
+  transform: translateY(6px);
+  max-height: 0;
+  pointer-events: none;
+}
+
+body.about-open .hero-about,
+body.about-open .platform-stack {
+  opacity: 0;
+  transform: translateY(10px);
+  max-height: 0;
+  pointer-events: none;
+}
+
+body.about-open .secondary-pills {
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px);
+  pointer-events: none;
+}
+
+body.about-open .about-panel {
+  opacity: 1;
+  transform: translateX(0) translateY(0);
+  pointer-events: auto;
+}
+
+body.about-open .aurora {
+  transform: translateY(15%);
+}
+
+body.about-open .grid-motif {
+  transform: skewY(-10deg) scale(1.04);
+  opacity: 0.22;
+  background-size: 42px 42px;
+  background-position: right -40px top 40px;
 }
 
 .secondary-pills a {
@@ -833,6 +997,8 @@ body.modal-open { overflow: hidden; }
 @media (max-width: 900px) {
   .hero { top: calc(50% - (var(--footer-bar-height) / 2) - 4px); }
   .platform-strip { width: min(86vw, 680px); }
+  .about-panel { width: min(560px, 70vw); }
+  body.about-open .hero { bottom: calc(var(--footer-bar-height) + 64px); }
 }
 
 @media (max-width: 640px) {
@@ -842,4 +1008,39 @@ body.modal-open { overflow: hidden; }
   .footer-links { gap: 10px; flex-wrap: wrap; }
   .footer-bar { height: auto; padding: 10px var(--footer-padding-x); gap: 10px; flex-direction: column; align-items: flex-start; }
   .footer-meta { flex-wrap: wrap; }
+  .about-panel {
+    top: clamp(10%, 12vh, 18%);
+    left: 50%;
+    right: auto;
+    width: min(92vw, 520px);
+    transform: translateX(-50%) translateY(12px);
+    text-align: left;
+  }
+  body.about-open .about-panel {
+    transform: translateX(-50%) translateY(0);
+  }
+  body.about-open .hero {
+    left: 50%;
+    bottom: calc(var(--footer-bar-height) + 52px);
+    transform: translateX(-50%);
+    align-items: center;
+    text-align: center;
+  }
+  body.about-open .cta-block { align-items: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero,
+  .wordmark img,
+  .hero-about,
+  .platform-stack,
+  .cta-block,
+  .cta-signup,
+  .secondary-pills,
+  .about-panel,
+  .grid-motif,
+  .aurora {
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
 }
