@@ -35,7 +35,13 @@
   details.hidden = true;
 
   root.append(toggle, details);
-  document.body.appendChild(root);
+
+  const host = document.querySelector("[data-status-slot]");
+  if (host) {
+    host.appendChild(root);
+  } else {
+    document.body.appendChild(root);
+  }
 
   let userToggled = false;
 
