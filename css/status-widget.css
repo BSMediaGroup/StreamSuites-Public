@@ -10,6 +10,14 @@
   --ss-status-unknown: #9aa0a6;
 }
 
+body:not(.status-tooltip-legacy) {
+  --ss-status-text: #e6e8eb;
+  --ss-status-muted: #d6d9de;
+  --ss-status-panel: rgba(18, 22, 28, 0.88);
+  --ss-status-border: rgba(255, 255, 255, 0.18);
+  --ss-status-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+}
+
 .ss-status-indicator {
   position: fixed;
   right: 14px;
@@ -67,6 +75,15 @@
   background: var(--ss-status-panel);
   box-shadow: var(--ss-status-shadow);
   line-height: 1.45;
+}
+
+body:not(.status-tooltip-legacy) .ss-status-details {
+  border-radius: 16px;
+  backdrop-filter: blur(14px);
+  box-shadow:
+    var(--ss-status-shadow),
+    inset 0 0 10px rgba(255, 255, 255, 0.15);
+  font-size: 11px;
 }
 
 .ss-status-summary {

@@ -377,6 +377,13 @@ textarea {
   gap: 0;
 }
 
+@supports selector(:has(*)) {
+  .footer-shell:has(.footer-version-tooltip-container:hover),
+  .footer-shell:has(.footer-version-tooltip-container:focus-within) {
+    z-index: 1400;
+  }
+}
+
 .footer-status {
   padding: 0 var(--footer-padding-x) 8px;
   display: flex;
@@ -464,7 +471,7 @@ textarea {
   transition:
     opacity 0.3s ease,
     transform 0.3s ease;
-  z-index: 20;
+  z-index: 1400;
 }
 
 .footer-version-tooltip::after {
