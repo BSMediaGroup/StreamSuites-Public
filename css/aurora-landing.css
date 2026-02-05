@@ -115,13 +115,13 @@ textarea {
   letter-spacing: 0.38em;
   text-transform: uppercase;
   color: rgba(230,232,235,0.38);
-  margin: 6px 0 8px;
+  margin: 6px 0 6px;
 }
 
 .platform-label::before,
 .platform-label::after {
   content: "";
-  flex: 1;
+  flex: 0.8;
   height: 1px;
   background: linear-gradient(
     to right,
