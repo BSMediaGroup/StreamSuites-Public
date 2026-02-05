@@ -103,6 +103,7 @@ textarea {
 .platform-strip {
   width: clamp(320px, 58vw, 760px);
   height: 36px;
+  margin-top: -6px;
 }
 
 .platform-label {
@@ -115,7 +116,7 @@ textarea {
   letter-spacing: 0.38em;
   text-transform: uppercase;
   color: rgba(230,232,235,0.38);
-  margin: 6px 0 6px;
+  margin: 6px 0 8px;
 }
 
 .platform-label::before,
