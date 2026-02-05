@@ -391,7 +391,7 @@ textarea {
 .footer-links {
   display: flex;
   gap: 16px;
-  font-size: 10px;
+  font-size: 8px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
@@ -408,7 +408,7 @@ textarea {
 .footer-meta {
   display: flex;
   gap: 16px;
-  font-size: 9px;
+  font-size: 8px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -431,7 +431,7 @@ textarea {
 }
 
 .footer-status .ss-status-label {
-  font-size: 9px;
+  font-size: 8px;
 }
 
 .footer-status .ss-status-details {

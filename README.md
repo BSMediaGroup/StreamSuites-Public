@@ -31,8 +31,6 @@ StreamSuites-Public/
 │   ├── about_part2_platforms_interfaces.json
 │   └── about_part3_about_system_spec.json
 ├── assets
-│   ├── css
-│   │   └── aurora-landing.css
 │   ├── backgrounds
 │   │   ├── .gitkeep
 │   │   ├── seodash.jpg
@@ -275,6 +273,7 @@ StreamSuites-Public/
 ├── clips
 │   └── detail.html
 ├── css
+│   ├── aurora-landing.css
 │   ├── base.css
 │   ├── components.css
 │   ├── layout.css
