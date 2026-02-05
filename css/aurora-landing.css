@@ -428,6 +428,103 @@ textarea {
   color: rgba(230,232,235,0.9);
 }
 
+/* ======================================================
+   FOOTER VERSION TOOLTIP (MATCHES INDEX-OLD GLASS)
+====================================================== */
+.footer-version-tooltip-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.footer-version-tooltip {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 380px;
+  max-width: 520px;
+  white-space: nowrap;
+  background: rgba(18, 22, 28, 0.88);
+  color: #e6e8eb;
+  padding: 12px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(14px);
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: left;
+  letter-spacing: normal;
+  text-transform: none;
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.55),
+    inset 0 0 10px rgba(255, 255, 255, 0.15);
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+  z-index: 20;
+}
+
+.footer-version-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 8px;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.18) transparent transparent transparent;
+}
+
+.footer-version-tooltip-container:hover .footer-version-tooltip {
+  visibility: visible;
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.footer-version-tooltip.is-below {
+  top: 130%;
+  bottom: auto;
+}
+
+.footer-version-tooltip.is-below::after {
+  top: auto;
+  bottom: 100%;
+  border-color: transparent transparent rgba(255, 255, 255, 0.18) transparent;
+}
+
+.footer-version-tooltip-line {
+  color: #d6d9de;
+}
+
+.footer-version-tooltip-line + .footer-version-tooltip-line {
+  margin-top: 4px;
+}
+
+.footer-version-tooltip-link {
+  display: inline-flex;
+  margin-top: 8px;
+  font-size: 10px;
+  letter-spacing: normal;
+  text-transform: none;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.footer-version-tooltip-link:hover {
+  color: #ffffff;
+}
+
+@media (max-width: 640px) {
+  .footer-version-tooltip {
+    min-width: 0;
+    max-width: min(360px, calc(100vw - 32px));
+    white-space: normal;
+  }
+}
+
 /* Status widget layout override for footer placement */
 .footer-status .ss-status-indicator {
   position: relative;

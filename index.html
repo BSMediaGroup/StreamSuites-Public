@@ -92,7 +92,14 @@
           <a class="footer-copyright" href="https://brainstream.media" target="_blank" rel="noopener noreferrer">
             © 2026 Brainstream Media Group
           </a>
-          <a class="footer-version" href="/changelog">Loading version…</a>
+          <span class="footer-version-tooltip-container">
+            <a class="footer-version" href="/changelog" aria-describedby="footer-version-tooltip">Loading version…</a>
+            <div class="footer-version-tooltip" id="footer-version-tooltip" role="tooltip">
+              <div class="footer-version-tooltip-line" data-footer-version-tooltip="version">Loading version…</div>
+              <div class="footer-version-tooltip-line" data-footer-version-tooltip="build">Build …</div>
+              <a class="footer-version-tooltip-link" href="/changelog">View changelog</a>
+            </div>
+          </span>
         </div>
       </div>
     </div>
