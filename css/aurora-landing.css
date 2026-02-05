@@ -330,12 +330,14 @@ textarea {
 ====================================================== */
 .secondary-pills {
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
   bottom: calc(var(--footer-bar-height) + 18px);
   display: flex;
+  justify-content: center;
   gap: 10px;
   z-index: 18;
+  padding: 0 var(--footer-padding-x);
 }
 
 .secondary-pills a {
