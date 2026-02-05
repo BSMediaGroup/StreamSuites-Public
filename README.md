@@ -278,6 +278,7 @@ StreamSuites-Public/
 │   ├── layout.css
 │   ├── overrides.css
 │   ├── public-pages.css
+│   ├── status-widget.css
 │   ├── theme-dark.css
 │   └── updates.css
 ├── data
@@ -301,6 +302,7 @@ StreamSuites-Public/
 │   ├── public-polls.js
 │   ├── public-roadmap.js
 │   ├── public-tallies.js
+│   ├── status-widget.js
 │   ├── tally-detail.js
 │   └── utils
 │       ├── about-data.js
