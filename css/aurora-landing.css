@@ -330,7 +330,8 @@ textarea {
 ====================================================== */
 .secondary-pills {
   position: absolute;
-  left: var(--footer-padding-x);
+  left: 50%;
+  transform: translateX(-50%);
   bottom: calc(var(--footer-bar-height) + 18px);
   display: flex;
   gap: 10px;
@@ -342,8 +343,8 @@ textarea {
   align-items: center;
   padding: 6px 14px;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.16);
-  background: rgba(18,22,28,0.5);
+  border: 1px solid rgba(255,255,255,0.136);
+  background: rgba(18,22,28,0.425);
   color: rgba(230,232,235,0.8);
   font-size: 11px;
   letter-spacing: 0.14em;
