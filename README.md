@@ -31,6 +31,8 @@ StreamSuites-Public/
 │   ├── about_part2_platforms_interfaces.json
 │   └── about_part3_about_system_spec.json
 ├── assets
+│   ├── css
+│   │   └── aurora-landing.css
 │   ├── backgrounds
 │   │   ├── .gitkeep
 │   │   ├── seodash.jpg
@@ -329,6 +331,7 @@ StreamSuites-Public/
 ├── EULA.md
 ├── favicon.ico
 ├── index.html
+├── index-old.html
 ├── LICENSE
 ├── polls.html
 ├── postmortem.html
