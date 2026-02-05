@@ -17,6 +17,8 @@
 
 <body>
   <div class="stage">
+    <button class="about-back" type="button" data-about-back aria-label="Back to hero">Back</button>
+
     <main class="hero" aria-label="StreamSuites hero">
       <div class="wordmark">
         <img src="./assets/logos/wordmarkchromefull.webp" alt="StreamSuites™" />
@@ -64,24 +66,61 @@
 
     <section class="about-panel" aria-label="About StreamSuites">
       <p class="about-eyebrow muted">About StreamSuites</p>
-      <h2 class="about-title">Automation that stays out of your way.</h2>
-      <p class="about-body muted">
-        Orchestrate overlays, chat interactions, and real-time graphics from a single control surface. StreamSuites
-        connects your tools, normalizes your data, and keeps your stream consistent under pressure.
-      </p>
-      <div class="about-placeholder">
-        <div class="about-placeholder-frame"></div>
-        <div class="about-placeholder-note muted">Product showcase placeholder</div>
+      <div class="about-slides" data-about-slides>
+        <article class="about-slide is-active" data-about-slide="0">
+          <h2 class="about-title">Automation that stays out of your way.</h2>
+          <p class="about-body muted">
+            Orchestrate overlays, chat interactions, and real-time graphics from a single control surface.
+            StreamSuites connects your tools, normalizes your data, and keeps your stream consistent under pressure.
+          </p>
+          <div class="about-points muted">
+            <span>Modular scenes</span>
+            <span>Live audience input</span>
+            <span>Broadcast-grade reliability</span>
+          </div>
+        </article>
+
+        <article class="about-slide" data-about-slide="1" aria-hidden="true">
+          <h2 class="about-title">Build once. Deploy everywhere.</h2>
+          <p class="about-body muted">
+            Publish unified graphics across platforms without rebuilding your entire stack. Profiles keep each show
+            consistent while your runtime data stays live.
+          </p>
+          <div class="about-points muted">
+            <span>Scene templates</span>
+            <span>Multi-platform output</span>
+            <span>Live data sources</span>
+          </div>
+        </article>
+
+        <article class="about-slide" data-about-slide="2" aria-hidden="true">
+          <h2 class="about-title">Designed for control rooms.</h2>
+          <p class="about-body muted">
+            Run complex broadcasts with fewer operators. StreamSuites keeps automation predictable, while giving you
+            manual override when the moment calls for it.
+          </p>
+          <div class="about-points muted">
+            <span>Operator tools</span>
+            <span>Fail-safe routing</span>
+            <span>Latency aware</span>
+          </div>
+        </article>
       </div>
-      <div class="about-points muted">
-        <span>Modular scenes</span>
-        <span>Live audience input</span>
-        <span>Broadcast-grade reliability</span>
+
+      <div class="about-controls">
+        <div class="about-nav">
+          <button class="about-nav-button" type="button" data-about-prev>Prev</button>
+          <button class="about-nav-button" type="button" data-about-next>Next</button>
+        </div>
+        <a class="about-full-link" href="/about.html">Read the full About</a>
       </div>
     </section>
 
     <div class="logo-shine"></div>
     <div class="grid-motif"></div>
+    <img class="grid-shot grid-shot-1" src="/assets/placeholders/streamsuites.jpg" alt="" aria-hidden="true" />
+    <img class="grid-shot grid-shot-2" src="/assets/placeholders/hotdog.jpg" alt="" aria-hidden="true" />
+    <img class="grid-shot grid-shot-3" src="/assets/placeholders/daniel.png" alt="" aria-hidden="true" />
 
     <div class="aurora">
       <div class="blob purple"></div>
@@ -627,10 +666,47 @@
   <script>
     (function () {
       const toggle = document.querySelector('[data-about-toggle]');
+      const back = document.querySelector('[data-about-back]');
+      const slides = Array.from(document.querySelectorAll('[data-about-slide]'));
+      const prev = document.querySelector('[data-about-prev]');
+      const next = document.querySelector('[data-about-next]');
+
       if (!toggle) return;
-      toggle.addEventListener('click', (event) => {
-        event.preventDefault();
-        document.body.classList.toggle('about-open');
+
+      const setSlide = (index) => {
+        if (!slides.length) return;
+        const total = slides.length;
+        const nextIndex = ((index % total) + total) % total;
+        slides.forEach((slide, idx) => {
+          const isActive = idx === nextIndex;
+          slide.classList.toggle('is-active', isActive);
+          slide.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+        });
+      };
+
+      const showAbout = (event) => {
+        event?.preventDefault();
+        document.body.classList.add('about-open');
+      };
+
+      const hideAbout = () => {
+        document.body.classList.remove('about-open');
+      };
+
+      toggle.addEventListener('click', showAbout);
+      back?.addEventListener('click', hideAbout);
+
+      let activeIndex = 0;
+      setSlide(activeIndex);
+
+      prev?.addEventListener('click', () => {
+        activeIndex -= 1;
+        setSlide(activeIndex);
+      });
+
+      next?.addEventListener('click', () => {
+        activeIndex += 1;
+        setSlide(activeIndex);
       });
     })();
   </script>
