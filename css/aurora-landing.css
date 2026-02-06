@@ -632,13 +632,15 @@ body.about-open .about-back {
 ====================================================== */
 body.about-open .hero {
   top: auto;
-  left: clamp(16px, 5vw, 54px);
-  bottom: calc(var(--footer-bar-height) + 20px);
+  left: clamp(20px, 3vw, 44px);
+  bottom: calc(var(--footer-bar-height) + 12px);
   transform: none;
-  width: min(460px, 86vw);
-  align-items: flex-start;
+  width: auto;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
   text-align: left;
-  gap: 8px;
+  gap: 14px;
 }
 
 body.about-open {
@@ -646,21 +648,25 @@ body.about-open {
 }
 
 body.about-open .wordmark {
-  order: 2;
+  order: 1;
 }
 
 body.about-open .wordmark img {
-  transform: scale(0.56);
+  transform: scale(0.54);
 }
 
 body.about-open .cta-block {
-  order: 1;
-  transform: translateY(2px);
+  order: 2;
+  margin: 0 0 12px;
+  transform: none;
+  position: static;
   align-items: flex-start;
-  gap: 8px;
+  gap: 0;
+  z-index: auto;
 }
 
 body.about-open .cta-signup {
+  display: none;
   opacity: 0;
   transform: translateY(6px);
   max-height: 0;
@@ -669,6 +675,7 @@ body.about-open .cta-signup {
 
 body.about-open .hero-about,
 body.about-open .platform-stack {
+  display: none;
   opacity: 0;
   transform: translateY(10px);
   max-height: 0;
@@ -682,10 +689,10 @@ body.about-open .secondary-pills {
 }
 
 body.about-open .about-panel {
-  top: clamp(10%, 11vh, 17%);
-  left: clamp(158px, 16vw, 252px);
+  top: clamp(10%, 11vh, 16%);
+  left: clamp(20px, 3vw, 44px);
   right: auto;
-  width: min(560px, 43vw);
+  width: min(580px, 44vw);
   opacity: 1;
   transform: translateX(0) translateY(0);
   pointer-events: auto;
@@ -704,54 +711,55 @@ body.about-open .grid-motif {
 
 body.about-open .grid-shot {
   right: auto;
-  left: clamp(43%, 48vw, 56%);
-  top: clamp(8%, 10vh, 14%);
-  width: min(620px, 47vw);
+  left: clamp(47%, 53vw, 60%);
+  top: clamp(6%, 8vh, 12%);
+  width: min(560px, 42vw);
   transform-origin: left top;
-  opacity: 0;
+  opacity: 0.3;
   pointer-events: none;
   z-index: 24;
 }
 
 body.about-open .grid-shot.is-active {
-  opacity: 0.97;
+  opacity: 0.96;
+}
+
+body.about-open .grid-shot-2,
+body.about-open .grid-shot-3,
+body.about-open .grid-shot-4 {
+  width: min(560px, 42vw);
 }
 
 body.about-open .grid-shot-1 {
-  transform: var(--grid-plane-tilt) translate3d(-132px, 58px, 0) scale(0.94);
+  transform: translate3d(-126px, 56px, 0) scale(1);
 }
 
 body.about-open .grid-shot-2 {
-  transform: var(--grid-plane-tilt) translate3d(-144px, 74px, 0) scale(0.94);
+  transform: translate3d(-108px, 84px, 0) scale(0.97);
 }
 
 body.about-open .grid-shot-3 {
-  transform: var(--grid-plane-tilt) translate3d(-156px, 88px, 0) scale(0.94);
+  transform: translate3d(-90px, 112px, 0) scale(0.94);
 }
 
 body.about-open .grid-shot-4 {
-  transform: var(--grid-plane-tilt) translate3d(-168px, 102px, 0) scale(0.94);
+  transform: translate3d(-72px, 140px, 0) scale(0.91);
 }
 
 body.about-open .about-back {
-  top: calc(clamp(10%, 11vh, 17%) + 312px);
-  left: clamp(32px, 4.5vw, 84px);
+  position: static;
+  top: auto;
+  left: auto;
+  z-index: auto;
+  gap: 0;
+  backdrop-filter: none;
+  opacity: 1;
+  pointer-events: auto;
   transform: translateY(0);
 }
 
-body.about-open .cta-block {
-  position: fixed;
-  top: 18px;
-  right: 18px;
-  left: auto;
-  margin-top: 0;
-  align-items: flex-end;
-  transform: none;
-  z-index: 30;
-}
-
 body.about-open .cta-primary {
-  padding: 10px 30px;
+  padding: 10px 28px;
 }
 
 .secondary-pills a {
@@ -1168,16 +1176,12 @@ body.modal-open { overflow: hidden; }
   body.about-open .hero { bottom: calc(var(--footer-bar-height) + 16px); }
   body.about-open { --grid-plane-tilt: perspective(1200px) rotateX(66deg) rotateZ(-34deg) scale(1.05); }
   body.about-open .about-panel {
-    left: clamp(98px, 10vw, 152px);
-    width: min(540px, 56vw);
+    left: 20px;
+    width: min(560px, 56vw);
   }
   body.about-open .grid-shot {
-    left: clamp(40%, 44vw, 50%);
+    left: clamp(44%, 49vw, 56%);
     width: min(480px, 46vw);
-  }
-  body.about-open .about-back {
-    top: calc(clamp(10%, 11vh, 17%) + 294px);
-    left: clamp(16px, 2vw, 36px);
   }
 }
 
@@ -1204,22 +1208,20 @@ body.modal-open { overflow: hidden; }
     bottom: calc(var(--footer-bar-height) + 18px);
     transform: translateX(-50%);
     align-items: center;
+    flex-direction: column;
     text-align: center;
   }
-  body.about-open .about-back {
-    top: 18px;
-    left: 18px;
-  }
   body.about-open .cta-block {
-    position: absolute;
+    position: static;
     top: auto;
     right: auto;
     left: auto;
     align-items: center;
-    z-index: 20;
+    margin: 0;
+    z-index: auto;
   }
   body.about-open .cta-primary {
-    padding: 11px 30px;
+    padding: 10px 28px;
   }
   body.about-open .cta-block { align-items: center; }
   body.about-open .grid-shot {
