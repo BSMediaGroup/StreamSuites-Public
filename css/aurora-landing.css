@@ -501,14 +501,6 @@ body.about-open .about-back {
   transition: opacity 0.55s ease, transform 0.65s ease;
 }
 
-.about-layout-shell {
-  display: none;
-}
-
-.about-cta-rail {
-  display: none;
-}
-
 .about-eyebrow {
   margin: 0 0 10px;
   font-size: 10px;
@@ -647,12 +639,13 @@ body.about-open .about-progress-connector {
   position: relative;
   width: auto;
   flex: 1 1 auto;
+  min-width: 16px;
   height: 2px;
   margin: 0 7px;
   border-top: 2px dotted rgba(230,232,235,0.32);
   background: none;
   overflow: hidden;
-  transition: border-color 0.3s ease;
+  transition: border-color 0.25s ease, border-style 0.25s ease;
 }
 
 body.about-open .about-progress-connector::after {
@@ -676,7 +669,7 @@ body.about-open .about-progress-step[data-state="active"] .about-progress-dot {
 body.about-open .about-progress-step[data-state="read"] .about-progress-connector,
 body.about-open .about-progress-step[data-state="active"] .about-progress-connector {
   border-top-style: solid;
-  border-top-color: rgba(160,145,255,0.14);
+  border-top-color: rgba(158,146,255,0.2);
 }
 
 body.about-open .about-progress-step[data-state="read"] .about-progress-connector::after,
@@ -736,6 +729,12 @@ body.about-open .hero {
 
 body.about-open {
   --grid-plane-tilt: perspective(1400px) rotateX(68deg) rotateZ(-36deg) scale(1.08);
+  --about-shell-width: min(1320px, calc(100vw - 56px));
+  --about-shell-left: calc((100vw - var(--about-shell-width)) / 2);
+  --about-shell-right: var(--about-shell-left);
+  --about-col-gap: clamp(30px, 3.2vw, 44px);
+  --about-info-width: clamp(380px, 37vw, 520px);
+  --about-stage-height: min(62vh, 520px);
 }
 
 body.about-open .wordmark {
@@ -747,8 +746,24 @@ body.about-open .wordmark img {
 }
 
 body.about-open .cta-block {
-  visibility: hidden;
+  order: 2;
+  margin: 0;
+  transform: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  gap: 0;
+  z-index: 92;
   pointer-events: none;
+}
+
+body.about-open .cta-primary-wrap {
+  position: absolute;
+  top: clamp(14px, 2vh, 20px);
+  right: clamp(18px, 2.4vw, 24px);
+  pointer-events: auto;
 }
 
 body.about-open .cta-signup {
@@ -774,90 +789,71 @@ body.about-open .secondary-pills {
   pointer-events: none;
 }
 
-body.about-open .about-layout-shell {
-  position: absolute;
-  left: 50%;
-  top: clamp(76px, 10vh, 126px);
-  bottom: calc(var(--footer-bar-height) + 48px);
-  transform: translateX(-50%);
-  width: min(1320px, calc(100vw - 56px));
-  display: grid;
-  grid-template-columns: minmax(360px, 0.38fr) minmax(0, 0.62fr);
-  column-gap: clamp(28px, 3.4vw, 44px);
-  align-items: stretch;
+body.about-open .about-panel {
+  top: clamp(88px, 11vh, 136px);
+  left: var(--about-shell-left);
+  right: auto;
+  width: var(--about-info-width);
+  opacity: 1;
+  transform: translateX(0) translateY(0);
   pointer-events: auto;
   z-index: 52;
 }
 
-body.about-open .about-column {
-  min-width: 0;
+body.about-open .aurora {
+  transform: translateY(15%);
 }
 
-body.about-open .about-column-info {
-  display: flex;
+body.about-open .grid-motif {
+  opacity: 0.22;
+  background-size: 44px 44px;
+  background-position: right -60px top 60px;
 }
 
-body.about-open .about-column-media {
-  display: flex;
-  align-items: center;
-}
-
-body.about-open .about-panel {
-  position: relative;
-  top: auto;
-  left: auto;
-  right: auto;
-  width: 100%;
-  opacity: 1;
+body.about-open .grid-shot {
+  left: calc(var(--about-shell-left) + var(--about-info-width) + var(--about-col-gap));
+  right: var(--about-shell-right);
+  top: clamp(112px, 14vh, 176px);
+  width: calc(var(--about-shell-width) - var(--about-info-width) - var(--about-col-gap));
+  height: var(--about-stage-height);
+  transform-origin: center center;
   transform: none;
-  pointer-events: auto;
-  z-index: auto;
-}
-
-body.about-open .about-slide-stage {
-  position: relative;
-  width: 100%;
-  height: min(62vh, 520px);
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid rgba(230,232,235,0.16);
-  background: rgba(8, 11, 16, 0.64);
-  box-shadow:
-    0 20px 46px rgba(0,0,0,0.52),
-    0 0 24px rgba(126,122,255,0.18);
-}
-
-body.about-open .about-image-slide {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
   object-fit: cover;
+  border: 1px solid rgba(230,232,235,0.15);
+  border-radius: 12px;
   opacity: 0;
   pointer-events: none;
+  z-index: 50;
+  box-shadow:
+    0 22px 50px rgba(0,0,0,0.52),
+    0 0 20px rgba(122,121,255,0.2);
   transition: opacity 0.5s ease;
 }
 
-body.about-open .about-image-slide.is-active {
+body.about-open .grid-shot.is-active {
   opacity: 1;
 }
 
-body.about-open .about-cta-rail {
-  display: block;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 84px;
-  z-index: 95;
-  pointer-events: none;
+body.about-open .grid-shot-2,
+body.about-open .grid-shot-3,
+body.about-open .grid-shot-4 {
+  width: calc(var(--about-shell-width) - var(--about-info-width) - var(--about-col-gap));
 }
 
-body.about-open .about-cta-rail .cta-primary-wrap {
-  position: absolute;
-  top: clamp(14px, 2vh, 20px);
-  right: clamp(18px, 2.4vw, 24px);
-  pointer-events: auto;
+body.about-open .grid-shot-1 {
+  transform: none;
+}
+
+body.about-open .grid-shot-2 {
+  transform: none;
+}
+
+body.about-open .grid-shot-3 {
+  transform: none;
+}
+
+body.about-open .grid-shot-4 {
+  transform: none;
 }
 
 body.about-open .about-back {
@@ -870,16 +866,6 @@ body.about-open .about-back {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);
-}
-
-body.about-open .aurora {
-  transform: translateY(15%);
-}
-
-body.about-open .grid-motif {
-  opacity: 0.22;
-  background-size: 44px 44px;
-  background-position: right -60px top 60px;
 }
 
 body.about-open .cta-primary {
@@ -1298,13 +1284,18 @@ body.modal-open { overflow: hidden; }
   .platform-strip { width: min(86vw, 680px); }
   .about-panel { width: min(560px, 70vw); }
   body.about-open .hero { bottom: calc(var(--footer-bar-height) + 16px); }
-  body.about-open .about-layout-shell {
-    width: min(1200px, calc(100vw - 36px));
-    grid-template-columns: minmax(320px, 0.4fr) minmax(0, 0.6fr);
-    column-gap: clamp(24px, 3vw, 36px);
+  body.about-open {
+    --grid-plane-tilt: perspective(1200px) rotateX(66deg) rotateZ(-34deg) scale(1.05);
+    --about-shell-width: calc(100vw - 40px);
+    --about-col-gap: clamp(24px, 2.8vw, 34px);
+    --about-info-width: clamp(320px, 42vw, 460px);
+    --about-stage-height: min(50vh, 430px);
   }
-  body.about-open .about-slide-stage {
-    height: min(50vh, 440px);
+  body.about-open .about-panel {
+    top: clamp(84px, 10vh, 124px);
+  }
+  body.about-open .grid-shot {
+    top: clamp(114px, 14vh, 160px);
   }
 }
 
@@ -1331,32 +1322,45 @@ body.modal-open { overflow: hidden; }
     flex-direction: column;
     text-align: center;
   }
-  body.about-open .about-layout-shell {
-    top: clamp(72px, 12vh, 94px);
-    bottom: calc(var(--footer-bar-height) + 22px);
-    width: calc(100vw - 24px);
-    grid-template-columns: 1fr;
-    row-gap: 16px;
-    overflow: hidden;
+  body.about-open .cta-block {
+    top: 0;
+    left: 0;
+    right: 0;
   }
-  body.about-open .about-column-info {
-    order: 1;
-    min-height: 0;
+  body.about-open .cta-primary {
+    padding: 10px 28px;
   }
-  body.about-open .about-column-media {
-    order: 2;
-    min-height: 0;
+  body.about-open .cta-primary-wrap {
+    top: 14px;
+    right: 18px;
   }
-  body.about-open .about-slide-stage {
-    height: min(42vh, 300px);
+  body.about-open {
+    --about-shell-width: calc(100vw - 24px);
+    --about-shell-left: 12px;
+    --about-shell-right: 12px;
+    --about-info-width: calc(100vw - 24px);
+    --about-col-gap: 0px;
+    --about-stage-height: min(34vh, 260px);
+  }
+  body.about-open .about-panel {
+    left: 12px;
+    right: 12px;
+    width: auto;
+    top: clamp(78px, 10vh, 102px);
+    transform: none;
+    padding-bottom: calc(var(--about-stage-height) + 18px);
+  }
+  body.about-open .grid-shot {
+    top: auto;
+    bottom: calc(var(--footer-bar-height) + 20px);
+    left: 12px;
+    right: 12px;
+    width: auto;
+    height: var(--about-stage-height);
   }
   body.about-open .about-controls-row {
     flex-direction: column;
     align-items: flex-start;
-  }
-  body.about-open .about-cta-rail .cta-primary-wrap {
-    top: 14px;
-    right: 18px;
   }
 }
 
@@ -1371,7 +1375,6 @@ body.modal-open { overflow: hidden; }
   .about-panel,
   .about-back,
   .about-slide,
-  .about-image-slide,
   .grid-motif,
   .grid-shot,
   .aurora {
