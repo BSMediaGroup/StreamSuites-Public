@@ -501,6 +501,14 @@ body.about-open .about-back {
   transition: opacity 0.55s ease, transform 0.65s ease;
 }
 
+.about-layout-shell {
+  display: none;
+}
+
+.about-cta-rail {
+  display: none;
+}
+
 .about-eyebrow {
   margin: 0 0 10px;
   font-size: 10px;
@@ -597,6 +605,7 @@ body.about-open .about-controls {
   flex-direction: column;
   align-items: flex-start;
   gap: 12px;
+  width: 100%;
 }
 
 body.about-open .about-controls-row {
@@ -608,13 +617,20 @@ body.about-open .about-controls-row {
 }
 
 body.about-open .about-progress {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  width: 100%;
 }
 
 body.about-open .about-progress-step {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+body.about-open .about-progress-step:last-child {
+  flex: 0 0 auto;
 }
 
 body.about-open .about-progress-dot {
@@ -628,12 +644,26 @@ body.about-open .about-progress-dot {
 }
 
 body.about-open .about-progress-connector {
-  width: 32px;
+  position: relative;
+  width: auto;
+  flex: 1 1 auto;
   height: 2px;
   margin: 0 7px;
   border-top: 2px dotted rgba(230,232,235,0.32);
   background: none;
-  transition: border-color 0.25s ease, border-style 0.25s ease, background 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+  transition: border-color 0.3s ease;
+}
+
+body.about-open .about-progress-connector::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(140,121,255,0.88), rgba(193,130,255,0.82), rgba(106,123,255,0.78));
+  box-shadow: 0 0 10px rgba(132,118,255,0.24);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.45s ease;
 }
 
 body.about-open .about-progress-step[data-state="read"] .about-progress-dot,
@@ -646,9 +676,12 @@ body.about-open .about-progress-step[data-state="active"] .about-progress-dot {
 body.about-open .about-progress-step[data-state="read"] .about-progress-connector,
 body.about-open .about-progress-step[data-state="active"] .about-progress-connector {
   border-top-style: solid;
-  border-top-color: transparent;
-  background: linear-gradient(90deg, rgba(140,121,255,0.88), rgba(193,130,255,0.82), rgba(106,123,255,0.78));
-  box-shadow: 0 0 10px rgba(132,118,255,0.24);
+  border-top-color: rgba(160,145,255,0.14);
+}
+
+body.about-open .about-progress-step[data-state="read"] .about-progress-connector::after,
+body.about-open .about-progress-step[data-state="active"] .about-progress-connector::after {
+  transform: scaleX(1);
 }
 
 /* ======================================================
@@ -714,16 +747,8 @@ body.about-open .wordmark img {
 }
 
 body.about-open .cta-block {
-  order: 2;
-  margin: 0;
-  transform: none;
-  position: fixed;
-  top: clamp(18px, 2.2vh, 24px);
-  right: clamp(18px, 2.4vw, 24px);
-  left: auto;
-  align-items: flex-end;
-  gap: 0;
-  z-index: 80;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 body.about-open .cta-signup {
@@ -749,62 +774,90 @@ body.about-open .secondary-pills {
   pointer-events: none;
 }
 
-body.about-open .about-panel {
-  top: clamp(10%, 11vh, 16%);
-  left: clamp(20px, 3vw, 44px);
-  right: auto;
-  width: min(580px, 44vw);
-  opacity: 1;
-  transform: translateX(0) translateY(0);
+body.about-open .about-layout-shell {
+  position: absolute;
+  left: 50%;
+  top: clamp(76px, 10vh, 126px);
+  bottom: calc(var(--footer-bar-height) + 48px);
+  transform: translateX(-50%);
+  width: min(1320px, calc(100vw - 56px));
+  display: grid;
+  grid-template-columns: minmax(360px, 0.38fr) minmax(0, 0.62fr);
+  column-gap: clamp(28px, 3.4vw, 44px);
+  align-items: stretch;
   pointer-events: auto;
-  z-index: 26;
+  z-index: 52;
 }
 
-body.about-open .aurora {
-  transform: translateY(15%);
+body.about-open .about-column {
+  min-width: 0;
 }
 
-body.about-open .grid-motif {
-  opacity: 0.22;
-  background-size: 44px 44px;
-  background-position: right -60px top 60px;
+body.about-open .about-column-info {
+  display: flex;
 }
 
-body.about-open .grid-shot {
+body.about-open .about-column-media {
+  display: flex;
+  align-items: center;
+}
+
+body.about-open .about-panel {
+  position: relative;
+  top: auto;
+  left: auto;
   right: auto;
-  left: clamp(44%, 50vw, 57%);
-  top: clamp(5%, 7vh, 11%);
-  width: min(700px, 50vw);
-  transform-origin: left top;
-  opacity: 0.26;
+  width: 100%;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  z-index: auto;
+}
+
+body.about-open .about-slide-stage {
+  position: relative;
+  width: 100%;
+  height: min(62vh, 520px);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(230,232,235,0.16);
+  background: rgba(8, 11, 16, 0.64);
+  box-shadow:
+    0 20px 46px rgba(0,0,0,0.52),
+    0 0 24px rgba(126,122,255,0.18);
+}
+
+body.about-open .about-image-slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
   pointer-events: none;
-  z-index: 24;
+  transition: opacity 0.5s ease;
 }
 
-body.about-open .grid-shot.is-active {
-  opacity: 0.98;
+body.about-open .about-image-slide.is-active {
+  opacity: 1;
 }
 
-body.about-open .grid-shot-2,
-body.about-open .grid-shot-3,
-body.about-open .grid-shot-4 {
-  width: min(700px, 50vw);
+body.about-open .about-cta-rail {
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 84px;
+  z-index: 95;
+  pointer-events: none;
 }
 
-body.about-open .grid-shot-1 {
-  transform: translate3d(-126px, 56px, 0) scale(1);
-}
-
-body.about-open .grid-shot-2 {
-  transform: translate3d(-108px, 84px, 0) scale(0.97);
-}
-
-body.about-open .grid-shot-3 {
-  transform: translate3d(-90px, 112px, 0) scale(0.94);
-}
-
-body.about-open .grid-shot-4 {
-  transform: translate3d(-72px, 140px, 0) scale(0.91);
+body.about-open .about-cta-rail .cta-primary-wrap {
+  position: absolute;
+  top: clamp(14px, 2vh, 20px);
+  right: clamp(18px, 2.4vw, 24px);
+  pointer-events: auto;
 }
 
 body.about-open .about-back {
@@ -817,6 +870,16 @@ body.about-open .about-back {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);
+}
+
+body.about-open .aurora {
+  transform: translateY(15%);
+}
+
+body.about-open .grid-motif {
+  opacity: 0.22;
+  background-size: 44px 44px;
+  background-position: right -60px top 60px;
 }
 
 body.about-open .cta-primary {
@@ -1235,14 +1298,13 @@ body.modal-open { overflow: hidden; }
   .platform-strip { width: min(86vw, 680px); }
   .about-panel { width: min(560px, 70vw); }
   body.about-open .hero { bottom: calc(var(--footer-bar-height) + 16px); }
-  body.about-open { --grid-plane-tilt: perspective(1200px) rotateX(66deg) rotateZ(-34deg) scale(1.05); }
-  body.about-open .about-panel {
-    left: 20px;
-    width: min(560px, 56vw);
+  body.about-open .about-layout-shell {
+    width: min(1200px, calc(100vw - 36px));
+    grid-template-columns: minmax(320px, 0.4fr) minmax(0, 0.6fr);
+    column-gap: clamp(24px, 3vw, 36px);
   }
-  body.about-open .grid-shot {
-    left: clamp(41%, 47vw, 54%);
-    width: min(560px, 54vw);
+  body.about-open .about-slide-stage {
+    height: min(50vh, 440px);
   }
 }
 
@@ -1261,9 +1323,6 @@ body.modal-open { overflow: hidden; }
     transform: translateX(-50%) translateY(12px);
     text-align: left;
   }
-  body.about-open .about-panel {
-    transform: translateX(-50%) translateY(0);
-  }
   body.about-open .hero {
     left: 50%;
     bottom: calc(var(--footer-bar-height) + 18px);
@@ -1272,25 +1331,32 @@ body.modal-open { overflow: hidden; }
     flex-direction: column;
     text-align: center;
   }
-  body.about-open .cta-block {
-    position: fixed;
-    top: 16px;
-    right: 16px;
-    left: auto;
-    align-items: flex-end;
-    margin: 0;
-    z-index: 80;
+  body.about-open .about-layout-shell {
+    top: clamp(72px, 12vh, 94px);
+    bottom: calc(var(--footer-bar-height) + 22px);
+    width: calc(100vw - 24px);
+    grid-template-columns: 1fr;
+    row-gap: 16px;
+    overflow: hidden;
   }
-  body.about-open .cta-primary {
-    padding: 10px 28px;
+  body.about-open .about-column-info {
+    order: 1;
+    min-height: 0;
   }
-  body.about-open .grid-shot {
-    opacity: 0.7;
-    left: 47%;
+  body.about-open .about-column-media {
+    order: 2;
+    min-height: 0;
+  }
+  body.about-open .about-slide-stage {
+    height: min(42vh, 300px);
   }
   body.about-open .about-controls-row {
     flex-direction: column;
     align-items: flex-start;
+  }
+  body.about-open .about-cta-rail .cta-primary-wrap {
+    top: 14px;
+    right: 18px;
   }
 }
 
@@ -1305,6 +1371,7 @@ body.modal-open { overflow: hidden; }
   .about-panel,
   .about-back,
   .about-slide,
+  .about-image-slide,
   .grid-motif,
   .grid-shot,
   .aurora {
