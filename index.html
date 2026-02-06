@@ -105,12 +105,25 @@
             <span>Latency aware</span>
           </div>
         </article>
+
+        <article class="about-slide" data-about-slide="3" aria-hidden="true">
+          <h2 class="about-title">Built for creators who iterate fast.</h2>
+          <p class="about-body muted">
+            Keep your show architecture stable while rapidly testing new overlays, interactions, and engagement logic.
+            StreamSuites lets you ship updates without sacrificing production confidence.
+          </p>
+          <div class="about-points muted">
+            <span>Rapid iteration</span>
+            <span>Stable runtime</span>
+            <span>Creator-first workflows</span>
+          </div>
+        </article>
       </div>
 
       <div class="about-controls">
         <div class="about-nav">
-          <button class="about-nav-button" type="button" data-about-prev>Prev</button>
-          <button class="about-nav-button" type="button" data-about-next>Next</button>
+          <button class="about-nav-button" type="button" data-about-prev aria-label="Previous slide">&larr;</button>
+          <button class="about-nav-button" type="button" data-about-next aria-label="Next slide">&rarr;</button>
         </div>
         <a class="about-full-link" href="/about.html">Read the full About</a>
       </div>
@@ -118,9 +131,10 @@
 
     <div class="logo-shine"></div>
     <div class="grid-motif"></div>
-    <img class="grid-shot grid-shot-1" src="/assets/placeholders/streamsuites.jpg" alt="" aria-hidden="true" />
-    <img class="grid-shot grid-shot-2" src="/assets/placeholders/hotdog.jpg" alt="" aria-hidden="true" />
-    <img class="grid-shot grid-shot-3" src="/assets/placeholders/daniel.png" alt="" aria-hidden="true" />
+    <img class="grid-shot grid-shot-1 is-active" src="/assets/illustrations/f1.webp" alt="" aria-hidden="true" data-about-image-slide="0" />
+    <img class="grid-shot grid-shot-2" src="/assets/illustrations/f2.webp" alt="" aria-hidden="true" data-about-image-slide="1" />
+    <img class="grid-shot grid-shot-3" src="/assets/illustrations/f3.webp" alt="" aria-hidden="true" data-about-image-slide="2" />
+    <img class="grid-shot grid-shot-4" src="/assets/illustrations/f4.webp" alt="" aria-hidden="true" data-about-image-slide="3" />
 
     <div class="aurora">
       <div class="blob purple"></div>
@@ -668,6 +682,7 @@
       const toggle = document.querySelector('[data-about-toggle]');
       const back = document.querySelector('[data-about-back]');
       const slides = Array.from(document.querySelectorAll('[data-about-slide]'));
+      const imageSlides = Array.from(document.querySelectorAll('[data-about-image-slide]'));
       const prev = document.querySelector('[data-about-prev]');
       const next = document.querySelector('[data-about-next]');
 
@@ -678,6 +693,11 @@
         const total = slides.length;
         const nextIndex = ((index % total) + total) % total;
         slides.forEach((slide, idx) => {
+          const isActive = idx === nextIndex;
+          slide.classList.toggle('is-active', isActive);
+          slide.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+        });
+        imageSlides.forEach((slide, idx) => {
           const isActive = idx === nextIndex;
           slide.classList.toggle('is-active', isActive);
           slide.setAttribute('aria-hidden', isActive ? 'false' : 'true');
