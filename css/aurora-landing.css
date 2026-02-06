@@ -593,6 +593,64 @@ body.about-open .about-back {
   border-bottom-color: rgba(255,255,255,0.45);
 }
 
+body.about-open .about-controls {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+body.about-open .about-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+
+body.about-open .about-progress {
+  display: inline-flex;
+  align-items: center;
+}
+
+body.about-open .about-progress-step {
+  display: inline-flex;
+  align-items: center;
+}
+
+body.about-open .about-progress-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(230,232,235,0.46);
+  background: transparent;
+  box-shadow: none;
+  transition: border-color 0.25s ease, background 0.3s ease, box-shadow 0.3s ease;
+}
+
+body.about-open .about-progress-connector {
+  width: 32px;
+  height: 2px;
+  margin: 0 7px;
+  border-top: 2px dotted rgba(230,232,235,0.32);
+  background: none;
+  transition: border-color 0.25s ease, border-style 0.25s ease, background 0.3s ease, box-shadow 0.3s ease;
+}
+
+body.about-open .about-progress-step[data-state="read"] .about-progress-dot,
+body.about-open .about-progress-step[data-state="active"] .about-progress-dot {
+  border-color: rgba(210,195,255,0.95);
+  background: linear-gradient(120deg, var(--purple), var(--magenta) 42%, var(--blue) 80%, var(--electric));
+  box-shadow: 0 0 8px rgba(146,125,255,0.35);
+}
+
+body.about-open .about-progress-step[data-state="read"] .about-progress-connector,
+body.about-open .about-progress-step[data-state="active"] .about-progress-connector {
+  border-top-style: solid;
+  border-top-color: transparent;
+  background: linear-gradient(90deg, rgba(140,121,255,0.88), rgba(193,130,255,0.82), rgba(106,123,255,0.78));
+  box-shadow: 0 0 10px rgba(132,118,255,0.24);
+}
+
 /* ======================================================
    GRID PLANE MEDIA
 ====================================================== */
@@ -657,12 +715,15 @@ body.about-open .wordmark img {
 
 body.about-open .cta-block {
   order: 2;
-  margin: 0 0 12px;
+  margin: 0;
   transform: none;
-  position: static;
-  align-items: flex-start;
+  position: fixed;
+  top: clamp(18px, 2.2vh, 24px);
+  right: clamp(18px, 2.4vw, 24px);
+  left: auto;
+  align-items: flex-end;
   gap: 0;
-  z-index: auto;
+  z-index: 80;
 }
 
 body.about-open .cta-signup {
@@ -711,23 +772,23 @@ body.about-open .grid-motif {
 
 body.about-open .grid-shot {
   right: auto;
-  left: clamp(47%, 53vw, 60%);
-  top: clamp(6%, 8vh, 12%);
-  width: min(560px, 42vw);
+  left: clamp(44%, 50vw, 57%);
+  top: clamp(5%, 7vh, 11%);
+  width: min(700px, 50vw);
   transform-origin: left top;
-  opacity: 0.3;
+  opacity: 0.26;
   pointer-events: none;
   z-index: 24;
 }
 
 body.about-open .grid-shot.is-active {
-  opacity: 0.96;
+  opacity: 0.98;
 }
 
 body.about-open .grid-shot-2,
 body.about-open .grid-shot-3,
 body.about-open .grid-shot-4 {
-  width: min(560px, 42vw);
+  width: min(700px, 50vw);
 }
 
 body.about-open .grid-shot-1 {
@@ -1180,8 +1241,8 @@ body.modal-open { overflow: hidden; }
     width: min(560px, 56vw);
   }
   body.about-open .grid-shot {
-    left: clamp(44%, 49vw, 56%);
-    width: min(480px, 46vw);
+    left: clamp(41%, 47vw, 54%);
+    width: min(560px, 54vw);
   }
 }
 
@@ -1212,23 +1273,22 @@ body.modal-open { overflow: hidden; }
     text-align: center;
   }
   body.about-open .cta-block {
-    position: static;
-    top: auto;
-    right: auto;
+    position: fixed;
+    top: 16px;
+    right: 16px;
     left: auto;
-    align-items: center;
+    align-items: flex-end;
     margin: 0;
-    z-index: auto;
+    z-index: 80;
   }
   body.about-open .cta-primary {
     padding: 10px 28px;
   }
-  body.about-open .cta-block { align-items: center; }
   body.about-open .grid-shot {
-    opacity: 0.75;
-    left: 50%;
+    opacity: 0.7;
+    left: 47%;
   }
-  .about-controls {
+  body.about-open .about-controls-row {
     flex-direction: column;
     align-items: flex-start;
   }
