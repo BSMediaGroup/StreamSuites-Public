@@ -817,11 +817,15 @@ body.about-open .grid-shot {
   left: calc(var(--about-shell-left) + var(--about-info-width) + var(--about-col-gap));
   right: var(--about-shell-right);
   top: clamp(112px, 14vh, 176px);
-  width: calc(var(--about-shell-width) - var(--about-info-width) - var(--about-col-gap));
-  height: var(--about-stage-height);
+  width: min(
+    calc(var(--about-shell-width) - var(--about-info-width) - var(--about-col-gap)),
+    calc(var(--about-stage-height) * 1.3333333)
+  );
+  aspect-ratio: 4 / 3;
+  height: auto;
   transform-origin: center center;
   transform: none;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center center;
   border: 1px solid rgba(230,232,235,0.15);
   border-radius: 12px;
@@ -841,7 +845,10 @@ body.about-open .grid-shot.is-active {
 body.about-open .grid-shot-2,
 body.about-open .grid-shot-3,
 body.about-open .grid-shot-4 {
-  width: calc(var(--about-shell-width) - var(--about-info-width) - var(--about-col-gap));
+  width: min(
+    calc(var(--about-shell-width) - var(--about-info-width) - var(--about-col-gap)),
+    calc(var(--about-stage-height) * 1.3333333)
+  );
 }
 
 body.about-open .grid-shot-1 {
@@ -1359,10 +1366,12 @@ body.modal-open { overflow: hidden; }
   body.about-open .grid-shot {
     top: auto;
     bottom: calc(var(--footer-bar-height) + 20px);
-    left: 12px;
-    right: 12px;
-    width: auto;
-    height: var(--about-stage-height);
+    left: 50%;
+    right: auto;
+    width: min(calc(100vw - 24px), calc(var(--about-stage-height) * 1.3333333));
+    aspect-ratio: 4 / 3;
+    height: auto;
+    transform: translateX(-50%);
   }
   body.about-open .about-controls-row {
     flex-direction: column;
