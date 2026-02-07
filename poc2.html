@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>StreamSuites — SVG Glow POC</title>
+<title>StreamSuites — SVG Neon Glow POC</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
@@ -34,53 +34,53 @@ html, body {
 >
 
   <defs>
-    <!-- Wide aura -->
-    <filter id="glow-wide" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="45" result="blur"/>
+    <!-- Massive outer aura -->
+    <filter id="glow-ultra" x="-120%" y="-120%" width="340%" height="340%">
+      <feGaussianBlur stdDeviation="95" result="blur1"/>
       <feColorMatrix
-        in="blur"
+        in="blur1"
         type="matrix"
         values="
           1 0 0 0 0
-          0 0.8 0 0 0
-          0 1 0 0 0
-          0 0 0 0.9 0"
+          0 0 0 0 0
+          1 0 1 0 0
+          0 0 0 1.3 0"
       />
     </filter>
 
-    <!-- Core glow -->
-    <filter id="glow-core" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="18"/>
+    <!-- Secondary bloom -->
+    <filter id="glow-bloom" x="-90%" y="-90%" width="280%" height="280%">
+      <feGaussianBlur stdDeviation="45"/>
     </filter>
   </defs>
 
-  <!-- OUTER AURA -->
+  <!-- OUTER AURA (VERY WIDE) -->
   <path
     d="M138.971,271.454l261.222,-271.454l583.168,0l-259.327,270.484l-151.009,0l-216.982,227.05l-217.072,0l-0,-226.08Zm705.419,337.815l-261.222,271.454l-583.168,0l259.327,-270.484l151.009,-0l216.982,-227.05l217.072,-0l0,226.08Z"
     fill="none"
-    stroke="#c182ff"
-    stroke-width="10"
-    filter="url(#glow-wide)"
-    opacity="0.7"
+    stroke="#a855ff"
+    stroke-width="18"
+    filter="url(#glow-ultra)"
+    opacity="0.95"
   />
 
   <!-- CORE GLOW -->
   <path
     d="M138.971,271.454l261.222,-271.454l583.168,0l-259.327,270.484l-151.009,0l-216.982,227.05l-217.072,0l-0,-226.08Zm705.419,337.815l-261.222,271.454l-583.168,0l259.327,-270.484l151.009,-0l216.982,-227.05l217.072,-0l0,226.08Z"
     fill="none"
-    stroke="#d38bff"
-    stroke-width="4"
-    filter="url(#glow-core)"
-    opacity="0.9"
+    stroke="#c084ff"
+    stroke-width="7"
+    filter="url(#glow-bloom)"
+    opacity="1"
   />
 
-  <!-- SHARP OUTLINE -->
+  <!-- NEON OUTLINE -->
   <path
     d="M138.971,271.454l261.222,-271.454l583.168,0l-259.327,270.484l-151.009,0l-216.982,227.05l-217.072,0l-0,-226.08Zm705.419,337.815l-261.222,271.454l-583.168,0l259.327,-270.484l151.009,-0l216.982,-227.05l217.072,-0l0,226.08Z"
     fill="none"
-    stroke="#ffffff"
-    stroke-width="1.5"
-    opacity="0.9"
+    stroke="#d8b4ff"
+    stroke-width="2.5"
+    opacity="1"
   />
 
 </svg>
