@@ -183,6 +183,12 @@
     </div>
   </div>
 
+  <div class="cta-floating" aria-hidden="true">
+    <div class="cta-primary-wrap">
+      <button class="cta-primary" type="button" data-auth-trigger="login" data-creator-cta>Creator Login</button>
+    </div>
+  </div>
+
   <div class="auth-modal-backdrop" id="auth-modal" aria-hidden="true">
     <div class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title" data-state="login">
       <button class="auth-modal-close" type="button" aria-label="Close">×</button>
@@ -292,14 +298,16 @@
 
   <script>
     (function () {
-      const cta = document.querySelector('[data-creator-cta]');
-      if (!cta) return;
+      const ctas = Array.from(document.querySelectorAll('[data-creator-cta]'));
+      if (!ctas.length) return;
 
       const LOGIN_LABEL = 'Creator Login';
       const DASHBOARD_LABEL = 'Creator Dashboard';
 
       const setLabel = (isAuthenticated) => {
-        cta.textContent = isAuthenticated ? DASHBOARD_LABEL : LOGIN_LABEL;
+        ctas.forEach((cta) => {
+          cta.textContent = isAuthenticated ? DASHBOARD_LABEL : LOGIN_LABEL;
+        });
       };
 
       setLabel(false);
@@ -695,12 +703,22 @@
         if (!progress) return;
         const steps = Array.from(progress.querySelectorAll('[data-about-progress-step]'));
         steps.forEach((step, idx) => {
-          const isRead = idx <= activeSlideIndex;
+          const isDotActive = idx <= activeSlideIndex;
           const isActive = idx === activeSlideIndex;
-          step.classList.toggle('is-read', isRead);
+          const connector = step.querySelector('[data-about-progress-connector]');
+          const dot = step.querySelector('[data-about-progress-dot]');
+
+          step.classList.toggle('is-read', isDotActive);
           step.classList.toggle('is-active', isActive);
-          step.setAttribute('data-state', isActive ? 'active' : (isRead ? 'read' : 'unread'));
+          step.setAttribute('data-state', isActive ? 'active' : (isDotActive ? 'read' : 'unread'));
           step.setAttribute('aria-current', isActive ? 'true' : 'false');
+
+          if (dot) {
+            dot.setAttribute('data-state', isDotActive ? 'active' : 'inactive');
+          }
+          if (connector) {
+            connector.setAttribute('data-state', idx < activeSlideIndex ? 'active' : 'inactive');
+          }
         });
       };
 
@@ -708,8 +726,8 @@
         if (!progress || !slides.length) return;
         progress.innerHTML = slides.map((_, idx) => `
           <span class="about-progress-step" data-about-progress-step data-index="${idx}" data-state="unread">
-            <span class="about-progress-dot" aria-hidden="true"></span>
-            ${idx < slides.length - 1 ? '<span class="about-progress-connector" aria-hidden="true"></span>' : ''}
+            <span class="about-progress-dot" data-about-progress-dot data-state="inactive" aria-hidden="true"></span>
+            ${idx < slides.length - 1 ? '<span class="about-progress-connector" data-about-progress-connector data-state="inactive" aria-hidden="true"></span>' : ''}
           </span>
         `).join('');
       };
