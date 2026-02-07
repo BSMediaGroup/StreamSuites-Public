@@ -819,15 +819,16 @@ body.about-open .grid-shot {
   top: clamp(112px, 14vh, 176px);
   width: min(
     calc(var(--about-shell-width) - var(--about-info-width) - var(--about-col-gap)),
-    calc(var(--about-stage-height) * 1.3333333)
+    calc(var(--about-stage-height) * 1.7777778)
   );
   height: calc(
     min(
       calc(var(--about-shell-width) - var(--about-info-width) - var(--about-col-gap)),
-      calc(var(--about-stage-height) * 1.3333333)
-    ) * 0.75
+      calc(var(--about-stage-height) * 1.7777778)
+    ) * 0.5625
   );
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 16 / 9;
+  margin-inline: auto;
   transform-origin: center center;
   transform: none;
   object-fit: contain;
@@ -852,7 +853,7 @@ body.about-open .grid-shot-3,
 body.about-open .grid-shot-4 {
   width: min(
     calc(var(--about-shell-width) - var(--about-info-width) - var(--about-col-gap)),
-    calc(var(--about-stage-height) * 1.3333333)
+    calc(var(--about-stage-height) * 1.7777778)
   );
 }
 
@@ -1371,12 +1372,13 @@ body.modal-open { overflow: hidden; }
   body.about-open .grid-shot {
     top: auto;
     bottom: calc(var(--footer-bar-height) + 20px);
-    left: 50%;
-    right: auto;
-    width: min(calc(100vw - 24px), calc(var(--about-stage-height) * 1.3333333));
-    height: calc(min(calc(100vw - 24px), calc(var(--about-stage-height) * 1.3333333)) * 0.75);
-    aspect-ratio: 4 / 3;
-    transform: translateX(-50%);
+    left: 12px;
+    right: 12px;
+    width: min(calc(100vw - 24px), calc(var(--about-stage-height) * 1.7777778));
+    height: calc(min(calc(100vw - 24px), calc(var(--about-stage-height) * 1.7777778)) * 0.5625);
+    aspect-ratio: 16 / 9;
+    margin-inline: auto;
+    transform: none;
   }
   body.about-open .about-controls-row {
     flex-direction: column;
