@@ -821,11 +821,16 @@ body.about-open .grid-shot {
     calc(var(--about-shell-width) - var(--about-info-width) - var(--about-col-gap)),
     calc(var(--about-stage-height) * 1.3333333)
   );
+  height: calc(
+    min(
+      calc(var(--about-shell-width) - var(--about-info-width) - var(--about-col-gap)),
+      calc(var(--about-stage-height) * 1.3333333)
+    ) * 0.75
+  );
   aspect-ratio: 4 / 3;
-  height: auto;
   transform-origin: center center;
   transform: none;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center center;
   border: 1px solid rgba(230,232,235,0.15);
   border-radius: 12px;
@@ -1369,8 +1374,8 @@ body.modal-open { overflow: hidden; }
     left: 50%;
     right: auto;
     width: min(calc(100vw - 24px), calc(var(--about-stage-height) * 1.3333333));
+    height: calc(min(calc(100vw - 24px), calc(var(--about-stage-height) * 1.3333333)) * 0.75);
     aspect-ratio: 4 / 3;
-    height: auto;
     transform: translateX(-50%);
   }
   body.about-open .about-controls-row {
