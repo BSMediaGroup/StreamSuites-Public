@@ -831,7 +831,7 @@ body.about-open .grid-shot {
   margin-inline: auto;
   transform-origin: center center;
   transform: none;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center center;
   border: 1px solid rgba(230,232,235,0.15);
   border-radius: 12px;
