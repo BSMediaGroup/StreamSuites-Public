@@ -596,7 +596,7 @@ body.about-open .about-back {
 body.about-open .about-controls {
   flex-direction: column;
   align-items: flex-start;
-  gap: 12px;
+  gap: 20px;
   width: 100%;
 }
 
