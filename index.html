@@ -13,6 +13,32 @@
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="/css/status-widget.css" />
   <link rel="stylesheet" href="/css/aurora-landing.css" />
+  <style>
+    .auth-modal {
+      max-height: 88vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(164, 174, 196, 0.48) rgba(12, 16, 24, 0.84);
+    }
+
+    .auth-modal::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .auth-modal::-webkit-scrollbar-track {
+      background: rgba(12, 16, 24, 0.84);
+    }
+
+    .auth-modal::-webkit-scrollbar-thumb {
+      background: rgba(164, 174, 196, 0.48);
+      border-radius: 999px;
+    }
+
+    .auth-modal::-webkit-scrollbar-thumb:hover {
+      background: rgba(181, 190, 211, 0.62);
+    }
+  </style>
 </head>
 
 <body>
@@ -212,7 +238,7 @@
             <img src="/assets/icons/github.svg" alt="" />
             Continue with GitHub
           </a>
-          <a class="auth-oauth-button" href="/auth/x/start">
+          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/x/start">
             <img src="/assets/icons/x.svg" alt="" />
             Continue with X
           </a>
@@ -234,6 +260,10 @@
               <img src="/assets/icons/discord.svg" alt="" />
               Continue with Discord
             </a>
+            <button class="auth-oauth-button" type="button" disabled aria-disabled="true" title="Coming soon" tabindex="-1" style="opacity: 0.55; cursor: not-allowed; pointer-events: none;">
+              <img src="/assets/icons/twitch.svg" alt="" />
+              Continue with Twitch (Coming soon)
+            </button>
           </div>
 
           <div class="auth-divider">Or email</div>
@@ -253,10 +283,6 @@
             </div>
           </form>
 
-          <button class="auth-oauth-button" type="button" disabled aria-disabled="true" title="Coming soon" tabindex="-1" style="opacity: 0.55; cursor: not-allowed; pointer-events: none;">
-            <img src="/assets/icons/twitch.svg" alt="" />
-            Continue with Twitch (Coming soon)
-          </button>
         </div>
 
         <p class="auth-legal muted">
@@ -280,7 +306,7 @@
             <img src="/assets/icons/github.svg" alt="" />
             Continue with GitHub
           </a>
-          <a class="auth-oauth-button" href="/auth/x/start">
+          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/x/start">
             <img src="/assets/icons/x.svg" alt="" />
             Continue with X
           </a>
@@ -302,6 +328,10 @@
               <img src="/assets/icons/discord.svg" alt="" />
               Continue with Discord
             </a>
+            <button class="auth-oauth-button" type="button" disabled aria-disabled="true" title="Coming soon" tabindex="-1" style="opacity: 0.55; cursor: not-allowed; pointer-events: none;">
+              <img src="/assets/icons/twitch.svg" alt="" />
+              Continue with Twitch (Coming soon)
+            </button>
           </div>
 
           <div class="auth-divider">Or email</div>
@@ -324,10 +354,6 @@
             </div>
           </form>
 
-          <button class="auth-oauth-button" type="button" disabled aria-disabled="true" title="Coming soon" tabindex="-1" style="opacity: 0.55; cursor: not-allowed; pointer-events: none;">
-            <img src="/assets/icons/twitch.svg" alt="" />
-            Continue with Twitch (Coming soon)
-          </button>
         </div>
 
         <p class="auth-legal muted">
