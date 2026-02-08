@@ -203,7 +203,7 @@
       </div>
 
       <div class="auth-panel" data-state="login">
-        <div class="auth-oauth-grid">
+        <div class="auth-oauth-grid" data-auth-primary-methods>
           <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/login/google?surface=creator">
             <img src="/assets/icons/google.svg" alt="" />
             Continue with Google
@@ -212,28 +212,52 @@
             <img src="/assets/icons/github.svg" alt="" />
             Continue with GitHub
           </a>
-          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/login/discord?surface=creator">
-            <img src="/assets/icons/discord.svg" alt="" />
-            Continue with Discord
+          <a class="auth-oauth-button" href="/auth/x/start">
+            <img src="/assets/icons/x.svg" alt="" />
+            Continue with X
           </a>
         </div>
 
-        <div class="auth-divider">Or email</div>
+        <div class="auth-toggle">
+          <button
+            type="button"
+            data-auth-other-methods-toggle
+            aria-expanded="false"
+          >
+            Other methods
+          </button>
+        </div>
 
-        <form class="auth-form" data-auth-form="login">
-          <label for="login-email">Email</label>
-          <input id="login-email" name="email" type="email" autocomplete="email" required />
-          <label for="login-password">Password</label>
-          <input id="login-password" name="password" type="password" autocomplete="current-password" required />
-          <div class="auth-error" role="alert" aria-live="polite"></div>
-          <button type="submit">Log in</button>
-          <div class="auth-resend" data-auth-resend="login" hidden>
-            <button type="button" class="auth-resend-button" data-auth-resend-button>
-              Resend verification email
-            </button>
-            <p class="muted auth-resend-status" data-auth-resend-status aria-live="polite"></p>
+        <div data-auth-secondary-methods hidden>
+          <div class="auth-oauth-grid">
+            <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/login/discord?surface=creator">
+              <img src="/assets/icons/discord.svg" alt="" />
+              Continue with Discord
+            </a>
           </div>
-        </form>
+
+          <div class="auth-divider">Or email</div>
+
+          <form class="auth-form" data-auth-form="login">
+            <label for="login-email">Email</label>
+            <input id="login-email" name="email" type="email" autocomplete="email" required />
+            <label for="login-password">Password</label>
+            <input id="login-password" name="password" type="password" autocomplete="current-password" required />
+            <div class="auth-error" role="alert" aria-live="polite"></div>
+            <button type="submit">Log in</button>
+            <div class="auth-resend" data-auth-resend="login" hidden>
+              <button type="button" class="auth-resend-button" data-auth-resend-button>
+                Resend verification email
+              </button>
+              <p class="muted auth-resend-status" data-auth-resend-status aria-live="polite"></p>
+            </div>
+          </form>
+
+          <button class="auth-oauth-button" type="button" disabled aria-disabled="true" title="Coming soon" tabindex="-1" style="opacity: 0.55; cursor: not-allowed; pointer-events: none;">
+            <img src="/assets/icons/twitch.svg" alt="" />
+            Continue with Twitch (Coming soon)
+          </button>
+        </div>
 
         <p class="auth-legal muted">
           By logging in, you agree to the <a href="/terms.html">Terms of Service</a> and acknowledge the
@@ -247,7 +271,7 @@
       </div>
 
       <div class="auth-panel" data-state="signup">
-        <div class="auth-oauth-grid">
+        <div class="auth-oauth-grid" data-auth-primary-methods>
           <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/login/google?surface=creator">
             <img src="/assets/icons/google.svg" alt="" />
             Continue with Google
@@ -256,31 +280,55 @@
             <img src="/assets/icons/github.svg" alt="" />
             Continue with GitHub
           </a>
-          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/login/discord?surface=creator">
-            <img src="/assets/icons/discord.svg" alt="" />
-            Continue with Discord
+          <a class="auth-oauth-button" href="/auth/x/start">
+            <img src="/assets/icons/x.svg" alt="" />
+            Continue with X
           </a>
         </div>
 
-        <div class="auth-divider">Or email</div>
+        <div class="auth-toggle">
+          <button
+            type="button"
+            data-auth-other-methods-toggle
+            aria-expanded="false"
+          >
+            Other methods
+          </button>
+        </div>
 
-        <form class="auth-form" data-auth-form="signup">
-          <label for="signup-email">Email</label>
-          <input id="signup-email" name="email" type="email" autocomplete="email" required />
-          <label for="signup-password">Password</label>
-          <input id="signup-password" name="password" type="password" autocomplete="new-password" required />
-          <label for="signup-confirm-password">Confirm password</label>
-          <input id="signup-confirm-password" name="confirmPassword" type="password" autocomplete="new-password" required />
-          <p class="muted auth-strength" data-auth-strength>Strength: Weak</p>
-          <div class="auth-error" role="alert" aria-live="polite"></div>
-          <button type="submit">Create account</button>
-          <div class="auth-resend" data-auth-resend="signup" hidden>
-            <button type="button" class="auth-resend-button" data-auth-resend-button>
-              Resend verification email
-            </button>
-            <p class="muted auth-resend-status" data-auth-resend-status aria-live="polite"></p>
+        <div data-auth-secondary-methods hidden>
+          <div class="auth-oauth-grid">
+            <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/login/discord?surface=creator">
+              <img src="/assets/icons/discord.svg" alt="" />
+              Continue with Discord
+            </a>
           </div>
-        </form>
+
+          <div class="auth-divider">Or email</div>
+
+          <form class="auth-form" data-auth-form="signup">
+            <label for="signup-email">Email</label>
+            <input id="signup-email" name="email" type="email" autocomplete="email" required />
+            <label for="signup-password">Password</label>
+            <input id="signup-password" name="password" type="password" autocomplete="new-password" required />
+            <label for="signup-confirm-password">Confirm password</label>
+            <input id="signup-confirm-password" name="confirmPassword" type="password" autocomplete="new-password" required />
+            <p class="muted auth-strength" data-auth-strength>Strength: Weak</p>
+            <div class="auth-error" role="alert" aria-live="polite"></div>
+            <button type="submit">Create account</button>
+            <div class="auth-resend" data-auth-resend="signup" hidden>
+              <button type="button" class="auth-resend-button" data-auth-resend-button>
+                Resend verification email
+              </button>
+              <p class="muted auth-resend-status" data-auth-resend-status aria-live="polite"></p>
+            </div>
+          </form>
+
+          <button class="auth-oauth-button" type="button" disabled aria-disabled="true" title="Coming soon" tabindex="-1" style="opacity: 0.55; cursor: not-allowed; pointer-events: none;">
+            <img src="/assets/icons/twitch.svg" alt="" />
+            Continue with Twitch (Coming soon)
+          </button>
+        </div>
 
         <p class="auth-legal muted">
           By creating an account, you agree to the <a href="/terms.html">Terms of Service</a> and acknowledge the
@@ -332,6 +380,8 @@
       const authClose = authModal?.querySelector('.auth-modal-close');
       const authTriggers = Array.from(document.querySelectorAll('[data-auth-trigger]'));
       const authToggles = Array.from(document.querySelectorAll('[data-auth-toggle]'));
+      const authPanels = Array.from(authModal?.querySelectorAll('.auth-panel') || []);
+      const authOtherMethodToggles = Array.from(authModal?.querySelectorAll('[data-auth-other-methods-toggle]') || []);
       const authForms = Array.from(document.querySelectorAll('[data-auth-form]'));
 
       if (!authModalBackdrop || !authModal) return;
@@ -366,8 +416,26 @@
         },
       };
 
+      const setOtherMethodsExpanded = (panel, expanded) => {
+        if (!panel) return;
+        const primary = panel.querySelector('[data-auth-primary-methods]');
+        const secondary = panel.querySelector('[data-auth-secondary-methods]');
+        const toggle = panel.querySelector('[data-auth-other-methods-toggle]');
+        if (!secondary || !toggle) return;
+        secondary.hidden = !expanded;
+        toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        if (primary) {
+          primary.hidden = expanded;
+        }
+      };
+
+      const resetOtherMethods = () => {
+        authPanels.forEach((panel) => setOtherMethodsExpanded(panel, false));
+      };
+
       const setAuthState = (state) => {
         authModal.dataset.state = state;
+        resetOtherMethods();
         if (authTitle && AUTH_TITLES[state]) {
           authTitle.textContent = AUTH_TITLES[state].title;
         }
@@ -508,6 +576,21 @@
         toggle.addEventListener('click', () => setAuthState(toggle.dataset.authToggle));
       });
 
+      authOtherMethodToggles.forEach((toggle, index) => {
+        const panel = toggle.closest('.auth-panel');
+        const secondary = panel?.querySelector('[data-auth-secondary-methods]');
+        if (secondary && !secondary.id) {
+          secondary.id = `auth-secondary-methods-${index + 1}`;
+        }
+        if (secondary?.id) {
+          toggle.setAttribute('aria-controls', secondary.id);
+        }
+        toggle.addEventListener('click', () => {
+          const expanded = toggle.getAttribute('aria-expanded') === 'true';
+          setOtherMethodsExpanded(panel, !expanded);
+        });
+      });
+
       authClose?.addEventListener('click', closeModal);
       authModalBackdrop.addEventListener('click', (event) => {
         if (event.target === authModalBackdrop) {
@@ -522,6 +605,7 @@
       });
 
       maybeOpenFromQuery();
+      resetOtherMethods();
 
       const resolveRedirect = (payload) => {
         if (payload?.redirect_url) {
