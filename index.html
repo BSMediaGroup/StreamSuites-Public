@@ -82,7 +82,7 @@
 
       <div class="cta-block">
         <div class="cta-primary-wrap" aria-hidden="true">
-          <button class="cta-primary" type="button" data-auth-trigger="login" data-creator-cta>Creator Login</button>
+          <button class="cta-primary" type="button" data-creator-cta>Continue</button>
         </div>
         <p class="cta-signup">No account? <button type="button" data-auth-trigger="signup">sign up</button> in seconds!</p>
       </div>
@@ -211,7 +211,7 @@
 
   <div class="cta-floating" aria-hidden="true">
     <div class="cta-primary-wrap">
-      <button class="cta-primary" type="button" data-auth-trigger="login" data-creator-cta>Creator Login</button>
+      <button class="cta-primary" type="button" data-creator-cta>Continue</button>
     </div>
   </div>
 
@@ -238,7 +238,7 @@
             <img src="/assets/icons/github.svg" alt="" />
             Continue with GitHub
           </a>
-          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/x/start">
+          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/x/start?surface=creator">
             <img src="/assets/icons/x.svg" alt="" />
             Continue with X
           </a>
@@ -306,7 +306,7 @@
             <img src="/assets/icons/github.svg" alt="" />
             Continue with GitHub
           </a>
-          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/x/start">
+          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/x/start?surface=creator">
             <img src="/assets/icons/x.svg" alt="" />
             Continue with X
           </a>
@@ -375,25 +375,109 @@
       const ctas = Array.from(document.querySelectorAll('[data-creator-cta]'));
       if (!ctas.length) return;
 
-      const LOGIN_LABEL = 'Creator Login';
-      const DASHBOARD_LABEL = 'Creator Dashboard';
+      const AUTH_SESSION_URL = 'https://api.streamsuites.app/auth/session';
+      const CREATOR_DASHBOARD_URL = 'https://creator.streamsuites.app/';
+      const CREATOR_CONTINUE_URL = 'https://creator.streamsuites.app/?login=1';
+      const AuthState = Object.freeze({
+        idle: 'idle',
+        starting: 'starting',
+        waiting_callback: 'waiting_callback',
+        success: 'success',
+        error: 'error',
+      });
+      const ctaFlow = {
+        state: AuthState.idle,
+        isCreatorSession: false,
+      };
 
-      const setLabel = (isAuthenticated) => {
+      const setState = (nextState) => {
+        ctaFlow.state = nextState;
         ctas.forEach((cta) => {
-          cta.textContent = isAuthenticated ? DASHBOARD_LABEL : LOGIN_LABEL;
+          cta.dataset.authState = nextState;
         });
       };
 
-      setLabel(false);
+      const setDisabled = (disabled) => {
+        ctas.forEach((cta) => {
+          cta.disabled = !!disabled;
+          cta.setAttribute('aria-busy', disabled ? 'true' : 'false');
+        });
+      };
 
-      // Required to align CTA label with creator session state.
-      fetch('https://api.streamsuites.app/auth/session', { credentials: 'include' })
-        .then((response) => (response.ok ? response.json() : null))
-        .then((payload) => {
-          const isCreator = Boolean(payload?.authenticated && payload?.user?.role === 'creator');
-          setLabel(isCreator);
+      const setLabel = () => {
+        let label = 'Continue';
+        if (ctaFlow.state === AuthState.starting || ctaFlow.state === AuthState.waiting_callback) {
+          label = 'Starting...';
+        } else if (ctaFlow.state === AuthState.error) {
+          label = 'Try Again';
+        } else if (ctaFlow.isCreatorSession) {
+          label = 'Creator Dashboard';
+        }
+        ctas.forEach((cta) => {
+          cta.textContent = label;
+        });
+      };
+
+      const isCreatorSessionPayload = (payload) => {
+        const hasValidSession = payload?.session_valid === true || payload?.authenticated === true;
+        return Boolean(hasValidSession && payload?.user?.role === 'creator');
+      };
+
+      const fetchCreatorSession = async () => {
+        const response = await fetch(AUTH_SESSION_URL, { credentials: 'include' });
+        if (!response.ok) return false;
+        const payload = await response.json().catch(() => null);
+        return isCreatorSessionPayload(payload);
+      };
+
+      const startContinueFlow = async () => {
+        if (ctaFlow.state === AuthState.starting || ctaFlow.state === AuthState.waiting_callback) {
+          return;
+        }
+        setState(AuthState.starting);
+        setDisabled(true);
+        setLabel();
+
+        try {
+          ctaFlow.isCreatorSession = await fetchCreatorSession();
+        } catch (error) {
+          setState(AuthState.error);
+          setDisabled(false);
+          setLabel();
+          return;
+        }
+
+        if (ctaFlow.isCreatorSession) {
+          setState(AuthState.success);
+          setLabel();
+          window.location.assign(CREATOR_DASHBOARD_URL);
+          return;
+        }
+
+        setState(AuthState.waiting_callback);
+        setLabel();
+        window.location.assign(CREATOR_CONTINUE_URL);
+      };
+
+      ctas.forEach((cta) => {
+        cta.addEventListener('click', (event) => {
+          event.preventDefault();
+          startContinueFlow();
+        });
+      });
+
+      setState(AuthState.idle);
+      setDisabled(false);
+      setLabel();
+      fetchCreatorSession()
+        .then((isCreator) => {
+          ctaFlow.isCreatorSession = isCreator;
+          setLabel();
         })
-        .catch(() => setLabel(false));
+        .catch(() => {
+          ctaFlow.isCreatorSession = false;
+          setLabel();
+        });
     })();
   </script>
 
@@ -417,6 +501,17 @@
       const AUTH_API_BASE = 'https://api.streamsuites.app/auth';
       const RESEND_ENDPOINT = `${AUTH_API_BASE}/verify/resend`;
       const PASSWORD_MIN_LENGTH = 8;
+      const AUTH_FLOW_STATES = Object.freeze({
+        idle: 'idle',
+        starting: 'starting',
+        waiting_callback: 'waiting_callback',
+        success: 'success',
+        error: 'error',
+      });
+      const oauthFlow = {
+        state: AUTH_FLOW_STATES.idle,
+        activeHref: '',
+      };
 
       const hasSpecialCharacter = (value) => /[^A-Za-z0-9]/.test(value);
 
@@ -440,6 +535,37 @@
           title: 'Sign up to StreamSuites™',
           subtitle: 'Start with OAuth or email to continue.',
         },
+      };
+
+      const setOauthFlowState = (nextState) => {
+        oauthFlow.state = nextState;
+        authModal.dataset.oauthFlowState = nextState;
+      };
+
+      const wireOauthFlowButtons = () => {
+        const oauthLinks = Array.from(
+          authModal.querySelectorAll('.auth-oauth-button[href^="https://api.streamsuites.app/auth/"]')
+        );
+        oauthLinks.forEach((link) => {
+          if (!(link instanceof HTMLAnchorElement)) return;
+          if (link.dataset.authFlowWired === 'true') return;
+          link.dataset.authFlowWired = 'true';
+          link.addEventListener('click', (event) => {
+            event.preventDefault();
+            if (oauthFlow.state === AUTH_FLOW_STATES.starting || oauthFlow.state === AUTH_FLOW_STATES.waiting_callback) {
+              return;
+            }
+            const href = link.href;
+            oauthFlow.activeHref = href;
+            setOauthFlowState(AUTH_FLOW_STATES.starting);
+            try {
+              setOauthFlowState(AUTH_FLOW_STATES.waiting_callback);
+              window.location.assign(href);
+            } catch (error) {
+              setOauthFlowState(AUTH_FLOW_STATES.error);
+            }
+          });
+        });
       };
 
       const setOtherMethodsExpanded = (panel, expanded) => {
@@ -472,6 +598,7 @@
 
       const openModal = (state = 'login') => {
         setAuthState(state);
+        setOauthFlowState(AUTH_FLOW_STATES.idle);
         authModalBackdrop.classList.add('is-open');
         authModalBackdrop.setAttribute('aria-hidden', 'false');
         document.body.classList.add('modal-open');
@@ -616,6 +743,9 @@
           setOtherMethodsExpanded(panel, !expanded);
         });
       });
+
+      setOauthFlowState(AUTH_FLOW_STATES.idle);
+      wireOauthFlowButtons();
 
       authClose?.addEventListener('click', closeModal);
       authModalBackdrop.addEventListener('click', (event) => {
