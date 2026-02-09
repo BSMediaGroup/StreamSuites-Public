@@ -12,6 +12,12 @@
   "use strict";
 
   let cleanupFns = [];
+  const ABOUT_URLS = {
+    "about.manifest.json": () => new URL("/about/about.manifest.json", window.location.origin).href,
+    "about_part1_core.json": () => new URL("/about/about_part1_core.json", window.location.origin).href,
+    "about_part2_platforms_interfaces.json": () => new URL("/about/about_part2_platforms_interfaces.json", window.location.origin).href,
+    "about_part3_about_system_spec.json": () => new URL("/about/about_part3_about_system_spec.json", window.location.origin).href
+  };
 
   const SCOPE_CONFIG = {
     "about_part1_core.json": {
@@ -81,32 +87,50 @@
     };
   }
 
-  function buildAboutPath(path) {
-    if (window.AboutData?.buildUrl) return AboutData.buildUrl(path);
-    const base = window.AboutData?.resolveBasePath?.() || "/about";
-    const trimmed = String(path || "").replace(/^\/+/, "");
-    return new URL(`${base.replace(/\/+$/, "")}/${trimmed}`, window.location.origin).toString();
+  function resolveAboutUrl(path) {
+    const raw = String(path || "").trim();
+    if (/^(https?:)?\/\//.test(raw)) return raw;
+    const normalized = raw.replace(/^\/+/, "");
+    if (ABOUT_URLS[normalized]) return ABOUT_URLS[normalized]();
+    if (normalized.startsWith("about/")) {
+      const key = normalized.replace(/^about\//, "");
+      if (ABOUT_URLS[key]) return ABOUT_URLS[key]();
+    }
+    return "";
   }
 
   async function fetchJson(url) {
+    console.info(`[PublicAbout] Fetch URL: ${url}`);
     const response = await fetch(url, { cache: "no-store" });
+    console.info(`[PublicAbout] Response status for ${url}: ${response.status}`);
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
-    return response.json();
+    try {
+      return await response.json();
+    } catch (err) {
+      console.error(`[PublicAbout] JSON parse failed for ${url}`, err);
+      throw err;
+    }
   }
 
   async function loadScopedSections() {
     try {
-      const manifest = await fetchJson(buildAboutPath("about.manifest.json"));
+      const manifestUrl = resolveAboutUrl("about.manifest.json");
+      const manifest = await fetchJson(manifestUrl);
       const sources = Array.isArray(manifest?.sources) ? manifest.sources : [];
 
       const scopedSections = [];
 
       for (const source of sources) {
         let payload;
+        const sourceUrl = resolveAboutUrl(source);
+        if (!sourceUrl) {
+          console.warn(`[PublicAbout] Unsupported scoped source ${source}`);
+          continue;
+        }
         try {
-          payload = await fetchJson(buildAboutPath(source));
+          payload = await fetchJson(sourceUrl);
         } catch (err) {
           console.warn(`[PublicAbout] Failed to load scoped source ${source}`, err);
           continue;
@@ -166,7 +190,7 @@
     if (!container) return;
 
     if (!scopes.length) {
-      container.innerHTML = `<p class="muted">${hasErrors ? "Failed to load data." : "No about sections available."}</p>`;
+      container.innerHTML = `<p class="muted">${hasErrors ? "Failed to load data." : "No entries available."}</p>`;
       return;
     }
 
@@ -233,7 +257,7 @@
               </div>
             </div>
             <div class="public-about-scope-body">
-              ${sectionMarkup || '<p class="muted">No sections available.</p>'}
+              ${sectionMarkup || '<p class="muted">No entries available.</p>'}
             </div>
           </section>
         `;

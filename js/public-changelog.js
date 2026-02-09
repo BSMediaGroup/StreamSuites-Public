@@ -130,10 +130,22 @@
     container.innerHTML = `
       <article class="public-glass-card changelog-error">
         <div class="section-heading">
-          <h3>Unable to load changelog</h3>
+          <h3>${message}</h3>
           <span class="lede">${message}</span>
         </div>
         <p class="muted">Please refresh the page or try again later.</p>
+      </article>
+    `;
+  }
+
+  function renderEmptyState() {
+    const container = document.getElementById("changelog-container");
+    if (!container) return;
+    container.innerHTML = `
+      <article class="public-glass-card changelog-empty">
+        <div class="section-heading">
+          <h3>No entries available.</h3>
+        </div>
       </article>
     `;
   }
@@ -145,8 +157,8 @@
       return Array.isArray(entries) ? entries : [];
     } catch (err) {
       console.warn("[Changelog] Failed to load data", err);
-      renderError("Changelog data is temporarily unavailable.");
-      return [];
+      renderError("Failed to load data.");
+      return null;
     }
   }
 
@@ -155,8 +167,9 @@
     if (!container) return;
 
     const releases = await loadChangelog();
+    if (releases === null) return;
     if (!releases.length) {
-      renderError("No changelog entries found.");
+      renderEmptyState();
       return;
     }
 

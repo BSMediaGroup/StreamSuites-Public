@@ -6,7 +6,7 @@
       window.Versioning.resolveBasePath()) ||
     "";
 
-  const dataPath = "/data/roadmap.json";
+  const dataUrl = () => new URL("/data/roadmap.json", window.location.origin).href;
   const fillGradient = "linear-gradient(90deg, #57b9ff, #63ffa2)";
   const pausedGradient = "linear-gradient(90deg, #ff5f6d, #ffc371)";
   const animationDuration = 1200;
@@ -109,28 +109,46 @@
   }
 
   async function loadData() {
-    const resolvedPath = resolveJsonUrl(dataPath);
+    const resolvedPath = resolveJsonUrl(dataUrl());
     try {
+      console.info(`[Roadmap] Fetch URL: ${resolvedPath}`);
       const response = await fetch(resolvedPath, { cache: "no-store" });
+      console.info(`[Roadmap] Response status for ${resolvedPath}: ${response.status}`);
       if (!response.ok) {
         console.error(`[Roadmap] Failed to fetch ${resolvedPath} (HTTP ${response.status})`);
         throw new Error(`HTTP ${response.status}`);
       }
       const payload = await response.json();
-      return Array.isArray(payload) ? payload : [];
+      const items = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.entries)
+          ? payload.entries
+          : [];
+      return {
+        failed: false,
+        items
+      };
     } catch (err) {
+      if (err instanceof SyntaxError) {
+        console.error(`[Roadmap] JSON parse failed for ${resolvedPath}: ${err.message}`);
+      }
       console.warn(`[Roadmap] Unable to load roadmap data from ${resolvedPath}`, err);
-      return [];
+      return {
+        failed: true,
+        items: []
+      };
     }
   }
 
   function buildCard(entry) {
-    const percent = Math.max(0, Math.min(100, Number(entry.percent) || 0));
+    const percentRaw = entry?.percent ?? entry?.progress;
+    const percent = Math.max(0, Math.min(100, Number(percentRaw) || 0));
     const icon = resolveAssetPath(entry.icon || "/assets/icons/ui/widget.svg");
-    const isPaused = entry.status === "paused" || entry.id === "rumble-sse";
+    const isPaused = entry.status === "paused";
     const statusBadge = isPaused
       ? '<span class="public-roadmap-status paused">Paused</span>'
       : "";
+    const metaText = entry.meta || entry.status || "";
     const barFill = isPaused ? pausedGradient : fillGradient;
 
     return `
@@ -143,7 +161,7 @@
           </span>
         </div>
         <div class="ss-progress-right">
-          <span class="ss-progress-meta">${entry.meta} ${statusBadge}</span>
+          <span class="ss-progress-meta">${metaText} ${statusBadge}</span>
           <button class="ss-progress-toggle ss-skill-toggle" type="button" aria-expanded="false" aria-label="Toggle detail">
             <span>▸</span>
           </button>
@@ -160,18 +178,26 @@
     </article>`;
   }
 
-  function render(data) {
+  function render(data, failed) {
     const container = document.getElementById("public-roadmap-list");
     if (!container) return [];
 
-    if (!Array.isArray(data) || data.length === 0) {
+    if (failed) {
       container.innerHTML = `
         <article class="public-glass-card changelog-error">
           <div class="section-heading">
-            <h3>Roadmap unavailable</h3>
-            <span class="lede">No roadmap entries could be loaded.</span>
+            <h3>Failed to load data.</h3>
           </div>
-          <p class="muted">Please refresh to retry.</p>
+        </article>`;
+      return [];
+    }
+
+    if (!Array.isArray(data) || data.length === 0) {
+      container.innerHTML = `
+        <article class="public-glass-card changelog-empty">
+          <div class="section-heading">
+            <h3>No entries available.</h3>
+          </div>
         </article>`;
       return [];
     }
@@ -328,8 +354,8 @@
   }
 
   async function init() {
-    const data = await loadData();
-    const cards = render(data);
+    const dataResult = await loadData();
+    const cards = render(dataResult.items, dataResult.failed);
     initToggles(cards);
     animateProgress(cards);
     attachHoverGlow(cards);
