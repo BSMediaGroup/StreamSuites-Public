@@ -73,6 +73,8 @@
       const REQUESTS_LOGIN_URL = "https://streamsuites.app/requests-login.html";
       const DEFAULT_RETURN_TO = "https://streamsuites.app/requests.html";
       const RETURN_STORAGE_KEY = "ss_requests_auth_return_to";
+      const POPUP_LAUNCHED_STORAGE_KEY = "ss_requests_popup_launched";
+      const POPUP_BLOCKED_STORAGE_KEY = "ss_requests_popup_blocked";
       const POLL_INTERVAL_MS = 800;
       const AUTH_COMPLETE_MESSAGE_TYPE = "ss_requests_auth_complete";
       const ALLOWED_MESSAGE_ORIGINS = new Set([
@@ -99,6 +101,22 @@
           window.localStorage.setItem(key, value);
         } catch (error) {
           // Ignore localStorage failures in restricted contexts.
+        }
+      };
+
+      const safeSessionStorageGet = (key) => {
+        try {
+          return window.sessionStorage.getItem(key);
+        } catch (error) {
+          return null;
+        }
+      };
+
+      const safeSessionStorageRemove = (key) => {
+        try {
+          window.sessionStorage.removeItem(key);
+        } catch (error) {
+          // Ignore sessionStorage failures in restricted contexts.
         }
       };
 
@@ -132,6 +150,9 @@
       const params = new URLSearchParams(window.location.search || "");
       const fromQuery = params.get("return_to");
       const returnTo = normalizeReturnTo(fromQuery || DEFAULT_RETURN_TO);
+      const popupLaunchedFromSubmit = safeSessionStorageGet(POPUP_LAUNCHED_STORAGE_KEY) === "1";
+      const popupBlockedFromSubmit = safeSessionStorageGet(POPUP_BLOCKED_STORAGE_KEY) === "1";
+      const suppressAutoOpen = popupLaunchedFromSubmit || popupBlockedFromSubmit;
       safeStorageSet(RETURN_STORAGE_KEY, returnTo);
 
       if (backLinkEl) {
@@ -184,6 +205,8 @@
         if (redirecting) return;
         redirecting = true;
         window.clearInterval(pollTimer);
+        safeSessionStorageRemove(POPUP_LAUNCHED_STORAGE_KEY);
+        safeSessionStorageRemove(POPUP_BLOCKED_STORAGE_KEY);
         try {
           if (loginWindow && !loginWindow.closed) {
             loginWindow.close();
@@ -218,10 +241,25 @@
           checkInFlight = false;
         }
 
-        ensureLoginVisible();
+        if (popupBlockedFromSubmit) {
+          if (openLoginEl) openLoginEl.hidden = false;
+          return;
+        }
+
+        if (!suppressAutoOpen) {
+          ensureLoginVisible();
+        }
       };
 
-      ensureLoginVisible();
+      if (popupBlockedFromSubmit) {
+        if (openLoginEl) openLoginEl.hidden = false;
+        setStatus("Login popup blocked. Use Open login to continue sign-in.");
+      } else if (popupLaunchedFromSubmit) {
+        setStatus("Complete sign-in in the login window. You will be redirected automatically.");
+      } else {
+        ensureLoginVisible();
+      }
+
       checkAuth();
       pollTimer = window.setInterval(checkAuth, POLL_INTERVAL_MS);
 

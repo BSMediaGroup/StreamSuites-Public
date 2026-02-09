@@ -5,7 +5,12 @@
   const PUBLIC_REQUEST_COMMENTS_API_BASE = "https://api.streamsuites.app/api/public/requests";
   const CREATOR_REQUEST_COMMENTS_API_BASE = "https://api.streamsuites.app/api/creator/requests";
   const AUTH_BRIDGE_URL = "/auth-bridge.html";
+  const REQUESTS_LOGIN_URL = "https://streamsuites.app/requests-login.html";
   const REQUESTS_RETURN_TO_URL = "https://streamsuites.app/requests.html";
+  const REQUESTS_LOGIN_POPUP_TARGET = "ss_public_auth_login";
+  const REQUESTS_LOGIN_POPUP_FEATURES = "popup=yes,width=560,height=760";
+  const POPUP_LAUNCHED_STORAGE_KEY = "ss_requests_popup_launched";
+  const POPUP_BLOCKED_STORAGE_KEY = "ss_requests_popup_blocked";
   const VOTE_TOKEN_STORAGE_KEY = "ss_vote_token";
   const REQUEST_DRAFT_STORAGE_KEY = "ss_requests_draft";
   const BODY_PREVIEW_LIMIT = 320;
@@ -883,8 +888,58 @@
     return endpoint.toString();
   }
 
-  function redirectToCreatorLogin() {
+  function buildRequestsLoginUrl() {
+    const endpoint = new URL(REQUESTS_LOGIN_URL);
+    endpoint.searchParams.set("return_to", REQUESTS_RETURN_TO_URL);
+    return endpoint.toString();
+  }
+
+  function safeSessionStorageSet(key, value) {
+    try {
+      window.sessionStorage.setItem(key, value);
+    } catch (error) {
+      // Ignore storage failures in restricted contexts.
+    }
+  }
+
+  function safeSessionStorageRemove(key) {
+    try {
+      window.sessionStorage.removeItem(key);
+    } catch (error) {
+      // Ignore storage failures in restricted contexts.
+    }
+  }
+
+  function openRequestsLoginPopup() {
+    const loginUrl = buildRequestsLoginUrl();
+    const popup = window.open(
+      loginUrl,
+      REQUESTS_LOGIN_POPUP_TARGET,
+      REQUESTS_LOGIN_POPUP_FEATURES
+    );
+    if (!popup) return null;
+    try {
+      popup.name = "ss_requests_auth";
+    } catch (error) {
+      // Ignore cross-origin timing issues when setting window.name.
+    }
+    return popup;
+  }
+
+  function redirectToCreatorLogin({ popupAttempted = false, popupWindow = null } = {}) {
     captureDraftFromForm();
+    if (popupAttempted) {
+      if (popupWindow) {
+        safeSessionStorageSet(POPUP_LAUNCHED_STORAGE_KEY, "1");
+        safeSessionStorageRemove(POPUP_BLOCKED_STORAGE_KEY);
+      } else {
+        safeSessionStorageSet(POPUP_BLOCKED_STORAGE_KEY, "1");
+        safeSessionStorageRemove(POPUP_LAUNCHED_STORAGE_KEY);
+      }
+    } else {
+      safeSessionStorageRemove(POPUP_LAUNCHED_STORAGE_KEY);
+      safeSessionStorageRemove(POPUP_BLOCKED_STORAGE_KEY);
+    }
     window.location.assign(buildCreatorLoginUrl());
   }
 
@@ -954,8 +1009,32 @@
   async function onSubmitRequestClicked() {
     hideSubmitFeedback();
     captureDraftFromForm();
-    const canSubmit = await ensureCreatorAccess({ redirectOnFailure: true });
-    if (!canSubmit) return;
+    const knownCreator =
+      commentAuthState.resolved &&
+      commentAuthState.authenticated &&
+      commentAuthState.isCreator;
+
+    let popupAttempted = false;
+    let popupWindow = null;
+    if (!knownCreator) {
+      popupAttempted = true;
+      popupWindow = openRequestsLoginPopup();
+    }
+
+    const canSubmit = await ensureCreatorAccess({ redirectOnFailure: false });
+    if (!canSubmit) {
+      redirectToCreatorLogin({ popupAttempted, popupWindow });
+      return;
+    }
+
+    if (popupWindow && !popupWindow.closed) {
+      try {
+        popupWindow.close();
+      } catch (error) {
+        // Ignore popup close failures.
+      }
+    }
+
     restoreDraftIntoForm();
     openSubmitPanel();
     if (submitTitleInputEl && !submitTitleInputEl.value.trim()) {
