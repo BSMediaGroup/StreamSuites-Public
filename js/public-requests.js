@@ -2,7 +2,7 @@
   const REQUESTS_API_URL = "https://api.streamsuites.app/api/public/requests";
   const ME_API_URL = "https://api.streamsuites.app/api/me";
   const CREATOR_REQUESTS_API_URL = "https://api.streamsuites.app/api/creator/requests";
-  const LOGIN_SHIM_URL = "/login.html";
+  const AUTH_BRIDGE_URL = "/auth-bridge.html";
   const REQUESTS_RETURN_TO_URL = "https://streamsuites.app/requests.html";
   const VOTE_TOKEN_STORAGE_KEY = "ss_vote_token";
   const REQUEST_DRAFT_STORAGE_KEY = "ss_requests_draft";
@@ -472,7 +472,7 @@
   }
 
   function buildCreatorLoginUrl() {
-    const endpoint = new URL(LOGIN_SHIM_URL, window.location.origin);
+    const endpoint = new URL(AUTH_BRIDGE_URL, window.location.origin);
     endpoint.searchParams.set("return_to", REQUESTS_RETURN_TO_URL);
     return endpoint.toString();
   }
