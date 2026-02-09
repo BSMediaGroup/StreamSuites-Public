@@ -344,6 +344,8 @@ StreamSuites-Public/
 ├── privacy.html
 ├── README.md
 ├── requests.html
+├── requests-auth-complete.html
+├── requests-login.html
 ├── scoreboards.html
 ├── support.html
 ├── tallies.html

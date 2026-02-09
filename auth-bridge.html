@@ -70,14 +70,13 @@
   <script>
     (function () {
       const ME_API_URL = "https://api.streamsuites.app/api/me";
-      const LOGIN_SHIM_URL = "https://streamsuites.app/login.html";
+      const REQUESTS_LOGIN_URL = "https://streamsuites.app/requests-login.html";
       const DEFAULT_RETURN_TO = "https://streamsuites.app/requests.html";
-      const BRIDGE_URL = "https://streamsuites.app/auth-bridge.html";
-      const RETURN_STORAGE_KEY = "ss_auth_return_to";
+      const RETURN_STORAGE_KEY = "ss_requests_auth_return_to";
       const POLL_INTERVAL_MS = 800;
-      const AUTH_COMPLETE_MESSAGE = "SS_REQUESTS_AUTH_COMPLETE";
+      const AUTH_COMPLETE_MESSAGE_TYPE = "ss_requests_auth_complete";
       const ALLOWED_MESSAGE_ORIGINS = new Set([
-        "https://creator.streamsuites.app",
+        window.location.origin,
         "https://streamsuites.app"
       ]);
 
@@ -132,21 +131,14 @@
       safeStorageSet(RETURN_STORAGE_KEY, returnTo);
 
       if (backLinkEl) {
-        backLinkEl.href = DEFAULT_RETURN_TO;
+        backLinkEl.href = returnTo;
       }
 
-      const bridgeReturnUrl = new URL(BRIDGE_URL);
-      bridgeReturnUrl.searchParams.set("return_to", returnTo);
-
-      const loginShimUrl = new URL(LOGIN_SHIM_URL);
-      loginShimUrl.searchParams.set("auth", "login");
-      loginShimUrl.searchParams.set(
-        "return_to",
-        `${bridgeReturnUrl.pathname}${bridgeReturnUrl.search}${bridgeReturnUrl.hash}`
-      );
+      const requestsLoginUrl = new URL(REQUESTS_LOGIN_URL);
+      requestsLoginUrl.searchParams.set("return_to", returnTo);
 
       if (openLoginEl) {
-        openLoginEl.href = loginShimUrl.toString();
+        openLoginEl.href = requestsLoginUrl.toString();
       }
 
       const ensureLoginVisible = () => {
@@ -162,7 +154,7 @@
 
         launchedLogin = true;
         loginWindow = window.open(
-          loginShimUrl.toString(),
+          requestsLoginUrl.toString(),
           "ss_public_auth_login",
           "popup=yes,width=560,height=760"
         );
@@ -231,17 +223,13 @@
 
       window.addEventListener("message", (event) => {
         if (!ALLOWED_MESSAGE_ORIGINS.has(event.origin)) return;
-        if (event.data !== AUTH_COMPLETE_MESSAGE) return;
+        const isRequestsAuthComplete =
+          event.data &&
+          typeof event.data === "object" &&
+          event.data.type === AUTH_COMPLETE_MESSAGE_TYPE;
+        if (!isRequestsAuthComplete) return;
 
-        try {
-          if (loginWindow && !loginWindow.closed) {
-            loginWindow.close();
-          }
-        } catch (error) {
-          // Ignore popup close failures.
-        }
-
-        void checkAuth();
+        redirectToReturnTarget();
       });
 
       window.addEventListener("beforeunload", () => {
