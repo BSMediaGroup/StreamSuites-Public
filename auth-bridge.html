@@ -62,7 +62,7 @@
     <h1>Signing you in...</h1>
     <p id="auth-bridge-status">Checking your session and opening login.</p>
     <div class="actions">
-      <a id="auth-bridge-open-login" href="#" target="_blank" rel="noopener noreferrer" hidden>Open login</a>
+      <a id="auth-bridge-open-login" href="#" target="_blank" hidden>Open login</a>
       <a id="auth-bridge-back" href="/requests.html">Back to Feature Requests</a>
     </div>
   </main>
@@ -75,6 +75,11 @@
       const BRIDGE_URL = "https://streamsuites.app/auth-bridge.html";
       const RETURN_STORAGE_KEY = "ss_auth_return_to";
       const POLL_INTERVAL_MS = 800;
+      const AUTH_COMPLETE_MESSAGE = "SS_REQUESTS_AUTH_COMPLETE";
+      const ALLOWED_MESSAGE_ORIGINS = new Set([
+        "https://creator.streamsuites.app",
+        "https://streamsuites.app"
+      ]);
 
       const statusEl = document.getElementById("auth-bridge-status");
       const openLoginEl = document.getElementById("auth-bridge-open-login");
@@ -159,8 +164,15 @@
         loginWindow = window.open(
           loginShimUrl.toString(),
           "ss_public_auth_login",
-          "popup=yes,width=560,height=760,noopener,noreferrer"
+          "popup=yes,width=560,height=760"
         );
+        if (loginWindow) {
+          try {
+            loginWindow.name = "ss_requests_auth";
+          } catch (error) {
+            // Ignore cross-origin timing issues when setting window.name.
+          }
+        }
 
         if (!loginWindow) {
           if (openLoginEl) openLoginEl.hidden = false;
@@ -216,6 +228,21 @@
 
       checkAuth();
       pollTimer = window.setInterval(checkAuth, POLL_INTERVAL_MS);
+
+      window.addEventListener("message", (event) => {
+        if (!ALLOWED_MESSAGE_ORIGINS.has(event.origin)) return;
+        if (event.data !== AUTH_COMPLETE_MESSAGE) return;
+
+        try {
+          if (loginWindow && !loginWindow.closed) {
+            loginWindow.close();
+          }
+        } catch (error) {
+          // Ignore popup close failures.
+        }
+
+        void checkAuth();
+      });
 
       window.addEventListener("beforeunload", () => {
         window.clearInterval(pollTimer);
