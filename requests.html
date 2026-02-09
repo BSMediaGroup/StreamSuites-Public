@@ -14,114 +14,131 @@
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
 
   <link rel="stylesheet" href="/css/theme-dark.css" />
+  <link rel="stylesheet" href="/css/components.css" />
   <link rel="stylesheet" href="/css/public-pages.css" />
   <link rel="stylesheet" href="/css/public-pages-v2.css" />
   <link rel="stylesheet" href="/css/status-widget.css" />
   <link rel="stylesheet" href="/css/requests.css" />
 </head>
 <body class="requests-page">
-  <div class="page-shell">
-    <header class="public-header">
-      <a href="/" class="brand-mark">
-        <img src="/assets/logos/logo.png" alt="StreamSuites" />
-        <div class="brand-title">
-          <h1>StreamSuites™</h1>
-          <p class="brand-subtitle">Feature requests</p>
+  <div class="public-bg" aria-hidden="true"></div>
+  <div class="public-surface">
+    <div class="public-shell">
+      <header class="public-topbar">
+        <a class="public-brand" href="/">
+          <img src="/assets/logos/logo.png" alt="StreamSuites" />
+          <div>
+            <h1>StreamSuites™</h1>
+            <p class="brand-subtitle">Public surface</p>
+          </div>
+        </a>
+        <div class="public-nav-wrapper">
+          <input type="checkbox" id="public-nav-toggle" class="nav-toggle" aria-label="Toggle navigation" />
+          <label class="hamburger" for="public-nav-toggle">
+            <span class="sr-only">Toggle navigation</span>
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+              <path class="line line-top-bottom" d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22"></path>
+              <path class="line" d="M7 16 27 16"></path>
+            </svg>
+          </label>
+          <div class="public-nav">
+            <span class="version-pill version-badge">Loading version…</span>
+            <a href="/about.html">About</a>
+            <a href="/tools.html">Tools</a>
+            <a href="/support.html">Support</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="/changelog.html">Changelog</a>
+            <a href="/accessibility.html">Accessibility</a>
+          </div>
         </div>
-      </a>
-      <div class="public-menu-group">
-        <input type="checkbox" id="requests-menu-toggle" class="nav-toggle" aria-label="Toggle navigation" />
-        <label class="hamburger" for="requests-menu-toggle">
-          <span class="sr-only">Toggle navigation</span>
-          <svg viewBox="0 0 32 32" aria-hidden="true">
-            <path class="line line-top-bottom" d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22"></path>
-            <path class="line" d="M7 16 27 16"></path>
-          </svg>
-        </label>
-        <div class="header-actions">
-          <span class="pill">public beta</span>
-          <a class="quiet-link" href="/">Home</a>
-          <a class="cta-link" href="/media.html">Media surfaces</a>
+      </header>
+
+      <section class="public-hero public-glass-panel requests-hero">
+        <div class="section-heading">
+          <h2>Feature Requests</h2>
+          <span class="public-badge">Public voting</span>
         </div>
-      </div>
-    </header>
+        <p class="muted">Browse, vote on, and help shape future StreamSuites features.</p>
+        <p class="helper-text">Voting is public. Submitting new requests requires creator login.</p>
+      </section>
 
-    <section class="page-heading">
-      <h2>Feature Requests</h2>
-      <span class="lede">Browse, vote on, and help shape future StreamSuites features.</span>
-    </section>
+      <section class="public-stack" aria-label="Feature requests">
+        <article class="public-glass-card">
+          <section class="requests-toolbar" aria-label="Requests controls">
+            <label for="request-sort" class="requests-sort-label">Sort</label>
+            <select id="request-sort" class="requests-sort-select">
+              <option value="new">New</option>
+              <option value="trending">Trending</option>
+            </select>
+            <button id="requests-submit-cta" class="ss-btn secondary requests-submit-btn" type="button">
+              Submit a feature request
+            </button>
+          </section>
 
-    <p class="helper-text">
-      Voting is public. Submitting new requests requires creator login.
-    </p>
-
-    <section class="requests-toolbar" aria-label="Requests controls">
-      <label for="request-sort" class="requests-sort-label">Sort</label>
-      <select id="request-sort" class="requests-sort-select">
-        <option value="new">New</option>
-        <option value="trending">Trending</option>
-      </select>
-      <button id="requests-submit-cta" class="ss-btn secondary requests-submit-btn" type="button">
-        Submit a feature request
-      </button>
-    </section>
-
-    <div id="requests-submit-success" class="empty-state requests-submit-success" hidden>
-      Thanks! Your request has been submitted for moderation.
-    </div>
-
-    <section id="requests-submit-panel" class="requests-submit-panel card" hidden aria-label="Submit feature request">
-      <div class="card-body">
-        <h3 class="title">Submit a feature request</h3>
-        <p class="requests-submit-note">
-          Submissions require creator login and are approved within 1–24 hours.
-        </p>
-        <form id="requests-submit-form" novalidate>
-          <div class="requests-field-group">
-            <label for="requests-submit-title">Title</label>
-            <input id="requests-submit-title" name="title" type="text" autocomplete="off" maxlength="160" />
-            <div id="requests-submit-title-error" class="requests-submit-field-error" hidden></div>
+          <div id="requests-submit-success" class="empty-state requests-submit-success" hidden>
+            Thanks! Your request has been submitted for moderation.
           </div>
-          <div class="requests-field-group">
-            <label for="requests-submit-body">Body</label>
-            <textarea id="requests-submit-body" name="body" rows="6" maxlength="4000"></textarea>
-            <div id="requests-submit-body-error" class="requests-submit-field-error" hidden></div>
+
+          <section id="requests-submit-panel" class="requests-submit-panel card" hidden aria-label="Submit feature request">
+            <div class="card-body">
+              <h3 class="title">Submit a feature request</h3>
+              <p class="requests-submit-note">
+                Submissions require creator login and are approved within 1-24 hours.
+              </p>
+              <form id="requests-submit-form" novalidate>
+                <div class="requests-field-group">
+                  <label for="requests-submit-title">Title</label>
+                  <input id="requests-submit-title" name="title" type="text" autocomplete="off" maxlength="160" />
+                  <div id="requests-submit-title-error" class="requests-submit-field-error" hidden></div>
+                </div>
+                <div class="requests-field-group">
+                  <label for="requests-submit-body">Body</label>
+                  <textarea id="requests-submit-body" name="body" rows="6" maxlength="4000"></textarea>
+                  <div id="requests-submit-body-error" class="requests-submit-field-error" hidden></div>
+                </div>
+                <div id="requests-submit-error" class="requests-submit-error" hidden></div>
+                <div class="requests-submit-actions">
+                  <button id="requests-submit-confirm" class="ss-btn primary" type="submit">Submit</button>
+                  <button id="requests-submit-cancel" class="ss-btn secondary" type="button">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </section>
+        </article>
+
+        <article class="public-glass-card">
+          <div id="requests-error" class="empty-state requests-inline-error" hidden>
+            Unable to load requests right now.
           </div>
-          <div id="requests-submit-error" class="requests-submit-error" hidden></div>
-          <div class="requests-submit-actions">
-            <button id="requests-submit-confirm" class="ss-btn primary" type="submit">Submit</button>
-            <button id="requests-submit-cancel" class="ss-btn secondary" type="button">Cancel</button>
+
+          <noscript>
+            <div class="empty-state">JavaScript is required to render feature requests.</div>
+          </noscript>
+
+          <div id="requests-loading" class="empty-state">Loading requests...</div>
+          <div id="requests-list" class="card-grid requests-grid" aria-live="polite"></div>
+          <div id="requests-empty" class="empty-state" hidden>
+            No approved requests are available yet.
           </div>
-        </form>
-      </div>
-    </section>
+        </article>
+      </section>
 
-    <div id="requests-error" class="empty-state requests-inline-error" hidden>
-      Unable to load requests right now.
+      <footer class="public-footer">
+        <div>
+          <span class="footer-version">Version</span>
+          <span class="footer-copyright">©</span>
+        </div>
+        <nav aria-label="Public footer navigation">
+          <a href="/about.html">About</a>
+          <a href="/tools.html">Tools</a>
+          <a href="/support.html">Support</a>
+          <a href="/donate.html">Donate</a>
+          <a href="/privacy.html">Privacy</a>
+          <a href="/changelog.html">Changelog</a>
+          <a href="/accessibility.html">Accessibility</a>
+        </nav>
+      </footer>
     </div>
-
-    <noscript>
-      <div class="empty-state">JavaScript is required to render feature requests.</div>
-    </noscript>
-
-    <div id="requests-loading" class="empty-state">Loading requests...</div>
-    <div id="requests-list" class="card-grid requests-grid" aria-live="polite"></div>
-    <div id="requests-empty" class="empty-state" hidden>
-      No approved requests are available yet.
-    </div>
-
-    <footer class="public-footer">
-      <span>StreamSuites™ Media Surface • Feature Requests</span>
-      <nav class="footer-login">
-        <a href="/donate.html">Donate</a>
-        <a class="login-primary" href="https://api.streamsuites.app/auth/login/google?surface=creator">Creator Login</a>
-        <span class="login-admin-group" aria-label="Administrator login options">
-          <span class="login-admin-label">Admin</span>
-          <a class="login-admin" href="https://api.streamsuites.app/auth/login/google?surface=admin">Google</a>
-          <a class="login-admin" href="https://api.streamsuites.app/auth/login/github?surface=admin">GitHub</a>
-        </span>
-      </nav>
-    </footer>
   </div>
 
   <script src="/js/utils/versioning.js"></script>
