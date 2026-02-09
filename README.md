@@ -276,6 +276,7 @@ StreamSuites-Public/
 │   ├── aurora-landing.css
 │   ├── base.css
 │   ├── components.css
+│   ├── donate.css
 │   ├── layout.css
 │   ├── overrides.css
 │   ├── public-pages.css
@@ -301,6 +302,7 @@ StreamSuites-Public/
 │   ├── public-changelog.js
 │   ├── public-clips.js
 │   ├── public-data.js
+│   ├── public-donate.js
 │   ├── public-polls.js
 │   ├── public-roadmap.js
 │   ├── public-tallies.js

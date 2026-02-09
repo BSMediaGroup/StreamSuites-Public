@@ -5,10 +5,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Support StreamSuites</title>
-  <meta name="description" content="Make an optional, one-time donation to support StreamSuites." />
+  <meta name="description" content="Support StreamSuites with an optional one-time donation that directly funds reliability, performance, and creator features." />
   <link rel="canonical" href="https://streamsuites.app/donate.html" />
   <meta property="og:title" content="Support StreamSuites" />
-  <meta property="og:description" content="Make an optional, one-time donation to support StreamSuites." />
+  <meta property="og:description" content="Optional one-time donations that help StreamSuites ship faster for creators and viewers." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://streamsuites.app/donate.html" />
   <meta property="og:image" content="/assets/backgrounds/seoshare.jpg" />
@@ -17,7 +17,8 @@
   <link rel="stylesheet" href="/css/components.css" />
   <link rel="stylesheet" href="/css/public-pages.css" />
   <link rel="stylesheet" href="/css/public-pages-v2.css" />
-  <link rel='stylesheet' href='/css/status-widget.css' />
+  <link rel="stylesheet" href="/css/donate.css" />
+  <link rel="stylesheet" href="/css/status-widget.css" />
 </head>
 <body class="donate-page">
   <div class="public-bg" aria-hidden="true"></div>
@@ -52,30 +53,163 @@
         </div>
       </header>
 
-      <section class="public-hero public-glass-panel">
-        <div class="section-heading">
-          <h2>Support StreamSuites</h2>
-          <span class="public-badge">Public surface</span>
+      <section class="public-hero public-glass-panel donate-hero" aria-labelledby="donate-hero-title">
+        <div class="donate-hero-grid">
+          <div class="donate-hero-copy">
+            <div class="section-heading">
+              <h2 id="donate-hero-title">Fund Better Creator Workflows</h2>
+              <span class="public-badge">Community funded</span>
+            </div>
+            <p class="muted">Your donation helps StreamSuites deliver faster runtimes, more reliable public tooling, and better experiences for both creators and viewers.</p>
+            <p class="muted">Donations are directed to infrastructure, operational tooling, and feature development. Every contribution improves platform performance and shipping velocity.</p>
+            <div class="hero-actions donate-hero-actions">
+              <a class="cta-link ss-btn primary" href="#donate">Support the roadmap</a>
+              <a class="cta-link ss-btn secondary" href="#funding-goals">View funding goals</a>
+            </div>
+          </div>
+          <aside class="public-glass-card donate-hero-side" aria-label="Trust highlights">
+            <h3>What support unlocks</h3>
+            <ul class="public-list donate-bullet-list">
+              <li>Lower latency in realtime modules and overlays</li>
+              <li>Higher throughput for media exports and public assets</li>
+              <li>More reliable uptime monitoring and incident response</li>
+            </ul>
+            <p class="helper-text">Secure payments by Stripe. StreamSuites does not receive raw card details.</p>
+          </aside>
         </div>
-        <p class="muted">StreamSuites stays focused on creators, fast public tools, and an ad-free experience. If you would like to help, you can make a voluntary one-time donation.</p>
       </section>
 
-      <section class="public-stack" aria-label="Donation options">
+      <section class="public-stack donate-primary-stack" aria-label="Donation checkout">
         <article class="public-glass-card donate-card" id="donate">
-          <h3>One-time donation</h3>
-          <p class="muted">Your support helps us keep StreamSuites reliable and continuously improving for the community.</p>
+          <div class="section-heading">
+            <h3>Make a One-Time Donation</h3>
+            <span class="public-badge">Stripe checkout</span>
+          </div>
+          <p class="muted">Choose a suggested amount or enter a custom value. Donations are optional and never required to use StreamSuites.</p>
           <div class="hero-actions donate-actions">
             <button class="cta-link ss-btn primary donate-option" type="button" data-amount="5">$5</button>
             <button class="cta-link ss-btn primary donate-option" type="button" data-amount="10">$10</button>
             <button class="cta-link ss-btn primary donate-option" type="button" data-amount="25">$25</button>
+            <button class="cta-link ss-btn primary donate-option" type="button" data-amount="50">$50</button>
+            <button class="cta-link ss-btn primary donate-option" type="button" data-amount="100">$100</button>
+            <button class="cta-link ss-btn primary donate-option" type="button" data-amount="250">$250</button>
           </div>
           <div class="donate-custom">
-            <label class="sr-only" for="donate-custom-amount">Custom amount</label>
-            <input id="donate-custom-amount" type="number" min="1" step="1" inputmode="decimal" placeholder="Custom amount (USD)" />
-            <button class="cta-link ss-btn secondary donate-option" type="button" data-action="custom">Donate custom amount</button>
+            <label for="donate-custom-amount">Custom amount (USD)</label>
+            <div class="donate-custom-row">
+              <input id="donate-custom-amount" type="number" min="1" step="1" inputmode="decimal" placeholder="Enter custom amount" />
+              <button class="cta-link ss-btn secondary donate-option" type="button" data-action="custom">Donate custom amount</button>
+            </div>
           </div>
-          <p class="helper-text">Donations are optional and never required to use StreamSuites.</p>
-          <p class="helper-text donate-error" role="alert" hidden>Sorry, we couldn't start the donation checkout. Please try again in a moment.</p>
+          <p class="helper-text">Payments are securely processed by Stripe Checkout.</p>
+          <p class="helper-text donate-message-inline" id="donate-message-inline" role="status" aria-live="polite" hidden>Message will be attached once enabled.</p>
+          <p class="helper-text donate-error" role="alert" hidden>Sorry, we could not start checkout. Please try again in a moment.</p>
+        </article>
+
+        <article class="public-glass-card secure-payments-card" aria-label="Payment security">
+          <h3>Secure payments by Stripe</h3>
+          <p class="muted">Every donation is handled through Stripe Checkout with industry-standard payment security and fraud protections.</p>
+          <p class="helper-text">Transparency: funding goes to hosting, compute, storage, bandwidth, monitoring, and active product development.</p>
+        </article>
+      </section>
+
+      <section class="public-stack donate-impact-stack" aria-labelledby="impact-tiers-title">
+        <article class="public-glass-panel">
+          <div class="section-heading">
+            <h2 id="impact-tiers-title">Impact Tiers</h2>
+            <span class="public-badge">Creator + viewer outcomes</span>
+          </div>
+          <p class="muted">Suggested amounts show tangible impact on performance, reliability, and feature delivery across StreamSuites tools.</p>
+          <div class="impact-grid" id="impact-tiers-grid">
+            <article class="public-glass-card impact-card">
+              <p class="impact-amount">$5</p>
+              <h3>Realtime compute boost</h3>
+              <p class="muted">Helps offset burst compute used by realtime modules during active stream windows.</p>
+              <button class="cta-link ss-btn secondary impact-select" type="button" data-amount="5">Select $5</button>
+            </article>
+            <article class="public-glass-card impact-card">
+              <p class="impact-amount">$10</p>
+              <h3>Faster event handling</h3>
+              <p class="muted">Supports lower-latency event processing for audience interactions and stream overlays.</p>
+              <button class="cta-link ss-btn secondary impact-select" type="button" data-amount="10">Select $10</button>
+            </article>
+            <article class="public-glass-card impact-card">
+              <p class="impact-amount">$25</p>
+              <h3>Clip and asset retention</h3>
+              <p class="muted">Funds storage growth for clip archives and media assets used by public pages and runtimes.</p>
+              <button class="cta-link ss-btn secondary impact-select" type="button" data-amount="25">Select $25</button>
+            </article>
+            <article class="public-glass-card impact-card">
+              <p class="impact-amount">$50</p>
+              <h3>Export throughput</h3>
+              <p class="muted">Improves bandwidth availability for exports and asset delivery to viewers.</p>
+              <button class="cta-link ss-btn secondary impact-select" type="button" data-amount="50">Select $50</button>
+            </article>
+            <article class="public-glass-card impact-card">
+              <p class="impact-amount">$100</p>
+              <h3>Monitoring and reliability</h3>
+              <p class="muted">Extends uptime monitoring and incident tooling so creators can depend on stable operations.</p>
+              <button class="cta-link ss-btn secondary impact-select" type="button" data-amount="100">Select $100</button>
+            </article>
+            <article class="public-glass-card impact-card">
+              <p class="impact-amount">$250</p>
+              <h3>Feature acceleration</h3>
+              <p class="muted">Directly increases development velocity for roadmap features requested by the community.</p>
+              <button class="cta-link ss-btn secondary impact-select" type="button" data-amount="250">Select $250</button>
+            </article>
+          </div>
+        </article>
+      </section>
+
+      <section class="public-stack donate-goals-stack" id="funding-goals" aria-labelledby="funding-goals-title">
+        <article class="public-glass-panel">
+          <div class="section-heading">
+            <h2 id="funding-goals-title">Funding Goals</h2>
+            <span class="public-badge">Placeholder totals</span>
+          </div>
+          <p class="muted">These goals represent the next operational upgrades for faster and more reliable creator tooling.</p>
+          <p class="helper-text goal-placeholder-note">Totals are currently shown as placeholders; live totals will be enabled in a later Stripe phase.</p>
+          <div class="goals-grid" id="donation-goals-grid"></div>
+        </article>
+      </section>
+
+      <section class="public-stack donate-message-stack" aria-labelledby="donor-message-title">
+        <article class="public-glass-card donor-message-card">
+          <div class="section-heading">
+            <h3 id="donor-message-title">Leave a Message</h3>
+            <span class="public-badge">Coming soon</span>
+          </div>
+          <label for="donor-message">Message (optional)</label>
+          <textarea id="donor-message" name="donor-message" rows="5" maxlength="320" placeholder="Share what you want StreamSuites to improve next."></textarea>
+          <div class="donor-message-meta">
+            <p class="helper-text">Message support will be enabled in a later phase (Stripe metadata / dashboard).</p>
+            <p class="donor-message-count" id="donor-message-count" aria-live="polite">0 / 320</p>
+          </div>
+          <p class="helper-text donor-message-status" id="donor-message-status" role="status" aria-live="polite" hidden>Message draft saved locally.</p>
+        </article>
+      </section>
+
+      <section class="public-stack donate-trust-stack" aria-labelledby="faq-trust-title">
+        <article class="public-glass-card donate-trust-card">
+          <div class="section-heading">
+            <h3 id="faq-trust-title">Trust and Transparency</h3>
+            <span class="public-badge">FAQ</span>
+          </div>
+          <p class="muted">StreamSuites keeps public tools fast and free to access. Donations fund hosting capacity, platform tooling, and focused development cycles.</p>
+          <div class="faq-grid">
+            <article class="faq-item">
+              <h4>Are donations required?</h4>
+              <p class="muted">No. StreamSuites remains accessible without payment. Donations are optional support.</p>
+            </article>
+            <article class="faq-item">
+              <h4>Who processes payments?</h4>
+              <p class="muted">Stripe Checkout processes all donations, including payment security and transaction handling.</p>
+            </article>
+            <article class="faq-item">
+              <h4>Where does the money go?</h4>
+              <p class="muted">Funds are allocated to compute, storage, bandwidth, reliability tooling, and faster feature delivery.</p>
+            </article>
+          </div>
         </article>
       </section>
 
@@ -99,107 +233,8 @@
 
   <script src="/js/utils/versioning.js"></script>
   <script src="/js/utils/version-stamp.js"></script>
-  <script>
-    (function () {
-      var donateCard = document.querySelector(".public-glass-card#donate");
-      if (!donateCard) {
-        return;
-      }
-
-      var statusMessage = donateCard.querySelector(".donate-error");
-      var presetButtons = donateCard.querySelectorAll(".donate-option[data-amount]");
-      var customButton = donateCard.querySelector(".donate-option[data-action=\"custom\"]");
-      var customInput = donateCard.querySelector("#donate-custom-amount");
-
-      var endpoint = "https://api.streamsuites.app/billing/donate/session";
-
-      function setStatusMessage(message) {
-        if (!statusMessage) {
-          return;
-        }
-        statusMessage.textContent = message;
-        statusMessage.hidden = false;
-      }
-
-      function setBusyState(isBusy, activeButton, label) {
-        var buttons = donateCard.querySelectorAll(".donate-option");
-        buttons.forEach(function (button) {
-          if (!button.dataset.label) {
-            button.dataset.label = button.textContent;
-          }
-          button.disabled = isBusy;
-          if (button === activeButton) {
-            button.setAttribute("aria-busy", isBusy ? "true" : "false");
-            button.textContent = isBusy ? label : button.dataset.label;
-          } else if (!isBusy) {
-            button.textContent = button.dataset.label;
-            button.removeAttribute("aria-busy");
-          }
-        });
-        if (customInput) {
-          customInput.disabled = isBusy;
-        }
-      }
-
-      function startDonation(amount, activeButton) {
-        setBusyState(true, activeButton, "Redirecting...");
-        if (statusMessage) {
-          statusMessage.hidden = true;
-        }
-
-        fetch(endpoint, {
-          method: "POST",
-          headers: {
-            "Accept": "application/json",
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            amount: amount,
-            source: "public"
-          })
-        })
-          .then(function (response) {
-            if (!response.ok) {
-              throw new Error("Donation request failed.");
-            }
-            return response.json();
-          })
-          .then(function (data) {
-            if (!data || typeof data.checkout_url !== "string" || !data.checkout_url.length) {
-              throw new Error("Donation session was not returned.");
-            }
-            window.location.assign(data.checkout_url);
-          })
-          .catch(function () {
-            setBusyState(false);
-            setStatusMessage("Sorry, we couldn't start the donation checkout. Please try again in a moment.");
-          });
-      }
-
-      presetButtons.forEach(function (button) {
-        button.addEventListener("click", function () {
-          var amount = Number(button.dataset.amount);
-          if (!Number.isFinite(amount) || amount <= 0) {
-            setStatusMessage("Please choose a valid donation amount.");
-            return;
-          }
-          startDonation(amount, button);
-        });
-      });
-
-      if (customButton && customInput) {
-        customButton.addEventListener("click", function () {
-          var amount = Number(customInput.value);
-          if (!Number.isFinite(amount) || amount <= 0) {
-            setStatusMessage("Please enter a valid donation amount.");
-            return;
-          }
-          startDonation(amount, customButton);
-        });
-      }
-    })();
-  </script>
-  <script src='/js/status-widget.js' defer></script>
+  <script src="/js/public-donate.js"></script>
+  <script src="/js/status-widget.js" defer></script>
 </body>
 </html>
 
