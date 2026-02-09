@@ -16,6 +16,14 @@
   let openCard = null;
   let hasAnimated = false;
 
+  function resolveJsonUrl(path) {
+    try {
+      return new URL(path, window.location.origin).toString();
+    } catch {
+      return String(path || "");
+    }
+  }
+
   function createBezierEasing(p1x, p1y, p2x, p2y) {
     const NEWTON_ITERATIONS = 4;
     const NEWTON_MIN_SLOPE = 0.001;
@@ -101,13 +109,17 @@
   }
 
   async function loadData() {
+    const resolvedPath = resolveJsonUrl(dataPath);
     try {
-      const response = await fetch(dataPath, { cache: "no-store" });
-      if (!response.ok) throw new Error("Failed to load roadmap data");
+      const response = await fetch(resolvedPath, { cache: "no-store" });
+      if (!response.ok) {
+        console.error(`[Roadmap] Failed to fetch ${resolvedPath} (HTTP ${response.status})`);
+        throw new Error(`HTTP ${response.status}`);
+      }
       const payload = await response.json();
       return Array.isArray(payload) ? payload : [];
     } catch (err) {
-      console.warn("Unable to load roadmap", err);
+      console.warn(`[Roadmap] Unable to load roadmap data from ${resolvedPath}`, err);
       return [];
     }
   }

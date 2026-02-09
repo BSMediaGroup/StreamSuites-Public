@@ -1,8 +1,18 @@
 const CHANGELOG_PATH = "/data/changelog.json";
 
+function resolveJsonUrl(path) {
+  try {
+    return new URL(path, window.location.origin).toString();
+  } catch {
+    return String(path || "");
+  }
+}
+
 async function fetchJson(url) {
-  const response = await fetch(url, { cache: "no-store" });
+  const resolvedUrl = resolveJsonUrl(url);
+  const response = await fetch(resolvedUrl, { cache: "no-store" });
   if (!response.ok) {
+    console.error(`[Changelog] Failed to fetch ${resolvedUrl} (HTTP ${response.status})`);
     throw new Error(`HTTP ${response.status}`);
   }
   return response.json();

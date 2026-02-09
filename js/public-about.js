@@ -85,7 +85,7 @@
     if (window.AboutData?.buildUrl) return AboutData.buildUrl(path);
     const base = window.AboutData?.resolveBasePath?.() || "/about";
     const trimmed = String(path || "").replace(/^\/+/, "");
-    return `${base}/${trimmed}`.replace(/\\+/g, "/");
+    return new URL(`${base.replace(/\/+$/, "")}/${trimmed}`, window.location.origin).toString();
   }
 
   async function fetchJson(url) {
@@ -161,12 +161,12 @@
     });
   }
 
-  function renderSections(scopes = []) {
+  function renderSections(scopes = [], hasErrors = false) {
     const container = document.getElementById("public-about-sections");
     if (!container) return;
 
     if (!scopes.length) {
-      container.innerHTML = `<p class="muted">No about sections available.</p>`;
+      container.innerHTML = `<p class="muted">${hasErrors ? "Failed to load data." : "No about sections available."}</p>`;
       return;
     }
 
@@ -342,7 +342,7 @@
     renderMeta(data.version, data.lastUpdated, data.build);
     renderRuntimeMetaFromVersioning();
     renderErrors(data.errors);
-    renderSections(scopesToRender);
+    renderSections(scopesToRender, Array.isArray(data.errors) && data.errors.length > 0);
     handleHashNavigation();
 
     const hashHandler = () => handleHashNavigation();
