@@ -2,6 +2,8 @@
   const REQUESTS_API_URL = "https://api.streamsuites.app/api/public/requests";
   const ME_API_URL = "https://api.streamsuites.app/api/me";
   const CREATOR_REQUESTS_API_URL = "https://api.streamsuites.app/api/creator/requests";
+  const PUBLIC_REQUEST_COMMENTS_API_BASE = "https://api.streamsuites.app/api/public/requests";
+  const CREATOR_REQUEST_COMMENTS_API_BASE = "https://api.streamsuites.app/api/creator/requests";
   const AUTH_BRIDGE_URL = "/auth-bridge.html";
   const REQUESTS_RETURN_TO_URL = "https://streamsuites.app/requests.html";
   const VOTE_TOKEN_STORAGE_KEY = "ss_vote_token";
@@ -32,6 +34,12 @@
   const votingInFlight = new Set();
   let submitInFlight = false;
   let meStatusPromise = null;
+  const commentsByRequestId = new Map();
+  const commentAuthState = {
+    authenticated: false,
+    isCreator: false,
+    resolved: false
+  };
 
   function getVoteToken() {
     try {
@@ -118,6 +126,27 @@
     return null;
   }
 
+  function readCommentCount(raw) {
+    const candidates = [
+      raw?.comment_count,
+      raw?.comments_count,
+      raw?.commentCount,
+      raw?.commentsCount,
+      raw?.request?.comment_count,
+      raw?.request?.comments_count,
+      raw?.request?.commentCount,
+      raw?.request?.commentsCount
+    ];
+
+    for (const value of candidates) {
+      const numeric = Number(value);
+      if (Number.isFinite(numeric) && numeric >= 0) {
+        return numeric;
+      }
+    }
+    return null;
+  }
+
   function normalizeRequest(raw) {
     if (!raw || typeof raw !== "object") return null;
     const id = raw.id || raw.request_id || raw.requestId;
@@ -144,6 +173,7 @@
       createdAt,
       createdTimestamp: parseDateTimestamp(createdAt),
       implementedAt,
+      commentCount: readCommentCount(raw) ?? 0,
       voteError: ""
     };
   }
@@ -157,6 +187,73 @@
 
     if (!Array.isArray(rows)) return [];
     return rows.map(normalizeRequest).filter(Boolean);
+  }
+
+  function normalizeComment(raw) {
+    if (!raw || typeof raw !== "object") return null;
+
+    const body = String(raw.body || raw.comment || raw.text || "").trim();
+    if (!body) return null;
+
+    const createdAt = raw.created_at || raw.createdAt || raw.posted_at || raw.postedAt || null;
+    return {
+      id: String(raw.id || raw.comment_id || raw.commentId || `${createdAt || Date.now()}-${body.slice(0, 12)}`),
+      body,
+      creatorDisplayName: String(
+        raw.creator_display_name ||
+        raw.created_by_display_name ||
+        raw.creator_name ||
+        raw.creator?.display_name ||
+        raw.creator?.name ||
+        raw.creator ||
+        "Creator"
+      ),
+      createdAt
+    };
+  }
+
+  function normalizeCommentsPayload(payload) {
+    const rows =
+      payload?.comments ||
+      payload?.items ||
+      payload?.data?.comments ||
+      payload?.data?.items ||
+      payload?.data ||
+      (Array.isArray(payload) ? payload : []);
+
+    if (!Array.isArray(rows)) return [];
+    return rows.map(normalizeComment).filter(Boolean);
+  }
+
+  function getCommentState(requestId) {
+    const key = String(requestId);
+    if (!commentsByRequestId.has(key)) {
+      commentsByRequestId.set(key, {
+        expanded: false,
+        loading: false,
+        loaded: false,
+        loadError: "",
+        postError: "",
+        postInFlight: false,
+        draft: "",
+        items: []
+      });
+    }
+    return commentsByRequestId.get(key);
+  }
+
+  function syncCommentStateWithRequests() {
+    const validIds = new Set(requests.map((request) => request.id));
+    for (const requestId of commentsByRequestId.keys()) {
+      if (!validIds.has(requestId)) {
+        commentsByRequestId.delete(requestId);
+      }
+    }
+  }
+
+  function safeCommentCount(count) {
+    const numeric = Number(count);
+    return Number.isFinite(numeric) && numeric >= 0 ? numeric : 0;
   }
 
   function getOrderedRequests() {
@@ -250,7 +347,131 @@
     voteError.hidden = !request.voteError;
     voteError.textContent = request.voteError || "";
 
-    body.append(titleRow, content, meta, voteRow, voteError);
+    const commentState = getCommentState(request.id);
+
+    const commentsSection = document.createElement("section");
+    commentsSection.className = "request-comments";
+
+    const commentsToggle = document.createElement("button");
+    commentsToggle.type = "button";
+    commentsToggle.className = "request-comments-toggle";
+    commentsToggle.setAttribute("aria-expanded", commentState.expanded ? "true" : "false");
+    commentsToggle.textContent = `Comments (${safeCommentCount(request.commentCount)})`;
+    commentsToggle.addEventListener("click", () => {
+      toggleCommentsSection(request.id);
+    });
+
+    commentsSection.appendChild(commentsToggle);
+
+    if (commentState.expanded) {
+      const commentsPanel = document.createElement("div");
+      commentsPanel.className = "request-comments-panel";
+
+      if (commentState.loading) {
+        const status = document.createElement("p");
+        status.className = "request-comments-status";
+        status.textContent = "Loading comments...";
+        commentsPanel.appendChild(status);
+      } else if (commentState.loadError) {
+        const status = document.createElement("p");
+        status.className = "request-comments-status request-comments-status-error";
+        status.textContent = "Unable to load comments.";
+        commentsPanel.appendChild(status);
+      } else if (!commentState.items.length) {
+        const empty = document.createElement("p");
+        empty.className = "request-comments-status";
+        empty.textContent = "No comments yet.";
+        commentsPanel.appendChild(empty);
+      } else {
+        const list = document.createElement("ul");
+        list.className = "request-comments-list";
+
+        commentState.items.forEach((comment) => {
+          const item = document.createElement("li");
+          item.className = "request-comment-item";
+
+          const commentMeta = document.createElement("div");
+          commentMeta.className = "request-comment-meta";
+
+          const author = document.createElement("span");
+          author.className = "request-comment-author";
+          author.textContent = comment.creatorDisplayName;
+
+          const created = document.createElement("span");
+          created.className = "request-comment-created";
+          created.textContent = parseDateLabel(comment.createdAt);
+
+          commentMeta.append(author, created);
+
+          const text = document.createElement("p");
+          text.className = "request-comment-body";
+          text.textContent = comment.body;
+
+          item.append(commentMeta, text);
+          list.appendChild(item);
+        });
+
+        commentsPanel.appendChild(list);
+      }
+
+      const composer = document.createElement("div");
+      composer.className = "request-comment-composer";
+
+      if (commentAuthState.isCreator) {
+        const textarea = document.createElement("textarea");
+        textarea.className = "request-comment-input";
+        textarea.rows = 3;
+        textarea.placeholder = "Write a comment...";
+        textarea.value = commentState.draft;
+        textarea.disabled = commentState.postInFlight;
+        textarea.addEventListener("input", (event) => {
+          commentState.draft = String(event.target?.value || "");
+          if (commentState.postError) {
+            commentState.postError = "";
+            renderRequests();
+          }
+        });
+
+        const actions = document.createElement("div");
+        actions.className = "request-comment-actions";
+
+        const submit = document.createElement("button");
+        submit.type = "button";
+        submit.className = "ss-btn secondary request-comment-submit";
+        submit.disabled = commentState.postInFlight;
+        submit.textContent = commentState.postInFlight ? "Posting..." : "Post comment";
+        submit.addEventListener("click", () => {
+          handleCommentSubmit(request.id);
+        });
+
+        actions.appendChild(submit);
+        composer.append(textarea, actions);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.className = "request-comment-input";
+        textarea.rows = 3;
+        textarea.placeholder = "Creator login required to comment.";
+        textarea.disabled = true;
+
+        const hint = document.createElement("p");
+        hint.className = "request-comment-login-hint";
+        hint.textContent = "Creator login required to comment.";
+
+        composer.append(textarea, hint);
+      }
+
+      if (commentState.postError) {
+        const postError = document.createElement("p");
+        postError.className = "request-comment-error";
+        postError.textContent = commentState.postError;
+        composer.appendChild(postError);
+      }
+
+      commentsPanel.appendChild(composer);
+      commentsSection.appendChild(commentsPanel);
+    }
+
+    body.append(titleRow, content, meta, voteRow, voteError, commentsSection);
     card.appendChild(body);
     return card;
   }
@@ -270,6 +491,141 @@
       fragment.appendChild(buildRequestCard(request));
     });
     listEl.appendChild(fragment);
+  }
+
+  async function loadCommentsForRequest(requestId) {
+    const state = getCommentState(requestId);
+    if (state.loading || state.loaded) return;
+
+    state.loading = true;
+    state.loadError = "";
+    renderRequests();
+
+    try {
+      const response = await fetch(
+        `${PUBLIC_REQUEST_COMMENTS_API_BASE}/${encodeURIComponent(requestId)}/comments`,
+        {
+          method: "GET",
+          cache: "no-store",
+          headers: { Accept: "application/json" }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Comment list failed with status ${response.status}`);
+      }
+
+      let payload = [];
+      try {
+        payload = await response.json();
+      } catch (error) {
+        payload = [];
+      }
+
+      state.items = normalizeCommentsPayload(payload);
+      state.loaded = true;
+      state.loadError = "";
+
+      const request = requests.find((entry) => entry.id === String(requestId));
+      if (request) {
+        request.commentCount = state.items.length;
+      }
+    } catch (error) {
+      state.loadError = "Unable to load comments.";
+    } finally {
+      state.loading = false;
+      renderRequests();
+    }
+  }
+
+  function toggleCommentsSection(requestId) {
+    const state = getCommentState(requestId);
+    state.expanded = !state.expanded;
+    renderRequests();
+
+    if (state.expanded && !state.loaded && !state.loading) {
+      loadCommentsForRequest(requestId);
+    }
+  }
+
+  async function handleCommentSubmit(requestId) {
+    const state = getCommentState(requestId);
+    if (state.postInFlight || !commentAuthState.isCreator) return;
+
+    const body = String(state.draft || "").trim();
+    if (!body) {
+      state.postError = "Comment cannot be empty.";
+      renderRequests();
+      return;
+    }
+
+    state.postInFlight = true;
+    state.postError = "";
+    renderRequests();
+
+    try {
+      const response = await fetch(
+        `${CREATOR_REQUEST_COMMENTS_API_BASE}/${encodeURIComponent(requestId)}/comments`,
+        {
+          method: "POST",
+          cache: "no-store",
+          credentials: "include",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ body })
+        }
+      );
+
+      if (!response.ok) {
+        let message = "Unable to post comment.";
+        try {
+          const failure = await response.json();
+          const parsed = parseApiError(failure);
+          if (parsed) message = parsed;
+        } catch (error) {
+          // Keep default message for non-JSON responses.
+        }
+        throw new Error(message);
+      }
+
+      let payload = null;
+      try {
+        payload = await response.json();
+      } catch (error) {
+        payload = null;
+      }
+
+      const appended = normalizeComment(
+        payload?.comment ||
+        payload?.data?.comment ||
+        payload?.data ||
+        payload
+      ) || {
+        id: `local-${Date.now()}`,
+        body,
+        creatorDisplayName: "Creator",
+        createdAt: new Date().toISOString()
+      };
+
+      state.items.push(appended);
+      state.loaded = true;
+      state.draft = "";
+      state.postError = "";
+
+      const request = requests.find((entry) => entry.id === String(requestId));
+      if (request) {
+        request.commentCount = state.items.length;
+      }
+    } catch (error) {
+      state.postError = error instanceof Error && error.message
+        ? error.message
+        : "Unable to post comment.";
+    } finally {
+      state.postInFlight = false;
+      renderRequests();
+    }
   }
 
   function captureTokenFromPayload(payload) {
@@ -471,6 +827,22 @@
     }
   }
 
+  function primeCommentAuthState() {
+    fetchMeStatus(false)
+      .then((me) => {
+        commentAuthState.authenticated = Boolean(me?.authenticated);
+        commentAuthState.isCreator = Boolean(me?.authenticated && me?.isCreator);
+      })
+      .catch(() => {
+        commentAuthState.authenticated = false;
+        commentAuthState.isCreator = false;
+      })
+      .finally(() => {
+        commentAuthState.resolved = true;
+        renderRequests();
+      });
+  }
+
   function buildCreatorLoginUrl() {
     const endpoint = new URL(AUTH_BRIDGE_URL, window.location.origin);
     endpoint.searchParams.set("return_to", REQUESTS_RETURN_TO_URL);
@@ -498,7 +870,7 @@
     return false;
   }
 
-  function parseSubmitError(payload) {
+  function parseApiError(payload) {
     const candidates = [
       payload?.error,
       payload?.message,
@@ -513,6 +885,10 @@
       }
     }
     return "";
+  }
+
+  function parseSubmitError(payload) {
+    return parseApiError(payload);
   }
 
   function validateSubmitForm() {
@@ -676,6 +1052,7 @@
       const payload = await response.json();
       captureTokenFromPayload(payload);
       requests = normalizePayload(payload);
+      syncCommentStateWithRequests();
       renderRequests();
     } catch (error) {
       if (loadErrorEl) loadErrorEl.hidden = false;
@@ -724,6 +1101,7 @@
         fetchRequests();
       });
     }
+    primeCommentAuthState();
     fetchRequests();
     initializeSubmissionFlow();
   }
