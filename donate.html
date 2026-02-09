@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="/css/public-pages-v2.css" />
   <link rel='stylesheet' href='/css/status-widget.css' />
 </head>
-<body>
+<body class="donate-page">
   <div class="public-bg" aria-hidden="true"></div>
   <div class="public-surface">
     <div class="public-shell">
@@ -61,18 +61,18 @@
       </section>
 
       <section class="public-stack" aria-label="Donation options">
-        <article class="public-glass-card" id="donate">
+        <article class="public-glass-card donate-card" id="donate">
           <h3>One-time donation</h3>
           <p class="muted">Your support helps us keep StreamSuites reliable and continuously improving for the community.</p>
           <div class="hero-actions donate-actions">
-            <button class="cta-link donate-option" type="button" data-amount="5">$5</button>
-            <button class="cta-link donate-option" type="button" data-amount="10">$10</button>
-            <button class="cta-link donate-option" type="button" data-amount="25">$25</button>
+            <button class="cta-link ss-btn primary donate-option" type="button" data-amount="5">$5</button>
+            <button class="cta-link ss-btn primary donate-option" type="button" data-amount="10">$10</button>
+            <button class="cta-link ss-btn primary donate-option" type="button" data-amount="25">$25</button>
           </div>
           <div class="donate-custom">
             <label class="sr-only" for="donate-custom-amount">Custom amount</label>
             <input id="donate-custom-amount" type="number" min="1" step="1" inputmode="decimal" placeholder="Custom amount (USD)" />
-            <button class="cta-link donate-option" type="button" data-action="custom">Donate custom amount</button>
+            <button class="cta-link ss-btn secondary donate-option" type="button" data-action="custom">Donate custom amount</button>
           </div>
           <p class="helper-text">Donations are optional and never required to use StreamSuites.</p>
           <p class="helper-text donate-error" role="alert" hidden>Sorry, we couldn't start the donation checkout. Please try again in a moment.</p>

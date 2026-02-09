@@ -163,7 +163,7 @@ body {
   font-size: 12px;
 }
 
-/* Public button system (Creator parity) */
+/* Public button system (Creator button replacement) */
 .ss-btn,
 .cta-link,
 .support-hub .support-btn,
@@ -171,44 +171,44 @@ body {
 .viz-utility-btn {
   --btn-bg-1: var(--public-v2-btn-secondary-1);
   --btn-bg-2: var(--public-v2-btn-secondary-2);
-  --btn-bg-color: var(--public-v2-btn-text);
-  position: relative;
-  border: none;
-  border-radius: 0.6em;
-  padding: 0.62em 1.04em;
-  min-height: 28px;
-  font-size: 0.68rem;
+  --btn-text: var(--public-v2-btn-text);
+  border: 0;
+  padding: 0.6em 1em;
+  border-radius: 0.5em;
+  background-size: 280% auto;
+  background-image: linear-gradient(
+    325deg,
+    var(--btn-bg-2) 0%,
+    var(--btn-bg-1) 55%,
+    var(--btn-bg-2) 90%
+  );
+  color: var(--btn-text);
+  text-decoration: none;
+  clip-path: none;
+  min-height: 26px;
+  min-width: 120px;
+  font-size: 0.6rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  text-decoration: none;
-  color: var(--btn-bg-color);
-  background-size: 280% auto;
-  background-image: linear-gradient(325deg, var(--btn-bg-2) 0%, var(--btn-bg-1) 55%, var(--btn-bg-2) 90%);
+  font-family: inherit;
+  line-height: 1.2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  transition: background-position 0.8s ease, box-shadow 0.3s ease, filter 0.3s ease, opacity 0.2s ease;
+  cursor: pointer;
+  transition: 0.8s;
   box-shadow:
-    0 0 14px rgba(80, 96, 150, 0.35),
-    0 5px 6px -1px rgba(46, 58, 108, 0.35),
-    inset 4px 4px 8px rgba(116, 134, 198, 0.24),
-    inset -4px -4px 8px rgba(32, 44, 98, 0.4);
+    0 0 20px rgba(109, 130, 255, 0.5),
+    0 5px 5px -1px rgba(64, 86, 192, 0.3),
+    inset 4px 4px 8px rgba(176, 194, 255, 0.5),
+    inset -4px -4px 8px rgba(41, 56, 148, 0.42);
 }
 
-.ss-btn::before,
 .cta-link::before,
-.support-hub .support-btn::before,
-.viz-toggle-btn::before,
-.viz-utility-btn::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(120deg, transparent 20%, rgba(255, 255, 255, 0.26) 50%, transparent 80%);
-  transform: translateX(-140%);
-  opacity: 0;
-  pointer-events: none;
+.cta-link::after {
+  content: none !important;
+  display: none !important;
 }
 
 .ss-btn:hover,
@@ -219,14 +219,12 @@ body {
   background-position: right top;
 }
 
-.ss-btn:hover::before,
-.cta-link:hover::before,
-.support-hub .support-btn:hover::before,
-.viz-toggle-btn:hover::before,
-.viz-utility-btn:hover::before {
-  opacity: 1;
-  transform: translateX(140%);
-  transition: transform 0.82s ease, opacity 0.2s ease;
+.ss-btn:active,
+.cta-link:active,
+.support-hub .support-btn:active,
+.viz-toggle-btn:active,
+.viz-utility-btn:active {
+  transform: none;
 }
 
 .ss-btn:is(:focus, :focus-visible, :active),
@@ -235,44 +233,56 @@ body {
 .viz-toggle-btn:is(:focus, :focus-visible, :active),
 .viz-utility-btn:is(:focus, :focus-visible, :active) {
   outline: none;
-  box-shadow: 0 0 0 3px var(--btn-bg-color), 0 0 0 6px var(--btn-bg-2);
+  box-shadow:
+    0 0 0 3px var(--btn-text),
+    0 0 0 6px var(--btn-bg-2);
 }
 
 .ss-btn.primary,
 .ss-btn-primary,
 .support-hub .support-btn-primary,
 .cta-link.primary,
+.donate-option.primary,
 .viz-toggle-btn.is-active {
   --btn-bg-1: var(--public-v2-btn-primary-1);
   --btn-bg-2: var(--public-v2-btn-primary-2);
-  box-shadow:
-    0 0 20px rgba(109, 130, 255, 0.5),
-    0 5px 5px -1px rgba(64, 86, 192, 0.3),
-    inset 4px 4px 8px rgba(176, 194, 255, 0.5),
-    inset -4px -4px 8px rgba(41, 56, 148, 0.42);
 }
 
 .ss-btn.secondary,
 .ss-btn-secondary,
 .support-hub .support-btn-secondary,
-.cta-link.secondary {
+.cta-link,
+.cta-link.secondary,
+.donate-option.secondary,
+.viz-toggle-btn {
   --btn-bg-1: var(--public-v2-btn-secondary-1);
   --btn-bg-2: var(--public-v2-btn-secondary-2);
+  box-shadow:
+    0 0 14px rgba(80, 96, 150, 0.35),
+    0 5px 6px -1px rgba(46, 58, 108, 0.35),
+    inset 4px 4px 8px rgba(116, 134, 198, 0.24),
+    inset -4px -4px 8px rgba(32, 44, 98, 0.4);
 }
 
 .ss-btn.muted,
 .ss-btn-muted,
 .cta-link.muted,
+.donate-option.muted,
 .viz-utility-btn,
 .viz-utility-btn.ghost {
   --btn-bg-1: var(--public-v2-btn-muted-1);
   --btn-bg-2: var(--public-v2-btn-muted-2);
-  --btn-bg-color: #cfd8ed;
+  --btn-text: #cfd8ed;
   box-shadow:
     0 0 10px rgba(64, 80, 120, 0.28),
     0 4px 5px -1px rgba(20, 28, 46, 0.35),
     inset 3px 3px 6px rgba(98, 114, 148, 0.2),
     inset -3px -3px 6px rgba(20, 30, 56, 0.44);
+}
+
+.viz-toggle-btn,
+.viz-utility-btn {
+  min-width: 0;
 }
 
 .ss-btn:disabled,
@@ -282,8 +292,82 @@ body {
 .viz-toggle-btn:disabled,
 .viz-utility-btn:disabled {
   cursor: not-allowed;
-  opacity: 0.52;
+  opacity: 0.5;
   box-shadow: none;
+}
+
+/* Donate page layout redesign (design only) */
+.donate-page .public-hero {
+  margin-bottom: 16px;
+}
+
+.donate-page .public-stack[aria-label="Donation options"] {
+  gap: 0;
+}
+
+.donate-page .donate-card {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: clamp(20px, 2.5vw, 30px);
+}
+
+.donate-page .donate-card h3 {
+  margin: 0 0 8px;
+  font-size: clamp(1.2rem, 2vw, 1.5rem);
+  letter-spacing: 0.03em;
+}
+
+.donate-page .donate-card > .muted {
+  margin: 0 0 16px;
+}
+
+.donate-page .donate-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.donate-page .donate-option {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  font-size: 0.74rem;
+}
+
+.donate-page .donate-custom {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.donate-page .donate-custom input {
+  width: 100%;
+  min-height: 42px;
+  border-radius: 10px;
+  border: 1px solid rgba(214, 226, 245, 0.24);
+  background: linear-gradient(150deg, rgba(14, 20, 32, 0.9), rgba(10, 16, 28, 0.9));
+  color: #e8efff;
+  padding: 10px 12px;
+  font-size: 0.88rem;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.donate-page .donate-custom input:focus-visible {
+  outline: none;
+  border-color: rgba(168, 184, 255, 0.7);
+  box-shadow: 0 0 0 2px rgba(92, 122, 255, 0.36);
+}
+
+.donate-page .donate-card .helper-text {
+  margin: 12px 0 0;
+}
+
+.donate-page .donate-card .donate-error {
+  color: #ffd0d0;
 }
 
 /* Footer baseline refinements */
@@ -349,6 +433,18 @@ body {
 
   .ss-status-indicator {
     bottom: max(62px, calc(env(safe-area-inset-bottom, 0px) + 52px));
+  }
+
+  .donate-page .donate-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .donate-page .donate-custom {
+    grid-template-columns: 1fr;
+  }
+
+  .donate-page .donate-option {
+    min-height: 40px;
   }
 }
 
