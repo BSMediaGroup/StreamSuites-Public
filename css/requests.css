@@ -3,7 +3,7 @@
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  margin: 14px 0 14px;
+  margin: 0;
 }
 
 .requests-page .requests-sort-label {
@@ -35,19 +35,21 @@
 }
 
 .requests-page .requests-inline-error {
-  margin-bottom: 12px;
+  margin: 0;
   color: #ffd0d0;
 }
 
 .requests-page .requests-submit-success {
-  margin-bottom: 12px;
+  margin-top: 12px;
+  margin-bottom: 0;
   color: #b7f4c5;
   border-color: rgba(73, 202, 122, 0.35);
   background: linear-gradient(145deg, rgba(20, 41, 30, 0.88), rgba(12, 28, 22, 0.9));
 }
 
 .requests-page .requests-submit-panel {
-  margin-bottom: 14px;
+  margin-top: 14px;
+  margin-bottom: 0;
 }
 
 .requests-page .requests-submit-panel .card-body {
