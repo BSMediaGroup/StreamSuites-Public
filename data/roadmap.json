@@ -11,210 +11,516 @@
       "title": "Central authentication and account API",
       "status": "complete",
       "progress": 100,
-      "description": "Central Auth API is live and authoritative for accounts, sessions, roles, and tier scaffolding. Supports Google, GitHub, Discord OAuth and email magic-link login with secure cookie-based sessions."
+      "description": "Central Auth API is live and authoritative for accounts, sessions, roles, and tier scaffolding. Supports Google, GitHub, Discord OAuth and email magic-link login with secure cookie-based sessions.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "account-model-roles-tiers",
       "title": "Account model with roles and tiers",
       "status": "complete",
       "progress": 100,
-      "description": "Unified account model implemented with one account per email, multi-provider linking, role enforcement (creator/admin), and tier scaffolding (OPEN/GOLD/PRO) for future authorization."
+      "description": "Unified account model implemented with one account per email, multi-provider linking, role enforcement (creator/admin), and tier scaffolding (OPEN/GOLD/PRO) for future authorization.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "multi-repo-web-separation",
       "title": "Multi-repo, multi-domain web surface separation",
       "status": "complete",
       "progress": 100,
-      "description": "Public, Creator, and Admin web surfaces are fully separated into distinct repositories and domains, with domains acting as OAuth security boundaries and runtime remaining authoritative."
+      "description": "Public, Creator, and Admin web surfaces are fully separated into distinct repositories and domains, with domains acting as OAuth security boundaries and runtime remaining authoritative.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "quota-enforcement",
       "title": "Quota enforcement",
       "status": "complete",
       "progress": 95,
-      "description": "Per-creator and per-platform daily quotas are enforced with buffer and hard caps; runtime wiring is stable with minor observability refinements pending."
+      "description": "Per-creator and per-platform daily quotas are enforced with buffer and hard caps; runtime wiring is stable with minor observability refinements pending.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "quota-snapshot-export",
       "title": "Quota snapshot export",
       "status": "complete",
       "progress": 90,
-      "description": "Scheduled quota snapshot exports are produced to shared/state/quotas.json for downstream dashboard use; export cadence is stable and treated as public reference data."
+      "description": "Scheduled quota snapshot exports are produced to shared/state/quotas.json for downstream dashboard use; export cadence is stable and treated as public reference data.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "discord-control-plane",
       "title": "Discord control-plane scaffolding",
       "status": "partial",
       "progress": 55,
-      "description": "Discord runtime scaffolding exists for control-plane publishing with dashboard state updates; ingestion remains limited and action execution is not enabled."
+      "description": "Discord runtime scaffolding exists for control-plane publishing with dashboard state updates; ingestion remains limited and action execution is not enabled.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "twitch-chat-triggers",
       "title": "Twitch chat trigger scaffolds",
       "status": "active",
       "progress": 60,
-      "description": "Twitch chat workers are active for evaluation-only triggers; ingestion is stable for testing but production-safe trigger execution is not yet enabled."
+      "description": "Twitch chat workers are active for evaluation-only triggers; ingestion is stable for testing but production-safe trigger execution is not yet enabled.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "youtube-chat-triggers",
       "title": "YouTube chat trigger scaffolds",
       "status": "active",
       "progress": 55,
-      "description": "YouTube chat workers are online for evaluation-only trigger detection with known gaps around throttling and long-running stream coverage."
+      "description": "YouTube chat workers are online for evaluation-only trigger detection with known gaps around throttling and long-running stream coverage.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "rumble-chat-workers",
       "title": "Rumble chat workers",
       "status": "paused",
       "progress": 30,
-      "description": "Rumble chat ingestion remains paused; worker code is preserved but disabled due to unstable chat_id discovery and inconsistent endpoints."
+      "description": "Rumble chat ingestion remains paused; worker code is preserved but disabled due to unstable chat_id discovery and inconsistent endpoints.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "quota-registry-hardening",
       "title": "Quota registry hardening",
       "status": "active",
       "progress": 70,
-      "description": "Registry wiring across platform workers is being tightened to ensure deterministic quota application and consistent shutdown behavior."
+      "description": "Registry wiring across platform workers is being tightened to ensure deterministic quota application and consistent shutdown behavior.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "dashboard-quota-observability",
       "title": "Dashboard quota observability",
       "status": "partial",
       "progress": 45,
-      "description": "Dashboard surfaces consume quota snapshots for read-only visibility; additional metrics and alerts are planned before declaring completeness."
+      "description": "Dashboard surfaces consume quota snapshots for read-only visibility; additional metrics and alerts are planned before declaring completeness.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "shutdown-ordering",
       "title": "Shutdown ordering across runtimes",
       "status": "active",
       "progress": 65,
-      "description": "Runtime shutdown sequencing has been tightened alongside Desktop Admin service controls to avoid orphaned workers and ensure exports flush safely."
+      "description": "Runtime shutdown sequencing has been tightened alongside Desktop Admin service controls to avoid orphaned workers and ensure exports flush safely.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "twitch-youtube-validation",
       "title": "YouTube/Twitch trigger validation",
       "status": "active",
       "progress": 65,
-      "description": "Live credential validation for YouTube and Twitch trigger scaffolds is ongoing to prove ingestion stability ahead of broader rollout."
+      "description": "Live credential validation for YouTube and Twitch trigger scaffolds is ongoing to prove ingestion stability ahead of broader rollout.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "config-driven-triggers",
       "title": "Config-driven trigger definitions",
       "status": "planned",
       "progress": 15,
-      "description": "Trigger definitions are slated to move to config with persisted cooldowns; no runtime wiring exists yet beyond design placeholders."
+      "description": "Trigger definitions are slated to move to config with persisted cooldowns; no runtime wiring exists yet beyond design placeholders.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "dashboard-config-introspection",
       "title": "Dashboard config introspection",
       "status": "planned",
       "progress": 10,
-      "description": "Read-only dashboard tooling for creator configuration is planned; no runtime endpoints or exports have been built."
+      "description": "Read-only dashboard tooling for creator configuration is planned; no runtime endpoints or exports have been built.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "twitter-control-plane",
       "title": "Twitter/X control-plane parity",
       "status": "planned",
       "progress": 5,
-      "description": "Control-plane parity for Twitter/X is planned; no worker scaffolding or integrations exist."
+      "description": "Control-plane parity for Twitter/X is planned; no worker scaffolding or integrations exist.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "scheduler-telemetry-alerting",
       "title": "Scheduler telemetry and alerts",
       "status": "planned",
       "progress": 20,
-      "description": "Scheduler telemetry and alerting surfaces are planned to detect worker health and ingestion failures; only basic logging exists today."
+      "description": "Scheduler telemetry and alerting surfaces are planned to detect worker health and ingestion failures; only basic logging exists today.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "trigger-action-dispatch",
       "title": "Trigger action execution and dispatch",
       "status": "planned",
       "progress": 10,
-      "description": "Action dispatch for triggers remains future work; runtime intentionally omits write or execution paths pending deterministic ingestion results."
+      "description": "Action dispatch for triggers remains future work; runtime intentionally omits write or execution paths pending deterministic ingestion results.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "operator-tooling",
       "title": "Operator tooling",
       "status": "active",
       "progress": 75,
-      "description": "WinForms Desktop Admin now functions as a local operator control plane with start/stop/restart controls, crash detection, log streaming, persistence, and safety hardening."
+      "description": "WinForms Desktop Admin now functions as a local operator control plane with start/stop/restart controls, crash detection, log streaming, persistence, and safety hardening.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "path-configuration-groundwork",
       "title": "Path configuration groundwork",
       "status": "active",
       "progress": 40,
-      "description": "Local path management is being wired through Desktop Admin to keep runtime snapshots and exports configurable on-disk while preserving read-only downstream consumption."
+      "description": "Local path management is being wired through Desktop Admin to keep runtime snapshots and exports configurable on-disk while preserving read-only downstream consumption.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "chat-logging-replay",
       "title": "Historical chat logging and replay",
       "status": "planned",
       "progress": 5,
-      "description": "Historical chat logging and replay remains a future capability; runtime currently processes live streams only."
+      "description": "Historical chat logging and replay remains a future capability; runtime currently processes live streams only.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "dashboard-trigger-controls",
       "title": "Dashboard trigger editing and live controls",
       "status": "planned",
       "progress": 5,
-      "description": "Dashboard-based trigger editing and live controls are not started; runtime keeps dashboard read-only for now."
+      "description": "Dashboard-based trigger editing and live controls are not started; runtime keeps dashboard read-only for now.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "chat-runtime-plumbing",
       "title": "Chat runtime plumbing",
       "status": "planned",
       "progress": 10,
-      "description": "Chat runtime plumbing remains not yet live; dashboard chat surfaces render preview-only data with no runtime socket wiring."
+      "description": "Chat runtime plumbing remains not yet live; dashboard chat surfaces render preview-only data with no runtime socket wiring.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "browser-extension-feed-hydration",
       "title": "Browser extension feed hydration",
       "status": "planned",
       "progress": 5,
-      "description": "Extension feed hydration is in planning and not started; extensions continue to show placeholder content until runtime ingestion exists."
+      "description": "Extension feed hydration is in planning and not started; extensions continue to show placeholder content until runtime ingestion exists.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "obs-overlay-runtime-feeds",
       "title": "OBS overlay runtime feeds",
       "status": "partial",
       "progress": 35,
-      "description": "OBS overlay UI surfaces are ready using mock data; runtime feed wiring is pending and overlays remain preview-only."
+      "description": "OBS overlay UI surfaces are ready using mock data; runtime feed wiring is pending and overlays remain preview-only.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "live-chat-socket-ingestion",
       "title": "Live chat socket ingestion",
       "status": "planned",
       "progress": 15,
-      "description": "Live chat socket ingestion is planned but not wired; dashboard previews rely on exported placeholders instead of active sockets."
+      "description": "Live chat socket ingestion is planned but not wired; dashboard previews rely on exported placeholders instead of active sockets.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "multi-platform-identity-routing",
       "title": "Multi-platform identity routing",
       "status": "planned",
       "progress": 10,
-      "description": "Identity routing across platforms remains planned; no runtime linkage exists between chat identities in preview surfaces."
+      "description": "Identity routing across platforms remains planned; no runtime linkage exists between chat identities in preview surfaces.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "deterministic-replay-ingestion",
       "title": "Deterministic replay ingestion",
       "status": "planned",
       "progress": 10,
-      "description": "Deterministic replay ingestion is planned; chat replay overlays continue to use mock data until runtime export wiring is added."
+      "description": "Deterministic replay ingestion is planned; chat replay overlays continue to use mock data until runtime export wiring is added.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "kick-chatbot-scaffold",
       "title": "Kick chatbot scaffold",
       "status": "active",
       "progress": 50,
-      "description": "Kick chat scaffold now validates env credentials, emits normalized messages through scheduler triggers, and remains feature-flagged for future live sockets."
+      "description": "Kick chat scaffold now validates env credentials, emits normalized messages through scheduler triggers, and remains feature-flagged for future live sockets.",
+      "icon": "./assets/icons/ui/widget.svg"
     },
     {
       "id": "pilled-ingest-plan",
       "title": "Pilled ingest-only planning",
       "status": "planned",
       "progress": 5,
-      "description": "Architecture reserved for a future Pilled ingest-only client; placeholders exist but no runtime wiring is active."
+      "description": "Architecture reserved for a future Pilled ingest-only client; placeholders exist but no runtime wiring is active.",
+      "icon": "./assets/icons/ui/widget.svg"
+    },
+    {
+      "id": "unified-runtime",
+      "order": 1,
+      "title": "StreamSuites Unified Runtime",
+      "percent": 72,
+      "meta": "72% · Alpha orchestration + export parity",
+      "status": "active",
+      "description": "The unified runtime is the authoritative automation engine. It enforces quotas, schedules jobs, ingests platform chat, aggregates signals, and emits deterministic exports that drive all dashboard views and public galleries. Contracts are locked for current modules and exports ship continuously; remaining alpha work tightens orchestration depth and platform parity without claiming live interactivity on the dashboards.",
+      "icon": "./assets/icons/ui/package.svg",
+      "tooltip": "72% · 70–75% Locked — Deterministic exports drive dashboard/public surfaces; further orchestration and parity in progress.",
+      "pulse": true
+    },
+    {
+      "id": "admin-dashboard",
+      "order": 2,
+      "title": "Administrator Dashboard UI",
+      "percent": 75,
+      "meta": "75% · Export parity + observability locked",
+      "status": "active",
+      "description": "The administrator dashboard provides a static, read-only observability surface for runtime exports, configuration state, and public gallery parity. It is intentionally non-interactive and designed for debugging, inspection, and system-wide visibility without issuing live commands; alpha coverage is focused on export fidelity, data integrity, and narrative accuracy over controls.",
+      "icon": "./assets/icons/ui/uiscreen.svg",
+      "tooltip": "75% · 70–80% Locked — Export parity, data surfaces, and About/roadmap alignment are stable; live controls intentionally absent."
+    },
+    {
+      "id": "creator-dashboard",
+      "order": 3,
+      "title": "Creator Dashboard UI",
+      "percent": 65,
+      "meta": "65% · Overhauled home + schema-aligned draft exports",
+      "status": "partial",
+      "description": "Creator-facing flows expose profiles, platform toggles, triggers, overlays, and module scaffolding in a schema-aligned layout. The home surface is fully overhauled with gallery links, platform summaries, and overlay readiness callouts. Current alpha behavior remains draft-only: forms mirror runtime schemas and output exports for review, but apply/write paths remain disabled and require manual import by operators.",
+      "icon": "./assets/icons/ui/uiscreen.svg",
+      "tooltip": "65% · 60–70% Integrated — Creator surface mature and schema-aligned; live apply/write paths intentionally disabled."
+    },
+    {
+      "id": "creator-dashboard-parity",
+      "order": 3.5,
+      "title": "Creator Dashboard Parity",
+      "percent": 40,
+      "meta": "40% · Read-only parity scaffolding",
+      "status": "partial",
+      "description": "Planned foundation for creator parity that keeps the dashboard read-only while mirroring admin data slices. The focus is on context-aware rendering, scoped platform visibility, and inert permissions scaffolding without enabling writes or live mutations.",
+      "icon": "./assets/icons/ui/uiscreen.svg",
+      "tooltip": "40% · 35–45% In Progress — Context-aware rendering and inert parity scaffolding in place; no mutations enabled."
+    },
+    {
+      "id": "public-interface",
+      "order": 4,
+      "title": "Public Interface & Gallery Surface",
+      "percent": 62,
+      "meta": "62% · Read-only galleries + overlay docs",
+      "status": "active",
+      "description": "The public interface exposes runtime-derived artifacts such as clips, polls, tallies, scoreboards, and replay views through static, read-only pages. All content is sourced exclusively from deterministic runtime exports, ensuring parity, safety, and zero live execution. Gallery and detail routes are live; continued work targets navigation cohesion and cross-module linking.",
+      "icon": "./assets/icons/ui/globe.svg",
+      "tooltip": "62% · 60–65% Integrated — Public pages render authoritative runtime exports with improving navigation cohesion."
+    },
+    {
+      "id": "discord-client",
+      "order": 5,
+      "title": "Discord Client",
+      "percent": 40,
+      "meta": "40% · Presence scaffold + lifecycle separation",
+      "status": "partial",
+      "description": "The Discord adapter targets bot presence, notifications, and command parity with other platforms. Foundations exist for heartbeat visibility and quota-safe connection management, but command wiring and export alignment are still structural; no dashboard-facing live controls are enabled.",
+      "icon": "./assets/icons/discord-silver.svg",
+      "tooltip": "40% · 35–45% Scaffolded — Presence, lifecycle separation, and health signaling established; command parity pending."
+    },
+    {
+      "id": "rumble-sse",
+      "order": 6,
+      "title": "Rumble Chat Ingest Pipeline",
+      "percent": 55,
+      "meta": "55% [PAUSED] · SSE-first architecture with runtime hold",
+      "status": "paused",
+      "description": "Paused. Rumble chat ingests via SSE when available and automatically falls back to DOM-based collection or API polling. Stable exports exist for dashboards and public pages, but the pipeline is on hold while integration hardening completes for production rollout.",
+      "icon": "./assets/icons/rumble-silver.svg",
+      "tooltip": "55% · 55–60% Integrated — Integrated with runtime orchestration and quotas but paused pending rollout."
+    },
+    {
+      "id": "twitch-runtime",
+      "order": 7,
+      "title": "Twitch Chat Runtime",
+      "percent": 45,
+      "meta": "45% · IRC ingestion + export alignment",
+      "status": "partial",
+      "description": "The Twitch runtime path is designed around IRC ingestion, trigger matching, and export-ready normalization. Controlled ingestion and normalization paths exist, but exports are still being mapped to dashboard/public expectations and quota enforcement parity is pending before broader use.",
+      "icon": "./assets/icons/twitch-0.svg",
+      "tooltip": "45% · 40–50% Functional — Ingestion stable in test; export parity and quotas still gating release."
+    },
+    {
+      "id": "youtube-runtime",
+      "order": 8,
+      "title": "YouTube Chat Runtime",
+      "percent": 30,
+      "meta": "30% · Scaffold + partial message mapping",
+      "status": "partial",
+      "description": "YouTube support is scoped to ingest live chat, align payloads with runtime schemas, and export snapshots the dashboard can render. Scaffold and partial mapping drafts exist, but live ingestion and exports remain staged and are not yet wired into dashboards.",
+      "icon": "./assets/icons/youtube-silver.svg",
+      "tooltip": "30% · 25–30% Scaffolded — Foundational scaffolding with partial mappings; live exports not enabled."
+    },
+    {
+      "id": "kick-foundation",
+      "order": 8.5,
+      "title": "Kick Platform Foundation",
+      "percent": 30,
+      "meta": "30% · Scaffolded dashboard + hydration paths",
+      "status": "partial",
+      "description": "Kick now has first-class dashboard scaffolding with dedicated views and settings rows. Dashboards stay read-only and hydrate from shared/state/runtime_snapshot.json when present, falling back to bundled docs/data/runtime_snapshot.json. Runtime ingestion remains in planning while connected-mode clarity keeps controls locked.",
+      "icon": "./assets/icons/kick-silver.svg",
+      "tooltip": "30% · 25–35% Scaffolded — Dashboard and hydration paths established; runtime ingest still pending."
+    },
+    {
+      "id": "pilled-ingest",
+      "order": 8.6,
+      "title": "Pilled Ingest-Only Path",
+      "percent": 6,
+      "meta": "6% · Planned ingest / replay-only placeholders",
+      "status": "planned",
+      "description": "Pilled is reserved as an ingest-only platform with a dedicated read-only dashboard view. No runtime collector exists yet; switches are locked and telemetry is disabled until the authoritative runtime ships exports, which will hydrate from shared/state/runtime_snapshot.json once present. The dashboard renders placeholders even when exports exist to reinforce the ingest-only contract.",
+      "icon": "./assets/icons/pilled-silver.svg",
+      "tooltip": "6% · 0–10% Planned — Read-only dashboard slot reserved; runtime collector not yet implemented and dashboard shows placeholders only."
+    },
+    {
+      "id": "twitter-integration",
+      "order": 9,
+      "title": "Twitter Client / Integration",
+      "percent": 5,
+      "meta": "5% · Concept / Deferred",
+      "status": "planned",
+      "description": "Twitter integration is purely conceptual, aimed at future ingestion of mentions, DMs, or chat-like events. The intent is a moderation and announcement surface once platform rules allow it. No scaffolding or exports exist yet; the dashboard only reserves a placeholder.",
+      "icon": "./assets/icons/twitter-silver.svg",
+      "tooltip": "5% · 0–5% Concept — Conceptual only. No runtime scaffolding or contracts exist yet."
+    },
+    {
+      "id": "chat-triggers",
+      "order": 10,
+      "title": "Chat Triggers",
+      "percent": 62,
+      "meta": "62% · Enforcement + exported catalogs",
+      "status": "active",
+      "description": "Trigger definitions run inside the runtime with deterministic matching, quotas, and cooldown enforcement. Exports include trigger catalogs and response shapes that the dashboard and public pages render read-only. Expansion work is active for platform coverage and moderation actions; dashboards remain observation-only.",
+      "icon": "./assets/icons/ui/automation.svg",
+      "tooltip": "62% · 60–65% Integrated — Runtime enforcement live; exports visible read-only while parity expands."
+    },
+    {
+      "id": "chat-abstraction",
+      "order": 11,
+      "title": "Cross-Platform Chat Abstraction",
+      "percent": 40,
+      "meta": "40% · Normalization rules + export alignment",
+      "status": "partial",
+      "description": "A cross-platform layer will normalize chat events across Rumble, Twitch, and YouTube so triggers, scoreboards, and moderation tools work uniformly. Draft normalization rules and export targets exist, but runtime enforcement and full parity are still structural with no live dashboard wiring yet.",
+      "icon": "./assets/icons/ui/automation.svg",
+      "tooltip": "40% · 35–45% In Progress — Normalization rules established; enforcement and cadence still expanding."
+    },
+    {
+      "id": "telemetry-exports",
+      "order": 12,
+      "title": "Telemetry Export Surface",
+      "percent": 45,
+      "meta": "45% · Health + quota exports in use",
+      "status": "partial",
+      "description": "Telemetry exports are intended to expose health, quota, and heartbeat signals the dashboard can graph without live calls. Scaffolding exists with limited alpha feeds; broader signals and automated cadences remain in development before dashboards shift from placeholder charts to live exports.",
+      "icon": "./assets/icons/ui/automation.svg",
+      "tooltip": "45% · 40–50% Functional — Health and quota exports active; cadence and depth still expanding."
+    },
+    {
+      "id": "schema-contract",
+      "order": 13,
+      "title": "Dashboard ↔ Runtime Schema Contract",
+      "percent": 70,
+      "meta": "70% · Deterministic exports + replay/overlay shapes",
+      "status": "active",
+      "description": "The schema contract defines exactly how the dashboard consumes exported JSON for creators, platforms, public galleries, overlays, and telemetry. It guarantees deterministic imports/exports for current alpha modules (clips, polls, tallies, scoreboards) and incorporates replay/overlay shapes. Coverage is expanding alongside new runtime drops to keep dashboards, public pages, and OBS browser sources in lockstep.",
+      "icon": "./assets/icons/ui/options.svg",
+      "tooltip": "70% · 65–75% Integrated — Core contracts enforced; expansion continues with new runtime drops."
+    },
+    {
+      "id": "chat-replay",
+      "order": 14,
+      "title": "Unified Live Chat Replay Module",
+      "percent": 85,
+      "meta": "85% · UI complete preview; runtime hydration not started",
+      "status": "partial",
+      "description": "Unified Chat Replay UI is UI COMPLETE / PREVIEW ONLY. Live Chat Window is UI COMPLETE / NO RUNTIME. OBS / Browser Source Overlay is UI COMPLETE / NO RUNTIME. Browser Extension (Live Chat Replay) is UI COMPLETE / RUNTIME PENDING. Multi-platform badge rendering is COMPLETE. Avatar fallback & identity handling is COMPLETE. Runtime hydration is NOT STARTED. Export streams remain draft-only and are not yet rendering live data on dashboard or public pages.",
+      "icon": "./assets/icons/ui/extension.svg",
+      "tooltip": "85% · UI complete previews — Replay/live windows, OBS/browser overlays, and browser extension mocks are UI-complete previews with badge + avatar fidelity; runtime hydration is not started."
+    },
+    {
+      "id": "admin-desktop-app",
+      "order": 15,
+      "title": "Desktop Admin Application (Local, Active)",
+      "percent": 85,
+      "meta": "85% · Local EXE concept (dashboard awareness only)",
+      "status": "active",
+      "description": "A Windows-first desktop Admin EXE is actively being built to mirror the dashboard’s admin views with local, authoritative control. It will read runtime state and write configuration locally, then hand changes back to the runtime without bypassing safety. No UI bindings or remote control paths are assumed; the entry documents the active development of a local-only foundation with later parity targets for macOS and Linux. The dashboard only surfaces this active work; no UI controls are wired yet.",
+      "icon": "./assets/icons/ui/windows.svg",
+      "tooltip": "85% · 80–90% In Progress — Local Admin EXE functionality is actively being developed for Windows, planned for future macOS and Linux parity."
+    },
+    {
+      "id": "scoreboards",
+      "order": 16,
+      "title": "Scoreboards",
+      "percent": 55,
+      "meta": "55% · Aggregation shapes + public gallery",
+      "status": "partial",
+      "description": "Scoreboards aggregate trigger outputs and interaction tallies into public-facing leaderboards. Export shapes and public gallery shells exist and render read-only data; runtime-side aggregation cadence and reset logic are limited to controlled runs and need expansion before routine automation.",
+      "icon": "./assets/icons/ui/widget.svg",
+      "tooltip": "55% · 50–60% Functional — Aggregation shapes solid; cadence and resets widening."
+    },
+    {
+      "id": "clips",
+      "order": 17,
+      "title": "Clips Module",
+      "percent": 65,
+      "meta": "65% · Runtime clipping + public gallery",
+      "status": "active",
+      "description": "The clips module automates livestream clipping, encodes segments with FFmpeg inside the runtime, and marches each clip through deterministic lifecycle states. Finished clips upload to the default StreamSuites Rumble channel today with exports that power dashboard and public gallery/detail pages; destination flexibility and moderation controls are the remaining alpha focus areas.",
+      "icon": "./assets/icons/ui/widget.svg",
+      "tooltip": "65% · 60–65% Integrated — Runtime clipping live with exports; moderation and destinations expanding."
+    },
+    {
+      "id": "polls",
+      "order": 18,
+      "title": "Polls Module",
+      "percent": 60,
+      "meta": "60% · Runtime polling + public gallery",
+      "status": "active",
+      "description": "Polls execute in the runtime with strict quotas and deterministic close conditions. Dashboard and public pages show read-only ballots, results, and detail pages sourced from runtime exports. Remaining work focuses on broader platform coverage, richer scheduling, and export cadence tuning before interactive management is considered.",
+      "icon": "./assets/icons/ui/widget.svg",
+      "tooltip": "60% · 55–60% Integrated — Runtime-driven polls with read-only dashboards; scheduling depth pending."
+    },
+    {
+      "id": "tallies",
+      "order": 19,
+      "title": "Tallies Module",
+      "percent": 50,
+      "meta": "50% · Aggregation + public gallery + detail pages",
+      "status": "partial",
+      "description": "Tallies are programmatic, chat-driven aggregations that count events over weekly, monthly, or custom windows. Public gallery and detail pages are live and read-only, driven by runtime exports. Runtime scheduling, trigger coupling, and enforcement logic continue to mature before routine automation is enabled.",
+      "icon": "./assets/icons/ui/widget.svg",
+      "tooltip": "50% · 45–50% Functional — Runtime aggregation active in limited runs; automation depth expanding."
+    },
+    {
+      "id": "levelling",
+      "order": 20,
+      "title": "Levelling System",
+      "percent": 10,
+      "meta": "10% · Planned / Experimental",
+      "status": "planned",
+      "description": "Levelling is envisioned as a fictional progression track where chat participation earns experience toward ranks or perks. It should eventually respect cross-platform identity mapping once available. This remains early ideation with no runtime scaffolding beyond concept notes.",
+      "icon": "./assets/icons/ui/widget.svg",
+      "tooltip": "10% · 10–15% Planned — Planned and documented. Architecture discussed, but no executable runtime scaffolding."
+    },
+    {
+      "id": "fake-gambling",
+      "order": 21,
+      "title": "Fake Gambling / Game Mechanics",
+      "percent": 10,
+      "meta": "10% · Planned",
+      "status": "planned",
+      "description": "The game mechanics are lightweight chat commands (e.g., !steal, !loot @user) that award or deduct fictional balances. The intent is playful, zero-stakes engagement surfaced in dashboards only. It stays in the planned phase with placeholder UI and no runtime enforcement.",
+      "icon": "./assets/icons/ui/widget.svg",
+      "tooltip": "10% · 10–15% Planned — Planned and documented. Architecture discussed, but no executable runtime scaffolding."
+    },
+    {
+      "id": "paid-interactions",
+      "order": 22,
+      "title": "Paid Interaction Detection",
+      "percent": 15,
+      "meta": "15% · Planned / Design in progress",
+      "status": "planned",
+      "description": "Paid interaction detection will surface gifted subscriptions and paid shout-outs (Rumble Rants, Super Chats, etc.) with monthly rollups. The dashboard aims to visualize those exports alongside leaderboards. Design work is underway, but runtime feeds are not yet finalized.",
+      "icon": "./assets/icons/ui/widget.svg",
+      "tooltip": "15% · 10–15% Planned — Planned and documented. Architecture discussed, but no executable runtime scaffolding."
     }
   ]
 }
