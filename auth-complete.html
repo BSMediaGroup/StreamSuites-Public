@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Authentication Complete</title>
+  <meta name="robots" content="noindex" />
+  <style>
+    :root { color-scheme: light; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: #f7f8fa;
+      color: #16171b;
+    }
+    main {
+      max-width: 460px;
+      width: 100%;
+      text-align: center;
+      background: #ffffff;
+      border: 1px solid #e6e8ed;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 8px 24px rgba(20, 24, 40, 0.06);
+    }
+    p {
+      margin: 0;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <p id="auth-complete-message">Finalizing sign-in...</p>
+  </main>
+  <script>
+    (function () {
+      const ME_API_URL = 'https://api.streamsuites.app/api/me';
+      const messageEl = document.getElementById('auth-complete-message');
+
+      const setMessage = (message) => {
+        if (messageEl) {
+          messageEl.textContent = message;
+        }
+      };
+
+      const readAuthenticated = (payload) => {
+        const candidates = [
+          payload?.authenticated,
+          payload?.is_authenticated,
+          payload?.isAuthenticated,
+          payload?.data?.authenticated,
+          payload?.data?.is_authenticated,
+          payload?.data?.isAuthenticated,
+        ];
+        return candidates.some((value) => value === true);
+      };
+
+      const run = async () => {
+        try {
+          const response = await fetch(ME_API_URL, {
+            method: 'GET',
+            cache: 'no-store',
+            credentials: 'include',
+            headers: { Accept: 'application/json' },
+          });
+
+          const payload = response.ok ? await response.json().catch(() => null) : null;
+          if (readAuthenticated(payload)) {
+            window.close();
+            window.setTimeout(() => {
+              if (!window.closed) {
+                setMessage("You're signed in. This tab can be closed.");
+              }
+            }, 300);
+            return;
+          }
+        } catch (error) {
+          // Treat errors as incomplete login and show the neutral close message.
+        }
+
+        setMessage('Login not completed. You may close this tab.');
+      };
+
+      run();
+    })();
+  </script>
+</body>
+</html>
