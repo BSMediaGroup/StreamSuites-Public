@@ -5,10 +5,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Privacy • StreamSuites™</title>
-  <meta name="description" content="Provisional privacy guidelines for StreamSuites public surfaces and dashboards." />
+  <meta name="description" content="Privacy policy for StreamSuites public surfaces, dashboards, runtime-connected services, and related operations." />
   <link rel="canonical" href="https://streamsuites.app/privacy.html" />
   <meta property="og:title" content="Privacy • StreamSuites™" />
-  <meta property="og:description" content="Provisional privacy guidelines for StreamSuites public surfaces and dashboards." />
+  <meta property="og:description" content="Privacy policy for StreamSuites public surfaces, dashboards, runtime-connected services, and related operations." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://streamsuites.app/privacy.html" />
   <meta property="og:image" content="/assets/backgrounds/seoshare.jpg" />
@@ -44,7 +44,7 @@
             <a href="/about.html">About</a>
             <a href="/tools.html">Tools</a>
             <a href="/support.html">Support</a>
-            <a href="/privacy.html">Privacy</a>
+            <a href="/privacy.html" aria-current="page">Privacy</a>
             <a href="/changelog.html">Changelog</a>
             <a href="/accessibility.html">Accessibility</a>
           </div>
@@ -56,49 +56,323 @@
           <h2>Privacy policy</h2>
           <span class="public-badge">Static surface</span>
         </div>
-        <p class="muted">StreamSuites limits data collection on public pages. Creator authentication happens in the dashboard. This page summarizes what we collect, how we use it, and your choices.</p>
+        <p class="muted">
+          This privacy policy explains how StreamSuites™ collects, uses, discloses, and protects information across our public pages,
+          creator/admin dashboards, runtime-connected services, and operational tooling. It applies to visitors, creators, subscribers, and end users
+          who may interact with StreamSuites-enabled experiences.
+        </p>
+        <p class="muted" style="margin-top: 10px;">
+          <strong>Last updated:</strong> February 9, 2026
+        </p>
       </section>
 
       <section class="public-stack" aria-label="Privacy statements">
-        <article class="public-glass-card">
-          <h3>Data we collect</h3>
-          <p class="muted">When you create a StreamSuites account, we collect basic account identifiers and login signals needed to run the service.</p>
+        <article class="public-glass-card" id="who-we-are">
+          <h3>Who we are and what this policy covers</h3>
+          <p class="muted">
+            StreamSuites™ is operated by Brainstream Media Group. This policy covers information processed when you:
+            visit our public surfaces (including streamsuites.app), use our dashboards (including creator/admin surfaces),
+            authenticate and connect third-party accounts, configure a StreamSuites runtime, receive communications from us,
+            make payments or donations, or subscribe to operational status updates.
+          </p>
           <ul class="public-list">
-            <li>Account data: email address, display name, and a hashed password if you use a direct login.</li>
-            <li>OAuth data: provider IDs from Google, GitHub, and Discord (plus the associated email if the provider shares it).</li>
-            <li>Operational data: login timestamps, IP address, user agent, and security events for abuse prevention.</li>
-            <li>Public pages: static HTML with basic server and CDN logs for uptime and performance.</li>
+            <li><strong>Visitors</strong>: people who browse public pages without signing in.</li>
+            <li><strong>Creators / Account holders</strong>: people who register and use dashboards and runtime features.</li>
+            <li><strong>End users</strong>: people who interact with StreamSuites-enabled livestreams, chat automations, or shared content (even without a StreamSuites account).</li>
+            <li><strong>Status subscribers</strong>: people who subscribe to service status notifications.</li>
+          </ul>
+          <p class="muted">
+            If a specific product surface displays a different privacy notice, that notice will govern for that surface.
+          </p>
+        </article>
+
+        <article class="public-glass-card" id="data-we-collect">
+          <h3>Information we collect</h3>
+          <p class="muted">
+            The categories below describe information we may collect or receive depending on how you use StreamSuites.
+          </p>
+          <ul class="public-list">
+            <li><strong>Account and profile data</strong>: email address, display name, internal identifiers, role/permissions, and account preferences.</li>
+            <li><strong>Login and security data</strong>: login timestamps, IP address, device/browser details (user agent), session identifiers, and security/abuse signals.</li>
+            <li><strong>Credentials</strong>: if direct login is enabled, passwords are stored only as salted hashes (not plaintext).</li>
+            <li><strong>OAuth and connected account data</strong>: provider identifiers and basic account info returned by OAuth providers (such as a provider user ID; and email/username only when the provider shares it and the requested scope permits it).</li>
+            <li><strong>Connected platform authorization</strong>: access tokens/refresh tokens, authorization scopes, channel/page identifiers, and configuration metadata required to connect and operate integrations (stored to provide the service and secured as sensitive data).</li>
+            <li><strong>Runtime and workspace configuration</strong>: settings you provide for automations, triggers, moderation rules, quotas/tallies, and other operational preferences.</li>
+            <li><strong>Service usage and diagnostics</strong>: feature usage, performance metrics, error reports, audit records of administrative actions, and reliability telemetry.</li>
+            <li><strong>Content and community interaction data</strong>: data processed from third-party platforms when StreamSuites is used for livestream operations (for example usernames/handles, chat messages, timestamps, message IDs, moderation events, and platform identifiers). This may include information about people who do not have a StreamSuites account.</li>
+            <li><strong>Media and exports</strong>: assets you upload, generated exports, configuration snapshots, and operational artifacts produced by the runtime (such as JSON manifests, logs, or reports).</li>
+            <li><strong>Payments and billing data</strong>: subscription status, plan tier, invoice references, transaction timestamps, country/region, and a payment-provider customer ID. Payment card details are processed by our payment provider and are not stored by StreamSuites.</li>
+            <li><strong>Communications</strong>: emails or messages you send to support, privacy requests, and service emails we send to you (including delivery metadata such as send time and delivery status).</li>
+            <li><strong>Analytics data</strong>: non-advertising website/app analytics (e.g., aggregated usage, page views, approximate location derived from IP, and device/browser characteristics), subject to your choices and applicable law.</li>
+            <li><strong>Status subscriptions</strong>: email address and/or phone number (if provided) when you subscribe to incident/maintenance notifications.</li>
           </ul>
         </article>
 
-        <article class="public-glass-card">
-          <h3>Authentication, sessions, and storage</h3>
-          <p class="muted">We use secure, HTTP-only session cookies to keep you signed in to the dashboard. Account data and workspace settings are stored in our database.</p>
+        <article class="public-glass-card" id="oauth">
+          <h3>OAuth, third-party logins, and connected platforms</h3>
+          <p class="muted">
+            StreamSuites supports authentication and account connection flows through OAuth providers. When you use an OAuth login or connect an external account,
+            the provider shares information with us based on the permissions (scopes) you grant.
+          </p>
           <ul class="public-list">
-            <li>OAuth providers supported today: Google, GitHub, and Discord.</li>
-            <li>Session cookies are used for authentication and are not used for advertising.</li>
-            <li>Dashboard secrets and tokens remain in the protected admin area, not on public pages.</li>
+            <li><strong>OAuth providers used for sign-in and/or account linking</strong>: Google, GitHub, Discord, X, and Twitch.</li>
+            <li><strong>What we typically receive</strong>: a provider user ID and basic profile details; email address only if the provider shares it and the scope permits it.</li>
+            <li><strong>What we store</strong>: the provider ID, linkage metadata, and (when required for operations) tokens/scopes to access connected features you enable.</li>
+            <li><strong>Scope minimization</strong>: we request only the permissions needed to operate the features you choose to enable.</li>
+            <li><strong>Revocation</strong>: you can often revoke access from within the third-party provider’s account settings; revocation may disable connected features in StreamSuites.</li>
+          </ul>
+          <p class="muted">
+            Third-party providers process your information under their own policies. You should review the privacy settings and notices provided by each provider.
+          </p>
+        </article>
+
+        <article class="public-glass-card" id="cookies">
+          <h3>Cookies, sessions, and similar technologies</h3>
+          <p class="muted">
+            StreamSuites uses cookies and similar technologies to keep you signed in, secure the service, and measure performance.
+            We do not use third-party advertising cookies to serve ads based on your activity.
+          </p>
+          <ul class="public-list">
+            <li><strong>Strictly necessary cookies</strong>: session cookies (often HTTP-only) used for authentication, CSRF protection, and security.</li>
+            <li><strong>Security and abuse prevention</strong>: network and bot-mitigation signals may be set by our security/CDN providers to protect the service.</li>
+            <li><strong>Analytics cookies</strong>: may be used for non-advertising analytics to understand site performance and usage trends (subject to your choices and applicable law).</li>
+            <li><strong>Your controls</strong>: you can block or delete cookies in your browser settings. Some features may not function without necessary cookies.</li>
+          </ul>
+          <p class="muted">
+            Where required by law, we rely on consent for certain analytics cookies and processing.
+          </p>
+        </article>
+
+        <article class="public-glass-card" id="how-we-use">
+          <h3>How we use information</h3>
+          <p class="muted">
+            We use information to operate StreamSuites, secure it, and provide the features you request.
+          </p>
+          <ul class="public-list">
+            <li>Provide account creation, authentication, and session management.</li>
+            <li>Enable dashboard functionality, runtime connectivity, and feature configuration.</li>
+            <li>Operate integrations you authorize (including chat automation, moderation tooling, and platform connectivity).</li>
+            <li>Process subscriptions, donations, invoices, refunds, and payment confirmations.</li>
+            <li>Send service messages (verification, security alerts, operational notices, support replies).</li>
+            <li>Monitor performance, debug errors, and improve reliability and usability.</li>
+            <li>Protect against fraud, abuse, and unauthorized access; enforce policies and legal terms.</li>
+            <li>Maintain audit trails for administrative actions and service integrity.</li>
+            <li>Produce aggregated, non-identifying analytics and reporting to understand service usage.</li>
+            <li>Comply with legal obligations and respond to lawful requests.</li>
           </ul>
         </article>
 
-        <article class="public-glass-card">
-          <h3>Access, admin visibility, and your rights</h3>
-          <p class="muted">Authorized StreamSuites administrators may access account records to provide support, resolve abuse, and maintain the service.</p>
+        <article class="public-glass-card" id="legal-bases">
+          <h3>Legal bases for processing</h3>
+          <p class="muted">
+            Depending on your location, applicable law may require us to identify legal bases for processing personal information.
+          </p>
           <ul class="public-list">
-            <li>You can request access to your account data or ask for corrections.</li>
-            <li>You can request account deletion or an onboarding reset that clears setup state.</li>
-            <li>Contact us at <a href="mailto:privacy@stream.suites">privacy@stream.suites</a> for privacy requests.</li>
+            <li><strong>Contract</strong>: to provide the service you request (account access, runtime features, subscriptions, support).</li>
+            <li><strong>Legitimate interests</strong>: to secure the service, prevent abuse, maintain reliability, and improve operations (balanced against your rights).</li>
+            <li><strong>Consent</strong>: where required (for example, certain analytics cookies or optional communications).</li>
+            <li><strong>Legal obligation</strong>: to meet accounting, tax, compliance, or lawful request requirements.</li>
           </ul>
         </article>
 
-        <article class="public-glass-card">
-          <h3>Retention, deletion, and security</h3>
-          <p class="muted">We keep account data while your account is active and retain limited logs for security and reliability.</p>
+        <article class="public-glass-card" id="sharing">
+          <h3>How we share information</h3>
+          <p class="muted">
+            We share information only as needed to operate StreamSuites and comply with law. We do not sell personal information.
+          </p>
           <ul class="public-list">
-            <li>Deletion requests trigger a soft-delete period before data is fully removed from active systems.</li>
-            <li>Backups may retain data for a limited time while they cycle out.</li>
-            <li>We use industry-standard security practices, but no system is guaranteed to be 100% secure.</li>
+            <li><strong>Service providers (processors)</strong>: infrastructure hosting, email delivery, payments, analytics, incident communication, monitoring, and security tooling.</li>
+            <li><strong>OAuth / platform providers</strong>: when you authenticate or authorize integrations, information is exchanged as part of that connection.</li>
+            <li><strong>Legal and safety</strong>: to comply with legal obligations, enforce terms, and protect users and the public.</li>
+            <li><strong>Business operations</strong>: in the event of a corporate restructuring, merger, acquisition, or asset transfer (subject to applicable safeguards).</li>
           </ul>
+          <p class="muted">
+            Where required, we use contractual safeguards and limit providers to processing information on our instructions.
+          </p>
+        </article>
+
+        <article class="public-glass-card" id="service-providers">
+          <h3>Key third-party services used in StreamSuites operations</h3>
+          <p class="muted">
+            StreamSuites relies on third-party services to deliver the platform. These providers may process personal information
+            on our behalf (for example, IP address, device information, email addresses, transaction metadata, and operational logs).
+          </p>
+          <ul class="public-list">
+            <li>
+              <strong>Cloudflare (CDN, DNS, security, bot mitigation)</strong>:
+              helps deliver public pages and APIs, improve performance, and protect against malicious traffic. Cloudflare may process network metadata
+              (such as IP address, request headers, and security signals) and may set security-related cookies.
+            </li>
+            <li>
+              <strong>Hetzner (hosting / VPS / cloud infrastructure)</strong>:
+              hosts application workloads and data storage for StreamSuites runtime-connected services. Data may be processed in datacenters
+              used to operate the service (including outside your country/region depending on deployment).
+            </li>
+            <li>
+              <strong>Resend (transactional email delivery)</strong>:
+              delivers critical emails such as verification messages, security notifications, and operational communications. Resend processes
+              recipient and message metadata (and message content as necessary to transmit the email).
+            </li>
+            <li>
+              <strong>Stripe (payments)</strong>:
+              processes subscription payments and optional one-off donations. Stripe processes payment card data and transaction details.
+              StreamSuites receives payment status, billing references, and customer/subscription identifiers, but does not store full card numbers.
+            </li>
+            <li>
+              <strong>Google Analytics (non-advertising analytics)</strong>:
+              used to understand aggregated usage and performance. We configure analytics for measurement and service improvement purposes,
+              not for selling data or ad-targeting through StreamSuites.
+            </li>
+            <li>
+              <strong>Atlassian Statuspage (service status monitoring)</strong>:
+              provides incident/maintenance communications and subscription notifications. If you subscribe, Statuspage may process your email address
+              and/or phone number for notifications.
+            </li>
+            <li>
+              <strong>OAuth identity / platform providers</strong>:
+              Google, GitHub, Discord, X, and Twitch provide authentication and/or authorization data when you choose to use those sign-in/connection methods.
+            </li>
+          </ul>
+          <p class="muted">
+            We may also use additional vendors for logging, error tracking, security monitoring, and operational tooling consistent with this policy.
+          </p>
+        </article>
+
+        <article class="public-glass-card" id="payments">
+          <h3>Payments, subscriptions, and donations</h3>
+          <p class="muted">
+            StreamSuites uses Stripe to process paid subscriptions and optional one-time donations. Payment details are handled by Stripe and stored by Stripe
+            under its security standards and policies.
+          </p>
+          <ul class="public-list">
+            <li><strong>What Stripe processes</strong>: payment card details, billing details, transaction amounts, and fraud-prevention signals (as applicable).</li>
+            <li><strong>What StreamSuites stores</strong>: subscription tier/status, renewal dates, invoice references, and a Stripe customer/subscription identifier.</li>
+            <li><strong>Chargebacks and compliance</strong>: we may retain transaction records as required for accounting, tax, and dispute resolution.</li>
+          </ul>
+        </article>
+
+        <article class="public-glass-card" id="emails">
+          <h3>Service communications and email delivery</h3>
+          <p class="muted">
+            We send important communications related to your account and service operations (for example: login verification, security alerts, billing notices,
+            runtime operational notices, and support responses). We use Resend for email delivery, which processes recipient information and delivery metadata.
+          </p>
+          <ul class="public-list">
+            <li><strong>Verification and security</strong>: emails to confirm your address and protect your account.</li>
+            <li><strong>Operational messages</strong>: incident communications and service changes that may affect reliability or access.</li>
+            <li><strong>Support</strong>: messages you send to support may be stored and processed to resolve your request.</li>
+            <li><strong>Unsubscribe</strong>: some informational emails may include unsubscribe controls; critical service/security emails may be required to operate the service.</li>
+          </ul>
+        </article>
+
+        <article class="public-glass-card" id="analytics">
+          <h3>Analytics and SEO measurement</h3>
+          <p class="muted">
+            We use Google Analytics to measure performance and understand aggregated usage (for example: which pages are visited, load times, and general device/browser statistics).
+            We use analytics to improve StreamSuites and maintain reliability.
+          </p>
+          <ul class="public-list">
+            <li><strong>No advertising targeting via StreamSuites</strong>: analytics is used for measurement and service improvement rather than ad delivery.</li>
+            <li><strong>Controls</strong>: you can block analytics cookies in your browser settings, use privacy extensions, or use available Google controls.</li>
+            <li><strong>Retention</strong>: analytics retention settings may be configured to limit how long user-level data is stored, consistent with product capabilities and applicable law.</li>
+          </ul>
+        </article>
+
+        <article class="public-glass-card" id="statuspage">
+          <h3>Status monitoring and incident notifications</h3>
+          <p class="muted">
+            StreamSuites uses Atlassian Statuspage to communicate service incidents and maintenance. You can view status without subscribing.
+            If you subscribe, Statuspage processes your contact details to send notifications.
+          </p>
+          <ul class="public-list">
+            <li><strong>Subscription data</strong>: email address and/or phone number (if provided) for incident/maintenance alerts.</li>
+            <li><strong>Preferences</strong>: notification preferences and subscription status may be stored by Statuspage.</li>
+            <li><strong>Embedded status</strong>: status information may be embedded on StreamSuites pages to keep users informed.</li>
+          </ul>
+        </article>
+
+        <article class="public-glass-card" id="data-retention">
+          <h3>Retention and deletion</h3>
+          <p class="muted">
+            We retain information as long as needed to provide StreamSuites and for legitimate operational purposes.
+          </p>
+          <ul class="public-list">
+            <li><strong>Account data</strong>: retained while your account is active, and deleted or anonymized upon verified request, subject to legal/operational requirements.</li>
+            <li><strong>Logs and security records</strong>: retained for a limited period for abuse prevention, auditing, and reliability analysis.</li>
+            <li><strong>Billing records</strong>: retained as required for tax/accounting, disputes, and compliance.</li>
+            <li><strong>Backups</strong>: backups may retain information for a limited time until overwritten through normal backup cycling.</li>
+          </ul>
+          <p class="muted">
+            Deletion typically begins with disabling access and then removing data from active systems, followed by backup expiry according to retention schedules.
+          </p>
+        </article>
+
+        <article class="public-glass-card" id="security">
+          <h3>Security</h3>
+          <p class="muted">
+            We implement technical and organizational measures designed to protect information against unauthorized access, loss, misuse, and alteration.
+            No system can be guaranteed to be 100% secure.
+          </p>
+          <ul class="public-list">
+            <li>Encryption in transit (TLS) for service communications.</li>
+            <li>Access controls, least-privilege administration, and audit logging for privileged actions.</li>
+            <li>Protection against malicious traffic and abuse via network security tooling.</li>
+            <li>Secure handling of sensitive tokens and secrets used for connected platform operations.</li>
+          </ul>
+        </article>
+
+        <article class="public-glass-card" id="international">
+          <h3>International transfers</h3>
+          <p class="muted">
+            StreamSuites and its service providers may process information in multiple countries. Where required, we use appropriate safeguards for cross-border transfers,
+            such as contractual protections and vendor compliance commitments.
+          </p>
+        </article>
+
+        <article class="public-glass-card" id="your-rights">
+          <h3>Your rights and choices</h3>
+          <p class="muted">
+            Depending on your location, you may have rights regarding personal information.
+          </p>
+          <ul class="public-list">
+            <li><strong>Access</strong>: request a copy of your personal information.</li>
+            <li><strong>Correction</strong>: request updates to inaccurate or incomplete information.</li>
+            <li><strong>Deletion</strong>: request deletion of your account and associated personal information (subject to retention requirements).</li>
+            <li><strong>Portability</strong>: request export of certain data in a structured format where applicable.</li>
+            <li><strong>Objection / restriction</strong>: object to or restrict certain processing where applicable.</li>
+            <li><strong>Consent withdrawal</strong>: withdraw consent for processing that is based on consent (where applicable).</li>
+            <li><strong>Cookies</strong>: control cookies via browser settings; blocking necessary cookies may break sign-in and other features.</li>
+            <li><strong>OAuth connections</strong>: revoke third-party authorizations at the provider to disable connected features.</li>
+          </ul>
+        </article>
+
+        <article class="public-glass-card" id="children">
+          <h3>Children</h3>
+          <p class="muted">
+            StreamSuites is not directed to children under 13 (or the minimum age required by your local law).
+            We do not knowingly collect personal information from children in a manner requiring parental consent.
+          </p>
+        </article>
+
+        <article class="public-glass-card" id="changes">
+          <h3>Changes to this policy</h3>
+          <p class="muted">
+            We may update this policy to reflect operational, legal, or technical changes. We will revise the “Last updated” date at the top of this page when changes are published.
+          </p>
+        </article>
+
+        <article class="public-glass-card" id="contact">
+          <h3>Contact</h3>
+          <p class="muted">
+            For privacy requests, data access/deletion inquiries, or questions about this policy, contact:
+          </p>
+          <ul class="public-list">
+            <li><strong>Email</strong>: <a href="mailto:privacy@streamsuites.app">privacy@streamsuites.app</a></li>
+            <li><strong>Support</strong>: <a href="mailto:support@streamsuites.app">support@streamsuites.app</a></li>
+          </ul>
+          <p class="muted">
+            If you contact us, we may request information to verify your identity before acting on certain requests.
+          </p>
         </article>
       </section>
 
@@ -125,4 +399,3 @@
   <script src='/js/status-widget.js' defer></script>
 </body>
 </html>
-
