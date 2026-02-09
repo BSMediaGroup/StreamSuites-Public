@@ -39,6 +39,77 @@
   color: #ffd0d0;
 }
 
+.requests-page .requests-submit-success {
+  margin-bottom: 12px;
+  color: #b7f4c5;
+  border-color: rgba(73, 202, 122, 0.35);
+  background: linear-gradient(145deg, rgba(20, 41, 30, 0.88), rgba(12, 28, 22, 0.9));
+}
+
+.requests-page .requests-submit-panel {
+  margin-bottom: 14px;
+}
+
+.requests-page .requests-submit-panel .card-body {
+  gap: 14px;
+}
+
+.requests-page .requests-submit-note {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.requests-page .requests-field-group {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.requests-page .requests-field-group label {
+  color: #dbe6ff;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.requests-page .requests-field-group input,
+.requests-page .requests-field-group textarea {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(214, 226, 245, 0.24);
+  background: linear-gradient(150deg, rgba(14, 20, 32, 0.9), rgba(10, 16, 28, 0.9));
+  color: #e8efff;
+  padding: 10px;
+  font: inherit;
+  line-height: 1.4;
+}
+
+.requests-page .requests-field-group textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.requests-page .requests-field-group input:focus-visible,
+.requests-page .requests-field-group textarea:focus-visible {
+  outline: none;
+  border-color: rgba(168, 184, 255, 0.7);
+  box-shadow: 0 0 0 2px rgba(92, 122, 255, 0.36);
+}
+
+.requests-page .requests-submit-field-error,
+.requests-page .requests-submit-error {
+  color: #ffd0d0;
+  font-size: 11px;
+}
+
+.requests-page .requests-submit-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .requests-page .requests-grid {
   grid-template-columns: 1fr;
 }
@@ -117,5 +188,9 @@
   .requests-page .request-vote-row {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .requests-page .requests-submit-actions .ss-btn {
+    width: 100%;
   }
 }

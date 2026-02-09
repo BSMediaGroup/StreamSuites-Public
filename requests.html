@@ -61,9 +61,39 @@
         <option value="new">New</option>
         <option value="trending">Trending</option>
       </select>
-      <a class="ss-btn secondary requests-submit-btn" href="https://api.streamsuites.app/auth/login/google?surface=creator">
+      <button id="requests-submit-cta" class="ss-btn secondary requests-submit-btn" type="button">
         Submit a feature request
-      </a>
+      </button>
+    </section>
+
+    <div id="requests-submit-success" class="empty-state requests-submit-success" hidden>
+      Thanks! Your request has been submitted for moderation.
+    </div>
+
+    <section id="requests-submit-panel" class="requests-submit-panel card" hidden aria-label="Submit feature request">
+      <div class="card-body">
+        <h3 class="title">Submit a feature request</h3>
+        <p class="requests-submit-note">
+          Submissions require creator login and are approved within 1–24 hours.
+        </p>
+        <form id="requests-submit-form" novalidate>
+          <div class="requests-field-group">
+            <label for="requests-submit-title">Title</label>
+            <input id="requests-submit-title" name="title" type="text" autocomplete="off" maxlength="160" />
+            <div id="requests-submit-title-error" class="requests-submit-field-error" hidden></div>
+          </div>
+          <div class="requests-field-group">
+            <label for="requests-submit-body">Body</label>
+            <textarea id="requests-submit-body" name="body" rows="6" maxlength="4000"></textarea>
+            <div id="requests-submit-body-error" class="requests-submit-field-error" hidden></div>
+          </div>
+          <div id="requests-submit-error" class="requests-submit-error" hidden></div>
+          <div class="requests-submit-actions">
+            <button id="requests-submit-confirm" class="ss-btn primary" type="submit">Submit</button>
+            <button id="requests-submit-cancel" class="ss-btn secondary" type="button">Cancel</button>
+          </div>
+        </form>
+      </div>
     </section>
 
     <div id="requests-error" class="empty-state requests-inline-error" hidden>
