@@ -2,7 +2,7 @@
   const REQUESTS_API_URL = "https://api.streamsuites.app/api/public/requests";
   const ME_API_URL = "https://api.streamsuites.app/api/me";
   const CREATOR_REQUESTS_API_URL = "https://api.streamsuites.app/api/creator/requests";
-  const CREATOR_LOGIN_URL = "https://api.streamsuites.app/auth/login/google?surface=creator";
+  const LOGIN_SHIM_URL = "/login.html";
   const REQUESTS_RETURN_TO_URL = "https://streamsuites.app/requests.html";
   const VOTE_TOKEN_STORAGE_KEY = "ss_vote_token";
   const REQUEST_DRAFT_STORAGE_KEY = "ss_requests_draft";
@@ -360,10 +360,13 @@
 
   function captureDraftFromForm() {
     if (!submitTitleInputEl || !submitBodyInputEl) return;
-    writeDraft({
-      title: submitTitleInputEl.value,
-      body: submitBodyInputEl.value
-    });
+    const title = String(submitTitleInputEl.value || "");
+    const body = String(submitBodyInputEl.value || "");
+    if (!title.trim() && !body.trim()) {
+      clearDraft();
+      return;
+    }
+    writeDraft({ title, body });
   }
 
   function hideSubmitFeedback() {
@@ -469,7 +472,7 @@
   }
 
   function buildCreatorLoginUrl() {
-    const endpoint = new URL(CREATOR_LOGIN_URL);
+    const endpoint = new URL(LOGIN_SHIM_URL, window.location.origin);
     endpoint.searchParams.set("return_to", REQUESTS_RETURN_TO_URL);
     return endpoint.toString();
   }
@@ -538,8 +541,9 @@
     };
   }
 
-  async function handleSubmitCtaClick() {
+  async function onSubmitRequestClicked() {
     hideSubmitFeedback();
+    captureDraftFromForm();
     const canSubmit = await ensureCreatorAccess({ redirectOnFailure: true });
     if (!canSubmit) return;
     restoreDraftIntoForm();
@@ -581,6 +585,7 @@
       });
 
       if (response.status === 401 || response.status === 403) {
+        captureDraftFromForm();
         redirectToCreatorLogin();
         return;
       }
@@ -613,7 +618,7 @@
   async function restoreDraftAfterLoginBounce() {
     const draft = readDraft();
     if (!draft || (!draft.title.trim() && !draft.body.trim())) return;
-    const canSubmit = await ensureCreatorAccess({ redirectOnFailure: true });
+    const canSubmit = await ensureCreatorAccess({ redirectOnFailure: false });
     if (!canSubmit) return;
     restoreDraftIntoForm();
     openSubmitPanel();
@@ -624,7 +629,7 @@
       return;
     }
 
-    submitCtaEl.addEventListener("click", handleSubmitCtaClick);
+    submitCtaEl.addEventListener("click", onSubmitRequestClicked);
     submitFormEl.addEventListener("submit", handleRequestSubmit);
 
     submitTitleInputEl.addEventListener("input", () => {
@@ -712,15 +717,20 @@
     }
   }
 
-  if (sortEl) {
-    sortEl.addEventListener("change", (event) => {
-      sortMode = event.target?.value === "trending" ? "trending" : "new";
-      fetchRequests();
-    });
-  }
-
-  document.addEventListener("DOMContentLoaded", () => {
+  function initializePage() {
+    if (sortEl) {
+      sortEl.addEventListener("change", (event) => {
+        sortMode = event.target?.value === "trending" ? "trending" : "new";
+        fetchRequests();
+      });
+    }
     fetchRequests();
     initializeSubmissionFlow();
-  });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initializePage, { once: true });
+  } else {
+    initializePage();
+  }
 })();

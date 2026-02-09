@@ -7,7 +7,70 @@
   <meta name="robots" content="noindex" />
   <link rel="canonical" href="https://streamsuites.app/" />
   <script>
-    window.location.replace('/?auth=login');
+    (function () {
+      const ME_API_URL = 'https://api.streamsuites.app/api/me';
+      const params = new URLSearchParams(window.location.search || '');
+      const authState = params.get('auth') === 'signup' ? 'signup' : 'login';
+
+      const normalizeReturnTo = (value) => {
+        if (!value || typeof value !== 'string') return '';
+        const trimmed = value.trim();
+        if (!trimmed) return '';
+        if (trimmed.startsWith('/')) return trimmed;
+        try {
+          const parsed = new URL(trimmed, window.location.origin);
+          const isSameOrigin = parsed.origin === window.location.origin;
+          const isCanonicalOrigin = parsed.origin === 'https://streamsuites.app';
+          if (!isSameOrigin && !isCanonicalOrigin) return '';
+          return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+        } catch (error) {
+          return '';
+        }
+      };
+
+      const returnTo = normalizeReturnTo(
+        params.get('return_to') || params.get('return') || params.get('redirect') || params.get('next')
+      );
+
+      const redirectToInlineLogin = () => {
+        const nextUrl = new URL('/', window.location.origin);
+        nextUrl.searchParams.set('auth', authState);
+        if (returnTo) {
+          nextUrl.searchParams.set('return_to', returnTo);
+        }
+        window.location.replace(nextUrl.toString());
+      };
+
+      if (!returnTo) {
+        redirectToInlineLogin();
+        return;
+      }
+
+      fetch(ME_API_URL, {
+        method: 'GET',
+        cache: 'no-store',
+        credentials: 'include',
+        headers: { Accept: 'application/json' },
+      })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((payload) => {
+          const authenticated =
+            payload?.authenticated === true ||
+            payload?.is_authenticated === true ||
+            payload?.isAuthenticated === true ||
+            payload?.data?.authenticated === true ||
+            payload?.data?.is_authenticated === true ||
+            payload?.data?.isAuthenticated === true;
+          if (authenticated) {
+            window.location.replace(returnTo);
+            return;
+          }
+          redirectToInlineLogin();
+        })
+        .catch(() => {
+          redirectToInlineLogin();
+        });
+    })();
   </script>
   <noscript>
     <meta http-equiv="refresh" content="0; url=/?auth=login" />
