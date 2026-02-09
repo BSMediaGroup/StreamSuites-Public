@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<!-- ===================================================================== -->
+<!-- StreamSuites™ Dashboard — Public Feature Requests                     -->
+<!-- Version: v0.2.3-alpha                                                 -->
+<!-- Owner: Daniel Clancy                                                  -->
+<!-- Copyright: © 2026 Brainstream Media Group                             -->
+<!-- ===================================================================== -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feature Requests</title>
+  <meta name="description" content="Browse and upvote approved StreamSuites feature requests." />
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+
+  <link rel="stylesheet" href="/css/theme-dark.css" />
+  <link rel="stylesheet" href="/css/public-pages.css" />
+  <link rel="stylesheet" href="/css/public-pages-v2.css" />
+  <link rel="stylesheet" href="/css/status-widget.css" />
+  <link rel="stylesheet" href="/css/requests.css" />
+</head>
+<body class="requests-page">
+  <div class="page-shell">
+    <header class="public-header">
+      <a href="/" class="brand-mark">
+        <img src="/assets/logos/logo.png" alt="StreamSuites" />
+        <div class="brand-title">
+          <h1>StreamSuites™</h1>
+          <p class="brand-subtitle">Feature requests</p>
+        </div>
+      </a>
+      <div class="public-menu-group">
+        <input type="checkbox" id="requests-menu-toggle" class="nav-toggle" aria-label="Toggle navigation" />
+        <label class="hamburger" for="requests-menu-toggle">
+          <span class="sr-only">Toggle navigation</span>
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <path class="line line-top-bottom" d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22"></path>
+            <path class="line" d="M7 16 27 16"></path>
+          </svg>
+        </label>
+        <div class="header-actions">
+          <span class="pill">public beta</span>
+          <a class="quiet-link" href="/">Home</a>
+          <a class="cta-link" href="/media.html">Media surfaces</a>
+        </div>
+      </div>
+    </header>
+
+    <section class="page-heading">
+      <h2>Feature Requests</h2>
+      <span class="lede">Browse, vote on, and help shape future StreamSuites features.</span>
+    </section>
+
+    <p class="helper-text">
+      Voting is public. Submitting new requests requires creator login.
+    </p>
+
+    <section class="requests-toolbar" aria-label="Requests controls">
+      <label for="request-sort" class="requests-sort-label">Sort</label>
+      <select id="request-sort" class="requests-sort-select">
+        <option value="new">New</option>
+        <option value="trending">Trending</option>
+      </select>
+      <a class="ss-btn secondary requests-submit-btn" href="https://api.streamsuites.app/auth/login/google?surface=creator">
+        Submit a feature request
+      </a>
+    </section>
+
+    <div id="requests-error" class="empty-state requests-inline-error" hidden>
+      Unable to load requests right now.
+    </div>
+
+    <noscript>
+      <div class="empty-state">JavaScript is required to render feature requests.</div>
+    </noscript>
+
+    <div id="requests-loading" class="empty-state">Loading requests...</div>
+    <div id="requests-list" class="card-grid requests-grid" aria-live="polite"></div>
+    <div id="requests-empty" class="empty-state" hidden>
+      No approved requests are available yet.
+    </div>
+
+    <footer class="public-footer">
+      <span>StreamSuites™ Media Surface • Feature Requests</span>
+      <nav class="footer-login">
+        <a href="/donate.html">Donate</a>
+        <a class="login-primary" href="https://api.streamsuites.app/auth/login/google?surface=creator">Creator Login</a>
+        <span class="login-admin-group" aria-label="Administrator login options">
+          <span class="login-admin-label">Admin</span>
+          <a class="login-admin" href="https://api.streamsuites.app/auth/login/google?surface=admin">Google</a>
+          <a class="login-admin" href="https://api.streamsuites.app/auth/login/github?surface=admin">GitHub</a>
+        </span>
+      </nav>
+    </footer>
+  </div>
+
+  <script src="/js/utils/versioning.js"></script>
+  <script src="/js/utils/version-stamp.js"></script>
+  <script src="/js/public-requests.js"></script>
+  <script src="/js/status-widget.js" defer></script>
+</body>
+</html>

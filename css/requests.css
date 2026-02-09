@@ -1,0 +1,121 @@
+.requests-page .requests-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 14px 0 14px;
+}
+
+.requests-page .requests-sort-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.requests-page .requests-sort-select {
+  min-height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(214, 226, 245, 0.24);
+  background: linear-gradient(150deg, rgba(14, 20, 32, 0.9), rgba(10, 16, 28, 0.9));
+  color: #e8efff;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.requests-page .requests-sort-select:focus-visible {
+  outline: none;
+  border-color: rgba(168, 184, 255, 0.7);
+  box-shadow: 0 0 0 2px rgba(92, 122, 255, 0.36);
+}
+
+.requests-page .requests-submit-btn {
+  margin-left: auto;
+}
+
+.requests-page .requests-inline-error {
+  margin-bottom: 12px;
+  color: #ffd0d0;
+}
+
+.requests-page .requests-grid {
+  grid-template-columns: 1fr;
+}
+
+.requests-page .request-card {
+  overflow: visible;
+}
+
+.requests-page .request-card .card-body {
+  gap: 12px;
+}
+
+.requests-page .request-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.requests-page .request-implemented {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(140, 199, 54, 0.45);
+  background: rgba(140, 199, 54, 0.16);
+  color: #c9f2a7;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.requests-page .request-body {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.requests-page .request-vote-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.requests-page .request-vote-count {
+  color: var(--text-secondary);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+}
+
+.requests-page .request-upvote-btn {
+  min-width: 124px;
+}
+
+.requests-page .request-upvote-btn.is-voted {
+  --btn-bg-1: var(--public-v2-btn-primary-1);
+  --btn-bg-2: var(--public-v2-btn-primary-2);
+}
+
+.requests-page .request-vote-error {
+  color: #ffd0d0;
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+@media (max-width: 768px) {
+  .requests-page .requests-submit-btn {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .requests-page .request-vote-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

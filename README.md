@@ -281,6 +281,7 @@ StreamSuites-Public/
 │   ├── overrides.css
 │   ├── public-pages.css
 │   ├── public-pages-v2.css
+│   ├── requests.css
 │   ├── status-widget.css
 │   ├── theme-dark.css
 │   └── updates.css
@@ -304,6 +305,7 @@ StreamSuites-Public/
 │   ├── public-data.js
 │   ├── public-donate.js
 │   ├── public-polls.js
+│   ├── public-requests.js
 │   ├── public-roadmap.js
 │   ├── public-tallies.js
 │   ├── status-widget.js
@@ -340,6 +342,7 @@ StreamSuites-Public/
 ├── postmortem.html
 ├── privacy.html
 ├── README.md
+├── requests.html
 ├── scoreboards.html
 ├── support.html
 ├── tallies.html
