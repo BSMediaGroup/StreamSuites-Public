@@ -119,6 +119,24 @@
         <div id="requests-empty" class="empty-state" hidden>
           No approved requests are available yet.
         </div>
+
+        <template id="request-comments-template">
+          <section class="request-comments-block">
+            <button
+              type="button"
+              class="request-comments-toggle"
+              data-action="toggle-comments"
+              data-request-id=""
+            >
+              Comments
+            </button>
+            <div class="request-comments request-comments-panel" data-request-id="" hidden>
+              <div class="comments-list request-comments-list"></div>
+              <div class="comments-status request-comments-status" hidden></div>
+              <div class="comment-form request-comment-composer"></div>
+            </div>
+          </section>
+        </template>
       </section>
 
       <footer class="public-footer">

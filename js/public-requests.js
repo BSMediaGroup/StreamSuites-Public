@@ -26,6 +26,7 @@
   const submitSuccessEl = document.getElementById("requests-submit-success");
   const submitCancelEl = document.getElementById("requests-submit-cancel");
   const submitConfirmEl = document.getElementById("requests-submit-confirm");
+  const requestCommentsTemplateEl = document.getElementById("request-comments-template");
 
   if (!listEl || !emptyEl || !loadingEl) return;
 
@@ -349,39 +350,78 @@
 
     const commentState = getCommentState(request.id);
 
-    const commentsSection = document.createElement("section");
-    commentsSection.className = "request-comments";
+    const commentsSection = requestCommentsTemplateEl?.content?.firstElementChild
+      ? requestCommentsTemplateEl.content.firstElementChild.cloneNode(true)
+      : document.createElement("section");
 
-    const commentsToggle = document.createElement("button");
-    commentsToggle.type = "button";
-    commentsToggle.className = "request-comments-toggle";
+    if (!commentsSection.className) {
+      commentsSection.className = "request-comments-block";
+    }
+
+    let commentsToggle = commentsSection.querySelector('[data-action="toggle-comments"]');
+    if (!commentsToggle) {
+      commentsToggle = document.createElement("button");
+      commentsToggle.type = "button";
+      commentsToggle.className = "request-comments-toggle";
+      commentsToggle.dataset.action = "toggle-comments";
+      commentsSection.appendChild(commentsToggle);
+    }
+
+    let commentsContainer = commentsSection.querySelector(".request-comments");
+    if (!commentsContainer) {
+      commentsContainer = document.createElement("div");
+      commentsContainer.className = "request-comments request-comments-panel";
+      commentsContainer.hidden = true;
+      commentsSection.appendChild(commentsContainer);
+    }
+
+    commentsToggle.dataset.requestId = request.id;
+    commentsContainer.dataset.requestId = request.id;
     commentsToggle.setAttribute("aria-expanded", commentState.expanded ? "true" : "false");
     commentsToggle.textContent = `Comments (${safeCommentCount(request.commentCount)})`;
     commentsToggle.addEventListener("click", () => {
       toggleCommentsSection(request.id);
     });
+    commentsContainer.hidden = !commentState.expanded;
 
-    commentsSection.appendChild(commentsToggle);
+    let commentsList = commentsContainer.querySelector(".comments-list");
+    if (!commentsList) {
+      commentsList = document.createElement("div");
+      commentsList.className = "comments-list request-comments-list";
+      commentsContainer.appendChild(commentsList);
+    }
+
+    let commentsStatus = commentsContainer.querySelector(".comments-status");
+    if (!commentsStatus) {
+      commentsStatus = document.createElement("div");
+      commentsStatus.className = "comments-status request-comments-status";
+      commentsContainer.appendChild(commentsStatus);
+    }
+
+    let commentForm = commentsContainer.querySelector(".comment-form");
+    if (!commentForm) {
+      commentForm = document.createElement("div");
+      commentForm.className = "comment-form request-comment-composer";
+      commentsContainer.appendChild(commentForm);
+    }
+
+    commentsList.innerHTML = "";
+    commentsStatus.hidden = true;
+    commentsStatus.classList.remove("request-comments-status-error");
+    commentsStatus.textContent = "";
+    commentForm.innerHTML = "";
 
     if (commentState.expanded) {
-      const commentsPanel = document.createElement("div");
-      commentsPanel.className = "request-comments-panel";
-
       if (commentState.loading) {
-        const status = document.createElement("p");
-        status.className = "request-comments-status";
-        status.textContent = "Loading comments...";
-        commentsPanel.appendChild(status);
+        commentsStatus.hidden = false;
+        commentsStatus.textContent = "Loading comments...";
       } else if (commentState.loadError) {
-        const status = document.createElement("p");
-        status.className = "request-comments-status request-comments-status-error";
-        status.textContent = "Unable to load comments.";
-        commentsPanel.appendChild(status);
+        commentsStatus.hidden = false;
+        commentsStatus.classList.add("request-comments-status-error");
+        commentsStatus.textContent = "Unable to load comments.";
       } else if (!commentState.items.length) {
-        const empty = document.createElement("p");
-        empty.className = "request-comments-status";
-        empty.textContent = "No comments yet.";
-        commentsPanel.appendChild(empty);
+        commentsStatus.hidden = false;
+        commentsStatus.textContent = "No comments yet.";
       } else {
         const list = document.createElement("ul");
         list.className = "request-comments-list";
@@ -411,11 +451,8 @@
           list.appendChild(item);
         });
 
-        commentsPanel.appendChild(list);
+        commentsList.appendChild(list);
       }
-
-      const composer = document.createElement("div");
-      composer.className = "request-comment-composer";
 
       if (commentAuthState.isCreator) {
         const textarea = document.createElement("textarea");
@@ -445,7 +482,7 @@
         });
 
         actions.appendChild(submit);
-        composer.append(textarea, actions);
+        commentForm.append(textarea, actions);
       } else {
         const textarea = document.createElement("textarea");
         textarea.className = "request-comment-input";
@@ -457,18 +494,15 @@
         hint.className = "request-comment-login-hint";
         hint.textContent = "Creator login required to comment.";
 
-        composer.append(textarea, hint);
+        commentForm.append(textarea, hint);
       }
 
       if (commentState.postError) {
         const postError = document.createElement("p");
         postError.className = "request-comment-error";
         postError.textContent = commentState.postError;
-        composer.appendChild(postError);
+        commentForm.appendChild(postError);
       }
-
-      commentsPanel.appendChild(composer);
-      commentsSection.appendChild(commentsPanel);
     }
 
     body.append(titleRow, content, meta, voteRow, voteError, commentsSection);
