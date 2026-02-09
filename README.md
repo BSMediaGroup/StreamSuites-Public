@@ -279,6 +279,7 @@ StreamSuites-Public/
 │   ├── layout.css
 │   ├── overrides.css
 │   ├── public-pages.css
+│   ├── public-pages-v2.css
 │   ├── status-widget.css
 │   ├── theme-dark.css
 │   └── updates.css
