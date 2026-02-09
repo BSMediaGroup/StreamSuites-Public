@@ -90,6 +90,10 @@
       let loginWindow = null;
       let launchedLogin = false;
 
+      const setStatus = (text) => {
+        if (statusEl) statusEl.textContent = text;
+      };
+
       const safeStorageSet = (key, value) => {
         try {
           window.localStorage.setItem(key, value);
@@ -148,11 +152,12 @@
 
         if (launchedLogin) {
           if (openLoginEl) openLoginEl.hidden = false;
-          if (statusEl) statusEl.textContent = "Continue in the login window, then return here automatically.";
+          setStatus("Complete sign-in in the login window, then return here automatically.");
           return;
         }
 
         launchedLogin = true;
+        setStatus("Opening login...");
         loginWindow = window.open(
           requestsLoginUrl.toString(),
           "ss_public_auth_login",
@@ -168,13 +173,11 @@
 
         if (!loginWindow) {
           if (openLoginEl) openLoginEl.hidden = false;
-          if (statusEl) statusEl.textContent = "Login popup blocked. Use Open login, then complete sign-in.";
+          setStatus("Login popup blocked. Use Open login to continue sign-in.");
           return;
         }
 
-        if (statusEl) {
-          statusEl.textContent = "Complete sign-in in the login window. You will be redirected automatically.";
-        }
+        setStatus("Complete sign-in in the login window. You will be redirected automatically.");
       };
 
       const redirectToReturnTarget = () => {
@@ -218,6 +221,7 @@
         ensureLoginVisible();
       };
 
+      ensureLoginVisible();
       checkAuth();
       pollTimer = window.setInterval(checkAuth, POLL_INTERVAL_MS);
 
