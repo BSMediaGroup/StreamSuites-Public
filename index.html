@@ -242,6 +242,14 @@
             <img src="/assets/icons/x.svg" alt="" />
             Continue with X
           </a>
+          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/login/discord?surface=creator">
+            <img src="/assets/icons/discord.svg" alt="" />
+            Continue with Discord
+          </a>
+          <button class="auth-oauth-button" type="button" disabled aria-disabled="true" title="Coming soon" tabindex="-1" style="opacity: 0.55; cursor: not-allowed; pointer-events: none;">
+            <img src="/assets/icons/twitch.svg" alt="" />
+            Continue with Twitch (Coming soon)
+          </button>
         </div>
 
         <div class="auth-toggle">
@@ -250,22 +258,11 @@
             data-auth-other-methods-toggle
             aria-expanded="false"
           >
-            Other methods
+            Use email/password
           </button>
         </div>
 
         <div data-auth-secondary-methods hidden>
-          <div class="auth-oauth-grid">
-            <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/login/discord?surface=creator">
-              <img src="/assets/icons/discord.svg" alt="" />
-              Continue with Discord
-            </a>
-            <button class="auth-oauth-button" type="button" disabled aria-disabled="true" title="Coming soon" tabindex="-1" style="opacity: 0.55; cursor: not-allowed; pointer-events: none;">
-              <img src="/assets/icons/twitch.svg" alt="" />
-              Continue with Twitch (Coming soon)
-            </button>
-          </div>
-
           <div class="auth-divider">Or email</div>
 
           <form class="auth-form" data-auth-form="login">
@@ -310,6 +307,14 @@
             <img src="/assets/icons/x.svg" alt="" />
             Continue with X
           </a>
+          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/login/discord?surface=creator">
+            <img src="/assets/icons/discord.svg" alt="" />
+            Continue with Discord
+          </a>
+          <button class="auth-oauth-button" type="button" disabled aria-disabled="true" title="Coming soon" tabindex="-1" style="opacity: 0.55; cursor: not-allowed; pointer-events: none;">
+            <img src="/assets/icons/twitch.svg" alt="" />
+            Continue with Twitch (Coming soon)
+          </button>
         </div>
 
         <div class="auth-toggle">
@@ -318,22 +323,11 @@
             data-auth-other-methods-toggle
             aria-expanded="false"
           >
-            Other methods
+            Use email/password
           </button>
         </div>
 
         <div data-auth-secondary-methods hidden>
-          <div class="auth-oauth-grid">
-            <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/login/discord?surface=creator">
-              <img src="/assets/icons/discord.svg" alt="" />
-              Continue with Discord
-            </a>
-            <button class="auth-oauth-button" type="button" disabled aria-disabled="true" title="Coming soon" tabindex="-1" style="opacity: 0.55; cursor: not-allowed; pointer-events: none;">
-              <img src="/assets/icons/twitch.svg" alt="" />
-              Continue with Twitch (Coming soon)
-            </button>
-          </div>
-
           <div class="auth-divider">Or email</div>
 
           <form class="auth-form" data-auth-form="signup">
@@ -515,15 +509,11 @@
 
       const setOtherMethodsExpanded = (panel, expanded) => {
         if (!panel) return;
-        const primary = panel.querySelector('[data-auth-primary-methods]');
         const secondary = panel.querySelector('[data-auth-secondary-methods]');
         const toggle = panel.querySelector('[data-auth-other-methods-toggle]');
         if (!secondary || !toggle) return;
         secondary.hidden = !expanded;
         toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-        if (primary) {
-          primary.hidden = expanded;
-        }
       };
 
       const resetOtherMethods = () => {
