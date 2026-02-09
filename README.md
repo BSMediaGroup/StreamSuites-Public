@@ -324,7 +324,6 @@ StreamSuites-Public/
 ├── .gitignore
 ├── about.html
 ├── accessibility.html
-├── auth-complete.html
 ├── auth-bridge.html
 ├── bg-poc.html
 ├── changelog.html

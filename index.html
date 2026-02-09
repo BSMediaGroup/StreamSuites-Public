@@ -438,7 +438,6 @@
       const CREATOR_DASHBOARD_URL = 'https://creator.streamsuites.app';
       const CREATOR_ONBOARDING_URL = 'https://creator.streamsuites.app/onboarding';
       const AUTH_API_BASE = 'https://api.streamsuites.app/auth';
-      const OAUTH_COMPLETE_URL = 'https://streamsuites.app/auth-complete.html';
       const RESEND_ENDPOINT = `${AUTH_API_BASE}/verify/resend`;
       const PASSWORD_MIN_LENGTH = 8;
       const AUTH_FLOW_STATES = Object.freeze({
@@ -496,13 +495,11 @@
               return;
             }
             const href = link.href;
-            const oauthStartUrl = new URL(href);
-            oauthStartUrl.searchParams.set('return_to', OAUTH_COMPLETE_URL);
-            oauthFlow.activeHref = oauthStartUrl.toString();
+            oauthFlow.activeHref = href;
             setOauthFlowState(AUTH_FLOW_STATES.starting);
             try {
               setOauthFlowState(AUTH_FLOW_STATES.waiting_callback);
-              window.location.assign(oauthFlow.activeHref);
+              window.location.assign(href);
             } catch (error) {
               setOauthFlowState(AUTH_FLOW_STATES.error);
             }
