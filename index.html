@@ -82,7 +82,7 @@
 
       <div class="cta-block">
         <div class="cta-primary-wrap" aria-hidden="true">
-          <button class="cta-primary" type="button" data-creator-cta>Continue</button>
+          <button class="cta-primary" type="button" data-auth-trigger="login" data-creator-cta>Creator Login</button>
         </div>
         <p class="cta-signup">No account? <button type="button" data-auth-trigger="signup">sign up</button> in seconds!</p>
       </div>
@@ -211,7 +211,7 @@
 
   <div class="cta-floating" aria-hidden="true">
     <div class="cta-primary-wrap">
-      <button class="cta-primary" type="button" data-creator-cta>Continue</button>
+      <button class="cta-primary" type="button" data-auth-trigger="login" data-creator-cta>Creator Login</button>
     </div>
   </div>
 
@@ -375,44 +375,14 @@
       const ctas = Array.from(document.querySelectorAll('[data-creator-cta]'));
       if (!ctas.length) return;
 
+      const LOGIN_LABEL = 'Creator Login';
+      const DASHBOARD_LABEL = 'Creator Dashboard';
       const AUTH_SESSION_URL = 'https://api.streamsuites.app/auth/session';
       const CREATOR_DASHBOARD_URL = 'https://creator.streamsuites.app/';
-      const CREATOR_CONTINUE_URL = 'https://creator.streamsuites.app/?login=1';
-      const AuthState = Object.freeze({
-        idle: 'idle',
-        starting: 'starting',
-        waiting_callback: 'waiting_callback',
-        success: 'success',
-        error: 'error',
-      });
-      const ctaFlow = {
-        state: AuthState.idle,
-        isCreatorSession: false,
-      };
-
-      const setState = (nextState) => {
-        ctaFlow.state = nextState;
-        ctas.forEach((cta) => {
-          cta.dataset.authState = nextState;
-        });
-      };
-
-      const setDisabled = (disabled) => {
-        ctas.forEach((cta) => {
-          cta.disabled = !!disabled;
-          cta.setAttribute('aria-busy', disabled ? 'true' : 'false');
-        });
-      };
+      let isCreatorSession = false;
 
       const setLabel = () => {
-        let label = 'Continue';
-        if (ctaFlow.state === AuthState.starting || ctaFlow.state === AuthState.waiting_callback) {
-          label = 'Starting...';
-        } else if (ctaFlow.state === AuthState.error) {
-          label = 'Try Again';
-        } else if (ctaFlow.isCreatorSession) {
-          label = 'Creator Dashboard';
-        }
+        const label = isCreatorSession ? DASHBOARD_LABEL : LOGIN_LABEL;
         ctas.forEach((cta) => {
           cta.textContent = label;
         });
@@ -430,52 +400,27 @@
         return isCreatorSessionPayload(payload);
       };
 
-      const startContinueFlow = async () => {
-        if (ctaFlow.state === AuthState.starting || ctaFlow.state === AuthState.waiting_callback) {
+      const handleCtaClick = (event) => {
+        if (!isCreatorSession) {
           return;
         }
-        setState(AuthState.starting);
-        setDisabled(true);
-        setLabel();
-
-        try {
-          ctaFlow.isCreatorSession = await fetchCreatorSession();
-        } catch (error) {
-          setState(AuthState.error);
-          setDisabled(false);
-          setLabel();
-          return;
-        }
-
-        if (ctaFlow.isCreatorSession) {
-          setState(AuthState.success);
-          setLabel();
-          window.location.assign(CREATOR_DASHBOARD_URL);
-          return;
-        }
-
-        setState(AuthState.waiting_callback);
-        setLabel();
-        window.location.assign(CREATOR_CONTINUE_URL);
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        window.location.assign(CREATOR_DASHBOARD_URL);
       };
 
       ctas.forEach((cta) => {
-        cta.addEventListener('click', (event) => {
-          event.preventDefault();
-          startContinueFlow();
-        });
+        cta.addEventListener('click', handleCtaClick);
       });
 
-      setState(AuthState.idle);
-      setDisabled(false);
       setLabel();
       fetchCreatorSession()
         .then((isCreator) => {
-          ctaFlow.isCreatorSession = isCreator;
+          isCreatorSession = isCreator;
           setLabel();
         })
         .catch(() => {
-          ctaFlow.isCreatorSession = false;
+          isCreatorSession = false;
           setLabel();
         });
     })();
