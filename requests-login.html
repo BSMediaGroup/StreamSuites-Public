@@ -45,6 +45,10 @@
                 <img class="ss-requests-auth__oauth-icon" src="/assets/icons/x.svg" alt="" aria-hidden="true" />
                 <span>X</span>
               </a>
+              <a class="ss-btn ss-btn-primary ss-requests-auth__oauth-button" data-provider="twitch" href="#">
+                <img class="ss-requests-auth__oauth-icon" src="/assets/icons/twitch.svg" alt="" aria-hidden="true" />
+                <span>Twitch</span>
+              </a>
             </div>
           </div>
           <div class="ss-requests-auth__divider"><span>Feature requests</span></div>
@@ -120,7 +124,8 @@
         google: "/auth/login/google",
         github: "/auth/login/github",
         x: "/auth/x/start",
-        discord: "/auth/login/discord"
+        discord: "/auth/login/discord",
+        twitch: "/oauth/twitch/start"
       };
 
       Object.keys(providerEndpointPaths).forEach((provider) => {

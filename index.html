@@ -246,10 +246,10 @@
             <img src="/assets/icons/discord.svg" alt="" />
             Continue with Discord
           </a>
-          <button class="auth-oauth-button" type="button" disabled aria-disabled="true" title="Coming soon" tabindex="-1" style="opacity: 0.55; cursor: not-allowed; pointer-events: none;">
+          <a class="auth-oauth-button" href="https://api.streamsuites.app/oauth/twitch/start">
             <img src="/assets/icons/twitch.svg" alt="" />
-            Continue with Twitch (Coming soon)
-          </button>
+            Continue with Twitch
+          </a>
         </div>
 
         <div class="auth-toggle">
@@ -311,10 +311,10 @@
             <img src="/assets/icons/discord.svg" alt="" />
             Continue with Discord
           </a>
-          <button class="auth-oauth-button" type="button" disabled aria-disabled="true" title="Coming soon" tabindex="-1" style="opacity: 0.55; cursor: not-allowed; pointer-events: none;">
+          <a class="auth-oauth-button" href="https://api.streamsuites.app/oauth/twitch/start">
             <img src="/assets/icons/twitch.svg" alt="" />
-            Continue with Twitch (Coming soon)
-          </button>
+            Continue with Twitch
+          </a>
         </div>
 
         <div class="auth-toggle">
@@ -483,7 +483,9 @@
 
       const wireOauthFlowButtons = () => {
         const oauthLinks = Array.from(
-          authModal.querySelectorAll('.auth-oauth-button[href^="https://api.streamsuites.app/auth/"]')
+          authModal.querySelectorAll(
+            '.auth-oauth-button[href^="https://api.streamsuites.app/auth/"], .auth-oauth-button[href^="https://api.streamsuites.app/oauth/"]'
+          )
         );
         oauthLinks.forEach((link) => {
           if (!(link instanceof HTMLAnchorElement)) return;
