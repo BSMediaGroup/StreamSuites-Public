@@ -294,6 +294,14 @@
     fetchStatus();
   }
 
+  const updateScrollbarOffset = () => {
+    const docEl = document.documentElement;
+    if (!docEl) return;
+    const rawWidth = (window.innerWidth || 0) - (docEl.clientWidth || 0);
+    const scrollbarWidth = Math.max(0, Math.round(rawWidth));
+    docEl.style.setProperty("--ss-status-scrollbar-offset", `${scrollbarWidth}px`);
+  };
+
   const parsePixels = (value, fallback = 0) => {
     const next = Number.parseFloat(value);
     return Number.isFinite(next) ? next : fallback;
@@ -363,7 +371,13 @@
     }
   }
 
+  const handleViewportChange = () => {
+    updateScrollbarOffset();
+    requestFooterOffsetUpdate();
+  };
+
   window.addEventListener("scroll", requestFooterOffsetUpdate, { passive: true });
-  window.addEventListener("resize", requestFooterOffsetUpdate);
+  window.addEventListener("resize", handleViewportChange);
+  updateScrollbarOffset();
   requestFooterOffsetUpdate();
 })();
