@@ -256,19 +256,46 @@
     return Number.isFinite(next) ? next : fallback;
   };
 
+  const readBaseBottom = () => {
+    const inlineBottom = root.style.bottom;
+    root.style.bottom = "";
+    const baseBottom = parsePixels(window.getComputedStyle(root).bottom, 10);
+    root.style.bottom = inlineBottom;
+    return baseBottom;
+  };
+
   const findFooter = () => {
     const selectors = [
       ".footer-shell",
+      "#app-footer.creator-footer",
+      "footer.creator-footer",
       "footer.public-footer",
       "footer.ss-footer",
       "footer",
       "[role='contentinfo']",
     ];
-    for (const selector of selectors) {
-      const match = document.querySelector(selector);
-      if (match) return match;
+    const seen = new Set();
+    const candidates = [];
+
+    selectors.forEach((selector) => {
+      document.querySelectorAll(selector).forEach((match) => {
+        if (!(match instanceof HTMLElement) || seen.has(match)) return;
+        seen.add(match);
+        const rect = match.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) return;
+        candidates.push(match);
+      });
+    });
+
+    if (!candidates.length) {
+      return null;
     }
-    return null;
+    return candidates.reduce((best, candidate) => {
+      if (!best) return candidate;
+      return candidate.getBoundingClientRect().top > best.getBoundingClientRect().top
+        ? candidate
+        : best;
+    }, null);
   };
 
   const getFooter = () => observedFooter || findFooter();
@@ -289,9 +316,9 @@
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
     const footerRect = footer.getBoundingClientRect();
     const overlap = Math.max(0, viewportHeight - footerRect.top);
-    const baseBottom = parsePixels(window.getComputedStyle(root).bottom, 10);
+    const baseBottom = readBaseBottom();
     const clearance = 8;
-    root.style.bottom = overlap > 0 ? `${Math.ceil(baseBottom + overlap + clearance)}px` : "";
+    root.style.bottom = overlap > 0 ? `${Math.ceil(Math.max(baseBottom, overlap + clearance))}px` : "";
   };
 
   const requestFooterOffsetUpdate = () => {
