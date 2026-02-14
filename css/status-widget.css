@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "SuiGeneris";
+  src: url("/assets/fonts/SuiGeneris-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --ss-status-text: rgba(232, 235, 239, 0.92);
   --ss-status-muted: rgba(232, 235, 239, 0.65);
@@ -8,6 +16,8 @@
   --ss-status-partial: #f0b04b;
   --ss-status-major: #f36a5f;
   --ss-status-unknown: #9aa0a6;
+  --ss-status-base-right: max(12px, calc(env(safe-area-inset-right, 0px) + 10px));
+  --ss-status-base-bottom: max(10px, calc(env(safe-area-inset-bottom, 0px) + 10px));
 }
 
 body:not(.status-tooltip-legacy) {
@@ -20,14 +30,14 @@ body:not(.status-tooltip-legacy) {
 
 .ss-status-indicator {
   position: fixed;
-  right: 14px;
-  bottom: 12px;
+  right: var(--ss-status-base-right);
+  bottom: var(--ss-status-base-bottom);
   z-index: 1200;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 8px;
-  font-family: inherit;
+  font-family: "SuiGeneris", "SuiGenerisRg", system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 12px;
   color: var(--ss-status-text);
   pointer-events: auto;
@@ -161,11 +171,6 @@ body:not(.status-tooltip-legacy) .ss-status-details {
 }
 
 @media (max-width: 640px) {
-  .ss-status-indicator {
-    right: 10px;
-    bottom: 10px;
-  }
-
   .ss-status-details {
     min-width: min(300px, 94vw);
   }
