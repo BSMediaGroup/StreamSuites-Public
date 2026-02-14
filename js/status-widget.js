@@ -6,6 +6,40 @@
 
   if (document.getElementById(ROOT_ID)) return;
 
+  const findFooter = () => {
+    const selectors = [
+      ".footer-shell",
+      "#app-footer.creator-footer",
+      "footer.creator-footer",
+      "footer.public-footer",
+      "footer.ss-footer",
+      "footer",
+      "[role='contentinfo']",
+    ];
+    const seen = new Set();
+    const candidates = [];
+
+    selectors.forEach((selector) => {
+      document.querySelectorAll(selector).forEach((match) => {
+        if (!(match instanceof HTMLElement) || seen.has(match)) return;
+        seen.add(match);
+        const rect = match.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) return;
+        candidates.push(match);
+      });
+    });
+
+    if (!candidates.length) {
+      return null;
+    }
+    return candidates.reduce((best, candidate) => {
+      if (!best) return candidate;
+      return candidate.getBoundingClientRect().top > best.getBoundingClientRect().top
+        ? candidate
+        : best;
+    }, null);
+  };
+
   const root = document.createElement("div");
   root.id = ROOT_ID;
   root.className = "ss-status-indicator";
@@ -36,7 +70,16 @@
 
   root.append(toggle, details);
 
-  const host = document.querySelector("[data-status-slot]");
+  let host = document.querySelector("[data-status-slot]");
+  if (!host) {
+    const footer = findFooter();
+    if (footer) {
+      host = document.createElement("div");
+      host.className = "ss-status-slot";
+      host.setAttribute("data-status-slot", "");
+      footer.appendChild(host);
+    }
+  }
   if (host) {
     host.appendChild(root);
   } else {
@@ -262,40 +305,6 @@
     const baseBottom = parsePixels(window.getComputedStyle(root).bottom, 10);
     root.style.bottom = inlineBottom;
     return baseBottom;
-  };
-
-  const findFooter = () => {
-    const selectors = [
-      ".footer-shell",
-      "#app-footer.creator-footer",
-      "footer.creator-footer",
-      "footer.public-footer",
-      "footer.ss-footer",
-      "footer",
-      "[role='contentinfo']",
-    ];
-    const seen = new Set();
-    const candidates = [];
-
-    selectors.forEach((selector) => {
-      document.querySelectorAll(selector).forEach((match) => {
-        if (!(match instanceof HTMLElement) || seen.has(match)) return;
-        seen.add(match);
-        const rect = match.getBoundingClientRect();
-        if (rect.width <= 0 || rect.height <= 0) return;
-        candidates.push(match);
-      });
-    });
-
-    if (!candidates.length) {
-      return null;
-    }
-    return candidates.reduce((best, candidate) => {
-      if (!best) return candidate;
-      return candidate.getBoundingClientRect().top > best.getBoundingClientRect().top
-        ? candidate
-        : best;
-    }, null);
   };
 
   const getFooter = () => observedFooter || findFooter();

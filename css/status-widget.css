@@ -163,6 +163,31 @@ body:not(.status-tooltip-legacy) .ss-status-details {
   background: var(--ss-status-unknown);
 }
 
+.public-footer .ss-status-slot,
+.creator-footer .ss-status-slot,
+.ss-footer .ss-status-slot {
+  position: absolute;
+  right: var(--ss-status-base-right);
+  bottom: calc(100% + 8px);
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.public-footer .ss-status-slot .ss-status-indicator,
+.creator-footer .ss-status-slot .ss-status-indicator,
+.ss-footer .ss-status-slot .ss-status-indicator {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  pointer-events: auto;
+}
+
+footer.ss-footer {
+  position: relative;
+}
+
 @media (max-width: 640px) {
   .ss-status-details {
     min-width: min(300px, 94vw);
