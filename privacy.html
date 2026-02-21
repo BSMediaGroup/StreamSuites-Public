@@ -114,7 +114,7 @@
           communications systems, billing workflows, monitoring, and analytics.
         </p>
         <p class="muted" style="margin-top: 10px;">
-          <strong>Last updated:</strong> February 9, 2026
+          <strong>Last updated:</strong> February 22, 2026
         </p>
       </section>
 
@@ -127,6 +127,8 @@
           <ul class="public-list toc-list">
             <li><a href="#definitions-scope">Definitions and scope</a></li>
             <li><a href="#information-we-collect">Information we collect</a></li>
+            <li><a href="#creator-analytics-stats">Creator analytics and statistics</a></li>
+            <li><a href="#livechat-logging-replay">Live chat logging and replay</a></li>
             <li><a href="#how-we-use-information">How we use information</a></li>
             <li><a href="#oauth-platform-connections">OAuth and connected platforms</a></li>
             <li><a href="#cookies-sessions">Cookies, sessions, and similar technologies</a></li>
@@ -220,7 +222,16 @@
           <h4>Audience and chat interaction data</h4>
           <ul class="public-list">
             <li>Usernames/handles, platform user IDs, message IDs, timestamps, moderation actions, and channel/community identifiers processed during creator operations.</li>
+            <li>Where enabled by a creator feature (such as unified chat replay), this may include chat message content and related metadata needed for playback, search, moderation history, or audit context.</li>
             <li>This may include data about people who never created a StreamSuites account.</li>
+          </ul>
+
+          <h4>Creator analytics and statistics data</h4>
+          <ul class="public-list">
+            <li>Historical snapshots of creator channel metrics (for example, follower/subscriber counts, view totals, and similar platform-provided statistics) when available via Connected Platforms and authorized connections.</li>
+            <li>Livestream and content event metadata (for example, titles, timestamps, platform URLs, and available engagement/viewer statistics) when available via Connected Platforms.</li>
+            <li>StreamSuites-generated operational statistics (for example, triggers invoked, clips created, jobs run, automation success/failure counts, and reliability indicators) tied to creator workspaces and runtime sessions.</li>
+            <li>Data-quality markers where a metric is approximate, estimated, partial, delayed, or unavailable for a Connected Platform.</li>
           </ul>
 
           <h4>Support and communications data</h4>
@@ -255,6 +266,78 @@
           </p>
         </article>
 
+        <article class="public-glass-card" id="creator-analytics-stats">
+          <h3>Creator analytics and statistics</h3>
+          <p class="muted">
+            StreamSuites provides creator dashboards and administrative dashboards that present operational and growth-related statistics.
+            These statistics may include platform-provided metrics (when available) and StreamSuites-generated metrics that reflect automation activity,
+            reliability, and outcomes.
+          </p>
+
+          <h4>What the dashboards may display</h4>
+          <ul class="public-list">
+            <li><strong>Channel growth</strong>: follower/subscriber counts and change over time (for example day-to-day, week-to-week, month-to-month, year-to-year) where available from Connected Platforms.</li>
+            <li><strong>Livestream history</strong>: latest livestream details and a list of recent events (for example title, timestamps, platform URLs, and available view/engagement metrics).</li>
+            <li><strong>Automation ROI</strong>: StreamSuites activity counts such as triggers invoked, clips created, jobs run, runtime session length, success/failure counts, and other operational outcomes.</li>
+            <li><strong>Totals and per-platform breakdowns</strong>: where multiple platforms are connected, dashboards may show per-platform figures and a combined total.</li>
+          </ul>
+
+          <h4>Data quality and availability</h4>
+          <p class="muted">
+            Connected Platforms differ in what they expose through APIs and authorized connections. StreamSuites may show a metric as unavailable (for example “—”) or
+            indicate that a value is approximate (for example by using symbols such as ~, +, or *). Where a metric is delayed or later revised by the Connected Platform,
+            historical points may change.
+          </p>
+
+          <h4>How creator analytics are sourced</h4>
+          <ul class="public-list">
+            <li><strong>From Connected Platforms</strong>: platform-provided statistics we can access using creator-authorized scopes, tokens, or permitted API methods.</li>
+            <li><strong>From StreamSuites operations</strong>: events produced by StreamSuites runtime services while executing creator-configured automations.</li>
+            <li><strong>From creator configuration</strong>: workspace settings that determine what features are enabled and what statistics are recorded.</li>
+          </ul>
+
+          <h4>Administrative visibility</h4>
+          <p class="muted">
+            StreamSuites administrators may view creator analytics for support, reliability investigation, abuse prevention, billing integrity, and platform operations.
+            We do not display global creator analytics to the public, and creator dashboards are scoped to the creator workspace/account.
+          </p>
+        </article>
+
+        <article class="public-glass-card" id="livechat-logging-replay">
+          <h3>Live chat logging and replay</h3>
+          <p class="muted">
+            Some StreamSuites features may capture and store live chat content and chat metadata from Connected Platforms in order to provide unified chat replay,
+            moderation history, auditing of automation outcomes, and creator-requested exports. This may be particularly relevant for platforms where chat replay is limited
+            or unavailable after a livestream ends.
+          </p>
+
+          <h4>When chat content may be stored</h4>
+          <ul class="public-list">
+            <li>When a creator enables a feature that requires chat storage (for example unified live chat replay, moderation history, searchable chat archives, or verification of automation triggers).</li>
+            <li>When chat capture is needed to execute creator-configured automations (for example trigger matching, moderation actions, or command handling), and the selected feature requires retention beyond transient processing.</li>
+          </ul>
+
+          <h4>What may be stored</h4>
+          <ul class="public-list">
+            <li>Chat message content, message IDs, timestamps, channel/community identifiers, platform usernames/handles, and platform user IDs (where provided).</li>
+            <li>Moderation actions and outcomes (for example deleted/held messages, timeouts, bans) when available via the Connected Platform and enabled features.</li>
+            <li>Derived and aggregated chat statistics (for example message counts, unique chatters, trigger hits) for reporting and creator dashboards.</li>
+          </ul>
+
+          <h4>Audience-member notice and creator responsibility</h4>
+          <p class="muted">
+            Audience members typically provide their chat messages to Connected Platforms under those platforms’ terms. When creators enable StreamSuites chat replay
+            or logging, StreamSuites may also process and store that chat content on behalf of the creator to provide the enabled feature. Creators are responsible for
+            ensuring they have appropriate disclosures to their communities where required by law or platform rules.
+          </p>
+
+          <h4>Use limitations</h4>
+          <ul class="public-list">
+            <li>StreamSuites does not sell chat content or use chat logs for third-party advertising targeting.</li>
+            <li>Chat logs are used to deliver the enabled features, support reliability and abuse prevention, and respond to lawful requests where required.</li>
+          </ul>
+        </article>
+
         <article class="public-glass-card" id="how-we-use-information">
           <h3>How we use information</h3>
           <p class="muted">
@@ -265,6 +348,19 @@
           <ul class="public-list">
             <li>Create and manage accounts, workspaces, dashboards, and runtime-linked features.</li>
             <li>Apply creator settings, execute automations, and provide exports and operational views.</li>
+          </ul>
+
+          <h4>Creator analytics, statistics, and reporting</h4>
+          <ul class="public-list">
+            <li>Generate and display creator dashboards that show historical trends, per-platform breakdowns, and StreamSuites operational outcomes.</li>
+            <li>Record StreamSuites automation activity (for example triggers, jobs, clips, and reliability indicators) to support creator reporting and troubleshooting.</li>
+            <li>Retrieve and store platform-provided statistics where available via authorized connections to populate dashboards and comparisons over time.</li>
+          </ul>
+
+          <h4>Live chat processing, logging, and replay (when enabled)</h4>
+          <ul class="public-list">
+            <li>Process chat events to execute creator-configured automation and moderation workflows.</li>
+            <li>Where a creator enables unified replay/logging features, store chat content and metadata to provide replay, search, moderation history, and related creator tools.</li>
           </ul>
 
           <h4>Authenticate and secure accounts</h4>
@@ -325,6 +421,13 @@
             <li>Access/refresh tokens and scope records when needed for ongoing connected operations.</li>
           </ul>
 
+          <h4>Authorization for statistics and replay features</h4>
+          <ul class="public-list">
+            <li>Where a creator enables analytics dashboards or comparisons over time, StreamSuites may periodically retrieve platform-provided statistics using the creator’s authorized connection.</li>
+            <li>Where a creator enables unified chat replay/logging, StreamSuites may retrieve and store chat events/content available via the platform connection to provide replay and related tools.</li>
+            <li>Disabling a feature or revoking permissions may prevent future collection and may limit dashboards or replay functionality.</li>
+          </ul>
+
           <h4>Connection controls</h4>
           <ul class="public-list">
             <li>Creators can revoke or rotate credentials from provider dashboards and/or StreamSuites controls where available.</li>
@@ -378,7 +481,7 @@
             Depending on your jurisdiction, we rely on one or more legal bases to process personal data.
           </p>
           <ul class="public-list">
-            <li><strong>Contract</strong>: to deliver the Services you request, including account access, runtime features, and support.</li>
+            <li><strong>Contract</strong>: to deliver the Services you request, including account access, runtime features, support, analytics dashboards you enable, and replay features you enable.</li>
             <li><strong>Legitimate interests</strong>: to secure Services, prevent abuse, maintain reliability, and improve operations in a balanced manner.</li>
             <li><strong>Consent</strong>: where required, such as specific analytics practices or optional communications.</li>
             <li><strong>Legal obligation</strong>: to meet tax, accounting, compliance, and lawful disclosure requirements.</li>
@@ -479,6 +582,7 @@
           <h4>What may be processed</h4>
           <ul class="public-list">
             <li>Handles/usernames, platform IDs, chat messages, message IDs, timestamps, moderation actions, and related event context.</li>
+            <li>Where a creator enables unified chat replay/logging, StreamSuites may store chat messages and metadata to provide replay, moderation history, searchable archives, and related creator tools.</li>
           </ul>
 
           <h4>Where the data comes from</h4>
@@ -488,7 +592,7 @@
 
           <h4>Creator role and StreamSuites role</h4>
           <ul class="public-list">
-            <li>Creators decide which integrations and automation rules are enabled in their workspace.</li>
+            <li>Creators decide which integrations and features (including replay/logging) are enabled in their workspace.</li>
             <li>StreamSuites provides platform infrastructure and processing needed to execute those configurations.</li>
           </ul>
 
@@ -521,6 +625,8 @@
             <li><strong>Security and audit logs</strong>: retained for defined windows to support abuse prevention, incident review, and access investigations.</li>
             <li><strong>Billing and transaction records</strong>: retained as required for accounting, tax, chargebacks, and legal compliance.</li>
             <li><strong>Support communications</strong>: retained as needed to resolve issues, maintain service continuity, and document request handling.</li>
+            <li><strong>Creator analytics and statistics</strong>: retained to provide historical reporting and comparisons over time while the account is active, subject to deletion requests and applicable legal/operational requirements.</li>
+            <li><strong>Chat logs for unified replay/logging (when enabled)</strong>: retained to provide replay, moderation history, and creator-requested exports while the feature is enabled and/or while the creator account remains active, subject to creator controls, deletion requests, and applicable legal/operational requirements.</li>
             <li><strong>Analytics data</strong>: retained under configured analytics settings and applicable legal requirements.</li>
             <li><strong>Status subscriptions</strong>: retained while subscription notifications remain active, then removed or anonymized when no longer needed.</li>
           </ul>
@@ -561,6 +667,12 @@
             <li>Request access to personal data we hold about you.</li>
             <li>Request correction of inaccurate or incomplete information.</li>
             <li>Request deletion of eligible data, subject to legal or operational retention requirements.</li>
+          </ul>
+
+          <h4>Creator analytics and chat replay controls</h4>
+          <ul class="public-list">
+            <li>Creators may disable connected features (where available) to limit future collection of platform statistics or chat replay/logging.</li>
+            <li>Creators may request export or deletion of creator analytics and/or chat logs associated with their workspace, subject to applicable law and operational requirements.</li>
           </ul>
 
           <h4>Portability, objection, and restriction (where applicable)</h4>
@@ -642,8 +754,3 @@
   <script src='/js/status-widget.js' defer></script>
 </body>
 </html>
-
-
-
-
-
