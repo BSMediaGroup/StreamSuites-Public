@@ -269,7 +269,7 @@ body.public-shell-page {
   background: var(--ps-chip);
   color: rgba(232, 239, 251, 0.86);
   border-radius: 999px;
-  padding: 6px 12px;
+  padding: 2px 6px;
   font-size: 0.75rem;
   letter-spacing: 0.03em;
   cursor: pointer;
@@ -595,9 +595,9 @@ body.public-shell-page {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 34px;
+  height: 24px;
   border-radius: 999px;
-  padding: 0 14px;
+  padding: 0 8px;
   border: 1px solid rgba(168, 220, 72, 0.88);
   color: #f8fff0;
   background: linear-gradient(180deg, rgba(21, 34, 19, 0.9), rgba(12, 23, 13, 0.9));
