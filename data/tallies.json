@@ -1,34 +1,67 @@
 {
   "meta": {
-    "schema": "streamsuites.tallies.v1",
-    "note": "Placeholder tally exports"
+    "schema": "streamsuites.tallies.v2",
+    "note": "Public tally gallery sample data"
   },
   "items": [
     {
       "id": "tally-01",
       "name": "Chat cheers",
       "state": "live",
-      "creator": "daniel",
-      "created_at": "2025-01-10T12:00:00Z",
-      "updated_at": "2025-01-12T15:00:00Z",
+      "creator": { "profile_id": "daniel" },
+      "summary": "Live tally of chat cheer events.",
+      "entries": [
+        { "label": "Rumble", "value": 1820 },
+        { "label": "YouTube", "value": 1705 },
+        { "label": "Twitch", "value": 1398 }
+      ],
+      "created_at": "2026-01-10T12:00:00Z",
+      "updated_at": "2026-01-17T15:00:00Z",
       "public": true
     },
     {
       "id": "tally-02",
       "name": "Bug reports triage",
       "state": "archived",
-      "creator": "skyler",
-      "created_at": "2025-01-07T08:00:00Z",
-      "updated_at": "2025-01-09T09:00:00Z",
-      "public": false
+      "creator": { "profile_id": "skyler" },
+      "summary": "Resolved vs pending triage totals.",
+      "entries": [
+        { "label": "Resolved", "value": 305 },
+        { "label": "Pending", "value": 41 },
+        { "label": "Escalated", "value": 12 }
+      ],
+      "created_at": "2026-01-07T08:00:00Z",
+      "updated_at": "2026-01-14T09:00:00Z",
+      "public": true
     },
     {
       "id": "tally-03",
       "name": "Hype train",
       "state": "live",
-      "creator": "lyra",
-      "created_at": "2025-01-13T03:00:00Z",
-      "updated_at": "2025-01-13T03:30:00Z",
+      "creator": { "profile_id": "lyra" },
+      "summary": "Weighted tally of hype events by platform.",
+      "entries": [
+        { "label": "Tier 1", "value": 420 },
+        { "label": "Tier 2", "value": 280 },
+        { "label": "Tier 3", "value": 121 }
+      ],
+      "created_at": "2026-01-13T03:00:00Z",
+      "updated_at": "2026-01-17T03:30:00Z",
+      "public": true
+    },
+    {
+      "id": "tally-04",
+      "name": "Community challenge submissions",
+      "state": "live",
+      "creator": "novabyte",
+      "summary": "Submissions by challenge category.",
+      "entries": [
+        { "label": "Clip remixes", "value": 96 },
+        { "label": "Overlay designs", "value": 74 },
+        { "label": "Poll concepts", "value": 51 }
+      ],
+      "created_at": "2026-01-14T10:00:00Z",
+      "updated_at": "2026-01-17T16:10:00Z",
       "public": true
     }
   ]

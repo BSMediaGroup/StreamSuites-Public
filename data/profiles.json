@@ -1,0 +1,53 @@
+{
+  "meta": {
+    "schema": "streamsuites.profiles.v1",
+    "note": "Public profile directory"
+  },
+  "items": [
+    {
+      "id": "public-user",
+      "username": "public-user",
+      "display_name": "Public User",
+      "avatar": "/assets/logos/logocircle.png",
+      "platform": "StreamSuites",
+      "role": "member",
+      "bio": "Fallback identity for public artifacts without creator metadata."
+    },
+    {
+      "id": "daniel",
+      "username": "daniel",
+      "display_name": "Daniel Clancy",
+      "avatar": "https://images.unsplash.com/photo-1521119989659-a83eee488004?auto=format&fit=crop&w=220&q=60",
+      "platform": "YouTube",
+      "role": "admin",
+      "bio": "Founder and release operator coordinating public drops."
+    },
+    {
+      "id": "lyra",
+      "username": "lyra",
+      "display_name": "Lyra Kane",
+      "avatar": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=220&q=60",
+      "platform": "Rumble",
+      "role": "creator",
+      "bio": "Producer for clip automation and campaign overlays."
+    },
+    {
+      "id": "skyler",
+      "username": "skyler",
+      "display_name": "Skyler Vale",
+      "avatar": "https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=220&q=60",
+      "platform": "Twitch",
+      "role": "creator",
+      "bio": "Runs community-driven polls and recap segments."
+    },
+    {
+      "id": "novabyte",
+      "username": "novabyte",
+      "display_name": "NovaByte",
+      "avatar": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=220&q=60",
+      "platform": "Kick",
+      "role": "creator",
+      "bio": "Focuses on scoreboard packs and live social experiments."
+    }
+  ]
+}

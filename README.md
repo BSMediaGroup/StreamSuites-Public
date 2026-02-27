@@ -37,7 +37,19 @@ StreamSuites-Public/
 ├── assets/
 │   └── [truncated: backgrounds/, fonts/, icons/, illustrations/, logos/, placeholders/, and root asset files]
 ├── clips/
-│   └── detail.html
+│   ├── detail.html
+│   ├── sampleclip00.mp4
+│   ├── sampleclip01.mp4
+│   ├── sampleclip02.mp4
+│   ├── sampleclip03.mp4
+│   ├── sampleclip04.mp4
+│   ├── sampleclip05.mp4
+│   └── samplewebm.webm
+├── community/
+│   ├── index.html
+│   ├── members.html
+│   ├── notices.html
+│   └── profile.html
 ├── css/
 │   ├── aurora-landing.css
 │   ├── base.css
@@ -47,6 +59,7 @@ StreamSuites-Public/
 │   ├── overrides.css
 │   ├── public-pages.css
 │   ├── public-pages-v2.css
+│   ├── public-shell.css
 │   ├── requests-auth.css
 │   ├── requests.css
 │   ├── status-widget.css
@@ -57,7 +70,9 @@ StreamSuites-Public/
 │   ├── changelog.runtime.json
 │   ├── clips.json
 │   ├── meta.json
+│   ├── notices.json
 │   ├── polls.json
+│   ├── profiles.json
 │   ├── roadmap.json
 │   ├── scoreboards.json
 │   └── tallies.json
@@ -70,10 +85,13 @@ StreamSuites-Public/
 │   ├── public-changelog.js
 │   ├── public-clips.js
 │   ├── public-data.js
+│   ├── public-data-hub.js
 │   ├── public-donate.js
+│   ├── public-pages-app.js
 │   ├── public-polls.js
 │   ├── public-requests.js
 │   ├── public-roadmap.js
+│   ├── public-shell.js
 │   ├── public-tallies.js
 │   ├── status-widget.js
 │   ├── tally-detail.js

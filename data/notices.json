@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "schema": "streamsuites.notices.v1",
+    "note": "Community notices feed"
+  },
+  "items": [
+    {
+      "id": "notice-001",
+      "title": "Community Spotlight submissions are open",
+      "body": "Submit your best clip remix before February 5 for the next featured spotlight reel.",
+      "priority": "high",
+      "author": "novabyte",
+      "created_at": "2026-01-30T19:00:00Z"
+    },
+    {
+      "id": "notice-002",
+      "title": "Poll templates updated",
+      "body": "Three new poll templates with pie + bar presets are now available in the public gallery samples.",
+      "priority": "normal",
+      "author": "lyra",
+      "created_at": "2026-01-28T15:20:00Z"
+    },
+    {
+      "id": "notice-003",
+      "title": "Scoreboard maintenance window",
+      "body": "Scoreboard exports will refresh at reduced cadence during the scheduled maintenance window tonight.",
+      "priority": "normal",
+      "author": "daniel",
+      "created_at": "2026-01-27T23:45:00Z"
+    },
+    {
+      "id": "notice-004",
+      "title": "Member profile badges",
+      "body": "Public profile pages now include creator/admin role hints and linked recent artifacts.",
+      "priority": "low",
+      "author": "skyler",
+      "created_at": "2026-01-25T11:00:00Z"
+    }
+  ]
+}

@@ -1,43 +1,87 @@
 {
   "meta": {
-    "schema": "streamsuites.polls.v1",
-    "note": "Placeholder poll exports"
+    "schema": "streamsuites.polls.v2",
+    "note": "Public poll gallery sample data"
   },
   "items": [
     {
       "id": "poll-100",
       "title": "What should we stream next?",
+      "question": "What should we stream next?",
       "state": "open",
-      "creator": "daniel",
-      "created_at": "2025-01-12T10:00:00Z",
-      "updated_at": "2025-01-12T10:15:00Z",
+      "creator": { "profile_id": "daniel" },
+      "summary": "Pick the next featured stream block for this weekend.",
+      "options": [
+        { "id": "a", "label": "Creator interviews", "votes": 381 },
+        { "id": "b", "label": "Clip breakdown live", "votes": 256 },
+        { "id": "c", "label": "Scoreboard showdown", "votes": 189 }
+      ],
+      "created_at": "2026-01-12T10:00:00Z",
+      "updated_at": "2026-01-17T12:00:00Z",
       "public": true
     },
     {
       "id": "poll-101",
       "title": "Favorite highlight length?",
+      "question": "Favorite highlight length?",
       "state": "closed",
-      "creator": "skyler",
-      "created_at": "2025-01-09T15:00:00Z",
-      "updated_at": "2025-01-09T18:00:00Z",
+      "creator": { "profile_id": "skyler" },
+      "summary": "Used to tune clip exports for social platforms.",
+      "options": [
+        { "id": "a", "label": "Under 30 seconds", "votes": 422 },
+        { "id": "b", "label": "30 to 60 seconds", "votes": 493 },
+        { "id": "c", "label": "1 to 2 minutes", "votes": 275 }
+      ],
+      "created_at": "2026-01-09T15:00:00Z",
+      "updated_at": "2026-01-15T18:00:00Z",
       "public": true
     },
     {
       "id": "poll-102",
       "title": "Should we keep the midnight slot?",
+      "question": "Should we keep the midnight slot?",
       "state": "open",
-      "creator": "lyra",
-      "created_at": "2025-01-13T01:00:00Z",
-      "updated_at": "2025-01-13T02:00:00Z",
-      "public": false
+      "creator": { "profile_id": "lyra" },
+      "summary": "Audience preference survey for late-night runs.",
+      "options": [
+        { "id": "a", "label": "Keep it nightly", "votes": 241 },
+        { "id": "b", "label": "Only weekends", "votes": 323 },
+        { "id": "c", "label": "Retire it", "votes": 143 }
+      ],
+      "created_at": "2026-01-13T01:00:00Z",
+      "updated_at": "2026-01-17T08:00:00Z",
+      "public": true
     },
     {
       "id": "poll-103",
       "title": "Which platform performed best?",
+      "question": "Which platform performed best?",
       "state": "closed",
-      "creator": "daniel",
-      "created_at": "2025-01-08T09:00:00Z",
-      "updated_at": "2025-01-08T10:00:00Z",
+      "creator": "novabyte",
+      "summary": "Post-event review poll for distribution channels.",
+      "options": [
+        { "id": "a", "label": "YouTube", "votes": 501 },
+        { "id": "b", "label": "Rumble", "votes": 384 },
+        { "id": "c", "label": "Twitch", "votes": 299 }
+      ],
+      "created_at": "2026-01-08T09:00:00Z",
+      "updated_at": "2026-01-14T10:00:00Z",
+      "public": true
+    },
+    {
+      "id": "poll-104",
+      "title": "Choose next community challenge",
+      "question": "Choose next community challenge",
+      "state": "open",
+      "creator": { "profile_id": "skyler" },
+      "summary": "Community event planning poll.",
+      "options": [
+        { "id": "a", "label": "Clip remix challenge", "votes": 302 },
+        { "id": "b", "label": "Live quiz", "votes": 214 },
+        { "id": "c", "label": "Vote-a-thon", "votes": 191 }
+      ],
+      "created_at": "2026-01-14T07:00:00Z",
+      "updated_at": "2026-01-16T11:30:00Z",
       "public": true
     }
   ]
