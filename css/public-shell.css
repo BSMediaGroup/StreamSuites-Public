@@ -595,7 +595,7 @@ body.public-shell-page {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 24px;
+  height: 20px;
   border-radius: 999px;
   padding: 0 8px;
   border: 1px solid rgba(168, 220, 72, 0.88);
@@ -604,7 +604,7 @@ body.public-shell-page {
   text-decoration: none;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-size: 0.68rem;
+  font-size: 0.58rem;
 }
 
 .creator-login-btn:hover {
@@ -637,7 +637,7 @@ body.public-shell-page {
 }
 
 .footer-bar {
-  min-height: 46px;
+  min-height: 36px;
   display: flex;
   align-items: center;
   justify-content: space-between;
