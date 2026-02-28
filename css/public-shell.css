@@ -1193,6 +1193,48 @@ body.public-shell-page a {
   outline: none;
 }
 
+.detail-owner-actions {
+  display: grid;
+  gap: 6px;
+}
+
+.detail-remove-btn {
+  justify-self: start;
+  min-height: 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(205, 132, 132, 0.42);
+  background: rgba(63, 32, 32, 0.52);
+  color: #f1d0d0;
+  padding: 0 10px;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.detail-remove-btn:hover,
+.detail-remove-btn:focus-visible {
+  border-color: rgba(224, 157, 157, 0.72);
+  color: #f8dede;
+  outline: none;
+}
+
+.detail-remove-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.detail-remove-error {
+  min-height: 14px;
+  color: #f3b7b7;
+  font-size: 0.66rem;
+}
+
+.detail-removed-card {
+  display: grid;
+  gap: 8px;
+}
+
 .external-source-link {
   display: inline-flex;
   align-items: center;

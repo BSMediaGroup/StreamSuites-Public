@@ -171,6 +171,47 @@
     return "";
   }
 
+  function normalizeOwnerAccountId(raw) {
+    const directKeys = [
+      "owner_account_id",
+      "ownerAccountId",
+      "created_by_account_id",
+      "createdByAccountId",
+      "account_id",
+      "accountId"
+    ];
+    for (const key of directKeys) {
+      const value = String(raw?.[key] || "").trim();
+      if (value) return value;
+    }
+
+    if (raw?.creator && typeof raw.creator === "object") {
+      for (const key of ["account_id", "accountId", "owner_account_id", "ownerAccountId"]) {
+        const value = String(raw.creator?.[key] || "").trim();
+        if (value) return value;
+      }
+    }
+
+    return "";
+  }
+
+  function resolveRemovalState(raw) {
+    const visibility = String(raw?.visibility || "").trim().toLowerCase();
+    const state = String(raw?.state || "").trim().toLowerCase();
+    const status = String(raw?.status || "").trim().toLowerCase();
+    const removedValues = new Set(["removed", "removed_by_owner"]);
+    const removedState =
+      (removedValues.has(visibility) && visibility) ||
+      (removedValues.has(state) && state) ||
+      (removedValues.has(status) && status) ||
+      "";
+    return {
+      visibility,
+      removedState,
+      isRemoved: Boolean(removedState)
+    };
+  }
+
   function normalizeProfile(raw) {
     const id = raw?.id || raw?.profile_id || raw?.username || raw?.name;
     if (!id) return null;
@@ -240,6 +281,7 @@
     const id = raw?.id || raw?.clip_id || `clip-${index + 1}`;
     const profile = resolveProfileRef(raw?.creator, profiles);
     const mediaUrl = raw?.media_url || raw?.video_url || raw?.url || null;
+    const removal = resolveRemovalState(raw);
 
     const platform = raw?.platform || profile.platform || "StreamSuites";
 
@@ -248,7 +290,7 @@
       type: "clips",
       title: raw?.title || raw?.name || `Clip ${index + 1}`,
       summary: raw?.summary || raw?.description || "Stream clip artifact.",
-      status: toTitle(raw?.status || raw?.state || "pending"),
+      status: removal.isRemoved ? "Removed" : toTitle(raw?.status || raw?.state || "pending"),
       platform,
       platformKey: normalizePlatformKey(platform),
       platformIcon: platformIconFor(platform),
@@ -259,6 +301,10 @@
       views: raw?.views ?? raw?.view_count ?? null,
       createdAt: raw?.created_at || raw?.createdAt || null,
       updatedAt: raw?.updated_at || raw?.updatedAt || null,
+      ownerAccountId: normalizeOwnerAccountId(raw),
+      visibility: removal.visibility,
+      removedState: removal.removedState,
+      isRemoved: removal.isRemoved,
       profileId: profile.id,
       creator: profile,
       href: `/clips/detail.html?id=${encodeURIComponent(id)}`
@@ -301,6 +347,7 @@
     const id = raw?.id || raw?.poll_id || `poll-${index + 1}`;
     const profile = resolveProfileRef(raw?.creator, profiles);
     const options = normalizeOptions(raw?.options || raw?.choices);
+    const removal = resolveRemovalState(raw);
 
     const chartType = String(raw?.chart_type || raw?.chartType || "").toLowerCase() === "pie" ? "pie" : "bar";
 
@@ -310,7 +357,7 @@
       title: raw?.title || raw?.question || `Poll ${index + 1}`,
       question: raw?.question || raw?.title || `Poll ${index + 1}`,
       summary: raw?.summary || raw?.description || "Community poll artifact.",
-      status: toTitle(raw?.status || raw?.state || "pending"),
+      status: removal.isRemoved ? "Removed" : toTitle(raw?.status || raw?.state || "pending"),
       options,
       chartType,
       totalVotes: options.reduce((sum, option) => sum + option.votes, 0),
@@ -318,6 +365,10 @@
       updatedAt: raw?.updated_at || raw?.updatedAt || null,
       closesAt: raw?.closes_at || raw?.closesAt || raw?.closed_at || null,
       sourceUrl: pickSourceUrl(raw),
+      ownerAccountId: normalizeOwnerAccountId(raw),
+      visibility: removal.visibility,
+      removedState: removal.removedState,
+      isRemoved: removal.isRemoved,
       platform: profile.platform,
       platformKey: profile.platformKey,
       platformIcon: profile.platformIcon,
@@ -369,17 +420,22 @@
   function normalizeScoreboard(raw, index, profiles) {
     const id = raw?.id || raw?.scoreboard_id || `score-${index + 1}`;
     const profile = resolveProfileRef(raw?.creator, profiles);
+    const removal = resolveRemovalState(raw);
 
     return {
       id,
       type: "scoreboards",
       title: raw?.title || raw?.name || `Scoreboard ${index + 1}`,
       summary: raw?.summary || raw?.description || "Scoreboard artifact.",
-      status: toTitle(raw?.status || raw?.state || "active"),
+      status: removal.isRemoved ? "Removed" : toTitle(raw?.status || raw?.state || "active"),
       entries: normalizeScoreEntries(raw?.entries || raw?.scores),
       createdAt: raw?.created_at || raw?.createdAt || null,
       updatedAt: raw?.updated_at || raw?.updatedAt || null,
       sourceUrl: pickSourceUrl(raw),
+      ownerAccountId: normalizeOwnerAccountId(raw),
+      visibility: removal.visibility,
+      removedState: removal.removedState,
+      isRemoved: removal.isRemoved,
       platform: profile.platform,
       platformKey: profile.platformKey,
       platformIcon: profile.platformIcon,
@@ -392,18 +448,23 @@
   function normalizeTally(raw, index, profiles) {
     const id = raw?.id || raw?.tally_id || `tally-${index + 1}`;
     const profile = resolveProfileRef(raw?.creator, profiles);
+    const removal = resolveRemovalState(raw);
 
     return {
       id,
       type: "tallies",
       title: raw?.title || raw?.name || `Tally ${index + 1}`,
       summary: raw?.summary || raw?.description || "Programmatic tally artifact.",
-      status: toTitle(raw?.status || raw?.state || "live"),
+      status: removal.isRemoved ? "Removed" : toTitle(raw?.status || raw?.state || "live"),
       entries: normalizeTallyEntries(raw?.entries || raw?.totals || raw?.options),
       window: raw?.window || raw?.time_window || raw?.scope || "Rolling window",
       createdAt: raw?.created_at || raw?.createdAt || null,
       updatedAt: raw?.updated_at || raw?.updatedAt || null,
       sourceUrl: pickSourceUrl(raw),
+      ownerAccountId: normalizeOwnerAccountId(raw),
+      visibility: removal.visibility,
+      removedState: removal.removedState,
+      isRemoved: removal.isRemoved,
       platform: profile.platform,
       platformKey: profile.platformKey,
       platformIcon: profile.platformIcon,
@@ -439,7 +500,7 @@
     const artifacts = [];
     ["clips", "polls", "scoreboards", "tallies"].forEach((key) => {
       (data[key] || []).forEach((item) => {
-        if (item.profileId === profileId) artifacts.push(item);
+        if (item.profileId === profileId && !item.isRemoved) artifacts.push(item);
       });
     });
     return sortByUpdated(artifacts);

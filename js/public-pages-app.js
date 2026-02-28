@@ -16,6 +16,7 @@
   const DETAIL_LAYOUT_STORAGE_KEY = "ss-public-detail-layout";
   const AUTH_API_BASE = "https://api.streamsuites.app";
   const AUTH_ME_URL = `${AUTH_API_BASE}/api/public/me`;
+  const AUTH_PUBLIC_ARTIFACTS_URL = `${AUTH_API_BASE}/api/public/artifacts`;
   const AUTH_LOGOUT_URL = `${AUTH_API_BASE}/auth/logout`;
   const PUBLIC_LOGIN_URL = "https://streamsuites.app/public-login.html";
   const CREATOR_DASHBOARD_URL = "https://creator.streamsuites.app";
@@ -539,7 +540,7 @@
   }
 
   function filterItemsByType(data, type, query) {
-    return (data[type] || []).filter((item) => matchesQuery(item, query));
+    return (data[type] || []).filter((item) => !item?.isRemoved && matchesQuery(item, query));
   }
 
   function renderMediaHome(ctx) {
@@ -646,6 +647,23 @@
     const url = new URL(pathname, window.location.origin);
     url.searchParams.set("id", id);
     return url.toString();
+  }
+
+  function buildArtifactGalleryLink(type) {
+    return TYPE_TO_PAGE[type] || "/media.html";
+  }
+
+  function isArtifactOwner(authState, item) {
+    const accountId = String(authState?.accountId || "").trim();
+    const ownerAccountId = String(item?.ownerAccountId || "").trim();
+    if (!accountId || !ownerAccountId) return false;
+    return accountId === ownerAccountId;
+  }
+
+  function buildRemoveEndpoint(item) {
+    const artifactType = encodeURIComponent(String(item?.type || "").trim().toLowerCase());
+    const artifactId = encodeURIComponent(String(item?.id || "").trim());
+    return `${AUTH_PUBLIC_ARTIFACTS_URL}/${artifactType}/${artifactId}/remove`;
   }
 
   function copyTextToClipboard(text) {
@@ -821,7 +839,9 @@
     return main;
   }
 
-  function buildDetailSide(item, helpers) {
+  function buildDetailSide(item, helpers, options = {}) {
+    const authState = options.authState || null;
+    const onRemoved = options.onRemoved;
     const side = create("aside", "detail-side");
 
     const profileCard = create("div", "profile-card");
@@ -836,6 +856,65 @@
     const shareBox = buildShareBox(shareUrl);
 
     profileCard.append(profileLink, shareLabel, shareBox);
+
+    const showOwnerRemoveAction =
+      !item?.isRemoved &&
+      Boolean(authState?.authenticated) &&
+      isArtifactOwner(authState, item);
+    if (showOwnerRemoveAction) {
+      const ownerActionLabel = create("div", "detail-subtle-label", "Owner Action");
+      const ownerActionWrap = create("div", "detail-owner-actions");
+      const removeButton = create("button", "detail-remove-btn", "Remove");
+      removeButton.type = "button";
+      const inlineError = create("div", "detail-remove-error");
+
+      removeButton.addEventListener("click", async () => {
+        inlineError.textContent = "";
+        const confirmed = window.confirm("Remove this artifact from public view?");
+        if (!confirmed) return;
+
+        removeButton.disabled = true;
+        try {
+          const response = await fetch(buildRemoveEndpoint(item), {
+            method: "POST",
+            cache: "no-store",
+            credentials: "include",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ reason: "user_request" })
+          });
+          let payload = null;
+          try {
+            payload = await response.json();
+          } catch (_err) {
+            payload = null;
+          }
+
+          if (!response.ok || payload?.success === false) {
+            const detail =
+              String(payload?.error || "").trim() ||
+              `Remove failed (${response.status})`;
+            inlineError.textContent = detail;
+            return;
+          }
+
+          item.isRemoved = true;
+          item.status = "Removed";
+          item.visibility = "removed_by_owner";
+          item.removedState = "removed_by_owner";
+          if (typeof onRemoved === "function") onRemoved();
+        } catch (_err) {
+          inlineError.textContent = "Remove failed. Please retry.";
+        } finally {
+          removeButton.disabled = false;
+        }
+      });
+
+      ownerActionWrap.append(removeButton, inlineError);
+      profileCard.append(ownerActionLabel, ownerActionWrap);
+    }
 
     const sourceBlock = buildExternalSourceBlock(item);
     if (sourceBlock) {
@@ -854,11 +933,12 @@
   }
 
   function renderDetail(ctx, config) {
-    const { host, data } = ctx;
+    const { host, data, authState } = ctx;
     clear(host);
 
     const id = window.StreamSuitesPublicData.parseDetailId();
-    const item = (data[config.detailType] || []).find((entry) => entry.id === id) || (data[config.detailType] || [])[0];
+    const allItems = data[config.detailType] || [];
+    const item = allItems.find((entry) => entry.id === id) || allItems.find((entry) => !entry?.isRemoved) || allItems[0];
 
     if (!item) {
       host.appendChild(create("div", "empty-state", "Item not found."));
@@ -867,25 +947,60 @@
 
     host.appendChild(buildPageHeading(item.title || item.question || "Detail", item.summary || "Public detail view."));
 
+    if (item.isRemoved) {
+      const removedLayout = create("section", "detail-layout is-stacked");
+      const removedCard = create("article", "detail-main detail-removed-card");
+      const removedTitle = create("h2", "", "Removed by owner");
+      const removedBody = create(
+        "p",
+        "",
+        "This artifact is no longer visible in public listings."
+      );
+      const backLink = create("a", "see-all", "Back to gallery");
+      backLink.href = buildArtifactGalleryLink(config.detailType);
+      removedCard.append(removedTitle, removedBody, backLink);
+      removedLayout.appendChild(removedCard);
+      host.appendChild(removedLayout);
+      return;
+    }
+
     const layout = create("section", "detail-layout");
     const toolbar = buildLayoutToggle(layout);
 
     const main = buildDetailMain(item, config);
-    const side = buildDetailSide(item, data.helpers);
+    const side = buildDetailSide(item, data.helpers, {
+      authState,
+      onRemoved() {
+        renderDetail(ctx, config);
+      }
+    });
 
     layout.append(main, side);
     host.append(toolbar, layout);
   }
 
   function renderPollResults(ctx) {
-    const { host, data } = ctx;
+    const { host, data, authState } = ctx;
     clear(host);
 
     const id = window.StreamSuitesPublicData.parseDetailId();
-    const poll = (data.polls || []).find((entry) => entry.id === id) || (data.polls || [])[0];
+    const allPolls = data.polls || [];
+    const poll = allPolls.find((entry) => entry.id === id) || allPolls.find((entry) => !entry?.isRemoved) || allPolls[0];
 
     if (!poll) {
       host.appendChild(create("div", "empty-state", "Poll not found."));
+      return;
+    }
+
+    if (poll.isRemoved) {
+      host.appendChild(buildPageHeading("Removed by owner", "This poll is no longer visible in public listings."));
+      const removedLayout = create("section", "detail-layout is-stacked");
+      const removedCard = create("article", "detail-main detail-removed-card");
+      const backLink = create("a", "see-all", "Back to Polls");
+      backLink.href = "/polls.html";
+      removedCard.append(create("p", "", "Poll results are unavailable because this artifact was removed."), backLink);
+      removedLayout.appendChild(removedCard);
+      host.appendChild(removedLayout);
       return;
     }
 
@@ -902,7 +1017,12 @@
     }
     main.appendChild(buildResultsRows(poll.options || [], "percent", 8));
 
-    const side = buildDetailSide(poll, data.helpers);
+    const side = buildDetailSide(poll, data.helpers, {
+      authState,
+      onRemoved() {
+        renderPollResults(ctx);
+      }
+    });
 
     layout.append(main, side);
     host.append(toolbar, layout);
@@ -1320,6 +1440,7 @@
           console.warn("[StreamSuites Public] Auth API unavailable; falling back to Guest widget.");
         } finally {
           applyCurrentAuthState();
+          rerender();
         }
         return authState;
       })();
@@ -1341,7 +1462,7 @@
 
     const rerender = () => {
       if (!loadedData) return;
-      currentConfig.render({ host: shell.content, data: loadedData, state }, currentConfig);
+      currentConfig.render({ host: shell.content, data: loadedData, state, authState }, currentConfig);
     };
 
     function applyConfig(nextConfig, options = {}) {
