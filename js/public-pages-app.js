@@ -13,143 +13,182 @@
     tallies: "/tallies.html"
   };
 
+  const DETAIL_LAYOUT_STORAGE_KEY = "ss-public-detail-layout";
+
   const PAGE_CONFIG = {
     "media-home": {
+      path: "/media.html",
       shellKind: "media",
       activeHref: "/media.html",
       topbarLabel: "Media Home",
       searchPlaceholder: "Search clips, polls, scoreboards, tallies",
       filterMode: "multi",
+      filtersCollapsed: true,
       defaultFilters: ["clips", "polls", "scoreboards", "tallies"],
       render: renderMediaHome
     },
     "media-clips": {
+      path: "/clips.html",
       shellKind: "media",
       activeHref: "/clips.html",
       topbarLabel: "Clips",
       searchPlaceholder: "Search clips",
       filterMode: "single-nav",
+      filtersCollapsed: true,
       defaultFilters: ["clips"],
       render: renderMediaList,
       listType: "clips"
     },
     "media-polls": {
+      path: "/polls.html",
       shellKind: "media",
       activeHref: "/polls.html",
       topbarLabel: "Polls",
       searchPlaceholder: "Search polls",
       filterMode: "single-nav",
+      filtersCollapsed: true,
       defaultFilters: ["polls"],
       render: renderMediaList,
       listType: "polls"
     },
     "media-scoreboards": {
+      path: "/scoreboards.html",
       shellKind: "media",
       activeHref: "/scoreboards.html",
       topbarLabel: "Scoreboards",
       searchPlaceholder: "Search scoreboards",
       filterMode: "single-nav",
+      filtersCollapsed: true,
       defaultFilters: ["scoreboards"],
       render: renderMediaList,
       listType: "scoreboards"
     },
     "media-tallies": {
+      path: "/tallies.html",
       shellKind: "media",
       activeHref: "/tallies.html",
       topbarLabel: "Tallies",
       searchPlaceholder: "Search tallies",
       filterMode: "single-nav",
+      filtersCollapsed: true,
       defaultFilters: ["tallies"],
       render: renderMediaList,
       listType: "tallies"
     },
     "detail-clip": {
+      path: "/clips/detail.html",
       shellKind: "media",
       activeHref: "/clips.html",
       topbarLabel: "Clip Detail",
       searchPlaceholder: "Search",
       filterMode: "single-nav",
+      filtersCollapsed: true,
       defaultFilters: ["clips"],
       render: renderDetail,
       detailType: "clips"
     },
     "detail-poll": {
+      path: "/polls/detail.html",
       shellKind: "media",
       activeHref: "/polls.html",
       topbarLabel: "Poll Detail",
       searchPlaceholder: "Search",
       filterMode: "single-nav",
+      filtersCollapsed: true,
       defaultFilters: ["polls"],
       render: renderDetail,
       detailType: "polls"
     },
     "detail-poll-results": {
+      path: "/polls/results.html",
       shellKind: "media",
       activeHref: "/polls.html",
       topbarLabel: "Poll Results",
       searchPlaceholder: "Search",
       filterMode: "single-nav",
+      filtersCollapsed: true,
       defaultFilters: ["polls"],
       render: renderPollResults,
       detailType: "polls"
     },
     "detail-scoreboard": {
+      path: "/scoreboards/detail.html",
       shellKind: "media",
       activeHref: "/scoreboards.html",
       topbarLabel: "Scoreboard Detail",
       searchPlaceholder: "Search",
       filterMode: "single-nav",
+      filtersCollapsed: true,
       defaultFilters: ["scoreboards"],
       render: renderDetail,
       detailType: "scoreboards"
     },
     "detail-tally": {
+      path: "/tallies/detail.html",
       shellKind: "media",
       activeHref: "/tallies.html",
       topbarLabel: "Tally Detail",
       searchPlaceholder: "Search",
       filterMode: "single-nav",
+      filtersCollapsed: true,
       defaultFilters: ["tallies"],
       render: renderDetail,
       detailType: "tallies"
     },
     "community-home": {
+      path: "/community/index.html",
+      aliases: ["/community", "/community/"],
       shellKind: "community",
       activeHref: "/community/index.html",
       topbarLabel: "Community",
       searchPlaceholder: "Search members and notices",
       filterMode: "none",
+      filtersCollapsed: true,
       defaultFilters: [],
       render: renderCommunityHome
     },
     "community-members": {
+      path: "/community/members.html",
       shellKind: "community",
       activeHref: "/community/members.html",
       topbarLabel: "Members",
       searchPlaceholder: "Search members",
       filterMode: "none",
+      filtersCollapsed: true,
       defaultFilters: [],
       render: renderCommunityMembers
     },
     "community-notices": {
+      path: "/community/notices.html",
       shellKind: "community",
       activeHref: "/community/notices.html",
       topbarLabel: "Notices",
       searchPlaceholder: "Search notices",
       filterMode: "none",
+      filtersCollapsed: true,
       defaultFilters: [],
       render: renderCommunityNotices
     },
     "community-profile": {
+      path: "/community/profile.html",
       shellKind: "community",
       activeHref: "/community/members.html",
       topbarLabel: "Profile",
       searchPlaceholder: "Search",
       filterMode: "none",
+      filtersCollapsed: true,
       defaultFilters: [],
       render: renderCommunityProfile
     }
   };
+
+  const PAGE_ID_BY_PATH = Object.entries(PAGE_CONFIG).reduce((acc, [, cfg]) => {
+    acc[normalizePath(cfg.path)] = cfg;
+    (cfg.aliases || []).forEach((alias) => {
+      acc[normalizePath(alias)] = cfg;
+    });
+    return acc;
+  }, {});
 
   function create(tag, className, text) {
     const node = document.createElement(tag);
@@ -166,13 +205,39 @@
     return String(value || "").toLowerCase();
   }
 
+  function normalizePath(pathname) {
+    const raw = String(pathname || "/").trim() || "/";
+    if (raw.length > 1 && raw.endsWith("/")) {
+      return raw.slice(0, -1);
+    }
+    return raw;
+  }
+
+  function buildFiltersForConfig(config) {
+    if (config.filterMode === "none") return [];
+    return MEDIA_FILTERS.map((filter) => ({
+      ...filter,
+      active: config.defaultFilters.includes(filter.value)
+    }));
+  }
+
   function matchesQuery(item, query) {
     const q = norm(query).trim();
     if (!q) return true;
-    return [item.title, item.summary, item.question, item.platform, item.status, item.creator?.displayName]
+
+    const haystack = [
+      item.title,
+      item.summary,
+      item.question,
+      item.platform,
+      item.status,
+      item.creator?.displayName,
+      item.creator?.role
+    ]
       .join(" ")
-      .toLowerCase()
-      .includes(q);
+      .toLowerCase();
+
+    return haystack.includes(q);
   }
 
   function sliceRows(items, perRow, rows) {
@@ -180,23 +245,153 @@
     return items.slice(0, size);
   }
 
-  function cardMetaPill(text, className) {
-    const pill = create("span", `meta-pill ${className || ""}`.trim(), text);
-    return pill;
+  function toStatusClass(value) {
+    return norm(value).replace(/[^a-z0-9]+/g, "-") || "pending";
   }
 
-  function buildMediaCard(item, options = {}) {
-    const card = create("article", "item-card");
+  function formatNumber(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return "0";
+    return parsed.toLocaleString();
+  }
+
+  function buildAvatar(profile) {
+    const avatar = create("span", "creator-avatar");
+    const image = profile?.avatar;
+    if (image) {
+      avatar.style.backgroundImage = `url(${image})`;
+      avatar.classList.add("has-image");
+      avatar.textContent = "";
+      return avatar;
+    }
+
+    const initial = (profile?.displayName || "Public User").trim().charAt(0).toUpperCase() || "P";
+    avatar.textContent = initial;
+    avatar.classList.add("is-fallback");
+    return avatar;
+  }
+
+  function buildBadgeChip(badge) {
+    const chip = create("span", "badge-chip", badge.label || "Badge");
+    const kind = badge?.kind === "admin" ? "admin" : "tier";
+    chip.classList.add(`badge-${kind}`);
+
+    if (kind === "tier" && badge?.tier) {
+      chip.dataset.tier = String(badge.tier).toUpperCase();
+    }
+
+    return chip;
+  }
+
+  function buildCreatorMeta(profile) {
+    const row = create("div", "creator-meta");
+    row.appendChild(buildAvatar(profile));
+
+    const textWrap = create("div", "creator-meta-text");
+    const top = create("div", "creator-meta-top");
+    top.appendChild(create("span", "creator-name", profile?.displayName || "Public User"));
+
+    const badges = Array.isArray(profile?.badges) ? profile.badges : [];
+    if (badges.length) {
+      const badgeWrap = create("div", "creator-badges");
+      badges.forEach((badge) => badgeWrap.appendChild(buildBadgeChip(badge)));
+      top.appendChild(badgeWrap);
+    }
+
+    const bottom = create("div", "creator-meta-bottom", profile?.platform || "StreamSuites");
+
+    textWrap.append(top, bottom);
+    row.appendChild(textWrap);
+    return row;
+  }
+
+  function buildPlatformChip(platform, iconPath) {
+    const chip = create("span", "meta-pill platform-pill");
+    const icon = create("img", "chip-icon");
+    icon.src = iconPath || window.StreamSuitesPublicData?.platformIconFor?.(platform) || "/assets/icons/pilled.svg";
+    icon.alt = `${platform || "Platform"} icon`;
+    chip.append(icon, create("span", "", platform || "Platform"));
+    return chip;
+  }
+
+  function buildStatusChip(status) {
+    return create("span", `meta-pill status-pill status-${toStatusClass(status)}`, status || "Pending");
+  }
+
+  function buildResultsRows(items, fieldName = "percent", maxRows = 3) {
+    const wrap = create("div", "results-list");
+    (items || []).slice(0, maxRows).forEach((entry) => {
+      const row = create("div", "result-row");
+      const label = create("div", "result-label");
+      const value = Number(entry?.[fieldName]) || 0;
+      label.append(create("span", "", entry?.label || "Entry"), create("span", "", `${value}%`));
+
+      const bar = create("div", "result-bar");
+      const fill = create("span", "result-fill");
+      fill.style.width = `${Math.max(0, Math.min(100, value))}%`;
+      if (entry?.color) {
+        fill.style.background = `linear-gradient(90deg, ${entry.color}, rgba(255,255,255,0.2))`;
+      }
+      bar.appendChild(fill);
+      row.append(label, bar);
+      wrap.appendChild(row);
+    });
+    return wrap;
+  }
+
+  function buildPiePreview(entries, percentField = "sharePercent") {
+    const wrap = create("div", "pie-preview");
+    const chart = create("div", "pie-chart");
+    const legend = create("div", "pie-legend");
+
+    const slices = (entries || []).slice(0, 5);
+    let cursor = 0;
+    const gradientStops = [];
+
+    slices.forEach((entry, index) => {
+      const percent = Number(entry?.[percentField]) || 0;
+      const clamped = Math.max(0, Math.min(100, percent));
+      const start = cursor;
+      const end = Math.min(100, cursor + clamped);
+      cursor = end;
+      const color = entry?.color || ["#7dd63d", "#6cc6ff", "#ffc24f", "#c595ff", "#56e0cd"][index % 5];
+      gradientStops.push(`${color} ${start}% ${end}%`);
+
+      const legendItem = create("div", "pie-legend-item");
+      const swatch = create("span", "pie-swatch");
+      swatch.style.background = color;
+      const label = create("span", "", `${entry?.label || "Entry"} ${clamped}%`);
+      legendItem.append(swatch, label);
+      legend.appendChild(legendItem);
+    });
+
+    if (!gradientStops.length) {
+      gradientStops.push("rgba(210,220,236,0.2) 0% 100%");
+    } else if (cursor < 100) {
+      gradientStops.push(`rgba(210,220,236,0.16) ${cursor}% 100%`);
+    }
+
+    chart.style.background = `conic-gradient(${gradientStops.join(", ")})`;
+    wrap.append(chart, legend);
+    return wrap;
+  }
+
+  function buildCardTitle(item) {
+    return item.type === "polls" ? item.question || item.title || "Poll" : item.title || "Untitled";
+  }
+
+  function buildClipCard(item, options) {
+    const card = create("article", "item-card type-clips");
     const link = create("a", "item-link");
     link.href = item.href;
 
     const thumb = create("div", "item-thumb");
-    if (item.type === "clips" && item.mediaUrl && /\.(mp4|webm|ogg)(\?.*)?$/i.test(item.mediaUrl)) {
+    if (item.mediaUrl && /\.(mp4|webm|ogg)(\?.*)?$/i.test(item.mediaUrl)) {
       const video = create("video");
       video.src = item.mediaUrl;
-      video.preload = "metadata";
       video.muted = true;
       video.playsInline = true;
+      video.preload = "metadata";
       video.setAttribute("aria-hidden", "true");
       thumb.appendChild(video);
     } else {
@@ -206,44 +401,118 @@
       thumb.appendChild(img);
     }
 
-    if (item.duration && item.type === "clips") {
+    if (item.duration) {
       thumb.appendChild(create("span", "item-duration", item.duration));
     }
 
     const body = create("div", "item-body");
-    const title = create("h3", "item-title", item.title || item.question || "Untitled");
-    const snippet = create("p", "item-snippet", item.summary || "");
-    if (!options.showSnippet) snippet.hidden = true;
+    body.append(create("h3", "item-title", buildCardTitle(item)), buildCreatorMeta(item.creator));
+
+    if (options.showSnippet) {
+      body.appendChild(create("p", "item-snippet", item.summary || ""));
+    }
 
     const meta = create("div", "item-meta");
-    meta.append(
-      cardMetaPill(item.creator?.displayName || "Public User"),
-      cardMetaPill(item.status || "Pending", `status-${norm(item.status)}`)
-    );
+    meta.append(buildPlatformChip(item.platform, item.platformIcon), buildStatusChip(item.status));
 
-    if (options.showType) {
-      meta.appendChild(cardMetaPill((item.type || "item").toUpperCase()));
+    if (item.views != null) {
+      meta.appendChild(create("span", "meta-pill", `${formatNumber(item.views)} views`));
     }
 
-    if (item.platform) {
-      meta.appendChild(cardMetaPill(item.platform));
-    }
-
-    if (item.totalVotes != null) {
-      meta.appendChild(cardMetaPill(`${item.totalVotes} votes`));
-    }
-
-    body.append(title, snippet, meta);
+    body.appendChild(meta);
     link.append(thumb, body);
     card.appendChild(link);
     return card;
   }
 
+  function buildPollCard(item) {
+    const card = create("article", "item-card type-polls");
+    const link = create("a", "item-link");
+    link.href = item.href;
+
+    const body = create("div", "item-body");
+    body.append(create("h3", "item-title", buildCardTitle(item)), buildCreatorMeta(item.creator));
+
+    if (item.chartType === "pie") {
+      body.appendChild(buildPiePreview(item.options || [], "percent"));
+    } else {
+      body.appendChild(buildResultsRows(item.options || [], "percent", 3));
+    }
+
+    const meta = create("div", "item-meta");
+    meta.append(
+      buildStatusChip(item.status),
+      create("span", "meta-pill", `${formatNumber(item.totalVotes)} votes`),
+      buildPlatformChip(item.platform, item.platformIcon)
+    );
+
+    body.appendChild(meta);
+    link.appendChild(body);
+    card.appendChild(link);
+    return card;
+  }
+
+  function buildScoreboardCard(item) {
+    const card = create("article", "item-card type-scoreboards");
+    const link = create("a", "item-link");
+    link.href = item.href;
+
+    const body = create("div", "item-body");
+    body.append(
+      create("h3", "item-title", buildCardTitle(item)),
+      buildCreatorMeta(item.creator),
+      buildResultsRows(item.entries || [], "percent", 3)
+    );
+
+    const meta = create("div", "item-meta");
+    meta.append(buildStatusChip(item.status), buildPlatformChip(item.platform, item.platformIcon));
+
+    body.appendChild(meta);
+    link.appendChild(body);
+    card.appendChild(link);
+    return card;
+  }
+
+  function buildTallyCard(item) {
+    const card = create("article", "item-card type-tallies");
+    const link = create("a", "item-link");
+    link.href = item.href;
+
+    const body = create("div", "item-body");
+    body.append(
+      create("h3", "item-title", buildCardTitle(item)),
+      buildCreatorMeta(item.creator),
+      buildPiePreview(item.entries || [], "sharePercent")
+    );
+
+    const meta = create("div", "item-meta");
+    const total = (item.entries || []).reduce((sum, entry) => sum + (Number(entry?.value) || 0), 0);
+    meta.append(
+      buildStatusChip(item.status),
+      create("span", "meta-pill", `${formatNumber(total)} total`),
+      buildPlatformChip(item.platform, item.platformIcon)
+    );
+
+    body.appendChild(meta);
+    link.appendChild(body);
+    card.appendChild(link);
+    return card;
+  }
+
+  function buildMediaCard(item, options = {}) {
+    if (!item || typeof item !== "object") return create("div");
+    if (item.type === "clips") return buildClipCard(item, options);
+    if (item.type === "polls") return buildPollCard(item, options);
+    if (item.type === "scoreboards") return buildScoreboardCard(item, options);
+    if (item.type === "tallies") return buildTallyCard(item, options);
+    return buildClipCard(item, options);
+  }
+
   function buildPageHeading(title, subtitle) {
-    const heading = create("section", "page-heading");
-    const left = create("div");
-    left.append(create("h1", "", title), create("p", "", subtitle));
-    heading.appendChild(left);
+    const heading = create("section", "page-heading page-heading-compact");
+    const h1 = create("h1", "", title);
+    const p = create("p", "", subtitle || "");
+    heading.append(h1, p);
     return heading;
   }
 
@@ -269,16 +538,19 @@
     clear(host);
     host.appendChild(buildPageHeading("Media Gallery", "Browse public clips, polls, scoreboards, and tallies."));
 
-    const activeFilters = new Set(state.activeFilters.length ? state.activeFilters : ["clips", "polls", "scoreboards", "tallies"]);
+    const activeFilters = new Set(
+      state.activeFilters.length ? state.activeFilters : ["clips", "polls", "scoreboards", "tallies"]
+    );
 
     const sections = [
-      { type: "clips", title: "Clips", seeAll: "/clips.html", limitRows: 2, showSnippet: true },
+      { type: "clips", title: "Clips", seeAll: "/clips.html", limitRows: 2, showSnippet: false },
       { type: "polls", title: "Polls", seeAll: "/polls.html", limitRows: 1 },
       { type: "scoreboards", title: "Scoreboards", seeAll: "/scoreboards.html", limitRows: 1 },
       { type: "tallies", title: "Tallies", seeAll: "/tallies.html", limitRows: 1 }
     ];
 
     let renderedAny = false;
+    let sectionIndex = 0;
 
     sections.forEach((config) => {
       if (!activeFilters.has(config.type)) return;
@@ -291,9 +563,15 @@
       renderedAny = true;
 
       const section = buildSection(config.title, config.seeAll).section;
+      section.classList.add(`section-${config.type}`);
+      if (sectionIndex > 0) {
+        section.classList.add("section-divided");
+      }
+      sectionIndex += 1;
+
       const grid = create("div", "media-grid");
       items.forEach((item) => {
-        grid.appendChild(buildMediaCard(item, { showSnippet: Boolean(config.showSnippet), showType: config.type !== "clips" }));
+        grid.appendChild(buildMediaCard(item, { showSnippet: Boolean(config.showSnippet) }));
       });
 
       section.appendChild(grid);
@@ -311,9 +589,9 @@
 
     const titles = {
       clips: ["Clips Gallery", "Creator clips with larger thumbnails and quick metadata."],
-      polls: ["Polls Gallery", "Public poll questions and current vote snapshots."],
-      scoreboards: ["Scoreboards Gallery", "Scoreboard overlays and public metric snapshots."],
-      tallies: ["Tallies Gallery", "Programmatic tally summaries and running totals."]
+      polls: ["Polls Gallery", "Public poll questions and vote snapshots."],
+      scoreboards: ["Scoreboards Gallery", "Scoreboard overlays and metric snapshots."],
+      tallies: ["Tallies Gallery", "Programmatic tally summaries with pie previews."]
     };
 
     const [title, subtitle] = titles[config.listType] || ["Gallery", "Public media gallery."];
@@ -324,7 +602,7 @@
 
     const items = filterItemsByType(data, config.listType, state.query);
     items.forEach((item) => {
-      grid.appendChild(buildMediaCard(item, { showSnippet: true, showType: config.listType !== "clips" }));
+      grid.appendChild(buildMediaCard(item, { showSnippet: config.listType === "clips" }));
     });
 
     section.appendChild(grid);
@@ -337,9 +615,11 @@
 
   function buildDetailRows(item, helpers) {
     const rows = create("ul", "data-list");
+
     const make = (label, value) => {
       const li = create("li");
-      li.innerHTML = `<strong>${label}:</strong> ${value || "Unknown"}`;
+      const strong = create("strong", "", `${label}:`);
+      li.append(strong, document.createTextNode(` ${value || "Unknown"}`));
       rows.appendChild(li);
     };
 
@@ -359,23 +639,132 @@
     return url.toString();
   }
 
-  function renderDetail(ctx, config) {
-    const { host, data } = ctx;
-    clear(host);
+  function copyTextToClipboard(text) {
+    const payload = String(text || "");
+    if (!payload) return Promise.resolve(false);
 
-    const id = window.StreamSuitesPublicData.parseDetailId();
-    const item = (data[config.detailType] || []).find((entry) => entry.id === id) || (data[config.detailType] || [])[0];
-
-    if (!item) {
-      host.appendChild(create("div", "empty-state", "Item not found."));
-      return;
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+      return navigator.clipboard.writeText(payload).then(
+        () => true,
+        () => false
+      );
     }
 
-    host.appendChild(buildPageHeading(item.title || item.question || "Detail", item.summary || "Public detail view."));
+    try {
+      const area = document.createElement("textarea");
+      area.value = payload;
+      area.setAttribute("readonly", "true");
+      area.style.position = "fixed";
+      area.style.top = "-9999px";
+      area.style.left = "-9999px";
+      document.body.appendChild(area);
+      area.focus();
+      area.select();
+      const copied = document.execCommand("copy");
+      area.remove();
+      return Promise.resolve(copied);
+    } catch (_err) {
+      return Promise.resolve(false);
+    }
+  }
 
-    const layout = create("section", "detail-layout");
+  function buildShareBox(url) {
+    const box = create("div", "share-box");
+    const text = create("code", "share-link-text", url);
+    text.setAttribute("title", url);
+
+    const copyButton = create("button", "share-copy-btn", "⎘");
+    copyButton.type = "button";
+    copyButton.setAttribute("aria-label", "Copy share link");
+
+    copyButton.addEventListener("click", () => {
+      copyTextToClipboard(url).then((copied) => {
+        copyButton.textContent = copied ? "✓" : "!";
+        window.setTimeout(() => {
+          copyButton.textContent = "⎘";
+        }, 1300);
+      });
+    });
+
+    box.append(text, copyButton);
+    return box;
+  }
+
+  function buildExternalSourceBlock(item) {
+    if (!item?.sourceUrl) return null;
+
+    const wrap = create("div", "external-source");
+    const link = create("a", "external-source-link");
+    link.href = item.sourceUrl;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+
+    const icon = create("img", "chip-icon");
+    icon.src = item.platformIcon || window.StreamSuitesPublicData?.platformIconFor?.(item.platform) || "/assets/icons/pilled.svg";
+    icon.alt = `${item.platform || "Source"} icon`;
+
+    const action = item.type === "clips" ? "Watch on" : "Open on";
+    link.append(icon, create("span", "", `${action} ${item.platform || "Source"}`));
+
+    wrap.appendChild(link);
+    return wrap;
+  }
+
+  function readDetailLayoutPreference() {
+    try {
+      const raw = window.localStorage.getItem(DETAIL_LAYOUT_STORAGE_KEY);
+      if (raw === "stack" || raw === "side") return raw;
+    } catch (_err) {
+      // Ignore storage failures.
+    }
+    return "side";
+  }
+
+  function writeDetailLayoutPreference(value) {
+    try {
+      window.localStorage.setItem(DETAIL_LAYOUT_STORAGE_KEY, value === "stack" ? "stack" : "side");
+    } catch (_err) {
+      // Ignore storage failures.
+    }
+  }
+
+  function buildLayoutToggle(layout) {
+    const toolbar = create("div", "detail-toolbar");
+    const label = create("span", "detail-toolbar-label", "Layout");
+    const group = create("div", "detail-layout-toggle-group");
+
+    const sideButton = create("button", "detail-layout-toggle", "▥");
+    sideButton.type = "button";
+    sideButton.dataset.layout = "side";
+    sideButton.setAttribute("aria-label", "Show side panel layout");
+
+    const stackButton = create("button", "detail-layout-toggle", "▤");
+    stackButton.type = "button";
+    stackButton.dataset.layout = "stack";
+    stackButton.setAttribute("aria-label", "Stack details under media");
+
+    const applyLayout = (nextLayout, persist) => {
+      const layoutMode = nextLayout === "stack" ? "stack" : "side";
+      layout.classList.toggle("is-stacked", layoutMode === "stack");
+      sideButton.classList.toggle("active", layoutMode === "side");
+      stackButton.classList.toggle("active", layoutMode === "stack");
+      sideButton.setAttribute("aria-pressed", layoutMode === "side" ? "true" : "false");
+      stackButton.setAttribute("aria-pressed", layoutMode === "stack" ? "true" : "false");
+      if (persist) writeDetailLayoutPreference(layoutMode);
+    };
+
+    sideButton.addEventListener("click", () => applyLayout("side", true));
+    stackButton.addEventListener("click", () => applyLayout("stack", true));
+
+    group.append(sideButton, stackButton);
+    toolbar.append(label, group);
+
+    applyLayout(readDetailLayoutPreference(), false);
+    return toolbar;
+  }
+
+  function buildDetailMain(item, config) {
     const main = create("article", "detail-main");
-    const side = create("aside", "detail-side");
 
     const player = create("div", "detail-player");
     if (config.detailType === "clips" && item.mediaUrl) {
@@ -394,7 +783,7 @@
     } else {
       const image = create("img");
       image.src = item.thumbnail || "/assets/backgrounds/seodash.jpg";
-      image.alt = `${item.title} preview`;
+      image.alt = `${item.title || item.question} preview`;
       player.appendChild(image);
     }
 
@@ -403,66 +792,80 @@
     copy.append(create("p", "", item.summary || "No description available."));
 
     if (config.detailType === "polls") {
-      const tableWrap = create("div", "table-wrap");
-      const table = create("table", "results-table");
-      table.innerHTML = "<thead><tr><th>Option</th><th>Votes</th></tr></thead>";
-      const body = create("tbody");
-      (item.options || []).forEach((option) => {
-        const row = create("tr");
-        row.innerHTML = `<td>${option.label} (${option.percent}%)</td><td>${option.votes}</td>`;
-        body.appendChild(row);
-      });
-      table.appendChild(body);
-      tableWrap.appendChild(table);
-      copy.appendChild(tableWrap);
+      if (item.chartType === "pie") {
+        copy.appendChild(buildPiePreview(item.options || [], "percent"));
+      } else {
+        copy.appendChild(buildResultsRows(item.options || [], "percent", 6));
+      }
     }
 
-    if (config.detailType === "scoreboards" || config.detailType === "tallies") {
-      const tableWrap = create("div", "table-wrap");
-      const table = create("table", "results-table");
-      table.innerHTML = "<thead><tr><th>Entry</th><th>Value</th></tr></thead>";
-      const body = create("tbody");
-      (item.entries || []).forEach((entry) => {
-        const row = create("tr");
-        row.innerHTML = `<td>${entry.label}</td><td>${entry.value}</td>`;
-        body.appendChild(row);
-      });
-      table.appendChild(body);
-      tableWrap.appendChild(table);
-      copy.appendChild(tableWrap);
+    if (config.detailType === "scoreboards") {
+      copy.appendChild(buildResultsRows(item.entries || [], "percent", 6));
+    }
+
+    if (config.detailType === "tallies") {
+      copy.appendChild(buildPiePreview(item.entries || [], "sharePercent"));
+      copy.appendChild(buildResultsRows(item.entries || [], "sharePercent", 6));
     }
 
     main.append(player, copy);
+    return main;
+  }
+
+  function buildDetailSide(item, helpers) {
+    const side = create("aside", "detail-side");
 
     const profileCard = create("div", "profile-card");
-    const profileMini = create("div", "profile-mini");
-    const avatar = create("img");
-    avatar.src = item.creator?.avatar || "/assets/logos/logocircle.png";
-    avatar.alt = `${item.creator?.displayName || "Public User"} avatar`;
-    const text = create("div");
-    text.append(create("strong", "", item.creator?.displayName || "Public User"));
-    text.append(create("div", "notice-meta", `${item.creator?.platform || "StreamSuites"} • ${item.creator?.role || "member"}`));
-    profileMini.append(avatar, text);
+    profileCard.appendChild(buildCreatorMeta(item.creator));
+    profileCard.appendChild(buildDetailRows(item, helpers));
 
     const profileLink = create("a", "see-all", "Open profile");
     profileLink.href = `/community/profile.html?id=${encodeURIComponent(item.profileId || "public-user")}`;
 
-    const shareLink = create("a", "see-all", "Copyable link");
-    shareLink.href = buildShareLink(window.location.pathname, item.id);
-    shareLink.textContent = buildShareLink(window.location.pathname, item.id);
+    const shareLabel = create("div", "detail-subtle-label", "Share Link");
+    const shareUrl = buildShareLink(window.location.pathname, item.id);
+    const shareBox = buildShareBox(shareUrl);
 
-    profileCard.append(profileMini, buildDetailRows(item, data.helpers), profileLink, shareLink);
+    profileCard.append(profileLink, shareLabel, shareBox);
+
+    const sourceBlock = buildExternalSourceBlock(item);
+    if (sourceBlock) {
+      profileCard.appendChild(sourceBlock);
+    }
 
     side.appendChild(profileCard);
 
-    if (config.detailType === "polls") {
+    if (item.resultsHref) {
       const resultsLink = create("a", "see-all", "Open results page");
       resultsLink.href = item.resultsHref;
       side.appendChild(resultsLink);
     }
 
+    return side;
+  }
+
+  function renderDetail(ctx, config) {
+    const { host, data } = ctx;
+    clear(host);
+
+    const id = window.StreamSuitesPublicData.parseDetailId();
+    const item = (data[config.detailType] || []).find((entry) => entry.id === id) || (data[config.detailType] || [])[0];
+
+    if (!item) {
+      host.appendChild(create("div", "empty-state", "Item not found."));
+      return;
+    }
+
+    host.appendChild(buildPageHeading(item.title || item.question || "Detail", item.summary || "Public detail view."));
+
+    const layout = create("section", "detail-layout");
+    const toolbar = buildLayoutToggle(layout);
+
+    const main = buildDetailMain(item, config);
+    const side = buildDetailSide(item, data.helpers);
+
     layout.append(main, side);
-    host.appendChild(layout);
+    host.append(toolbar, layout);
   }
 
   function renderPollResults(ctx) {
@@ -480,47 +883,20 @@
     host.appendChild(buildPageHeading(`Results: ${poll.title}`, "Standalone poll results with shareable URL."));
 
     const layout = create("section", "detail-layout");
+    const toolbar = buildLayoutToggle(layout);
+
     const main = create("article", "detail-main");
-    const side = create("aside", "detail-side");
+    main.appendChild(create("p", "item-snippet", `Status: ${poll.status} | Total votes: ${formatNumber(poll.totalVotes)}`));
 
-    const status = create("p", "item-snippet", `Status: ${poll.status} • Total votes: ${poll.totalVotes}`);
-    const tableWrap = create("div", "table-wrap");
-    const table = create("table", "results-table");
-    table.innerHTML = "<thead><tr><th>Option</th><th>Votes</th></tr></thead>";
+    if (poll.chartType === "pie") {
+      main.appendChild(buildPiePreview(poll.options || [], "percent"));
+    }
+    main.appendChild(buildResultsRows(poll.options || [], "percent", 8));
 
-    const body = create("tbody");
-    (poll.options || []).forEach((option) => {
-      const row = create("tr");
-      row.innerHTML = `<td>${option.label} (${option.percent}%)</td><td>${option.votes}</td>`;
-      body.appendChild(row);
-    });
-
-    table.appendChild(body);
-    tableWrap.appendChild(table);
-    main.append(status, tableWrap);
-
-    const profileCard = create("div", "profile-card");
-    const profileMini = create("div", "profile-mini");
-    const avatar = create("img");
-    avatar.src = poll.creator?.avatar || "/assets/logos/logocircle.png";
-    avatar.alt = `${poll.creator?.displayName || "Public User"} avatar`;
-    const text = create("div");
-    text.append(create("strong", "", poll.creator?.displayName || "Public User"));
-    text.append(create("div", "notice-meta", `${poll.creator?.platform || "StreamSuites"} • ${poll.creator?.role || "member"}`));
-    profileMini.append(avatar, text);
-
-    const profileLink = create("a", "see-all", "Open profile");
-    profileLink.href = `/community/profile.html?id=${encodeURIComponent(poll.profileId || "public-user")}`;
-
-    const shareLink = create("a", "see-all", "Copyable link");
-    shareLink.href = buildShareLink(window.location.pathname, poll.id);
-    shareLink.textContent = buildShareLink(window.location.pathname, poll.id);
-
-    profileCard.append(profileMini, buildDetailRows(poll, data.helpers), profileLink, shareLink);
-    side.appendChild(profileCard);
+    const side = buildDetailSide(poll, data.helpers);
 
     layout.append(main, side);
-    host.appendChild(layout);
+    host.append(toolbar, layout);
   }
 
   function renderCommunityHome(ctx) {
@@ -535,7 +911,7 @@
       noticeCard.append(
         create("h3", "", latestNotice.title),
         create("p", "", latestNotice.body),
-        create("div", "notice-meta", `${data.helpers.toTimestamp(latestNotice.createdAt)} • ${latestNotice.author.displayName}`)
+        create("div", "notice-meta", `${data.helpers.toTimestamp(latestNotice.createdAt)} | ${latestNotice.author.displayName}`)
       );
       noticeSection.appendChild(noticeCard);
     } else {
@@ -564,23 +940,16 @@
 
   function buildProfileCard(profile, data) {
     const card = create("article", "profile-card");
-    const top = create("div", "profile-mini");
-    const avatar = create("img");
-    avatar.src = profile.avatar || "/assets/logos/logocircle.png";
-    avatar.alt = `${profile.displayName} avatar`;
-    const info = create("div");
-    info.append(create("strong", "", profile.displayName));
-    info.append(create("div", "notice-meta", `${profile.platform} • ${profile.role}`));
-    top.append(avatar, info);
+    card.appendChild(buildCreatorMeta(profile));
 
     const artifactCount = (data.artifactsByProfile?.[profile.id] || []).length;
     const badge = create("div", "item-meta");
-    badge.append(cardMetaPill(`${artifactCount} artifacts`));
+    badge.append(create("span", "meta-pill", `${artifactCount} artifacts`));
 
     const link = create("a", "see-all", "Open profile");
     link.href = `/community/profile.html?id=${encodeURIComponent(profile.id)}`;
 
-    card.append(top, create("p", "item-snippet", profile.bio || ""), badge, link);
+    card.append(create("p", "item-snippet", profile.bio || ""), badge, link);
     return card;
   }
 
@@ -621,7 +990,7 @@
       card.append(
         create("h3", "", notice.title),
         create("p", "", notice.body),
-        create("div", "notice-meta", `${notice.priority} • ${data.helpers.toTimestamp(notice.createdAt)} • ${notice.author.displayName}`)
+        create("div", "notice-meta", `${notice.priority} | ${data.helpers.toTimestamp(notice.createdAt)} | ${notice.author.displayName}`)
       );
       list.appendChild(card);
     });
@@ -640,30 +1009,21 @@
     const profile = data.profilesById[id] || data.profilesById[window.StreamSuitesPublicData.DEFAULT_PROFILE.id];
     const artifacts = data.artifactsByProfile?.[profile.id] || [];
 
-    host.appendChild(buildPageHeading(profile.displayName, `${profile.platform} • ${profile.role}`));
+    host.appendChild(buildPageHeading(profile.displayName, `${profile.platform} | ${profile.role}`));
 
-    const hero = create("section", "detail-layout");
+    const hero = create("section", "detail-layout is-stacked");
     const left = create("article", "detail-main");
     const right = create("aside", "detail-side");
 
     const profileCard = create("article", "profile-card");
-    const top = create("div", "profile-mini");
-    const avatar = create("img");
-    avatar.src = profile.avatar || "/assets/logos/logocircle.png";
-    avatar.alt = `${profile.displayName} avatar`;
-    const info = create("div");
-    info.append(create("strong", "", profile.displayName));
-    info.append(create("div", "notice-meta", `@${profile.username} • ${profile.platform}`));
-    top.append(avatar, info);
-    profileCard.append(top, create("p", "", profile.bio || ""));
-
+    profileCard.append(buildCreatorMeta(profile), create("p", "", profile.bio || ""));
     left.appendChild(profileCard);
 
     const artifactSection = create("section", "section");
     artifactSection.append(create("h2", "", "Recent Artifacts"));
     const grid = create("div", "media-grid");
     artifacts.slice(0, 12).forEach((item) => {
-      grid.appendChild(buildMediaCard(item, { showSnippet: true, showType: true }));
+      grid.appendChild(buildMediaCard(item, { showSnippet: true }));
     });
     artifactSection.appendChild(grid);
 
@@ -676,64 +1036,204 @@
     host.appendChild(hero);
   }
 
+  function resolveConfigFromPath(pathname) {
+    return PAGE_ID_BY_PATH[normalizePath(pathname)] || null;
+  }
+
+  function canHandleUrl(url) {
+    return url.origin === window.location.origin && Boolean(resolveConfigFromPath(url.pathname));
+  }
+
+  function parsePageIdFromDocument(doc) {
+    const fromBody = doc?.body?.dataset?.publicPage;
+    if (fromBody && PAGE_CONFIG[fromBody]) return fromBody;
+    return "";
+  }
+
   function init() {
-    const pageId = document.body.dataset.publicPage;
-    if (!pageId) return;
+    const initialPageId = document.body.dataset.publicPage;
+    if (!initialPageId || !PAGE_CONFIG[initialPageId]) return;
 
-    const config = PAGE_CONFIG[pageId];
-    if (!config) return;
-
-    const filters = config.filterMode === "none"
-      ? []
-      : MEDIA_FILTERS.map((filter) => ({
-          ...filter,
-          active: config.defaultFilters.includes(filter.value)
-        }));
+    let currentPageId = initialPageId;
+    let currentConfig = PAGE_CONFIG[currentPageId];
+    let loadedData = null;
+    let navigationToken = 0;
 
     const state = {
       query: "",
-      activeFilters: [...config.defaultFilters]
+      activeFilters: [...currentConfig.defaultFilters]
     };
 
     const shell = window.StreamSuitesPublicShell.mount({
-      shellKind: config.shellKind,
-      activeHref: config.activeHref,
-      topbarLabel: config.topbarLabel,
-      searchPlaceholder: config.searchPlaceholder,
-      filters,
-      multiFilter: config.filterMode === "multi",
-      onSearch(query) {
-        state.query = query;
-        rerender();
-      },
-      onFilter(detail) {
-        if (config.filterMode === "multi") {
-          state.activeFilters = detail.activeFilters.length ? detail.activeFilters : ["clips", "polls", "scoreboards", "tallies"];
-          rerender();
-          return;
-        }
-
-        if (config.filterMode === "single-nav") {
-          const target = TYPE_TO_PAGE[detail.value];
-          if (target && target !== window.location.pathname) {
-            window.location.assign(target);
-            return;
-          }
-          state.activeFilters = [detail.value];
-        }
-      }
+      shellKind: currentConfig.shellKind,
+      activeHref: currentConfig.activeHref,
+      topbarLabel: currentConfig.topbarLabel,
+      searchPlaceholder: currentConfig.searchPlaceholder,
+      filters: buildFiltersForConfig(currentConfig),
+      filtersCollapsed: currentConfig.filtersCollapsed,
+      multiFilter: currentConfig.filterMode === "multi",
+      accountLabel: "Guest"
     });
-
-    let loadedData = null;
 
     const rerender = () => {
       if (!loadedData) return;
-      config.render({ host: shell.content, data: loadedData, state }, config);
+      currentConfig.render({ host: shell.content, data: loadedData, state }, currentConfig);
     };
 
-    window.StreamSuitesPublicData.loadAll().then((data) => {
-      loadedData = data;
+    function applyConfig(nextConfig, options = {}) {
+      currentConfig = nextConfig;
+      currentPageId = Object.keys(PAGE_CONFIG).find((key) => PAGE_CONFIG[key] === nextConfig) || currentPageId;
+
+      if (!options.keepState) {
+        state.query = "";
+        state.activeFilters = [...nextConfig.defaultFilters];
+      }
+
+      shell.updateOptions({
+        shellKind: nextConfig.shellKind,
+        activeHref: nextConfig.activeHref,
+        topbarLabel: nextConfig.topbarLabel,
+        searchPlaceholder: nextConfig.searchPlaceholder,
+        filters: buildFiltersForConfig(nextConfig),
+        multiFilter: nextConfig.filterMode === "multi",
+        filtersCollapsed: nextConfig.filtersCollapsed,
+        onSearch(query) {
+          state.query = query;
+          rerender();
+        },
+        onFilter(detail) {
+          if (nextConfig.filterMode === "multi") {
+            state.activeFilters = detail.activeFilters.length ? detail.activeFilters : ["clips", "polls", "scoreboards", "tallies"];
+            rerender();
+            return;
+          }
+
+          if (nextConfig.filterMode === "single-nav") {
+            const target = TYPE_TO_PAGE[detail.value];
+            if (target && normalizePath(target) !== normalizePath(window.location.pathname)) {
+              navigateTo(new URL(target, window.location.origin), { historyMode: "push" });
+              return;
+            }
+            state.activeFilters = [detail.value];
+            rerender();
+          }
+        }
+      });
+
+      shell.setQuery(state.query);
+      shell.setFilterState(state.activeFilters);
+      shell.setActiveHref(nextConfig.activeHref);
+
       rerender();
+    }
+
+    async function ensureData() {
+      if (loadedData) return loadedData;
+      loadedData = await window.StreamSuitesPublicData.loadAll();
+      return loadedData;
+    }
+
+    async function navigateTo(url, navOptions = {}) {
+      const historyMode = navOptions.historyMode || "push";
+      if (!canHandleUrl(url)) {
+        window.location.assign(url.toString());
+        return;
+      }
+
+      const token = ++navigationToken;
+      shell.setLoading(true);
+
+      try {
+        const response = await fetch(url.toString(), {
+          cache: "no-store",
+          credentials: "same-origin"
+        });
+
+        if (!response.ok) {
+          throw new Error(`Navigation fetch failed: ${response.status}`);
+        }
+
+        const html = await response.text();
+        if (token !== navigationToken) return;
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const fetchedPageId = parsePageIdFromDocument(doc);
+        const nextConfig = fetchedPageId ? PAGE_CONFIG[fetchedPageId] : resolveConfigFromPath(url.pathname);
+
+        if (!nextConfig) {
+          window.location.assign(url.toString());
+          return;
+        }
+
+        if (doc.title) {
+          document.title = doc.title;
+        }
+
+        if (fetchedPageId) {
+          document.body.dataset.publicPage = fetchedPageId;
+        }
+
+        if (historyMode === "push") {
+          window.history.pushState({ path: url.pathname + url.search }, "", url.toString());
+        } else if (historyMode === "replace") {
+          window.history.replaceState({ path: url.pathname + url.search }, "", url.toString());
+        }
+
+        await ensureData();
+        applyConfig(nextConfig, { keepState: false });
+      } catch (_err) {
+        window.location.assign(url.toString());
+      } finally {
+        if (token === navigationToken) {
+          shell.setLoading(false);
+        }
+      }
+    }
+
+    document.addEventListener("click", (event) => {
+      const anchor = event.target.closest("a[href]");
+      if (!anchor) return;
+      if (anchor.hasAttribute("download")) return;
+      if (anchor.target === "_blank") return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+      const href = anchor.getAttribute("href") || "";
+      if (!href || href.startsWith("#")) return;
+
+      let url;
+      try {
+        url = new URL(href, window.location.href);
+      } catch (_err) {
+        return;
+      }
+
+      if (!canHandleUrl(url)) return;
+
+      if (
+        normalizePath(url.pathname) === normalizePath(window.location.pathname) &&
+        url.search === window.location.search &&
+        url.hash === window.location.hash
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      navigateTo(url, { historyMode: "push" });
+    });
+
+    window.addEventListener("popstate", () => {
+      const url = new URL(window.location.href);
+      if (!canHandleUrl(url)) {
+        window.location.reload();
+        return;
+      }
+      navigateTo(url, { historyMode: "none" });
+    });
+
+    ensureData().then(() => {
+      applyConfig(currentConfig, { keepState: false });
+      shell.setLoading(false);
     });
   }
 

@@ -11,13 +11,30 @@
 
   const FALLBACK_AVATAR = "/assets/logos/logocircle.png";
 
+  const PLATFORM_ICON_MAP = Object.freeze({
+    rumble: "/assets/icons/rumble.svg",
+    youtube: "/assets/icons/youtube.svg",
+    twitch: "/assets/icons/twitch.svg",
+    kick: "/assets/icons/kick.svg",
+    twitter: "/assets/icons/twitter.svg",
+    x: "/assets/icons/x.svg",
+    pilled: "/assets/icons/pilled.svg",
+    streamsuites: "/assets/icons/pilled.svg",
+    generic: "/assets/icons/pilled.svg"
+  });
+
   const DEFAULT_PROFILE = {
     id: "public-user",
     username: "public-user",
     displayName: "Public User",
     avatar: FALLBACK_AVATAR,
     platform: "StreamSuites",
+    platformKey: "streamsuites",
     role: "member",
+    tier: "",
+    badges: [
+      { kind: "tier", label: "Member" }
+    ],
     bio: "Community-visible profile used when creator metadata is unavailable."
   };
 
@@ -79,16 +96,100 @@
     }
   }
 
+  function normalizePlatformKey(value) {
+    const raw = String(value || "").trim().toLowerCase();
+    if (!raw) return "generic";
+    if (raw === "x") return "x";
+    if (raw === "streamsuites" || raw === "streamsuite") return "streamsuites";
+    if (Object.prototype.hasOwnProperty.call(PLATFORM_ICON_MAP, raw)) {
+      return raw;
+    }
+    return "generic";
+  }
+
+  function platformIconFor(value) {
+    const key = normalizePlatformKey(value);
+    return PLATFORM_ICON_MAP[key] || PLATFORM_ICON_MAP.generic;
+  }
+
+  function normalizeRole(value) {
+    const raw = String(value || "member").trim().toLowerCase();
+    if (!raw) return "member";
+    if (raw.includes("admin")) return "admin";
+    if (raw.includes("creator")) return "creator";
+    return "member";
+  }
+
+  function normalizeTier(value) {
+    const raw = String(value || "").trim().toUpperCase();
+    if (!raw) return "";
+    if (raw === "OPEN") return "CORE";
+    if (["CORE", "GOLD", "PRO"].includes(raw)) return raw;
+    return toTitle(raw);
+  }
+
+  function buildProfileBadges(role, tier) {
+    const badges = [];
+
+    if (tier) {
+      badges.push({ kind: "tier", label: tier, tier });
+    } else {
+      const fallbackTier = role === "creator" ? "Creator" : role === "admin" ? "Creator" : "Member";
+      badges.push({ kind: "tier", label: fallbackTier, tier: "" });
+    }
+
+    if (role === "admin") {
+      badges.push({ kind: "admin", label: "Admin" });
+    }
+
+    return badges;
+  }
+
+  function pickSourceUrl(raw) {
+    const candidate =
+      raw?.source_url ||
+      raw?.sourceUrl ||
+      raw?.canonical_url ||
+      raw?.canonicalUrl ||
+      raw?.external_url ||
+      raw?.externalUrl ||
+      raw?.original_url ||
+      raw?.originalUrl ||
+      null;
+
+    if (!candidate || typeof candidate !== "string") return "";
+
+    try {
+      const url = new URL(candidate, window.location.origin);
+      if (url.origin !== window.location.origin && /^https?:$/i.test(url.protocol)) {
+        return url.toString();
+      }
+    } catch (_err) {
+      return "";
+    }
+
+    return "";
+  }
+
   function normalizeProfile(raw) {
     const id = raw?.id || raw?.profile_id || raw?.username || raw?.name;
     if (!id) return null;
+
+    const role = normalizeRole(raw.role || raw.role_hint);
+    const tier = normalizeTier(raw.tier || raw.plan_tier || raw.membership_tier || raw.membershipTier || raw.tier_label);
+    const platform = raw.platform || "StreamSuites";
+
     return {
       id: String(id),
       username: String(raw.username || raw.handle || id),
       displayName: raw.display_name || raw.displayName || raw.name || String(id),
       avatar: raw.avatar || raw.avatar_url || FALLBACK_AVATAR,
-      platform: raw.platform || "StreamSuites",
-      role: raw.role || raw.role_hint || "member",
+      platform,
+      platformKey: normalizePlatformKey(platform),
+      platformIcon: platformIconFor(platform),
+      role,
+      tier,
+      badges: buildProfileBadges(role, tier),
       bio: raw.bio || raw.summary || ""
     };
   }
@@ -140,16 +241,21 @@
     const profile = resolveProfileRef(raw?.creator, profiles);
     const mediaUrl = raw?.media_url || raw?.video_url || raw?.url || null;
 
+    const platform = raw?.platform || profile.platform || "StreamSuites";
+
     return {
       id,
       type: "clips",
       title: raw?.title || raw?.name || `Clip ${index + 1}`,
       summary: raw?.summary || raw?.description || "Stream clip artifact.",
       status: toTitle(raw?.status || raw?.state || "pending"),
-      platform: raw?.platform || profile.platform || "StreamSuites",
+      platform,
+      platformKey: normalizePlatformKey(platform),
+      platformIcon: platformIconFor(platform),
       duration: raw?.duration || toDuration(raw?.duration_seconds, "--:--"),
       thumbnail: raw?.thumbnail || raw?.thumbnail_url || "/assets/backgrounds/seodash.jpg",
       mediaUrl,
+      sourceUrl: pickSourceUrl(raw),
       views: raw?.views ?? raw?.view_count ?? null,
       createdAt: raw?.created_at || raw?.createdAt || null,
       updatedAt: raw?.updated_at || raw?.updatedAt || null,
@@ -170,6 +276,8 @@
 
     const total = fallback.reduce((sum, option) => sum + Number(option?.votes ?? option?.count ?? 0), 0);
 
+    const palette = ["#7dd63d", "#6cc6ff", "#ffc24f", "#c595ff", "#56e0cd"];
+
     return fallback.map((option, index) => {
       const votes = Number(option?.votes ?? option?.count ?? 0) || 0;
       const percent =
@@ -184,7 +292,7 @@
         label: option?.label || option?.name || `Option ${index + 1}`,
         votes,
         percent,
-        color: option?.color || null
+        color: option?.color || palette[index % palette.length]
       };
     });
   }
@@ -194,6 +302,8 @@
     const profile = resolveProfileRef(raw?.creator, profiles);
     const options = normalizeOptions(raw?.options || raw?.choices);
 
+    const chartType = String(raw?.chart_type || raw?.chartType || "").toLowerCase() === "pie" ? "pie" : "bar";
+
     return {
       id,
       type: "polls",
@@ -202,10 +312,15 @@
       summary: raw?.summary || raw?.description || "Community poll artifact.",
       status: toTitle(raw?.status || raw?.state || "pending"),
       options,
+      chartType,
       totalVotes: options.reduce((sum, option) => sum + option.votes, 0),
       createdAt: raw?.created_at || raw?.createdAt || null,
       updatedAt: raw?.updated_at || raw?.updatedAt || null,
       closesAt: raw?.closes_at || raw?.closesAt || raw?.closed_at || null,
+      sourceUrl: pickSourceUrl(raw),
+      platform: profile.platform,
+      platformKey: profile.platformKey,
+      platformIcon: profile.platformIcon,
       profileId: profile.id,
       creator: profile,
       href: `/polls/detail.html?id=${encodeURIComponent(id)}`,
@@ -231,9 +346,24 @@
         id: entry?.id || `entry-${index + 1}`,
         label: entry?.label || entry?.name || `Entry ${index + 1}`,
         value,
-        percent: maxValue > 0 ? Math.round((value / maxValue) * 100) : 0
+        votes: value,
+        percent: maxValue > 0 ? Math.round((value / maxValue) * 100) : 0,
+        sharePercent: 0,
+        color: entry?.color || null
       };
     });
+  }
+
+  function normalizeTallyEntries(rawEntries) {
+    const entries = normalizeScoreEntries(rawEntries);
+    const total = entries.reduce((sum, entry) => sum + entry.value, 0);
+    const palette = ["#7dd63d", "#6cc6ff", "#ffc24f", "#c595ff", "#56e0cd"];
+
+    return entries.map((entry, index) => ({
+      ...entry,
+      sharePercent: total > 0 ? Math.round((entry.value / total) * 100) : 0,
+      color: entry.color || palette[index % palette.length]
+    }));
   }
 
   function normalizeScoreboard(raw, index, profiles) {
@@ -249,6 +379,10 @@
       entries: normalizeScoreEntries(raw?.entries || raw?.scores),
       createdAt: raw?.created_at || raw?.createdAt || null,
       updatedAt: raw?.updated_at || raw?.updatedAt || null,
+      sourceUrl: pickSourceUrl(raw),
+      platform: profile.platform,
+      platformKey: profile.platformKey,
+      platformIcon: profile.platformIcon,
       profileId: profile.id,
       creator: profile,
       href: `/scoreboards/detail.html?id=${encodeURIComponent(id)}`
@@ -258,7 +392,6 @@
   function normalizeTally(raw, index, profiles) {
     const id = raw?.id || raw?.tally_id || `tally-${index + 1}`;
     const profile = resolveProfileRef(raw?.creator, profiles);
-    const entries = normalizeScoreEntries(raw?.entries || raw?.totals || raw?.options);
 
     return {
       id,
@@ -266,9 +399,14 @@
       title: raw?.title || raw?.name || `Tally ${index + 1}`,
       summary: raw?.summary || raw?.description || "Programmatic tally artifact.",
       status: toTitle(raw?.status || raw?.state || "live"),
-      entries,
+      entries: normalizeTallyEntries(raw?.entries || raw?.totals || raw?.options),
+      window: raw?.window || raw?.time_window || raw?.scope || "Rolling window",
       createdAt: raw?.created_at || raw?.createdAt || null,
       updatedAt: raw?.updated_at || raw?.updatedAt || null,
+      sourceUrl: pickSourceUrl(raw),
+      platform: profile.platform,
+      platformKey: profile.platformKey,
+      platformIcon: profile.platformIcon,
       profileId: profile.id,
       creator: profile,
       href: `/tallies/detail.html?id=${encodeURIComponent(id)}`
@@ -365,7 +503,9 @@
         meta: metaPayload,
         helpers: {
           toTimestamp,
-          toTitle
+          toTitle,
+          platformIconFor,
+          normalizePlatformKey
         }
       };
     })();
@@ -378,6 +518,8 @@
     parseDetailId: () => window.StreamSuitesPublicShell?.parseDetailId?.() || "",
     toTimestamp,
     toTitle,
-    DEFAULT_PROFILE
+    DEFAULT_PROFILE,
+    platformIconFor,
+    normalizePlatformKey
   };
 })();
