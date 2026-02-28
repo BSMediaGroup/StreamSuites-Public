@@ -928,25 +928,27 @@
   function buildDetailMain(item, config, helpers) {
     const main = create("article", "detail-main");
 
-    if (config.detailType === "clips" && item.mediaUrl) {
+    if (config.detailType === "clips") {
       const player = create("div", "detail-player");
-      if (/\.(mp4|webm|ogg)(\?.*)?$/i.test(item.mediaUrl)) {
-        const video = create("video");
-        video.controls = true;
-        video.src = item.mediaUrl;
-        player.appendChild(video);
+      if (item.mediaUrl) {
+        if (/\.(mp4|webm|ogg)(\?.*)?$/i.test(item.mediaUrl)) {
+          const video = create("video");
+          video.controls = true;
+          video.src = item.mediaUrl;
+          player.appendChild(video);
+        } else {
+          const iframe = create("iframe");
+          iframe.src = item.mediaUrl;
+          iframe.title = item.title;
+          iframe.loading = "lazy";
+          player.appendChild(iframe);
+        }
       } else {
-        const iframe = create("iframe");
-        iframe.src = item.mediaUrl;
-        iframe.title = item.title;
-        iframe.loading = "lazy";
-        player.appendChild(iframe);
+        const image = create("img");
+        image.src = item.thumbnail || "/assets/backgrounds/seodash.jpg";
+        image.alt = `${item.title || item.question} preview`;
+        player.appendChild(image);
       }
-    } else {
-      const image = create("img");
-      image.src = item.thumbnail || "/assets/backgrounds/seodash.jpg";
-      image.alt = `${item.title || item.question} preview`;
-      player.appendChild(image);
       const copy = create("div", "detail-copy");
       copy.append(create("h2", "", item.title || item.question || "Detail"));
       copy.append(create("p", "", item.summary || "No description available."));
