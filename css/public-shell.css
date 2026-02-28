@@ -642,7 +642,7 @@ body.public-shell-page {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 8px 18px;
+  padding: 6px 18px;
   background: var(--ps-glass-bg);
   border-top: 1px solid var(--ps-glass-border);
   backdrop-filter: blur(16px);
