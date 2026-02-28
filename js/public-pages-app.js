@@ -790,11 +790,146 @@
     return toolbar;
   }
 
-  function buildDetailMain(item, config) {
+  function buildVoteBreakdownList(items, percentField = "percent") {
+    const list = create("ul", "vote-list");
+    (items || []).forEach((entry) => {
+      const li = create("li", "vote-item");
+      const label = create("strong", "", entry?.label || "Entry");
+      const meta = create("span", "timestamp");
+      const percent = Number(entry?.[percentField]) || 0;
+      const votes = Number(entry?.votes ?? entry?.value ?? 0);
+      meta.textContent = `${percent}% | ${formatNumber(votes)} votes`;
+      li.append(label, meta);
+      list.appendChild(li);
+    });
+    return list;
+  }
+
+  function buildBarRows(items, percentField = "percent") {
+    const rows = create("div", "bar-rows");
+    (items || []).forEach((entry) => {
+      const row = create("div", "bar-row");
+      const label = create("div", "bar-label", entry?.label || "Entry");
+      const meter = create("div", "bar-meter");
+      const fill = create("span", "bar-fill");
+      const percent = Math.max(0, Math.min(100, Number(entry?.[percentField]) || 0));
+      fill.style.width = `${percent}%`;
+      if (entry?.color) {
+        fill.style.background = `linear-gradient(90deg, ${entry.color}, ${entry.color})`;
+      }
+      meter.appendChild(fill);
+      const meta = create("div", "bar-meta");
+      const votes = Number(entry?.votes ?? entry?.value ?? 0);
+      meta.textContent = `${percent}% | ${formatNumber(votes)} votes`;
+      row.append(label, meter, meta);
+      rows.appendChild(row);
+    });
+    return rows;
+  }
+
+  function buildVisualizationPanel(item, config) {
+    const panel = create("div", "visualization-panel");
+
+    const top = create("div", "viz-top");
+    const left = create("div", "viz-top-left");
+    const toggle = create("div", "viz-toggle");
+    toggle.setAttribute("role", "tablist");
+    toggle.setAttribute("aria-label", "Select visualization format");
+
+    const barBtn = create("button", "viz-toggle-btn is-active", "Bar view");
+    barBtn.type = "button";
+    barBtn.dataset.view = "bar";
+    barBtn.setAttribute("aria-pressed", "true");
+    toggle.appendChild(barBtn);
+
+    const pieBtn = create("button", "viz-toggle-btn", "Pie view");
+    pieBtn.type = "button";
+    pieBtn.dataset.view = "pie";
+    pieBtn.setAttribute("aria-pressed", "false");
+    toggle.appendChild(pieBtn);
+
+    let customBtn = null;
+    if (config.detailType === "tallies") {
+      customBtn = create("button", "viz-toggle-btn", "Custom pie");
+      customBtn.type = "button";
+      customBtn.dataset.view = "custom";
+      customBtn.setAttribute("aria-pressed", "false");
+      toggle.appendChild(customBtn);
+    }
+
+    const hint = create("span", "viz-hint", "Expanded detail visualization");
+    left.append(toggle, hint);
+    top.appendChild(left);
+
+    const stage = create("div", "viz-stage");
+
+    const barView = create("div", "viz-view active");
+    barView.dataset.view = "bar";
+    const pieView = create("div", "viz-view");
+    pieView.dataset.view = "pie";
+    pieView.hidden = true;
+
+    let items = [];
+    let percentField = "percent";
+    if (config.detailType === "polls") {
+      items = item.options || [];
+      percentField = "percent";
+    } else if (config.detailType === "tallies") {
+      items = item.entries || [];
+      percentField = "sharePercent";
+    } else {
+      items = item.entries || [];
+      percentField = "percent";
+    }
+
+    barView.appendChild(buildBarRows(items, percentField));
+    pieView.appendChild(buildPiePreview(items, percentField));
+
+    stage.append(barView, pieView);
+
+    if (customBtn) {
+      const customView = create("div", "viz-view");
+      customView.dataset.view = "custom";
+      customView.hidden = true;
+      const customPie = create("div", "custom-pie-shell");
+      customPie.appendChild(buildPiePreview(items, percentField));
+      const center = create("div", "custom-pie-center");
+      const logo = create("img");
+      logo.src = item.creator?.avatar || "/assets/logos/logocircle.png";
+      logo.alt = `${item.creator?.displayName || "Creator"} avatar`;
+      center.appendChild(logo);
+      customPie.appendChild(center);
+      customView.appendChild(customPie);
+      stage.appendChild(customView);
+    }
+
+    const views = Array.from(stage.querySelectorAll(".viz-view"));
+    const buttons = [barBtn, pieBtn].concat(customBtn ? [customBtn] : []);
+    const setView = (name) => {
+      buttons.forEach((btn) => {
+        const active = btn.dataset.view === name;
+        btn.classList.toggle("is-active", active);
+        btn.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+      views.forEach((view) => {
+        const active = view.dataset.view === name;
+        view.classList.toggle("active", active);
+        view.hidden = !active;
+      });
+    };
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", () => setView(btn.dataset.view));
+    });
+
+    panel.append(top, stage);
+    return panel;
+  }
+
+  function buildDetailMain(item, config, helpers) {
     const main = create("article", "detail-main");
 
-    const player = create("div", "detail-player");
     if (config.detailType === "clips" && item.mediaUrl) {
+      const player = create("div", "detail-player");
       if (/\.(mp4|webm|ogg)(\?.*)?$/i.test(item.mediaUrl)) {
         const video = create("video");
         video.controls = true;
@@ -812,30 +947,63 @@
       image.src = item.thumbnail || "/assets/backgrounds/seodash.jpg";
       image.alt = `${item.title || item.question} preview`;
       player.appendChild(image);
+      const copy = create("div", "detail-copy");
+      copy.append(create("h2", "", item.title || item.question || "Detail"));
+      copy.append(create("p", "", item.summary || "No description available."));
+      main.append(player, copy);
+      return main;
     }
 
-    const copy = create("div", "detail-copy");
-    copy.append(create("h2", "", item.title || item.question || "Detail"));
-    copy.append(create("p", "", item.summary || "No description available."));
+    const detailShell = create("div", "detail-shell");
+    const vizCard = create("div", "detail-card");
+    const vizHeading = create("div", "detail-heading");
+    const detailTypeLabels = {
+      polls: "Poll",
+      scoreboards: "Scoreboard",
+      tallies: "Tally"
+    };
+    const typeLabel = detailTypeLabels[config.detailType] || "Artifact";
+    vizHeading.append(
+      create("h3", "detail-title", `${typeLabel} overview`),
+      create("span", "timestamp", helpers.toTimestamp(item.updatedAt || item.createdAt))
+    );
+    vizCard.append(vizHeading, buildVisualizationPanel(item, config));
 
-    if (config.detailType === "polls") {
-      if (item.chartType === "pie") {
-        copy.appendChild(buildPiePreview(item.options || [], "percent"));
-      } else {
-        copy.appendChild(buildResultsRows(item.options || [], "percent", 6));
-      }
-    }
+    const secondaryCard = create("div", "detail-card");
+    const secondaryHeading = create("div", "detail-heading");
+    const secondaryTitle =
+      config.detailType === "scoreboards"
+        ? "Metadata"
+        : config.detailType === "tallies"
+          ? "Tally breakdown"
+          : "Vote breakdown";
+    secondaryHeading.append(create("h3", "detail-title", secondaryTitle));
+    secondaryCard.appendChild(secondaryHeading);
 
     if (config.detailType === "scoreboards") {
-      copy.appendChild(buildResultsRows(item.entries || [], "percent", 6));
+      const list = create("ul", "meta-list");
+      const totalEntries = (item.entries || []).length;
+      const totalValue = (item.entries || []).reduce((sum, entry) => sum + (Number(entry?.value) || 0), 0);
+      const items = [
+        ["Mode", "Expanded scoreboard detail"],
+        ["Entries", String(totalEntries)],
+        ["Total value", formatNumber(totalValue)],
+        ["Status", item.status || "Pending"]
+      ];
+      items.forEach(([label, value]) => {
+        const li = create("li");
+        li.innerHTML = `<strong>${label}:</strong> ${value}`;
+        list.appendChild(li);
+      });
+      secondaryCard.appendChild(list);
+    } else {
+      const entries = config.detailType === "polls" ? item.options || [] : item.entries || [];
+      const percentField = config.detailType === "tallies" ? "sharePercent" : "percent";
+      secondaryCard.appendChild(buildVoteBreakdownList(entries, percentField));
     }
 
-    if (config.detailType === "tallies") {
-      copy.appendChild(buildPiePreview(item.entries || [], "sharePercent"));
-      copy.appendChild(buildResultsRows(item.entries || [], "sharePercent", 6));
-    }
-
-    main.append(player, copy);
+    detailShell.append(vizCard, secondaryCard);
+    main.appendChild(detailShell);
     return main;
   }
 
@@ -967,7 +1135,7 @@
     const layout = create("section", "detail-layout");
     const toolbar = buildLayoutToggle(layout);
 
-    const main = buildDetailMain(item, config);
+    const main = buildDetailMain(item, config, data.helpers);
     const side = buildDetailSide(item, data.helpers, {
       authState,
       onRemoved() {
@@ -1010,12 +1178,25 @@
     const toolbar = buildLayoutToggle(layout);
 
     const main = create("article", "detail-main");
-    main.appendChild(create("p", "item-snippet", `Status: ${poll.status} | Total votes: ${formatNumber(poll.totalVotes)}`));
+    const detailShell = create("div", "detail-shell");
+    const vizCard = create("div", "detail-card");
+    const vizHeading = create("div", "detail-heading");
+    vizHeading.append(
+      create("h3", "detail-title", "Poll results"),
+      create("span", "timestamp", `Status: ${poll.status} | Total votes: ${formatNumber(poll.totalVotes)}`)
+    );
+    vizCard.append(vizHeading, buildVisualizationPanel(poll, { detailType: "polls" }));
 
-    if (poll.chartType === "pie") {
-      main.appendChild(buildPiePreview(poll.options || [], "percent"));
-    }
-    main.appendChild(buildResultsRows(poll.options || [], "percent", 8));
+    const breakdownCard = create("div", "detail-card vote-card");
+    const breakdownHeading = create("div", "detail-heading");
+    breakdownHeading.append(
+      create("h3", "detail-title", "Vote breakdown"),
+      create("span", "timestamp", data.helpers.toTimestamp(poll.updatedAt || poll.createdAt))
+    );
+    breakdownCard.append(breakdownHeading, buildVoteBreakdownList(poll.options || [], "percent"));
+
+    detailShell.append(vizCard, breakdownCard);
+    main.appendChild(detailShell);
 
     const side = buildDetailSide(poll, data.helpers, {
       authState,
