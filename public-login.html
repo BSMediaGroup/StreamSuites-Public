@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Public Login | StreamSuites</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="/css/theme-dark.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/public-pages.css" />
+  <link rel="stylesheet" href="/css/public-pages-v2.css" />
+  <link rel="stylesheet" href="/css/public-login.css" />
+</head>
+<body class="ss-public-login">
+  <div class="public-bg" aria-hidden="true"></div>
+  <div class="ss-public-login__surface">
+    <main class="ss-public-login__main">
+      <section class="ss-panel glass-card ss-public-login__panel">
+        <header class="ss-public-login__header">
+          <h1 class="ss-public-login__title">
+            <img class="ss-public-login__logo" src="/assets/logos/pubcon.webp" alt="StreamSuites logo" />
+            <span>Public Login</span>
+          </h1>
+          <p class="ss-public-login__subtitle">Sign in for public media and community features.</p>
+        </header>
+
+        <div class="ss-public-login__body">
+          <p id="public-login-status" class="ss-public-login__status">Checking your session...</p>
+
+          <nav class="ss-public-login__tabs" aria-label="Authentication mode">
+            <button type="button" class="ss-public-login__tab is-active" data-tab="login">Log in</button>
+            <button type="button" class="ss-public-login__tab" data-tab="signup">Sign up</button>
+          </nav>
+
+          <section id="public-login-providers" class="ss-public-login__providers" hidden>
+            <p class="ss-public-login__section-kicker">Continue with</p>
+            <div class="ss-public-login__oauth-grid">
+              <a class="ss-public-login__oauth-button" data-provider="google" href="#">
+                <img src="/assets/icons/google.svg" alt="" aria-hidden="true" />
+                <span>Google</span>
+              </a>
+              <a class="ss-public-login__oauth-button" data-provider="github" href="#">
+                <img src="/assets/icons/github.svg" alt="" aria-hidden="true" />
+                <span>GitHub</span>
+              </a>
+              <a class="ss-public-login__oauth-button" data-provider="discord" href="#">
+                <img src="/assets/icons/discord.svg" alt="" aria-hidden="true" />
+                <span>Discord</span>
+              </a>
+              <a class="ss-public-login__oauth-button" data-provider="x" href="#">
+                <img src="/assets/icons/x.svg" alt="" aria-hidden="true" />
+                <span>X</span>
+              </a>
+              <a class="ss-public-login__oauth-button" data-provider="twitch" href="#">
+                <img src="/assets/icons/twitch.svg" alt="" aria-hidden="true" />
+                <span>Twitch</span>
+              </a>
+            </div>
+          </section>
+
+          <div class="ss-public-login__divider"><span>or email</span></div>
+
+          <form id="public-login-form" class="ss-public-login__form" novalidate>
+            <label for="public-login-email">Email</label>
+            <input id="public-login-email" name="email" type="email" autocomplete="email" required />
+            <label for="public-login-password">Password</label>
+            <input id="public-login-password" name="password" type="password" autocomplete="current-password" required />
+            <p id="public-login-error" class="ss-public-login__error" hidden></p>
+            <button id="public-login-submit" type="submit" class="ss-public-login__submit">Log in</button>
+          </form>
+
+          <form id="public-signup-form" class="ss-public-login__form" hidden novalidate>
+            <label for="public-signup-email">Email</label>
+            <input id="public-signup-email" name="email" type="email" autocomplete="email" required />
+            <label for="public-signup-password">Password</label>
+            <input id="public-signup-password" name="password" type="password" autocomplete="new-password" required />
+            <label for="public-signup-confirm">Confirm password</label>
+            <input id="public-signup-confirm" name="confirm_password" type="password" autocomplete="new-password" required />
+            <p id="public-signup-error" class="ss-public-login__error" hidden></p>
+            <p id="public-signup-success" class="ss-public-login__success" hidden></p>
+            <button id="public-signup-submit" type="submit" class="ss-public-login__submit">Create account</button>
+          </form>
+
+          <div class="ss-public-login__actions">
+            <a id="public-login-back" class="ss-public-login__action-link" href="/media.html">Back</a>
+            <button id="public-login-close" type="button" class="ss-public-login__action-link">Close</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/js/public-login.js" defer></script>
+</body>
+</html>

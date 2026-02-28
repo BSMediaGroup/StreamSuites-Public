@@ -14,6 +14,15 @@
   };
 
   const DETAIL_LAYOUT_STORAGE_KEY = "ss-public-detail-layout";
+  const AUTH_API_BASE = "https://api.streamsuites.app";
+  const AUTH_ME_URL = `${AUTH_API_BASE}/api/public/me`;
+  const AUTH_LOGOUT_URL = `${AUTH_API_BASE}/auth/logout`;
+  const PUBLIC_LOGIN_URL = "https://streamsuites.app/public-login.html";
+  const CREATOR_DASHBOARD_URL = "https://creator.streamsuites.app";
+  const ADMIN_DASHBOARD_URL = "https://admin.streamsuites.app";
+  const PUBLIC_AUTH_POPUP_TARGET = "ss_public_auth_login";
+  const PUBLIC_AUTH_POPUP_FEATURES = "popup=yes,width=560,height=760";
+  const PUBLIC_AUTH_COMPLETE_MESSAGE_TYPE = "ss_public_auth_complete";
 
   const PAGE_CONFIG = {
     "media-home": {
@@ -1036,6 +1045,207 @@
     host.appendChild(hero);
   }
 
+  function readAuthenticated(payload) {
+    const candidates = [
+      payload?.authenticated,
+      payload?.is_authenticated,
+      payload?.isAuthenticated,
+      payload?.data?.authenticated,
+      payload?.data?.is_authenticated,
+      payload?.data?.isAuthenticated
+    ];
+    return candidates.some((value) => value === true);
+  }
+
+  function normalizeAccountType(value) {
+    const normalized = String(value || "").trim().toUpperCase();
+    if (normalized === "ADMIN" || normalized === "CREATOR" || normalized === "PUBLIC") {
+      return normalized;
+    }
+    return "";
+  }
+
+  function deriveBadges(accountType, tier) {
+    const badges = [];
+    const normalizedTier = String(tier || "").trim().toLowerCase();
+    if (normalizedTier === "gold" || normalizedTier === "pro") {
+      badges.push({ kind: "tier", value: normalizedTier, label: normalizedTier.toUpperCase() });
+    }
+    if (accountType === "ADMIN") {
+      badges.push({ kind: "role", value: "admin", label: "Admin" });
+    } else if (accountType === "CREATOR") {
+      badges.push({ kind: "role", value: "creator", label: "Creator" });
+    }
+    return badges;
+  }
+
+  function normalizeBadges(rawBadges, accountType, tier) {
+    if (!Array.isArray(rawBadges) || !rawBadges.length) {
+      return deriveBadges(accountType, tier);
+    }
+    return rawBadges
+      .map((badge) => {
+        if (!badge || typeof badge !== "object") return null;
+        const label = String(badge.label || badge.value || "").trim();
+        if (!label) return null;
+        const kind = String(badge.kind || "").trim().toLowerCase() || "role";
+        const value = String(badge.value || badge.tier || "").trim().toLowerCase();
+        return { kind, value, label };
+      })
+      .filter(Boolean);
+  }
+
+  function normalizeAuthState(payload) {
+    const authenticated = readAuthenticated(payload);
+    if (!authenticated) {
+      return {
+        authenticated: false,
+        accountId: "",
+        displayName: "Guest",
+        avatarUrl: "",
+        accountType: "PUBLIC",
+        tier: "core",
+        badges: []
+      };
+    }
+
+    const accountId = String(
+      payload?.account_id ||
+      payload?.data?.account_id ||
+      payload?.user?.internal_id ||
+      payload?.user?.id ||
+      ""
+    ).trim();
+    const displayName = String(
+      payload?.display_name ||
+      payload?.data?.display_name ||
+      payload?.user?.display_name ||
+      payload?.creator?.display_name ||
+      payload?.creator?.name ||
+      payload?.name ||
+      "User"
+    ).trim() || "User";
+    const avatarUrl = String(
+      payload?.avatar_url ||
+      payload?.data?.avatar_url ||
+      payload?.user?.avatar_url ||
+      payload?.creator?.avatar_url ||
+      ""
+    ).trim();
+    const accountType =
+      normalizeAccountType(payload?.account_type) ||
+      normalizeAccountType(payload?.role) ||
+      normalizeAccountType(payload?.data?.role) ||
+      normalizeAccountType(payload?.user?.role) ||
+      (payload?.is_admin ? "ADMIN" : payload?.is_creator ? "CREATOR" : "PUBLIC");
+    const tier = String(
+      payload?.tier ||
+      payload?.data?.tier ||
+      payload?.user?.tier ||
+      "core"
+    ).trim().toLowerCase() || "core";
+
+    return {
+      authenticated: true,
+      accountId,
+      displayName,
+      avatarUrl,
+      accountType,
+      tier,
+      badges: normalizeBadges(payload?.badges, accountType, tier)
+    };
+  }
+
+  function openPublicLoginPopup() {
+    const loginUrl = new URL(PUBLIC_LOGIN_URL);
+    loginUrl.searchParams.set("return_to", window.location.href);
+    const popup = window.open(
+      loginUrl.toString(),
+      PUBLIC_AUTH_POPUP_TARGET,
+      PUBLIC_AUTH_POPUP_FEATURES
+    );
+    if (!popup) {
+      window.location.assign(loginUrl.toString());
+      return null;
+    }
+    try {
+      popup.focus();
+    } catch (_err) {
+      // Ignore popup focus errors.
+    }
+    return popup;
+  }
+
+  function buildAccountMenuItems(authState) {
+    if (!authState?.authenticated) return [];
+
+    const items = [
+      {
+        label: "Profile",
+        href: `/community/profile.html?id=${encodeURIComponent(authState.accountId || "public-user")}`,
+        action: "profile"
+      }
+    ];
+
+    if (authState.accountType === "CREATOR" || authState.accountType === "ADMIN") {
+      items.push({ separator: true });
+      items.push({
+        label: "Creator Dashboard",
+        href: CREATOR_DASHBOARD_URL,
+        target: "_blank",
+        rel: "noopener noreferrer",
+        action: "creator_dashboard"
+      });
+    }
+
+    if (authState.accountType === "ADMIN") {
+      items.push({
+        label: "Admin Dashboard",
+        href: ADMIN_DASHBOARD_URL,
+        target: "_blank",
+        rel: "noopener noreferrer",
+        action: "admin_dashboard"
+      });
+    }
+
+    items.push({ separator: true });
+    items.push({ label: "Logout", action: "logout" });
+    return items;
+  }
+
+  function applyAuthStateToShell(shell, authState, onMenuAction) {
+    shell.updateOptions({
+      accountLabel: authState?.authenticated ? authState.displayName : "Guest",
+      accountAvatar: authState?.authenticated ? authState.avatarUrl : "",
+      accountBadges: authState?.authenticated ? authState.badges : [],
+      accountAuthenticated: Boolean(authState?.authenticated),
+      accountMenuItems: buildAccountMenuItems(authState),
+      accountLoginLabel: "Public Login",
+      onAccountLogin() {
+        openPublicLoginPopup();
+      },
+      onAccountMenuAction(action, item) {
+        if (typeof onMenuAction === "function") {
+          onMenuAction(String(action || ""), item || null);
+        }
+      }
+    });
+  }
+
+  async function fetchAuthState() {
+    const response = await fetch(AUTH_ME_URL, {
+      method: "GET",
+      cache: "no-store",
+      credentials: "include",
+      headers: { Accept: "application/json" }
+    });
+    if (!response.ok) {
+      throw new Error(`auth me request failed (${response.status})`);
+    }
+    const payload = await response.json();
+    return normalizeAuthState(payload);
+  }
+
   function resolveConfigFromPath(pathname) {
     return PAGE_ID_BY_PATH[normalizePath(pathname)] || null;
   }
@@ -1073,6 +1283,60 @@
       filtersCollapsed: currentConfig.filtersCollapsed,
       multiFilter: currentConfig.filterMode === "multi",
       accountLabel: "Guest"
+    });
+
+    let authState = normalizeAuthState(null);
+    let authRefreshPromise = null;
+
+    async function handleAccountMenuAction(action) {
+      if (action !== "logout") return;
+
+      try {
+        await fetch(AUTH_LOGOUT_URL, {
+          method: "POST",
+          cache: "no-store",
+          credentials: "include",
+          headers: { Accept: "application/json" }
+        });
+      } catch (_err) {
+        // Continue and refresh auth state even when logout network call fails.
+      }
+
+      await refreshAuthWidget(true);
+    }
+
+    function applyCurrentAuthState() {
+      applyAuthStateToShell(shell, authState, handleAccountMenuAction);
+    }
+
+    async function refreshAuthWidget(force = false) {
+      if (!force && authRefreshPromise) return authRefreshPromise;
+
+      authRefreshPromise = (async () => {
+        try {
+          authState = await fetchAuthState();
+        } catch (error) {
+          authState = normalizeAuthState(null);
+          console.warn("[StreamSuites Public] Auth API unavailable; falling back to Guest widget.");
+        } finally {
+          applyCurrentAuthState();
+        }
+        return authState;
+      })();
+
+      try {
+        return await authRefreshPromise;
+      } finally {
+        authRefreshPromise = null;
+      }
+    }
+
+    applyCurrentAuthState();
+
+    window.addEventListener("message", (event) => {
+      if (!event || !event.data || event.data.type !== PUBLIC_AUTH_COMPLETE_MESSAGE_TYPE) return;
+      if (event.origin !== "https://streamsuites.app" && event.origin !== window.location.origin) return;
+      refreshAuthWidget(true);
     });
 
     const rerender = () => {
@@ -1233,6 +1497,7 @@
 
     ensureData().then(() => {
       applyConfig(currentConfig, { keepState: false });
+      refreshAuthWidget(true);
       shell.setLoading(false);
     });
   }

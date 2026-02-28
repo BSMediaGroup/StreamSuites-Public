@@ -181,12 +181,18 @@
       multiFilter: false,
       accountLabel: "Guest",
       accountAvatar: "",
+      accountBadges: [],
+      accountAuthenticated: false,
+      accountMenuItems: [],
+      accountLoginLabel: "Public Login",
       ...userOptions
     };
 
     const callbacks = {
       onSearch: typeof options.onSearch === "function" ? options.onSearch : null,
-      onFilter: typeof options.onFilter === "function" ? options.onFilter : null
+      onFilter: typeof options.onFilter === "function" ? options.onFilter : null,
+      onAccountLogin: typeof options.onAccountLogin === "function" ? options.onAccountLogin : null,
+      onAccountMenuAction: typeof options.onAccountMenuAction === "function" ? options.onAccountMenuAction : null
     };
 
     const root = document.querySelector(options.rootSelector);
@@ -253,11 +259,27 @@
     topbarCenter.appendChild(searchShell);
 
     const topbarRight = create("div", "topbar-right");
-    const account = create("div", "account-pill");
+    const accountWidget = create("div", "account-widget");
+    const account = create("button", "account-pill account-trigger");
+    account.type = "button";
+    account.setAttribute("aria-haspopup", "menu");
+    account.setAttribute("aria-expanded", "false");
     const accountAvatar = create("span", "account-avatar");
+    const accountText = create("span", "account-text");
     const accountName = create("span", "account-name", options.accountLabel || "Guest");
-    account.append(accountAvatar, accountName);
-    topbarRight.appendChild(account);
+    const accountBadges = create("span", "account-badges");
+    accountText.append(accountName, accountBadges);
+    account.append(accountAvatar, accountText);
+
+    const accountLoginBtn = create("button", "account-login-btn", options.accountLoginLabel || "Public Login");
+    accountLoginBtn.type = "button";
+
+    const accountMenu = create("div", "account-menu");
+    accountMenu.hidden = true;
+    accountMenu.setAttribute("role", "menu");
+
+    accountWidget.append(account, accountLoginBtn, accountMenu);
+    topbarRight.appendChild(accountWidget);
 
     topbarMain.append(topbarLeft, topbarCenter, topbarRight);
 
@@ -295,9 +317,21 @@
     const storedSidebarState = readSidebarState();
     let useAutoSidebarState = !storedSidebarState;
 
-    function setAccountLabel(label, avatarUrl) {
+    function setAccountIdentity(label, avatarUrl, badges = []) {
       const nextLabel = (label || "Guest").trim() || "Guest";
       accountName.textContent = nextLabel;
+      accountBadges.innerHTML = "";
+
+      (Array.isArray(badges) ? badges : []).forEach((badge) => {
+        if (!badge || typeof badge !== "object") return;
+        const chip = create("span", "account-badge", String(badge.label || badge.value || "").trim());
+        const kind = String(badge.kind || "").trim().toLowerCase();
+        if (kind) chip.classList.add(`account-badge-${kind}`);
+        const tone = String(badge.value || "").trim().toLowerCase();
+        if (tone) chip.dataset.value = tone;
+        if (!chip.textContent) return;
+        accountBadges.appendChild(chip);
+      });
 
       if (avatarUrl) {
         accountAvatar.textContent = "";
@@ -312,6 +346,114 @@
       accountAvatar.style.backgroundImage = "";
       const initial = nextLabel.charAt(0).toUpperCase();
       accountAvatar.textContent = initial || "G";
+    }
+
+    function closeAccountMenu() {
+      accountMenu.hidden = true;
+      account.classList.remove("is-open");
+      account.setAttribute("aria-expanded", "false");
+    }
+
+    function openAccountMenu() {
+      if (!options.accountAuthenticated || !Array.isArray(options.accountMenuItems) || !options.accountMenuItems.length) {
+        closeAccountMenu();
+        return;
+      }
+      accountMenu.hidden = false;
+      account.classList.add("is-open");
+      account.setAttribute("aria-expanded", "true");
+    }
+
+    function setAccountMenuItems(items = []) {
+      options.accountMenuItems = Array.isArray(items) ? items.slice() : [];
+      accountMenu.innerHTML = "";
+      if (!options.accountAuthenticated) {
+        closeAccountMenu();
+        return;
+      }
+
+      const header = create("div", "account-menu-header");
+      header.append(
+        create("div", "account-menu-name", accountName.textContent || "User"),
+        create("div", "account-menu-role", options.accountBadges?.length ? options.accountBadges.map((badge) => badge.label).join(" · ") : "")
+      );
+      accountMenu.appendChild(header);
+
+      options.accountMenuItems.forEach((item) => {
+        if (!item || typeof item !== "object") return;
+        if (item.separator) {
+          accountMenu.appendChild(create("div", "account-menu-separator"));
+          return;
+        }
+        const label = String(item.label || "").trim();
+        if (!label) return;
+
+        if (item.href) {
+          const link = create("a", "account-menu-item", label);
+          link.href = String(item.href);
+          link.setAttribute("role", "menuitem");
+          if (item.target) link.target = String(item.target);
+          if (item.rel) link.rel = String(item.rel);
+          link.addEventListener("click", () => {
+            closeAccountMenu();
+            if (typeof callbacks.onAccountMenuAction === "function") {
+              callbacks.onAccountMenuAction(String(item.action || ""), item);
+            }
+          });
+          accountMenu.appendChild(link);
+          return;
+        }
+
+        const button = create("button", "account-menu-item", label);
+        button.type = "button";
+        button.setAttribute("role", "menuitem");
+        if (String(item.action || "").toLowerCase() === "logout") {
+          button.classList.add("is-danger");
+        }
+        button.addEventListener("click", () => {
+          closeAccountMenu();
+          if (typeof callbacks.onAccountMenuAction === "function") {
+            callbacks.onAccountMenuAction(String(item.action || ""), item);
+          }
+        });
+        accountMenu.appendChild(button);
+      });
+    }
+
+    function setAccountAuthenticated(authenticated) {
+      options.accountAuthenticated = Boolean(authenticated);
+      account.classList.toggle("is-authenticated", options.accountAuthenticated);
+      accountLoginBtn.hidden = options.accountAuthenticated;
+      account.disabled = !options.accountAuthenticated;
+      if (!options.accountAuthenticated) {
+        closeAccountMenu();
+      }
+    }
+
+    function setAccountState(next = {}) {
+      if (typeof next.accountLabel === "string") {
+        options.accountLabel = next.accountLabel;
+      }
+      if (typeof next.accountAvatar === "string") {
+        options.accountAvatar = next.accountAvatar;
+      }
+      if (Array.isArray(next.accountBadges)) {
+        options.accountBadges = next.accountBadges.slice();
+      }
+      if (typeof next.accountAuthenticated === "boolean") {
+        options.accountAuthenticated = next.accountAuthenticated;
+      }
+      if (Array.isArray(next.accountMenuItems)) {
+        options.accountMenuItems = next.accountMenuItems.slice();
+      }
+      if (typeof next.accountLoginLabel === "string") {
+        options.accountLoginLabel = next.accountLoginLabel;
+      }
+
+      accountLoginBtn.textContent = options.accountLoginLabel || "Public Login";
+      setAccountIdentity(options.accountLabel, options.accountAvatar, options.accountBadges);
+      setAccountAuthenticated(options.accountAuthenticated);
+      setAccountMenuItems(options.accountMenuItems);
     }
 
     function setSidebarState(nextState, persist = true) {
@@ -469,10 +611,15 @@
         setFilterCollapsed(next.filtersCollapsed);
       }
 
-      if (typeof next.accountLabel === "string" || typeof next.accountAvatar === "string") {
-        options.accountLabel = typeof next.accountLabel === "string" ? next.accountLabel : options.accountLabel;
-        options.accountAvatar = typeof next.accountAvatar === "string" ? next.accountAvatar : options.accountAvatar;
-        setAccountLabel(options.accountLabel, options.accountAvatar);
+      if (
+        typeof next.accountLabel === "string" ||
+        typeof next.accountAvatar === "string" ||
+        Array.isArray(next.accountBadges) ||
+        typeof next.accountAuthenticated === "boolean" ||
+        Array.isArray(next.accountMenuItems) ||
+        typeof next.accountLoginLabel === "string"
+      ) {
+        setAccountState(next);
       }
 
       if (typeof next.onSearch === "function" || next.onSearch === null) {
@@ -481,6 +628,14 @@
 
       if (typeof next.onFilter === "function" || next.onFilter === null) {
         callbacks.onFilter = typeof next.onFilter === "function" ? next.onFilter : null;
+      }
+
+      if (typeof next.onAccountLogin === "function" || next.onAccountLogin === null) {
+        callbacks.onAccountLogin = typeof next.onAccountLogin === "function" ? next.onAccountLogin : null;
+      }
+
+      if (typeof next.onAccountMenuAction === "function" || next.onAccountMenuAction === null) {
+        callbacks.onAccountMenuAction = typeof next.onAccountMenuAction === "function" ? next.onAccountMenuAction : null;
       }
     }
 
@@ -527,6 +682,34 @@
       if (typeof callbacks.onFilter === "function") callbacks.onFilter(detail);
     });
 
+    account.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (!options.accountAuthenticated) return;
+      if (accountMenu.hidden) {
+        openAccountMenu();
+      } else {
+        closeAccountMenu();
+      }
+    });
+
+    accountLoginBtn.addEventListener("click", () => {
+      if (typeof callbacks.onAccountLogin === "function") {
+        callbacks.onAccountLogin();
+      }
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!accountWidget.contains(event.target)) {
+        closeAccountMenu();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeAccountMenu();
+      }
+    });
+
     window.addEventListener(
       "resize",
       () => {
@@ -538,7 +721,14 @@
 
     renderSidebarNav(options.shellKind, options.activeHref);
     setFilterOptions(options.filters, options.multiFilter);
-    setAccountLabel(options.accountLabel, options.accountAvatar);
+    setAccountState({
+      accountLabel: options.accountLabel,
+      accountAvatar: options.accountAvatar,
+      accountBadges: options.accountBadges,
+      accountAuthenticated: options.accountAuthenticated,
+      accountMenuItems: options.accountMenuItems,
+      accountLoginLabel: options.accountLoginLabel
+    });
 
     const initialSidebarState = storedSidebarState || (isMobileViewport() ? SIDEBAR_STATES.icon : SIDEBAR_STATES.expanded);
     if (initialSidebarState !== SIDEBAR_STATES.hidden) {
@@ -577,6 +767,9 @@
           chip.classList.toggle("active", isActive);
           chip.setAttribute("aria-pressed", isActive ? "true" : "false");
         });
+      },
+      setAccount(nextAccount) {
+        setAccountState(nextAccount || {});
       }
     };
   }

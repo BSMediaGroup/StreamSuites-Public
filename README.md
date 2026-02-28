@@ -25,6 +25,10 @@ Public StreamSuites web surface (static GitHub Pages site).
   - Dedicated auth bridge/login completion pages (`auth-bridge.html`, `requests-login.html`, `requests-auth-complete.html`).
   - Updated requests layout/styling (`css/public-pages-v2.css`, `css/requests.css`, `css/requests-auth.css`).
   - Public voting and creator-auth comment/submit flows in `js/public-requests.js`.
+- Public account auth upgrades:
+  - Dedicated public login/complete pages (`public-login.html`, `public-auth-complete.html`).
+  - Public login assets (`css/public-login.css`, `js/public-login.js`, `js/public-auth-complete.js`).
+  - Auth-aware top-right user widget in the media/community shell (`js/public-shell.js`, `js/public-pages-app.js`).
 
 ## Repository Tree (Abridged, Current)
 ```text
@@ -59,6 +63,7 @@ StreamSuites-Public/
 │   ├── overrides.css
 │   ├── public-pages.css
 │   ├── public-pages-v2.css
+│   ├── public-login.css
 │   ├── public-shell.css
 │   ├── requests-auth.css
 │   ├── requests.css
@@ -88,6 +93,8 @@ StreamSuites-Public/
 │   ├── public-data-hub.js
 │   ├── public-donate.js
 │   ├── public-pages-app.js
+│   ├── public-auth-complete.js
+│   ├── public-login.js
 │   ├── public-polls.js
 │   ├── public-requests.js
 │   ├── public-roadmap.js
@@ -130,6 +137,8 @@ StreamSuites-Public/
 ├── polls.html
 ├── postmortem.html
 ├── privacy.html
+├── public-auth-complete.html
+├── public-login.html
 ├── README.md
 ├── requests-auth-complete.html
 ├── requests-login.html
