@@ -245,7 +245,7 @@
     logo.alt = "StreamSuites";
     const labels = create("span", "sidebar-brand-label");
     labels.append(
-      create("span", "sidebar-brand-title", "StreamSuites"),
+      create("span", "sidebar-brand-title", "StreamSuites™"),
       create("span", "sidebar-brand-subtitle", "Public")
     );
     brand.append(logo, labels);
