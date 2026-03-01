@@ -311,22 +311,15 @@ body.public-shell-page.modal-open {
 }
 
 .public-shell-root[data-sidebar-state="icon"] .sidebar-brand-label {
-  display: grid;
-  justify-items: center;
-  gap: 4px;
+  display: none;
 }
 
 .public-shell-root[data-sidebar-state="icon"] .sidebar-brand-subheading {
-  width: min(56px, 100%);
-  min-height: 24px;
-  padding: 3px 4px;
+  display: none;
 }
 
 .public-shell-root[data-sidebar-state="icon"] .sidebar-brand-subheading-text {
-  white-space: normal;
-  text-align: center;
-  font-size: 0.47rem;
-  line-height: 1.05;
+  display: none;
 }
 
 .public-shell-root[data-sidebar-state="icon"] .sidebar-link,
