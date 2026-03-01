@@ -2193,9 +2193,14 @@ body.public-shell-page.modal-open {
 }
 
 .footer-status {
-  padding: 0 16px 8px;
-  display: flex;
+  position: absolute;
+  right: 16px;
+  bottom: calc(100% + 8px);
+  padding: 0;
+  display: inline-flex;
   justify-content: flex-end;
+  pointer-events: none;
+  z-index: 2;
 }
 
 .footer-status:empty {
@@ -2351,6 +2356,7 @@ body.public-shell-page.modal-open {
   right: auto;
   bottom: auto;
   align-items: flex-end;
+  pointer-events: auto;
 }
 
 .footer-status .ss-status-label {
