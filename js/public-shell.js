@@ -683,19 +683,23 @@
       });
     }
 
+    let filterCollapsed = Boolean(options.filtersCollapsed);
+
     function setFilterCollapsed(collapsed) {
       const hasFilters = filterRow.childElementCount > 0;
-      const nextCollapsed = Boolean(collapsed || !hasFilters);
+      const nextCollapsed = hasFilters ? Boolean(collapsed) : true;
+      filterCollapsed = nextCollapsed;
+      options.filtersCollapsed = nextCollapsed;
       filterDock.classList.toggle("is-empty", !hasFilters);
       filterDock.classList.toggle("is-collapsed", nextCollapsed);
       filterToggle.setAttribute("aria-expanded", String(!nextCollapsed));
       filterToggle.setAttribute("aria-label", nextCollapsed ? "Expand filters" : "Collapse filters");
       filterToggle.disabled = !hasFilters;
+      filterRowWrap.setAttribute("aria-hidden", String(nextCollapsed));
       filterToggleIcon.style.setProperty(
         "--icon-mask",
         `url("${nextCollapsed ? UI_ICON_MAP.filterExpand : UI_ICON_MAP.filterCollapse}")`
       );
-      filterRowWrap.hidden = nextCollapsed;
     }
 
     function setSearchVisible(visible) {
@@ -726,7 +730,7 @@
 
       options.filters = chips;
       options.multiFilter = Boolean(multiFilter);
-      setFilterCollapsed(Boolean(options.filtersCollapsed));
+      setFilterCollapsed(filterCollapsed);
     }
 
     function getSidebarState() {
@@ -845,9 +849,8 @@
     });
 
     filterToggle.addEventListener("click", () => {
-      const collapsed = !filterDock.classList.contains("is-collapsed");
-      options.filtersCollapsed = collapsed;
-      setFilterCollapsed(collapsed);
+      if (filterToggle.disabled) return;
+      setFilterCollapsed(!filterCollapsed);
     });
 
     filterRow.addEventListener("click", (event) => {

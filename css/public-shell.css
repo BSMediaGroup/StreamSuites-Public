@@ -298,7 +298,7 @@ body.public-shell-page.modal-open {
   mask-size: contain;
 }
 
-.public-shell-root[data-sidebar-state="icon"] .sidebar-brand-title,
+.public-shell-root[data-sidebar-state="icon"] .sidebar-brand-label,
 .public-shell-root[data-sidebar-state="icon"] .sidebar-group-title,
 .public-shell-root[data-sidebar-state="icon"] .sidebar-text {
   display: none;
@@ -310,30 +310,7 @@ body.public-shell-page.modal-open {
 }
 
 .public-shell-root[data-sidebar-state="icon"] .sidebar-brand {
-  flex-direction: column;
-  gap: 6px;
   padding: 8px 4px;
-}
-
-.public-shell-root[data-sidebar-state="icon"] .sidebar-brand-label {
-  display: flex;
-  justify-content: center;
-}
-
-.public-shell-root[data-sidebar-state="icon"] .sidebar-brand-subheading {
-  width: 100%;
-  padding: 4px 2px;
-}
-
-.public-shell-root[data-sidebar-state="icon"] .sidebar-brand-subheading-text {
-  display: inline-block;
-  max-width: 100%;
-  text-align: center;
-  font-size: 0.42rem;
-  letter-spacing: 0.06em;
-  line-height: 1.15;
-  word-break: break-word;
-  white-space: normal;
 }
 
 .public-main {
@@ -686,12 +663,12 @@ body.public-shell-page.modal-open {
 }
 
 .filter-dock {
-  display: grid;
-  grid-template-columns: auto 1fr;
+  position: relative;
+  display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 10px;
   min-height: 34px;
-  padding: 6px 14px 8px;
+  padding: 6px 42px 8px;
   border-top: 1px solid rgba(169, 190, 223, 0.1);
   background: rgba(9, 14, 23, 0.64);
 }
@@ -701,6 +678,10 @@ body.public-shell-page.modal-open {
 }
 
 .filter-toggle {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
   border: 1px solid rgba(170, 191, 226, 0.26);
   background: linear-gradient(165deg, rgba(33, 49, 74, 0.86), rgba(16, 25, 40, 0.9));
   color: rgba(210, 224, 246, 0.9);
@@ -745,16 +726,28 @@ body.public-shell-page.modal-open {
   display: flex;
   justify-content: center;
   align-items: center;
+  width: min(560px, 100%);
   min-width: 0;
+  transition: opacity 150ms ease, max-height 150ms ease;
+  opacity: 1;
+  max-height: 72px;
 }
 
 .filter-row {
   display: flex;
   gap: 8px;
+  width: 100%;
   justify-content: center;
   flex-wrap: wrap;
   overflow-x: auto;
   scrollbar-width: none;
+}
+
+.filter-dock.is-collapsed .filter-row-wrap {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 .filter-row::-webkit-scrollbar {
@@ -2371,8 +2364,12 @@ body.public-shell-page.modal-open {
   }
 
   .filter-dock {
-    padding-left: 10px;
+    padding-left: 38px;
     padding-right: 10px;
+  }
+
+  .filter-toggle {
+    left: 10px;
   }
 
   .pie-preview {
