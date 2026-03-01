@@ -24,7 +24,7 @@
   --ps-scrollbar-thumb: rgba(106, 124, 154, 0.64);
   --ps-scrollbar-thumb-hover: rgba(134, 155, 188, 0.78);
   --ps-scrollbar-track: rgba(8, 13, 22, 0.64);
-  --ps-content-bottom-gap: 34px;
+  --ps-content-bottom-gap: 0px;
 }
 
 * {
