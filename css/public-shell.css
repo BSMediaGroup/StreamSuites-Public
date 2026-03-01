@@ -18,6 +18,7 @@
   --ps-glass-border: rgba(188, 204, 232, 0.26);
   --ps-sidebar-expanded-w: 242px;
   --ps-sidebar-icon-w: 72px;
+  --ps-center-track-max: 560px;
   --ps-radius: 16px;
   --ps-shadow: 0 22px 44px rgba(0, 0, 0, 0.44);
   --ps-scrollbar-thumb: rgba(106, 124, 154, 0.64);
@@ -364,7 +365,7 @@ body.public-shell-page.modal-open {
 
 .topbar-main {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, var(--ps-center-track-max)) minmax(0, 1fr);
   align-items: center;
   gap: 12px;
   min-height: 52px;
@@ -376,11 +377,18 @@ body.public-shell-page.modal-open {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+}
+
+.topbar-left {
+  grid-column: 1;
+  justify-self: start;
 }
 
 .topbar-right {
+  grid-column: 3;
   justify-self: end;
-  margin-left: auto;
+  margin-left: 0;
 }
 
 .topbar-menu-btn,
@@ -437,12 +445,15 @@ body.public-shell-page.modal-open {
 }
 
 .topbar-center {
+  grid-column: 2;
   display: flex;
   justify-content: center;
+  width: 100%;
+  min-width: 0;
 }
 
 .search-shell {
-  width: min(560px, 100%);
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -694,14 +705,21 @@ body.public-shell-page.modal-open {
 }
 
 .filter-dock {
-  position: relative;
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, var(--ps-center-track-max)) minmax(0, 1fr);
   align-items: center;
-  min-height: 34px;
-  padding: 6px 42px 8px;
+  min-height: 0;
+  padding: 6px 14px 8px;
   border-top: 1px solid rgba(169, 190, 223, 0.1);
   background: rgba(9, 14, 23, 0.64);
+  overflow: hidden;
+  max-height: 92px;
+  opacity: 1;
+  transition:
+    max-height 160ms ease,
+    opacity 120ms ease,
+    padding 160ms ease,
+    border-top-width 160ms ease;
 }
 
 .filter-dock.is-empty {
@@ -709,22 +727,24 @@ body.public-shell-page.modal-open {
 }
 
 .filter-toggle {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
+  margin-left: 6px;
   border: 1px solid rgba(170, 191, 226, 0.26);
   background: linear-gradient(165deg, rgba(33, 49, 74, 0.86), rgba(16, 25, 40, 0.9));
   color: rgba(210, 224, 246, 0.9);
   border-radius: 9px;
-  height: 24px;
-  width: 24px;
-  min-width: 24px;
-  padding: 0;
+  height: 26px;
+  min-width: 88px;
+  padding: 0 10px;
   display: inline-flex;
   align-items: center;
+  gap: 8px;
   justify-content: center;
   cursor: pointer;
+  font-size: 0.62rem;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: "SuiGenerisRg", "SuiGeneris", sans-serif;
 }
 
 .filter-toggle:hover,
@@ -739,25 +759,27 @@ body.public-shell-page.modal-open {
   cursor: default;
 }
 
-.filter-toggle-icon {
-  width: 12px;
-  height: 12px;
-  background-color: currentColor;
-  -webkit-mask-image: var(--icon-mask);
-  mask-image: var(--icon-mask);
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-  -webkit-mask-size: contain;
-  mask-size: contain;
+.filter-toggle-caret {
+  width: 7px;
+  height: 7px;
+  display: inline-block;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-135deg);
+  transform-origin: center;
+  transition: transform 120ms ease;
+}
+
+.filter-toggle.is-collapsed .filter-toggle-caret {
+  transform: rotate(45deg);
 }
 
 .filter-row-wrap {
+  grid-column: 2;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: min(560px, 100%);
+  width: 100%;
   min-width: 0;
   transition: opacity 150ms ease, max-height 150ms ease;
   opacity: 1;
@@ -773,6 +795,15 @@ body.public-shell-page.modal-open {
   overflow-x: auto;
   scrollbar-width: none;
   font-family: "SuiGenerisRg", "SuiGeneris", sans-serif;
+}
+
+.filter-dock.is-collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-top-width: 0;
+  pointer-events: none;
 }
 
 .filter-dock.is-collapsed .filter-row-wrap {
@@ -2338,6 +2369,15 @@ body.public-shell-page.modal-open {
 @media (max-width: 1080px) {
   .topbar-main {
     grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 8px;
+  }
+
+  .topbar-left {
+    grid-column: 1;
+  }
+
+  .topbar-right {
+    grid-column: 2;
   }
 
   .topbar-center {
@@ -2402,13 +2442,10 @@ body.public-shell-page.modal-open {
     right: -4px;
   }
 
-  .filter-dock {
-    padding-left: 38px;
-    padding-right: 10px;
-  }
-
   .filter-toggle {
-    left: 10px;
+    margin-left: 0;
+    min-width: 78px;
+    padding: 0 8px;
   }
 
   .pie-preview {

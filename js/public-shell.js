@@ -23,6 +23,7 @@
   ];
 
   const SIDEBAR_STATE_KEY = "ss-public-sidebar-state";
+  const FILTER_COLLAPSE_STATE_KEY = "ss-public-filters-collapsed";
   const SIDEBAR_STATES = Object.freeze({
     hidden: "hidden",
     icon: "icon",
@@ -115,6 +116,25 @@
   function writeSidebarState(state) {
     try {
       window.localStorage.setItem(SIDEBAR_STATE_KEY, state);
+    } catch (_err) {
+      // Ignore storage failures.
+    }
+  }
+
+  function readFilterCollapsedState() {
+    try {
+      const raw = window.localStorage.getItem(FILTER_COLLAPSE_STATE_KEY);
+      if (raw === "true") return true;
+      if (raw === "false") return false;
+    } catch (_err) {
+      // Ignore storage failures.
+    }
+    return null;
+  }
+
+  function writeFilterCollapsedState(collapsed) {
+    try {
+      window.localStorage.setItem(FILTER_COLLAPSE_STATE_KEY, collapsed ? "true" : "false");
     } catch (_err) {
       // Ignore storage failures.
     }
@@ -336,15 +356,18 @@
 
     topbarMain.append(topbarLeft, topbarCenter, topbarRight);
 
-    const filterDock = create("div", "filter-dock");
     const filterToggle = create("button", "filter-toggle");
     filterToggle.type = "button";
-    filterToggle.setAttribute("aria-label", "Expand filters");
+    filterToggle.setAttribute("aria-label", "Show filters");
     filterToggle.setAttribute("aria-expanded", "false");
     filterToggle.setAttribute("aria-controls", "public-filter-row");
-    const filterToggleIcon = createIcon(UI_ICON_MAP.filterExpand, "filter-toggle-icon");
-    filterToggle.appendChild(filterToggleIcon);
+    const filterToggleLabel = create("span", "filter-toggle-label", "Filters");
+    const filterToggleCaret = create("span", "filter-toggle-caret");
+    filterToggleCaret.setAttribute("aria-hidden", "true");
+    filterToggle.append(filterToggleLabel, filterToggleCaret);
+    topbarLeft.appendChild(filterToggle);
 
+    const filterDock = create("div", "filter-dock");
     const filterRowWrap = create("div", "filter-row-wrap");
     filterRowWrap.id = "public-filter-row";
 
@@ -352,7 +375,7 @@
     filterRow.setAttribute("data-shell-filters", "");
     filterRowWrap.appendChild(filterRow);
 
-    filterDock.append(filterToggle, filterRowWrap);
+    filterDock.append(filterRowWrap);
 
     const loadingBar = create("div", "shell-loading");
     loadingBar.setAttribute("aria-hidden", "true");
@@ -683,23 +706,27 @@
       });
     }
 
-    let filterCollapsed = Boolean(options.filtersCollapsed);
+    const storedFilterCollapsed = readFilterCollapsedState();
+    let hasPersistedFilterPreference = typeof storedFilterCollapsed === "boolean";
+    let filterCollapsed = hasPersistedFilterPreference ? storedFilterCollapsed : Boolean(options.filtersCollapsed);
 
-    function setFilterCollapsed(collapsed) {
+    function setFilterCollapsed(collapsed, { persist = false } = {}) {
       const hasFilters = filterRow.childElementCount > 0;
       const nextCollapsed = hasFilters ? Boolean(collapsed) : true;
       filterCollapsed = nextCollapsed;
       options.filtersCollapsed = nextCollapsed;
       filterDock.classList.toggle("is-empty", !hasFilters);
-      filterDock.classList.toggle("is-collapsed", nextCollapsed);
+      filterDock.classList.toggle("is-collapsed", nextCollapsed || !hasFilters);
+      filterToggle.classList.toggle("is-collapsed", nextCollapsed);
       filterToggle.setAttribute("aria-expanded", String(!nextCollapsed));
-      filterToggle.setAttribute("aria-label", nextCollapsed ? "Expand filters" : "Collapse filters");
+      filterToggle.setAttribute("aria-label", nextCollapsed ? "Show filters" : "Hide filters");
       filterToggle.disabled = !hasFilters;
-      filterRowWrap.setAttribute("aria-hidden", String(nextCollapsed));
-      filterToggleIcon.style.setProperty(
-        "--icon-mask",
-        `url("${nextCollapsed ? UI_ICON_MAP.filterExpand : UI_ICON_MAP.filterCollapse}")`
-      );
+      filterToggle.hidden = !hasFilters;
+      filterRowWrap.setAttribute("aria-hidden", String(nextCollapsed || !hasFilters));
+      if (persist && hasFilters) {
+        writeFilterCollapsedState(nextCollapsed);
+        hasPersistedFilterPreference = true;
+      }
     }
 
     function setSearchVisible(visible) {
@@ -730,7 +757,7 @@
 
       options.filters = chips;
       options.multiFilter = Boolean(multiFilter);
-      setFilterCollapsed(filterCollapsed);
+      setFilterCollapsed(filterCollapsed, { persist: false });
     }
 
     function getSidebarState() {
@@ -802,9 +829,9 @@
         setFilterOptions(Array.isArray(next.filters) ? next.filters : options.filters, next.multiFilter ?? options.multiFilter);
       }
 
-      if (typeof next.filtersCollapsed === "boolean") {
+      if (typeof next.filtersCollapsed === "boolean" && !hasPersistedFilterPreference) {
         options.filtersCollapsed = next.filtersCollapsed;
-        setFilterCollapsed(next.filtersCollapsed);
+        setFilterCollapsed(next.filtersCollapsed, { persist: false });
       }
 
       if (
@@ -850,7 +877,7 @@
 
     filterToggle.addEventListener("click", () => {
       if (filterToggle.disabled) return;
-      setFilterCollapsed(!filterCollapsed);
+      setFilterCollapsed(!filterCollapsed, { persist: true });
     });
 
     filterRow.addEventListener("click", (event) => {
