@@ -1395,7 +1395,7 @@
 
   function buildProfileCard(profile, data) {
     const card = create("article", "profile-card");
-    card.appendChild(buildCreatorMeta(profile, { expanded: true, includeRoleChip: true }));
+    card.appendChild(buildCreatorMeta(profile, { expanded: true, includeRoleChip: false }));
 
     const artifactCount = (data.artifactsByProfile?.[profile.id] || []).length;
     const badge = create("div", "item-meta");
@@ -1460,7 +1460,22 @@
   function resolveLocalProfile(data, code) {
     const normalizedCode = normalizeUserCode(code || "public-user");
     const fallback = data.profilesById?.[window.StreamSuitesPublicData.DEFAULT_PROFILE.id] || window.StreamSuitesPublicData.DEFAULT_PROFILE;
-    return data.profilesByCode?.[normalizedCode] || data.profilesById?.[normalizedCode] || fallback;
+    const direct = data.profilesByCode?.[normalizedCode] || data.profilesById?.[normalizedCode];
+    if (direct) return direct;
+
+    const aliasMatch = (data.profiles || []).find((profile) => {
+      const displayName = String(profile?.displayName || "").trim();
+      const firstName = displayName.split(/\s+/)[0] || "";
+      const aliases = [
+        profile?.userCode,
+        profile?.username,
+        profile?.id,
+        displayName,
+        firstName
+      ];
+      return aliases.some((entry) => normalizeUserCode(entry || "", "") === normalizedCode);
+    });
+    return aliasMatch || fallback;
   }
 
   function resolveCommunityProfileCode(data) {

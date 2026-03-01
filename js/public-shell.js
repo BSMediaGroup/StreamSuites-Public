@@ -14,7 +14,7 @@
   const COMMUNITY_NAV = [
     { href: "/community/index.html", label: "Home", icon: "/assets/icons/ui/dashboard.svg", group: "main" },
     { href: "/community/members.html", label: "Members", icon: "/assets/icons/ui/profile.svg", group: "main" },
-    { href: "/community/notices.html", label: "Notices", icon: "/assets/icons/ui/bell.svg", group: "main" },
+    { href: "/community/notices.html", label: "Notices", icon: "/assets/icons/ui/tickbadge.svg", group: "main" },
     { href: "/community/settings.html", label: "Settings", icon: "/assets/icons/ui/cog.svg", group: "main" },
     { href: "/media.html", label: "Media", icon: "/assets/icons/ui/portal.svg", group: "main" },
     { href: "/support.html", label: "Support", icon: "/assets/icons/ui/checkbox.svg", group: "quick" },
@@ -310,7 +310,7 @@
     searchInput.placeholder = options.searchPlaceholder || "Search";
     searchInput.setAttribute("data-shell-search", "");
     const searchHint = create("span", "search-kbd-hint");
-    searchHint.innerHTML = "<kbd>Ctrl</kbd>/<kbd>&#8984;</kbd> K";
+    searchHint.innerHTML = "<kbd>Ctrl</kbd>/<kbd>Cmd</kbd> K";
     searchShell.append(searchIcon, searchInput, searchHint);
     topbarCenter.appendChild(searchShell);
 
