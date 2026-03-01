@@ -53,7 +53,8 @@ StreamSuites-Public/
 │   ├── index.html
 │   ├── members.html
 │   ├── notices.html
-│   └── profile.html
+│   ├── profile.html
+│   └── settings.html
 ├── css/
 │   ├── aurora-landing.css
 │   ├── base.css

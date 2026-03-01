@@ -14,23 +14,48 @@
   };
 
   const DETAIL_LAYOUT_STORAGE_KEY = "ss-public-detail-layout";
+  const PROFILE_ARTIFACT_LAYOUT_STORAGE_KEY = "ss-public-profile-artifact-layout";
   const AUTH_API_BASE = "https://api.streamsuites.app";
   const AUTH_ME_URL = `${AUTH_API_BASE}/api/public/me`;
+  const AUTH_PUBLIC_PROFILE_URL = `${AUTH_API_BASE}/api/public/profile`;
+  const AUTH_PUBLIC_PROFILE_ME_URL = `${AUTH_API_BASE}/api/public/profile/me`;
+  const AUTH_PUBLIC_PROFILE_RESOLVE_URL = `${AUTH_API_BASE}/api/public/profile/resolve`;
   const AUTH_PUBLIC_ARTIFACTS_URL = `${AUTH_API_BASE}/api/public/artifacts`;
   const AUTH_LOGOUT_URL = `${AUTH_API_BASE}/auth/logout`;
   const CREATOR_DASHBOARD_URL = "https://creator.streamsuites.app";
   const ADMIN_DASHBOARD_URL = "https://admin.streamsuites.app";
   const PUBLIC_AUTH_COMPLETE_MESSAGE_TYPE = "ss_public_auth_complete";
   const ROLE_ICON_MAP = Object.freeze({
-    admin: "/assets/icons/ui/admin.svg",
-    creator: "/assets/icons/ui/verifiedbadge.svg",
-    viewer: "/assets/icons/ui/tickbadge.svg"
+    admin: "/assets/icons/tierbadge-admin.svg"
   });
   const TIER_ICON_MAP = Object.freeze({
     core: "/assets/icons/tierbadge-core.svg",
     gold: "/assets/icons/tierbadge-gold.svg",
     pro: "/assets/icons/tierbadge-pro.svg"
   });
+  const UI_ICON_MAP = Object.freeze({
+    copy: "/assets/icons/ui/portal.svg",
+    check: "/assets/icons/ui/tickyes.svg",
+    layoutSide: "/assets/icons/ui/cards.svg",
+    layoutStack: "/assets/icons/ui/tablechart.svg",
+    gallery: "/assets/icons/ui/cards.svg",
+    list: "/assets/icons/ui/tablechart.svg",
+    edit: "/assets/icons/ui/cog.svg",
+    share: "/assets/icons/ui/send.svg",
+    visibility: "/assets/icons/ui/globe.svg",
+    social: "/assets/icons/ui/integrations.svg"
+  });
+  const SOCIAL_ICON_MAP = Object.freeze({
+    youtube: "/assets/icons/youtube.svg",
+    rumble: "/assets/icons/rumble.svg",
+    discord: "/assets/icons/discord.svg",
+    x: "/assets/icons/x.svg",
+    twitter: "/assets/icons/twitter.svg",
+    twitch: "/assets/icons/twitch.svg",
+    kick: "/assets/icons/kick.svg",
+    tiktok: "/assets/icons/ui/widget.svg"
+  });
+  const DEFAULT_PROFILE_COVER = "/assets/placeholders/defaultprofilecover.webp";
 
   const PAGE_CONFIG = {
     "media-home": {
@@ -98,6 +123,7 @@
       activeHref: "/clips.html",
       topbarLabel: "Clip Detail",
       searchPlaceholder: "Search",
+      hideSearch: true,
       filterMode: "single-nav",
       filtersCollapsed: true,
       defaultFilters: ["clips"],
@@ -110,6 +136,7 @@
       activeHref: "/polls.html",
       topbarLabel: "Poll Detail",
       searchPlaceholder: "Search",
+      hideSearch: true,
       filterMode: "single-nav",
       filtersCollapsed: true,
       defaultFilters: ["polls"],
@@ -122,6 +149,7 @@
       activeHref: "/polls.html",
       topbarLabel: "Poll Results",
       searchPlaceholder: "Search",
+      hideSearch: true,
       filterMode: "single-nav",
       filtersCollapsed: true,
       defaultFilters: ["polls"],
@@ -134,6 +162,7 @@
       activeHref: "/scoreboards.html",
       topbarLabel: "Scoreboard Detail",
       searchPlaceholder: "Search",
+      hideSearch: true,
       filterMode: "single-nav",
       filtersCollapsed: true,
       defaultFilters: ["scoreboards"],
@@ -146,6 +175,7 @@
       activeHref: "/tallies.html",
       topbarLabel: "Tally Detail",
       searchPlaceholder: "Search",
+      hideSearch: true,
       filterMode: "single-nav",
       filtersCollapsed: true,
       defaultFilters: ["tallies"],
@@ -192,10 +222,23 @@
       activeHref: "/community/members.html",
       topbarLabel: "Profile",
       searchPlaceholder: "Search",
+      hideSearch: true,
       filterMode: "none",
       filtersCollapsed: true,
       defaultFilters: [],
       render: renderCommunityProfile
+    },
+    "community-settings": {
+      path: "/community/settings.html",
+      shellKind: "community",
+      activeHref: "/community/settings.html",
+      topbarLabel: "Account Settings",
+      searchPlaceholder: "Search",
+      hideSearch: true,
+      filterMode: "none",
+      filtersCollapsed: true,
+      defaultFilters: [],
+      render: renderCommunitySettings
     }
   };
 
@@ -214,6 +257,13 @@
     return node;
   }
 
+  function createIcon(path, className = "inline-icon-mask") {
+    const icon = create("span", className);
+    icon.setAttribute("aria-hidden", "true");
+    icon.style.setProperty("--icon-mask", `url("${String(path || "").trim()}")`);
+    return icon;
+  }
+
   function clear(node) {
     while (node.firstChild) node.removeChild(node.firstChild);
   }
@@ -228,6 +278,21 @@
       return raw.slice(0, -1);
     }
     return raw;
+  }
+
+  function isUuidLike(value) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
+  }
+
+  function normalizeSocialLinks(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+    return Object.entries(value).reduce((acc, [key, raw]) => {
+      const normalizedKey = String(key || "").trim().toLowerCase();
+      const normalizedValue = String(raw || "").trim();
+      if (!normalizedKey || !normalizedValue) return acc;
+      acc[normalizedKey] = normalizedValue;
+      return acc;
+    }, {});
   }
 
   function buildFiltersForConfig(config) {
@@ -311,12 +376,14 @@
     const icon = create("img", "badge-icon");
     const normalized = String(value || "").trim().toLowerCase();
     if (type === "tier") {
-      icon.src = TIER_ICON_MAP[normalized] || TIER_ICON_MAP.core;
+      icon.src = TIER_ICON_MAP[normalized];
+      if (!icon.src) return null;
       icon.alt = `${normalized || "core"} tier`;
       icon.classList.add("badge-icon-tier");
       return icon;
     }
-    icon.src = ROLE_ICON_MAP[normalized] || ROLE_ICON_MAP.viewer;
+    icon.src = ROLE_ICON_MAP[normalized];
+    if (!icon.src) return null;
     icon.alt = `${normalized || "viewer"} role`;
     icon.classList.add("badge-icon-role");
     return icon;
@@ -327,8 +394,13 @@
     const row = create("span", "creator-badges");
     const role = normalizeRoleForUi(profile?.role);
     const tier = normalizeTierForUi(profile?.tier);
-
-    row.append(createBadgeIcon("role", role), createBadgeIcon("tier", tier));
+    if (role === "admin") {
+      const adminIcon = createBadgeIcon("role", "admin");
+      if (adminIcon) row.appendChild(adminIcon);
+    } else if (role === "creator") {
+      const tierIcon = createBadgeIcon("tier", tier);
+      if (tierIcon) row.appendChild(tierIcon);
+    }
 
     if (includeRoleChip) {
       const chip = create("span", "badge-role-chip", roleLabel(role));
@@ -687,9 +759,16 @@
   }
 
   function buildProfileHref(profileOrCode) {
-    const code = typeof profileOrCode === "string"
-      ? profileOrCode
-      : profileOrCode?.userCode || profileOrCode?.username || profileOrCode?.id || "public-user";
+    const rawCode =
+      typeof profileOrCode === "string"
+        ? profileOrCode
+        : profileOrCode?.userCode || profileOrCode?.username || profileOrCode?.id || "public-user";
+    const normalizedCode = String(rawCode || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+    const code = !normalizedCode || isUuidLike(normalizedCode) ? "public-user" : normalizedCode;
     return `/community/profile.html?u=${encodeURIComponent(String(code || "public-user").trim() || "public-user")}`;
   }
 
@@ -750,15 +829,20 @@
     const text = create("code", "share-link-text", url);
     text.setAttribute("title", url);
 
-    const copyButton = create("button", "share-copy-btn", "⎘");
+    const copyButton = create("button", "share-copy-btn");
     copyButton.type = "button";
     copyButton.setAttribute("aria-label", "Copy share link");
+    copyButton.appendChild(createIcon(UI_ICON_MAP.copy, "button-icon-mask"));
 
     copyButton.addEventListener("click", () => {
       copyTextToClipboard(url).then((copied) => {
-        copyButton.textContent = copied ? "✓" : "!";
+        copyButton.classList.toggle("is-copied", copied);
+        copyButton.innerHTML = "";
+        copyButton.appendChild(createIcon(copied ? UI_ICON_MAP.check : UI_ICON_MAP.copy, "button-icon-mask"));
         window.setTimeout(() => {
-          copyButton.textContent = "⎘";
+          copyButton.classList.remove("is-copied");
+          copyButton.innerHTML = "";
+          copyButton.appendChild(createIcon(UI_ICON_MAP.copy, "button-icon-mask"));
         }, 1300);
       });
     });
@@ -816,15 +900,17 @@
     const label = create("span", "detail-toolbar-label", "Layout");
     const group = create("div", "detail-layout-toggle-group");
 
-    const sideButton = create("button", "detail-layout-toggle", "▥");
+    const sideButton = create("button", "detail-layout-toggle");
     sideButton.type = "button";
     sideButton.dataset.layout = "side";
     sideButton.setAttribute("aria-label", "Show side panel layout");
+    sideButton.appendChild(createIcon(UI_ICON_MAP.layoutSide, "button-icon-mask"));
 
-    const stackButton = create("button", "detail-layout-toggle", "▤");
+    const stackButton = create("button", "detail-layout-toggle");
     stackButton.type = "button";
     stackButton.dataset.layout = "stack";
     stackButton.setAttribute("aria-label", "Stack details under media");
+    stackButton.appendChild(createIcon(UI_ICON_MAP.layoutStack, "button-icon-mask"));
 
     const applyLayout = (nextLayout, persist) => {
       const layoutMode = nextLayout === "stack" ? "stack" : "side";
@@ -1289,6 +1375,7 @@
 
     const memberCap = window.matchMedia("(max-width: 900px)").matches ? 4 : 8;
     const members = (data.profiles || [])
+      .filter((profile) => profile?.isListed !== false)
       .filter((profile) => norm(profile.displayName).includes(norm(state.query)) || norm(profile.username).includes(norm(state.query)))
       .slice(0, memberCap);
 
@@ -1328,6 +1415,7 @@
 
     const grid = create("section", "profile-grid");
     const members = (data.profiles || []).filter((profile) => {
+      if (profile?.isListed === false) return false;
       const haystack = `${profile.displayName} ${profile.username} ${profile.role} ${profile.platform}`.toLowerCase();
       return haystack.includes(norm(state.query));
     });
@@ -1369,62 +1457,564 @@
     }
   }
 
-  function resolveCommunityProfile(data) {
+  function resolveLocalProfile(data, code) {
+    const normalizedCode = normalizeUserCode(code || "public-user");
+    const fallback = data.profilesById?.[window.StreamSuitesPublicData.DEFAULT_PROFILE.id] || window.StreamSuitesPublicData.DEFAULT_PROFILE;
+    return data.profilesByCode?.[normalizedCode] || data.profilesById?.[normalizedCode] || fallback;
+  }
+
+  function resolveCommunityProfileCode(data) {
     const params = new URLSearchParams(window.location.search || "");
     const byCode = String(params.get("u") || "").trim();
     const legacyId = String(params.get("id") || "").trim();
-    const fallback = data.profilesById[window.StreamSuitesPublicData.DEFAULT_PROFILE.id];
+    const fallbackCode = window.StreamSuitesPublicData.DEFAULT_PROFILE.userCode || "public-user";
 
     if (byCode) {
-      const profile = data.profilesByCode?.[byCode] || data.profilesById?.[byCode] || fallback;
-      const safeHref = buildProfileHref(profile);
+      const normalized = normalizeUserCode(byCode, fallbackCode);
+      const safeHref = buildProfileHref(normalized);
       if (window.location.pathname + window.location.search !== safeHref) {
         window.history.replaceState(window.history.state, "", safeHref);
       }
-      return profile;
+      return normalized;
     }
 
     if (legacyId) {
-      const profile = data.profilesById?.[legacyId] || data.profilesByCode?.[legacyId] || fallback;
-      window.history.replaceState(window.history.state, "", buildProfileHref(profile));
-      return profile;
+      if (isUuidLike(legacyId)) {
+        window.history.replaceState(window.history.state, "", "/community/profile.html");
+        return fallbackCode;
+      }
+      const profile = resolveLocalProfile(data, legacyId);
+      const normalized = normalizeUserCode(profile?.userCode || profile?.id || fallbackCode, fallbackCode);
+      window.history.replaceState(window.history.state, "", buildProfileHref(normalized));
+      return normalized;
     }
 
-    return fallback;
+    return fallbackCode;
+  }
+
+  function socialIconPath(network) {
+    const normalized = String(network || "").trim().toLowerCase();
+    return SOCIAL_ICON_MAP[normalized] || "/assets/icons/ui/globe.svg";
+  }
+
+  function normalizeProfilePayload(payload, fallbackProfile, fallbackCode) {
+    const accountType =
+      normalizeAccountType(payload?.account_type) ||
+      normalizeAccountType(payload?.accountType) ||
+      (String(payload?.role || "").toLowerCase().includes("admin")
+        ? "ADMIN"
+        : String(payload?.role || "").toLowerCase().includes("creator")
+          ? "CREATOR"
+          : "PUBLIC");
+    const role = accountType === "ADMIN" ? "admin" : accountType === "CREATOR" ? "creator" : "viewer";
+    const tier = normalizeTierForUi(payload?.tier || fallbackProfile?.tier || "core");
+    const userCode = normalizeUserCode(
+      payload?.user_code || payload?.userCode || fallbackProfile?.userCode || fallbackCode || "public-user"
+    );
+    const displayName = String(payload?.display_name || payload?.displayName || fallbackProfile?.displayName || "Public User").trim() || "Public User";
+    const avatar = String(payload?.avatar_url || payload?.avatarUrl || fallbackProfile?.avatar || window.StreamSuitesPublicData.DEFAULT_PROFILE.avatar || "").trim();
+    const coverImageUrl = String(payload?.cover_image_url || payload?.coverImageUrl || fallbackProfile?.coverImageUrl || DEFAULT_PROFILE_COVER).trim() || DEFAULT_PROFILE_COVER;
+    const bio = String(payload?.bio || fallbackProfile?.bio || "").trim();
+    const socialLinks = normalizeSocialLinks(payload?.social_links || payload?.socialLinks || fallbackProfile?.socialLinks);
+    const isAnonymous = payload?.is_anonymous === true || payload?.anonymous === true || fallbackProfile?.isAnonymous === true;
+    const isListed = payload?.is_listed !== false && payload?.listed !== false && fallbackProfile?.isListed !== false;
+    return {
+      id: fallbackProfile?.id || userCode,
+      userCode,
+      username: fallbackProfile?.username || userCode,
+      displayName,
+      avatar,
+      platform: fallbackProfile?.platform || "StreamSuites",
+      platformKey: fallbackProfile?.platformKey || "streamsuites",
+      platformIcon: fallbackProfile?.platformIcon || "/assets/icons/pilled.svg",
+      role,
+      tier,
+      bio,
+      socialLinks,
+      coverImageUrl,
+      isAnonymous,
+      isListed,
+      badges: buildAccountBadges(accountType, tier)
+    };
+  }
+
+  async function fetchPublicProfileByCode(userCode) {
+    const endpoint = new URL(AUTH_PUBLIC_PROFILE_URL);
+    endpoint.searchParams.set("u", normalizeUserCode(userCode));
+    const response = await fetch(endpoint.toString(), {
+      method: "GET",
+      cache: "no-store",
+      credentials: "include",
+      headers: { Accept: "application/json" }
+    });
+    if (!response.ok) {
+      throw new Error(`public profile request failed (${response.status})`);
+    }
+    const payload = await response.json();
+    return payload?.profile && typeof payload.profile === "object" ? payload.profile : payload;
+  }
+
+  async function fetchMyPublicProfile() {
+    const response = await fetch(AUTH_PUBLIC_PROFILE_ME_URL, {
+      method: "GET",
+      cache: "no-store",
+      credentials: "include",
+      headers: { Accept: "application/json" }
+    });
+    if (!response.ok) {
+      throw new Error(`public profile me request failed (${response.status})`);
+    }
+    const payload = await response.json();
+    return payload?.profile && typeof payload.profile === "object" ? payload.profile : payload;
+  }
+
+  async function saveMyPublicProfile(payload) {
+    const response = await fetch(AUTH_PUBLIC_PROFILE_ME_URL, {
+      method: "POST",
+      cache: "no-store",
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload || {})
+    });
+    const responsePayload = await response.json().catch(() => ({}));
+    if (!response.ok || responsePayload?.success === false) {
+      throw new Error(String(responsePayload?.error || "").trim() || `save failed (${response.status})`);
+    }
+    return responsePayload?.profile && typeof responsePayload.profile === "object"
+      ? responsePayload.profile
+      : responsePayload;
+  }
+
+  function collectProfileArtifacts(data, ...profileKeys) {
+    const seen = new Set();
+    const items = [];
+    profileKeys.forEach((key) => {
+      const normalizedKey = String(key || "").trim();
+      if (!normalizedKey) return;
+      (data.artifactsByProfile?.[normalizedKey] || []).forEach((item) => {
+        if (!item || item.isRemoved) return;
+        if (seen.has(item.id)) return;
+        seen.add(item.id);
+        items.push(item);
+      });
+    });
+    return items;
+  }
+
+  function readProfileArtifactLayoutPreference() {
+    try {
+      const raw = window.localStorage.getItem(PROFILE_ARTIFACT_LAYOUT_STORAGE_KEY);
+      if (raw === "gallery" || raw === "list") return raw;
+    } catch (_err) {
+      // Ignore storage failures.
+    }
+    return "gallery";
+  }
+
+  function writeProfileArtifactLayoutPreference(value) {
+    try {
+      window.localStorage.setItem(PROFILE_ARTIFACT_LAYOUT_STORAGE_KEY, value === "list" ? "list" : "gallery");
+    } catch (_err) {
+      // Ignore storage failures.
+    }
+  }
+
+  function buildProfileArtifactsToggle(initialMode, onModeChange) {
+    const wrap = create("div", "detail-layout-toggle-group profile-artifact-toggle");
+    const galleryBtn = create("button", "detail-layout-toggle");
+    galleryBtn.type = "button";
+    galleryBtn.dataset.mode = "gallery";
+    galleryBtn.setAttribute("aria-label", "Show gallery artifact view");
+    galleryBtn.appendChild(createIcon(UI_ICON_MAP.gallery, "button-icon-mask"));
+    const listBtn = create("button", "detail-layout-toggle");
+    listBtn.type = "button";
+    listBtn.dataset.mode = "list";
+    listBtn.setAttribute("aria-label", "Show list artifact view");
+    listBtn.appendChild(createIcon(UI_ICON_MAP.list, "button-icon-mask"));
+    wrap.append(galleryBtn, listBtn);
+
+    const setMode = (nextMode, persist = true) => {
+      const mode = nextMode === "list" ? "list" : "gallery";
+      galleryBtn.classList.toggle("active", mode === "gallery");
+      listBtn.classList.toggle("active", mode === "list");
+      galleryBtn.setAttribute("aria-pressed", mode === "gallery" ? "true" : "false");
+      listBtn.setAttribute("aria-pressed", mode === "list" ? "true" : "false");
+      if (persist) writeProfileArtifactLayoutPreference(mode);
+      if (typeof onModeChange === "function") onModeChange(mode);
+    };
+
+    galleryBtn.addEventListener("click", () => setMode("gallery", true));
+    listBtn.addEventListener("click", () => setMode("list", true));
+    setMode(initialMode, false);
+    return { wrap, setMode };
+  }
+
+  function buildSocialLinksRow(socialLinks) {
+    const row = create("div", "profile-social-row");
+    const entries = Object.entries(normalizeSocialLinks(socialLinks));
+    if (!entries.length) {
+      row.appendChild(create("span", "muted", "No social links set."));
+      return row;
+    }
+    entries.forEach(([network, url]) => {
+      const anchor = create("a", "social-icon-btn");
+      anchor.href = url;
+      anchor.target = "_blank";
+      anchor.rel = "noopener noreferrer";
+      anchor.setAttribute("aria-label", network);
+      const icon = create("img");
+      icon.src = socialIconPath(network);
+      icon.alt = "";
+      anchor.appendChild(icon);
+      row.appendChild(anchor);
+    });
+    return row;
+  }
+
+  function renderProfileArtifactRows(host, artifacts, ownerMode) {
+    clear(host);
+    const list = create("div", "profile-artifact-list");
+    artifacts.slice(0, 20).forEach((item) => {
+      const row = create("article", "profile-artifact-row");
+      const heading = create("a", "profile-artifact-title", buildCardTitle(item));
+      heading.href = item.href;
+      const meta = create("div", "profile-artifact-meta", `${toTitle(item.type)} | ${item.status || "Pending"}`);
+      const actions = create("div", "profile-artifact-actions");
+      const openLink = create("a", "see-all", "Open");
+      openLink.href = item.href;
+      actions.appendChild(openLink);
+      if (ownerMode) {
+        const editLink = create("a", "edit-affordance", "Edit");
+        editLink.href = item.href;
+        actions.appendChild(editLink);
+      }
+      row.append(heading, meta, actions);
+      list.appendChild(row);
+    });
+    host.appendChild(list);
+  }
+
+  function renderProfileArtifactGrid(host, artifacts, ownerMode) {
+    clear(host);
+    const grid = create("div", "media-grid");
+    artifacts.slice(0, 12).forEach((item) => {
+      const wrap = create("article", "profile-artifact-item");
+      wrap.appendChild(buildMediaCard(item, { showSnippet: true }));
+      if (ownerMode) {
+        const edit = create("a", "edit-affordance artifact-edit-affordance", "Edit");
+        edit.href = item.href;
+        wrap.appendChild(edit);
+      }
+      grid.appendChild(wrap);
+    });
+    host.appendChild(grid);
   }
 
   function renderCommunityProfile(ctx) {
-    const { host, data } = ctx;
+    const { host, data, authState } = ctx;
     clear(host);
+    host.appendChild(buildPageHeading("Profile", "Loading public profile…"));
 
-    const profile = resolveCommunityProfile(data);
-    const artifacts = data.artifactsByProfile?.[profile.id] || [];
-
-    host.appendChild(buildPageHeading(profile.displayName, `${profile.platform} | ${roleLabel(normalizeRoleForUi(profile.role))}`));
-
-    const hero = create("section", "detail-layout is-stacked");
+    const profileCode = resolveCommunityProfileCode(data);
+    const fallbackProfile = resolveLocalProfile(data, profileCode);
+    const hero = create("section", "detail-layout is-stacked profile-layout");
     const left = create("article", "detail-main");
     const right = create("aside", "detail-side");
-
-    const profileCard = create("article", "profile-card");
-    profileCard.append(buildCreatorMeta(profile, { expanded: true, includeRoleChip: true }), create("p", "", profile.bio || ""));
+    const profileCard = create("article", "profile-card profile-card-expanded");
     left.appendChild(profileCard);
 
-    const artifactSection = create("section", "section");
-    artifactSection.append(create("h2", "", "Recent Artifacts"));
-    const grid = create("div", "media-grid");
-    artifacts.slice(0, 12).forEach((item) => {
-      grid.appendChild(buildMediaCard(item, { showSnippet: true }));
-    });
-    artifactSection.appendChild(grid);
-
-    if (!artifacts.length) {
-      artifactSection.appendChild(create("div", "empty-state", "No artifacts linked to this profile yet."));
-    }
-
+    const artifactSection = create("section", "section profile-artifacts-section");
+    const artifactHeading = create("div", "section-heading");
+    artifactHeading.append(create("h2", "", "Recent Artifacts"));
+    const artifactHost = create("div", "profile-artifacts-host");
+    artifactSection.append(artifactHeading, artifactHost);
     right.appendChild(artifactSection);
+
     hero.append(left, right);
     host.appendChild(hero);
+
+    const renderLoadedProfile = (profile, canEdit) => {
+      clear(profileCard);
+      const shareUrl = new URL(buildProfileHref(profile.userCode), window.location.origin).toString();
+      const coverWrap = create("div", "profile-cover");
+      const coverImage = create("img");
+      coverImage.src = profile.coverImageUrl || DEFAULT_PROFILE_COVER;
+      coverImage.alt = `${profile.displayName} cover`;
+      coverWrap.appendChild(coverImage);
+      profileCard.appendChild(coverWrap);
+
+      const profileMeta = buildCreatorMeta(profile, { expanded: true, includeRoleChip: true });
+      profileCard.appendChild(profileMeta);
+
+      const socialHeader = create("div", "profile-inline-header");
+      socialHeader.append(create("h3", "", "Social Links"));
+      if (canEdit) {
+        const editSocial = create("a", "edit-affordance", "Edit");
+        editSocial.href = "/community/settings.html";
+        socialHeader.appendChild(editSocial);
+      }
+      profileCard.append(socialHeader, buildSocialLinksRow(profile.socialLinks));
+
+      const bioHeader = create("div", "profile-inline-header");
+      bioHeader.append(create("h3", "", "Bio"));
+      const bioBody = create("p", "profile-bio-text", profile.bio || "No bio provided yet.");
+      profileCard.append(bioHeader, bioBody);
+
+      if (canEdit) {
+        const editBioBtn = create("button", "edit-affordance edit-button-inline", "Edit");
+        editBioBtn.type = "button";
+        editBioBtn.prepend(createIcon(UI_ICON_MAP.edit, "inline-icon-mask"));
+        bioHeader.appendChild(editBioBtn);
+
+        const bioEditor = create("div", "profile-bio-editor");
+        bioEditor.hidden = true;
+        const bioInput = create("textarea");
+        bioInput.value = profile.bio || "";
+        bioInput.rows = 4;
+        const bioSave = create("button", "filter-chip active", "Save");
+        bioSave.type = "button";
+        const bioCancel = create("button", "filter-chip", "Cancel");
+        bioCancel.type = "button";
+        const bioStatus = create("span", "muted");
+        const bioActions = create("div", "profile-bio-actions");
+        bioActions.append(bioSave, bioCancel, bioStatus);
+        bioEditor.append(bioInput, bioActions);
+        profileCard.appendChild(bioEditor);
+
+        editBioBtn.addEventListener("click", () => {
+          bioEditor.hidden = false;
+          bioInput.focus();
+          bioInput.select();
+        });
+        bioCancel.addEventListener("click", () => {
+          bioEditor.hidden = true;
+          bioInput.value = profile.bio || "";
+          bioStatus.textContent = "";
+        });
+        bioSave.addEventListener("click", async () => {
+          bioStatus.textContent = "Saving…";
+          bioSave.disabled = true;
+          try {
+            const updated = await saveMyPublicProfile({ bio: bioInput.value.trim() });
+            profile.bio = String(updated?.bio || bioInput.value || "").trim();
+            bioBody.textContent = profile.bio || "No bio provided yet.";
+            bioStatus.textContent = "Saved";
+            window.setTimeout(() => {
+              bioEditor.hidden = true;
+              bioStatus.textContent = "";
+            }, 700);
+          } catch (error) {
+            bioStatus.textContent = error instanceof Error ? error.message : "Save failed";
+          } finally {
+            bioSave.disabled = false;
+          }
+        });
+      }
+
+      const shareHeader = create("div", "profile-inline-header");
+      const shareTitle = create("h3", "", "Profile Share Link");
+      shareTitle.prepend(createIcon(UI_ICON_MAP.share, "inline-icon-mask"));
+      shareHeader.appendChild(shareTitle);
+      profileCard.append(shareHeader, buildShareBox(shareUrl));
+
+      if (canEdit) {
+        const privacyWrap = create("label", "profile-visibility-toggle");
+        const toggle = create("input");
+        toggle.type = "checkbox";
+        toggle.checked = profile.isAnonymous === true;
+        const text = create("span", "", "Anonymous / Private profile");
+        const status = create("span", "muted");
+        privacyWrap.append(toggle, text, status);
+        profileCard.appendChild(privacyWrap);
+        toggle.addEventListener("change", async () => {
+          status.textContent = "Saving…";
+          toggle.disabled = true;
+          try {
+            const updated = await saveMyPublicProfile({ anonymous: toggle.checked });
+            profile.isAnonymous = updated?.is_anonymous === true || updated?.anonymous === true;
+            toggle.checked = profile.isAnonymous;
+            status.textContent = profile.isAnonymous ? "Anonymous enabled" : "Public profile enabled";
+          } catch (error) {
+            toggle.checked = !toggle.checked;
+            status.textContent = error instanceof Error ? error.message : "Save failed";
+          } finally {
+            toggle.disabled = false;
+          }
+        });
+      }
+    };
+
+    let profileArtifacts = collectProfileArtifacts(data, profileCode, fallbackProfile?.id, fallbackProfile?.userCode);
+    let ownerCanEdit = false;
+    let currentArtifactMode = readProfileArtifactLayoutPreference();
+    const artifactToggle = buildProfileArtifactsToggle(currentArtifactMode, (mode) => {
+      currentArtifactMode = mode;
+      if (mode === "list") {
+        renderProfileArtifactRows(artifactHost, profileArtifacts, ownerCanEdit);
+      } else {
+        renderProfileArtifactGrid(artifactHost, profileArtifacts, ownerCanEdit);
+      }
+    });
+    artifactHeading.appendChild(artifactToggle.wrap);
+    artifactToggle.setMode(currentArtifactMode, false);
+
+    (async () => {
+      let profile = normalizeProfilePayload(fallbackProfile, fallbackProfile, profileCode);
+      const ownerCode = normalizeUserCode(authState?.userCode || "");
+      const canEdit = Boolean(authState?.authenticated) && ownerCode === profile.userCode;
+      let artifactItems = collectProfileArtifacts(data, profile.userCode, profile.id, profile.username);
+      try {
+        const payload = canEdit ? await fetchMyPublicProfile() : await fetchPublicProfileByCode(profileCode);
+        profile = normalizeProfilePayload(payload, fallbackProfile, profileCode);
+        artifactItems = collectProfileArtifacts(data, profile.userCode, profile.id, fallbackProfile?.id);
+      } catch (_err) {
+        // Keep local profile fallback when API profile endpoints are unavailable.
+      }
+
+      const nextHeading = buildPageHeading(profile.displayName, `${profile.platform} | ${roleLabel(normalizeRoleForUi(profile.role))}`);
+      const existingHeading = host.querySelector(".page-heading");
+      if (existingHeading && existingHeading.parentElement === host) {
+        host.replaceChild(nextHeading, existingHeading);
+      } else {
+        host.prepend(nextHeading);
+      }
+      renderLoadedProfile(profile, canEdit);
+      ownerCanEdit = canEdit;
+      profileArtifacts = artifactItems;
+      if (currentArtifactMode === "list") {
+        renderProfileArtifactRows(artifactHost, profileArtifacts, ownerCanEdit);
+      } else {
+        renderProfileArtifactGrid(artifactHost, profileArtifacts, ownerCanEdit);
+      }
+      if (!profileArtifacts.length) {
+        artifactHost.appendChild(create("div", "empty-state", "No artifacts linked to this profile yet."));
+      }
+    })();
+  }
+
+  function renderCommunitySettings(ctx) {
+    const { host, authState } = ctx;
+    clear(host);
+    host.appendChild(buildPageHeading("Public Account Settings", "Manage visibility, bio, cover, and social links."));
+
+    if (!authState?.authenticated) {
+      host.appendChild(create("div", "empty-state", "Log in to access Public Account Settings."));
+      return;
+    }
+
+    const accountType = String(authState.accountType || "").toUpperCase();
+    if (accountType !== "PUBLIC") {
+      host.appendChild(create("div", "empty-state", "This settings view is available for Viewer/Public accounts only."));
+      return;
+    }
+
+    const panel = create("section", "profile-card settings-form");
+    const status = create("div", "muted");
+    const form = create("form", "settings-grid");
+    form.addEventListener("submit", (event) => event.preventDefault());
+
+    const visibilityField = create("label", "settings-field");
+    const visibilityTitle = create("span", "settings-label", "Profile visibility");
+    const visibilityToggle = create("input");
+    visibilityToggle.type = "checkbox";
+    visibilityToggle.name = "anonymous";
+    visibilityField.append(visibilityTitle, visibilityToggle, create("span", "settings-help", "Enable anonymous profile mode."));
+
+    const listingField = create("label", "settings-field");
+    const listingTitle = create("span", "settings-label", "Community directory listing");
+    const listingToggle = create("input");
+    listingToggle.type = "checkbox";
+    listingToggle.name = "listed";
+    listingToggle.checked = true;
+    listingField.append(listingTitle, listingToggle, create("span", "settings-help", "Show this profile in members directory."));
+
+    const coverField = create("label", "settings-field");
+    const coverTitle = create("span", "settings-label", "Cover image URL");
+    const coverInput = create("input");
+    coverInput.type = "url";
+    coverInput.name = "cover_image_url";
+    coverInput.placeholder = DEFAULT_PROFILE_COVER;
+    coverField.append(coverTitle, coverInput);
+
+    const bioField = create("label", "settings-field");
+    const bioTitle = create("span", "settings-label", "Bio");
+    const bioInput = create("textarea");
+    bioInput.name = "bio";
+    bioInput.rows = 5;
+    bioField.append(bioTitle, bioInput);
+
+    const socialField = create("div", "settings-field");
+    socialField.appendChild(create("span", "settings-label", "Social links"));
+    const socialInputs = {};
+    ["youtube", "rumble", "discord", "x", "tiktok", "twitch", "kick"].forEach((key) => {
+      const row = create("label", "settings-social-row");
+      const label = create("span", "", key.toUpperCase());
+      const input = create("input");
+      input.type = "url";
+      input.placeholder = `${key} URL`;
+      socialInputs[key] = input;
+      row.append(label, input);
+      socialField.appendChild(row);
+    });
+
+    const saveButton = create("button", "filter-chip active settings-save-btn", "Save settings");
+    saveButton.type = "button";
+    saveButton.addEventListener("click", async () => {
+      status.textContent = "Saving…";
+      saveButton.disabled = true;
+      try {
+        const socialPayload = Object.entries(socialInputs).reduce((acc, [key, input]) => {
+          const value = String(input.value || "").trim();
+          if (!value) return acc;
+          acc[key] = value;
+          return acc;
+        }, {});
+        const payload = {
+          anonymous: visibilityToggle.checked,
+          listed: listingToggle.checked,
+          cover_image_url: String(coverInput.value || "").trim(),
+          bio: String(bioInput.value || "").trim(),
+          social_links: socialPayload
+        };
+        const updated = await saveMyPublicProfile(payload);
+        const social = normalizeSocialLinks(updated?.social_links || updated?.socialLinks);
+        Object.entries(socialInputs).forEach(([key, input]) => {
+          input.value = social[key] || "";
+        });
+        visibilityToggle.checked = updated?.is_anonymous === true || updated?.anonymous === true;
+        listingToggle.checked = updated?.is_listed !== false && updated?.listed !== false;
+        coverInput.value = String(updated?.cover_image_url || updated?.coverImageUrl || payload.cover_image_url || "").trim();
+        bioInput.value = String(updated?.bio || payload.bio || "").trim();
+        status.textContent = "Saved";
+      } catch (error) {
+        status.textContent = error instanceof Error ? error.message : "Save failed";
+      } finally {
+        saveButton.disabled = false;
+      }
+    });
+
+    form.append(visibilityField, listingField, coverField, bioField, socialField, saveButton);
+    panel.append(form, status);
+    host.appendChild(panel);
+
+    (async () => {
+      try {
+        const profile = await fetchMyPublicProfile();
+        const social = normalizeSocialLinks(profile?.social_links || profile?.socialLinks);
+        visibilityToggle.checked = profile?.is_anonymous === true || profile?.anonymous === true;
+        listingToggle.checked = profile?.is_listed !== false && profile?.listed !== false;
+        coverInput.value = String(profile?.cover_image_url || profile?.coverImageUrl || "").trim();
+        bioInput.value = String(profile?.bio || "").trim();
+        Object.entries(socialInputs).forEach(([key, input]) => {
+          input.value = social[key] || "";
+        });
+      } catch (_err) {
+        status.textContent = "Unable to load settings from Auth API.";
+      }
+    })();
   }
 
   function readAuthenticated(payload) {
@@ -1461,11 +2051,15 @@
   function buildAccountBadges(accountType, tier) {
     const role = accountType === "ADMIN" ? "admin" : accountType === "CREATOR" ? "creator" : "viewer";
     const tierValue = normalizeTierForUi(tier);
-    return [
-      { kind: "role-icon", value: role },
-      { kind: "tier-icon", value: tierValue },
-      { kind: "role-chip", value: role, label: roleLabel(role) }
-    ];
+    const badges = [{ kind: "role-chip", value: role, label: roleLabel(role) }];
+    if (role === "admin") {
+      badges.unshift({ kind: "role-icon", value: "admin" });
+      return badges;
+    }
+    if (role === "creator") {
+      badges.unshift({ kind: "tier-icon", value: tierValue });
+    }
+    return badges;
   }
 
   function normalizeAuthState(payload) {
@@ -1562,6 +2156,14 @@
       }
     ];
 
+    if (authState.accountType === "PUBLIC") {
+      items.push({
+        label: "Account Settings",
+        href: "/community/settings.html",
+        action: "account_settings"
+      });
+    }
+
     if (authState.accountType === "CREATOR" || authState.accountType === "ADMIN") {
       items.push({ separator: true });
       items.push({
@@ -1625,6 +2227,25 @@
     return url.origin === window.location.origin && Boolean(resolveConfigFromPath(url.pathname));
   }
 
+  async function resolveLegacyProfileUuid(uuidValue) {
+    const uuid = String(uuidValue || "").trim();
+    if (!isUuidLike(uuid)) return "";
+    const response = await fetch(AUTH_PUBLIC_PROFILE_RESOLVE_URL, {
+      method: "POST",
+      cache: "no-store",
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ uuid })
+    });
+    if (!response.ok) return "";
+    const payload = await response.json().catch(() => ({}));
+    const code = normalizeUserCode(payload?.user_code || payload?.userCode || "", "");
+    return code;
+  }
+
   function parsePageIdFromDocument(doc) {
     const fromBody = doc?.body?.dataset?.publicPage;
     if (fromBody && PAGE_CONFIG[fromBody]) return fromBody;
@@ -1639,6 +2260,16 @@
     let currentConfig = PAGE_CONFIG[currentPageId];
     let loadedData = null;
     let navigationToken = 0;
+    let pendingLegacyProfileUuid = "";
+
+    if (normalizePath(window.location.pathname) === "/community/profile.html") {
+      const params = new URLSearchParams(window.location.search || "");
+      const legacyId = String(params.get("id") || "").trim();
+      if (isUuidLike(legacyId)) {
+        pendingLegacyProfileUuid = legacyId;
+        window.history.replaceState(window.history.state, "", "/community/profile.html");
+      }
+    }
 
     const state = {
       query: "",
@@ -1650,6 +2281,7 @@
       activeHref: currentConfig.activeHref,
       topbarLabel: currentConfig.topbarLabel,
       searchPlaceholder: currentConfig.searchPlaceholder,
+      showSearch: currentConfig.hideSearch !== true,
       filters: buildFiltersForConfig(currentConfig),
       filtersCollapsed: currentConfig.filtersCollapsed,
       multiFilter: currentConfig.filterMode === "multi",
@@ -1738,6 +2370,7 @@
         activeHref: nextConfig.activeHref,
         topbarLabel: nextConfig.topbarLabel,
         searchPlaceholder: nextConfig.searchPlaceholder,
+        showSearch: nextConfig.hideSearch !== true,
         filters: buildFiltersForConfig(nextConfig),
         multiFilter: nextConfig.filterMode === "multi",
         filtersCollapsed: nextConfig.filtersCollapsed,
@@ -1875,11 +2508,19 @@
       navigateTo(url, { historyMode: "none" });
     });
 
-    ensureData().then(() => {
-      applyConfig(currentConfig, { keepState: false });
-      refreshAuthWidget(true);
-      shell.setLoading(false);
-    });
+    ensureData()
+      .then(async () => {
+        if (pendingLegacyProfileUuid) {
+          const resolvedCode = await resolveLegacyProfileUuid(pendingLegacyProfileUuid).catch(() => "");
+          const finalCode = resolvedCode || "public-user";
+          window.history.replaceState(window.history.state, "", buildProfileHref(finalCode));
+        }
+      })
+      .finally(() => {
+        applyConfig(currentConfig, { keepState: false });
+        refreshAuthWidget(true);
+        shell.setLoading(false);
+      });
   }
 
   if (document.readyState === "loading") {

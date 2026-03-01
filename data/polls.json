@@ -9,7 +9,7 @@
       "title": "What should we stream next?",
       "question": "What should we stream next?",
       "state": "open",
-      "creator": { "profile_id": "daniel" },
+      "creator": { "user_code": "4TiOlvS" },
       "summary": "Pick the next featured stream block for this weekend.",
       "options": [
         { "id": "a", "label": "Creator interviews", "votes": 381 },
@@ -25,7 +25,7 @@
       "title": "Favorite highlight length?",
       "question": "Favorite highlight length?",
       "state": "closed",
-      "creator": { "profile_id": "skyler" },
+      "creator": { "user_code": "VIvXsPS" },
       "summary": "Used to tune clip exports for social platforms.",
       "options": [
         { "id": "a", "label": "Under 30 seconds", "votes": 422 },
@@ -41,7 +41,7 @@
       "title": "Should we keep the midnight slot?",
       "question": "Should we keep the midnight slot?",
       "state": "open",
-      "creator": { "profile_id": "lyra" },
+      "creator": { "user_code": "JqhcS2m" },
       "summary": "Audience preference survey for late-night runs.",
       "options": [
         { "id": "a", "label": "Keep it nightly", "votes": 241 },
@@ -57,7 +57,7 @@
       "title": "Which platform performed best?",
       "question": "Which platform performed best?",
       "state": "closed",
-      "creator": "novabyte",
+      "creator": "7lPBEiA",
       "summary": "Post-event review poll for distribution channels.",
       "options": [
         { "id": "a", "label": "YouTube", "votes": 501 },
@@ -73,7 +73,7 @@
       "title": "Choose next community challenge",
       "question": "Choose next community challenge",
       "state": "open",
-      "creator": { "profile_id": "skyler" },
+      "creator": { "user_code": "VIvXsPS" },
       "summary": "Community event planning poll.",
       "options": [
         { "id": "a", "label": "Clip remix challenge", "votes": 302 },
@@ -86,3 +86,4 @@
     }
   ]
 }
+

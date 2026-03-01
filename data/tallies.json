@@ -8,7 +8,7 @@
       "id": "tally-01",
       "name": "Chat cheers",
       "state": "live",
-      "creator": { "profile_id": "daniel" },
+      "creator": { "user_code": "4TiOlvS" },
       "summary": "Live tally of chat cheer events.",
       "entries": [
         { "label": "Rumble", "value": 1820 },
@@ -23,7 +23,7 @@
       "id": "tally-02",
       "name": "Bug reports triage",
       "state": "archived",
-      "creator": { "profile_id": "skyler" },
+      "creator": { "user_code": "VIvXsPS" },
       "summary": "Resolved vs pending triage totals.",
       "entries": [
         { "label": "Resolved", "value": 305 },
@@ -38,7 +38,7 @@
       "id": "tally-03",
       "name": "Hype train",
       "state": "live",
-      "creator": { "profile_id": "lyra" },
+      "creator": { "user_code": "JqhcS2m" },
       "summary": "Weighted tally of hype events by platform.",
       "entries": [
         { "label": "Tier 1", "value": 420 },
@@ -53,7 +53,7 @@
       "id": "tally-04",
       "name": "Community challenge submissions",
       "state": "live",
-      "creator": "novabyte",
+      "creator": "7lPBEiA",
       "summary": "Submissions by challenge category.",
       "entries": [
         { "label": "Clip remixes", "value": 96 },
@@ -66,3 +66,4 @@
     }
   ]
 }
+

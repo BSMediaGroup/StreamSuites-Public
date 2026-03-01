@@ -1,23 +1,24 @@
 (() => {
   const MEDIA_NAV = [
-    { href: "/media.html", label: "Home", icon: "⌂", group: "main" },
-    { href: "/clips.html", label: "Clips", icon: "▶", group: "main" },
-    { href: "/polls.html", label: "Polls", icon: "◉", group: "main" },
-    { href: "/scoreboards.html", label: "Scoreboards", icon: "▦", group: "main" },
-    { href: "/tallies.html", label: "Tallies", icon: "◔", group: "main" },
-    { href: "/community/index.html", label: "Community", icon: "☰", group: "main" },
-    { href: "/support.html", label: "Support", icon: "?", group: "quick" },
-    { href: "/donate.html", label: "Donate", icon: "$", group: "quick" },
-    { href: "/about.html", label: "About", icon: "i", group: "quick" }
+    { href: "/media.html", label: "Home", icon: "/assets/icons/ui/dashboard.svg", group: "main" },
+    { href: "/clips.html", label: "Clips", icon: "/assets/icons/ui/portal.svg", group: "main" },
+    { href: "/polls.html", label: "Polls", icon: "/assets/icons/ui/clickpoint.svg", group: "main" },
+    { href: "/scoreboards.html", label: "Scoreboards", icon: "/assets/icons/ui/tablechart.svg", group: "main" },
+    { href: "/tallies.html", label: "Tallies", icon: "/assets/icons/ui/piechart.svg", group: "main" },
+    { href: "/community/index.html", label: "Community", icon: "/assets/icons/ui/profile.svg", group: "main" },
+    { href: "/support.html", label: "Support", icon: "/assets/icons/ui/checkbox.svg", group: "quick" },
+    { href: "/donate.html", label: "Donate", icon: "/assets/icons/ui/heart.svg", group: "quick" },
+    { href: "/about.html", label: "About", icon: "/assets/icons/ui/identity.svg", group: "quick" }
   ];
 
   const COMMUNITY_NAV = [
-    { href: "/community/index.html", label: "Home", icon: "⌂", group: "main" },
-    { href: "/community/members.html", label: "Members", icon: "☺", group: "main" },
-    { href: "/community/notices.html", label: "Notices", icon: "✦", group: "main" },
-    { href: "/media.html", label: "Media", icon: "▶", group: "main" },
-    { href: "/support.html", label: "Support", icon: "?", group: "quick" },
-    { href: "/about.html", label: "About", icon: "i", group: "quick" }
+    { href: "/community/index.html", label: "Home", icon: "/assets/icons/ui/dashboard.svg", group: "main" },
+    { href: "/community/members.html", label: "Members", icon: "/assets/icons/ui/profile.svg", group: "main" },
+    { href: "/community/notices.html", label: "Notices", icon: "/assets/icons/ui/bell.svg", group: "main" },
+    { href: "/community/settings.html", label: "Settings", icon: "/assets/icons/ui/cog.svg", group: "main" },
+    { href: "/media.html", label: "Media", icon: "/assets/icons/ui/portal.svg", group: "main" },
+    { href: "/support.html", label: "Support", icon: "/assets/icons/ui/checkbox.svg", group: "quick" },
+    { href: "/about.html", label: "About", icon: "/assets/icons/ui/identity.svg", group: "quick" }
   ];
 
   const SIDEBAR_STATE_KEY = "ss-public-sidebar-state";
@@ -38,14 +39,21 @@
     { provider: "twitch", label: "Continue with Twitch", icon: "/assets/icons/twitch.svg", path: "/oauth/twitch/start" }
   ]);
   const ROLE_ICON_MAP = Object.freeze({
-    admin: "/assets/icons/ui/admin.svg",
-    creator: "/assets/icons/ui/verifiedbadge.svg",
-    viewer: "/assets/icons/ui/tickbadge.svg"
+    admin: "/assets/icons/tierbadge-admin.svg"
   });
   const TIER_ICON_MAP = Object.freeze({
     core: "/assets/icons/tierbadge-core.svg",
     gold: "/assets/icons/tierbadge-gold.svg",
     pro: "/assets/icons/tierbadge-pro.svg"
+  });
+  const UI_ICON_MAP = Object.freeze({
+    menu: "/assets/icons/ui/sidebar.svg",
+    close: "/assets/icons/ui/minus.svg",
+    search: "/assets/icons/ui/querystats.svg",
+    copy: "/assets/icons/ui/portal.svg",
+    layoutSide: "/assets/icons/ui/cards.svg",
+    layoutStack: "/assets/icons/ui/tablechart.svg",
+    check: "/assets/icons/ui/tickyes.svg"
   });
 
   function create(tag, className, text) {
@@ -53,6 +61,13 @@
     if (className) node.className = className;
     if (typeof text === "string") node.textContent = text;
     return node;
+  }
+
+  function createIcon(path, className = "icon-mask") {
+    const icon = create("span", className);
+    icon.setAttribute("aria-hidden", "true");
+    icon.style.setProperty("--icon-mask", `url("${String(path || "").trim()}")`);
+    return icon;
   }
 
   function normalizePath(path) {
@@ -106,6 +121,10 @@
     return window.matchMedia(MOBILE_MEDIA_QUERY).matches;
   }
 
+  function shellSubheading(shellKind) {
+    return shellKind === "community" ? "COMMUNITY HUB" : "PUBLIC SURFACE";
+  }
+
   function createSidebarLink(item, currentPath) {
     const link = create("a", "sidebar-link");
     link.href = item.href;
@@ -117,8 +136,8 @@
       link.setAttribute("aria-current", "page");
     }
 
-    const icon = create("span", "sidebar-icon", item.icon || "•");
-    icon.setAttribute("aria-hidden", "true");
+    const icon = create("span", "sidebar-icon");
+    icon.appendChild(createIcon(item.icon || "/assets/icons/ui/portal.svg", "sidebar-icon-mask"));
 
     const text = create("span", "sidebar-text", item.label);
     link.append(icon, text);
@@ -203,6 +222,7 @@
       activeHref: window.location.pathname,
       topbarLabel: "Media Gallery",
       searchPlaceholder: "Search",
+      showSearch: true,
       filters: [],
       filtersCollapsed: true,
       multiFilter: false,
@@ -248,8 +268,11 @@
       create("span", "sidebar-brand-title", "StreamSuites™"),
       create("span", "sidebar-brand-subtitle", "Public")
     );
+    const brandSubheading = create("div", "sidebar-brand-subheading");
+    const brandSubheadingText = create("span", "sidebar-brand-subheading-text", shellSubheading(options.shellKind));
+    brandSubheading.appendChild(brandSubheadingText);
     brand.append(logo, labels);
-    sidebarTop.appendChild(brand);
+    sidebarTop.append(brand, brandSubheading);
 
     const sidebarScroll = create("div", "sidebar-scroll");
 
@@ -262,21 +285,23 @@
     const topbarMain = create("div", "topbar-main");
     const topbarLeft = create("div", "topbar-left");
 
-    const modeBtn = create("button", "topbar-menu-btn", "☰");
+    const modeBtn = create("button", "topbar-menu-btn");
     modeBtn.type = "button";
     modeBtn.setAttribute("aria-label", "Toggle sidebar size");
+    modeBtn.appendChild(createIcon(UI_ICON_MAP.menu, "topbar-btn-icon"));
 
-    const hideBtn = create("button", "topbar-hide-btn", "⨯");
+    const hideBtn = create("button", "topbar-hide-btn");
     hideBtn.type = "button";
     hideBtn.setAttribute("aria-label", "Hide sidebar");
+    hideBtn.appendChild(createIcon(UI_ICON_MAP.close, "topbar-btn-icon topbar-btn-icon-close"));
 
     const topbarTitle = create("span", "topbar-title", options.topbarLabel || "Media Gallery");
     topbarLeft.append(modeBtn, hideBtn, topbarTitle);
 
     const topbarCenter = create("div", "topbar-center");
     const searchShell = create("label", "search-shell");
-    const searchIcon = create("span", "search-icon", "⌕");
-    searchIcon.setAttribute("aria-hidden", "true");
+    const searchIcon = create("span", "search-icon");
+    searchIcon.appendChild(createIcon(UI_ICON_MAP.search, "search-icon-mask"));
     const searchInput = create("input");
     searchInput.type = "search";
     searchInput.placeholder = options.searchPlaceholder || "Search";
@@ -342,7 +367,7 @@
     authBackdrop.setAttribute("aria-hidden", "true");
     authBackdrop.innerHTML = `
       <div class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="public-auth-modal-title" data-state="login">
-        <button class="auth-modal-close" type="button" aria-label="Close">×</button>
+        <button class="auth-modal-close" type="button" aria-label="Close"><span class="auth-modal-close-icon" aria-hidden="true"></span></button>
         <div class="auth-modal-header">
           <p class="auth-modal-eyebrow">Public access</p>
           <h2 id="public-auth-modal-title" class="auth-modal-title">
@@ -360,6 +385,10 @@
     const authTitle = authBackdrop.querySelector("[data-auth-title-text]");
     const authSubtitle = authBackdrop.querySelector("[data-auth-subtitle]");
     const authClose = authBackdrop.querySelector(".auth-modal-close");
+    const authCloseIcon = authBackdrop.querySelector(".auth-modal-close-icon");
+    if (authCloseIcon) {
+      authCloseIcon.style.setProperty("--icon-mask", `url("${UI_ICON_MAP.close}")`);
+    }
     const authPanels = Array.from(authBackdrop.querySelectorAll(".auth-panel"));
 
     function buildAuthPanel(mode) {
@@ -459,8 +488,10 @@
         const kind = String(badge.kind || "").trim().toLowerCase();
         const value = String(badge.value || "").trim().toLowerCase();
         if (kind === "role-icon" || kind === "tier-icon") {
+          if (kind === "role-icon" && value !== "admin") return;
           const icon = create("img", "account-badge-icon");
-          icon.src = kind === "tier-icon" ? (TIER_ICON_MAP[value] || TIER_ICON_MAP.core) : (ROLE_ICON_MAP[value] || ROLE_ICON_MAP.viewer);
+          icon.src = kind === "tier-icon" ? TIER_ICON_MAP[value] : ROLE_ICON_MAP[value];
+          if (!icon.src) return;
           icon.alt = "";
           accountBadges.appendChild(icon);
           return;
@@ -655,6 +686,18 @@
       filterRowWrap.hidden = nextCollapsed;
     }
 
+    function setSearchVisible(visible) {
+      const show = visible !== false;
+      options.showSearch = show;
+      topbar.classList.toggle("search-hidden", !show);
+      topbarCenter.hidden = !show;
+      searchShell.hidden = !show;
+      if (!show) {
+        searchInput.value = "";
+        root.dispatchEvent(new CustomEvent("public-shell:search", { detail: { query: "" } }));
+      }
+    }
+
     function setFilterOptions(filters, multiFilter) {
       filterRow.innerHTML = "";
       const chips = Array.isArray(filters) ? filters : [];
@@ -718,6 +761,7 @@
       if (nextShellKind !== options.shellKind || nextActiveHref !== options.activeHref) {
         options.shellKind = nextShellKind;
         options.activeHref = nextActiveHref;
+        brandSubheadingText.textContent = shellSubheading(options.shellKind);
         renderSidebarNav(options.shellKind, options.activeHref);
       } else if (next.activeHref) {
         options.activeHref = next.activeHref;
@@ -732,6 +776,10 @@
       if (typeof next.searchPlaceholder === "string") {
         options.searchPlaceholder = next.searchPlaceholder;
         searchInput.placeholder = next.searchPlaceholder;
+      }
+
+      if (typeof next.showSearch === "boolean") {
+        setSearchVisible(next.showSearch);
       }
 
       if (Array.isArray(next.filters) || typeof next.multiFilter === "boolean") {
@@ -835,6 +883,7 @@
         return;
       }
       if ((event.ctrlKey || event.metaKey) && String(event.key || "").toLowerCase() === "k") {
+        if (!options.showSearch) return;
         if (isEditableTarget(event.target)) return;
         event.preventDefault();
         searchInput.focus();
@@ -853,6 +902,7 @@
 
     renderSidebarNav(options.shellKind, options.activeHref);
     setFilterOptions(options.filters, options.multiFilter);
+    setSearchVisible(options.showSearch);
     setAccountState({
       accountLabel: options.accountLabel,
       accountAvatar: options.accountAvatar,

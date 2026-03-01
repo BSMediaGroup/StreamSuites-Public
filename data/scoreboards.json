@@ -8,7 +8,7 @@
       "id": "score-01",
       "name": "Daily engagement ladder",
       "state": "active",
-      "creator": { "profile_id": "daniel" },
+      "creator": { "user_code": "4TiOlvS" },
       "summary": "Tracks top channels by daily engagement points.",
       "entries": [
         { "label": "Channel A", "value": 985 },
@@ -23,7 +23,7 @@
       "id": "score-02",
       "name": "Twitch vs YouTube",
       "state": "active",
-      "creator": { "profile_id": "skyler" },
+      "creator": { "user_code": "VIvXsPS" },
       "summary": "Compares current-week average live retention.",
       "entries": [
         { "label": "Twitch", "value": 76 },
@@ -38,7 +38,7 @@
       "id": "score-03",
       "name": "Onboarding tasks",
       "state": "paused",
-      "creator": { "profile_id": "lyra" },
+      "creator": { "user_code": "JqhcS2m" },
       "summary": "Creator onboarding checklist completion tracker.",
       "entries": [
         { "label": "Completed", "value": 52 },
@@ -53,7 +53,7 @@
       "id": "score-04",
       "name": "Community sprint points",
       "state": "active",
-      "creator": "novabyte",
+      "creator": "7lPBEiA",
       "summary": "Gamified sprint scoreboard for community goals.",
       "entries": [
         { "label": "Team Aurora", "value": 412 },
@@ -66,3 +66,4 @@
     }
   ]
 }
+

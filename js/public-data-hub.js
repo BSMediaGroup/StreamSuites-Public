@@ -31,18 +31,32 @@
     avatar: FALLBACK_AVATAR,
     platform: "StreamSuites",
     platformKey: "streamsuites",
-    role: "member",
+    role: "viewer",
     tier: "",
-    badges: [
-      { kind: "tier", label: "Member" }
-    ],
-    bio: "Community-visible profile used when creator metadata is unavailable."
+    badges: [],
+    bio: "Community-visible profile used when creator metadata is unavailable.",
+    accountType: "PUBLIC",
+    socialLinks: {},
+    coverImageUrl: "/assets/placeholders/defaultprofilecover.webp",
+    isAnonymous: false,
+    isListed: true
   };
 
   let cachePromise = null;
 
   function isUuidLike(value) {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
+  }
+
+  function normalizeSocialLinks(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+    return Object.entries(value).reduce((acc, [key, raw]) => {
+      const normalizedKey = String(key || "").trim().toLowerCase();
+      const normalizedValue = String(raw || "").trim();
+      if (!normalizedKey || !normalizedValue) return acc;
+      acc[normalizedKey] = normalizedValue;
+      return acc;
+    }, {});
   }
 
   function toArray(payload) {
@@ -118,11 +132,11 @@
   }
 
   function normalizeRole(value) {
-    const raw = String(value || "member").trim().toLowerCase();
-    if (!raw) return "member";
+    const raw = String(value || "viewer").trim().toLowerCase();
+    if (!raw) return "viewer";
     if (raw.includes("admin")) return "admin";
     if (raw.includes("creator")) return "creator";
-    return "member";
+    return "viewer";
   }
 
   function normalizeTier(value) {
@@ -135,18 +149,13 @@
 
   function buildProfileBadges(role, tier) {
     const badges = [];
-
-    if (tier) {
-      badges.push({ kind: "tier", label: tier, tier });
-    } else {
-      const fallbackTier = role === "creator" ? "Creator" : role === "admin" ? "Creator" : "Member";
-      badges.push({ kind: "tier", label: fallbackTier, tier: "" });
-    }
-
     if (role === "admin") {
       badges.push({ kind: "admin", label: "Admin" });
+      return badges;
     }
-
+    if (role === "creator" && tier) {
+      badges.push({ kind: "tier", label: tier, tier });
+    }
     return badges;
   }
 
@@ -218,7 +227,7 @@
   }
 
   function normalizeProfile(raw) {
-    const id = raw?.id || raw?.profile_id || raw?.username || raw?.name;
+    const id = raw?.id || raw?.profile_id || raw?.user_code || raw?.userCode || raw?.username || raw?.name;
     if (!id) return null;
     const userCodeRaw = raw?.user_code || raw?.userCode || raw?.username || id;
     const normalizedCode = String(userCodeRaw || "public-user")
@@ -228,12 +237,18 @@
       .replace(/^-+|-+$/g, "");
     const userCode = !normalizedCode || isUuidLike(normalizedCode) ? "public-user" : normalizedCode;
 
-    const role = normalizeRole(raw.role || raw.role_hint);
+    const accountTypeRaw = String(raw.account_type || raw.accountType || raw.role || "").trim().toUpperCase();
+    const role = normalizeRole(raw.role || raw.role_hint || accountTypeRaw);
+    const accountType = accountTypeRaw || (role === "admin" ? "ADMIN" : role === "creator" ? "CREATOR" : "PUBLIC");
     const tier = normalizeTier(raw.tier || raw.plan_tier || raw.membership_tier || raw.membershipTier || raw.tier_label);
     const platform = raw.platform || "StreamSuites";
+    const socialLinks = normalizeSocialLinks(raw.social_links || raw.socialLinks);
+    const coverImageUrl = String(raw.cover_image_url || raw.coverImageUrl || "").trim() || "/assets/placeholders/defaultprofilecover.webp";
+    const isAnonymous = raw?.is_anonymous === true || raw?.anonymous === true;
+    const isListed = raw?.is_listed !== false && raw?.listed !== false;
 
     return {
-      id: String(id),
+      id: userCode || String(id),
       userCode,
       username: String(raw.username || raw.handle || id),
       displayName: raw.display_name || raw.displayName || raw.name || String(id),
@@ -242,25 +257,43 @@
       platformKey: normalizePlatformKey(platform),
       platformIcon: platformIconFor(platform),
       role,
+      accountType,
       tier,
       badges: buildProfileBadges(role, tier),
-      bio: raw.bio || raw.summary || ""
+      bio: raw.bio || raw.summary || "",
+      socialLinks,
+      coverImageUrl,
+      isAnonymous,
+      isListed
     };
+  }
+
+  function normalizeProfileLookup(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
   }
 
   function buildProfileMap(items) {
     const map = new Map();
     map.set(DEFAULT_PROFILE.id, { ...DEFAULT_PROFILE });
     map.set(DEFAULT_PROFILE.userCode, { ...DEFAULT_PROFILE });
+    map.set(normalizeProfileLookup(DEFAULT_PROFILE.id), { ...DEFAULT_PROFILE });
+    map.set(normalizeProfileLookup(DEFAULT_PROFILE.userCode), { ...DEFAULT_PROFILE });
     items.forEach((raw) => {
       const profile = normalizeProfile(raw);
       if (!profile) return;
       map.set(profile.id, profile);
+      map.set(normalizeProfileLookup(profile.id), profile);
       if (profile.userCode) {
         map.set(profile.userCode, profile);
+        map.set(normalizeProfileLookup(profile.userCode), profile);
       }
       if (profile.username) {
         map.set(profile.username, profile);
+        map.set(normalizeProfileLookup(profile.username), profile);
       }
     });
     return map;
@@ -270,7 +303,10 @@
     if (!rawCreator) return profiles.get(DEFAULT_PROFILE.id);
 
     if (typeof rawCreator === "string") {
-      return profiles.get(rawCreator) || profiles.get(DEFAULT_PROFILE.id);
+      const byRaw = profiles.get(rawCreator);
+      if (byRaw) return byRaw;
+      const byNormalized = profiles.get(normalizeProfileLookup(rawCreator));
+      return byNormalized || profiles.get(DEFAULT_PROFILE.id);
     }
 
     const candidateId =
@@ -278,18 +314,27 @@
       rawCreator.profileId ||
       rawCreator.user_code ||
       rawCreator.userCode ||
+      rawCreator.profile_code ||
+      rawCreator.profileCode ||
       rawCreator.id ||
       rawCreator.username ||
       rawCreator.name;
 
-    if (candidateId && profiles.has(String(candidateId))) {
-      return profiles.get(String(candidateId));
+    if (candidateId) {
+      const byRaw = profiles.get(String(candidateId));
+      if (byRaw) return byRaw;
+      const byNormalized = profiles.get(normalizeProfileLookup(candidateId));
+      if (byNormalized) return byNormalized;
     }
 
     const derived = normalizeProfile(rawCreator);
     if (derived) {
       profiles.set(derived.id, derived);
+      profiles.set(derived.userCode, derived);
       profiles.set(derived.username, derived);
+      profiles.set(normalizeProfileLookup(derived.id), derived);
+      profiles.set(normalizeProfileLookup(derived.userCode), derived);
+      profiles.set(normalizeProfileLookup(derived.username), derived);
       return derived;
     }
 
