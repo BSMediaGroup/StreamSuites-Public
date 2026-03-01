@@ -146,6 +146,7 @@ StreamSuites-Public/
 ├── requests.html
 ├── scoreboards.html
 ├── status-check.html
+├── stats.html
 ├── support.html
 ├── tallies.html
 ├── terms.html

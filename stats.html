@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<!-- StreamSuites™ — Public Statistics Page -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Statistics • StreamSuites™</title>
+  <meta name="description" content="Public StreamSuites statistics snapshot with animated counters and analytics visuals." />
+  <link rel="canonical" href="https://streamsuites.app/stats.html" />
+  <meta property="og:title" content="Statistics • StreamSuites™" />
+  <meta property="og:description" content="Public StreamSuites statistics snapshot with animated counters and analytics visuals." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://streamsuites.app/stats.html" />
+  <meta property="og:image" content="/assets/backgrounds/seoshare.jpg" />
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="/css/theme-dark.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/public-pages.css" />
+  <link rel="stylesheet" href="/css/public-pages-v2.css" />
+  <link rel='stylesheet' href='/css/status-widget.css' />
+  <style>
+    .stats-layout {
+      display: grid;
+      gap: 1.25rem;
+      grid-template-columns: 1.5fr 1fr;
+      align-items: stretch;
+    }
+
+    .stats-section {
+      margin-top: 1.25rem;
+      display: grid;
+      gap: 1.1rem;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+
+    .stats-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 20px;
+      border: 1px solid rgba(168, 136, 255, 0.32);
+      background:
+        radial-gradient(130% 120% at 92% -12%, rgba(148, 78, 255, 0.22), transparent 56%),
+        linear-gradient(140deg, rgba(12, 16, 34, 0.92), rgba(10, 12, 24, 0.95));
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 22px 46px rgba(4, 6, 14, 0.58),
+        0 0 0 1px rgba(115, 80, 220, 0.15);
+      padding: 1.1rem 1.12rem;
+      backdrop-filter: blur(6px);
+    }
+
+    .stats-card h3 {
+      margin: 0;
+      font-size: 0.98rem;
+      letter-spacing: 0.01em;
+    }
+
+    .stats-subtle {
+      color: rgba(201, 212, 242, 0.7);
+      margin: 0.38rem 0 0;
+      font-size: 0.86rem;
+      line-height: 1.45;
+    }
+
+    .spotlight {
+      min-height: 225px;
+      display: grid;
+      align-content: space-between;
+    }
+
+    .spotlight::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 22% 16%, rgba(255, 255, 255, 0.22), transparent 34%),
+        linear-gradient(112deg, rgba(126, 80, 255, 0.15), rgba(255, 88, 207, 0.06));
+      opacity: 0.72;
+      pointer-events: none;
+    }
+
+    .spotlight::after {
+      content: "";
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      top: 1rem;
+      left: 1rem;
+      box-shadow: 0 0 0 7px rgba(146, 108, 255, 0.14), 0 0 26px rgba(170, 88, 255, 0.8);
+      background: #efe8ff;
+      animation: spotlightPulse 2.8s ease-in-out infinite;
+    }
+
+    .spotlight-kicker {
+      font-size: 0.77rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(214, 190, 255, 0.92);
+      margin: 0;
+    }
+
+    .spotlight-value {
+      margin: 0.35rem 0 0;
+      font-family: "Recharge", "Segoe UI", sans-serif;
+      font-size: clamp(2.4rem, 6vw, 3.35rem);
+      line-height: 1;
+      color: #f6f2ff;
+      text-shadow: 0 0 28px rgba(165, 95, 255, 0.48);
+    }
+
+    .delta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 0.65rem;
+      font-size: 0.82rem;
+      color: #f7f4ff;
+      border-radius: 999px;
+      border: 1px solid rgba(193, 155, 255, 0.45);
+      background: rgba(142, 83, 255, 0.2);
+      padding: 0.28rem 0.65rem;
+    }
+
+    .delta-pill::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #7cffcd;
+      box-shadow: 0 0 12px rgba(124, 255, 205, 0.8);
+    }
+
+    .spotlight-progress {
+      margin-top: 0.95rem;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(135, 145, 183, 0.2);
+      overflow: hidden;
+      border: 1px solid rgba(176, 189, 224, 0.18);
+    }
+
+    .spotlight-progress > span {
+      display: block;
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #ff5dd2, #875eff 60%, #57c7ff);
+      transition: width 900ms cubic-bezier(0.21, 1, 0.22, 1);
+      box-shadow: 0 0 18px rgba(130, 92, 255, 0.8);
+    }
+
+    .compact-grid {
+      grid-column: span 12;
+      display: grid;
+      gap: 0.95rem;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .compact-card {
+      min-height: 165px;
+      display: grid;
+      align-content: space-between;
+    }
+
+    .compact-label {
+      margin: 0;
+      color: rgba(198, 209, 238, 0.9);
+      font-size: 0.83rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .compact-value {
+      margin: 0.42rem 0 0;
+      font-size: clamp(1.55rem, 2.2vw, 2rem);
+      font-weight: 700;
+      color: #fbfbff;
+    }
+
+    .compact-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.7rem;
+    }
+
+    .compact-delta {
+      margin: 0;
+      font-size: 0.8rem;
+      color: rgba(135, 255, 211, 0.96);
+    }
+
+    .compact-track {
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(117, 132, 182, 0.24);
+      margin-top: 0.62rem;
+      overflow: hidden;
+    }
+
+    .compact-track span {
+      display: block;
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #ff4cbf, #8f69ff);
+      transition: width 780ms cubic-bezier(0.17, 0.84, 0.44, 1);
+    }
+
+    .sparkline {
+      width: 88px;
+      height: 28px;
+      display: block;
+      margin-left: auto;
+    }
+
+    .sparkline path.base {
+      fill: none;
+      stroke: rgba(122, 141, 197, 0.32);
+      stroke-width: 2;
+    }
+
+    .sparkline path.live {
+      fill: none;
+      stroke: url(#spark-gradient);
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      transition: stroke-dashoffset 980ms cubic-bezier(0.2, 1, 0.22, 1);
+    }
+
+    .card-analytics {
+      grid-column: span 8;
+      min-height: 270px;
+      display: grid;
+      gap: 0.95rem;
+      align-content: start;
+    }
+
+    .analytics-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .analytics-live {
+      font-size: 0.78rem;
+      color: #8cffcf;
+      border: 1px solid rgba(110, 250, 198, 0.35);
+      background: rgba(6, 56, 47, 0.52);
+      border-radius: 999px;
+      padding: 0.22rem 0.58rem;
+    }
+
+    .analytics-mini {
+      display: grid;
+      gap: 0.8rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .analytics-mini-box {
+      border-radius: 14px;
+      border: 1px solid rgba(138, 152, 206, 0.2);
+      background: rgba(7, 11, 26, 0.72);
+      padding: 0.8rem;
+    }
+
+    .analytics-mini-box p {
+      margin: 0;
+      color: rgba(180, 193, 230, 0.82);
+      font-size: 0.8rem;
+    }
+
+    .analytics-mini-box strong {
+      display: block;
+      margin-top: 0.26rem;
+      color: #f5f7ff;
+      font-size: 1.45rem;
+      line-height: 1.06;
+    }
+
+    .bar-chart {
+      margin-top: 0.05rem;
+      min-height: 132px;
+      border-radius: 16px;
+      border: 1px solid rgba(118, 132, 186, 0.24);
+      background: rgba(8, 12, 28, 0.68);
+      padding: 0.9rem 0.75rem 0.78rem;
+      display: flex;
+      gap: 0.62rem;
+      align-items: end;
+    }
+
+    .bar-wrap {
+      flex: 1;
+      min-width: 0;
+      display: grid;
+      gap: 0.52rem;
+      justify-items: center;
+    }
+
+    .bar {
+      width: 100%;
+      max-width: 20px;
+      border-radius: 6px;
+      height: 0;
+      background: linear-gradient(180deg, #8273ff, #4c5df8);
+      box-shadow: 0 10px 24px rgba(108, 88, 255, 0.38);
+      transition: height 820ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .bar-label {
+      font-size: 0.72rem;
+      color: rgba(181, 194, 228, 0.84);
+      letter-spacing: 0.01em;
+      text-transform: uppercase;
+    }
+
+    .card-milestones {
+      grid-column: span 4;
+      min-height: 270px;
+      display: grid;
+      align-content: space-between;
+      gap: 0.7rem;
+      background:
+        radial-gradient(95% 75% at 72% 100%, rgba(235, 91, 230, 0.26), transparent 62%),
+        linear-gradient(145deg, rgba(19, 21, 46, 0.95), rgba(10, 12, 26, 0.98));
+    }
+
+    .milestones-list {
+      list-style: none;
+      margin: 0.5rem 0 0;
+      padding: 0;
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    .milestones-list li {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      color: #e6ebfb;
+      font-size: 0.9rem;
+    }
+
+    .milestones-list li::before {
+      content: "✓";
+      display: inline-grid;
+      place-items: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      font-size: 0.74rem;
+      background: linear-gradient(140deg, #8f55ff, #be6bff);
+      color: #fefcff;
+      box-shadow: 0 0 14px rgba(158, 89, 255, 0.62);
+      flex-shrink: 0;
+    }
+
+    .stats-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 0.4rem;
+    }
+
+    .stats-tags span {
+      font-size: 0.75rem;
+      letter-spacing: 0.02em;
+      color: rgba(218, 225, 252, 0.9);
+      border-radius: 999px;
+      padding: 0.26rem 0.55rem;
+      background: rgba(138, 111, 228, 0.26);
+      border: 1px solid rgba(170, 148, 243, 0.36);
+    }
+
+    .metrics-note {
+      margin-top: 0.95rem;
+      color: rgba(177, 189, 224, 0.82);
+      font-size: 0.8rem;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @keyframes spotlightPulse {
+      0%,
+      100% {
+        transform: translateY(0);
+        opacity: 0.78;
+      }
+      50% {
+        transform: translateY(3px);
+        opacity: 1;
+      }
+    }
+
+    @media (max-width: 1040px) {
+      .stats-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .compact-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .card-analytics,
+      .card-milestones {
+        grid-column: span 12;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .compact-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .analytics-mini {
+        grid-template-columns: 1fr;
+      }
+
+      .bar-chart {
+        gap: 0.4rem;
+      }
+
+      .bar {
+        max-width: 16px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .spotlight::after {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="public-bg" aria-hidden="true"></div>
+  <div class="public-surface">
+    <div class="public-shell">
+      <header class="public-topbar">
+        <a class="public-brand" href="/">
+          <img src="/assets/logos/logo.png" alt="StreamSuites" />
+          <div>
+            <h1>StreamSuites™</h1>
+            <p class="brand-subtitle">Public surface</p>
+          </div>
+        </a>
+        <div class="public-nav-wrapper">
+          <input type="checkbox" id="public-nav-toggle" class="nav-toggle" aria-label="Toggle navigation" />
+          <label class="hamburger" for="public-nav-toggle">
+            <span class="sr-only">Toggle navigation</span>
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+              <path class="line line-top-bottom" d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22"></path>
+              <path class="line" d="M7 16 27 16"></path>
+            </svg>
+          </label>
+          <div class="public-nav">
+            <span class="version-pill version-badge">Loading version…</span>
+            <a href="/about.html">About</a>
+            <a href="/tools.html">Tools</a>
+            <a href="/support.html">Support</a>
+            <a href="/stats.html" aria-current="page">Statistics</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="/changelog.html">Changelog</a>
+            <a href="/accessibility.html">Accessibility</a>
+          </div>
+        </div>
+      </header>
+
+      <section class="public-hero public-glass-panel">
+        <div class="section-heading">
+          <h2>StreamSuites Statistics</h2>
+          <span class="public-badge">Live-ready placeholder model</span>
+        </div>
+        <p class="muted" id="stats-summary"></p>
+        <p class="muted" id="stats-updated" style="margin-top: 8px;"></p>
+      </section>
+
+      <section class="stats-layout" aria-label="Statistics highlights">
+        <article class="stats-card spotlight reveal-animate" id="spotlight-card"></article>
+        <article class="stats-card reveal-animate" id="runtime-breakdown-card"></article>
+      </section>
+
+      <section class="stats-section" aria-label="Statistics dashboard">
+        <div class="compact-grid" id="compact-cards"></div>
+        <article class="stats-card card-analytics reveal-animate" id="analytics-card"></article>
+        <article class="stats-card card-milestones reveal-animate" id="milestones-card"></article>
+      </section>
+
+      <footer class="public-footer">
+        <div>
+          <span class="footer-version">Version</span>
+          <span class="footer-copyright">©</span>
+        </div>
+        <nav aria-label="Public footer navigation">
+          <a href="/about.html">About</a>
+          <a href="/tools.html">Tools</a>
+          <a href="/support.html">Support</a>
+          <a href="/donate.html">Donate</a>
+          <a href="/stats.html">Statistics</a>
+          <a href="/privacy.html">Privacy</a>
+          <a href="/changelog.html">Changelog</a>
+          <a href="/accessibility.html">Accessibility</a>
+        </nav>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    const STATS_PLACEHOLDER = {
+      as_of: "2026-03-01T13:20:00Z",
+      summary: "Placeholder public metrics for StreamSuites adoption, runtime activity, and creator ecosystem health.",
+      total_users: 89400,
+      creators: 16250,
+      viewers: 73150,
+      total_site_visits: 3248000,
+      total_runtime_events: 12896740,
+      runtime_breakdown: {
+        triggers: 4823000,
+        clips: 1462000,
+        exports: 384900,
+        automations: 2476500,
+        bot_actions: 3754200,
+        notifications: 996140
+      },
+      active_installations: {
+        total: 22120,
+        desktop_admin: 4820,
+        desktop_creator: 9930,
+        extensions: 4180,
+        mobile_dash: 2110,
+        studio_bridge: 1080
+      },
+      last_30d: {
+        users: 12.4,
+        creators: 8.6,
+        site_visits: 14.2,
+        runtime_events: 17.9,
+        installations: 9.3,
+        clip_exports: 6.8
+      },
+      series: {
+        last_7d_runtime_events: [128000, 136500, 149300, 141900, 164200, 152600, 171800],
+        last_7d_visits: [39800, 42100, 45300, 44000, 47600, 46200, 49100],
+        last_30d_visits: [93200, 94100, 95500, 96800, 97700, 99000, 100200, 101300, 102500, 104100, 105000, 106300, 107500, 109800, 111200, 112400, 114000, 116100, 118500, 120300, 122900, 125100, 127600, 130400, 133700, 136800, 140200, 145900, 149600, 154200]
+      },
+      milestones: [
+        "100+ consecutive launch weeks completed",
+        "50K automation workflows activated",
+        "Top 1K creators crossed 1M combined clips",
+        "Public shell + community hub unified",
+        "Multi-platform OAuth reliability above 99.9%"
+      ]
+    };
+
+    (() => {
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const numberFormatter = new Intl.NumberFormat("en-US");
+
+      function formatFullNumber(value) {
+        const numeric = Number(value) || 0;
+        return numberFormatter.format(Math.round(numeric));
+      }
+
+      function formatCompactNumber(value) {
+        const numeric = Number(value) || 0;
+        const absolute = Math.abs(numeric);
+        if (absolute >= 1000000) return `${(numeric / 1000000).toFixed(1).replace(/\\.0$/, "")}M`;
+        if (absolute >= 1000) return `${(numeric / 1000).toFixed(1).replace(/\\.0$/, "")}K`;
+        return formatFullNumber(numeric);
+      }
+
+      function formatPercent(value) {
+        const numeric = Number(value) || 0;
+        return `${numeric > 0 ? "+" : ""}${numeric.toFixed(1)}%`;
+      }
+
+      function buildSparkline(values) {
+        const points = Array.isArray(values) ? values.map((v) => Number(v) || 0) : [];
+        const width = 88;
+        const height = 28;
+        const min = Math.min(...points, 0);
+        const max = Math.max(...points, 1);
+        const span = max - min || 1;
+
+        const coords = points.map((point, index) => {
+          const x = points.length === 1 ? 0 : (index / (points.length - 1)) * width;
+          const y = height - ((point - min) / span) * (height - 4) - 2;
+          return `${x.toFixed(2)},${y.toFixed(2)}`;
+        });
+
+        const path = coords.length ? `M${coords[0]} L${coords.slice(1).join(" ")}` : "M0,26 L88,26";
+
+        return `
+          <svg class="sparkline" viewBox="0 0 ${width} ${height}" role="img" aria-label="Trend sparkline">
+            <defs>
+              <linearGradient id="spark-gradient" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#ff53bf"></stop>
+                <stop offset="100%" stop-color="#7d7bff"></stop>
+              </linearGradient>
+            </defs>
+            <path class="base" d="${path}"></path>
+            <path class="live" d="${path}"></path>
+          </svg>
+        `;
+      }
+
+      function toBarEntries(entries) {
+        const list = Object.entries(entries || {});
+        const max = Math.max(...list.map(([, value]) => Number(value) || 0), 1);
+        return list.map(([key, value]) => ({
+          label: key.replace(/_/g, " "),
+          short: key.slice(0, 3).toUpperCase(),
+          value: Number(value) || 0,
+          height: ((Number(value) || 0) / max) * 100
+        }));
+      }
+
+      function render(stats) {
+        const totalUsers = Number(stats.total_users) || 0;
+        const visitors = Number(stats.total_site_visits) || 0;
+        const runtimeTotal = Number(stats.total_runtime_events) || 0;
+        const installTotal = Number(stats.active_installations?.total) || 0;
+
+        const compactCards = [
+          {
+            label: "Total users",
+            value: totalUsers,
+            delta: stats.last_30d?.users,
+            progress: 72,
+            trend: stats.series?.last_7d_visits || []
+          },
+          {
+            label: "Active installations",
+            value: installTotal,
+            delta: stats.last_30d?.installations,
+            progress: 61,
+            trend: stats.series?.last_7d_runtime_events || []
+          },
+          {
+            label: "Runtime events",
+            value: runtimeTotal,
+            delta: stats.last_30d?.runtime_events,
+            progress: 88,
+            trend: stats.series?.last_7d_runtime_events || []
+          }
+        ];
+
+        document.getElementById("stats-summary").textContent = stats.summary || "";
+        const asOf = new Date(stats.as_of);
+        document.getElementById("stats-updated").innerHTML = `<strong>As of:</strong> ${Number.isNaN(asOf.getTime()) ? "Pending" : asOf.toLocaleString()}`;
+
+        document.getElementById("spotlight-card").innerHTML = `
+          <div>
+            <p class="spotlight-kicker">Spotlight Metric</p>
+            <h3>Total Site Visits</h3>
+            <p class="spotlight-value count-up" data-count-target="${visitors}" data-format="compact">0</p>
+            <span class="delta-pill">${formatPercent(stats.last_30d?.site_visits)} vs last 30 days</span>
+          </div>
+          <div>
+            <p class="stats-subtle">Cross-platform traffic from public pages, media surfaces, and community hub views.</p>
+            <div class="spotlight-progress">
+              <span data-progress-target="84"></span>
+            </div>
+          </div>
+        `;
+
+        const runtimeBars = toBarEntries(stats.runtime_breakdown);
+        document.getElementById("runtime-breakdown-card").innerHTML = `
+          <h3>Runtime Event Breakdown</h3>
+          <p class="stats-subtle">Total runtime events processed across automation modules.</p>
+          <p class="compact-value count-up" data-count-target="${runtimeTotal}" data-format="full">0</p>
+          <div class="bar-chart" role="img" aria-label="Runtime event category distribution">
+            ${runtimeBars
+              .map(
+                (item) => `
+                  <div class="bar-wrap" title="${item.label}: ${formatFullNumber(item.value)}">
+                    <div class="bar" data-bar-target="${item.height.toFixed(2)}"></div>
+                    <span class="bar-label">${item.short}</span>
+                  </div>
+                `
+              )
+              .join("")}
+          </div>
+          <p class="metrics-note">Categories: ${runtimeBars.map((item) => `${item.label} (${formatCompactNumber(item.value)})`).join(" • ")}</p>
+        `;
+
+        document.getElementById("compact-cards").innerHTML = compactCards
+          .map(
+            (item) => `
+              <article class="stats-card compact-card reveal-animate">
+                <div>
+                  <p class="compact-label">${item.label}</p>
+                  <p class="compact-value count-up" data-count-target="${item.value}" data-format="full">0</p>
+                </div>
+                <div>
+                  <div class="compact-meta">
+                    <p class="compact-delta">${formatPercent(item.delta)} in last 30d</p>
+                    ${buildSparkline(item.trend)}
+                  </div>
+                  <div class="compact-track"><span data-progress-target="${item.progress}"></span></div>
+                </div>
+              </article>
+            `
+          )
+          .join("");
+
+        const performanceSeries = (stats.series?.last_7d_runtime_events || []).map((value, idx) => ({
+          day: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][idx] || `D${idx + 1}`,
+          value: Number(value) || 0
+        }));
+        const peak = Math.max(...performanceSeries.map((item) => item.value), 1);
+
+        document.getElementById("analytics-card").innerHTML = `
+          <div class="analytics-head">
+            <h3>Performance Analytics</h3>
+            <span class="analytics-live">Live placeholder</span>
+          </div>
+          <div class="analytics-mini">
+            <article class="analytics-mini-box">
+              <p>Total creators</p>
+              <strong class="count-up" data-count-target="${stats.creators || 0}" data-format="compact">0</strong>
+              <p class="compact-delta">${formatPercent(stats.last_30d?.creators)} in last 30d</p>
+            </article>
+            <article class="analytics-mini-box">
+              <p>Viewer accounts</p>
+              <strong class="count-up" data-count-target="${stats.viewers || 0}" data-format="compact">0</strong>
+              <p class="compact-delta">${formatPercent(stats.last_30d?.users)} in last 30d</p>
+            </article>
+          </div>
+          <div class="bar-chart" role="img" aria-label="Runtime events over last seven days">
+            ${performanceSeries
+              .map(
+                (point) => `
+                  <div class="bar-wrap" title="${point.day}: ${formatFullNumber(point.value)}">
+                    <div class="bar" data-bar-target="${((point.value / peak) * 100).toFixed(2)}"></div>
+                    <span class="bar-label">${point.day}</span>
+                  </div>
+                `
+              )
+              .join("")}
+          </div>
+        `;
+
+        const installEntries = Object.entries(stats.active_installations || {})
+          .filter(([key]) => key !== "total")
+          .sort((a, b) => (Number(b[1]) || 0) - (Number(a[1]) || 0));
+
+        document.getElementById("milestones-card").innerHTML = `
+          <div>
+            <h3>Milestones & Bragging Rights</h3>
+            <p class="stats-subtle">Operational marks and ecosystem progress points reached by StreamSuites.</p>
+            <ul class="milestones-list">
+              ${(stats.milestones || []).map((item) => `<li>${item}</li>`).join("")}
+            </ul>
+          </div>
+          <div>
+            <p class="compact-label">Install mix</p>
+            <div class="stats-tags">
+              ${installEntries.map(([key, value]) => `<span>${key.replace(/_/g, " ")}: ${formatCompactNumber(value)}</span>`).join("")}
+            </div>
+          </div>
+        `;
+      }
+
+      function easeOutCubic(t) {
+        return 1 - Math.pow(1 - t, 3);
+      }
+
+      function animateCount(node) {
+        if (!node || node.dataset.animated === "true") return;
+        const target = Number(node.dataset.countTarget || 0);
+        const format = node.dataset.format || "full";
+        const formatFn = format === "compact" ? formatCompactNumber : formatFullNumber;
+
+        if (reducedMotion) {
+          node.textContent = formatFn(target);
+          node.dataset.animated = "true";
+          return;
+        }
+
+        const duration = 1200;
+        const start = performance.now();
+
+        function frame(now) {
+          const progress = Math.min((now - start) / duration, 1);
+          const eased = easeOutCubic(progress);
+          const value = Math.round(target * eased);
+          node.textContent = formatFn(value);
+          if (progress < 1) {
+            requestAnimationFrame(frame);
+            return;
+          }
+          node.dataset.animated = "true";
+          node.textContent = formatFn(target);
+        }
+
+        requestAnimationFrame(frame);
+      }
+
+      function activateVisuals(container) {
+        if (!container || container.dataset.entered === "true") return;
+        container.dataset.entered = "true";
+
+        container.querySelectorAll("[data-progress-target]").forEach((node) => {
+          const target = Number(node.dataset.progressTarget || 0);
+          if (reducedMotion) {
+            node.style.width = `${target}%`;
+            return;
+          }
+          requestAnimationFrame(() => {
+            node.style.width = `${target}%`;
+          });
+        });
+
+        container.querySelectorAll(".bar[data-bar-target]").forEach((bar) => {
+          const target = Number(bar.dataset.barTarget || 0);
+          if (reducedMotion) {
+            bar.style.height = `${target}%`;
+            return;
+          }
+          requestAnimationFrame(() => {
+            bar.style.height = `${target}%`;
+          });
+        });
+
+        container.querySelectorAll(".sparkline path.live").forEach((path) => {
+          const length = typeof path.getTotalLength === "function" ? path.getTotalLength() : 0;
+          path.style.strokeDasharray = String(length || 1);
+          if (reducedMotion) {
+            path.style.strokeDashoffset = "0";
+            return;
+          }
+          path.style.strokeDashoffset = String(length || 1);
+          requestAnimationFrame(() => {
+            path.style.strokeDashoffset = "0";
+          });
+        });
+
+        container.querySelectorAll(".count-up").forEach((counter) => {
+          animateCount(counter);
+        });
+      }
+
+      function initViewportAnimations() {
+        const blocks = Array.from(document.querySelectorAll(".reveal-animate"));
+
+        if (reducedMotion || typeof IntersectionObserver !== "function") {
+          blocks.forEach((block) => activateVisuals(block));
+          return;
+        }
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return;
+              activateVisuals(entry.target);
+              observer.unobserve(entry.target);
+            });
+          },
+          {
+            threshold: 0.35,
+            rootMargin: "0px 0px -8% 0px"
+          }
+        );
+
+        blocks.forEach((block) => observer.observe(block));
+      }
+
+      render(STATS_PLACEHOLDER);
+      initViewportAnimations();
+    })();
+  </script>
+  <script src="/js/utils/versioning.js"></script>
+  <script src="/js/utils/version-stamp.js"></script>
+  <script src='/js/status-widget.js' defer></script>
+</body>
+</html>
