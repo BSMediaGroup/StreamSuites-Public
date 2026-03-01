@@ -18,6 +18,7 @@
     { href: "/community/settings.html", label: "Settings", icon: "/assets/icons/ui/cog.svg", group: "main" },
     { href: "/media.html", label: "Media", icon: "/assets/icons/ui/portal.svg", group: "main" },
     { href: "/support.html", label: "Support", icon: "/assets/icons/ui/checkbox.svg", group: "quick" },
+    { href: "/donate.html", label: "Donate", icon: "/assets/icons/ui/heart.svg", group: "quick" },
     { href: "/about.html", label: "About", icon: "/assets/icons/ui/identity.svg", group: "quick" }
   ];
 
@@ -50,6 +51,8 @@
     menu: "/assets/icons/ui/sidebar.svg",
     close: "/assets/icons/ui/minus.svg",
     search: "/assets/icons/ui/querystats.svg",
+    filterExpand: "/assets/icons/ui/plus.svg",
+    filterCollapse: "/assets/icons/ui/minus.svg",
     copy: "/assets/icons/ui/portal.svg",
     layoutSide: "/assets/icons/ui/cards.svg",
     layoutStack: "/assets/icons/ui/tablechart.svg",
@@ -264,15 +267,15 @@
     logo.src = "/assets/logos/logo.png";
     logo.alt = "StreamSuites";
     const labels = create("span", "sidebar-brand-label");
-    labels.append(
-      create("span", "sidebar-brand-title", "StreamSuites™"),
-      create("span", "sidebar-brand-subtitle", "Public")
-    );
-    const brandSubheading = create("div", "sidebar-brand-subheading");
+    const brandSubheading = create("span", "sidebar-brand-subheading");
     const brandSubheadingText = create("span", "sidebar-brand-subheading-text", shellSubheading(options.shellKind));
     brandSubheading.appendChild(brandSubheadingText);
+    labels.append(
+      create("span", "sidebar-brand-title", "StreamSuites™"),
+      brandSubheading
+    );
     brand.append(logo, labels);
-    sidebarTop.append(brand, brandSubheading);
+    sidebarTop.append(brand);
 
     const sidebarScroll = create("div", "sidebar-scroll");
 
@@ -334,10 +337,13 @@
     topbarMain.append(topbarLeft, topbarCenter, topbarRight);
 
     const filterDock = create("div", "filter-dock");
-    const filterToggle = create("button", "filter-toggle", "FILTERS");
+    const filterToggle = create("button", "filter-toggle");
     filterToggle.type = "button";
+    filterToggle.setAttribute("aria-label", "Expand filters");
     filterToggle.setAttribute("aria-expanded", "false");
     filterToggle.setAttribute("aria-controls", "public-filter-row");
+    const filterToggleIcon = createIcon(UI_ICON_MAP.filterExpand, "filter-toggle-icon");
+    filterToggle.appendChild(filterToggleIcon);
 
     const filterRowWrap = create("div", "filter-row-wrap");
     filterRowWrap.id = "public-filter-row";
@@ -359,8 +365,8 @@
 
     const footer = buildFooter();
 
-    main.append(topbar, loadingBar, content, footer);
-    layout.append(sidebar, main);
+    main.append(topbar, loadingBar, content);
+    layout.append(sidebar, main, footer);
     root.append(bg, layout);
 
     const authBackdrop = create("div", "auth-modal-backdrop");
@@ -683,6 +689,12 @@
       filterDock.classList.toggle("is-empty", !hasFilters);
       filterDock.classList.toggle("is-collapsed", nextCollapsed);
       filterToggle.setAttribute("aria-expanded", String(!nextCollapsed));
+      filterToggle.setAttribute("aria-label", nextCollapsed ? "Expand filters" : "Collapse filters");
+      filterToggle.disabled = !hasFilters;
+      filterToggleIcon.style.setProperty(
+        "--icon-mask",
+        `url("${nextCollapsed ? UI_ICON_MAP.filterExpand : UI_ICON_MAP.filterCollapse}")`
+      );
       filterRowWrap.hidden = nextCollapsed;
     }
 

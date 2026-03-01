@@ -89,6 +89,10 @@ body.public-shell-page.modal-open {
   min-height: 100vh;
   display: grid;
   grid-template-columns: var(--ps-sidebar-expanded-w) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "sidebar main"
+    "footer footer";
   transition: grid-template-columns 180ms ease;
   overflow: hidden;
 }
@@ -102,6 +106,7 @@ body.public-shell-page.modal-open {
 }
 
 .public-sidebar {
+  grid-area: sidebar;
   border-right: 1px solid rgba(214, 223, 237, 0.18);
   background: linear-gradient(180deg, rgba(10, 15, 24, 0.96), rgba(7, 12, 20, 0.9));
   backdrop-filter: blur(14px);
@@ -151,6 +156,7 @@ body.public-shell-page.modal-open {
 
 .sidebar-brand-label {
   display: grid;
+  gap: 4px;
   line-height: 1.1;
 }
 
@@ -171,8 +177,9 @@ body.public-shell-page.modal-open {
   align-items: center;
   justify-content: center;
   min-height: 20px;
-  margin-top: 8px;
-  padding: 4px 6px;
+  max-width: 100%;
+  width: fit-content;
+  padding: 4px 7px;
   border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   background: rgba(255, 255, 255, 0.08);
@@ -291,7 +298,7 @@ body.public-shell-page.modal-open {
   mask-size: contain;
 }
 
-.public-shell-root[data-sidebar-state="icon"] .sidebar-brand-label,
+.public-shell-root[data-sidebar-state="icon"] .sidebar-brand-title,
 .public-shell-root[data-sidebar-state="icon"] .sidebar-group-title,
 .public-shell-root[data-sidebar-state="icon"] .sidebar-text {
   display: none;
@@ -302,8 +309,18 @@ body.public-shell-page.modal-open {
   justify-content: center;
 }
 
+.public-shell-root[data-sidebar-state="icon"] .sidebar-brand {
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 4px;
+}
+
+.public-shell-root[data-sidebar-state="icon"] .sidebar-brand-label {
+  display: flex;
+  justify-content: center;
+}
+
 .public-shell-root[data-sidebar-state="icon"] .sidebar-brand-subheading {
-  margin-top: 8px;
   width: 100%;
   padding: 4px 2px;
 }
@@ -320,6 +337,7 @@ body.public-shell-page.modal-open {
 }
 
 .public-main {
+  grid-area: main;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -354,6 +372,11 @@ body.public-shell-page.modal-open {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.topbar-right {
+  justify-self: end;
+  margin-left: auto;
 }
 
 .topbar-menu-btn,
@@ -681,13 +704,14 @@ body.public-shell-page.modal-open {
   border: 1px solid rgba(170, 191, 226, 0.26);
   background: linear-gradient(165deg, rgba(33, 49, 74, 0.86), rgba(16, 25, 40, 0.9));
   color: rgba(210, 224, 246, 0.9);
-  border-radius: 999px;
+  border-radius: 9px;
   height: 24px;
-  padding: 0 11px;
-  font-size: 0.64rem;
-  font-family: "SuiGenerisRg", "SuiGeneris", "Segoe UI", sans-serif;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  width: 24px;
+  min-width: 24px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
 }
 
@@ -696,6 +720,25 @@ body.public-shell-page.modal-open {
   color: var(--ps-link-primary);
   border-color: rgba(154, 209, 255, 0.54);
   outline: none;
+}
+
+.filter-toggle:disabled {
+  opacity: 0.48;
+  cursor: default;
+}
+
+.filter-toggle-icon {
+  width: 12px;
+  height: 12px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--icon-mask);
+  mask-image: var(--icon-mask);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
 }
 
 .filter-row-wrap {
@@ -2083,6 +2126,7 @@ body.public-shell-page.modal-open {
 }
 
 .footer-shell {
+  grid-area: footer;
   position: relative;
   width: 100%;
   z-index: 1;
@@ -2112,18 +2156,24 @@ body.public-shell-page.modal-open {
 
 .public-topbar.search-hidden .topbar-main {
   position: relative;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .public-topbar.search-hidden .topbar-center {
   display: none;
 }
 
+.public-topbar.search-hidden .topbar-right {
+  margin-left: auto;
+}
+
 .public-topbar.search-hidden .topbar-title {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  max-width: calc(100% - 260px);
+  max-width: calc(100% - 320px);
   text-align: center;
   pointer-events: none;
 }
