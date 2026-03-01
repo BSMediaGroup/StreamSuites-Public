@@ -25,6 +25,7 @@
 
   const DEFAULT_PROFILE = {
     id: "public-user",
+    userCode: "public-user",
     username: "public-user",
     displayName: "Public User",
     avatar: FALLBACK_AVATAR,
@@ -39,6 +40,10 @@
   };
 
   let cachePromise = null;
+
+  function isUuidLike(value) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
+  }
 
   function toArray(payload) {
     if (Array.isArray(payload)) return payload;
@@ -215,6 +220,13 @@
   function normalizeProfile(raw) {
     const id = raw?.id || raw?.profile_id || raw?.username || raw?.name;
     if (!id) return null;
+    const userCodeRaw = raw?.user_code || raw?.userCode || raw?.username || id;
+    const normalizedCode = String(userCodeRaw || "public-user")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+    const userCode = !normalizedCode || isUuidLike(normalizedCode) ? "public-user" : normalizedCode;
 
     const role = normalizeRole(raw.role || raw.role_hint);
     const tier = normalizeTier(raw.tier || raw.plan_tier || raw.membership_tier || raw.membershipTier || raw.tier_label);
@@ -222,6 +234,7 @@
 
     return {
       id: String(id),
+      userCode,
       username: String(raw.username || raw.handle || id),
       displayName: raw.display_name || raw.displayName || raw.name || String(id),
       avatar: raw.avatar || raw.avatar_url || FALLBACK_AVATAR,
@@ -238,10 +251,14 @@
   function buildProfileMap(items) {
     const map = new Map();
     map.set(DEFAULT_PROFILE.id, { ...DEFAULT_PROFILE });
+    map.set(DEFAULT_PROFILE.userCode, { ...DEFAULT_PROFILE });
     items.forEach((raw) => {
       const profile = normalizeProfile(raw);
       if (!profile) return;
       map.set(profile.id, profile);
+      if (profile.userCode) {
+        map.set(profile.userCode, profile);
+      }
       if (profile.username) {
         map.set(profile.username, profile);
       }
@@ -259,6 +276,8 @@
     const candidateId =
       rawCreator.profile_id ||
       rawCreator.profileId ||
+      rawCreator.user_code ||
+      rawCreator.userCode ||
       rawCreator.id ||
       rawCreator.username ||
       rawCreator.name;
@@ -306,6 +325,7 @@
       removedState: removal.removedState,
       isRemoved: removal.isRemoved,
       profileId: profile.id,
+      profileCode: profile.userCode || profile.username || profile.id,
       creator: profile,
       href: `/clips/detail.html?id=${encodeURIComponent(id)}`
     };
@@ -373,6 +393,7 @@
       platformKey: profile.platformKey,
       platformIcon: profile.platformIcon,
       profileId: profile.id,
+      profileCode: profile.userCode || profile.username || profile.id,
       creator: profile,
       href: `/polls/detail.html?id=${encodeURIComponent(id)}`,
       resultsHref: `/polls/results.html?id=${encodeURIComponent(id)}`
@@ -440,6 +461,7 @@
       platformKey: profile.platformKey,
       platformIcon: profile.platformIcon,
       profileId: profile.id,
+      profileCode: profile.userCode || profile.username || profile.id,
       creator: profile,
       href: `/scoreboards/detail.html?id=${encodeURIComponent(id)}`
     };
@@ -469,6 +491,7 @@
       platformKey: profile.platformKey,
       platformIcon: profile.platformIcon,
       profileId: profile.id,
+      profileCode: profile.userCode || profile.username || profile.id,
       creator: profile,
       href: `/tallies/detail.html?id=${encodeURIComponent(id)}`
     };
@@ -560,6 +583,7 @@
         notices,
         profiles: profileList,
         profilesById: Object.fromEntries(profileList.map((profile) => [profile.id, profile])),
+        profilesByCode: Object.fromEntries(profileList.map((profile) => [profile.userCode || profile.id, profile])),
         artifactsByProfile,
         meta: metaPayload,
         helpers: {

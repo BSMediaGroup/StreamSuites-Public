@@ -18,12 +18,19 @@
   const AUTH_ME_URL = `${AUTH_API_BASE}/api/public/me`;
   const AUTH_PUBLIC_ARTIFACTS_URL = `${AUTH_API_BASE}/api/public/artifacts`;
   const AUTH_LOGOUT_URL = `${AUTH_API_BASE}/auth/logout`;
-  const PUBLIC_LOGIN_URL = "https://streamsuites.app/public-login.html";
   const CREATOR_DASHBOARD_URL = "https://creator.streamsuites.app";
   const ADMIN_DASHBOARD_URL = "https://admin.streamsuites.app";
-  const PUBLIC_AUTH_POPUP_TARGET = "ss_public_auth_login";
-  const PUBLIC_AUTH_POPUP_FEATURES = "popup=yes,width=560,height=760";
   const PUBLIC_AUTH_COMPLETE_MESSAGE_TYPE = "ss_public_auth_complete";
+  const ROLE_ICON_MAP = Object.freeze({
+    admin: "/assets/icons/ui/admin.svg",
+    creator: "/assets/icons/ui/verifiedbadge.svg",
+    viewer: "/assets/icons/ui/tickbadge.svg"
+  });
+  const TIER_ICON_MAP = Object.freeze({
+    core: "/assets/icons/tierbadge-core.svg",
+    gold: "/assets/icons/tierbadge-gold.svg",
+    pro: "/assets/icons/tierbadge-pro.svg"
+  });
 
   const PAGE_CONFIG = {
     "media-home": {
@@ -281,32 +288,69 @@
     return avatar;
   }
 
-  function buildBadgeChip(badge) {
-    const chip = create("span", "badge-chip", badge.label || "Badge");
-    const kind = badge?.kind === "admin" ? "admin" : "tier";
-    chip.classList.add(`badge-${kind}`);
-
-    if (kind === "tier" && badge?.tier) {
-      chip.dataset.tier = String(badge.tier).toUpperCase();
-    }
-
-    return chip;
+  function normalizeRoleForUi(value) {
+    const role = String(value || "").trim().toLowerCase();
+    if (role.includes("admin")) return "admin";
+    if (role.includes("creator")) return "creator";
+    return "viewer";
   }
 
-  function buildCreatorMeta(profile) {
+  function normalizeTierForUi(value) {
+    const tier = String(value || "").trim().toLowerCase();
+    if (tier === "gold" || tier === "pro") return tier;
+    return "core";
+  }
+
+  function roleLabel(role) {
+    if (role === "admin") return "ADMIN";
+    if (role === "creator") return "CREATOR";
+    return "VIEWER";
+  }
+
+  function createBadgeIcon(type, value) {
+    const icon = create("img", "badge-icon");
+    const normalized = String(value || "").trim().toLowerCase();
+    if (type === "tier") {
+      icon.src = TIER_ICON_MAP[normalized] || TIER_ICON_MAP.core;
+      icon.alt = `${normalized || "core"} tier`;
+      icon.classList.add("badge-icon-tier");
+      return icon;
+    }
+    icon.src = ROLE_ICON_MAP[normalized] || ROLE_ICON_MAP.viewer;
+    icon.alt = `${normalized || "viewer"} role`;
+    icon.classList.add("badge-icon-role");
+    return icon;
+  }
+
+  function buildBadgeSuffix(profile, options = {}) {
+    const includeRoleChip = Boolean(options.includeRoleChip);
+    const row = create("span", "creator-badges");
+    const role = normalizeRoleForUi(profile?.role);
+    const tier = normalizeTierForUi(profile?.tier);
+
+    row.append(createBadgeIcon("role", role), createBadgeIcon("tier", tier));
+
+    if (includeRoleChip) {
+      const chip = create("span", "badge-role-chip", roleLabel(role));
+      row.appendChild(chip);
+    }
+    return row;
+  }
+
+  function buildCreatorMeta(profile, options = {}) {
+    const expanded = Boolean(options.expanded);
+    const includeRoleChip = Boolean(options.includeRoleChip);
     const row = create("div", "creator-meta");
-    row.appendChild(buildAvatar(profile));
+    if (expanded) row.classList.add("is-expanded");
+    const avatar = buildAvatar(profile);
+    if (expanded) avatar.classList.add("is-expanded");
+    row.appendChild(avatar);
 
     const textWrap = create("div", "creator-meta-text");
     const top = create("div", "creator-meta-top");
     top.appendChild(create("span", "creator-name", profile?.displayName || "Public User"));
 
-    const badges = Array.isArray(profile?.badges) ? profile.badges : [];
-    if (badges.length) {
-      const badgeWrap = create("div", "creator-badges");
-      badges.forEach((badge) => badgeWrap.appendChild(buildBadgeChip(badge)));
-      top.appendChild(badgeWrap);
-    }
+    top.appendChild(buildBadgeSuffix(profile, { includeRoleChip }));
 
     const bottom = create("div", "creator-meta-bottom", profile?.platform || "StreamSuites");
 
@@ -638,9 +682,15 @@
     make("Status", item.status || "Pending");
     make("Created", helpers.toTimestamp(item.createdAt));
     make("Updated", helpers.toTimestamp(item.updatedAt));
-    make("ID", item.id);
 
     return rows;
+  }
+
+  function buildProfileHref(profileOrCode) {
+    const code = typeof profileOrCode === "string"
+      ? profileOrCode
+      : profileOrCode?.userCode || profileOrCode?.username || profileOrCode?.id || "public-user";
+    return `/community/profile.html?u=${encodeURIComponent(String(code || "public-user").trim() || "public-user")}`;
   }
 
   function buildShareLink(pathname, id) {
@@ -718,20 +768,26 @@
   }
 
   function buildExternalSourceBlock(item) {
-    if (!item?.sourceUrl) return null;
-
     const wrap = create("div", "external-source");
     const link = create("a", "external-source-link");
-    link.href = item.sourceUrl;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
+    const sourceUrl = String(item?.sourceUrl || "").trim();
+    const hasSource = Boolean(sourceUrl);
+    if (hasSource) {
+      link.href = sourceUrl;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+    } else {
+      link.href = "#";
+      link.classList.add("is-disabled");
+      link.setAttribute("aria-disabled", "true");
+      link.tabIndex = -1;
+    }
 
     const icon = create("img", "chip-icon");
-    icon.src = item.platformIcon || window.StreamSuitesPublicData?.platformIconFor?.(item.platform) || "/assets/icons/pilled.svg";
-    icon.alt = `${item.platform || "Source"} icon`;
-
-    const action = item.type === "clips" ? "Watch on" : "Open on";
-    link.append(icon, create("span", "", `${action} ${item.platform || "Source"}`));
+    icon.src = "/assets/icons/rumble.svg";
+    icon.alt = "Rumble icon";
+    const text = item?.type === "clips" ? "Watch on Rumble" : "Open on Rumble";
+    link.append(icon, create("span", "", hasSource ? text : `${text} (Unavailable)`));
 
     wrap.appendChild(link);
     return wrap;
@@ -1015,17 +1071,22 @@
     const side = create("aside", "detail-side");
 
     const profileCard = create("div", "profile-card");
-    profileCard.appendChild(buildCreatorMeta(item.creator));
+    profileCard.appendChild(buildCreatorMeta(item.creator, { expanded: true, includeRoleChip: true }));
     profileCard.appendChild(buildDetailRows(item, helpers));
 
     const profileLink = create("a", "see-all", "Open profile");
-    profileLink.href = `/community/profile.html?id=${encodeURIComponent(item.profileId || "public-user")}`;
+    profileLink.href = buildProfileHref(item.profileCode || item.profileId || "public-user");
 
     const shareLabel = create("div", "detail-subtle-label", "Share Link");
     const shareUrl = buildShareLink(window.location.pathname, item.id);
     const shareBox = buildShareBox(shareUrl);
+    const sourceLabel = create("div", "detail-subtle-label", "External Link");
+    const sourceBlock = item?.type === "clips" ? buildExternalSourceBlock(item) : null;
 
     profileCard.append(profileLink, shareLabel, shareBox);
+    if (sourceBlock) {
+      profileCard.append(sourceLabel, sourceBlock);
+    }
 
     const showOwnerRemoveAction =
       !item?.isRemoved &&
@@ -1084,11 +1145,6 @@
 
       ownerActionWrap.append(removeButton, inlineError);
       profileCard.append(ownerActionLabel, ownerActionWrap);
-    }
-
-    const sourceBlock = buildExternalSourceBlock(item);
-    if (sourceBlock) {
-      profileCard.appendChild(sourceBlock);
     }
 
     side.appendChild(profileCard);
@@ -1252,14 +1308,14 @@
 
   function buildProfileCard(profile, data) {
     const card = create("article", "profile-card");
-    card.appendChild(buildCreatorMeta(profile));
+    card.appendChild(buildCreatorMeta(profile, { expanded: true, includeRoleChip: true }));
 
     const artifactCount = (data.artifactsByProfile?.[profile.id] || []).length;
     const badge = create("div", "item-meta");
     badge.append(create("span", "meta-pill", `${artifactCount} artifacts`));
 
     const link = create("a", "see-all", "Open profile");
-    link.href = `/community/profile.html?id=${encodeURIComponent(profile.id)}`;
+    link.href = buildProfileHref(profile);
 
     card.append(create("p", "item-snippet", profile.bio || ""), badge, link);
     return card;
@@ -1313,22 +1369,45 @@
     }
   }
 
+  function resolveCommunityProfile(data) {
+    const params = new URLSearchParams(window.location.search || "");
+    const byCode = String(params.get("u") || "").trim();
+    const legacyId = String(params.get("id") || "").trim();
+    const fallback = data.profilesById[window.StreamSuitesPublicData.DEFAULT_PROFILE.id];
+
+    if (byCode) {
+      const profile = data.profilesByCode?.[byCode] || data.profilesById?.[byCode] || fallback;
+      const safeHref = buildProfileHref(profile);
+      if (window.location.pathname + window.location.search !== safeHref) {
+        window.history.replaceState(window.history.state, "", safeHref);
+      }
+      return profile;
+    }
+
+    if (legacyId) {
+      const profile = data.profilesById?.[legacyId] || data.profilesByCode?.[legacyId] || fallback;
+      window.history.replaceState(window.history.state, "", buildProfileHref(profile));
+      return profile;
+    }
+
+    return fallback;
+  }
+
   function renderCommunityProfile(ctx) {
     const { host, data } = ctx;
     clear(host);
 
-    const id = window.StreamSuitesPublicData.parseDetailId();
-    const profile = data.profilesById[id] || data.profilesById[window.StreamSuitesPublicData.DEFAULT_PROFILE.id];
+    const profile = resolveCommunityProfile(data);
     const artifacts = data.artifactsByProfile?.[profile.id] || [];
 
-    host.appendChild(buildPageHeading(profile.displayName, `${profile.platform} | ${profile.role}`));
+    host.appendChild(buildPageHeading(profile.displayName, `${profile.platform} | ${roleLabel(normalizeRoleForUi(profile.role))}`));
 
     const hero = create("section", "detail-layout is-stacked");
     const left = create("article", "detail-main");
     const right = create("aside", "detail-side");
 
     const profileCard = create("article", "profile-card");
-    profileCard.append(buildCreatorMeta(profile), create("p", "", profile.bio || ""));
+    profileCard.append(buildCreatorMeta(profile, { expanded: true, includeRoleChip: true }), create("p", "", profile.bio || ""));
     left.appendChild(profileCard);
 
     const artifactSection = create("section", "section");
@@ -1368,34 +1447,25 @@
     return "";
   }
 
-  function deriveBadges(accountType, tier) {
-    const badges = [];
-    const normalizedTier = String(tier || "").trim().toLowerCase();
-    if (normalizedTier === "gold" || normalizedTier === "pro") {
-      badges.push({ kind: "tier", value: normalizedTier, label: normalizedTier.toUpperCase() });
-    }
-    if (accountType === "ADMIN") {
-      badges.push({ kind: "role", value: "admin", label: "Admin" });
-    } else if (accountType === "CREATOR") {
-      badges.push({ kind: "role", value: "creator", label: "Creator" });
-    }
-    return badges;
+  function normalizeUserCode(value, fallback = "public-user") {
+    const normalized = String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+    const isUuidLike = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized);
+    if (!normalized || isUuidLike) return fallback;
+    return normalized;
   }
 
-  function normalizeBadges(rawBadges, accountType, tier) {
-    if (!Array.isArray(rawBadges) || !rawBadges.length) {
-      return deriveBadges(accountType, tier);
-    }
-    return rawBadges
-      .map((badge) => {
-        if (!badge || typeof badge !== "object") return null;
-        const label = String(badge.label || badge.value || "").trim();
-        if (!label) return null;
-        const kind = String(badge.kind || "").trim().toLowerCase() || "role";
-        const value = String(badge.value || badge.tier || "").trim().toLowerCase();
-        return { kind, value, label };
-      })
-      .filter(Boolean);
+  function buildAccountBadges(accountType, tier) {
+    const role = accountType === "ADMIN" ? "admin" : accountType === "CREATOR" ? "creator" : "viewer";
+    const tierValue = normalizeTierForUi(tier);
+    return [
+      { kind: "role-icon", value: role },
+      { kind: "tier-icon", value: tierValue },
+      { kind: "role-chip", value: role, label: roleLabel(role) }
+    ];
   }
 
   function normalizeAuthState(payload) {
@@ -1404,7 +1474,8 @@
       return {
         authenticated: false,
         accountId: "",
-        displayName: "Guest",
+        userCode: "public-user",
+        displayName: "Login",
         avatarUrl: "",
         accountType: "PUBLIC",
         tier: "core",
@@ -1447,45 +1518,46 @@
       payload?.user?.tier ||
       "core"
     ).trim().toLowerCase() || "core";
+    const userCode = normalizeUserCode(
+      payload?.user_code ||
+      payload?.data?.user_code ||
+      payload?.user?.user_code ||
+      payload?.creator?.user_code ||
+      payload?.username ||
+      payload?.user?.username
+    );
 
     return {
       authenticated: true,
       accountId,
+      userCode,
       displayName,
       avatarUrl,
       accountType,
       tier,
-      badges: normalizeBadges(payload?.badges, accountType, tier)
+      badges: buildAccountBadges(accountType, tier)
     };
   }
 
-  function openPublicLoginPopup() {
-    const loginUrl = new URL(PUBLIC_LOGIN_URL);
-    loginUrl.searchParams.set("return_to", window.location.href);
-    const popup = window.open(
-      loginUrl.toString(),
-      PUBLIC_AUTH_POPUP_TARGET,
-      PUBLIC_AUTH_POPUP_FEATURES
-    );
-    if (!popup) {
-      window.location.assign(loginUrl.toString());
-      return null;
-    }
-    try {
-      popup.focus();
-    } catch (_err) {
-      // Ignore popup focus errors.
-    }
-    return popup;
-  }
-
   function buildAccountMenuItems(authState) {
-    if (!authState?.authenticated) return [];
+    if (!authState?.authenticated) {
+      return [
+        { label: "Public Login", action: "public_login" },
+        {
+          label: "Creator Login",
+          href: "https://api.streamsuites.app/auth/login/google?surface=creator",
+          target: "_blank",
+          rel: "noopener noreferrer",
+          action: "creator_login"
+        },
+        { label: "Sign up", action: "public_signup", subtle: true }
+      ];
+    }
 
     const items = [
       {
         label: "Profile",
-        href: `/community/profile.html?id=${encodeURIComponent(authState.accountId || "public-user")}`,
+        href: buildProfileHref(authState.userCode || "public-user"),
         action: "profile"
       }
     ];
@@ -1518,15 +1590,11 @@
 
   function applyAuthStateToShell(shell, authState, onMenuAction) {
     shell.updateOptions({
-      accountLabel: authState?.authenticated ? authState.displayName : "Guest",
+      accountLabel: authState?.authenticated ? authState.displayName : "Login",
       accountAvatar: authState?.authenticated ? authState.avatarUrl : "",
       accountBadges: authState?.authenticated ? authState.badges : [],
       accountAuthenticated: Boolean(authState?.authenticated),
       accountMenuItems: buildAccountMenuItems(authState),
-      accountLoginLabel: "Public Login",
-      onAccountLogin() {
-        openPublicLoginPopup();
-      },
       onAccountMenuAction(action, item) {
         if (typeof onMenuAction === "function") {
           onMenuAction(String(action || ""), item || null);
@@ -1592,6 +1660,14 @@
     let authRefreshPromise = null;
 
     async function handleAccountMenuAction(action) {
+      if (action === "public_login") {
+        shell.openAuthModal?.("login");
+        return;
+      }
+      if (action === "public_signup") {
+        shell.openAuthModal?.("signup");
+        return;
+      }
       if (action !== "logout") return;
 
       try {

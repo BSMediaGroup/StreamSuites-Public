@@ -28,6 +28,25 @@
   });
 
   const MOBILE_MEDIA_QUERY = "(max-width: 920px)";
+  const AUTH_API_BASE = "https://api.streamsuites.app";
+  const AUTH_COMPLETE_URL = "https://streamsuites.app/public-auth-complete.html";
+  const AUTH_OAUTH_LINKS = Object.freeze([
+    { provider: "google", label: "Continue with Google", icon: "/assets/icons/google.svg", path: "/auth/login/google" },
+    { provider: "github", label: "Continue with GitHub", icon: "/assets/icons/github.svg", path: "/auth/login/github" },
+    { provider: "x", label: "Continue with X", icon: "/assets/icons/x.svg", path: "/auth/x/start" },
+    { provider: "discord", label: "Continue with Discord", icon: "/assets/icons/discord.svg", path: "/auth/login/discord" },
+    { provider: "twitch", label: "Continue with Twitch", icon: "/assets/icons/twitch.svg", path: "/oauth/twitch/start" }
+  ]);
+  const ROLE_ICON_MAP = Object.freeze({
+    admin: "/assets/icons/ui/admin.svg",
+    creator: "/assets/icons/ui/verifiedbadge.svg",
+    viewer: "/assets/icons/ui/tickbadge.svg"
+  });
+  const TIER_ICON_MAP = Object.freeze({
+    core: "/assets/icons/tierbadge-core.svg",
+    gold: "/assets/icons/tierbadge-gold.svg",
+    pro: "/assets/icons/tierbadge-pro.svg"
+  });
 
   function create(tag, className, text) {
     const node = document.createElement(tag);
@@ -39,6 +58,14 @@
   function normalizePath(path) {
     if (!path) return "/";
     return path.endsWith("/") && path.length > 1 ? path.slice(0, -1) : path;
+  }
+
+  function isEditableTarget(target) {
+    if (!(target instanceof Element)) return false;
+    if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement) {
+      return true;
+    }
+    return target.closest("[contenteditable='true']") !== null;
   }
 
   function parseDetailId() {
@@ -184,7 +211,6 @@
       accountBadges: [],
       accountAuthenticated: false,
       accountMenuItems: [],
-      accountLoginLabel: "Public Login",
       ...userOptions
     };
 
@@ -255,7 +281,9 @@
     searchInput.type = "search";
     searchInput.placeholder = options.searchPlaceholder || "Search";
     searchInput.setAttribute("data-shell-search", "");
-    searchShell.append(searchIcon, searchInput);
+    const searchHint = create("span", "search-kbd-hint");
+    searchHint.innerHTML = "<kbd>Ctrl</kbd>/<kbd>&#8984;</kbd> K";
+    searchShell.append(searchIcon, searchInput, searchHint);
     topbarCenter.appendChild(searchShell);
 
     const topbarRight = create("div", "topbar-right");
@@ -271,20 +299,17 @@
     accountText.append(accountName, accountBadges);
     account.append(accountAvatar, accountText);
 
-    const accountLoginBtn = create("button", "account-login-btn", options.accountLoginLabel || "Public Login");
-    accountLoginBtn.type = "button";
-
     const accountMenu = create("div", "account-menu");
     accountMenu.hidden = true;
     accountMenu.setAttribute("role", "menu");
 
-    accountWidget.append(account, accountLoginBtn, accountMenu);
+    accountWidget.append(account, accountMenu);
     topbarRight.appendChild(accountWidget);
 
     topbarMain.append(topbarLeft, topbarCenter, topbarRight);
 
     const filterDock = create("div", "filter-dock");
-    const filterToggle = create("button", "filter-toggle", "Filters");
+    const filterToggle = create("button", "filter-toggle", "FILTERS");
     filterToggle.type = "button";
     filterToggle.setAttribute("aria-expanded", "false");
     filterToggle.setAttribute("aria-controls", "public-filter-row");
@@ -313,6 +338,113 @@
     layout.append(sidebar, main);
     root.append(bg, layout);
 
+    const authBackdrop = create("div", "auth-modal-backdrop");
+    authBackdrop.setAttribute("aria-hidden", "true");
+    authBackdrop.innerHTML = `
+      <div class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="public-auth-modal-title" data-state="login">
+        <button class="auth-modal-close" type="button" aria-label="Close">×</button>
+        <div class="auth-modal-header">
+          <p class="auth-modal-eyebrow">Public access</p>
+          <h2 id="public-auth-modal-title" class="auth-modal-title">
+            <img src="/assets/logos/pubcon.webp" alt="StreamSuites logo" />
+            <span data-auth-title-text>Log in to StreamSuites™</span>
+          </h2>
+          <p class="auth-modal-subtitle" data-auth-subtitle>Use OAuth to continue.</p>
+        </div>
+        <div class="auth-panel" data-state="login"></div>
+        <div class="auth-panel" data-state="signup"></div>
+      </div>
+    `;
+    root.appendChild(authBackdrop);
+    const authModal = authBackdrop.querySelector(".auth-modal");
+    const authTitle = authBackdrop.querySelector("[data-auth-title-text]");
+    const authSubtitle = authBackdrop.querySelector("[data-auth-subtitle]");
+    const authClose = authBackdrop.querySelector(".auth-modal-close");
+    const authPanels = Array.from(authBackdrop.querySelectorAll(".auth-panel"));
+
+    function buildAuthPanel(mode) {
+      const panel = authBackdrop.querySelector(`.auth-panel[data-state="${mode}"]`);
+      if (!panel) return;
+      panel.innerHTML = "";
+
+      const oauthGrid = create("div", "auth-oauth-grid");
+      AUTH_OAUTH_LINKS.forEach((entry) => {
+        const endpoint = new URL(entry.path, AUTH_API_BASE);
+        endpoint.searchParams.set("surface", "public");
+        endpoint.searchParams.set("login_intent", "public");
+        endpoint.searchParams.set("return_to", `${AUTH_COMPLETE_URL}?return_to=${encodeURIComponent(window.location.href)}`);
+        const link = create("a", "auth-oauth-button", entry.label);
+        link.href = endpoint.toString();
+        const icon = create("img");
+        icon.src = entry.icon;
+        icon.alt = "";
+        link.prepend(icon);
+        oauthGrid.appendChild(link);
+      });
+      panel.appendChild(oauthGrid);
+
+      const methodsToggle = create("div", "auth-toggle");
+      const methodLink = create("a", "", "Use email/password");
+      methodLink.href = `/public-login.html?return_to=${encodeURIComponent(window.location.href)}&auth=${mode}`;
+      methodsToggle.appendChild(methodLink);
+      panel.appendChild(methodsToggle);
+
+      const legal = create("p", "auth-legal muted");
+      legal.innerHTML = `By continuing, you agree to the <a href="/terms.html">Terms of Service</a> and acknowledge the <a href="/privacy.html">Privacy page</a>.`;
+      panel.appendChild(legal);
+
+      const swap = create("div", "auth-toggle");
+      if (mode === "login") {
+        swap.innerHTML = `Need an account? <button type="button" data-auth-toggle="signup">Sign up</button>`;
+      } else {
+        swap.innerHTML = `Already have an account? <button type="button" data-auth-toggle="login">Log in</button>`;
+      }
+      panel.appendChild(swap);
+    }
+
+    buildAuthPanel("login");
+    buildAuthPanel("signup");
+
+    function setAuthModalState(state) {
+      const next = state === "signup" ? "signup" : "login";
+      if (authModal) {
+        authModal.dataset.state = next;
+      }
+      if (authTitle) {
+        authTitle.textContent = next === "signup" ? "Sign up to StreamSuites™" : "Log in to StreamSuites™";
+      }
+      if (authSubtitle) {
+        authSubtitle.textContent = next === "signup" ? "Create your public account." : "Use OAuth to continue.";
+      }
+      authPanels.forEach((panel) => {
+        panel.hidden = panel.getAttribute("data-state") !== next;
+      });
+    }
+
+    function openAuthModal(state = "login") {
+      setAuthModalState(state);
+      authBackdrop.classList.add("is-open");
+      authBackdrop.setAttribute("aria-hidden", "false");
+      document.body.classList.add("modal-open");
+    }
+
+    function closeAuthModal() {
+      authBackdrop.classList.remove("is-open");
+      authBackdrop.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("modal-open");
+    }
+
+    authClose?.addEventListener("click", closeAuthModal);
+    authBackdrop.addEventListener("click", (event) => {
+      if (event.target === authBackdrop) closeAuthModal();
+    });
+    authBackdrop.addEventListener("click", (event) => {
+      const toggle = event.target.closest("[data-auth-toggle]");
+      if (!toggle) return;
+      const state = String(toggle.getAttribute("data-auth-toggle") || "login");
+      setAuthModalState(state);
+    });
+
     let lastVisibleSidebarState = SIDEBAR_STATES.expanded;
     const storedSidebarState = readSidebarState();
     let useAutoSidebarState = !storedSidebarState;
@@ -324,13 +456,21 @@
 
       (Array.isArray(badges) ? badges : []).forEach((badge) => {
         if (!badge || typeof badge !== "object") return;
-        const chip = create("span", "account-badge", String(badge.label || badge.value || "").trim());
         const kind = String(badge.kind || "").trim().toLowerCase();
-        if (kind) chip.classList.add(`account-badge-${kind}`);
-        const tone = String(badge.value || "").trim().toLowerCase();
-        if (tone) chip.dataset.value = tone;
-        if (!chip.textContent) return;
-        accountBadges.appendChild(chip);
+        const value = String(badge.value || "").trim().toLowerCase();
+        if (kind === "role-icon" || kind === "tier-icon") {
+          const icon = create("img", "account-badge-icon");
+          icon.src = kind === "tier-icon" ? (TIER_ICON_MAP[value] || TIER_ICON_MAP.core) : (ROLE_ICON_MAP[value] || ROLE_ICON_MAP.viewer);
+          icon.alt = "";
+          accountBadges.appendChild(icon);
+          return;
+        }
+        if (kind === "role-chip") {
+          const chip = create("span", "account-badge-role-chip", String(badge.label || value || "").trim());
+          if (chip.textContent) {
+            accountBadges.appendChild(chip);
+          }
+        }
       });
 
       if (avatarUrl) {
@@ -355,7 +495,7 @@
     }
 
     function openAccountMenu() {
-      if (!options.accountAuthenticated || !Array.isArray(options.accountMenuItems) || !options.accountMenuItems.length) {
+      if (!Array.isArray(options.accountMenuItems) || !options.accountMenuItems.length) {
         closeAccountMenu();
         return;
       }
@@ -367,17 +507,15 @@
     function setAccountMenuItems(items = []) {
       options.accountMenuItems = Array.isArray(items) ? items.slice() : [];
       accountMenu.innerHTML = "";
-      if (!options.accountAuthenticated) {
-        closeAccountMenu();
-        return;
+      if (options.accountAuthenticated) {
+        const header = create("div", "account-menu-header");
+        const roleChip = (options.accountBadges || []).find((badge) => String(badge?.kind || "") === "role-chip");
+        header.append(
+          create("div", "account-menu-name", accountName.textContent || "User"),
+          create("div", "account-menu-role", String(roleChip?.label || "").trim())
+        );
+        accountMenu.appendChild(header);
       }
-
-      const header = create("div", "account-menu-header");
-      header.append(
-        create("div", "account-menu-name", accountName.textContent || "User"),
-        create("div", "account-menu-role", options.accountBadges?.length ? options.accountBadges.map((badge) => badge.label).join(" · ") : "")
-      );
-      accountMenu.appendChild(header);
 
       options.accountMenuItems.forEach((item) => {
         if (!item || typeof item !== "object") return;
@@ -407,6 +545,7 @@
         const button = create("button", "account-menu-item", label);
         button.type = "button";
         button.setAttribute("role", "menuitem");
+        if (item.subtle) button.classList.add("is-subtle");
         if (String(item.action || "").toLowerCase() === "logout") {
           button.classList.add("is-danger");
         }
@@ -423,10 +562,8 @@
     function setAccountAuthenticated(authenticated) {
       options.accountAuthenticated = Boolean(authenticated);
       account.classList.toggle("is-authenticated", options.accountAuthenticated);
-      accountLoginBtn.hidden = options.accountAuthenticated;
-      account.disabled = !options.accountAuthenticated;
       if (!options.accountAuthenticated) {
-        closeAccountMenu();
+        account.classList.remove("is-authenticated");
       }
     }
 
@@ -446,11 +583,6 @@
       if (Array.isArray(next.accountMenuItems)) {
         options.accountMenuItems = next.accountMenuItems.slice();
       }
-      if (typeof next.accountLoginLabel === "string") {
-        options.accountLoginLabel = next.accountLoginLabel;
-      }
-
-      accountLoginBtn.textContent = options.accountLoginLabel || "Public Login";
       setAccountIdentity(options.accountLabel, options.accountAvatar, options.accountBadges);
       setAccountAuthenticated(options.accountAuthenticated);
       setAccountMenuItems(options.accountMenuItems);
@@ -616,8 +748,7 @@
         typeof next.accountAvatar === "string" ||
         Array.isArray(next.accountBadges) ||
         typeof next.accountAuthenticated === "boolean" ||
-        Array.isArray(next.accountMenuItems) ||
-        typeof next.accountLoginLabel === "string"
+        Array.isArray(next.accountMenuItems)
       ) {
         setAccountState(next);
       }
@@ -684,17 +815,10 @@
 
     account.addEventListener("click", (event) => {
       event.stopPropagation();
-      if (!options.accountAuthenticated) return;
       if (accountMenu.hidden) {
         openAccountMenu();
       } else {
         closeAccountMenu();
-      }
-    });
-
-    accountLoginBtn.addEventListener("click", () => {
-      if (typeof callbacks.onAccountLogin === "function") {
-        callbacks.onAccountLogin();
       }
     });
 
@@ -706,7 +830,15 @@
 
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
+        closeAuthModal();
         closeAccountMenu();
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && String(event.key || "").toLowerCase() === "k") {
+        if (isEditableTarget(event.target)) return;
+        event.preventDefault();
+        searchInput.focus();
+        searchInput.select();
       }
     });
 
@@ -726,8 +858,7 @@
       accountAvatar: options.accountAvatar,
       accountBadges: options.accountBadges,
       accountAuthenticated: options.accountAuthenticated,
-      accountMenuItems: options.accountMenuItems,
-      accountLoginLabel: options.accountLoginLabel
+      accountMenuItems: options.accountMenuItems
     });
 
     const initialSidebarState = storedSidebarState || (isMobileViewport() ? SIDEBAR_STATES.icon : SIDEBAR_STATES.expanded);
@@ -770,6 +901,12 @@
       },
       setAccount(nextAccount) {
         setAccountState(nextAccount || {});
+      },
+      openAuthModal(state) {
+        openAuthModal(state);
+      },
+      closeAuthModal() {
+        closeAuthModal();
       }
     };
   }
