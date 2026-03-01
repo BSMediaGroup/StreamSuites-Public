@@ -138,6 +138,7 @@ StreamSuites-Public/
 ├── polls.html
 ├── postmortem.html
 ├── privacy.html
+├── resources.html
 ├── public-auth-complete.html
 ├── public-login.html
 ├── README.md

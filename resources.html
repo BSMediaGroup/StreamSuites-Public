@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<!-- StreamSuites™ — Public Resources Page -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resources • StreamSuites™</title>
+  <meta name="description" content="Curated external creator, policy, and support resources for the StreamSuites public surface." />
+  <link rel="canonical" href="https://streamsuites.app/resources.html" />
+  <meta property="og:title" content="Resources • StreamSuites™" />
+  <meta property="og:description" content="Curated external creator, policy, and support resources for the StreamSuites public surface." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://streamsuites.app/resources.html" />
+  <meta property="og:image" content="/assets/backgrounds/seoshare.jpg" />
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="/css/theme-dark.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/public-pages.css" />
+  <link rel="stylesheet" href="/css/public-pages-v2.css" />
+  <link rel="stylesheet" href="/css/status-widget.css" />
+  <style>
+    .resources-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.35rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #d9cbff;
+      border: 1px solid rgba(178, 144, 255, 0.36);
+      background: linear-gradient(120deg, rgba(110, 78, 198, 0.34), rgba(18, 20, 40, 0.68));
+      box-shadow: 0 8px 22px rgba(81, 52, 148, 0.24);
+    }
+
+    .resources-controls {
+      display: grid;
+      gap: 0.95rem;
+      margin-top: 1rem;
+    }
+
+    .resources-search {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(151, 129, 217, 0.42);
+      background: rgba(17, 20, 40, 0.76);
+      color: #ede9ff;
+      padding: 0.8rem 0.95rem;
+      font: inherit;
+      transition: border-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .resources-search:focus-visible {
+      outline: none;
+      border-color: rgba(179, 147, 255, 0.92);
+      box-shadow: 0 0 0 4px rgba(120, 84, 214, 0.24);
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
+    .chip {
+      border: 1px solid rgba(151, 129, 217, 0.36);
+      border-radius: 999px;
+      background: rgba(23, 24, 46, 0.78);
+      color: #d8d3f6;
+      padding: 0.42rem 0.72rem;
+      font-size: 0.78rem;
+      line-height: 1;
+      cursor: pointer;
+      transition: border-color 160ms ease, transform 160ms ease, background 160ms ease, color 160ms ease;
+    }
+
+    .chip.active {
+      color: #f4f1ff;
+      border-color: rgba(183, 154, 255, 0.9);
+      background: linear-gradient(120deg, rgba(104, 75, 191, 0.62), rgba(30, 32, 65, 0.8));
+      box-shadow: 0 8px 24px rgba(86, 54, 156, 0.22);
+    }
+
+    .chip:hover {
+      transform: translateY(-1px);
+      border-color: rgba(183, 154, 255, 0.76);
+    }
+
+    .featured-grid,
+    .resources-grid {
+      display: grid;
+      gap: 0.95rem;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      margin-top: 0.95rem;
+    }
+
+    .resources-card {
+      position: relative;
+      border-radius: 18px;
+      border: 1px solid rgba(155, 130, 224, 0.38);
+      background:
+        linear-gradient(160deg, rgba(117, 83, 218, 0.2), rgba(14, 16, 35, 0.76) 45%, rgba(7, 9, 21, 0.94));
+      box-shadow: 0 20px 34px rgba(8, 10, 23, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      padding: 1rem;
+      transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease, opacity 220ms ease;
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    .resources-card.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .resources-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(185, 157, 255, 0.76);
+      box-shadow: 0 26px 40px rgba(12, 14, 32, 0.66);
+    }
+
+    .resources-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .resources-icon-badge {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(145deg, rgba(124, 86, 222, 0.64), rgba(46, 32, 79, 0.6));
+      border: 1px solid rgba(203, 181, 255, 0.45);
+      color: #f6f2ff;
+      flex-shrink: 0;
+    }
+
+    .resources-card h3 {
+      margin: 0;
+      font-size: 1.04rem;
+      color: #f4f2ff;
+      letter-spacing: 0.01em;
+    }
+
+    .resources-card p {
+      margin: 0.52rem 0 0.84rem;
+      color: #cbc5ea;
+      line-height: 1.56;
+      font-size: 0.94rem;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      border: 1px solid rgba(176, 146, 255, 0.52);
+      background: rgba(42, 30, 78, 0.64);
+      color: #e9ddff;
+      padding: 0.23rem 0.55rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .resources-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.36rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .resources-tags span {
+      border-radius: 999px;
+      border: 1px solid rgba(120, 105, 173, 0.45);
+      background: rgba(28, 30, 54, 0.72);
+      color: #c8c1e7;
+      font-size: 0.72rem;
+      padding: 0.18rem 0.52rem;
+    }
+
+    .resources-card a {
+      color: #ddd0ff;
+      font-weight: 600;
+      text-decoration-color: rgba(197, 173, 255, 0.58);
+    }
+
+    .browse-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.56rem;
+      margin-top: 0.95rem;
+    }
+
+    .browse-links a {
+      border-radius: 999px;
+      border: 1px solid rgba(141, 117, 209, 0.48);
+      background: rgba(20, 21, 42, 0.86);
+      color: #d9d1f8;
+      padding: 0.32rem 0.72rem;
+      font-size: 0.8rem;
+      text-decoration: none;
+      transition: border-color 160ms ease, color 160ms ease;
+    }
+
+    .browse-links a:hover {
+      border-color: rgba(186, 158, 255, 0.82);
+      color: #f3efff;
+    }
+
+    .results-meta {
+      margin-top: 0.95rem;
+      color: #b7addd;
+      font-size: 0.88rem;
+    }
+
+    .category-group {
+      margin-top: 1.15rem;
+    }
+
+    .category-group h3 {
+      margin: 0;
+      font-size: 1rem;
+      letter-spacing: 0.03em;
+      color: #f0eaff;
+    }
+
+    .empty-state {
+      margin-top: 1rem;
+      border-radius: 16px;
+      border: 1px dashed rgba(145, 126, 201, 0.54);
+      background: rgba(16, 18, 35, 0.84);
+      padding: 1rem;
+      color: #c7c0e6;
+    }
+
+    .footer-note {
+      margin-top: 1.35rem;
+      font-size: 0.9rem;
+      color: #b8addf;
+    }
+
+    @media (max-width: 760px) {
+      .resources-card {
+        padding: 0.9rem;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .resources-card,
+      .chip,
+      .resources-search,
+      .browse-links a {
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="public-bg" aria-hidden="true"></div>
+  <div class="public-surface">
+    <div class="public-shell">
+      <header class="public-topbar">
+        <a class="public-brand" href="/">
+          <img src="/assets/logos/logo.png" alt="StreamSuites" />
+          <div>
+            <h1>StreamSuites™</h1>
+            <p class="brand-subtitle">Public surface</p>
+          </div>
+        </a>
+        <div class="public-nav-wrapper">
+          <input type="checkbox" id="public-nav-toggle" class="nav-toggle" aria-label="Toggle navigation" />
+          <label class="hamburger" for="public-nav-toggle">
+            <span class="sr-only">Toggle navigation</span>
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+              <path class="line line-top-bottom" d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22"></path>
+              <path class="line" d="M7 16 27 16"></path>
+            </svg>
+          </label>
+          <div class="public-nav">
+            <span class="version-pill version-badge">Loading version…</span>
+            <a href="/about.html">About</a>
+            <a href="/tools.html">Tools</a>
+            <a href="/support.html">Support</a>
+            <a href="/resources.html" aria-current="page">Resources</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="/changelog.html">Changelog</a>
+            <a href="/accessibility.html">Accessibility</a>
+          </div>
+        </div>
+      </header>
+
+      <section class="public-hero public-glass-panel">
+        <span class="resources-pill">StreamSuites / Resources</span>
+        <div class="section-heading" style="margin-top: 0.8rem;">
+          <h2>External resources</h2>
+          <span class="public-badge">Curated</span>
+        </div>
+        <p class="muted">
+          Creator tools, platform policy references, and support links that are useful alongside StreamSuites workflows.
+        </p>
+      </section>
+
+      <section class="public-glass-card" aria-label="Featured resources">
+        <div class="section-heading">
+          <h3>Featured</h3>
+          <span class="public-badge">Recommended</span>
+        </div>
+        <div id="featured-grid" class="featured-grid"></div>
+      </section>
+
+      <section class="public-glass-card" aria-label="Filters and search">
+        <div class="section-heading">
+          <h3>Find resources</h3>
+          <span class="public-badge">Filter</span>
+        </div>
+        <div class="resources-controls">
+          <input id="resource-search" class="resources-search" type="search" placeholder="Search title, description, or tags..." autocomplete="off" />
+          <div id="category-chips" class="chip-row" aria-label="Category filters"></div>
+          <div id="tag-chips" class="chip-row" aria-label="Tag filters"></div>
+        </div>
+      </section>
+
+      <section class="public-glass-card" aria-label="Browse by category">
+        <div class="section-heading">
+          <h3>Browse by category</h3>
+          <span class="public-badge">Anchors</span>
+        </div>
+        <div id="browse-links" class="browse-links"></div>
+      </section>
+
+      <section class="public-stack" aria-label="Resource results">
+        <article class="public-glass-card">
+          <div class="section-heading">
+            <h3>Results</h3>
+            <span class="public-badge" id="results-count">0</span>
+          </div>
+          <p class="results-meta" id="results-meta">Showing resources.</p>
+          <div id="resource-results"></div>
+          <div id="resource-empty" class="empty-state" hidden>
+            No resources matched your filters. Try clearing search, category, or tag chips.
+          </div>
+          <p class="footer-note">This page is curated and grows over time.</p>
+        </article>
+      </section>
+
+      <footer class="public-footer">
+        <div>
+          <span class="footer-version">Version</span>
+          <span class="footer-copyright">©</span>
+        </div>
+        <nav aria-label="Public footer navigation">
+          <a href="/about.html">About</a>
+          <a href="/tools.html">Tools</a>
+          <a href="/support.html">Support</a>
+          <a href="/resources.html">Resources</a>
+          <a href="/donate.html">Donate</a>
+          <a href="/privacy.html">Privacy</a>
+          <a href="/changelog.html">Changelog</a>
+          <a href="/accessibility.html">Accessibility</a>
+        </nav>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    const RESOURCES_PLACEHOLDER = [
+      {
+        id: "streemerz",
+        title: "Streemerz",
+        description: "Streaming-focused creator tooling and utilities.",
+        url: "https://streemerz.com",
+        category: "Creator Resources",
+        tags: ["streaming", "tools", "creator"],
+        badge: "Recommended",
+        icon: "creator"
+      },
+      {
+        id: "nutty",
+        title: "Nutty",
+        description: "Education and guidance for modern stream creators.",
+        url: "https://nutty.gg",
+        category: "Creator Resources",
+        tags: ["streaming", "education", "creator"],
+        badge: "Recommended",
+        icon: "learn"
+      },
+      {
+        id: "google-privacy-policy",
+        title: "Google Privacy Policy",
+        description: "Google's formal privacy policy statement.",
+        url: "https://policies.google.com/privacy?hl=en-US",
+        category: "Platform Policies",
+        tags: ["privacy", "google"],
+        badge: "Policy",
+        icon: "policy"
+      },
+      {
+        id: "google-privacy-terms-hub",
+        title: "Google Privacy & Terms Hub",
+        description: "Google's central hub for privacy and terms documentation.",
+        url: "https://policies.google.com/",
+        category: "Platform Policies",
+        tags: ["privacy", "terms", "google"],
+        badge: "Policy",
+        icon: "policy"
+      },
+      {
+        id: "twitch-privacy-notice",
+        title: "Twitch Privacy Notice",
+        description: "Twitch legal privacy notice reference.",
+        url: "https://legal.twitch.com/en/legal/privacy-notice/",
+        category: "Platform Policies",
+        tags: ["privacy", "twitch"],
+        badge: "Policy",
+        icon: "policy"
+      },
+      {
+        id: "twitch-privacy-center",
+        title: "Twitch Privacy Center",
+        description: "Twitch privacy center information and controls.",
+        url: "https://www.twitch.tv/privacy",
+        category: "Platform Policies",
+        tags: ["privacy", "twitch"],
+        badge: "Policy",
+        icon: "shield"
+      },
+      {
+        id: "rumble-corp-privacy-policy",
+        title: "Rumble Privacy Policy (Corporate)",
+        description: "Rumble investor and corporate privacy policy page.",
+        url: "https://investors.rumble.com/privacy-policy/",
+        category: "Platform Policies",
+        tags: ["privacy", "rumble"],
+        badge: "Policy",
+        icon: "policy"
+      },
+      {
+        id: "google-privacy-help-center",
+        title: "Google Privacy Help Center",
+        description: "Google help center article for privacy controls and questions.",
+        url: "https://support.google.com/policies/answer/9581826?hl=en",
+        category: "Support & Help",
+        tags: ["help", "privacy", "google"],
+        badge: "Help",
+        icon: "help"
+      },
+      {
+        id: "rumble-were-here-to-help",
+        title: "Rumble: We're Here to Help",
+        description: "Rumble support overview post and support access details.",
+        url: "https://corp.rumble.com/blog/were-here-to-help/",
+        category: "Support & Help",
+        tags: ["help", "rumble"],
+        badge: "Help",
+        icon: "help"
+      },
+      {
+        id: "rumble-cloud-contact",
+        title: "Rumble Cloud Contact",
+        description: "Direct contact page for Rumble Cloud support.",
+        url: "https://portal.rumble.cloud/contact-us",
+        category: "Support & Help",
+        tags: ["support", "rumble", "cloud"],
+        badge: "Help",
+        icon: "support"
+      },
+      {
+        id: "twitch-security",
+        title: "Twitch Security",
+        description: "Twitch security guidance and trust resources.",
+        url: "https://www.twitch.tv/p/security/",
+        category: "Support & Help",
+        tags: ["security", "twitch"],
+        badge: "Help",
+        icon: "shield"
+      }
+    ];
+
+    const ICONS = {
+      creator: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4v16"/><path d="M4 12h16"/></svg>',
+      learn: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16v12H4z"/><path d="M8 10h8"/><path d="M8 14h6"/></svg>',
+      policy: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h8l4 4v14H7z"/><path d="M15 3v5h5"/><path d="M10 13h6"/></svg>',
+      help: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.4 9.3a2.7 2.7 0 0 1 5.2 1c0 1.9-2.6 2.1-2.6 4"/><circle cx="12" cy="17" r=".8" fill="currentColor"/></svg>',
+      support: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3a9 9 0 0 0-9 9v4a2 2 0 0 0 2 2h2v-6H5"/><path d="M12 3a9 9 0 0 1 9 9v4a2 2 0 0 1-2 2h-2v-6h2"/><path d="M9 20h6"/></svg>',
+      shield: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v6c0 5-3.2 8.4-7 9-3.8-.6-7-4-7-9V6z"/><path d="m9.2 12 1.8 1.9 3.8-3.9"/></svg>',
+      link: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 14 21 3"/><path d="M14 3h7v7"/><path d="M21 14v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h6"/></svg>'
+    };
+
+    const state = {
+      query: "",
+      category: "All",
+      tag: "All"
+    };
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const searchInput = document.getElementById("resource-search");
+    const categoryChips = document.getElementById("category-chips");
+    const tagChips = document.getElementById("tag-chips");
+    const featuredGrid = document.getElementById("featured-grid");
+    const browseLinks = document.getElementById("browse-links");
+    const resultsHost = document.getElementById("resource-results");
+    const emptyState = document.getElementById("resource-empty");
+    const resultsCount = document.getElementById("results-count");
+    const resultsMeta = document.getElementById("results-meta");
+
+    const categories = Array.from(new Set(RESOURCES_PLACEHOLDER.map((item) => item.category))).sort();
+    const topTags = Object.entries(
+      RESOURCES_PLACEHOLDER.reduce((acc, item) => {
+        item.tags.forEach((tag) => {
+          acc[tag] = (acc[tag] || 0) + 1;
+        });
+        return acc;
+      }, {})
+    )
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, 8)
+      .map(([tag]) => tag);
+
+    function slug(value) {
+      return String(value || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    }
+
+    function iconSvg(key) {
+      return ICONS[key] || ICONS.link;
+    }
+
+    function createChip(label, active, onClick) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `chip${active ? " active" : ""}`;
+      button.textContent = label;
+      button.setAttribute("aria-pressed", active ? "true" : "false");
+      button.addEventListener("click", onClick);
+      return button;
+    }
+
+    function buildFeatured() {
+      const featured = RESOURCES_PLACEHOLDER.filter((item) => item.badge === "Recommended").slice(0, 3);
+      featuredGrid.innerHTML = "";
+      featured.forEach((item) => {
+        featuredGrid.appendChild(buildCard(item, false));
+      });
+    }
+
+    function buildBrowseLinks() {
+      browseLinks.innerHTML = "";
+      categories.forEach((category) => {
+        const a = document.createElement("a");
+        a.href = `#category-${slug(category)}`;
+        a.textContent = category;
+        browseLinks.appendChild(a);
+      });
+    }
+
+    function buildCard(item, allowAnimate) {
+      const card = document.createElement("article");
+      card.className = "resources-card";
+      card.innerHTML = `
+        <div class="resources-card-head">
+          <span class="resources-icon-badge" aria-hidden="true">${iconSvg(item.icon)}</span>
+          <span class="badge-pill">${item.badge}</span>
+        </div>
+        <h3>${item.title}</h3>
+        <p>${item.description}</p>
+        <div class="resources-tags">${item.tags.map((tag) => `<span>#${tag}</span>`).join("")}</div>
+        <a href="${item.url}" target="_blank" rel="noopener noreferrer">Open resource</a>
+      `;
+      if (!allowAnimate || reducedMotion) {
+        card.classList.add("is-visible");
+      }
+      return card;
+    }
+
+    function filterResources() {
+      const query = state.query.trim().toLowerCase();
+      return RESOURCES_PLACEHOLDER.filter((item) => {
+        if (state.category !== "All" && item.category !== state.category) return false;
+        if (state.tag !== "All" && !item.tags.includes(state.tag)) return false;
+        if (!query) return true;
+        const haystack = `${item.title} ${item.description} ${item.tags.join(" ")}`.toLowerCase();
+        return haystack.includes(query);
+      });
+    }
+
+    function updateChips() {
+      categoryChips.innerHTML = "";
+      categoryChips.appendChild(createChip("All", state.category === "All", () => {
+        state.category = "All";
+        renderResults(true);
+      }));
+      categories.forEach((category) => {
+        categoryChips.appendChild(createChip(category, state.category === category, () => {
+          state.category = category;
+          renderResults(true);
+        }));
+      });
+
+      tagChips.innerHTML = "";
+      tagChips.appendChild(createChip("All Tags", state.tag === "All", () => {
+        state.tag = "All";
+        renderResults(true);
+      }));
+      topTags.forEach((tag) => {
+        tagChips.appendChild(createChip(`#${tag}`, state.tag === tag, () => {
+          state.tag = tag;
+          renderResults(true);
+        }));
+      });
+    }
+
+    function animateCards(host) {
+      if (reducedMotion) return;
+      const cards = host.querySelectorAll(".resources-card");
+      cards.forEach((card, index) => {
+        const delay = Math.min(index * 36, 240);
+        window.setTimeout(() => {
+          card.classList.add("is-visible");
+        }, delay);
+      });
+    }
+
+    function renderResults(fromFilterChange) {
+      const filtered = filterResources();
+      const grouped = filtered.reduce((acc, item) => {
+        if (!acc[item.category]) acc[item.category] = [];
+        acc[item.category].push(item);
+        return acc;
+      }, {});
+
+      resultsHost.innerHTML = "";
+      emptyState.hidden = filtered.length > 0;
+      resultsCount.textContent = String(filtered.length);
+      resultsMeta.textContent = `${filtered.length} result${filtered.length === 1 ? "" : "s"} shown for ${state.category === "All" ? "all categories" : state.category}${state.tag === "All" ? "" : ` and tag #${state.tag}`}.`;
+
+      if (!filtered.length) return;
+
+      categories.forEach((category) => {
+        const items = grouped[category];
+        if (!items || !items.length) return;
+        const group = document.createElement("section");
+        group.className = "category-group";
+        group.id = `category-${slug(category)}`;
+        const heading = document.createElement("h3");
+        heading.textContent = category;
+        const grid = document.createElement("div");
+        grid.className = "resources-grid";
+        items.forEach((item) => {
+          grid.appendChild(buildCard(item, fromFilterChange));
+        });
+        group.append(heading, grid);
+        resultsHost.appendChild(group);
+      });
+
+      animateCards(resultsHost);
+    }
+
+    searchInput.addEventListener("input", (event) => {
+      state.query = event.target.value || "";
+      renderResults(true);
+    });
+
+    buildFeatured();
+    buildBrowseLinks();
+    updateChips();
+    renderResults(false);
+  </script>
+
+  <script src="/js/utils/versioning.js"></script>
+  <script src="/js/utils/version-stamp.js"></script>
+  <script src="/js/status-widget.js" defer></script>
+</body>
+</html>

@@ -7,6 +7,7 @@
     { href: "/tallies.html", label: "Tallies", icon: "/assets/icons/ui/piechart.svg", group: "main" },
     { href: "/community/index.html", label: "Community", icon: "/assets/icons/ui/profile.svg", group: "main" },
     { href: "/support.html", label: "Support", icon: "/assets/icons/ui/checkbox.svg", group: "quick" },
+    { href: "/resources.html", label: "Resources", icon: "/assets/icons/ui/portal.svg", group: "quick" },
     { href: "/donate.html", label: "Donate", icon: "/assets/icons/ui/heart.svg", group: "quick" },
     { href: "/stats.html", label: "Statistics", icon: "/assets/icons/ui/chartdata.svg", group: "quick" },
     { href: "/about.html", label: "About", icon: "/assets/icons/ui/identity.svg", group: "quick" }
@@ -19,6 +20,7 @@
     { href: "/community/settings.html", label: "Settings", icon: "/assets/icons/ui/cog.svg", group: "main" },
     { href: "/media.html", label: "Media", icon: "/assets/icons/ui/portal.svg", group: "main" },
     { href: "/support.html", label: "Support", icon: "/assets/icons/ui/checkbox.svg", group: "quick" },
+    { href: "/resources.html", label: "Resources", icon: "/assets/icons/ui/portal.svg", group: "quick" },
     { href: "/donate.html", label: "Donate", icon: "/assets/icons/ui/heart.svg", group: "quick" },
     { href: "/stats.html", label: "Statistics", icon: "/assets/icons/ui/chartdata.svg", group: "quick" },
     { href: "/about.html", label: "About", icon: "/assets/icons/ui/identity.svg", group: "quick" }
