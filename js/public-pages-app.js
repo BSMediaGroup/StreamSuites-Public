@@ -363,6 +363,25 @@
     node.removeAttribute(name);
   }
 
+  function setHoverJsonAttr(node, name, value) {
+    if (!node || !name) return;
+    if (value == null) {
+      node.removeAttribute(name);
+      return;
+    }
+    let text = "";
+    try {
+      text = JSON.stringify(value);
+    } catch (_err) {
+      text = "";
+    }
+    if (text && text !== "{}" && text !== "[]") {
+      node.setAttribute(name, text);
+      return;
+    }
+    node.removeAttribute(name);
+  }
+
   function applyProfileHoverAttrs(node, profile) {
     if (!node || !profile || typeof profile !== "object") return;
     node.classList.add("ss-profile-hover");
@@ -374,6 +393,9 @@
     const avatarUrl = String(profile.avatar || "").trim();
     const role = roleLabel(normalizeRoleForUi(profile.role));
     const bio = String(profile.bio || "").trim();
+    const coverUrl = String(profile.coverImageUrl || profile.cover_image_url || "").trim();
+    const socialLinks = normalizeSocialLinks(profile.socialLinks || profile.social_links);
+    const badges = Array.isArray(profile.badges) ? profile.badges : [];
 
     setHoverDataAttr(node, "data-ss-user-code", userCode);
     setHoverDataAttr(node, "data-ss-user-id", userId);
@@ -381,7 +403,10 @@
     setHoverDataAttr(node, "data-ss-avatar-url", avatarUrl);
     setHoverDataAttr(node, "data-ss-role", role);
     setHoverDataAttr(node, "data-ss-bio", bio);
+    setHoverDataAttr(node, "data-ss-cover-url", coverUrl);
     setHoverDataAttr(node, "data-ss-profile-href", profileHref);
+    setHoverJsonAttr(node, "data-ss-social-links", socialLinks);
+    setHoverJsonAttr(node, "data-ss-badges", badges);
   }
 
   function bindClipThumbLoading(img, thumb) {

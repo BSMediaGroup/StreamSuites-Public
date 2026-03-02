@@ -5,6 +5,40 @@
   const HIDE_DELAY_MS = 120;
   const OFFSET = 10;
   const VIEWPORT_GAP = 12;
+  const ROLE_ICON_MAP = Object.freeze({
+    admin: "/assets/icons/tierbadge-admin.svg"
+  });
+  const TIER_ICON_MAP = Object.freeze({
+    core: "/assets/icons/tierbadge-core.svg",
+    gold: "/assets/icons/tierbadge-gold.svg",
+    pro: "/assets/icons/tierbadge-pro.svg"
+  });
+  const SOCIAL_ICON_MAP = Object.freeze({
+    youtube: "/assets/icons/youtube.svg",
+    rumble: "/assets/icons/rumble.svg",
+    discord: "/assets/icons/discord.svg",
+    x: "/assets/icons/x.svg",
+    twitter: "/assets/icons/twitter.svg",
+    twitch: "/assets/icons/twitch.svg",
+    kick: "/assets/icons/kick.svg",
+    tiktok: "/assets/icons/ui/widget.svg",
+    github: "/assets/icons/github.svg",
+    website: "/assets/icons/ui/globe.svg",
+    instagram: "/assets/icons/ui/widget.svg"
+  });
+  const SOCIAL_ORDER = Object.freeze([
+    "x",
+    "twitter",
+    "youtube",
+    "rumble",
+    "twitch",
+    "kick",
+    "discord",
+    "instagram",
+    "tiktok",
+    "github",
+    "website"
+  ]);
 
   let card = null;
   let activeTrigger = null;
@@ -39,12 +73,103 @@
     return safeText(value, "P").charAt(0).toUpperCase();
   }
 
+  function parseJsonObject(value) {
+    const raw = safeText(value);
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") return null;
+      return parsed;
+    } catch (_err) {
+      return null;
+    }
+  }
+
   function normalizeRole(value) {
     const raw = safeText(value).toUpperCase();
     if (raw.includes("ADMIN")) return "ADMIN";
     if (raw.includes("CREATOR")) return "CREATOR";
     if (raw.includes("VIEWER")) return "VIEWER";
     return raw || "PUBLIC";
+  }
+
+  function normalizeTier(value) {
+    const tier = safeText(value).toLowerCase();
+    if (tier === "gold" || tier === "pro") return tier;
+    return "core";
+  }
+
+  function normalizeSocialLinks(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+    return Object.entries(value).reduce((acc, [key, raw]) => {
+      const normalizedKey = safeText(key).toLowerCase();
+      const normalizedValue = safeText(raw);
+      if (!normalizedKey || !normalizedValue) return acc;
+      acc[normalizedKey] = normalizedValue;
+      return acc;
+    }, {});
+  }
+
+  function normalizeExternalUrl(url) {
+    const raw = safeText(url);
+    if (!raw) return "";
+    if (/^https?:\/\//i.test(raw)) return raw;
+    if (/^(mailto:|tel:)/i.test(raw)) return raw;
+    if (/^[a-z][a-z0-9+.-]*:/i.test(raw)) return "";
+    return `https://${raw.replace(/^\/+/, "")}`;
+  }
+
+  function socialIconPath(network) {
+    const normalized = safeText(network).toLowerCase();
+    return SOCIAL_ICON_MAP[normalized] || "/assets/icons/ui/globe.svg";
+  }
+
+  function collectSocialEntries(value) {
+    const normalized = normalizeSocialLinks(value);
+    const entries = [];
+    const seen = new Set();
+    SOCIAL_ORDER.forEach((network) => {
+      if (!normalized[network]) return;
+      const url = normalizeExternalUrl(normalized[network]);
+      if (!url) return;
+      entries.push({ network, url });
+      seen.add(network);
+    });
+    Object.entries(normalized).forEach(([network, rawUrl]) => {
+      if (seen.has(network)) return;
+      const url = normalizeExternalUrl(rawUrl);
+      if (!url) return;
+      entries.push({ network, url });
+    });
+    return entries;
+  }
+
+  function buildBadgesFromRole(role, tier = "core") {
+    const normalizedRole = normalizeRole(role);
+    if (normalizedRole === "ADMIN") return [{ kind: "role-icon", value: "admin" }];
+    if (normalizedRole === "CREATOR") return [{ kind: "tier-icon", value: normalizeTier(tier) }];
+    return [];
+  }
+
+  function normalizeBadges(value, role, tier) {
+    if (Array.isArray(value)) {
+      return value
+        .map((badge) => {
+          if (!badge || typeof badge !== "object") return null;
+          const kind = safeText(badge.kind).toLowerCase();
+          const badgeValue = safeText(badge.value).toLowerCase();
+          if (!kind || !badgeValue) return null;
+          return { kind, value: badgeValue };
+        })
+        .filter(Boolean);
+    }
+    return buildBadgesFromRole(role, tier);
+  }
+
+  function resolveBadgeIconPath(kind, value) {
+    if (kind === "role-icon") return ROLE_ICON_MAP[value] || "";
+    if (kind === "tier-icon") return TIER_ICON_MAP[value] || "";
+    return "";
   }
 
   function parseTriggerData(trigger) {
@@ -59,6 +184,9 @@
     const role = normalizeRole(ds.ssRole);
     const bio = safeText(ds.ssBio);
     const profileHref = safeText(ds.ssProfileHref) || safeText(trigger?.getAttribute("href"));
+    const coverImageUrl = safeText(ds.ssCoverUrl || ds.ssCoverImageUrl);
+    const socialLinks = normalizeSocialLinks(parseJsonObject(ds.ssSocialLinks));
+    const badges = normalizeBadges(parseJsonObject(ds.ssBadges), role, "core");
     return {
       displayName,
       userCode,
@@ -66,7 +194,10 @@
       avatarUrl,
       role,
       bio,
-      profileHref
+      profileHref,
+      coverImageUrl,
+      socialLinks,
+      badges
     };
   }
 
@@ -78,14 +209,20 @@
     card.setAttribute("role", "tooltip");
     card.setAttribute("aria-hidden", "true");
     card.innerHTML = `
-      <div class="ss-profile-hovercard-cover"></div>
+      <div class="ss-profile-hovercard-cover">
+        <img class="ss-profile-hovercard-cover-image" data-slot="cover-image" alt="" loading="eager" decoding="async" hidden />
+      </div>
       <div class="ss-profile-hovercard-body">
         <div class="ss-profile-hovercard-avatar" data-slot="avatar"></div>
         <div class="ss-profile-hovercard-head">
-          <h3 class="ss-profile-hovercard-name" data-slot="name">Public User</h3>
+          <div class="ss-profile-hovercard-name-row">
+            <h3 class="ss-profile-hovercard-name" data-slot="name">Public User</h3>
+            <span class="ss-profile-hovercard-badges" data-slot="badges"></span>
+          </div>
           <p class="ss-profile-hovercard-subtitle" data-slot="subtitle">PUBLIC</p>
         </div>
         <p class="ss-profile-hovercard-bio" data-slot="bio"></p>
+        <div class="ss-profile-hovercard-social-row" data-slot="social-row"></div>
         <div class="ss-profile-hovercard-actions" data-slot="actions">
           <a class="ss-profile-hovercard-action" data-slot="profile-link" href="/community/profile.html">View Profile</a>
         </div>
@@ -95,6 +232,18 @@
         </div>
       </div>
     `;
+
+    const coverImage = getSlot("cover-image");
+    if (coverImage) {
+      coverImage.addEventListener("load", () => {
+        card?.classList.add("has-cover-image");
+        coverImage.hidden = false;
+      });
+      coverImage.addEventListener("error", () => {
+        card?.classList.remove("has-cover-image");
+        coverImage.hidden = true;
+      });
+    }
 
     card.addEventListener("mouseenter", () => {
       cardHovered = true;
@@ -114,12 +263,69 @@
     return card?.querySelector(`[data-slot="${name}"]`) || null;
   }
 
+  function renderBadgeSuffix(row, badges) {
+    if (!row) return;
+    row.innerHTML = "";
+    const normalized = normalizeBadges(badges, "PUBLIC", "core");
+    normalized.forEach((badge) => {
+      const iconPath = resolveBadgeIconPath(badge.kind, badge.value);
+      if (!iconPath) return;
+      const icon = document.createElement("img");
+      icon.className = "ss-profile-hovercard-badge";
+      icon.src = iconPath;
+      icon.alt = "";
+      row.appendChild(icon);
+    });
+    row.hidden = row.childElementCount === 0;
+  }
+
+  function renderSocialRow(row, socialLinks) {
+    if (!row) return;
+    row.innerHTML = "";
+    const links = collectSocialEntries(socialLinks);
+    if (!links.length) {
+      row.hidden = true;
+      return;
+    }
+    links.forEach(({ network, url }) => {
+      const anchor = document.createElement("a");
+      anchor.className = "ss-profile-hovercard-social";
+      anchor.href = url;
+      anchor.target = "_blank";
+      anchor.rel = "noopener noreferrer";
+      anchor.setAttribute("aria-label", network);
+      const icon = document.createElement("img");
+      icon.src = socialIconPath(network);
+      icon.alt = "";
+      anchor.appendChild(icon);
+      row.appendChild(anchor);
+    });
+    row.hidden = false;
+  }
+
+  function setCoverImage(url, displayName) {
+    const coverImage = getSlot("cover-image");
+    if (!coverImage) return;
+    const source = safeText(url);
+    card?.classList.remove("has-cover-image");
+    if (!source) {
+      coverImage.hidden = true;
+      coverImage.removeAttribute("src");
+      return;
+    }
+    coverImage.hidden = false;
+    coverImage.alt = `${safeText(displayName, "Public User")} cover`;
+    coverImage.src = source;
+  }
+
   function updateCardContent(profile) {
     if (!card) return;
     const avatarEl = getSlot("avatar");
     const nameEl = getSlot("name");
+    const badgesEl = getSlot("badges");
     const subtitleEl = getSlot("subtitle");
     const bioEl = getSlot("bio");
+    const socialRowEl = getSlot("social-row");
     const actionsEl = getSlot("actions");
     const profileLink = getSlot("profile-link");
 
@@ -136,12 +342,20 @@
     if (nameEl) {
       nameEl.textContent = safeText(profile.displayName, "Public User");
     }
+    if (badgesEl) {
+      renderBadgeSuffix(badgesEl, profile.badges);
+    }
     if (subtitleEl) {
       subtitleEl.textContent = safeText(profile.role, "PUBLIC");
     }
     if (bioEl) {
       bioEl.textContent = safeText(profile.bio, "Profile details are being updated.");
     }
+    if (socialRowEl) {
+      renderSocialRow(socialRowEl, profile.socialLinks);
+    }
+
+    setCoverImage(profile.coverImageUrl, profile.displayName);
 
     if (actionsEl && profileLink) {
       const href = safeText(profile.profileHref);
@@ -198,7 +412,7 @@
 
     const preferRight = rect.left + cardRect.width + OFFSET <= window.innerWidth - VIEWPORT_GAP;
     const rawLeft = preferRight ? rect.left : rect.right - cardRect.width;
-    let left = clamp(rawLeft, VIEWPORT_GAP, window.innerWidth - cardRect.width - VIEWPORT_GAP);
+    const left = clamp(rawLeft, VIEWPORT_GAP, window.innerWidth - cardRect.width - VIEWPORT_GAP);
 
     let top = rect.bottom + OFFSET;
     if (top + cardRect.height > window.innerHeight - VIEWPORT_GAP) {
@@ -213,24 +427,43 @@
   }
 
   function mergeProfile(base, next) {
-    return {
+    const role = normalizeRole(next?.role || base.role);
+    const merged = {
       displayName: safeText(next?.displayName, base.displayName),
       userCode: safeText(next?.userCode, base.userCode),
       userId: safeText(next?.userId, base.userId),
       avatarUrl: safeText(next?.avatarUrl, base.avatarUrl),
-      role: normalizeRole(next?.role || base.role),
+      role,
       bio: safeText(next?.bio, base.bio),
-      profileHref: safeText(next?.profileHref, base.profileHref)
+      profileHref: safeText(next?.profileHref, base.profileHref),
+      coverImageUrl: safeText(next?.coverImageUrl, base.coverImageUrl),
+      socialLinks: normalizeSocialLinks(next?.socialLinks || base.socialLinks),
+      badges: normalizeBadges(next?.badges ?? base.badges, role, safeText(next?.tier || base?.tier || "core"))
     };
+    return merged;
   }
 
   function normalizeFetchedProfile(payload, fallback) {
     const profile = payload?.profile && typeof payload.profile === "object" ? payload.profile : payload;
+    const accountType = normalizeRole(profile?.account_type || profile?.accountType || profile?.role || fallback.role);
+    const tier = normalizeTier(profile?.tier || "core");
     const userCode = safeText(profile?.user_code || profile?.userCode || fallback.userCode);
     const displayName = safeText(profile?.display_name || profile?.displayName || profile?.name || fallback.displayName);
-    const role = normalizeRole(profile?.account_type || profile?.accountType || profile?.role || fallback.role);
+    const role = normalizeRole(accountType);
     const avatarUrl = safeText(profile?.avatar_url || profile?.avatarUrl || profile?.avatar || fallback.avatarUrl);
     const bio = safeText(profile?.bio || profile?.summary || fallback.bio);
+    const coverImageUrl = safeText(
+      profile?.cover_image_url ||
+      profile?.coverImageUrl ||
+      profile?.profile_cover ||
+      profile?.banner_url ||
+      profile?.bannerUrl ||
+      profile?.cover_url ||
+      profile?.coverUrl ||
+      fallback.coverImageUrl
+    );
+    const socialLinks = normalizeSocialLinks(profile?.social_links || profile?.socialLinks || fallback.socialLinks);
+    const badges = normalizeBadges(profile?.badges, role, tier);
     const href = userCode ? `/community/profile.html?u=${encodeURIComponent(userCode)}` : fallback.profileHref;
     return {
       displayName,
@@ -239,14 +472,18 @@
       avatarUrl,
       role,
       bio,
-      profileHref: href
+      profileHref: href,
+      coverImageUrl,
+      socialLinks,
+      badges,
+      tier
     };
   }
 
   function shouldFetchProfile(profile) {
     if (!profile.userCode) return false;
     if (profileCache.has(profile.userCode)) return false;
-    return !profile.bio || !profile.role || !profile.avatarUrl;
+    return true;
   }
 
   function abortFetch() {
@@ -281,7 +518,6 @@
       setLoading(false);
       positionCard(activeTrigger);
     } catch (_err) {
-      // Keep local data as fallback.
       if (token === activeFetchToken) {
         setLoading(false);
       }
