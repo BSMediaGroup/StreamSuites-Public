@@ -339,7 +339,8 @@
     topbarCenter.appendChild(searchShell);
 
     const topbarRight = create("div", "topbar-right");
-    const accountWidget = create("div", "account-widget");
+    const accountWidget = create("div", "account-widget ss-no-profile-hover");
+    accountWidget.setAttribute("data-ss-profile-hover", "off");
     const account = create("button", "account-pill account-trigger");
     account.type = "button";
     account.setAttribute("aria-haspopup", "menu");

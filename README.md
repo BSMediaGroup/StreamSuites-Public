@@ -39,6 +39,10 @@ StreamSuites-Public/
 │   ├── about_part2_platforms_interfaces.json
 │   └── about_part3_about_system_spec.json
 ├── assets/
+│   ├── css/
+│   │   └── ss-profile-hovercard.css
+│   ├── js/
+│   │   └── ss-profile-hovercard.js
 │   └── [truncated: backgrounds/, fonts/, icons/, illustrations/, logos/, placeholders/, and root asset files]
 ├── clips/
 │   ├── detail.html

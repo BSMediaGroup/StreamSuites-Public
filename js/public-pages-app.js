@@ -353,6 +353,50 @@
     return avatar;
   }
 
+  function setHoverDataAttr(node, name, value) {
+    if (!node || !name) return;
+    const text = String(value || "").trim();
+    if (text) {
+      node.setAttribute(name, text);
+      return;
+    }
+    node.removeAttribute(name);
+  }
+
+  function applyProfileHoverAttrs(node, profile) {
+    if (!node || !profile || typeof profile !== "object") return;
+    node.classList.add("ss-profile-hover");
+
+    const profileHref = buildProfileHref(profile);
+    const userCode = String(profile.userCode || profile.username || profile.id || "").trim();
+    const userId = String(profile.id || profile.userCode || profile.username || "").trim();
+    const displayName = String(profile.displayName || profile.username || "Public User").trim();
+    const avatarUrl = String(profile.avatar || "").trim();
+    const role = roleLabel(normalizeRoleForUi(profile.role));
+    const bio = String(profile.bio || "").trim();
+
+    setHoverDataAttr(node, "data-ss-user-code", userCode);
+    setHoverDataAttr(node, "data-ss-user-id", userId);
+    setHoverDataAttr(node, "data-ss-display-name", displayName);
+    setHoverDataAttr(node, "data-ss-avatar-url", avatarUrl);
+    setHoverDataAttr(node, "data-ss-role", role);
+    setHoverDataAttr(node, "data-ss-bio", bio);
+    setHoverDataAttr(node, "data-ss-profile-href", profileHref);
+  }
+
+  function bindClipThumbLoading(img, thumb) {
+    if (!img || !thumb) return;
+    thumb.classList.add("is-loading");
+    const settle = () => {
+      thumb.classList.remove("is-loading");
+    };
+    img.addEventListener("load", settle, { once: true });
+    img.addEventListener("error", settle, { once: true });
+    if (img.complete) {
+      settle();
+    }
+  }
+
   function normalizeRoleForUi(value) {
     const role = String(value || "").trim().toLowerCase();
     if (role.includes("admin")) return "admin";
@@ -413,14 +457,18 @@
     const expanded = Boolean(options.expanded);
     const includeRoleChip = Boolean(options.includeRoleChip);
     const row = create("div", "creator-meta");
+    applyProfileHoverAttrs(row, profile);
     if (expanded) row.classList.add("is-expanded");
     const avatar = buildAvatar(profile);
+    applyProfileHoverAttrs(avatar, profile);
     if (expanded) avatar.classList.add("is-expanded");
     row.appendChild(avatar);
 
     const textWrap = create("div", "creator-meta-text");
     const top = create("div", "creator-meta-top");
-    top.appendChild(create("span", "creator-name", profile?.displayName || "Public User"));
+    const name = create("span", "creator-name", profile?.displayName || "Public User");
+    applyProfileHoverAttrs(name, profile);
+    top.appendChild(name);
 
     top.appendChild(buildBadgeSuffix(profile, { includeRoleChip }));
 
@@ -512,6 +560,9 @@
     link.href = item.href;
 
     const thumb = create("div", "item-thumb");
+    const thumbSkeleton = create("span", "ss-thumb-skeleton");
+    thumbSkeleton.setAttribute("aria-hidden", "true");
+    thumb.appendChild(thumbSkeleton);
     if (item.mediaUrl && /\.(mp4|webm|ogg)(\?.*)?$/i.test(item.mediaUrl)) {
       const video = create("video");
       video.src = item.mediaUrl;
@@ -522,9 +573,11 @@
       thumb.appendChild(video);
     } else {
       const img = create("img");
+      img.loading = "lazy";
       img.src = item.thumbnail || "/assets/backgrounds/seodash.jpg";
       img.alt = `${item.title} preview`;
       thumb.appendChild(img);
+      bindClipThumbLoading(img, thumb);
     }
 
     if (item.duration) {
