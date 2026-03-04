@@ -449,18 +449,23 @@
       if (!icon.src) return null;
       icon.alt = `${normalized || "core"} tier`;
       icon.classList.add("badge-icon-tier");
+      icon.classList.add("ss-tier-badge");
+      icon.setAttribute("data-ss-role-badge", normalized || "core");
       return icon;
     }
     icon.src = ROLE_ICON_MAP[normalized];
     if (!icon.src) return null;
     icon.alt = `${normalized || "viewer"} role`;
     icon.classList.add("badge-icon-role");
+    icon.classList.add("ss-role-badge");
+    icon.setAttribute("data-ss-role-badge", normalized || "role");
     return icon;
   }
 
   function buildBadgeSuffix(profile, options = {}) {
     const includeRoleChip = Boolean(options.includeRoleChip);
-    const row = create("span", "creator-badges");
+    const row = create("span", "creator-badges ss-role-badges");
+    row.setAttribute("data-ss-badge-kind", "role");
     const role = normalizeRoleForUi(profile?.role);
     const tier = normalizeTierForUi(profile?.tier);
     if (role === "admin") {
