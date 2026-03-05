@@ -133,20 +133,34 @@
       border-bottom: 1px solid rgba(155, 130, 224, 0.32);
     }
 
-    .resources-card-body {
-      padding: 1rem;
+    .resources-card--featured-brand .resources-card-body {
+      padding: 0 1rem 1rem;
     }
 
     .resources-card--featured-brand .resources-card-head {
-      margin-top: -22px;
       position: relative;
       z-index: 1;
+      min-height: 52px;
+      padding-left: 64px;
+      margin-bottom: 0.68rem;
+    }
+
+    .resources-card--featured-brand .resources-icon-badge--large {
+      position: absolute;
+      left: 0;
+      top: -26px;
+      z-index: 2;
+    }
+
+    .resources-card--featured-brand .badge-pill {
+      margin-left: auto;
+      margin-top: 0.2rem;
     }
 
     .resources-icon-badge--large {
-      width: 44px;
-      height: 44px;
-      border-radius: 13px;
+      width: 52px;
+      height: 52px;
+      border-radius: 15px;
     }
 
     .resources-icon-badge--large svg {
@@ -444,7 +458,7 @@
       },
       {
         id: "nutty",
-        title: "Nutty",
+        title: "Nutty.gg",
         description: "Education and guidance for modern stream creators.",
         url: "https://nutty.gg",
         category: "Creator Resources",
