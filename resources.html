@@ -120,6 +120,40 @@
       box-shadow: 0 26px 40px rgba(12, 14, 32, 0.66);
     }
 
+    .resources-card--featured-brand {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .resources-featured-cover {
+      height: 126px;
+      background-position: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      border-bottom: 1px solid rgba(155, 130, 224, 0.32);
+    }
+
+    .resources-card-body {
+      padding: 1rem;
+    }
+
+    .resources-card--featured-brand .resources-card-head {
+      margin-top: -22px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .resources-icon-badge--large {
+      width: 44px;
+      height: 44px;
+      border-radius: 13px;
+    }
+
+    .resources-icon-badge--large svg {
+      width: 36px;
+      height: 36px;
+    }
+
     .resources-card-head {
       display: flex;
       justify-content: space-between;
@@ -147,6 +181,11 @@
       object-fit: contain;
       display: block;
       filter: drop-shadow(0 1px 2px rgba(10, 8, 18, 0.45));
+    }
+
+    .resources-icon-img--large {
+      width: 36px;
+      height: 36px;
     }
 
     .resources-card h3 {
@@ -617,12 +656,23 @@
       return { kind: "svg", svg: iconSvg(fallbackKey), alt: `${item.title} icon`, fallbackKey };
     }
 
-    function renderCornerIcon(item) {
+    function featuredCoverFor(item) {
+      const host = hostFromUrl(item.url);
+      if (host === "streemrz.com") return "assets/backgrounds/splash-streemrz.webp";
+      if (host === "nutty.gg") return "assets/backgrounds/splash-nutty.webp";
+      return "";
+    }
+
+    function renderCornerIcon(item, options = {}) {
       const resolved = resolveResourceIcon(item);
+      const useLarge = Boolean(options.large);
+      const iconSize = useLarge ? 36 : 18;
+      const badgeClass = `resources-icon-badge${useLarge ? " resources-icon-badge--large" : ""}`;
+      const imgClass = `resources-icon-img${useLarge ? " resources-icon-img--large" : ""}`;
       if (resolved.kind === "img") {
-        return `<span class="resources-icon-badge" aria-hidden="true" data-fallback-icon="${resolved.fallbackKey || "link"}"><img class="resources-icon-img" src="${resolved.src}" alt="${resolved.alt}" width="18" height="18" decoding="async" loading="lazy" /></span>`;
+        return `<span class="${badgeClass}" aria-hidden="true" data-fallback-icon="${resolved.fallbackKey || "link"}"><img class="${imgClass}" src="${resolved.src}" alt="${resolved.alt}" width="${iconSize}" height="${iconSize}" decoding="async" loading="lazy" /></span>`;
       }
-      return `<span class="resources-icon-badge" aria-hidden="true">${resolved.svg}</span>`;
+      return `<span class="${badgeClass}" aria-hidden="true">${resolved.svg}</span>`;
     }
 
     function createChip(label, active, onClick) {
@@ -639,7 +689,11 @@
       const featured = RESOURCES_PLACEHOLDER.filter((item) => item.badge === "Recommended").slice(0, 3);
       featuredGrid.innerHTML = "";
       featured.forEach((item) => {
-        featuredGrid.appendChild(buildCard(item, false));
+        const coverSrc = featuredCoverFor(item);
+        featuredGrid.appendChild(buildCard(item, false, {
+          coverSrc,
+          largeIcon: Boolean(coverSrc)
+        }));
       });
     }
 
@@ -653,12 +707,16 @@
       });
     }
 
-    function buildCard(item, allowAnimate) {
+    function buildCard(item, allowAnimate, options = {}) {
       const card = document.createElement("article");
       card.className = "resources-card";
-      card.innerHTML = `
+      if (options.coverSrc) {
+        card.classList.add("resources-card--featured-brand");
+      }
+
+      const bodyMarkup = `
         <div class="resources-card-head">
-          ${renderCornerIcon(item)}
+          ${renderCornerIcon(item, { large: options.largeIcon })}
           <span class="badge-pill">${item.badge}</span>
         </div>
         <h3>${item.title}</h3>
@@ -666,6 +724,14 @@
         <div class="resources-tags">${item.tags.map((tag) => `<span>#${tag}</span>`).join("")}</div>
         <a href="${item.url}" target="_blank" rel="noopener noreferrer">Open resource</a>
       `;
+
+      card.innerHTML = options.coverSrc
+        ? `
+          <div class="resources-featured-cover" aria-hidden="true" style="background-image: url('${options.coverSrc}');"></div>
+          <div class="resources-card-body">${bodyMarkup}</div>
+        `
+        : bodyMarkup;
+
       const iconImg = card.querySelector(".resources-icon-badge img");
       if (iconImg) {
         iconImg.addEventListener("error", () => {
