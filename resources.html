@@ -141,6 +141,14 @@
       flex-shrink: 0;
     }
 
+    .resources-icon-img {
+      width: 18px;
+      height: 18px;
+      object-fit: contain;
+      display: block;
+      filter: drop-shadow(0 1px 2px rgba(10, 8, 18, 0.45));
+    }
+
     .resources-card h3 {
       margin: 0;
       font-size: 1.04rem;
@@ -534,6 +542,75 @@
       return ICONS[key] || ICONS.link;
     }
 
+    function hostFromUrl(rawUrl) {
+      try {
+        return new URL(rawUrl).hostname.toLowerCase().replace(/^www\./, "");
+      } catch (_err) {
+        return "";
+      }
+    }
+
+    function resolveResourceIcon(item) {
+      const fallbackKey = item.icon || "link";
+      const host = hostFromUrl(item.url);
+      const id = String(item.id || "").toLowerCase();
+      const title = String(item.title || "").toLowerCase();
+      const category = String(item.category || "").toLowerCase();
+      const tags = (Array.isArray(item.tags) ? item.tags : []).map((tag) => String(tag).toLowerCase());
+      const text = `${title} ${item.description || ""}`.toLowerCase();
+
+      if (host === "streemrz.com") {
+        return { kind: "img", src: "assets/logos/streemrzlogo.webp", alt: "Streemrz logo", fallbackKey };
+      }
+
+      if (host === "nutty.gg") {
+        return { kind: "img", src: "assets/logos/nuttylogo.webp", alt: "Nutty logo", fallbackKey };
+      }
+
+      if (
+        host === "rumble.cloud" ||
+        host.endsWith(".rumble.cloud") ||
+        id.includes("rumble-cloud") ||
+        title.includes("rumble cloud")
+      ) {
+        return { kind: "img", src: "assets/logos/rumblecloudlogo-silver.webp", alt: "Rumble Cloud logo", fallbackKey };
+      }
+
+      if (host === "google.com" || host.endsWith(".google.com")) {
+        return { kind: "img", src: "assets/icons/google.svg", alt: "Google logo", fallbackKey };
+      }
+
+      if (host === "twitch.tv" || host.endsWith(".twitch.tv")) {
+        return { kind: "img", src: "assets/icons/twitch.svg", alt: "Twitch logo", fallbackKey };
+      }
+
+      if (host === "rumble.com" || host.endsWith(".rumble.com")) {
+        return { kind: "img", src: "assets/icons/rumble.svg", alt: "Rumble logo", fallbackKey };
+      }
+
+      if (
+        tags.includes("security") ||
+        tags.includes("support") ||
+        tags.includes("help") ||
+        category.includes("support") ||
+        text.includes("security") ||
+        text.includes("support") ||
+        text.includes("help")
+      ) {
+        return { kind: "img", src: "assets/icons/ui/checkshield.svg", alt: "Security and support icon", fallbackKey };
+      }
+
+      return { kind: "svg", svg: iconSvg(fallbackKey), alt: `${item.title} icon`, fallbackKey };
+    }
+
+    function renderCornerIcon(item) {
+      const resolved = resolveResourceIcon(item);
+      if (resolved.kind === "img") {
+        return `<span class="resources-icon-badge" aria-hidden="true" data-fallback-icon="${resolved.fallbackKey || "link"}"><img class="resources-icon-img" src="${resolved.src}" alt="${resolved.alt}" width="18" height="18" decoding="async" loading="lazy" /></span>`;
+      }
+      return `<span class="resources-icon-badge" aria-hidden="true">${resolved.svg}</span>`;
+    }
+
     function createChip(label, active, onClick) {
       const button = document.createElement("button");
       button.type = "button";
@@ -567,7 +644,7 @@
       card.className = "resources-card";
       card.innerHTML = `
         <div class="resources-card-head">
-          <span class="resources-icon-badge" aria-hidden="true">${iconSvg(item.icon)}</span>
+          ${renderCornerIcon(item)}
           <span class="badge-pill">${item.badge}</span>
         </div>
         <h3>${item.title}</h3>
@@ -575,6 +652,15 @@
         <div class="resources-tags">${item.tags.map((tag) => `<span>#${tag}</span>`).join("")}</div>
         <a href="${item.url}" target="_blank" rel="noopener noreferrer">Open resource</a>
       `;
+      const iconImg = card.querySelector(".resources-icon-badge img");
+      if (iconImg) {
+        iconImg.addEventListener("error", () => {
+          const badge = iconImg.closest(".resources-icon-badge");
+          if (!badge) return;
+          const fallbackKey = badge.getAttribute("data-fallback-icon") || "link";
+          badge.innerHTML = iconSvg(fallbackKey);
+        });
+      }
       if (!allowAnimate || reducedMotion) {
         card.classList.add("is-visible");
       }
