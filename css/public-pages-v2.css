@@ -87,6 +87,13 @@ body {
   padding-bottom: 104px;
 }
 
+.public-shell > section + section,
+.public-shell > section + footer,
+.public-shell > article + section,
+.public-shell > article + footer {
+  margin-top: 14px;
+}
+
 .public-hero,
 .public-glass-panel,
 .public-glass-card,
