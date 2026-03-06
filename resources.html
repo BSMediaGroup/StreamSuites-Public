@@ -109,6 +109,10 @@
       transform: translateY(12px);
     }
 
+    .resources-card.is-clickable {
+      cursor: pointer;
+    }
+
     .resources-card.is-visible {
       opacity: 1;
       transform: translateY(0);
@@ -724,6 +728,10 @@
     function buildCard(item, allowAnimate, options = {}) {
       const card = document.createElement("article");
       card.className = "resources-card";
+      card.classList.add("is-clickable");
+      card.tabIndex = 0;
+      card.setAttribute("role", "link");
+      card.setAttribute("aria-label", `${item.title} (opens in a new tab)`);
       if (options.coverSrc) {
         card.classList.add("resources-card--featured-brand");
       }
@@ -755,6 +763,20 @@
           badge.innerHTML = iconSvg(fallbackKey);
         });
       }
+      const openResource = () => {
+        window.open(item.url, "_blank", "noopener,noreferrer");
+      };
+      card.addEventListener("click", (event) => {
+        if (event.target.closest("a, button, input, select, textarea, label")) return;
+        openResource();
+      });
+      card.addEventListener("keydown", (event) => {
+        if (event.target !== card) return;
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openResource();
+        }
+      });
       if (!allowAnimate || reducedMotion) {
         card.classList.add("is-visible");
       }
