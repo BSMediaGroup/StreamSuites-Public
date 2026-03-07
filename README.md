@@ -29,6 +29,9 @@ Public StreamSuites web surface (static GitHub Pages site).
   - Dedicated public login/complete pages (`public-login.html`, `public-auth-complete.html`).
   - Public login assets (`css/public-login.css`, `js/public-login.js`, `js/public-auth-complete.js`).
   - Auth-aware top-right user widget in the media/community shell (`js/public-shell.js`, `js/public-pages-app.js`).
+- Lightweight public-page visit reporting:
+  - Shared visit instrumentation now reports non-blocking page-load beacons from the public site to the authoritative runtime/Auth API via `js/status-widget.js`.
+  - The public repo remains non-authoritative; visit events are only forwarded for runtime-owned alerting and short-window counters.
 
 ## Repository Tree (Abridged, Current)
 ```text
