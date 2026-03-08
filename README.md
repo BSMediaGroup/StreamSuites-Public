@@ -1,5 +1,5 @@
 # StreamSuites-Public
-Public StreamSuites web surface (static GitHub Pages site).
+Public StreamSuites web surface (static Cloudflare Pages site).
 
 ## Current Release
 - Public surface target: `v0.4.1-alpha`.
@@ -8,14 +8,16 @@ Public StreamSuites web surface (static GitHub Pages site).
   - `https://admin.streamsuites.app/runtime/exports/version.json` (see `js/utils/versioning.js`).
 
 ## Scope
-- This repo serves the static public site at `https://streamsuites.app` (GitHub Pages from repository root with custom domain via `CNAME`).
+- This repo serves the canonical static public site at `https://streamsuites.app` on Cloudflare Pages.
 - This repo is not a canonical state authority. It renders runtime-exported artifacts/JSON and API responses.
 - Canonical state is authored outside this repo (runtime/admin services).
+- This repo now owns the canonical standalone public profile route foundation at `/u/<slug>`, while retaining the original community hub routes for legacy/internal navigation.
 
 ## Public Surface Behavior
 - Static pages and assets are shipped from this repository root.
 - Public galleries and metadata views hydrate from exported JSON artifacts (for example files in `/data` plus runtime version export).
 - Feature Requests (`requests.html`) includes authenticated creator flows backed by `api.streamsuites.app` (fetch/vote/comment/submit). This is UI-only client integration; no backend logic is hosted here.
+- Standalone public profiles now resolve on the canonical site via `/u/<slug>`, backed by the original public implementation’s profile body renderer and Cloudflare Pages rewrite support.
 
 ## What Is New (v0.4.1-alpha surface)
 - Aurora landing experience and refreshed layout shell (`index.html`, `css/aurora-landing.css`).
@@ -36,6 +38,8 @@ Public StreamSuites web surface (static GitHub Pages site).
 ## Repository Tree (Abridged, Current)
 ```text
 StreamSuites-Public/
+├── u/
+│   └── index.html
 ├── about/
 │   ├── about.manifest.json
 │   ├── about_part1_core.json
@@ -124,6 +128,7 @@ StreamSuites-Public/
 ├── tallies/
 │   └── detail.html
 ├── .gitignore
+├── _redirects
 ├── 404.html
 ├── about.html
 ├── accessibility.html

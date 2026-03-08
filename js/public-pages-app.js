@@ -25,6 +25,7 @@
   const CREATOR_DASHBOARD_URL = "https://creator.streamsuites.app";
   const ADMIN_DASHBOARD_URL = "https://admin.streamsuites.app";
   const PUBLIC_AUTH_COMPLETE_MESSAGE_TYPE = "ss_public_auth_complete";
+  const CANONICAL_PROFILE_PREFIX = "/u/";
   const ROLE_ICON_MAP = Object.freeze({
     admin: "/assets/icons/tierbadge-admin.svg"
   });
@@ -239,6 +240,20 @@
       filtersCollapsed: true,
       defaultFilters: [],
       render: renderCommunitySettings
+    },
+    "public-profile-standalone": {
+      path: "/u/index.html",
+      aliases: ["/u", "/u/"],
+      shellKind: "public",
+      activeHref: "/community/members.html",
+      topbarLabel: "Public Profile",
+      searchPlaceholder: "Search",
+      hideSearch: true,
+      filterMode: "none",
+      filtersCollapsed: true,
+      defaultFilters: [],
+      standalone: true,
+      render: renderStandaloneProfile
     }
   };
 
@@ -278,6 +293,11 @@
       return raw.slice(0, -1);
     }
     return raw;
+  }
+
+  function isCanonicalProfilePath(pathname) {
+    const normalized = normalizePath(pathname);
+    return normalized === "/u" || normalized === "/u/index.html" || normalized.startsWith(CANONICAL_PROFILE_PREFIX);
   }
 
   function isUuidLike(value) {
@@ -842,16 +862,24 @@
   }
 
   function buildProfileHref(profileOrCode) {
+    return buildCanonicalProfileHref(profileOrCode);
+  }
+
+  function buildCanonicalProfileHref(profileOrCode) {
     const rawCode =
       typeof profileOrCode === "string"
         ? profileOrCode
         : profileOrCode?.userCode || profileOrCode?.username || profileOrCode?.id || "public-user";
-    const normalizedCode = String(rawCode || "")
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9_-]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-    const code = !normalizedCode || isUuidLike(normalizedCode) ? "public-user" : normalizedCode;
+    const code = normalizeUserCode(rawCode, "public-user");
+    return `${CANONICAL_PROFILE_PREFIX}${encodeURIComponent(String(code || "public-user").trim() || "public-user")}`;
+  }
+
+  function buildLegacyProfileHref(profileOrCode) {
+    const rawCode =
+      typeof profileOrCode === "string"
+        ? profileOrCode
+        : profileOrCode?.userCode || profileOrCode?.username || profileOrCode?.id || "public-user";
+    const code = normalizeUserCode(rawCode, "public-user");
     return `/community/profile.html?u=${encodeURIComponent(String(code || "public-user").trim() || "public-user")}`;
   }
 
@@ -1569,7 +1597,7 @@
 
     if (byCode) {
       const normalized = normalizeUserCode(byCode, fallbackCode);
-      const safeHref = buildProfileHref(normalized);
+      const safeHref = buildLegacyProfileHref(normalized);
       if (window.location.pathname + window.location.search !== safeHref) {
         window.history.replaceState(window.history.state, "", safeHref);
       }
@@ -1583,11 +1611,23 @@
       }
       const profile = resolveLocalProfile(data, legacyId);
       const normalized = normalizeUserCode(profile?.userCode || profile?.id || fallbackCode, fallbackCode);
-      window.history.replaceState(window.history.state, "", buildProfileHref(normalized));
+      window.history.replaceState(window.history.state, "", buildLegacyProfileHref(normalized));
       return normalized;
     }
 
     return fallbackCode;
+  }
+
+  function resolveStandaloneProfileCode() {
+    const normalizedPath = normalizePath(window.location.pathname);
+    if (normalizedPath === "/u" || normalizedPath === "/u/index.html") {
+      return "public-user";
+    }
+    if (!normalizedPath.startsWith(CANONICAL_PROFILE_PREFIX)) {
+      return "public-user";
+    }
+    const slug = normalizedPath.slice(CANONICAL_PROFILE_PREFIX.length).split("/")[0] || "";
+    return normalizeUserCode(slug, "public-user");
   }
 
   function socialIconPath(network) {
@@ -1811,6 +1851,117 @@
     host.appendChild(grid);
   }
 
+  function renderProfileBody(profileCard, profile, canEdit) {
+    clear(profileCard);
+    const shareUrl = new URL(buildCanonicalProfileHref(profile.userCode), window.location.origin).toString();
+    const coverWrap = create("div", "profile-cover");
+    const coverImage = create("img");
+    coverImage.src = profile.coverImageUrl || DEFAULT_PROFILE_COVER;
+    coverImage.alt = `${profile.displayName} cover`;
+    coverWrap.appendChild(coverImage);
+    profileCard.appendChild(coverWrap);
+
+    const profileMeta = buildCreatorMeta(profile, { expanded: true, includeRoleChip: true });
+    profileCard.appendChild(profileMeta);
+
+    const socialHeader = create("div", "profile-inline-header");
+    socialHeader.append(create("h3", "", "Social Links"));
+    if (canEdit) {
+      const editSocial = create("a", "edit-affordance", "Edit");
+      editSocial.href = "/community/settings.html";
+      socialHeader.appendChild(editSocial);
+    }
+    profileCard.append(socialHeader, buildSocialLinksRow(profile.socialLinks));
+
+    const bioHeader = create("div", "profile-inline-header");
+    bioHeader.append(create("h3", "", "Bio"));
+    const bioBody = create("p", "profile-bio-text", profile.bio || "No bio provided yet.");
+    profileCard.append(bioHeader, bioBody);
+
+    if (canEdit) {
+      const editBioBtn = create("button", "edit-affordance edit-button-inline", "Edit");
+      editBioBtn.type = "button";
+      editBioBtn.prepend(createIcon(UI_ICON_MAP.edit, "inline-icon-mask"));
+      bioHeader.appendChild(editBioBtn);
+
+      const bioEditor = create("div", "profile-bio-editor");
+      bioEditor.hidden = true;
+      const bioInput = create("textarea");
+      bioInput.value = profile.bio || "";
+      bioInput.rows = 4;
+      const bioSave = create("button", "filter-chip active", "Save");
+      bioSave.type = "button";
+      const bioCancel = create("button", "filter-chip", "Cancel");
+      bioCancel.type = "button";
+      const bioStatus = create("span", "muted");
+      const bioActions = create("div", "profile-bio-actions");
+      bioActions.append(bioSave, bioCancel, bioStatus);
+      bioEditor.append(bioInput, bioActions);
+      profileCard.appendChild(bioEditor);
+
+      editBioBtn.addEventListener("click", () => {
+        bioEditor.hidden = false;
+        bioInput.focus();
+        bioInput.select();
+      });
+      bioCancel.addEventListener("click", () => {
+        bioEditor.hidden = true;
+        bioInput.value = profile.bio || "";
+        bioStatus.textContent = "";
+      });
+      bioSave.addEventListener("click", async () => {
+        bioStatus.textContent = "Saving…";
+        bioSave.disabled = true;
+        try {
+          const updated = await saveMyPublicProfile({ bio: bioInput.value.trim() });
+          profile.bio = String(updated?.bio || bioInput.value || "").trim();
+          bioBody.textContent = profile.bio || "No bio provided yet.";
+          bioStatus.textContent = "Saved";
+          window.setTimeout(() => {
+            bioEditor.hidden = true;
+            bioStatus.textContent = "";
+          }, 700);
+        } catch (error) {
+          bioStatus.textContent = error instanceof Error ? error.message : "Save failed";
+        } finally {
+          bioSave.disabled = false;
+        }
+      });
+    }
+
+    const shareHeader = create("div", "profile-inline-header");
+    const shareTitle = create("h3", "", "Profile Share Link");
+    shareTitle.prepend(createIcon(UI_ICON_MAP.share, "inline-icon-mask"));
+    shareHeader.appendChild(shareTitle);
+    profileCard.append(shareHeader, buildShareBox(shareUrl));
+
+    if (canEdit) {
+      const privacyWrap = create("label", "profile-visibility-toggle");
+      const toggle = create("input");
+      toggle.type = "checkbox";
+      toggle.checked = profile.isAnonymous === true;
+      const text = create("span", "", "Anonymous / Private profile");
+      const status = create("span", "muted");
+      privacyWrap.append(toggle, text, status);
+      profileCard.appendChild(privacyWrap);
+      toggle.addEventListener("change", async () => {
+        status.textContent = "Saving…";
+        toggle.disabled = true;
+        try {
+          const updated = await saveMyPublicProfile({ anonymous: toggle.checked });
+          profile.isAnonymous = updated?.is_anonymous === true || updated?.anonymous === true;
+          toggle.checked = profile.isAnonymous;
+          status.textContent = profile.isAnonymous ? "Anonymous enabled" : "Public profile enabled";
+        } catch (error) {
+          toggle.checked = !toggle.checked;
+          status.textContent = error instanceof Error ? error.message : "Save failed";
+        } finally {
+          toggle.disabled = false;
+        }
+      });
+    }
+  }
+
   function renderCommunityProfile(ctx) {
     const { host, data, authState } = ctx;
     clear(host);
@@ -1833,117 +1984,6 @@
 
     hero.append(left, right);
     host.appendChild(hero);
-
-    const renderLoadedProfile = (profile, canEdit) => {
-      clear(profileCard);
-      const shareUrl = new URL(buildProfileHref(profile.userCode), window.location.origin).toString();
-      const coverWrap = create("div", "profile-cover");
-      const coverImage = create("img");
-      coverImage.src = profile.coverImageUrl || DEFAULT_PROFILE_COVER;
-      coverImage.alt = `${profile.displayName} cover`;
-      coverWrap.appendChild(coverImage);
-      profileCard.appendChild(coverWrap);
-
-      const profileMeta = buildCreatorMeta(profile, { expanded: true, includeRoleChip: true });
-      profileCard.appendChild(profileMeta);
-
-      const socialHeader = create("div", "profile-inline-header");
-      socialHeader.append(create("h3", "", "Social Links"));
-      if (canEdit) {
-        const editSocial = create("a", "edit-affordance", "Edit");
-        editSocial.href = "/community/settings.html";
-        socialHeader.appendChild(editSocial);
-      }
-      profileCard.append(socialHeader, buildSocialLinksRow(profile.socialLinks));
-
-      const bioHeader = create("div", "profile-inline-header");
-      bioHeader.append(create("h3", "", "Bio"));
-      const bioBody = create("p", "profile-bio-text", profile.bio || "No bio provided yet.");
-      profileCard.append(bioHeader, bioBody);
-
-      if (canEdit) {
-        const editBioBtn = create("button", "edit-affordance edit-button-inline", "Edit");
-        editBioBtn.type = "button";
-        editBioBtn.prepend(createIcon(UI_ICON_MAP.edit, "inline-icon-mask"));
-        bioHeader.appendChild(editBioBtn);
-
-        const bioEditor = create("div", "profile-bio-editor");
-        bioEditor.hidden = true;
-        const bioInput = create("textarea");
-        bioInput.value = profile.bio || "";
-        bioInput.rows = 4;
-        const bioSave = create("button", "filter-chip active", "Save");
-        bioSave.type = "button";
-        const bioCancel = create("button", "filter-chip", "Cancel");
-        bioCancel.type = "button";
-        const bioStatus = create("span", "muted");
-        const bioActions = create("div", "profile-bio-actions");
-        bioActions.append(bioSave, bioCancel, bioStatus);
-        bioEditor.append(bioInput, bioActions);
-        profileCard.appendChild(bioEditor);
-
-        editBioBtn.addEventListener("click", () => {
-          bioEditor.hidden = false;
-          bioInput.focus();
-          bioInput.select();
-        });
-        bioCancel.addEventListener("click", () => {
-          bioEditor.hidden = true;
-          bioInput.value = profile.bio || "";
-          bioStatus.textContent = "";
-        });
-        bioSave.addEventListener("click", async () => {
-          bioStatus.textContent = "Saving…";
-          bioSave.disabled = true;
-          try {
-            const updated = await saveMyPublicProfile({ bio: bioInput.value.trim() });
-            profile.bio = String(updated?.bio || bioInput.value || "").trim();
-            bioBody.textContent = profile.bio || "No bio provided yet.";
-            bioStatus.textContent = "Saved";
-            window.setTimeout(() => {
-              bioEditor.hidden = true;
-              bioStatus.textContent = "";
-            }, 700);
-          } catch (error) {
-            bioStatus.textContent = error instanceof Error ? error.message : "Save failed";
-          } finally {
-            bioSave.disabled = false;
-          }
-        });
-      }
-
-      const shareHeader = create("div", "profile-inline-header");
-      const shareTitle = create("h3", "", "Profile Share Link");
-      shareTitle.prepend(createIcon(UI_ICON_MAP.share, "inline-icon-mask"));
-      shareHeader.appendChild(shareTitle);
-      profileCard.append(shareHeader, buildShareBox(shareUrl));
-
-      if (canEdit) {
-        const privacyWrap = create("label", "profile-visibility-toggle");
-        const toggle = create("input");
-        toggle.type = "checkbox";
-        toggle.checked = profile.isAnonymous === true;
-        const text = create("span", "", "Anonymous / Private profile");
-        const status = create("span", "muted");
-        privacyWrap.append(toggle, text, status);
-        profileCard.appendChild(privacyWrap);
-        toggle.addEventListener("change", async () => {
-          status.textContent = "Saving…";
-          toggle.disabled = true;
-          try {
-            const updated = await saveMyPublicProfile({ anonymous: toggle.checked });
-            profile.isAnonymous = updated?.is_anonymous === true || updated?.anonymous === true;
-            toggle.checked = profile.isAnonymous;
-            status.textContent = profile.isAnonymous ? "Anonymous enabled" : "Public profile enabled";
-          } catch (error) {
-            toggle.checked = !toggle.checked;
-            status.textContent = error instanceof Error ? error.message : "Save failed";
-          } finally {
-            toggle.disabled = false;
-          }
-        });
-      }
-    };
 
     let profileArtifacts = collectProfileArtifacts(data, profileCode, fallbackProfile?.id, fallbackProfile?.userCode);
     let ownerCanEdit = false;
@@ -1979,7 +2019,7 @@
       } else {
         host.prepend(nextHeading);
       }
-      renderLoadedProfile(profile, canEdit);
+      renderProfileBody(profileCard, profile, canEdit);
       ownerCanEdit = canEdit;
       profileArtifacts = artifactItems;
       if (currentArtifactMode === "list") {
@@ -1990,6 +2030,42 @@
       if (!profileArtifacts.length) {
         artifactHost.appendChild(create("div", "empty-state", "No artifacts linked to this profile yet."));
       }
+    })();
+  }
+
+  function renderStandaloneProfile(ctx) {
+    const { host, data, authState } = ctx;
+    clear(host);
+    host.appendChild(buildPageHeading("Profile", "Loading public profile…"));
+
+    const layout = create("section", "public-standalone-main");
+    const profileCard = create("article", "profile-card profile-card-expanded profile-card-standalone");
+    layout.appendChild(profileCard);
+    host.appendChild(layout);
+
+    const profileCode = resolveStandaloneProfileCode();
+    const fallbackProfile = resolveLocalProfile(data, profileCode);
+
+    (async () => {
+      let profile = normalizeProfilePayload(fallbackProfile, fallbackProfile, profileCode);
+      const ownerCode = normalizeUserCode(authState?.userCode || "");
+      const canEdit = Boolean(authState?.authenticated) && ownerCode === profile.userCode;
+      try {
+        const payload = canEdit ? await fetchMyPublicProfile() : await fetchPublicProfileByCode(profileCode);
+        profile = normalizeProfilePayload(payload, fallbackProfile, profileCode);
+      } catch (_err) {
+        // Keep local profile fallback when API profile endpoints are unavailable.
+      }
+
+      const nextHeading = buildPageHeading(profile.displayName, `${profile.platform} | ${roleLabel(normalizeRoleForUi(profile.role))}`);
+      const existingHeading = host.querySelector(".page-heading");
+      if (existingHeading && existingHeading.parentElement === host) {
+        host.replaceChild(nextHeading, existingHeading);
+      } else {
+        host.prepend(nextHeading);
+      }
+      document.title = `${profile.displayName} | StreamSuites Public Profile`;
+      renderProfileBody(profileCard, profile, canEdit);
     })();
   }
 
@@ -2318,7 +2394,14 @@
   }
 
   function resolveConfigFromPath(pathname) {
-    return PAGE_ID_BY_PATH[normalizePath(pathname)] || null;
+    const normalizedPath = normalizePath(pathname);
+    if (PAGE_ID_BY_PATH[normalizedPath]) {
+      return PAGE_ID_BY_PATH[normalizedPath];
+    }
+    if (isCanonicalProfilePath(normalizedPath)) {
+      return PAGE_CONFIG["public-profile-standalone"];
+    }
+    return null;
   }
 
   function canHandleUrl(url) {
@@ -2350,6 +2433,23 @@
     return "";
   }
 
+  function mountStandaloneRoot() {
+    const root = document.querySelector("#public-app");
+    if (!root) return null;
+    document.body.classList.add("public-standalone-page");
+    root.classList.add("public-standalone-root");
+    clear(root);
+    return {
+      content: root,
+      setLoading() {},
+      updateOptions() {},
+      setQuery() {},
+      setFilterState() {},
+      setActiveHref() {},
+      openAuthModal() {}
+    };
+  }
+
   function init() {
     const initialPageId = document.body.dataset.publicPage;
     if (!initialPageId || !PAGE_CONFIG[initialPageId]) return;
@@ -2374,17 +2474,20 @@
       activeFilters: [...currentConfig.defaultFilters]
     };
 
-    const shell = window.StreamSuitesPublicShell.mount({
-      shellKind: currentConfig.shellKind,
-      activeHref: currentConfig.activeHref,
-      topbarLabel: currentConfig.topbarLabel,
-      searchPlaceholder: currentConfig.searchPlaceholder,
-      showSearch: currentConfig.hideSearch !== true,
-      filters: buildFiltersForConfig(currentConfig),
-      filtersCollapsed: currentConfig.filtersCollapsed,
-      multiFilter: currentConfig.filterMode === "multi",
-      accountLabel: "Guest"
-    });
+    const shell = currentConfig.standalone
+      ? mountStandaloneRoot()
+      : window.StreamSuitesPublicShell.mount({
+          shellKind: currentConfig.shellKind,
+          activeHref: currentConfig.activeHref,
+          topbarLabel: currentConfig.topbarLabel,
+          searchPlaceholder: currentConfig.searchPlaceholder,
+          showSearch: currentConfig.hideSearch !== true,
+          filters: buildFiltersForConfig(currentConfig),
+          filtersCollapsed: currentConfig.filtersCollapsed,
+          multiFilter: currentConfig.filterMode === "multi",
+          accountLabel: "Guest"
+        });
+    if (!shell) return;
 
     let authState = normalizeAuthState(null);
     let authRefreshPromise = null;
@@ -2415,6 +2518,7 @@
     }
 
     function applyCurrentAuthState() {
+      if (currentConfig.standalone) return;
       applyAuthStateToShell(shell, authState, handleAccountMenuAction);
     }
 
@@ -2457,6 +2561,12 @@
     function applyConfig(nextConfig, options = {}) {
       currentConfig = nextConfig;
       currentPageId = Object.keys(PAGE_CONFIG).find((key) => PAGE_CONFIG[key] === nextConfig) || currentPageId;
+
+      if (nextConfig.standalone) {
+        document.body.classList.add("public-standalone-page");
+      } else {
+        document.body.classList.remove("public-standalone-page");
+      }
 
       if (!options.keepState) {
         state.query = "";
@@ -2541,6 +2651,11 @@
           return;
         }
 
+        if (Boolean(nextConfig.standalone) !== Boolean(currentConfig.standalone)) {
+          window.location.assign(url.toString());
+          return;
+        }
+
         if (doc.title) {
           document.title = doc.title;
         }
@@ -2611,7 +2726,7 @@
         if (pendingLegacyProfileUuid) {
           const resolvedCode = await resolveLegacyProfileUuid(pendingLegacyProfileUuid).catch(() => "");
           const finalCode = resolvedCode || "public-user";
-          window.history.replaceState(window.history.state, "", buildProfileHref(finalCode));
+          window.history.replaceState(window.history.state, "", buildLegacyProfileHref(finalCode));
         }
       })
       .finally(() => {
