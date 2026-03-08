@@ -17,7 +17,7 @@ Public StreamSuites web surface (static Cloudflare Pages site).
 - Static pages and assets are shipped from this repository root.
 - Public galleries and metadata views hydrate from exported JSON artifacts (for example files in `/data` plus runtime version export).
 - Feature Requests (`requests.html`) includes authenticated creator flows backed by `api.streamsuites.app` (fetch/vote/comment/submit). This is UI-only client integration; no backend logic is hosted here.
-- Standalone public profiles now resolve on the canonical site via `/u/<slug>`, backed by the original public implementation’s profile body renderer and Cloudflare Pages rewrite support.
+- Standalone public profiles now resolve on the canonical site via `/u/<slug>`, backed by the original public implementation’s profile body renderer and Cloudflare Pages rewrite/function support.
 
 ## What Is New (v0.4.1-alpha surface)
 - Aurora landing experience and refreshed layout shell (`index.html`, `css/aurora-landing.css`).
@@ -38,6 +38,9 @@ Public StreamSuites web surface (static Cloudflare Pages site).
 ## Repository Tree (Abridged, Current)
 ```text
 StreamSuites-Public/
+├── functions/
+│   └── u/
+│       └── [[slug]].js
 ├── u/
 │   └── index.html
 ├── about/

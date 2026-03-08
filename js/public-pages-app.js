@@ -1589,6 +1589,26 @@
     return aliasMatch || fallback;
   }
 
+  function findLocalProfile(data, code) {
+    const normalizedCode = normalizeUserCode(code || "", "");
+    if (!normalizedCode) return null;
+    const direct = data.profilesByCode?.[normalizedCode] || data.profilesById?.[normalizedCode];
+    if (direct) return direct;
+
+    return (data.profiles || []).find((profile) => {
+      const displayName = String(profile?.displayName || "").trim();
+      const firstName = displayName.split(/\s+/)[0] || "";
+      const aliases = [
+        profile?.userCode,
+        profile?.username,
+        profile?.id,
+        displayName,
+        firstName
+      ];
+      return aliases.some((entry) => normalizeUserCode(entry || "", "") === normalizedCode);
+    }) || null;
+  }
+
   function resolveCommunityProfileCode(data) {
     const params = new URLSearchParams(window.location.search || "");
     const byCode = String(params.get("u") || "").trim();
@@ -1621,13 +1641,13 @@
   function resolveStandaloneProfileCode() {
     const normalizedPath = normalizePath(window.location.pathname);
     if (normalizedPath === "/u" || normalizedPath === "/u/index.html") {
-      return "public-user";
+      return "";
     }
     if (!normalizedPath.startsWith(CANONICAL_PROFILE_PREFIX)) {
-      return "public-user";
+      return "";
     }
     const slug = normalizedPath.slice(CANONICAL_PROFILE_PREFIX.length).split("/")[0] || "";
-    return normalizeUserCode(slug, "public-user");
+    return normalizeUserCode(slug, "");
   }
 
   function socialIconPath(network) {
@@ -1686,10 +1706,40 @@
       headers: { Accept: "application/json" }
     });
     if (!response.ok) {
-      throw new Error(`public profile request failed (${response.status})`);
+      const error = new Error(`public profile request failed (${response.status})`);
+      error.status = response.status;
+      throw error;
     }
     const payload = await response.json();
     return payload?.profile && typeof payload.profile === "object" ? payload.profile : payload;
+  }
+
+  function renderProfileNotFound(host, requestedCode) {
+    const normalizedCode = String(requestedCode || "").trim();
+    const title = normalizedCode ? `@${normalizedCode}` : "Profile";
+    const subtitle = normalizedCode
+      ? "This public profile could not be found."
+      : "A public profile slug is required for this route.";
+    const nextHeading = buildPageHeading(title, subtitle);
+    const existingHeading = host.querySelector(".page-heading");
+    if (existingHeading && existingHeading.parentElement === host) {
+      host.replaceChild(nextHeading, existingHeading);
+    } else {
+      host.prepend(nextHeading);
+    }
+
+    const layout = host.querySelector(".public-standalone-main");
+    const profileCard = host.querySelector(".profile-card-standalone");
+    if (!layout || !profileCard) return;
+
+    clear(profileCard);
+    profileCard.append(
+      create("div", "empty-state", normalizedCode ? "Profile not found." : "Missing profile slug."),
+      create("p", "item-snippet", normalizedCode
+        ? "Check the profile link or try searching the community directory."
+        : "Use a canonical public profile URL in the format /u/<slug>.")
+    );
+    document.title = normalizedCode ? `${normalizedCode} | Profile Not Found` : "Profile Not Found | StreamSuites";
   }
 
   async function fetchMyPublicProfile() {
@@ -2044,17 +2094,36 @@
     host.appendChild(layout);
 
     const profileCode = resolveStandaloneProfileCode();
-    const fallbackProfile = resolveLocalProfile(data, profileCode);
+    const localProfile = findLocalProfile(data, profileCode);
+    const fallbackProfile = localProfile || resolveLocalProfile(data, profileCode);
 
     (async () => {
-      let profile = normalizeProfilePayload(fallbackProfile, fallbackProfile, profileCode);
+      if (!profileCode) {
+        renderProfileNotFound(host, "");
+        return;
+      }
+
+      let profile = localProfile ? normalizeProfilePayload(localProfile, localProfile, profileCode) : null;
       const ownerCode = normalizeUserCode(authState?.userCode || "");
-      const canEdit = Boolean(authState?.authenticated) && ownerCode === profile.userCode;
+      const canEdit = Boolean(authState?.authenticated) && ownerCode === normalizeUserCode(profile?.userCode || profileCode);
       try {
         const payload = canEdit ? await fetchMyPublicProfile() : await fetchPublicProfileByCode(profileCode);
         profile = normalizeProfilePayload(payload, fallbackProfile, profileCode);
-      } catch (_err) {
+      } catch (error) {
+        if (!profile) {
+          renderProfileNotFound(host, profileCode);
+          return;
+        }
+        if (!canEdit && error?.status === 404) {
+          renderProfileNotFound(host, profileCode);
+          return;
+        }
         // Keep local profile fallback when API profile endpoints are unavailable.
+      }
+
+      if (!profile) {
+        renderProfileNotFound(host, profileCode);
+        return;
       }
 
       const nextHeading = buildPageHeading(profile.displayName, `${profile.platform} | ${roleLabel(normalizeRoleForUi(profile.role))}`);
