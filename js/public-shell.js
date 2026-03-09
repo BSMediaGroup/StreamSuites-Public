@@ -35,8 +35,9 @@
   });
 
   const MOBILE_MEDIA_QUERY = "(max-width: 920px)";
-  const AUTH_API_BASE = "https://api.streamsuites.app";
-  const AUTH_COMPLETE_URL = "https://streamsuites.app/public-auth-complete.html";
+  const CURRENT_ORIGIN = String(window.location.origin || "").trim();
+  const AUTH_API_BASE = /^https?:\/\//.test(CURRENT_ORIGIN) ? CURRENT_ORIGIN : "https://streamsuites.app";
+  const AUTH_COMPLETE_URL = new URL("/public-auth-complete.html", AUTH_API_BASE).toString();
   const AUTH_OAUTH_LINKS = Object.freeze([
     { provider: "google", label: "Continue with Google", icon: "/assets/icons/google.svg", path: "/auth/login/google" },
     { provider: "github", label: "Continue with GitHub", icon: "/assets/icons/github.svg", path: "/auth/login/github" },

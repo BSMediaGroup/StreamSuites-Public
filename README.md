@@ -38,6 +38,7 @@ Public StreamSuites web surface (static Cloudflare Pages site).
 - Public account auth upgrades:
   - Dedicated public login/complete pages (`public-login.html`, `public-auth-complete.html`).
   - Public login assets (`css/public-login.css`, `js/public-login.js`, `js/public-auth-complete.js`).
+  - Cloudflare Pages auth/API proxy routes now forward public auth/session traffic from same-origin `streamsuites.app` function paths to the authoritative Auth API, avoiding direct browser-side cross-origin login/session hops during the Pages deployment model.
   - Auth-aware top-right user widget in the media/community shell (`js/public-shell.js`, `js/public-pages-app.js`).
   - Viewer/public account settings now expose real StreamSuites profile controls in `community/settings.html`, with save/load wiring in `js/public-pages-app.js` and supporting styles in `css/public-shell.css`.
 - Lightweight public-page visit reporting:
@@ -48,6 +49,14 @@ Public StreamSuites web surface (static Cloudflare Pages site).
 ```text
 StreamSuites-Public/
 ├── functions/
+│   ├── _shared/
+│   │   └── auth-api-proxy.js
+│   ├── api/
+│   │   └── [[path]].js
+│   ├── auth/
+│   │   └── [[path]].js
+│   ├── oauth/
+│   │   └── [[path]].js
 │   └── u/
 │       └── [[slug]].js
 ├── u/

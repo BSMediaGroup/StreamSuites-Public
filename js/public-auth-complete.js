@@ -1,9 +1,12 @@
 (() => {
-  const ME_API_URL = "https://api.streamsuites.app/api/public/me";
-  const LOGIN_URL = "https://streamsuites.app/public-login.html";
-  const DEFAULT_RETURN_TO = "https://streamsuites.app/media.html";
+  const CURRENT_ORIGIN = String(window.location.origin || "").trim();
+  const PUBLIC_BASE = /^https?:\/\//.test(CURRENT_ORIGIN) ? CURRENT_ORIGIN : "https://streamsuites.app";
+  const ME_API_URL = new URL("/api/public/me", PUBLIC_BASE).toString();
+  const LOGIN_URL = new URL("/public-login.html", PUBLIC_BASE).toString();
+  const DEFAULT_RETURN_TO = new URL("/media.html", PUBLIC_BASE).toString();
   const AUTH_COMPLETE_MESSAGE_TYPE = "ss_public_auth_complete";
   const CLOSE_FALLBACK_DELAY_MS = 700;
+  const REQUEST_TIMEOUT_MS = 12000;
 
   const statusEl = document.getElementById("public-auth-complete-status");
   const errorEl = document.getElementById("public-auth-complete-error");
@@ -50,8 +53,21 @@
     return candidates.some((value) => value === true);
   }
 
+  async function fetchWithTimeout(resource, options = {}, timeoutMs = REQUEST_TIMEOUT_MS) {
+    const controller = new AbortController();
+    const timeoutHandle = window.setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetch(resource, {
+        ...options,
+        signal: controller.signal
+      });
+    } finally {
+      window.clearTimeout(timeoutHandle);
+    }
+  }
+
   async function checkSession() {
-    const response = await fetch(ME_API_URL, {
+    const response = await fetchWithTimeout(ME_API_URL, {
       method: "GET",
       cache: "no-store",
       credentials: "include",
@@ -113,9 +129,13 @@
           window.location.replace(returnTo);
         }
       }, CLOSE_FALLBACK_DELAY_MS);
-    } catch (_err) {
+    } catch (error) {
       setStatus("Unable to verify session.");
-      setError("Auth API unavailable. Please retry login.");
+      setError(
+        error?.name === "AbortError"
+          ? "Session check timed out. Please retry login."
+          : "Auth API unavailable. Please retry login."
+      );
       console.warn("[StreamSuites Public] Unable to verify session on auth completion.");
     }
   }

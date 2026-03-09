@@ -15,7 +15,8 @@
 
   const DETAIL_LAYOUT_STORAGE_KEY = "ss-public-detail-layout";
   const PROFILE_ARTIFACT_LAYOUT_STORAGE_KEY = "ss-public-profile-artifact-layout";
-  const AUTH_API_BASE = "https://api.streamsuites.app";
+  const CURRENT_ORIGIN = String(window.location.origin || "").trim();
+  const AUTH_API_BASE = /^https?:\/\//.test(CURRENT_ORIGIN) ? CURRENT_ORIGIN : "https://streamsuites.app";
   const AUTH_ME_URL = `${AUTH_API_BASE}/api/public/me`;
   const AUTH_PUBLIC_PROFILE_URL = `${AUTH_API_BASE}/api/public/profile`;
   const AUTH_PUBLIC_PROFILE_ME_URL = `${AUTH_API_BASE}/api/public/profile/me`;

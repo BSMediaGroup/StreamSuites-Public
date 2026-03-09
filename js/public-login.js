@@ -1,11 +1,14 @@
 (() => {
-  const API_BASE = "https://api.streamsuites.app";
+  const CURRENT_ORIGIN = String(window.location.origin || "").trim();
+  const PUBLIC_BASE = /^https?:\/\//.test(CURRENT_ORIGIN) ? CURRENT_ORIGIN : "https://streamsuites.app";
+  const API_BASE = PUBLIC_BASE;
   const ME_API_URL = `${API_BASE}/api/public/me`;
   const LOGIN_PASSWORD_URL = `${API_BASE}/auth/login/password`;
   const SIGNUP_PASSWORD_URL = `${API_BASE}/auth/signup/password`;
-  const COMPLETE_URL = "https://streamsuites.app/public-auth-complete.html";
-  const DEFAULT_RETURN_TO = "https://streamsuites.app/media.html";
+  const COMPLETE_URL = new URL("/public-auth-complete.html", PUBLIC_BASE).toString();
+  const DEFAULT_RETURN_TO = new URL("/media.html", PUBLIC_BASE).toString();
   const MIN_PASSWORD_LENGTH = 8;
+  const REQUEST_TIMEOUT_MS = 12000;
 
   const providerEndpointPaths = {
     google: "/auth/login/google",
@@ -105,8 +108,21 @@
     if (tabName === "login") setSuccess("");
   }
 
+  async function fetchWithTimeout(resource, options = {}, timeoutMs = REQUEST_TIMEOUT_MS) {
+    const controller = new AbortController();
+    const timeoutHandle = window.setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetch(resource, {
+        ...options,
+        signal: controller.signal
+      });
+    } finally {
+      window.clearTimeout(timeoutHandle);
+    }
+  }
+
   async function fetchMeState() {
-    const response = await fetch(ME_API_URL, {
+    const response = await fetchWithTimeout(ME_API_URL, {
       method: "GET",
       cache: "no-store",
       credentials: "include",
@@ -177,7 +193,7 @@
 
     setBusy(loginSubmitEl, true, "Logging in...", "Log in");
     try {
-      const response = await fetch(LOGIN_PASSWORD_URL, {
+      const response = await fetchWithTimeout(LOGIN_PASSWORD_URL, {
         method: "POST",
         cache: "no-store",
         credentials: "include",
@@ -223,7 +239,11 @@
         setStatus("Finishing login...");
       }
       redirectToComplete();
-    } catch (_err) {
+    } catch (error) {
+      if (error?.name === "AbortError") {
+        setError(loginErrorEl, "Login timed out. Please try again.");
+        return;
+      }
       setError(loginErrorEl, "Network error during login. Please try again.");
     } finally {
       setBusy(loginSubmitEl, false, "Logging in...", "Log in");
@@ -255,7 +275,7 @@
 
     setBusy(signupSubmitEl, true, "Creating...", "Create account");
     try {
-      const response = await fetch(SIGNUP_PASSWORD_URL, {
+      const response = await fetchWithTimeout(SIGNUP_PASSWORD_URL, {
         method: "POST",
         cache: "no-store",
         credentials: "include",
@@ -289,7 +309,11 @@
       if (loginForm instanceof HTMLFormElement) {
         loginForm.elements.email.value = email;
       }
-    } catch (_err) {
+    } catch (error) {
+      if (error?.name === "AbortError") {
+        setError(signupErrorEl, "Signup timed out. Please try again.");
+        return;
+      }
       setError(signupErrorEl, "Network error during signup. Please try again.");
     } finally {
       setBusy(signupSubmitEl, false, "Creating...", "Create account");
