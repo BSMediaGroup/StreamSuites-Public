@@ -41,8 +41,25 @@
     accountType: "PUBLIC",
     socialLinks: {},
     coverImageUrl: "/assets/placeholders/defaultprofilecover.webp",
+    bannerImageUrl: "/assets/placeholders/defaultprofilecover.webp",
+    backgroundImageUrl: "",
     isAnonymous: false,
-    isListed: true
+    isListed: true,
+    publicSurfaceAccountType: "viewer_only",
+    creatorCapable: false,
+    viewerOnly: true,
+    streamsuitesProfileUrl: "https://streamsuites.app/u/public-user",
+    streamsuitesShareUrl: "https://streamsuites.app/u/public-user",
+    streamsuitesProfileEnabled: true,
+    streamsuitesProfileEligible: true,
+    streamsuitesProfileVisible: true,
+    streamsuitesProfileStatusReason: "visible",
+    findmehereEnabled: false,
+    findmehereEligible: false,
+    findmehereVisible: false,
+    findmehereProfileUrl: "",
+    findmehereShareUrl: "",
+    findmehereStatusReason: "creator_capable_required"
   };
 
   let cachePromise = null;
@@ -269,8 +286,29 @@
     const platform = raw.platform || "StreamSuites";
     const socialLinks = normalizeSocialLinks(raw.social_links || raw.socialLinks);
     const coverImageUrl = String(raw.cover_image_url || raw.coverImageUrl || "").trim() || "/assets/placeholders/defaultprofilecover.webp";
+    const bannerImageUrl = String(raw.banner_image_url || raw.bannerImageUrl || raw.cover_image_url || raw.coverImageUrl || "").trim() || coverImageUrl;
+    const backgroundImageUrl = String(raw.background_image_url || raw.backgroundImageUrl || "").trim();
     const isAnonymous = raw?.is_anonymous === true || raw?.anonymous === true;
     const isListed = raw?.is_listed !== false && raw?.listed !== false;
+    const creatorCapable = raw?.creator_capable === true;
+    const viewerOnly = raw?.viewer_only === true || (!creatorCapable && String(raw?.public_surface_account_type || "").trim() === "viewer_only");
+    const streamsuitesProfileUrl = String(raw?.streamsuites_profile_url || raw?.streamsuitesProfileUrl || "").trim();
+    const streamsuitesShareUrl = String(raw?.streamsuites_share_url || raw?.streamsuitesShareUrl || streamsuitesProfileUrl).trim();
+    const streamsuitesProfileEnabled = raw?.streamsuites_profile_enabled !== false && raw?.streamsuitesProfileEnabled !== false;
+    const streamsuitesProfileEligible = raw?.streamsuites_profile_eligible !== false && raw?.streamsuitesProfileEligible !== false;
+    const streamsuitesProfileVisible =
+      raw?.streamsuites_profile_visible === true ||
+      raw?.streamsuitesProfileVisible === true ||
+      (streamsuitesProfileEnabled && streamsuitesProfileEligible && !("streamsuites_profile_visible" in (raw || {})) && !("streamsuitesProfileVisible" in (raw || {})));
+    const streamsuitesProfileStatusReason = String(
+      raw?.streamsuites_profile_status_reason || raw?.streamsuitesProfileStatusReason || (streamsuitesProfileVisible ? "visible" : "")
+    ).trim();
+    const findmehereEnabled = raw?.findmehere_enabled === true || raw?.findmehereEnabled === true;
+    const findmehereEligible = raw?.findmehere_eligible === true || raw?.findmehereEligible === true;
+    const findmehereVisible = raw?.findmehere_visible === true || raw?.findmehereVisible === true;
+    const findmehereProfileUrl = String(raw?.findmehere_profile_url || raw?.findmehereProfileUrl || "").trim();
+    const findmehereShareUrl = String(raw?.findmehere_share_url || raw?.findmehereShareUrl || findmehereProfileUrl).trim();
+    const findmehereStatusReason = String(raw?.findmehere_status_reason || raw?.findmehereStatusReason || "").trim();
 
     return {
       id: userCode || String(id),
@@ -291,8 +329,25 @@
       bio: raw.bio || raw.summary || "",
       socialLinks,
       coverImageUrl,
+      bannerImageUrl,
+      backgroundImageUrl,
       isAnonymous,
-      isListed
+      isListed,
+      publicSurfaceAccountType: String(raw?.public_surface_account_type || raw?.publicSurfaceAccountType || (creatorCapable ? "creator_capable" : "viewer_only")).trim(),
+      creatorCapable,
+      viewerOnly,
+      streamsuitesProfileUrl,
+      streamsuitesShareUrl,
+      streamsuitesProfileEnabled,
+      streamsuitesProfileEligible,
+      streamsuitesProfileVisible,
+      streamsuitesProfileStatusReason,
+      findmehereEnabled,
+      findmehereEligible,
+      findmehereVisible,
+      findmehereProfileUrl,
+      findmehereShareUrl,
+      findmehereStatusReason
     };
   }
 

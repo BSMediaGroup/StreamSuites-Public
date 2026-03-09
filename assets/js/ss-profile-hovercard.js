@@ -154,6 +154,18 @@
     return `https://${raw.replace(/^\/+/, "")}`;
   }
 
+  function normalizeProfileLookup(value) {
+    return safeText(value)
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
+  function buildCanonicalProfileHref(profile) {
+    const slug = normalizeProfileLookup(profile?.public_slug || profile?.publicSlug || profile?.slug || profile?.user_code || profile?.userCode);
+    return slug ? `/u/${encodeURIComponent(slug)}` : "";
+  }
+
   function socialIconPath(network) {
     const normalized = safeText(network).toLowerCase();
     return SOCIAL_ICON_MAP[normalized] || "/assets/icons/ui/globe.svg";
@@ -697,6 +709,8 @@
     const avatarUrl = safeText(profile?.avatar_url || profile?.avatarUrl || profile?.avatar || fallback.avatarUrl);
     const bio = safeText(profile?.bio || profile?.summary || fallback.bio);
     const coverImageUrl = safeText(
+      profile?.banner_image_url ||
+      profile?.bannerImageUrl ||
       profile?.cover_image_url ||
       profile?.coverImageUrl ||
       profile?.profile_cover ||
@@ -708,7 +722,7 @@
     );
     const socialLinks = normalizeSocialLinks(profile?.social_links || profile?.socialLinks || fallback.socialLinks);
     const badges = normalizeBadges(profile?.badges, role, tier);
-    const href = userCode ? `/community/profile.html?u=${encodeURIComponent(userCode)}` : fallback.profileHref;
+    const href = safeText(profile?.streamsuites_profile_url) || buildCanonicalProfileHref(profile) || fallback.profileHref;
     return {
       displayName,
       userCode,

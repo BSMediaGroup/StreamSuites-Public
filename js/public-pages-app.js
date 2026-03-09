@@ -295,6 +295,13 @@
     return raw;
   }
 
+  function firstBoolean(...values) {
+    for (const value of values) {
+      if (typeof value === "boolean") return value;
+    }
+    return null;
+  }
+
   function isCanonicalProfilePath(pathname) {
     const normalized = normalizePath(pathname);
     return normalized === "/u" || normalized === "/u/index.html" || normalized.startsWith(CANONICAL_PROFILE_PREFIX);
@@ -956,6 +963,74 @@
     return box;
   }
 
+  function resolveProfileVisibilityReason(profile) {
+    const reason = String(profile?.streamsuitesProfileStatusReason || "").trim();
+    if (reason) return reason;
+    if (profile?.streamsuitesProfileVisible) return "visible";
+    if (profile?.streamsuitesProfileEligible === false) return "missing_public_slug";
+    if (profile?.streamsuitesProfileEnabled === false) return "disabled_by_account";
+    return "unavailable";
+  }
+
+  function isProfileVisibleOnStreamSuites(profile) {
+    return Boolean(profile?.streamsuitesProfileVisible);
+  }
+
+  function buildUnavailableProfileMessage(profile) {
+    const reason = resolveProfileVisibilityReason(profile);
+    if (reason === "disabled_by_account") {
+      return "This StreamSuites public profile is currently unavailable because public profile visibility is disabled in the authoritative account settings.";
+    }
+    if (reason === "missing_public_slug") {
+      return "This account does not currently have a canonical public profile slug, so the StreamSuites public profile cannot be shown.";
+    }
+    return "This StreamSuites public profile is currently unavailable.";
+  }
+
+  function buildFindMeHereStatusText(profile) {
+    const reason = String(profile?.findmehereStatusReason || "").trim();
+    if (profile?.findmehereVisible) return "";
+    if (reason === "creator_capable_required" || profile?.viewerOnly) {
+      return "FindMeHere listing is not available for viewer-only public accounts.";
+    }
+    if (reason === "disabled_by_account") {
+      return "FindMeHere listing is currently disabled for this profile.";
+    }
+    if (reason === "missing_public_slug") {
+      return "FindMeHere listing is unavailable until this account has a canonical public slug.";
+    }
+    return "FindMeHere listing is not enabled for this profile.";
+  }
+
+  function buildProfileShareSection(profile) {
+    const section = create("div", "profile-share-section");
+    const options = create("div", "profile-share-grid");
+    const streamSuitesUrl = String(profile?.streamsuitesShareUrl || profile?.streamsuitesProfileUrl || "").trim();
+    const findMeHereUrl = profile?.findmehereVisible ? String(profile?.findmehereShareUrl || profile?.findmehereProfileUrl || "").trim() : "";
+
+    const createShareOption = (label, url, tone = "") => {
+      const card = create("div", `profile-share-option${tone ? ` ${tone}` : ""}`);
+      card.append(create("div", "profile-share-option-title", label), buildShareBox(url));
+      return card;
+    };
+
+    if (streamSuitesUrl) {
+      options.appendChild(createShareOption("StreamSuites", streamSuitesUrl));
+    }
+
+    if (findMeHereUrl) {
+      options.appendChild(createShareOption("FindMeHere", findMeHereUrl));
+    } else {
+      const note = create("div", "profile-share-note", buildFindMeHereStatusText(profile));
+      if (note.textContent) {
+        options.appendChild(note);
+      }
+    }
+
+    section.appendChild(options);
+    return section;
+  }
+
   function buildExternalSourceBlock(item) {
     const wrap = create("div", "external-source");
     const link = create("a", "external-source-link");
@@ -1480,7 +1555,7 @@
 
     const memberCap = window.matchMedia("(max-width: 900px)").matches ? 4 : 8;
     const members = (data.profiles || [])
-      .filter((profile) => profile?.isListed !== false)
+      .filter((profile) => profile?.isListed !== false && isProfileVisibleOnStreamSuites(profile))
       .filter((profile) => norm(profile.displayName).includes(norm(state.query)) || norm(profile.username).includes(norm(state.query)))
       .slice(0, memberCap);
 
@@ -1520,7 +1595,7 @@
 
     const grid = create("section", "profile-grid");
     const members = (data.profiles || []).filter((profile) => {
-      if (profile?.isListed === false) return false;
+      if (profile?.isListed === false || !isProfileVisibleOnStreamSuites(profile)) return false;
       const haystack = `${profile.displayName} ${profile.username} ${profile.role} ${profile.platform}`.toLowerCase();
       return haystack.includes(norm(state.query));
     });
@@ -1653,13 +1728,63 @@
     const userCode = normalizeUserCode(
       payload?.user_code || payload?.userCode || fallbackProfile?.userCode || fallbackCode || "public-user"
     );
+    const canonicalPublicUrl = publicSlug ? `https://streamsuites.app/u/${encodeURIComponent(publicSlug)}` : "";
     const displayName = String(payload?.display_name || payload?.displayName || fallbackProfile?.displayName || "Public User").trim() || "Public User";
     const avatar = String(payload?.avatar_url || payload?.avatarUrl || fallbackProfile?.avatar || window.StreamSuitesPublicData.DEFAULT_PROFILE.avatar || "").trim();
     const coverImageUrl = String(payload?.cover_image_url || payload?.coverImageUrl || fallbackProfile?.coverImageUrl || DEFAULT_PROFILE_COVER).trim() || DEFAULT_PROFILE_COVER;
+    const bannerImageUrl = String(
+      payload?.banner_image_url || payload?.bannerImageUrl || payload?.cover_image_url || payload?.coverImageUrl || fallbackProfile?.bannerImageUrl || coverImageUrl
+    ).trim() || coverImageUrl;
+    const backgroundImageUrl = String(payload?.background_image_url || payload?.backgroundImageUrl || fallbackProfile?.backgroundImageUrl || "").trim();
     const bio = String(payload?.bio || fallbackProfile?.bio || "").trim();
     const socialLinks = normalizeSocialLinks(payload?.social_links || payload?.socialLinks || fallbackProfile?.socialLinks);
     const isAnonymous = payload?.is_anonymous === true || payload?.anonymous === true || fallbackProfile?.isAnonymous === true;
     const isListed = payload?.is_listed !== false && payload?.listed !== false && fallbackProfile?.isListed !== false;
+    const creatorCapable = firstBoolean(payload?.creator_capable, payload?.creatorCapable, fallbackProfile?.creatorCapable, accountType === "ADMIN" || accountType === "CREATOR") === true;
+    const viewerOnly =
+      firstBoolean(payload?.viewer_only, payload?.viewerOnly, fallbackProfile?.viewerOnly, !creatorCapable && payload?.public_surface_account_type === "viewer_only") === true;
+    const streamsuitesProfileUrl = String(
+      payload?.streamsuites_profile_url || payload?.streamsuitesProfileUrl || fallbackProfile?.streamsuitesProfileUrl || canonicalPublicUrl || ""
+    ).trim();
+    const streamsuitesShareUrl = String(
+      payload?.streamsuites_share_url || payload?.streamsuitesShareUrl || fallbackProfile?.streamsuitesShareUrl || streamsuitesProfileUrl || ""
+    ).trim();
+    const streamsuitesProfileEnabled = firstBoolean(
+      payload?.streamsuites_profile_enabled,
+      payload?.streamsuitesProfileEnabled,
+      fallbackProfile?.streamsuitesProfileEnabled,
+      true
+    ) === true;
+    const streamsuitesProfileEligible = firstBoolean(
+      payload?.streamsuites_profile_eligible,
+      payload?.streamsuitesProfileEligible,
+      fallbackProfile?.streamsuitesProfileEligible,
+      Boolean(publicSlug)
+    ) === true;
+    const streamsuitesProfileVisible = firstBoolean(
+      payload?.streamsuites_profile_visible,
+      payload?.streamsuitesProfileVisible,
+      fallbackProfile?.streamsuitesProfileVisible,
+      streamsuitesProfileEnabled && streamsuitesProfileEligible
+    ) === true;
+    const streamsuitesProfileStatusReason = String(
+      payload?.streamsuites_profile_status_reason ||
+      payload?.streamsuitesProfileStatusReason ||
+      fallbackProfile?.streamsuitesProfileStatusReason ||
+      (streamsuitesProfileVisible ? "visible" : "")
+    ).trim();
+    const findmehereEnabled = firstBoolean(payload?.findmehere_enabled, payload?.findmehereEnabled, fallbackProfile?.findmehereEnabled, false) === true;
+    const findmehereEligible = firstBoolean(payload?.findmehere_eligible, payload?.findmehereEligible, fallbackProfile?.findmehereEligible, false) === true;
+    const findmehereVisible = firstBoolean(payload?.findmehere_visible, payload?.findmehereVisible, fallbackProfile?.findmehereVisible, false) === true;
+    const findmehereProfileUrl = String(
+      payload?.findmehere_profile_url || payload?.findmehereProfileUrl || fallbackProfile?.findmehereProfileUrl || ""
+    ).trim();
+    const findmehereShareUrl = String(
+      payload?.findmehere_share_url || payload?.findmehereShareUrl || fallbackProfile?.findmehereShareUrl || findmehereProfileUrl || ""
+    ).trim();
+    const findmehereStatusReason = String(
+      payload?.findmehere_status_reason || payload?.findmehereStatusReason || fallbackProfile?.findmehereStatusReason || ""
+    ).trim();
     return {
       id: fallbackProfile?.id || userCode,
       userCode,
@@ -1677,9 +1802,28 @@
       bio,
       socialLinks,
       coverImageUrl,
+      bannerImageUrl,
+      backgroundImageUrl,
       isAnonymous,
       isListed,
-      badges: buildAccountBadges(accountType, tier)
+      badges: buildAccountBadges(accountType, tier),
+      publicSurfaceAccountType: String(
+        payload?.public_surface_account_type || payload?.publicSurfaceAccountType || fallbackProfile?.publicSurfaceAccountType || (creatorCapable ? "creator_capable" : "viewer_only")
+      ).trim(),
+      creatorCapable,
+      viewerOnly,
+      streamsuitesProfileUrl,
+      streamsuitesShareUrl,
+      streamsuitesProfileEnabled,
+      streamsuitesProfileEligible,
+      streamsuitesProfileVisible,
+      streamsuitesProfileStatusReason,
+      findmehereEnabled,
+      findmehereEligible,
+      findmehereVisible,
+      findmehereProfileUrl,
+      findmehereShareUrl,
+      findmehereStatusReason
     };
   }
 
@@ -1746,6 +1890,30 @@
         : "Use a canonical public profile URL in the format /u/<slug>.")
     );
     document.title = normalizedCode ? `${normalizedCode} | Profile Not Found` : "Profile Not Found | StreamSuites";
+  }
+
+  function renderProfileUnavailable(host, profile, requestedCode) {
+    const normalizedCode = String(profile?.publicSlug || requestedCode || "").trim();
+    const title = normalizedCode ? `@${normalizedCode}` : "Profile unavailable";
+    const subtitle = "This canonical StreamSuites public profile is currently unavailable.";
+    const nextHeading = buildPageHeading(title, subtitle);
+    const existingHeading = host.querySelector(".page-heading");
+    if (existingHeading && existingHeading.parentElement === host) {
+      host.replaceChild(nextHeading, existingHeading);
+    } else {
+      host.prepend(nextHeading);
+    }
+
+    const layout = host.querySelector(".public-standalone-main");
+    const profileCard = host.querySelector(".profile-card-standalone");
+    if (!layout || !profileCard) return;
+
+    clear(profileCard);
+    profileCard.append(
+      create("div", "empty-state", "Profile unavailable"),
+      create("p", "profile-unavailable-copy", buildUnavailableProfileMessage(profile))
+    );
+    document.title = normalizedCode ? `${normalizedCode} | Profile Unavailable` : "Profile Unavailable | StreamSuites";
   }
 
   async function fetchMyPublicProfile() {
@@ -1909,10 +2077,9 @@
 
   function renderProfileBody(profileCard, profile, canEdit) {
     clear(profileCard);
-    const shareUrl = new URL(buildCanonicalProfileHref(profile), window.location.origin).toString();
     const coverWrap = create("div", "profile-cover");
     const coverImage = create("img");
-    coverImage.src = profile.coverImageUrl || DEFAULT_PROFILE_COVER;
+    coverImage.src = profile.bannerImageUrl || profile.coverImageUrl || DEFAULT_PROFILE_COVER;
     coverImage.alt = `${profile.displayName} cover`;
     coverWrap.appendChild(coverImage);
     profileCard.appendChild(coverWrap);
@@ -1986,10 +2153,10 @@
     }
 
     const shareHeader = create("div", "profile-inline-header");
-    const shareTitle = create("h3", "", "Profile Share Link");
+    const shareTitle = create("h3", "", "Share Links");
     shareTitle.prepend(createIcon(UI_ICON_MAP.share, "inline-icon-mask"));
     shareHeader.appendChild(shareTitle);
-    profileCard.append(shareHeader, buildShareBox(shareUrl));
+    profileCard.append(shareHeader, buildProfileShareSection(profile));
 
     if (canEdit) {
       const privacyWrap = create("label", "profile-visibility-toggle");
@@ -2134,7 +2301,11 @@
           return;
         }
         if (!canEdit && error?.status === 404) {
-          renderProfileNotFound(host, profileCode);
+          if (!isProfileVisibleOnStreamSuites(profile)) {
+            renderProfileUnavailable(host, profile, profileCode);
+          } else {
+            renderProfileNotFound(host, profileCode);
+          }
           return;
         }
         // Keep local profile fallback when API profile endpoints are unavailable.
@@ -2142,6 +2313,11 @@
 
       if (!profile) {
         renderProfileNotFound(host, profileCode);
+        return;
+      }
+
+      if (!canEdit && !isProfileVisibleOnStreamSuites(profile)) {
+        renderProfileUnavailable(host, profile, profileCode);
         return;
       }
 

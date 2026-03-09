@@ -1308,6 +1308,40 @@ body.public-shell-page.modal-open {
   gap: 8px;
 }
 
+.profile-share-section {
+  display: grid;
+  gap: 10px;
+}
+
+.profile-share-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.profile-share-option {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid rgba(177, 194, 224, 0.18);
+  border-radius: 12px;
+  background: rgba(14, 21, 33, 0.72);
+}
+
+.profile-share-option-title {
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(190, 207, 231, 0.72);
+}
+
+.profile-share-note,
+.profile-unavailable-copy {
+  margin: 0;
+  color: rgba(201, 214, 235, 0.88);
+  line-height: 1.5;
+  font-size: 0.72rem;
+}
+
 .profile-visibility-toggle {
   display: inline-flex;
   align-items: center;

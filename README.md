@@ -12,12 +12,19 @@ Public StreamSuites web surface (static Cloudflare Pages site).
 - This repo is not a canonical state authority. It renders runtime-exported artifacts/JSON and API responses.
 - Canonical state is authored outside this repo (runtime/admin services).
 - This repo now owns the canonical standalone public profile route foundation at `/u/<slug>`, backed by the authoritative public slug model exported by `StreamSuites`, while retaining migration-safe legacy `user_code` compatibility in community/profile resolution.
+- Canonical public profiles now consume the authoritative StreamSuites profile surface model for visibility, StreamSuites vs FindMeHere eligibility, canonical share URLs, and reserved profile media fields (`cover`/`banner`, reserved `background`).
 
 ## Public Surface Behavior
 - Static pages and assets are shipped from this repository root.
 - Public galleries and metadata views hydrate from exported JSON artifacts (for example files in `/data` plus runtime version export).
 - Feature Requests (`requests.html`) includes authenticated creator flows backed by `api.streamsuites.app` (fetch/vote/comment/submit). This is UI-only client integration; no backend logic is hosted here.
 - Standalone public profiles now resolve on the canonical site via `/u/<slug>`, with slug-first lookup, legacy `user_code` fallback during migration, and Cloudflare Pages rewrite/function support that preserves deep links.
+- Canonical public profile rendering now trusts the authoritative exported profile/account fields from `StreamSuites` for:
+  - `streamsuites_profile_enabled|eligible|visible|status_reason`
+  - `findmehere_enabled|eligible|visible|profile_url|share_url|status_reason`
+  - `creator_capable`, `viewer_only`, and `public_surface_account_type`
+  - `cover_image_url`, `banner_image_url`, and reserved `background_image_url`
+- On `https://streamsuites.app/u/<slug>`, StreamSuites share links always use the canonical slug URL and FindMeHere share links only render when the authoritative export says the account is eligible/listed there.
 
 ## What Is New (v0.4.1-alpha surface)
 - Aurora landing experience and refreshed layout shell (`index.html`, `css/aurora-landing.css`).
