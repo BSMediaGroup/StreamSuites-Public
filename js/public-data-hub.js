@@ -87,6 +87,31 @@
       .replace(/^-+|-+$/g, "");
   }
 
+  function normalizeArtifactLookup(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
+  function firstArtifactIdentifier(raw, keys) {
+    for (const key of keys) {
+      const value = String(raw?.[key] || "").trim();
+      if (value) return value;
+    }
+    return "";
+  }
+
+  function buildArtifactHref(type, identifier) {
+    const encoded = encodeURIComponent(String(identifier || "").trim());
+    if (type === "clips") return `/clips/${encoded}`;
+    if (type === "polls") return `/polls/${encoded}`;
+    if (type === "scoreboards") return `/scores/${encoded}`;
+    if (type === "tallies") return `/tallies/detail.html?id=${encoded}`;
+    return `/media.html`;
+  }
+
   function normalizeSlugAliases(value) {
     const items = Array.isArray(value) ? value : [];
     const seen = new Set();
@@ -421,6 +446,8 @@
 
   function normalizeClip(raw, index, profiles) {
     const id = raw?.id || raw?.clip_id || `clip-${index + 1}`;
+    const routeId =
+      firstArtifactIdentifier(raw, ["public_slug", "slug", "clip_slug", "clipSlug", "canonical_id", "canonicalId"]) || id;
     const profile = resolveProfileRef(raw?.creator, profiles);
     const mediaUrl = raw?.media_url || raw?.video_url || raw?.url || null;
     const removal = resolveRemovalState(raw);
@@ -447,10 +474,12 @@
       visibility: removal.visibility,
       removedState: removal.removedState,
       isRemoved: removal.isRemoved,
+      routeId,
+      routeKeys: [id, routeId].map(normalizeArtifactLookup).filter(Boolean),
       profileId: profile.id,
       profileCode: profile.publicSlug || profile.userCode || profile.username || profile.id,
       creator: profile,
-      href: `/clips/detail.html?id=${encodeURIComponent(id)}`
+      href: buildArtifactHref("clips", routeId)
     };
   }
 
@@ -488,6 +517,8 @@
 
   function normalizePoll(raw, index, profiles) {
     const id = raw?.id || raw?.poll_id || `poll-${index + 1}`;
+    const routeId =
+      firstArtifactIdentifier(raw, ["public_slug", "slug", "poll_slug", "pollSlug", "canonical_id", "canonicalId"]) || id;
     const profile = resolveProfileRef(raw?.creator, profiles);
     const options = normalizeOptions(raw?.options || raw?.choices);
     const removal = resolveRemovalState(raw);
@@ -512,13 +543,15 @@
       visibility: removal.visibility,
       removedState: removal.removedState,
       isRemoved: removal.isRemoved,
+      routeId,
+      routeKeys: [id, routeId].map(normalizeArtifactLookup).filter(Boolean),
       platform: profile.platform,
       platformKey: profile.platformKey,
       platformIcon: profile.platformIcon,
       profileId: profile.id,
       profileCode: profile.publicSlug || profile.userCode || profile.username || profile.id,
       creator: profile,
-      href: `/polls/detail.html?id=${encodeURIComponent(id)}`,
+      href: buildArtifactHref("polls", routeId),
       resultsHref: `/polls/results.html?id=${encodeURIComponent(id)}`
     };
   }
@@ -563,6 +596,8 @@
 
   function normalizeScoreboard(raw, index, profiles) {
     const id = raw?.id || raw?.scoreboard_id || `score-${index + 1}`;
+    const routeId =
+      firstArtifactIdentifier(raw, ["public_slug", "slug", "score_slug", "scoreSlug", "scoreboard_slug", "scoreboardSlug", "canonical_id", "canonicalId"]) || id;
     const profile = resolveProfileRef(raw?.creator, profiles);
     const removal = resolveRemovalState(raw);
 
@@ -580,13 +615,15 @@
       visibility: removal.visibility,
       removedState: removal.removedState,
       isRemoved: removal.isRemoved,
+      routeId,
+      routeKeys: [id, routeId].map(normalizeArtifactLookup).filter(Boolean),
       platform: profile.platform,
       platformKey: profile.platformKey,
       platformIcon: profile.platformIcon,
       profileId: profile.id,
       profileCode: profile.publicSlug || profile.userCode || profile.username || profile.id,
       creator: profile,
-      href: `/scoreboards/detail.html?id=${encodeURIComponent(id)}`
+      href: buildArtifactHref("scoreboards", routeId)
     };
   }
 
@@ -750,6 +787,8 @@
     toTimestamp,
     toTitle,
     DEFAULT_PROFILE,
+    buildArtifactHref,
+    normalizeArtifactLookup,
     platformIconFor,
     normalizePlatformKey
   };

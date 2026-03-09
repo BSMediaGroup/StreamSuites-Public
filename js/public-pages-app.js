@@ -266,6 +266,11 @@
     });
     return acc;
   }, {});
+  const ARTIFACT_ROUTE_CONFIG = Object.freeze([
+    { prefix: "/clips/", pageId: "detail-clip", detailType: "clips" },
+    { prefix: "/polls/", pageId: "detail-poll", detailType: "polls" },
+    { prefix: "/scores/", pageId: "detail-scoreboard", detailType: "scoreboards" }
+  ]);
 
   function create(tag, className, text) {
     const node = document.createElement(tag);
@@ -890,14 +895,62 @@
     return `/community/profile.html?u=${encodeURIComponent(String(code || "public-user").trim() || "public-user")}`;
   }
 
-  function buildShareLink(pathname, id) {
-    const url = new URL(pathname, window.location.origin);
-    url.searchParams.set("id", id);
-    return url.toString();
+  function buildArtifactDetailHref(itemOrType, idOrRouteId) {
+    if (typeof window.StreamSuitesPublicData?.buildArtifactHref !== "function") {
+      const type = typeof itemOrType === "string" ? itemOrType : itemOrType?.type;
+      const identifier = typeof itemOrType === "string" ? idOrRouteId : itemOrType?.routeId || itemOrType?.id;
+      const encoded = encodeURIComponent(String(identifier || "").trim());
+      if (type === "clips") return `/clips/${encoded}`;
+      if (type === "polls") return `/polls/${encoded}`;
+      if (type === "scoreboards") return `/scores/${encoded}`;
+      return `/media.html`;
+    }
+    const type = typeof itemOrType === "string" ? itemOrType : itemOrType?.type;
+    const identifier = typeof itemOrType === "string" ? idOrRouteId : itemOrType?.routeId || itemOrType?.id;
+    return window.StreamSuitesPublicData.buildArtifactHref(type, identifier);
+  }
+
+  function buildShareLink(item) {
+    return new URL(buildArtifactDetailHref(item), window.location.origin).toString();
   }
 
   function buildArtifactGalleryLink(type) {
     return TYPE_TO_PAGE[type] || "/media.html";
+  }
+
+  function getArtifactRouteMatch(pathname) {
+    const normalizedPath = normalizePath(pathname);
+    for (const config of ARTIFACT_ROUTE_CONFIG) {
+      if (normalizedPath.startsWith(config.prefix) && normalizedPath.length > config.prefix.length) {
+        return config;
+      }
+    }
+    return null;
+  }
+
+  function findArtifactByIdentifier(items, identifier) {
+    const requested = String(identifier || "").trim();
+    if (!requested) return null;
+    const normalizedRequested =
+      typeof window.StreamSuitesPublicData?.normalizeArtifactLookup === "function"
+        ? window.StreamSuitesPublicData.normalizeArtifactLookup(requested)
+        : String(requested).trim().toLowerCase();
+    return (
+      (items || []).find((entry) => String(entry?.id || "").trim() === requested) ||
+      (items || []).find((entry) => String(entry?.routeId || "").trim() === requested) ||
+      (items || []).find((entry) => Array.isArray(entry?.routeKeys) && entry.routeKeys.includes(normalizedRequested)) ||
+      null
+    );
+  }
+
+  function syncCanonicalArtifactRoute(item, config) {
+    if (!item || !config || config.detailType === "tallies") return;
+    const canonicalPath = buildArtifactDetailHref(item);
+    const nextUrl = new URL(canonicalPath, window.location.origin);
+    if (normalizePath(window.location.pathname) === normalizePath(nextUrl.pathname) && !window.location.search) {
+      return;
+    }
+    window.history.replaceState(window.history.state, "", nextUrl.toString());
   }
 
   function isArtifactOwner(authState, item) {
@@ -1438,7 +1491,7 @@
     profileLink.href = buildProfileHref(item.profileCode || item.profileId || "public-user");
 
     const shareLabel = create("div", "detail-subtle-label", "Share Link");
-    const shareUrl = buildShareLink(window.location.pathname, item.id);
+    const shareUrl = buildShareLink(item);
     const shareBox = buildShareBox(shareUrl);
     const sourceLabel = create("div", "detail-subtle-label", "External Link");
     const sourceBlock = item?.type === "clips" ? buildExternalSourceBlock(item) : null;
@@ -1524,12 +1577,17 @@
 
     const id = window.StreamSuitesPublicData.parseDetailId();
     const allItems = data[config.detailType] || [];
-    const item = allItems.find((entry) => entry.id === id) || allItems.find((entry) => !entry?.isRemoved) || allItems[0];
+    const item = findArtifactByIdentifier(allItems, id);
 
     if (!item) {
-      host.appendChild(create("div", "empty-state", "Item not found."));
+      const typeLabel = config.detailType === "scoreboards" ? "Score" : toTitle(config.detailType).replace(/s$/, "");
+      host.appendChild(buildPageHeading(`${typeLabel} unavailable`, `No public ${typeLabel.toLowerCase()} matches the requested identifier.`));
+      const state = create("div", "empty-state", "Check the artifact link or return to the gallery.");
+      host.appendChild(state);
       return;
     }
+
+    syncCanonicalArtifactRoute(item, config);
 
     host.appendChild(buildPageHeading(item.title || item.question || "Detail", item.summary || "Public detail view."));
 
@@ -1571,10 +1629,11 @@
 
     const id = window.StreamSuitesPublicData.parseDetailId();
     const allPolls = data.polls || [];
-    const poll = allPolls.find((entry) => entry.id === id) || allPolls.find((entry) => !entry?.isRemoved) || allPolls[0];
+    const poll = findArtifactByIdentifier(allPolls, id);
 
     if (!poll) {
-      host.appendChild(create("div", "empty-state", "Poll not found."));
+      host.appendChild(buildPageHeading("Poll unavailable", "No public poll matches the requested identifier."));
+      host.appendChild(create("div", "empty-state", "Check the poll link or return to the gallery."));
       return;
     }
 
@@ -2991,6 +3050,10 @@
     const normalizedPath = normalizePath(pathname);
     if (PAGE_ID_BY_PATH[normalizedPath]) {
       return PAGE_ID_BY_PATH[normalizedPath];
+    }
+    const artifactRoute = getArtifactRouteMatch(normalizedPath);
+    if (artifactRoute) {
+      return PAGE_CONFIG[artifactRoute.pageId];
     }
     if (isCanonicalProfilePath(normalizedPath)) {
       return PAGE_CONFIG["public-profile-standalone"];

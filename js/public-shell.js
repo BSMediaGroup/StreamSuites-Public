@@ -97,6 +97,14 @@
     const fromQuery = params.get("id");
     if (fromQuery) return fromQuery;
 
+    const pathname = normalizePath(window.location.pathname);
+    const cleanPrefixes = ["/clips/", "/polls/", "/scores/"];
+    for (const prefix of cleanPrefixes) {
+      if (pathname.startsWith(prefix) && pathname.length > prefix.length) {
+        return decodeURIComponent(pathname.slice(prefix.length));
+      }
+    }
+
     const hash = (window.location.hash || "").replace(/^#/, "").trim();
     if (!hash) return "";
     if (hash.includes("=")) {
