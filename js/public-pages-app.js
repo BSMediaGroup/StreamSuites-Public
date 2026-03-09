@@ -407,6 +407,7 @@
     node.classList.add("ss-profile-hover");
 
     const profileHref = buildProfileHref(profile);
+    const publicSlug = getCanonicalProfileSlug(profile, "");
     const userCode = String(profile.userCode || profile.username || profile.id || "").trim();
     const userId = String(profile.id || profile.userCode || profile.username || "").trim();
     const displayName = String(profile.displayName || profile.username || "Public User").trim();
@@ -418,6 +419,7 @@
     const badges = Array.isArray(profile.badges) ? profile.badges : [];
 
     setHoverDataAttr(node, "data-ss-user-code", userCode);
+    setHoverDataAttr(node, "data-ss-public-slug", publicSlug);
     setHoverDataAttr(node, "data-ss-user-id", userId);
     setHoverDataAttr(node, "data-ss-display-name", displayName);
     setHoverDataAttr(node, "data-ss-avatar-url", avatarUrl);
@@ -866,20 +868,12 @@
   }
 
   function buildCanonicalProfileHref(profileOrCode) {
-    const rawCode =
-      typeof profileOrCode === "string"
-        ? profileOrCode
-        : profileOrCode?.userCode || profileOrCode?.username || profileOrCode?.id || "public-user";
-    const code = normalizeUserCode(rawCode, "public-user");
-    return `${CANONICAL_PROFILE_PREFIX}${encodeURIComponent(String(code || "public-user").trim() || "public-user")}`;
+    const slug = getCanonicalProfileSlug(profileOrCode, "public-user");
+    return `${CANONICAL_PROFILE_PREFIX}${encodeURIComponent(String(slug || "public-user").trim() || "public-user")}`;
   }
 
   function buildLegacyProfileHref(profileOrCode) {
-    const rawCode =
-      typeof profileOrCode === "string"
-        ? profileOrCode
-        : profileOrCode?.userCode || profileOrCode?.username || profileOrCode?.id || "public-user";
-    const code = normalizeUserCode(rawCode, "public-user");
+    const code = getLegacyProfileCode(profileOrCode, "public-user");
     return `/community/profile.html?u=${encodeURIComponent(String(code || "public-user").trim() || "public-user")}`;
   }
 
@@ -1571,20 +1565,14 @@
   function resolveLocalProfile(data, code) {
     const normalizedCode = normalizeUserCode(code || "public-user");
     const fallback = data.profilesById?.[window.StreamSuitesPublicData.DEFAULT_PROFILE.id] || window.StreamSuitesPublicData.DEFAULT_PROFILE;
-    const direct = data.profilesByCode?.[normalizedCode] || data.profilesById?.[normalizedCode];
+    const direct =
+      data.profilesBySlug?.[normalizedCode] ||
+      data.profilesByCode?.[normalizedCode] ||
+      data.profilesById?.[normalizedCode];
     if (direct) return direct;
 
     const aliasMatch = (data.profiles || []).find((profile) => {
-      const displayName = String(profile?.displayName || "").trim();
-      const firstName = displayName.split(/\s+/)[0] || "";
-      const aliases = [
-        profile?.userCode,
-        profile?.username,
-        profile?.id,
-        displayName,
-        firstName
-      ];
-      return aliases.some((entry) => normalizeUserCode(entry || "", "") === normalizedCode);
+      return collectProfileIdentifiers(profile, { includeDisplayNames: true }).includes(normalizedCode);
     });
     return aliasMatch || fallback;
   }
@@ -1592,21 +1580,13 @@
   function findLocalProfile(data, code) {
     const normalizedCode = normalizeUserCode(code || "", "");
     if (!normalizedCode) return null;
-    const direct = data.profilesByCode?.[normalizedCode] || data.profilesById?.[normalizedCode];
+    const direct =
+      data.profilesBySlug?.[normalizedCode] ||
+      data.profilesByCode?.[normalizedCode] ||
+      data.profilesById?.[normalizedCode];
     if (direct) return direct;
 
-    return (data.profiles || []).find((profile) => {
-      const displayName = String(profile?.displayName || "").trim();
-      const firstName = displayName.split(/\s+/)[0] || "";
-      const aliases = [
-        profile?.userCode,
-        profile?.username,
-        profile?.id,
-        displayName,
-        firstName
-      ];
-      return aliases.some((entry) => normalizeUserCode(entry || "", "") === normalizedCode);
-    }) || null;
+    return (data.profiles || []).find((profile) => collectProfileIdentifiers(profile, { includeDisplayNames: true }).includes(normalizedCode)) || null;
   }
 
   function resolveCommunityProfileCode(data) {
@@ -1617,7 +1597,7 @@
 
     if (byCode) {
       const normalized = normalizeUserCode(byCode, fallbackCode);
-      const safeHref = buildLegacyProfileHref(normalized);
+      const safeHref = buildLegacyProfileHref(findLocalProfile(data, normalized) || normalized);
       if (window.location.pathname + window.location.search !== safeHref) {
         window.history.replaceState(window.history.state, "", safeHref);
       }
@@ -1630,8 +1610,8 @@
         return fallbackCode;
       }
       const profile = resolveLocalProfile(data, legacyId);
-      const normalized = normalizeUserCode(profile?.userCode || profile?.id || fallbackCode, fallbackCode);
-      window.history.replaceState(window.history.state, "", buildLegacyProfileHref(normalized));
+      const normalized = normalizeUserCode(profile?.publicSlug || profile?.userCode || profile?.id || fallbackCode, fallbackCode);
+      window.history.replaceState(window.history.state, "", buildLegacyProfileHref(profile || normalized));
       return normalized;
     }
 
@@ -1666,6 +1646,10 @@
           : "PUBLIC");
     const role = accountType === "ADMIN" ? "admin" : accountType === "CREATOR" ? "creator" : "viewer";
     const tier = normalizeTierForUi(payload?.tier || fallbackProfile?.tier || "core");
+    const publicSlug = getCanonicalProfileSlug(
+      payload?.public_slug || payload?.publicSlug || payload?.slug || fallbackProfile?.publicSlug || fallbackProfile?.slug || "",
+      ""
+    );
     const userCode = normalizeUserCode(
       payload?.user_code || payload?.userCode || fallbackProfile?.userCode || fallbackCode || "public-user"
     );
@@ -1679,7 +1663,10 @@
     return {
       id: fallbackProfile?.id || userCode,
       userCode,
-      username: fallbackProfile?.username || userCode,
+      publicSlug,
+      slug: publicSlug,
+      slugAliases: normalizeSlugAliases(payload?.slug_aliases || payload?.slugAliases || fallbackProfile?.slugAliases),
+      username: fallbackProfile?.username || publicSlug || userCode,
       displayName,
       avatar,
       platform: fallbackProfile?.platform || "StreamSuites",
@@ -1696,9 +1683,9 @@
     };
   }
 
-  async function fetchPublicProfileByCode(userCode) {
+  async function fetchPublicProfileByIdentifier(identifier) {
     const endpoint = new URL(AUTH_PUBLIC_PROFILE_URL);
-    endpoint.searchParams.set("u", normalizeUserCode(userCode));
+    endpoint.searchParams.set("slug", normalizeUserCode(identifier));
     const response = await fetch(endpoint.toString(), {
       method: "GET",
       cache: "no-store",
@@ -1712,6 +1699,25 @@
     }
     const payload = await response.json();
     return payload?.profile && typeof payload.profile === "object" ? payload.profile : payload;
+  }
+
+  function syncStandaloneProfileCanonicalUrl(profile, requestedIdentifier) {
+    const canonicalSlug = getCanonicalProfileSlug(profile, "");
+    const requested = normalizeUserCode(requestedIdentifier, "");
+    if (!canonicalSlug || !requested || canonicalSlug === requested) return;
+    const canonicalHref = buildCanonicalProfileHref(profile);
+    if (normalizePath(window.location.pathname) === normalizePath(canonicalHref)) return;
+    // TODO: replace with a server-side redirect once migration-safe legacy handling is retired.
+    window.history.replaceState(window.history.state, "", canonicalHref);
+  }
+
+  function canEditResolvedProfile(authState, profile, fallbackIdentifier = "") {
+    if (!authState?.authenticated) return false;
+    const authIdentifiers = new Set([
+      getCanonicalProfileSlug(authState, ""),
+      getLegacyProfileCode(authState, "")
+    ].filter(Boolean));
+    return collectProfileIdentifiers(profile || fallbackIdentifier).some((identifier) => authIdentifiers.has(identifier));
   }
 
   function renderProfileNotFound(host, requestedCode) {
@@ -1780,7 +1786,7 @@
     const seen = new Set();
     const items = [];
     profileKeys.forEach((key) => {
-      const normalizedKey = String(key || "").trim();
+      const normalizedKey = normalizeUserCode(key, "");
       if (!normalizedKey) return;
       (data.artifactsByProfile?.[normalizedKey] || []).forEach((item) => {
         if (!item || item.isRemoved) return;
@@ -1903,7 +1909,7 @@
 
   function renderProfileBody(profileCard, profile, canEdit) {
     clear(profileCard);
-    const shareUrl = new URL(buildCanonicalProfileHref(profile.userCode), window.location.origin).toString();
+    const shareUrl = new URL(buildCanonicalProfileHref(profile), window.location.origin).toString();
     const coverWrap = create("div", "profile-cover");
     const coverImage = create("img");
     coverImage.src = profile.coverImageUrl || DEFAULT_PROFILE_COVER;
@@ -2035,7 +2041,13 @@
     hero.append(left, right);
     host.appendChild(hero);
 
-    let profileArtifacts = collectProfileArtifacts(data, profileCode, fallbackProfile?.id, fallbackProfile?.userCode);
+    let profileArtifacts = collectProfileArtifacts(
+      data,
+      profileCode,
+      fallbackProfile?.publicSlug,
+      fallbackProfile?.id,
+      fallbackProfile?.userCode
+    );
     let ownerCanEdit = false;
     let currentArtifactMode = readProfileArtifactLayoutPreference();
     const artifactToggle = buildProfileArtifactsToggle(currentArtifactMode, (mode) => {
@@ -2051,13 +2063,20 @@
 
     (async () => {
       let profile = normalizeProfilePayload(fallbackProfile, fallbackProfile, profileCode);
-      const ownerCode = normalizeUserCode(authState?.userCode || "");
-      const canEdit = Boolean(authState?.authenticated) && ownerCode === profile.userCode;
-      let artifactItems = collectProfileArtifacts(data, profile.userCode, profile.id, profile.username);
+      let canEdit = canEditResolvedProfile(authState, profile, profileCode);
+      let artifactItems = collectProfileArtifacts(data, profile.publicSlug, profile.userCode, profile.id, profile.username);
       try {
-        const payload = canEdit ? await fetchMyPublicProfile() : await fetchPublicProfileByCode(profileCode);
+        const payload = canEdit ? await fetchMyPublicProfile() : await fetchPublicProfileByIdentifier(profileCode);
         profile = normalizeProfilePayload(payload, fallbackProfile, profileCode);
-        artifactItems = collectProfileArtifacts(data, profile.userCode, profile.id, fallbackProfile?.id);
+        canEdit = canEditResolvedProfile(authState, profile, profileCode);
+        artifactItems = collectProfileArtifacts(
+          data,
+          profile.publicSlug,
+          profile.userCode,
+          profile.id,
+          fallbackProfile?.publicSlug,
+          fallbackProfile?.id
+        );
       } catch (_err) {
         // Keep local profile fallback when API profile endpoints are unavailable.
       }
@@ -2104,11 +2123,11 @@
       }
 
       let profile = localProfile ? normalizeProfilePayload(localProfile, localProfile, profileCode) : null;
-      const ownerCode = normalizeUserCode(authState?.userCode || "");
-      const canEdit = Boolean(authState?.authenticated) && ownerCode === normalizeUserCode(profile?.userCode || profileCode);
+      let canEdit = canEditResolvedProfile(authState, profile, profileCode);
       try {
-        const payload = canEdit ? await fetchMyPublicProfile() : await fetchPublicProfileByCode(profileCode);
+        const payload = canEdit ? await fetchMyPublicProfile() : await fetchPublicProfileByIdentifier(profileCode);
         profile = normalizeProfilePayload(payload, fallbackProfile, profileCode);
+        canEdit = canEditResolvedProfile(authState, profile, profileCode);
       } catch (error) {
         if (!profile) {
           renderProfileNotFound(host, profileCode);
@@ -2125,6 +2144,8 @@
         renderProfileNotFound(host, profileCode);
         return;
       }
+
+      syncStandaloneProfileCanonicalUrl(profile, profileCode);
 
       const nextHeading = buildPageHeading(profile.displayName, `${profile.platform} | ${roleLabel(normalizeRoleForUi(profile.role))}`);
       const existingHeading = host.querySelector(".page-heading");
@@ -2291,6 +2312,72 @@
     return normalized;
   }
 
+  function normalizeSlugAliases(value) {
+    const entries = Array.isArray(value) ? value : [];
+    const seen = new Set();
+    return entries.reduce((acc, entry) => {
+      const normalized = normalizeUserCode(entry, "");
+      if (!normalized || seen.has(normalized)) return acc;
+      seen.add(normalized);
+      acc.push(normalized);
+      return acc;
+    }, []);
+  }
+
+  function getCanonicalProfileSlug(profileOrCode, fallback = "public-user") {
+    if (typeof profileOrCode === "string") {
+      return normalizeUserCode(profileOrCode, fallback);
+    }
+    return normalizeUserCode(
+      profileOrCode?.publicSlug || profileOrCode?.public_slug || profileOrCode?.slug || profileOrCode?.userCode || profileOrCode?.username || profileOrCode?.id,
+      fallback
+    );
+  }
+
+  function getLegacyProfileCode(profileOrCode, fallback = "public-user") {
+    if (typeof profileOrCode === "string") {
+      return normalizeUserCode(profileOrCode, fallback);
+    }
+    return normalizeUserCode(
+      profileOrCode?.userCode || profileOrCode?.user_code || profileOrCode?.username || profileOrCode?.id || profileOrCode?.publicSlug || profileOrCode?.slug,
+      fallback
+    );
+  }
+
+  function collectProfileIdentifiers(profile, options = {}) {
+    if (!profile || typeof profile !== "object") {
+      const normalized = normalizeUserCode(profile, "");
+      return normalized ? [normalized] : [];
+    }
+
+    const displayName = String(profile?.displayName || profile?.display_name || "").trim();
+    const firstName = displayName.split(/\s+/)[0] || "";
+    const identifiers = [
+      profile?.publicSlug,
+      profile?.public_slug,
+      profile?.slug,
+      ...(Array.isArray(profile?.slugAliases) ? profile.slugAliases : []),
+      ...(Array.isArray(profile?.slug_aliases) ? profile.slug_aliases : []),
+      profile?.userCode,
+      profile?.user_code,
+      profile?.username,
+      profile?.id
+    ];
+
+    if (options.includeDisplayNames) {
+      identifiers.push(displayName, firstName);
+    }
+
+    const seen = new Set();
+    return identifiers.reduce((acc, entry) => {
+      const normalized = normalizeUserCode(entry, "");
+      if (!normalized || seen.has(normalized)) return acc;
+      seen.add(normalized);
+      acc.push(normalized);
+      return acc;
+    }, []);
+  }
+
   function buildAccountBadges(accountType, tier) {
     const role = accountType === "ADMIN" ? "admin" : accountType === "CREATOR" ? "creator" : "viewer";
     const tierValue = normalizeTierForUi(tier);
@@ -2312,6 +2399,7 @@
         authenticated: false,
         accountId: "",
         userCode: "public-user",
+        publicSlug: "public-user",
         displayName: "Login",
         avatarUrl: "",
         accountType: "PUBLIC",
@@ -2363,11 +2451,22 @@
       payload?.username ||
       payload?.user?.username
     );
+    const publicSlug = getCanonicalProfileSlug(
+      payload?.public_slug ||
+      payload?.data?.public_slug ||
+      payload?.user?.public_slug ||
+      payload?.slug ||
+      payload?.data?.slug ||
+      payload?.user?.slug ||
+      "",
+      ""
+    );
 
     return {
       authenticated: true,
       accountId,
       userCode,
+      publicSlug,
       displayName,
       avatarUrl,
       accountType,
@@ -2394,7 +2493,7 @@
     const items = [
       {
         label: "Profile",
-        href: buildProfileHref(authState.userCode || "public-user"),
+        href: buildProfileHref(authState),
         action: "profile"
       }
     ];
@@ -2492,8 +2591,7 @@
     });
     if (!response.ok) return "";
     const payload = await response.json().catch(() => ({}));
-    const code = normalizeUserCode(payload?.user_code || payload?.userCode || "", "");
-    return code;
+    return getCanonicalProfileSlug(payload?.public_slug || payload?.slug || payload?.user_code || payload?.userCode || "", "");
   }
 
   function parsePageIdFromDocument(doc) {

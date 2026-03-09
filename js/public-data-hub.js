@@ -26,6 +26,9 @@
   const DEFAULT_PROFILE = {
     id: "public-user",
     userCode: "public-user",
+    publicSlug: "public-user",
+    slug: "public-user",
+    slugAliases: [],
     username: "public-user",
     displayName: "Public User",
     avatar: FALLBACK_AVATAR,
@@ -57,6 +60,26 @@
       acc[normalizedKey] = normalizedValue;
       return acc;
     }, {});
+  }
+
+  function normalizeProfileLookup(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
+  function normalizeSlugAliases(value) {
+    const items = Array.isArray(value) ? value : [];
+    const seen = new Set();
+    return items.reduce((acc, entry) => {
+      const normalized = normalizeProfileLookup(entry);
+      if (!normalized || seen.has(normalized)) return acc;
+      seen.add(normalized);
+      acc.push(normalized);
+      return acc;
+    }, []);
   }
 
   function toArray(payload) {
@@ -236,6 +259,8 @@
       .replace(/[^a-z0-9_-]+/g, "-")
       .replace(/^-+|-+$/g, "");
     const userCode = !normalizedCode || isUuidLike(normalizedCode) ? "public-user" : normalizedCode;
+    const publicSlug = normalizeProfileLookup(raw?.public_slug || raw?.publicSlug || raw?.slug || "");
+    const slugAliases = normalizeSlugAliases(raw?.slug_aliases || raw?.slugAliases);
 
     const accountTypeRaw = String(raw.account_type || raw.accountType || raw.role || "").trim().toUpperCase();
     const role = normalizeRole(raw.role || raw.role_hint || accountTypeRaw);
@@ -250,6 +275,9 @@
     return {
       id: userCode || String(id),
       userCode,
+      publicSlug,
+      slug: publicSlug,
+      slugAliases,
       username: String(raw.username || raw.handle || id),
       displayName: raw.display_name || raw.displayName || raw.name || String(id),
       avatar: raw.avatar || raw.avatar_url || FALLBACK_AVATAR,
@@ -268,33 +296,30 @@
     };
   }
 
-  function normalizeProfileLookup(value) {
-    return String(value || "")
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9_-]+/g, "-")
-      .replace(/^-+|-+$/g, "");
+  function indexProfile(map, profile) {
+    [
+      profile?.id,
+      profile?.publicSlug,
+      profile?.slug,
+      ...(Array.isArray(profile?.slugAliases) ? profile.slugAliases : []),
+      profile?.userCode,
+      profile?.username
+    ].forEach((value) => {
+      const raw = String(value || "").trim();
+      const normalized = normalizeProfileLookup(raw);
+      if (!normalized) return;
+      map.set(raw, profile);
+      map.set(normalized, profile);
+    });
   }
 
   function buildProfileMap(items) {
     const map = new Map();
-    map.set(DEFAULT_PROFILE.id, { ...DEFAULT_PROFILE });
-    map.set(DEFAULT_PROFILE.userCode, { ...DEFAULT_PROFILE });
-    map.set(normalizeProfileLookup(DEFAULT_PROFILE.id), { ...DEFAULT_PROFILE });
-    map.set(normalizeProfileLookup(DEFAULT_PROFILE.userCode), { ...DEFAULT_PROFILE });
+    indexProfile(map, { ...DEFAULT_PROFILE });
     items.forEach((raw) => {
       const profile = normalizeProfile(raw);
       if (!profile) return;
-      map.set(profile.id, profile);
-      map.set(normalizeProfileLookup(profile.id), profile);
-      if (profile.userCode) {
-        map.set(profile.userCode, profile);
-        map.set(normalizeProfileLookup(profile.userCode), profile);
-      }
-      if (profile.username) {
-        map.set(profile.username, profile);
-        map.set(normalizeProfileLookup(profile.username), profile);
-      }
+      indexProfile(map, profile);
     });
     return map;
   }
@@ -310,6 +335,9 @@
     }
 
     const candidateId =
+      rawCreator.public_slug ||
+      rawCreator.publicSlug ||
+      rawCreator.slug ||
       rawCreator.profile_id ||
       rawCreator.profileId ||
       rawCreator.user_code ||
@@ -329,12 +357,7 @@
 
     const derived = normalizeProfile(rawCreator);
     if (derived) {
-      profiles.set(derived.id, derived);
-      profiles.set(derived.userCode, derived);
-      profiles.set(derived.username, derived);
-      profiles.set(normalizeProfileLookup(derived.id), derived);
-      profiles.set(normalizeProfileLookup(derived.userCode), derived);
-      profiles.set(normalizeProfileLookup(derived.username), derived);
+      indexProfile(profiles, derived);
       return derived;
     }
 
@@ -370,7 +393,7 @@
       removedState: removal.removedState,
       isRemoved: removal.isRemoved,
       profileId: profile.id,
-      profileCode: profile.userCode || profile.username || profile.id,
+      profileCode: profile.publicSlug || profile.userCode || profile.username || profile.id,
       creator: profile,
       href: `/clips/detail.html?id=${encodeURIComponent(id)}`
     };
@@ -438,7 +461,7 @@
       platformKey: profile.platformKey,
       platformIcon: profile.platformIcon,
       profileId: profile.id,
-      profileCode: profile.userCode || profile.username || profile.id,
+      profileCode: profile.publicSlug || profile.userCode || profile.username || profile.id,
       creator: profile,
       href: `/polls/detail.html?id=${encodeURIComponent(id)}`,
       resultsHref: `/polls/results.html?id=${encodeURIComponent(id)}`
@@ -506,7 +529,7 @@
       platformKey: profile.platformKey,
       platformIcon: profile.platformIcon,
       profileId: profile.id,
-      profileCode: profile.userCode || profile.username || profile.id,
+      profileCode: profile.publicSlug || profile.userCode || profile.username || profile.id,
       creator: profile,
       href: `/scoreboards/detail.html?id=${encodeURIComponent(id)}`
     };
@@ -536,7 +559,7 @@
       platformKey: profile.platformKey,
       platformIcon: profile.platformIcon,
       profileId: profile.id,
-      profileCode: profile.userCode || profile.username || profile.id,
+      profileCode: profile.publicSlug || profile.userCode || profile.username || profile.id,
       creator: profile,
       href: `/tallies/detail.html?id=${encodeURIComponent(id)}`
     };
@@ -616,7 +639,18 @@
       });
 
       const artifactsByProfile = profileList.reduce((acc, profile) => {
-        acc[profile.id] = buildProfileArtifacts({ clips, polls, scoreboards, tallies }, profile.id);
+        const artifacts = buildProfileArtifacts({ clips, polls, scoreboards, tallies }, profile.id);
+        [
+          profile?.id,
+          profile?.publicSlug,
+          profile?.slug,
+          ...(Array.isArray(profile?.slugAliases) ? profile.slugAliases : []),
+          profile?.userCode,
+          profile?.username
+        ].forEach((key) => {
+          const normalized = normalizeProfileLookup(key);
+          if (normalized) acc[normalized] = artifacts;
+        });
         return acc;
       }, {});
 
@@ -628,6 +662,18 @@
         notices,
         profiles: profileList,
         profilesById: Object.fromEntries(profileList.map((profile) => [profile.id, profile])),
+        profilesBySlug: Object.fromEntries(
+          profileList.flatMap((profile) => {
+            const keys = [
+              profile?.publicSlug,
+              profile?.slug,
+              ...(Array.isArray(profile?.slugAliases) ? profile.slugAliases : [])
+            ]
+              .map((value) => normalizeProfileLookup(value))
+              .filter(Boolean);
+            return keys.map((key) => [key, profile]);
+          })
+        ),
         profilesByCode: Object.fromEntries(profileList.map((profile) => [profile.userCode || profile.id, profile])),
         artifactsByProfile,
         meta: metaPayload,

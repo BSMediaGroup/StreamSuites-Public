@@ -11,13 +11,13 @@ Public StreamSuites web surface (static Cloudflare Pages site).
 - This repo serves the canonical static public site at `https://streamsuites.app` on Cloudflare Pages.
 - This repo is not a canonical state authority. It renders runtime-exported artifacts/JSON and API responses.
 - Canonical state is authored outside this repo (runtime/admin services).
-- This repo now owns the canonical standalone public profile route foundation at `/u/<slug>`, while retaining the original community hub routes for legacy/internal navigation.
+- This repo now owns the canonical standalone public profile route foundation at `/u/<slug>`, backed by the authoritative public slug model exported by `StreamSuites`, while retaining migration-safe legacy `user_code` compatibility in community/profile resolution.
 
 ## Public Surface Behavior
 - Static pages and assets are shipped from this repository root.
 - Public galleries and metadata views hydrate from exported JSON artifacts (for example files in `/data` plus runtime version export).
 - Feature Requests (`requests.html`) includes authenticated creator flows backed by `api.streamsuites.app` (fetch/vote/comment/submit). This is UI-only client integration; no backend logic is hosted here.
-- Standalone public profiles now resolve on the canonical site via `/u/<slug>`, backed by the original public implementation’s profile body renderer and Cloudflare Pages rewrite/function support.
+- Standalone public profiles now resolve on the canonical site via `/u/<slug>`, with slug-first lookup, legacy `user_code` fallback during migration, and Cloudflare Pages rewrite/function support that preserves deep links.
 
 ## What Is New (v0.4.1-alpha surface)
 - Aurora landing experience and refreshed layout shell (`index.html`, `css/aurora-landing.css`).
