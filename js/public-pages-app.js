@@ -23,6 +23,7 @@
   const AUTH_PUBLIC_ARTIFACTS_URL = `${AUTH_API_BASE}/api/public/artifacts`;
   const AUTH_LOGOUT_URL = `${AUTH_API_BASE}/auth/logout`;
   const CREATOR_DASHBOARD_URL = "https://creator.streamsuites.app";
+  const CREATOR_SIGNUP_URL = "https://api.streamsuites.app/auth/login/google?surface=creator";
   const ADMIN_DASHBOARD_URL = "https://admin.streamsuites.app";
   const PUBLIC_AUTH_COMPLETE_MESSAGE_TYPE = "ss_public_auth_complete";
   const CANONICAL_PROFILE_PREFIX = "/u/";
@@ -378,6 +379,10 @@
     avatar.textContent = initial;
     avatar.classList.add("is-fallback");
     return avatar;
+  }
+
+  function textInitial(value) {
+    return String(value || "").trim().charAt(0).toUpperCase() || "P";
   }
 
   function setHoverDataAttr(node, name, value) {
@@ -1000,6 +1005,94 @@
       return "FindMeHere listing is unavailable until this account has a canonical public slug.";
     }
     return "FindMeHere listing is not enabled for this profile.";
+  }
+
+  function buildStreamSuitesVisibilityText(profile) {
+    const reason = resolveProfileVisibilityReason(profile);
+    if (reason === "visible") {
+      return "This StreamSuites public profile is visible on the canonical /u/<slug> route.";
+    }
+    if (reason === "disabled_by_account") {
+      return "This StreamSuites public profile is hidden because visibility is disabled in the authoritative account settings.";
+    }
+    if (reason === "missing_public_slug") {
+      return "A canonical public slug is required before this StreamSuites public profile can be shown.";
+    }
+    return "This StreamSuites public profile is currently unavailable.";
+  }
+
+  function buildFindMeHereUpgradeText(profile) {
+    const reason = String(profile?.findmehereStatusReason || "").trim();
+    if (reason === "missing_public_slug") {
+      return "FindMeHere also requires a canonical public slug, but this account still needs a creator-capable upgrade before listing is possible.";
+    }
+    if (reason === "disabled_by_account" && profile?.creatorCapable) {
+      return "FindMeHere is available only on creator-capable accounts and is currently disabled in the authoritative settings.";
+    }
+    return "FindMeHere listing is creator-only. Viewer/public accounts can manage their StreamSuites profile here, then upgrade through the creator flow when FindMeHere listing is needed.";
+  }
+
+  function normalizeProfileEditorLinks(socialInputs) {
+    return Object.entries(socialInputs).reduce((acc, [key, input]) => {
+      const value = String(input?.value || "").trim();
+      if (!value) return acc;
+      acc[key] = value;
+      return acc;
+    }, {});
+  }
+
+  function validateSettingsFormFields(fields) {
+    const errors = [];
+    (fields.urlInputs || []).forEach((input) => {
+      if (!(input instanceof HTMLInputElement)) return;
+      const value = String(input.value || "").trim();
+      if (!value) return;
+      if (!input.checkValidity()) {
+        const label = String(input.dataset.label || input.name || "Field").trim();
+        errors.push(`${label} must be a valid URL.`);
+      }
+    });
+    const bioLength = String(fields.bioInput?.value || "").trim().length;
+    if (bioLength > 1200) {
+      errors.push("Bio must be 1200 characters or fewer.");
+    }
+    return errors;
+  }
+
+  function syncViewerSettingsForm(profile, formState) {
+    if (!profile || !formState) return;
+    formState.profile = profile;
+    formState.avatarPreview.style.backgroundImage = profile.avatar ? `url(${profile.avatar})` : "";
+    formState.avatarPreview.classList.toggle("has-image", Boolean(profile.avatar));
+    formState.avatarPreview.textContent = profile.avatar ? "" : textInitial(profile.displayName || "P");
+    formState.avatarUrlInput.value = profile.avatar || "";
+    formState.displayNameInput.value = profile.displayName || "";
+    formState.slugInput.value = profile.publicSlug || "";
+    formState.slugAliases.textContent = (profile.slugAliases || []).length
+      ? `Aliases: ${(profile.slugAliases || []).join(", ")}`
+      : "No historical slug aliases are currently exposed.";
+    formState.streamSuitesToggle.checked = profile.streamsuitesProfileEnabled === true;
+    formState.streamSuitesStatus.textContent = buildStreamSuitesVisibilityText(profile);
+    formState.listingToggle.checked = profile.isListed !== false;
+    formState.anonymousToggle.checked = profile.isAnonymous === true;
+    formState.coverInput.value = profile.coverImageUrl || "";
+    formState.backgroundInput.value = profile.backgroundImageUrl || "";
+    formState.bioInput.value = profile.bio || "";
+    Object.entries(formState.socialInputs).forEach(([key, input]) => {
+      input.value = profile.socialLinks?.[key] || "";
+    });
+
+    const canonicalUrl = String(profile.streamsuitesProfileUrl || "").trim();
+    const visibleUrl = String(profile.streamsuitesShareUrl || profile.streamsuitesProfileUrl || "").trim();
+    formState.sharePreview.textContent = canonicalUrl || "Canonical public URL unavailable until a slug is assigned.";
+    formState.sharePreview.dataset.empty = canonicalUrl ? "false" : "true";
+    formState.shareCopy.disabled = !canonicalUrl;
+    formState.sharePublicStatus.textContent = visibleUrl
+      ? "Currently public on StreamSuites."
+      : buildStreamSuitesVisibilityText(profile);
+    formState.findMeHereStatus.textContent = buildFindMeHereUpgradeText(profile);
+    formState.findMeHereReason.textContent = buildFindMeHereStatusText(profile);
+    formState.findMeHereUrl.textContent = String(profile.findmehereProfileUrl || "").trim() || "Unavailable for this account type";
   }
 
   function buildProfileShareSection(profile) {
@@ -2338,7 +2431,7 @@
   function renderCommunitySettings(ctx) {
     const { host, authState } = ctx;
     clear(host);
-    host.appendChild(buildPageHeading("Public Account Settings", "Manage visibility, bio, cover, and social links."));
+    host.appendChild(buildPageHeading("Public Account Settings", "Manage your StreamSuites public profile and review creator-only FindMeHere eligibility."));
 
     if (!authState?.authenticated) {
       host.appendChild(create("div", "empty-state", "Log in to access Public Account Settings."));
@@ -2352,83 +2445,219 @@
     }
 
     const panel = create("section", "profile-card settings-form");
-    const status = create("div", "muted");
-    const form = create("form", "settings-grid");
+    const status = create("div", "muted settings-status");
+    status.textContent = "Loading authoritative profile settings…";
+    const form = create("form", "settings-grid viewer-settings-grid");
     form.addEventListener("submit", (event) => event.preventDefault());
 
-    const visibilityField = create("label", "settings-field");
-    const visibilityTitle = create("span", "settings-label", "Profile visibility");
-    const visibilityToggle = create("input");
-    visibilityToggle.type = "checkbox";
-    visibilityToggle.name = "anonymous";
-    visibilityField.append(visibilityTitle, visibilityToggle, create("span", "settings-help", "Enable anonymous profile mode."));
+    const topGrid = create("div", "viewer-settings-top-grid");
+    const identityCard = create("section", "settings-card");
+    const identityHeader = create("div", "settings-card-header");
+    identityHeader.append(
+      create("h2", "settings-card-title", "Profile identity"),
+      create("p", "settings-card-copy", "Authoritative identity values shown here come from the account payload. Slug, display name, and avatar are visible on the public surface, but are not writable through the current public profile save endpoint.")
+    );
+    const identityBody = create("div", "settings-card-body");
+    const identityHero = create("div", "viewer-settings-identity");
+    const avatarPreview = create("span", "viewer-settings-avatar");
+    const identityFields = create("div", "viewer-settings-identity-fields");
 
-    const listingField = create("label", "settings-field");
-    const listingTitle = create("span", "settings-label", "Community directory listing");
+    const displayNameField = create("label", "settings-field");
+    const displayNameTitle = create("span", "settings-label", "Display name");
+    const displayNameInput = create("input");
+    displayNameInput.type = "text";
+    displayNameInput.name = "display_name";
+    displayNameInput.readOnly = true;
+    displayNameField.append(displayNameTitle, displayNameInput, create("span", "settings-help", "Displayed from the authoritative account identity. Public-side editing is not yet exposed."));
+
+    const avatarUrlField = create("label", "settings-field");
+    const avatarUrlTitle = create("span", "settings-label", "Avatar URL");
+    const avatarUrlInput = create("input");
+    avatarUrlInput.type = "text";
+    avatarUrlInput.name = "avatar_url";
+    avatarUrlInput.readOnly = true;
+    avatarUrlField.append(avatarUrlTitle, avatarUrlInput, create("span", "settings-help", "Avatar is currently sourced from the authoritative account payload. URL-based profile avatar editing is not exposed on this endpoint yet."));
+
+    const slugField = create("label", "settings-field");
+    const slugTitle = create("span", "settings-label", "Canonical public slug");
+    const slugInput = create("input");
+    slugInput.type = "text";
+    slugInput.name = "public_slug";
+    slugInput.readOnly = true;
+    const slugAliases = create("span", "settings-help");
+    slugField.append(slugTitle, slugInput, create("span", "settings-help", "Slug assignment exists in the authoritative backend, but this public settings surface currently receives it as read-only."), slugAliases);
+
+    identityFields.append(displayNameField, avatarUrlField, slugField);
+    identityHero.append(avatarPreview, identityFields);
+    identityBody.appendChild(identityHero);
+    identityCard.append(identityHeader, identityBody);
+
+    const shareCard = create("section", "settings-card");
+    const shareHeader = create("div", "settings-card-header");
+    shareHeader.append(
+      create("h2", "settings-card-title", "Share preview"),
+      create("p", "settings-card-copy", "This is the canonical StreamSuites public URL generated from the authoritative profile model.")
+    );
+    const shareBody = create("div", "settings-card-body");
+    const sharePreview = create("code", "settings-share-preview");
+    const shareActions = create("div", "settings-share-actions");
+    const shareCopy = create("button", "filter-chip settings-share-copy", "Copy URL");
+    shareCopy.type = "button";
+    const sharePublicStatus = create("div", "settings-inline-note");
+    shareCopy.addEventListener("click", () => {
+      const url = String(sharePreview.textContent || "").trim();
+      if (!url || shareCopy.disabled) return;
+      copyTextToClipboard(url).then((copied) => {
+        shareCopy.textContent = copied ? "Copied" : "Copy URL";
+        window.setTimeout(() => {
+          shareCopy.textContent = "Copy URL";
+        }, 1200);
+      });
+    });
+    shareActions.append(sharePreview, shareCopy);
+    shareBody.append(shareActions, sharePublicStatus);
+    shareCard.append(shareHeader, shareBody);
+    topGrid.append(identityCard, shareCard);
+
+    const streamsuitesCard = create("section", "settings-card");
+    const streamsuitesHeader = create("div", "settings-card-header");
+    streamsuitesHeader.append(
+      create("h2", "settings-card-title", "StreamSuites public profile"),
+      create("p", "settings-card-copy", "Viewer/public accounts are eligible for the StreamSuites profile only. These controls save through the authoritative `/api/public/profile/me` path.")
+    );
+    const streamsuitesBody = create("div", "settings-card-body");
+
+    const streamSuitesField = create("label", "settings-toggle-row");
+    const streamSuitesMeta = create("span", "settings-toggle-meta");
+    streamSuitesMeta.append(
+      create("span", "settings-label", "Public profile visibility"),
+      create("span", "settings-help", "Hide or show your canonical StreamSuites profile without affecting account access.")
+    );
+    const streamSuitesToggle = create("input");
+    streamSuitesToggle.type = "checkbox";
+    streamSuitesToggle.name = "streamsuites_profile_enabled";
+    streamSuitesField.append(streamSuitesMeta, streamSuitesToggle);
+    const streamSuitesStatus = create("div", "settings-inline-note");
+
+    const listingField = create("label", "settings-toggle-row");
+    const listingMeta = create("span", "settings-toggle-meta");
+    listingMeta.append(
+      create("span", "settings-label", "Community directory listing"),
+      create("span", "settings-help", "Show this profile in the public members directory when the StreamSuites profile is visible.")
+    );
     const listingToggle = create("input");
     listingToggle.type = "checkbox";
     listingToggle.name = "listed";
-    listingToggle.checked = true;
-    listingField.append(listingTitle, listingToggle, create("span", "settings-help", "Show this profile in members directory."));
+    listingField.append(listingMeta, listingToggle);
+
+    const anonymousField = create("label", "settings-toggle-row");
+    const anonymousMeta = create("span", "settings-toggle-meta");
+    anonymousMeta.append(
+      create("span", "settings-label", "Anonymous mode"),
+      create("span", "settings-help", "Hide your real identity on the public profile while retaining the profile shell.")
+    );
+    const anonymousToggle = create("input");
+    anonymousToggle.type = "checkbox";
+    anonymousToggle.name = "anonymous";
+    anonymousField.append(anonymousMeta, anonymousToggle);
 
     const coverField = create("label", "settings-field");
-    const coverTitle = create("span", "settings-label", "Cover image URL");
+    const coverTitle = create("span", "settings-label", "Cover or banner image URL");
     const coverInput = create("input");
     coverInput.type = "url";
     coverInput.name = "cover_image_url";
+    coverInput.dataset.label = "Cover or banner image URL";
     coverInput.placeholder = DEFAULT_PROFILE_COVER;
-    coverField.append(coverTitle, coverInput);
+    coverField.append(coverTitle, coverInput, create("span", "settings-help", "The current backend stores cover and banner from the same authoritative `cover_image_url` value."));
+
+    const backgroundField = create("label", "settings-field");
+    const backgroundTitle = create("span", "settings-label", "Background image URL");
+    const backgroundInput = create("input");
+    backgroundInput.type = "url";
+    backgroundInput.name = "background_image_url";
+    backgroundInput.dataset.label = "Background image URL";
+    backgroundInput.placeholder = "https://cdn.example.com/background.png";
+    backgroundField.append(backgroundTitle, backgroundInput, create("span", "settings-help", "URL-based media only for now. This preserves room for future authoritative upload flows."));
 
     const bioField = create("label", "settings-field");
-    const bioTitle = create("span", "settings-label", "Bio");
+    const bioTitle = create("span", "settings-label", "Bio / about");
     const bioInput = create("textarea");
     bioInput.name = "bio";
     bioInput.rows = 5;
-    bioField.append(bioTitle, bioInput);
+    bioInput.maxLength = 1200;
+    bioField.append(bioTitle, bioInput, create("span", "settings-help", "Up to 1200 characters."));
 
     const socialField = create("div", "settings-field");
-    socialField.appendChild(create("span", "settings-label", "Social links"));
+    socialField.appendChild(create("span", "settings-label", "Public links"));
+    socialField.appendChild(create("span", "settings-help", "Only grounded URL fields already accepted by the backend are editable here."));
     const socialInputs = {};
     ["youtube", "rumble", "discord", "x", "tiktok", "twitch", "kick"].forEach((key) => {
       const row = create("label", "settings-social-row");
       const label = create("span", "", key.toUpperCase());
       const input = create("input");
       input.type = "url";
+      input.name = `social_${key}`;
+      input.dataset.label = `${key.toUpperCase()} link`;
       input.placeholder = `${key} URL`;
       socialInputs[key] = input;
       row.append(label, input);
       socialField.appendChild(row);
     });
 
-    const saveButton = create("button", "filter-chip active settings-save-btn", "Save settings");
+    streamsuitesBody.append(streamSuitesField, streamSuitesStatus, listingField, anonymousField, coverField, backgroundField, bioField, socialField);
+    streamsuitesCard.append(streamsuitesHeader, streamsuitesBody);
+
+    const findMeHereCard = create("section", "settings-card settings-card-muted");
+    const findMeHereHeader = create("div", "settings-card-header");
+    findMeHereHeader.append(
+      create("h2", "settings-card-title", "FindMeHere listing"),
+      create("p", "settings-card-copy", "FindMeHere is creator-only. Viewer/public accounts should see eligibility truthfully instead of an editable toggle.")
+    );
+    const findMeHereBody = create("div", "settings-card-body");
+    const findMeHereStatus = create("p", "settings-callout is-warning");
+    const findMeHereReason = create("p", "settings-inline-note");
+    const findMeHereUrl = create("code", "settings-share-preview");
+    const findMeHereActions = create("div", "settings-cta-row");
+    const upgradeLink = create("a", "filter-chip active settings-cta-primary", "Upgrade to Creator");
+    upgradeLink.href = CREATOR_SIGNUP_URL;
+    upgradeLink.target = "_blank";
+    upgradeLink.rel = "noopener noreferrer";
+    const creatorSiteLink = create("a", "filter-chip settings-cta-secondary", "Open Creator Surface");
+    creatorSiteLink.href = CREATOR_DASHBOARD_URL;
+    creatorSiteLink.target = "_blank";
+    creatorSiteLink.rel = "noopener noreferrer";
+    findMeHereActions.append(upgradeLink, creatorSiteLink);
+    findMeHereBody.append(findMeHereStatus, findMeHereReason, findMeHereUrl, findMeHereActions);
+    findMeHereCard.append(findMeHereHeader, findMeHereBody);
+
+    const saveButton = create("button", "filter-chip active settings-save-btn", "Save profile settings");
     saveButton.type = "button";
     saveButton.addEventListener("click", async () => {
-      status.textContent = "Saving…";
+      const validationErrors = validateSettingsFormFields({
+        urlInputs: [coverInput, backgroundInput, ...Object.values(socialInputs)],
+        bioInput
+      });
+      if (validationErrors.length) {
+        status.textContent = validationErrors[0];
+        return;
+      }
+
+      status.textContent = "Saving authoritative profile settings…";
       saveButton.disabled = true;
       try {
-        const socialPayload = Object.entries(socialInputs).reduce((acc, [key, input]) => {
-          const value = String(input.value || "").trim();
-          if (!value) return acc;
-          acc[key] = value;
-          return acc;
-        }, {});
+        const socialPayload = normalizeProfileEditorLinks(socialInputs);
         const payload = {
-          anonymous: visibilityToggle.checked,
+          streamsuites_profile_enabled: streamSuitesToggle.checked,
+          anonymous: anonymousToggle.checked,
           listed: listingToggle.checked,
           cover_image_url: String(coverInput.value || "").trim(),
+          background_image_url: String(backgroundInput.value || "").trim(),
           bio: String(bioInput.value || "").trim(),
           social_links: socialPayload
         };
         const updated = await saveMyPublicProfile(payload);
-        const social = normalizeSocialLinks(updated?.social_links || updated?.socialLinks);
-        Object.entries(socialInputs).forEach(([key, input]) => {
-          input.value = social[key] || "";
-        });
-        visibilityToggle.checked = updated?.is_anonymous === true || updated?.anonymous === true;
-        listingToggle.checked = updated?.is_listed !== false && updated?.listed !== false;
-        coverInput.value = String(updated?.cover_image_url || updated?.coverImageUrl || payload.cover_image_url || "").trim();
-        bioInput.value = String(updated?.bio || payload.bio || "").trim();
-        status.textContent = "Saved";
+        syncViewerSettingsForm(normalizeProfilePayload(updated, updated, authState?.publicSlug || authState?.userCode || "public-user"), formState);
+        status.textContent = "Profile settings saved.";
       } catch (error) {
         status.textContent = error instanceof Error ? error.message : "Save failed";
       } finally {
@@ -2436,23 +2665,43 @@
       }
     });
 
-    form.append(visibilityField, listingField, coverField, bioField, socialField, saveButton);
-    panel.append(form, status);
+    const formActions = create("div", "settings-actions");
+    formActions.append(saveButton, status);
+    form.append(topGrid, streamsuitesCard, findMeHereCard, formActions);
+    panel.append(form);
     host.appendChild(panel);
+
+    const formState = {
+      profile: null,
+      avatarPreview,
+      avatarUrlInput,
+      displayNameInput,
+      slugInput,
+      slugAliases,
+      streamSuitesToggle,
+      streamSuitesStatus,
+      listingToggle,
+      anonymousToggle,
+      coverInput,
+      backgroundInput,
+      bioInput,
+      socialInputs,
+      sharePreview,
+      shareCopy,
+      sharePublicStatus,
+      findMeHereStatus,
+      findMeHereReason,
+      findMeHereUrl
+    };
 
     (async () => {
       try {
-        const profile = await fetchMyPublicProfile();
-        const social = normalizeSocialLinks(profile?.social_links || profile?.socialLinks);
-        visibilityToggle.checked = profile?.is_anonymous === true || profile?.anonymous === true;
-        listingToggle.checked = profile?.is_listed !== false && profile?.listed !== false;
-        coverInput.value = String(profile?.cover_image_url || profile?.coverImageUrl || "").trim();
-        bioInput.value = String(profile?.bio || "").trim();
-        Object.entries(socialInputs).forEach(([key, input]) => {
-          input.value = social[key] || "";
-        });
+        const payload = await fetchMyPublicProfile();
+        const profile = normalizeProfilePayload(payload, payload, authState?.publicSlug || authState?.userCode || "public-user");
+        syncViewerSettingsForm(profile, formState);
+        status.textContent = "Authoritative profile settings loaded.";
       } catch (_err) {
-        status.textContent = "Unable to load settings from Auth API.";
+        status.textContent = "Unable to load settings from the authoritative Auth API.";
       }
     })();
   }

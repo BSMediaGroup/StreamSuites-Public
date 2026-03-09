@@ -1412,6 +1412,81 @@ body.public-shell-page.modal-open {
   gap: 12px;
 }
 
+.viewer-settings-grid {
+  gap: 16px;
+}
+
+.viewer-settings-top-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.settings-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(186, 203, 229, 0.18);
+  border-radius: 16px;
+  background: rgba(13, 20, 32, 0.74);
+}
+
+.settings-card-muted {
+  background: linear-gradient(180deg, rgba(42, 33, 18, 0.52), rgba(20, 18, 14, 0.72));
+  border-color: rgba(241, 189, 96, 0.22);
+}
+
+.settings-card-header,
+.settings-card-body {
+  display: grid;
+  gap: 8px;
+}
+
+.settings-card-title {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #eef5ff;
+}
+
+.settings-card-copy {
+  margin: 0;
+  color: rgba(194, 209, 232, 0.82);
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.viewer-settings-identity {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+}
+
+.viewer-settings-avatar {
+  width: 68px;
+  height: 68px;
+  border-radius: 18px;
+  border: 1px solid rgba(185, 203, 230, 0.26);
+  background: linear-gradient(145deg, rgba(145, 205, 255, 0.92), rgba(112, 220, 255, 0.9));
+  background-size: cover;
+  background-position: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #07101b;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.viewer-settings-avatar.has-image {
+  color: transparent;
+}
+
+.viewer-settings-identity-fields {
+  display: grid;
+  gap: 10px;
+}
+
 .settings-field {
   display: grid;
   gap: 6px;
@@ -1430,6 +1505,7 @@ body.public-shell-page.modal-open {
 }
 
 .settings-field input[type="url"],
+.settings-field input[type="text"],
 .settings-field textarea,
 .settings-social-row input[type="url"] {
   width: 100%;
@@ -1439,6 +1515,65 @@ body.public-shell-page.modal-open {
   color: #e7efff;
   padding: 8px 10px;
   font-size: 0.72rem;
+}
+
+.settings-field input[readonly] {
+  color: rgba(220, 231, 247, 0.88);
+  background: rgba(18, 24, 38, 0.72);
+}
+
+.settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid rgba(177, 194, 224, 0.14);
+  border-radius: 12px;
+  background: rgba(10, 16, 26, 0.6);
+  padding: 10px 12px;
+}
+
+.settings-toggle-meta {
+  display: grid;
+  gap: 5px;
+}
+
+.settings-toggle-row input[type="checkbox"] {
+  accent-color: #9ad1ff;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.settings-inline-note {
+  margin: 0;
+  color: rgba(197, 210, 230, 0.82);
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+.settings-share-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.settings-share-preview {
+  display: block;
+  overflow-wrap: anywhere;
+  border-radius: 12px;
+  border: 1px solid rgba(184, 201, 228, 0.18);
+  background: rgba(8, 13, 22, 0.86);
+  color: #e8f1ff;
+  padding: 10px 12px;
+  font-size: 0.72rem;
+}
+
+.settings-share-preview[data-empty="true"] {
+  color: rgba(184, 198, 221, 0.7);
+}
+
+.settings-share-copy {
+  justify-self: start;
 }
 
 .settings-social-row {
@@ -1455,6 +1590,59 @@ body.public-shell-page.modal-open {
 
 .settings-save-btn {
   justify-self: start;
+}
+
+.settings-callout {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(203, 170, 87, 0.22);
+  background: rgba(60, 42, 18, 0.34);
+  color: #ffe8b5;
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.settings-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.settings-cta-primary,
+.settings-cta-secondary {
+  text-decoration: none;
+}
+
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-status {
+  min-height: 1.2em;
+}
+
+@media (max-width: 900px) {
+  .viewer-settings-top-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .viewer-settings-identity {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-toggle-row {
+    align-items: start;
+  }
+
+  .settings-social-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .item-meta {

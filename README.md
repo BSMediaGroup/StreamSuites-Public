@@ -25,6 +25,7 @@ Public StreamSuites web surface (static Cloudflare Pages site).
   - `creator_capable`, `viewer_only`, and `public_surface_account_type`
   - `cover_image_url`, `banner_image_url`, and reserved `background_image_url`
 - On `https://streamsuites.app/u/<slug>`, StreamSuites share links always use the canonical slug URL and FindMeHere share links only render when the authoritative export says the account is eligible/listed there.
+- `/community/settings.html` now provides a real viewer/public account profile settings surface backed by `api.streamsuites.app/api/public/profile/me`, including authoritative StreamSuites profile visibility, canonical URL preview, profile media/link fields already supported by the backend, and truthful FindMeHere creator-only upgrade messaging.
 
 ## What Is New (v0.4.1-alpha surface)
 - Aurora landing experience and refreshed layout shell (`index.html`, `css/aurora-landing.css`).
@@ -38,6 +39,7 @@ Public StreamSuites web surface (static Cloudflare Pages site).
   - Dedicated public login/complete pages (`public-login.html`, `public-auth-complete.html`).
   - Public login assets (`css/public-login.css`, `js/public-login.js`, `js/public-auth-complete.js`).
   - Auth-aware top-right user widget in the media/community shell (`js/public-shell.js`, `js/public-pages-app.js`).
+  - Viewer/public account settings now expose real StreamSuites profile controls in `community/settings.html`, with save/load wiring in `js/public-pages-app.js` and supporting styles in `css/public-shell.css`.
 - Lightweight public-page visit reporting:
   - Shared visit instrumentation now reports non-blocking page-load beacons from the public site to the authoritative runtime/Auth API via `js/status-widget.js`.
   - The public repo remains non-authoritative; visit events are only forwarded for runtime-owned alerting and short-window counters.
