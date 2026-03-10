@@ -145,6 +145,29 @@
     }, {});
   }
 
+  function normalizeLiveStatus(value) {
+    if (!value || typeof value !== "object") return null;
+    const provider = safeText(value?.provider || value?.active_provider || value?.activeProvider).toLowerCase();
+    const viewerCount = Number(value?.viewerCount ?? value?.viewer_count);
+    return {
+      isLive: value?.isLive === true || value?.is_live === true,
+      provider,
+      providerLabel: safeText(value?.providerLabel || (provider ? provider.charAt(0).toUpperCase() + provider.slice(1) : "Live")),
+      title: safeText(value?.title || value?.live_title || value?.liveTitle),
+      url: safeText(value?.url || value?.live_url || value?.liveUrl),
+      viewerCount: Number.isFinite(viewerCount) && viewerCount >= 0 ? Math.round(viewerCount) : null
+    };
+  }
+
+  function buildLiveBadge(liveStatus) {
+    if (!liveStatus?.isLive) return null;
+    const badge = document.createElement("span");
+    badge.className = "ss-profile-hovercard-live-badge";
+    badge.textContent = "LIVE";
+    badge.setAttribute("aria-label", `${liveStatus.providerLabel || "Live"} live now`);
+    return badge;
+  }
+
   function normalizeExternalUrl(url) {
     const raw = safeText(url);
     if (!raw) return "";
@@ -425,6 +448,7 @@
     const coverImageUrl = safeText(ds.ssCoverUrl || ds.ssCoverImageUrl);
     const socialLinks = normalizeSocialLinks(parseJsonObject(ds.ssSocialLinks));
     const badges = normalizeBadges(parseJsonObject(ds.ssBadges), role, "core");
+    const liveStatus = normalizeLiveStatus(parseJsonObject(ds.ssLiveStatus));
     return {
       displayName,
       userCode,
@@ -435,7 +459,8 @@
       profileHref,
       coverImageUrl,
       socialLinks,
-      badges
+      badges,
+      liveStatus
     };
   }
 
@@ -586,6 +611,7 @@
     const profileLink = getSlot("profile-link");
 
     if (avatarEl) {
+      avatarEl.classList.toggle("is-live", Boolean(profile.liveStatus?.isLive));
       if (profile.avatarUrl) {
         avatarEl.style.backgroundImage = `url(${profile.avatarUrl})`;
         avatarEl.textContent = "";
@@ -600,9 +626,15 @@
     }
     if (badgesEl) {
       renderBadgeSuffix(badgesEl, profile.badges, trigger || activeTrigger);
+      const liveBadge = buildLiveBadge(profile.liveStatus);
+      if (liveBadge) badgesEl.appendChild(liveBadge);
     }
     if (subtitleEl) {
-      subtitleEl.textContent = safeText(profile.role, "PUBLIC");
+      const parts = [safeText(profile.role, "PUBLIC")];
+      if (profile.liveStatus?.isLive) {
+        parts.push(profile.liveStatus.viewerCount != null ? `${profile.liveStatus.viewerCount.toLocaleString()} watching` : "Live now");
+      }
+      subtitleEl.textContent = parts.join(" · ");
     }
     if (bioEl) {
       bioEl.textContent = safeText(profile.bio, "Profile details are being updated.");
@@ -694,7 +726,8 @@
       profileHref: safeText(next?.profileHref, base.profileHref),
       coverImageUrl: safeText(next?.coverImageUrl, base.coverImageUrl),
       socialLinks: normalizeSocialLinks(next?.socialLinks || base.socialLinks),
-      badges: normalizeBadges(next?.badges ?? base.badges, role, safeText(next?.tier || base?.tier || "core"))
+      badges: normalizeBadges(next?.badges ?? base.badges, role, safeText(next?.tier || base?.tier || "core")),
+      liveStatus: normalizeLiveStatus(next?.liveStatus) || normalizeLiveStatus(base?.liveStatus)
     };
     return merged;
   }
@@ -723,6 +756,7 @@
     const socialLinks = normalizeSocialLinks(profile?.social_links || profile?.socialLinks || fallback.socialLinks);
     const badges = normalizeBadges(profile?.badges, role, tier);
     const href = safeText(profile?.streamsuites_profile_url) || buildCanonicalProfileHref(profile) || fallback.profileHref;
+    const liveStatus = normalizeLiveStatus(profile?.live_status || profile?.liveStatus || fallback.liveStatus);
     return {
       displayName,
       userCode,
@@ -734,7 +768,8 @@
       coverImageUrl,
       socialLinks,
       badges,
-      tier
+      tier,
+      liveStatus
     };
   }
 

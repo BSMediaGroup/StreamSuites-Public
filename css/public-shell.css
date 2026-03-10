@@ -1094,6 +1094,7 @@ body.public-shell-page.modal-open {
   height: 20px;
   border-radius: 50%;
   border: 1px solid rgba(218, 230, 246, 0.28);
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1118,6 +1119,21 @@ body.public-shell-page.modal-open {
 
 .creator-avatar.has-image {
   color: transparent;
+}
+
+.creator-avatar.is-live {
+  border-color: rgba(255, 120, 120, 0.92);
+  box-shadow: 0 0 0 2px rgba(255, 72, 72, 0.34);
+}
+
+.creator-avatar.is-live::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 2px solid rgba(255, 72, 72, 0.82);
+  animation: creator-live-pulse 1.8s ease-out infinite;
+  pointer-events: none;
 }
 
 .creator-meta-text {
@@ -1171,6 +1187,95 @@ body.public-shell-page.modal-open {
   color: rgba(220, 233, 253, 0.92);
   background: rgba(56, 77, 108, 0.42);
   font-family: "SuiGenerisRg", "SuiGeneris", sans-serif;
+}
+
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 20px;
+  padding: 0 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 109, 109, 0.55);
+  background: linear-gradient(180deg, rgba(255, 84, 84, 0.26), rgba(110, 18, 18, 0.9));
+  color: #fff3f3;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  box-shadow: 0 10px 22px rgba(109, 18, 18, 0.3);
+}
+
+.live-badge-compact {
+  min-height: 16px;
+  padding: 0 7px;
+  font-size: 0.5rem;
+}
+
+.profile-live-banner {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 94, 94, 0.22);
+  background: linear-gradient(180deg, rgba(88, 16, 16, 0.42), rgba(17, 21, 32, 0.86));
+}
+
+.profile-live-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.profile-live-summary {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 214, 214, 0.86);
+}
+
+.profile-live-title {
+  margin: 0;
+  color: rgba(240, 228, 235, 0.96);
+  line-height: 1.45;
+  font-size: 0.78rem;
+}
+
+.profile-live-link {
+  width: fit-content;
+  color: #ffd3d3;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.profile-live-link:hover,
+.profile-live-link:focus-visible {
+  color: #fff0f0;
+}
+
+@keyframes creator-live-pulse {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.92);
+  }
+  70% {
+    opacity: 0;
+    transform: scale(1.18);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .creator-avatar.is-live::after {
+    animation: none;
+    opacity: 0.65;
+    transform: none;
+  }
 }
 
 .inline-icon-mask,

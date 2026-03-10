@@ -6,7 +6,8 @@
     tallies: "/data/tallies.json",
     profiles: "/data/profiles.json",
     notices: "/data/notices.json",
-    meta: "/data/meta.json"
+    meta: "/data/meta.json",
+    liveStatus: "/data/live-status.json"
   };
 
   const FALLBACK_AVATAR = "/assets/logos/logocircle.png";
@@ -59,8 +60,16 @@
     findmehereVisible: false,
     findmehereProfileUrl: "",
     findmehereShareUrl: "",
-    findmehereStatusReason: "creator_capable_required"
+    findmehereStatusReason: "creator_capable_required",
+    liveStatus: null
   };
+
+  const EMPTY_LIVE_STATUS_SNAPSHOT = Object.freeze({
+    schema_version: "v1",
+    generated_at: null,
+    providers: [],
+    creators: []
+  });
 
   let cachePromise = null;
 
@@ -122,6 +131,98 @@
       acc.push(normalized);
       return acc;
     }, []);
+  }
+
+  function parseViewerCount(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed < 0) return null;
+    return Math.round(parsed);
+  }
+
+  function normalizeLiveStatus(raw) {
+    if (!raw || typeof raw !== "object") return null;
+    const activeStatus =
+      raw?.active_status && typeof raw.active_status === "object"
+        ? raw.active_status
+        : raw?.activeStatus && typeof raw.activeStatus === "object"
+          ? raw.activeStatus
+          : null;
+    const freshness = String(raw?.freshness || "").trim().toLowerCase();
+    const stale = raw?.stale === true || freshness === "stale";
+    const activeFreshness = String(activeStatus?.freshness || "").trim().toLowerCase();
+    const activeStale = activeStatus?.stale === true || activeFreshness === "stale";
+    const isLive = raw?.is_live === true || raw?.isLive === true;
+    if (!isLive || stale || (activeStatus && (activeStatus?.is_live !== true || activeStale))) {
+      return null;
+    }
+
+    const provider = String(raw?.active_provider || raw?.activeProvider || activeStatus?.provider || "").trim().toLowerCase();
+    return {
+      isLive: true,
+      provider,
+      providerLabel: toTitle(provider || "live"),
+      title: String(activeStatus?.live_title || activeStatus?.liveTitle || "").trim(),
+      url: String(activeStatus?.live_url || activeStatus?.liveUrl || "").trim(),
+      viewerCount: parseViewerCount(activeStatus?.viewer_count || activeStatus?.viewerCount),
+      startedAt: String(activeStatus?.started_at || activeStatus?.startedAt || "").trim(),
+      lastCheckedAt: String(
+        raw?.last_checked_at || raw?.lastCheckedAt || activeStatus?.last_checked_at || activeStatus?.lastCheckedAt || ""
+      ).trim(),
+      thumbnailUrl: String(activeStatus?.thumbnail_url || activeStatus?.thumbnailUrl || "").trim()
+    };
+  }
+
+  function buildLiveStatusMap(payload) {
+    const map = new Map();
+    const items = Array.isArray(payload?.creators) ? payload.creators : [];
+    items.forEach((entry) => {
+      const normalized = normalizeLiveStatus(entry);
+      if (!normalized) return;
+      [
+        entry?.creator_id,
+        entry?.creatorId,
+        entry?.display_name,
+        entry?.displayName
+      ].forEach((value) => {
+        const key = normalizeProfileLookup(value);
+        if (key) map.set(key, normalized);
+      });
+    });
+    return map;
+  }
+
+  function hasEmbeddedLiveStatus(raw) {
+    if (!raw || typeof raw !== "object") return false;
+    return Object.prototype.hasOwnProperty.call(raw, "live_status") || Object.prototype.hasOwnProperty.call(raw, "liveStatus");
+  }
+
+  function resolveLiveStatus(raw, liveStatusMap) {
+    if (hasEmbeddedLiveStatus(raw)) {
+      return normalizeLiveStatus(raw?.live_status || raw?.liveStatus);
+    }
+    const direct = normalizeLiveStatus(raw);
+    if (direct) return direct;
+    const candidates = [
+      raw?.id,
+      raw?.creator_id,
+      raw?.creatorId,
+      raw?.public_slug,
+      raw?.publicSlug,
+      raw?.slug,
+      raw?.user_code,
+      raw?.userCode,
+      raw?.username,
+      raw?.display_name,
+      raw?.displayName,
+      raw?.name
+    ];
+    for (const candidate of candidates) {
+      const key = normalizeProfileLookup(candidate);
+      if (key && liveStatusMap?.has(key)) {
+        return liveStatusMap.get(key) || null;
+      }
+    }
+    return null;
   }
 
   function toArray(payload) {
@@ -291,7 +392,7 @@
     };
   }
 
-  function normalizeProfile(raw) {
+  function normalizeProfile(raw, liveStatusMap = null) {
     const id = raw?.id || raw?.profile_id || raw?.user_code || raw?.userCode || raw?.username || raw?.name;
     if (!id) return null;
     const userCodeRaw = raw?.user_code || raw?.userCode || raw?.username || id;
@@ -372,7 +473,8 @@
       findmehereVisible,
       findmehereProfileUrl,
       findmehereShareUrl,
-      findmehereStatusReason
+      findmehereStatusReason,
+      liveStatus: resolveLiveStatus(raw, liveStatusMap)
     };
   }
 
@@ -393,11 +495,11 @@
     });
   }
 
-  function buildProfileMap(items) {
+  function buildProfileMap(items, liveStatusMap = null) {
     const map = new Map();
     indexProfile(map, { ...DEFAULT_PROFILE });
     items.forEach((raw) => {
-      const profile = normalizeProfile(raw);
+      const profile = normalizeProfile(raw, liveStatusMap);
       if (!profile) return;
       indexProfile(map, profile);
     });
@@ -700,7 +802,8 @@
         talliesPayload,
         profilesPayload,
         noticesPayload,
-        metaPayload
+        metaPayload,
+        liveStatusPayload
       ] = await Promise.all([
         loadJson(DATA_PATHS.clips, { items: [] }),
         loadJson(DATA_PATHS.polls, { items: [] }),
@@ -708,11 +811,13 @@
         loadJson(DATA_PATHS.tallies, { items: [] }),
         loadJson(DATA_PATHS.profiles, { items: [] }),
         loadJson(DATA_PATHS.notices, { items: [] }),
-        loadJson(DATA_PATHS.meta, null)
+        loadJson(DATA_PATHS.meta, null),
+        loadJson(DATA_PATHS.liveStatus, EMPTY_LIVE_STATUS_SNAPSHOT)
       ]);
 
       const profileItems = toArray(profilesPayload);
-      const profilesMap = buildProfileMap(profileItems);
+      const liveStatusMap = buildLiveStatusMap(liveStatusPayload);
+      const profilesMap = buildProfileMap(profileItems, liveStatusMap);
 
       const clips = sortByUpdated(toArray(clipsPayload).map((item, index) => normalizeClip(item, index, profilesMap)));
       const polls = sortByUpdated(toArray(pollsPayload).map((item, index) => normalizePoll(item, index, profilesMap)));
@@ -769,6 +874,7 @@
         profilesByCode: Object.fromEntries(profileList.map((profile) => [profile.userCode || profile.id, profile])),
         artifactsByProfile,
         meta: metaPayload,
+        liveStatus: liveStatusPayload,
         helpers: {
           toTimestamp,
           toTitle,
@@ -789,6 +895,7 @@
     DEFAULT_PROFILE,
     buildArtifactHref,
     normalizeArtifactLookup,
+    normalizeLiveStatus,
     platformIconFor,
     normalizePlatformKey
   };

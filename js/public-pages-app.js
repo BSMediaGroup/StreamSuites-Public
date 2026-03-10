@@ -371,8 +371,51 @@
     return parsed.toLocaleString();
   }
 
+  function getLiveStatus(profile) {
+    return profile?.liveStatus && profile.liveStatus.isLive ? profile.liveStatus : null;
+  }
+
+  function buildLiveBadge(profile, options = {}) {
+    const liveStatus = getLiveStatus(profile);
+    if (!liveStatus) return null;
+    const badge = create("span", options.compact ? "live-badge live-badge-compact" : "live-badge", "LIVE");
+    badge.setAttribute("aria-label", `${liveStatus.providerLabel || "Live"} live now`);
+    return badge;
+  }
+
+  function buildLiveSummary(profile) {
+    const liveStatus = getLiveStatus(profile);
+    if (!liveStatus) return "";
+    const parts = [`${liveStatus.providerLabel || "Live"} live now`];
+    if (liveStatus.viewerCount != null) {
+      parts.push(`${formatNumber(liveStatus.viewerCount)} watching`);
+    }
+    return parts.join(" · ");
+  }
+
+  function buildProfileLiveBanner(profile) {
+    const liveStatus = getLiveStatus(profile);
+    if (!liveStatus) return null;
+    const banner = create("section", "profile-live-banner");
+    const heading = create("div", "profile-live-heading");
+    heading.append(buildLiveBadge(profile), create("span", "profile-live-summary", buildLiveSummary(profile)));
+    banner.appendChild(heading);
+    if (liveStatus.title) {
+      banner.appendChild(create("p", "profile-live-title", liveStatus.title));
+    }
+    if (liveStatus.url) {
+      const link = create("a", "profile-live-link", "Watch stream");
+      link.href = liveStatus.url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      banner.appendChild(link);
+    }
+    return banner;
+  }
+
   function buildAvatar(profile) {
     const avatar = create("span", "creator-avatar");
+    if (getLiveStatus(profile)) avatar.classList.add("is-live");
     const image = profile?.avatar;
     if (image) {
       avatar.style.backgroundImage = `url(${image})`;
@@ -435,6 +478,7 @@
     const coverUrl = String(profile.coverImageUrl || profile.cover_image_url || "").trim();
     const socialLinks = normalizeSocialLinks(profile.socialLinks || profile.social_links);
     const badges = Array.isArray(profile.badges) ? profile.badges : [];
+    const liveStatus = getLiveStatus(profile);
 
     setHoverDataAttr(node, "data-ss-user-code", userCode);
     setHoverDataAttr(node, "data-ss-public-slug", publicSlug);
@@ -447,6 +491,7 @@
     setHoverDataAttr(node, "data-ss-profile-href", profileHref);
     setHoverJsonAttr(node, "data-ss-social-links", socialLinks);
     setHoverJsonAttr(node, "data-ss-badges", badges);
+    setHoverJsonAttr(node, "data-ss-live-status", liveStatus);
   }
 
   function bindClipThumbLoading(img, thumb) {
@@ -520,6 +565,8 @@
       const chip = create("span", "badge-role-chip", roleLabel(role));
       row.appendChild(chip);
     }
+    const liveBadge = buildLiveBadge(profile, { compact: true });
+    if (liveBadge) row.appendChild(liveBadge);
     return row;
   }
 
@@ -1938,6 +1985,12 @@
     const findmehereStatusReason = String(
       payload?.findmehere_status_reason || payload?.findmehereStatusReason || fallbackProfile?.findmehereStatusReason || ""
     ).trim();
+    const hasLiveStatusPayload =
+      Object.prototype.hasOwnProperty.call(payload || {}, "live_status") ||
+      Object.prototype.hasOwnProperty.call(payload || {}, "liveStatus");
+    const liveStatus = hasLiveStatusPayload
+      ? window.StreamSuitesPublicData?.normalizeLiveStatus?.(payload?.live_status || payload?.liveStatus) || null
+      : fallbackProfile?.liveStatus || null;
     return {
       id: fallbackProfile?.id || userCode,
       userCode,
@@ -1976,7 +2029,8 @@
       findmehereVisible,
       findmehereProfileUrl,
       findmehereShareUrl,
-      findmehereStatusReason
+      findmehereStatusReason,
+      liveStatus
     };
   }
 
@@ -2239,6 +2293,8 @@
 
     const profileMeta = buildCreatorMeta(profile, { expanded: true, includeRoleChip: true });
     profileCard.appendChild(profileMeta);
+    const liveBanner = buildProfileLiveBanner(profile);
+    if (liveBanner) profileCard.appendChild(liveBanner);
 
     const socialHeader = create("div", "profile-inline-header");
     socialHeader.append(create("h3", "", "Social Links"));
