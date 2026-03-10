@@ -2985,12 +2985,12 @@
   }
 
   function normalizeUserCode(value, fallback = "public-user") {
-    const normalized = String(value || "")
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9_-]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-    const isUuidLike = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized);
+    const raw = String(value || "").trim().toLowerCase();
+    const isUuidLike = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(raw);
+    const normalized = raw
+      .replace(/[\s-]+/g, "")
+      .replace(/[^a-z0-9_]+/g, "")
+      .replace(/^_+|_+$/g, "");
     if (!normalized || isUuidLike) return fallback;
     return normalized;
   }

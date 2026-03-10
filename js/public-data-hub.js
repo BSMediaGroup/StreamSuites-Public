@@ -92,8 +92,9 @@
     return String(value || "")
       .trim()
       .toLowerCase()
-      .replace(/[^a-z0-9_-]+/g, "-")
-      .replace(/^-+|-+$/g, "");
+      .replace(/[\s-]+/g, "")
+      .replace(/[^a-z0-9_]+/g, "")
+      .replace(/^_+|_+$/g, "");
   }
 
   function normalizeArtifactLookup(value) {
