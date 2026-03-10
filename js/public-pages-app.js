@@ -208,6 +208,18 @@
       defaultFilters: [],
       render: renderCommunityMembers
     },
+    "community-live": {
+      path: "/live/index.html",
+      aliases: ["/live", "/live/"],
+      shellKind: "community",
+      activeHref: "/live",
+      topbarLabel: "Live",
+      searchPlaceholder: "Search live creators",
+      filterMode: "none",
+      filtersCollapsed: true,
+      defaultFilters: [],
+      render: renderCommunityLive
+    },
     "community-notices": {
       path: "/community/notices.html",
       shellKind: "community",
@@ -1771,6 +1783,20 @@
     }
 
     host.appendChild(memberSection);
+
+    const liveSection = buildSection("Live Now", "/live").section;
+    const liveGrid = create("div", "profile-grid");
+    sortLiveProfiles(collectLiveProfiles(data))
+      .slice(0, 4)
+      .forEach(({ profile, liveStatus }) => {
+        liveGrid.appendChild(buildLiveProfileCard(profile, liveStatus));
+      });
+    if (liveGrid.childElementCount) {
+      liveSection.appendChild(liveGrid);
+    } else {
+      liveSection.appendChild(create("div", "empty-state", "No public StreamSuites creators are live right now."));
+    }
+    host.appendChild(liveSection);
   }
 
   function buildProfileCard(profile, data) {
@@ -1785,6 +1811,74 @@
     link.href = buildProfileHref(profile);
 
     card.append(create("p", "item-snippet", profile.bio || ""), badge, link);
+    return card;
+  }
+
+  function collectLiveProfiles(data) {
+    return (data.profiles || [])
+      .filter((profile) => profile?.isListed !== false && isProfileVisibleOnStreamSuites(profile))
+      .map((profile) => ({ profile, liveStatus: getLiveStatus(profile) }))
+      .filter((entry) => entry.liveStatus);
+  }
+
+  function sortLiveProfiles(entries) {
+    return [...entries].sort((left, right) => {
+      const leftViewers = left.liveStatus?.viewerCount ?? -1;
+      const rightViewers = right.liveStatus?.viewerCount ?? -1;
+      if (rightViewers !== leftViewers) return rightViewers - leftViewers;
+
+      const leftChecked = Date.parse(left.liveStatus?.lastCheckedAt || "") || 0;
+      const rightChecked = Date.parse(right.liveStatus?.lastCheckedAt || "") || 0;
+      if (rightChecked !== leftChecked) return rightChecked - leftChecked;
+
+      const leftStarted = Date.parse(left.liveStatus?.startedAt || "") || 0;
+      const rightStarted = Date.parse(right.liveStatus?.startedAt || "") || 0;
+      if (rightStarted !== leftStarted) return rightStarted - leftStarted;
+
+      return String(left.profile?.displayName || "").localeCompare(String(right.profile?.displayName || ""));
+    });
+  }
+
+  function buildLiveProfileCard(profile, liveStatus) {
+    const card = create("article", "profile-card");
+    card.appendChild(buildCreatorMeta(profile, { expanded: true, includeRoleChip: false }));
+
+    const meta = create("div", "item-meta");
+    meta.append(
+      buildPlatformChip(liveStatus?.providerLabel || profile?.platform || "Live", window.StreamSuitesPublicData?.platformIconFor?.(liveStatus?.provider || profile?.platform)),
+      buildStatusChip("Live")
+    );
+
+    if (profile?.platform && norm(profile.platform) !== norm(liveStatus?.providerLabel || "")) {
+      meta.appendChild(buildPlatformChip(profile.platform, profile.platformIcon));
+    }
+
+    if (liveStatus?.viewerCount != null) {
+      meta.appendChild(create("span", "meta-pill", `${formatNumber(liveStatus.viewerCount)} watching`));
+    }
+
+    const summary = create(
+      "p",
+      "item-snippet",
+      liveStatus?.title || `${liveStatus?.providerLabel || "Creator"} stream is live now on the public StreamSuites surface.`
+    );
+
+    const actions = create("div", "live-directory-actions");
+    const profileLink = create("a", "see-all", "Open profile");
+    profileLink.href = buildProfileHref(profile);
+    actions.appendChild(profileLink);
+    if (liveStatus?.url) {
+      const watchLink = create("a", "see-all", "Watch stream");
+      watchLink.href = liveStatus.url;
+      watchLink.target = "_blank";
+      watchLink.rel = "noopener noreferrer";
+      actions.appendChild(watchLink);
+    }
+
+    const checkedAt = liveStatus?.lastCheckedAt ? create("p", "item-snippet", `Last checked ${toTimestamp(liveStatus.lastCheckedAt)}`) : null;
+    card.append(meta, summary);
+    if (checkedAt) card.appendChild(checkedAt);
+    card.appendChild(actions);
     return card;
   }
 
@@ -1808,6 +1902,47 @@
     if (!members.length) {
       host.appendChild(create("div", "empty-state", "No members match this search."));
     }
+  }
+
+  function renderCommunityLive(ctx) {
+    const { host, data, state } = ctx;
+    clear(host);
+    host.appendChild(buildPageHeading("Live Now", "Browse creators currently live on the canonical StreamSuites public surface."));
+
+    const entries = sortLiveProfiles(collectLiveProfiles(data)).filter(({ profile, liveStatus }) => {
+      const haystack = [
+        profile?.displayName,
+        profile?.publicSlug,
+        profile?.username,
+        profile?.platform,
+        liveStatus?.providerLabel,
+        liveStatus?.title
+      ].join(" ").toLowerCase();
+      return haystack.includes(String(state.query || "").trim().toLowerCase());
+    });
+
+    const summary = create("section", "section");
+    const summaryHead = create("div", "section-heading");
+    summaryHead.append(
+      create("h2", "", "Currently live creators"),
+      create("span", "meta-pill status-pill status-live", `${entries.length} live`)
+    );
+    summary.appendChild(summaryHead);
+
+    if (!entries.length) {
+      summary.appendChild(
+        create("div", "empty-state", state.query ? "No live creators match this search." : "No public StreamSuites creators are live right now.")
+      );
+      host.appendChild(summary);
+      return;
+    }
+
+    const grid = create("section", "profile-grid");
+    entries.forEach(({ profile, liveStatus }) => {
+      grid.appendChild(buildLiveProfileCard(profile, liveStatus));
+    });
+    summary.appendChild(grid);
+    host.appendChild(summary);
   }
 
   function renderCommunityNotices(ctx) {

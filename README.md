@@ -19,6 +19,7 @@ Public StreamSuites web surface (static Cloudflare Pages site).
 - Public galleries and metadata views hydrate from exported JSON artifacts (for example files in `/data` plus runtime version export).
 - Feature Requests (`requests.html`) includes authenticated creator flows backed by `api.streamsuites.app` (fetch/vote/comment/submit). This is UI-only client integration; no backend logic is hosted here.
 - Standalone public profiles now resolve on the canonical site via `/u/<slug>`, with slug-first lookup, legacy `user_code` fallback during migration, and Cloudflare Pages rewrite/function support that preserves deep links.
+- The canonical public live-directory route now resolves at `/live`, using the centralized normalized `live-status` payload plus authoritative StreamSuites profile visibility flags so only publicly visible live creators appear there.
 - Public artifact detail links now canonicalize to clean routes at `/clips/<id-or-slug>`, `/polls/<id-or-slug>`, and `/scores/<id-or-slug>`, while legacy `detail.html?id=...` entrypoints remain migration-safe and client-canonicalize to the clean route where applicable.
 - Canonical public profile rendering now trusts the authoritative exported profile/account fields from `StreamSuites` for:
   - `streamsuites_profile_enabled|eligible|visible|status_reason`
@@ -118,6 +119,7 @@ StreamSuites-Public/
 │   ├── changelog.json
 │   ├── changelog.runtime.json
 │   ├── clips.json
+│   ├── live-status.json
 │   ├── meta.json
 │   ├── notices.json
 │   ├── polls.json
@@ -151,6 +153,8 @@ StreamSuites-Public/
 │       ├── version-stamp.js
 │       └── versioning.js
 ├── login/
+│   └── index.html
+├── live/
 │   └── index.html
 ├── polls/
 │   ├── detail.html

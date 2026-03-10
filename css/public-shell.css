@@ -1508,6 +1508,13 @@ body.public-shell-page.modal-open {
   gap: 8px;
 }
 
+.live-directory-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .settings-form {
   max-width: 900px;
 }
