@@ -477,7 +477,7 @@
 
   function applyProfileHoverAttrs(node, profile) {
     if (!node || !profile || typeof profile !== "object") return;
-    node.classList.add("ss-profile-hover");
+    node.setAttribute("data-ss-profile-hover-trigger", "true");
 
     const profileHref = buildProfileHref(profile);
     const publicSlug = getCanonicalProfileSlug(profile, "");
@@ -585,18 +585,18 @@
   function buildCreatorMeta(profile, options = {}) {
     const expanded = Boolean(options.expanded);
     const includeRoleChip = Boolean(options.includeRoleChip);
+    const enableHover = Boolean(options.enableHover);
     const row = create("div", "creator-meta");
-    applyProfileHoverAttrs(row, profile);
     if (expanded) row.classList.add("is-expanded");
     const avatar = buildAvatar(profile);
-    applyProfileHoverAttrs(avatar, profile);
+    if (enableHover) applyProfileHoverAttrs(avatar, profile);
     if (expanded) avatar.classList.add("is-expanded");
     row.appendChild(avatar);
 
     const textWrap = create("div", "creator-meta-text");
     const top = create("div", "creator-meta-top");
     const name = create("span", "creator-name", profile?.displayName || "Public User");
-    applyProfileHoverAttrs(name, profile);
+    if (enableHover) applyProfileHoverAttrs(name, profile);
     top.appendChild(name);
 
     top.appendChild(buildBadgeSuffix(profile, { includeRoleChip }));
@@ -714,7 +714,10 @@
     }
 
     const body = create("div", "item-body");
-    body.append(create("h3", "item-title", buildCardTitle(item)), buildCreatorMeta(item.creator));
+    body.append(
+      create("h3", "item-title", buildCardTitle(item)),
+      buildCreatorMeta(item.creator, { enableHover: options.enableProfileHover !== false })
+    );
 
     if (options.showSnippet) {
       body.appendChild(create("p", "item-snippet", item.summary || ""));
@@ -739,7 +742,10 @@
     link.href = item.href;
 
     const body = create("div", "item-body");
-    body.append(create("h3", "item-title", buildCardTitle(item)), buildCreatorMeta(item.creator));
+    body.append(
+      create("h3", "item-title", buildCardTitle(item)),
+      buildCreatorMeta(item.creator, { enableHover: item?.enableProfileHover !== false })
+    );
 
     if (item.chartType === "pie") {
       body.appendChild(buildPiePreview(item.options || [], "percent"));
@@ -768,7 +774,7 @@
     const body = create("div", "item-body");
     body.append(
       create("h3", "item-title", buildCardTitle(item)),
-      buildCreatorMeta(item.creator),
+      buildCreatorMeta(item.creator, { enableHover: item?.enableProfileHover !== false }),
       buildResultsRows(item.entries || [], "percent", 3)
     );
 
@@ -789,7 +795,7 @@
     const body = create("div", "item-body");
     body.append(
       create("h3", "item-title", buildCardTitle(item)),
-      buildCreatorMeta(item.creator),
+      buildCreatorMeta(item.creator, { enableHover: item?.enableProfileHover !== false }),
       buildPiePreview(item.entries || [], "sharePercent")
     );
 
@@ -809,11 +815,12 @@
 
   function buildMediaCard(item, options = {}) {
     if (!item || typeof item !== "object") return create("div");
-    if (item.type === "clips") return buildClipCard(item, options);
-    if (item.type === "polls") return buildPollCard(item, options);
-    if (item.type === "scoreboards") return buildScoreboardCard(item, options);
-    if (item.type === "tallies") return buildTallyCard(item, options);
-    return buildClipCard(item, options);
+    const nextItem = { ...item, enableProfileHover: options.enableProfileHover };
+    if (item.type === "clips") return buildClipCard(nextItem, options);
+    if (item.type === "polls") return buildPollCard(nextItem, options);
+    if (item.type === "scoreboards") return buildScoreboardCard(nextItem, options);
+    if (item.type === "tallies") return buildTallyCard(nextItem, options);
+    return buildClipCard(nextItem, options);
   }
 
   function buildPageHeading(title, subtitle) {
@@ -1543,7 +1550,7 @@
     const side = create("aside", "detail-side");
 
     const profileCard = create("div", "profile-card");
-    profileCard.appendChild(buildCreatorMeta(item.creator, { expanded: true, includeRoleChip: true }));
+    profileCard.appendChild(buildCreatorMeta(item.creator, { expanded: true, includeRoleChip: true, enableHover: true }));
     profileCard.appendChild(buildDetailRows(item, helpers));
 
     const profileLink = create("a", "see-all", "Open profile");
@@ -1801,7 +1808,7 @@
 
   function buildProfileCard(profile, data) {
     const card = create("article", "profile-card");
-    card.appendChild(buildCreatorMeta(profile, { expanded: true, includeRoleChip: false }));
+    card.appendChild(buildCreatorMeta(profile, { expanded: true, includeRoleChip: false, enableHover: true }));
 
     const artifactCount = (data.artifactsByProfile?.[profile.id] || []).length;
     const badge = create("div", "item-meta");
@@ -1841,7 +1848,7 @@
 
   function buildLiveProfileCard(profile, liveStatus) {
     const card = create("article", "profile-card");
-    card.appendChild(buildCreatorMeta(profile, { expanded: true, includeRoleChip: false }));
+    card.appendChild(buildCreatorMeta(profile, { expanded: true, includeRoleChip: false, enableHover: true }));
 
     const meta = create("div", "item-meta");
     meta.append(
@@ -2406,7 +2413,7 @@
     const grid = create("div", "media-grid");
     artifacts.slice(0, 12).forEach((item) => {
       const wrap = create("article", "profile-artifact-item");
-      wrap.appendChild(buildMediaCard(item, { showSnippet: true }));
+      wrap.appendChild(buildMediaCard(item, { showSnippet: true, enableProfileHover: false }));
       if (ownerMode) {
         const edit = create("a", "edit-affordance artifact-edit-affordance", "Edit");
         edit.href = item.href;
@@ -2426,7 +2433,7 @@
     coverWrap.appendChild(coverImage);
     profileCard.appendChild(coverWrap);
 
-    const profileMeta = buildCreatorMeta(profile, { expanded: true, includeRoleChip: true });
+    const profileMeta = buildCreatorMeta(profile, { expanded: true, includeRoleChip: true, enableHover: false });
     profileCard.appendChild(profileMeta);
     const liveBanner = buildProfileLiveBanner(profile);
     if (liveBanner) profileCard.appendChild(liveBanner);
