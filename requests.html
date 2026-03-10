@@ -75,10 +75,6 @@
             </button>
           </section>
 
-          <div id="requests-submit-success" class="empty-state requests-submit-success" hidden>
-            Thanks! Your request has been submitted for moderation.
-          </div>
-
           <section id="requests-submit-panel" class="requests-submit-panel card" hidden aria-label="Submit feature request">
             <div class="card-body">
               <h3 class="title">Submit a feature request</h3>
@@ -96,7 +92,6 @@
                   <textarea id="requests-submit-body" name="body" rows="6" maxlength="4000"></textarea>
                   <div id="requests-submit-body-error" class="requests-submit-field-error" hidden></div>
                 </div>
-                <div id="requests-submit-error" class="requests-submit-error" hidden></div>
                 <div class="requests-submit-actions">
                   <button id="requests-submit-confirm" class="ss-btn primary" type="submit">Submit</button>
                   <button id="requests-submit-cancel" class="ss-btn secondary" type="button">Cancel</button>
@@ -157,6 +152,7 @@
     </div>
   </div>
 
+  <script src="/js/public-toast.js"></script>
   <script src="/js/utils/versioning.js"></script>
   <script src="/js/utils/version-stamp.js"></script>
   <script src="/js/public-requests.js"></script>

@@ -27,11 +27,10 @@
   const submitBodyInputEl = document.getElementById("requests-submit-body");
   const submitTitleErrorEl = document.getElementById("requests-submit-title-error");
   const submitBodyErrorEl = document.getElementById("requests-submit-body-error");
-  const submitErrorEl = document.getElementById("requests-submit-error");
-  const submitSuccessEl = document.getElementById("requests-submit-success");
   const submitCancelEl = document.getElementById("requests-submit-cancel");
   const submitConfirmEl = document.getElementById("requests-submit-confirm");
   const requestCommentsTemplateEl = document.getElementById("request-comments-template");
+  const toast = window.StreamSuitesPublicToast;
 
   if (!listEl || !emptyEl || !loadingEl) return;
 
@@ -765,13 +764,8 @@
   }
 
   function hideSubmitFeedback() {
-    if (submitErrorEl) {
-      submitErrorEl.hidden = true;
-      submitErrorEl.textContent = "";
-    }
-    if (submitSuccessEl) {
-      submitSuccessEl.hidden = true;
-    }
+    toast?.dismiss?.("requests-submit-error");
+    toast?.dismiss?.("requests-submit-success");
   }
 
   function setSubmitFieldError(field, message) {
@@ -782,9 +776,16 @@
   }
 
   function setSubmitError(message) {
-    if (!submitErrorEl) return;
-    submitErrorEl.textContent = message || "";
-    submitErrorEl.hidden = !message;
+    const text = String(message || "").trim();
+    if (!text) {
+      toast?.dismiss?.("requests-submit-error");
+      return;
+    }
+    toast?.error?.(text, {
+      key: "requests-submit-error",
+      title: "Submission failed",
+      autoDismissMs: 6800
+    });
   }
 
   function openSubmitPanel() {
@@ -1094,7 +1095,11 @@
       clearDraft();
       if (submitFormEl) submitFormEl.reset();
       closeSubmitPanel();
-      if (submitSuccessEl) submitSuccessEl.hidden = false;
+      toast?.success?.("Thanks! Your request has been submitted for moderation.", {
+        key: "requests-submit-success",
+        title: "Request submitted",
+        autoDismissMs: 4200
+      });
     } catch (error) {
       setSubmitError(error instanceof Error && error.message
         ? error.message

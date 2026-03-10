@@ -66,7 +66,6 @@
             <input id="public-login-email" name="email" type="email" autocomplete="email" required />
             <label for="public-login-password">Password</label>
             <input id="public-login-password" name="password" type="password" autocomplete="current-password" required />
-            <p id="public-login-error" class="ss-public-login__error" hidden></p>
             <button id="public-login-submit" type="submit" class="ss-public-login__submit">Log in</button>
           </form>
 
@@ -77,8 +76,6 @@
             <input id="public-signup-password" name="password" type="password" autocomplete="new-password" required />
             <label for="public-signup-confirm">Confirm password</label>
             <input id="public-signup-confirm" name="confirm_password" type="password" autocomplete="new-password" required />
-            <p id="public-signup-error" class="ss-public-login__error" hidden></p>
-            <p id="public-signup-success" class="ss-public-login__success" hidden></p>
             <button id="public-signup-submit" type="submit" class="ss-public-login__submit">Create account</button>
           </form>
 
@@ -91,6 +88,7 @@
     </main>
   </div>
 
+  <script src="/js/public-toast.js" defer></script>
   <script src="/js/public-login.js" defer></script>
 </body>
 </html>

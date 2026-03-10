@@ -1,0 +1,98 @@
+(() => {
+  const active = new Map();
+  const exitMs = 220;
+
+  function getRegion() {
+    let region = document.querySelector("[data-ss-alert-stack='public']");
+    if (region) return region;
+    region = document.createElement("div");
+    region.className = "ss-alert-stack";
+    region.dataset.ssAlertStack = "public";
+    region.setAttribute("aria-live", "polite");
+    region.setAttribute("aria-atomic", "false");
+    document.body.appendChild(region);
+    return region;
+  }
+
+  function remove(id) {
+    const entry = active.get(id);
+    if (!entry) return;
+    if (entry.timer) {
+      window.clearTimeout(entry.timer);
+    }
+    active.delete(id);
+    entry.node.classList.remove("is-visible");
+    entry.node.classList.add("is-leaving");
+    window.setTimeout(() => entry.node.remove(), exitMs);
+  }
+
+  function show(message, options = {}) {
+    const text = String(message || "").trim();
+    if (!text) return "";
+
+    const tone = ["success", "info", "warning", "error"].includes(options.tone)
+      ? options.tone
+      : "info";
+    const id = String(options.key || `${tone}:${text}`).trim();
+    remove(id);
+
+    const node = document.createElement("section");
+    node.className = "ss-floating-alert";
+    node.dataset.tone = tone;
+    node.dataset.alertId = id;
+    node.setAttribute("role", tone === "error" || tone === "warning" ? "alert" : "status");
+    node.setAttribute("aria-live", tone === "error" || tone === "warning" ? "assertive" : "polite");
+
+    const title = document.createElement("strong");
+    title.className = "ss-floating-alert__title";
+    title.textContent = options.title || tone;
+
+    const body = document.createElement("span");
+    body.className = "ss-floating-alert__message";
+    body.textContent = text;
+
+    const dismiss = document.createElement("button");
+    dismiss.type = "button";
+    dismiss.className = "ss-floating-alert__dismiss";
+    dismiss.setAttribute("aria-label", "Dismiss notification");
+    dismiss.textContent = "×";
+    dismiss.addEventListener("click", () => remove(id));
+
+    node.append(title, body, dismiss);
+    getRegion().appendChild(node);
+    window.requestAnimationFrame(() => node.classList.add("is-visible"));
+
+    const autoDismissMs = Number.isFinite(options.autoDismissMs)
+      ? options.autoDismissMs
+      : tone === "error" || tone === "warning"
+        ? 6200
+        : 3800;
+    const timer = autoDismissMs > 0 ? window.setTimeout(() => remove(id), autoDismissMs) : 0;
+    active.set(id, { node, timer });
+    return id;
+  }
+
+  function clearAll() {
+    Array.from(active.keys()).forEach(remove);
+  }
+
+  window.addEventListener("pagehide", clearAll);
+
+  window.StreamSuitesPublicToast = {
+    show,
+    dismiss: remove,
+    clearAll,
+    success(message, options = {}) {
+      return show(message, { ...options, tone: "success" });
+    },
+    info(message, options = {}) {
+      return show(message, { ...options, tone: "info" });
+    },
+    warning(message, options = {}) {
+      return show(message, { ...options, tone: "warning" });
+    },
+    error(message, options = {}) {
+      return show(message, { ...options, tone: "error" });
+    }
+  };
+})();

@@ -88,6 +88,7 @@ StreamSuites-Public/
 ├── js/
 │   ├── public-data-hub.js
 │   ├── public-pages-app.js
+│   ├── public-toast.js
 │   ├── public-requests.js
 │   ├── public-shell.js
 │   ├── status-widget.js

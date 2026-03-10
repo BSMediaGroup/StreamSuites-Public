@@ -9,9 +9,9 @@
   const REQUEST_TIMEOUT_MS = 12000;
 
   const statusEl = document.getElementById("public-auth-complete-status");
-  const errorEl = document.getElementById("public-auth-complete-error");
   const backLinkEl = document.getElementById("public-auth-complete-back");
   const loginLinkEl = document.getElementById("public-auth-complete-login");
+  const toast = window.StreamSuitesPublicToast;
 
   const params = new URLSearchParams(window.location.search || "");
   const returnTo = normalizeReturnTo(params.get("return_to") || DEFAULT_RETURN_TO);
@@ -35,10 +35,16 @@
   }
 
   function setError(message) {
-    if (!errorEl) return;
     const text = String(message || "").trim();
-    errorEl.textContent = text;
-    errorEl.hidden = !text;
+    if (!text) {
+      toast?.dismiss?.("public-auth-complete-error");
+      return;
+    }
+    toast?.error?.(text, {
+      key: "public-auth-complete-error",
+      title: "Sign-in error",
+      autoDismissMs: 7200
+    });
   }
 
   function isAuthenticatedPayload(payload) {

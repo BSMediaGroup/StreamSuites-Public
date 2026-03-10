@@ -23,13 +23,11 @@
   const tabs = Array.from(document.querySelectorAll(".ss-public-login__tab"));
   const loginForm = document.getElementById("public-login-form");
   const signupForm = document.getElementById("public-signup-form");
-  const loginErrorEl = document.getElementById("public-login-error");
-  const signupErrorEl = document.getElementById("public-signup-error");
-  const signupSuccessEl = document.getElementById("public-signup-success");
   const loginSubmitEl = document.getElementById("public-login-submit");
   const signupSubmitEl = document.getElementById("public-signup-submit");
   const backLinkEl = document.getElementById("public-login-back");
   const closeButtonEl = document.getElementById("public-login-close");
+  const toast = window.StreamSuitesPublicToast;
 
   const params = new URLSearchParams(window.location.search || "");
   const returnTo = normalizeReturnTo(params.get("return_to") || DEFAULT_RETURN_TO);
@@ -71,17 +69,22 @@
   }
 
   function setError(target, message) {
-    if (!target) return;
     const text = String(message || "").trim();
-    target.textContent = text;
-    target.hidden = !text;
+    const key = target === "signup" ? "public-signup-error" : "public-login-error";
+    if (!text) {
+      toast?.dismiss?.(key);
+      return;
+    }
+    toast?.error?.(text, { key, title: "Error" });
   }
 
   function setSuccess(message) {
-    if (!signupSuccessEl) return;
     const text = String(message || "").trim();
-    signupSuccessEl.textContent = text;
-    signupSuccessEl.hidden = !text;
+    if (!text) {
+      toast?.dismiss?.("public-signup-success");
+      return;
+    }
+    toast?.success?.(text, { key: "public-signup-success", title: "Success" });
   }
 
   function setBusy(button, busy, labelBusy, labelIdle) {
@@ -103,8 +106,8 @@
     });
     if (loginForm) loginForm.hidden = tabName !== "login";
     if (signupForm) signupForm.hidden = tabName !== "signup";
-    setError(loginErrorEl, "");
-    setError(signupErrorEl, "");
+    setError("login", "");
+    setError("signup", "");
     if (tabName === "login") setSuccess("");
   }
 
@@ -184,10 +187,10 @@
 
     const email = String(loginForm.elements.email?.value || "").trim().toLowerCase();
     const password = String(loginForm.elements.password?.value || "");
-    setError(loginErrorEl, "");
+    setError("login", "");
 
     if (!email || !password) {
-      setError(loginErrorEl, "Please provide an email and password.");
+      setError("login", "Please provide an email and password.");
       return;
     }
 
@@ -218,19 +221,19 @@
       }
 
       if (response.status === 401) {
-        setError(loginErrorEl, "Invalid credentials.");
+        setError("login", "Invalid credentials.");
         return;
       }
       if (response.status === 429) {
-        setError(loginErrorEl, "Too many login attempts. Please wait and try again.");
+        setError("login", "Too many login attempts. Please wait and try again.");
         return;
       }
       if (payload?.verification_required === true) {
-        setError(loginErrorEl, "Check your email to verify your account before logging in.");
+        setError("login", "Check your email to verify your account before logging in.");
         return;
       }
       if (response.status >= 400) {
-        setError(loginErrorEl, parseErrorMessage(payload, "Unable to log in right now."));
+        setError("login", parseErrorMessage(payload, "Unable to log in right now."));
         return;
       }
 
@@ -241,10 +244,10 @@
       redirectToComplete();
     } catch (error) {
       if (error?.name === "AbortError") {
-        setError(loginErrorEl, "Login timed out. Please try again.");
+        setError("login", "Login timed out. Please try again.");
         return;
       }
-      setError(loginErrorEl, "Network error during login. Please try again.");
+      setError("login", "Network error during login. Please try again.");
     } finally {
       setBusy(loginSubmitEl, false, "Logging in...", "Log in");
     }
@@ -257,19 +260,19 @@
     const email = String(signupForm.elements.email?.value || "").trim().toLowerCase();
     const password = String(signupForm.elements.password?.value || "");
     const confirmPassword = String(signupForm.elements.confirm_password?.value || "");
-    setError(signupErrorEl, "");
+    setError("signup", "");
     setSuccess("");
 
     if (!email || !password || !confirmPassword) {
-      setError(signupErrorEl, "Please complete all fields.");
+      setError("signup", "Please complete all fields.");
       return;
     }
     if (password.length < MIN_PASSWORD_LENGTH || !hasSpecialCharacter(password)) {
-      setError(signupErrorEl, "Password must be at least 8 characters and include a special character.");
+      setError("signup", "Password must be at least 8 characters and include a special character.");
       return;
     }
     if (password !== confirmPassword) {
-      setError(signupErrorEl, "Passwords do not match.");
+      setError("signup", "Passwords do not match.");
       return;
     }
 
@@ -299,7 +302,7 @@
       }
 
       if (!response.ok) {
-        setError(signupErrorEl, parseErrorMessage(payload, "Unable to create account right now."));
+        setError("signup", parseErrorMessage(payload, "Unable to create account right now."));
         return;
       }
 
@@ -311,10 +314,10 @@
       }
     } catch (error) {
       if (error?.name === "AbortError") {
-        setError(signupErrorEl, "Signup timed out. Please try again.");
+        setError("signup", "Signup timed out. Please try again.");
         return;
       }
-      setError(signupErrorEl, "Network error during signup. Please try again.");
+      setError("signup", "Network error during signup. Please try again.");
     } finally {
       setBusy(signupSubmitEl, false, "Creating...", "Create account");
     }
