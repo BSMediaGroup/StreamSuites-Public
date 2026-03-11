@@ -371,11 +371,15 @@
       const LOGIN_LABEL = 'Creator Login';
       const DASHBOARD_LABEL = 'Creator Dashboard';
       const AUTH_SESSION_URL = '/auth/session';
-      const CREATOR_DASHBOARD_URL = 'https://creator.streamsuites.app/';
-      let isCreatorSession = false;
+      const state = {
+        creatorDashboardUrl: 'https://creator.streamsuites.app/',
+        isCreatorSession: false,
+        checked: false,
+        inFlight: null,
+      };
 
       const setLabel = () => {
-        const label = isCreatorSession ? DASHBOARD_LABEL : LOGIN_LABEL;
+        const label = state.isCreatorSession ? DASHBOARD_LABEL : LOGIN_LABEL;
         ctas.forEach((cta) => {
           cta.textContent = label;
         });
@@ -393,13 +397,39 @@
         return isCreatorSessionPayload(payload);
       };
 
+      const ensureCreatorSession = async ({ force = false } = {}) => {
+        if (state.inFlight) {
+          return state.inFlight;
+        }
+        if (state.checked && !force) {
+          return state.isCreatorSession;
+        }
+        state.inFlight = fetchCreatorSession()
+          .then((isCreator) => {
+            state.isCreatorSession = isCreator;
+            state.checked = true;
+            setLabel();
+            return isCreator;
+          })
+          .catch(() => {
+            state.isCreatorSession = false;
+            state.checked = true;
+            setLabel();
+            return false;
+          })
+          .finally(() => {
+            state.inFlight = null;
+          });
+        return state.inFlight;
+      };
+
       const handleCtaClick = (event) => {
-        if (!isCreatorSession) {
+        if (!state.isCreatorSession) {
           return;
         }
         event.preventDefault();
         event.stopImmediatePropagation();
-        window.location.assign(CREATOR_DASHBOARD_URL);
+        window.location.assign(state.creatorDashboardUrl);
       };
 
       ctas.forEach((cta) => {
@@ -407,15 +437,10 @@
       });
 
       setLabel();
-      fetchCreatorSession()
-        .then((isCreator) => {
-          isCreatorSession = isCreator;
-          setLabel();
-        })
-        .catch(() => {
-          isCreatorSession = false;
-          setLabel();
-        });
+      window.StreamSuitesPublicCreatorAuth = {
+        ensureCreatorSession,
+        getCreatorDashboardUrl: () => state.creatorDashboardUrl,
+      };
     })();
   </script>
 
@@ -697,7 +722,21 @@
       };
 
       authTriggers.forEach((trigger) => {
-        trigger.addEventListener('click', () => openModal(trigger.dataset.authTrigger));
+        trigger.addEventListener('click', async (event) => {
+          if (trigger.hasAttribute('data-creator-cta')) {
+            const authHelper = window.StreamSuitesPublicCreatorAuth;
+            if (authHelper?.ensureCreatorSession) {
+              event.preventDefault();
+              event.stopImmediatePropagation();
+              const isCreator = await authHelper.ensureCreatorSession({ force: true });
+              if (isCreator) {
+                window.location.assign(authHelper.getCreatorDashboardUrl());
+                return;
+              }
+            }
+          }
+          openModal(trigger.dataset.authTrigger);
+        });
       });
 
       authToggles.forEach((toggle) => {
