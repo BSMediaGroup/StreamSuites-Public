@@ -53,6 +53,13 @@
     { provider: "discord", label: "Continue with Discord", icon: "/assets/icons/discord.svg", path: "/auth/login/discord" },
     { provider: "twitch", label: "Continue with Twitch", icon: "/assets/icons/twitch.svg", path: "/oauth/twitch/start" }
   ]);
+  const AUTH_ACCESS_STORAGE_KEY = "streamsuites.public.authAccessGate";
+  const AUTH_ACCESS_CACHE_MS = 30000;
+  const AUTH_ACCESS_FALLBACK_MESSAGES = Object.freeze({
+    normal: "Authentication is operating normally.",
+    maintenance: "Authentication is temporarily unavailable while maintenance is in progress.",
+    development: "Authentication is temporarily limited while development access mode is active."
+  });
   const ROLE_ICON_MAP = Object.freeze({
     admin: "/assets/icons/tierbadge-admin.svg"
   });
@@ -85,6 +92,139 @@
     icon.setAttribute("aria-hidden", "true");
     icon.style.setProperty("--icon-mask", `url("${String(path || "").trim()}")`);
     return icon;
+  }
+
+  function fallbackAuthAccessMessage(mode) {
+    return AUTH_ACCESS_FALLBACK_MESSAGES[mode] || AUTH_ACCESS_FALLBACK_MESSAGES.normal;
+  }
+
+  function clearAuthAccessUnlockState() {
+    try {
+      window.sessionStorage.removeItem(AUTH_ACCESS_STORAGE_KEY);
+    } catch (_err) {
+      // Ignore session storage failures.
+    }
+  }
+
+  function readAuthAccessUnlockState() {
+    try {
+      const raw = window.sessionStorage.getItem(AUTH_ACCESS_STORAGE_KEY);
+      if (!raw) return { active: false, expiresAt: "" };
+      const parsed = JSON.parse(raw);
+      const expiresAt = typeof parsed?.expiresAt === "string" ? parsed.expiresAt.trim() : "";
+      const expiresAtMs = Date.parse(expiresAt);
+      if (!expiresAt || !Number.isFinite(expiresAtMs) || expiresAtMs <= Date.now()) {
+        clearAuthAccessUnlockState();
+        return { active: false, expiresAt: "" };
+      }
+      return { active: true, expiresAt };
+    } catch (_err) {
+      clearAuthAccessUnlockState();
+      return { active: false, expiresAt: "" };
+    }
+  }
+
+  function persistAuthAccessUnlockState(expiresAt) {
+    if (typeof expiresAt !== "string" || !expiresAt.trim()) return;
+    try {
+      window.sessionStorage.setItem(
+        AUTH_ACCESS_STORAGE_KEY,
+        JSON.stringify({
+          unlocked: true,
+          expiresAt: expiresAt.trim()
+        })
+      );
+    } catch (_err) {
+      // Ignore session storage failures.
+    }
+  }
+
+  function normalizeAuthAccessState(payload, available = true) {
+    const rawMode = typeof payload?.mode === "string" ? payload.mode.trim().toLowerCase() : "";
+    const mode = rawMode === "maintenance" || rawMode === "development" ? rawMode : "normal";
+    const gateActive = mode !== "normal";
+    const bypassEnabled = gateActive && payload?.bypass_enabled === true;
+    const unlockState = bypassEnabled ? readAuthAccessUnlockState() : { active: false, expiresAt: "" };
+    if (!gateActive || !bypassEnabled) {
+      clearAuthAccessUnlockState();
+    }
+    return {
+      available,
+      mode,
+      gateActive,
+      message:
+        typeof payload?.message === "string" && payload.message.trim()
+          ? payload.message.trim()
+          : fallbackAuthAccessMessage(mode),
+      bypassEnabled,
+      bypassUnlocked: bypassEnabled && unlockState.active,
+      unlockExpiresAt: unlockState.expiresAt
+    };
+  }
+
+  async function fetchAuthAccessState(baseUrl) {
+    try {
+      const response = await fetch(new URL("/auth/access-state", baseUrl).toString(), {
+        method: "GET",
+        cache: "no-store",
+        credentials: "include",
+        headers: {
+          Accept: "application/json"
+        }
+      });
+      if (!response.ok) {
+        throw new Error(`access-state-${response.status}`);
+      }
+      const payload = await response.json();
+      return normalizeAuthAccessState(payload, true);
+    } catch (_err) {
+      return normalizeAuthAccessState(null, false);
+    }
+  }
+
+  async function unlockAuthAccessGate(baseUrl, code) {
+    const response = await fetch(new URL("/auth/debug/unlock", baseUrl).toString(), {
+      method: "POST",
+      cache: "no-store",
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ code })
+    });
+
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch (_err) {
+      payload = null;
+    }
+
+    if (!response.ok) {
+      const error = new Error("unlock_failed");
+      error.status = response.status;
+      error.payload = payload;
+      throw error;
+    }
+
+    const expiresAt = typeof payload?.expires_at === "string" ? payload.expires_at.trim() : "";
+    if (expiresAt) {
+      persistAuthAccessUnlockState(expiresAt);
+    }
+
+    return {
+      ...normalizeAuthAccessState(
+        {
+          mode: payload?.mode,
+          message: payload?.message,
+          bypass_enabled: true
+        },
+        true
+      ),
+      bypassUnlocked: true,
+      unlockExpiresAt: expiresAt
+    };
   }
 
   function normalizePath(path) {
@@ -426,6 +566,35 @@
             <span data-auth-title-text>Log in to StreamSuites™</span>
           </h2>
           <p class="auth-modal-subtitle" data-auth-subtitle>Use OAuth to continue.</p>
+          <section class="ss-auth-access-gate" data-auth-access-gate hidden>
+            <div class="ss-auth-access-gate__summary">
+              <p class="ss-auth-access-gate__message" data-auth-access-message></p>
+              <button
+                class="ss-auth-access-gate__toggle"
+                type="button"
+                data-auth-access-toggle
+                aria-expanded="false"
+                aria-controls="public-auth-access-form"
+                aria-label="Unlock temporary auth access"
+                hidden
+              >
+                <img class="ss-auth-access-gate__icon" src="/assets/icons/ui/key.svg" alt="" aria-hidden="true" />
+              </button>
+            </div>
+            <form id="public-auth-access-form" class="ss-auth-access-gate__form" data-auth-access-form hidden novalidate>
+              <label class="ss-auth-access-gate__label" for="public-auth-access-code">Access code</label>
+              <input
+                id="public-auth-access-code"
+                class="ss-auth-access-gate__input"
+                type="password"
+                autocomplete="current-password"
+                spellcheck="false"
+                data-auth-access-input
+              />
+              <button class="ss-auth-access-gate__submit" type="submit" data-auth-access-submit>Unlock</button>
+            </form>
+            <p class="ss-auth-access-gate__feedback" data-auth-access-feedback hidden></p>
+          </section>
         </div>
         <div class="auth-panel" data-state="login"></div>
         <div class="auth-panel" data-state="signup"></div>
@@ -437,10 +606,97 @@
     const authSubtitle = authBackdrop.querySelector("[data-auth-subtitle]");
     const authClose = authBackdrop.querySelector(".auth-modal-close");
     const authCloseIcon = authBackdrop.querySelector(".auth-modal-close-icon");
+    const authAccessGate = authBackdrop.querySelector("[data-auth-access-gate]");
+    const authAccessMessage = authBackdrop.querySelector("[data-auth-access-message]");
+    const authAccessToggle = authBackdrop.querySelector("[data-auth-access-toggle]");
+    const authAccessForm = authBackdrop.querySelector("[data-auth-access-form]");
+    const authAccessInput = authBackdrop.querySelector("[data-auth-access-input]");
+    const authAccessSubmit = authBackdrop.querySelector("[data-auth-access-submit]");
+    const authAccessFeedback = authBackdrop.querySelector("[data-auth-access-feedback]");
     if (authCloseIcon) {
       authCloseIcon.style.setProperty("--icon-mask", `url("${UI_ICON_MAP.close}")`);
     }
     const authPanels = Array.from(authBackdrop.querySelectorAll(".auth-panel"));
+    let authAccessState = normalizeAuthAccessState(null, false);
+    let authAccessLoadedAt = 0;
+    let authAccessPromise = null;
+    let authAccessFormOpen = false;
+
+    function isAuthAccessBlocked() {
+      return authAccessState.gateActive && !authAccessState.bypassUnlocked;
+    }
+
+    function setAuthAccessFeedback(message, tone) {
+      if (!authAccessFeedback) return;
+      const text = typeof message === "string" ? message.trim() : "";
+      authAccessFeedback.hidden = !text;
+      authAccessFeedback.textContent = text;
+      authAccessFeedback.dataset.tone = tone || "";
+    }
+
+    function setAuthAccessFormOpen(open) {
+      authAccessFormOpen = Boolean(
+        open && authAccessState.gateActive && authAccessState.bypassEnabled && !authAccessState.bypassUnlocked
+      );
+      if (authAccessForm) {
+        authAccessForm.hidden = !authAccessFormOpen;
+      }
+      if (authAccessToggle) {
+        authAccessToggle.setAttribute("aria-expanded", authAccessFormOpen ? "true" : "false");
+        authAccessToggle.classList.toggle("is-active", authAccessFormOpen);
+      }
+      if (authAccessFormOpen && authAccessInput instanceof HTMLInputElement) {
+        window.setTimeout(() => authAccessInput.focus(), 0);
+      }
+    }
+
+    function syncAuthAccessUi() {
+      if (authAccessGate) {
+        authAccessGate.hidden = !authAccessState.gateActive;
+        authAccessGate.classList.toggle("is-unlocked", authAccessState.bypassUnlocked);
+      }
+      if (authAccessMessage) {
+        authAccessMessage.textContent = authAccessState.gateActive ? authAccessState.message : "";
+      }
+      if (authAccessToggle instanceof HTMLButtonElement) {
+        authAccessToggle.hidden = !(authAccessState.gateActive && authAccessState.bypassEnabled);
+      }
+      if (!authAccessState.gateActive || !authAccessState.bypassEnabled || authAccessState.bypassUnlocked) {
+        setAuthAccessFormOpen(false);
+      } else if (authAccessForm) {
+        authAccessForm.hidden = !authAccessFormOpen;
+      }
+
+      authBackdrop.querySelectorAll("[data-auth-gate-action]").forEach((action) => {
+        action.classList.toggle("is-disabled", isAuthAccessBlocked());
+        action.setAttribute("aria-disabled", isAuthAccessBlocked() ? "true" : "false");
+      });
+    }
+
+    async function loadModalAuthAccessState(force = false) {
+      const shouldUseCache =
+        !force &&
+        authAccessLoadedAt > 0 &&
+        Date.now() - authAccessLoadedAt < AUTH_ACCESS_CACHE_MS;
+      if (shouldUseCache) {
+        syncAuthAccessUi();
+        return authAccessState;
+      }
+      if (authAccessPromise) return authAccessPromise;
+
+      authAccessPromise = fetchAuthAccessState(AUTH_API_BASE)
+        .then((nextState) => {
+          authAccessState = nextState;
+          authAccessLoadedAt = Date.now();
+          syncAuthAccessUi();
+          return authAccessState;
+        })
+        .finally(() => {
+          authAccessPromise = null;
+        });
+
+      return authAccessPromise;
+    }
 
     function buildAuthPanel(mode) {
       const panel = authBackdrop.querySelector(`.auth-panel[data-state="${mode}"]`);
@@ -455,9 +711,21 @@
         endpoint.searchParams.set("return_to", `${AUTH_COMPLETE_URL}?return_to=${encodeURIComponent(window.location.href)}`);
         const link = create("a", "auth-oauth-button", entry.label);
         link.href = endpoint.toString();
+        link.dataset.authGateAction = "true";
         const icon = create("img");
         icon.src = entry.icon;
         icon.alt = "";
+        link.addEventListener("click", async (event) => {
+          event.preventDefault();
+          const nextState = await loadModalAuthAccessState(false);
+          if (nextState.gateActive && !nextState.bypassUnlocked) {
+            if (nextState.bypassEnabled) {
+              setAuthAccessFormOpen(true);
+            }
+            return;
+          }
+          window.location.assign(link.href);
+        });
         link.prepend(icon);
         oauthGrid.appendChild(link);
       });
@@ -466,6 +734,18 @@
       const methodsToggle = create("div", "auth-toggle");
       const methodLink = create("a", "", "Use email/password");
       methodLink.href = `/public-login.html?return_to=${encodeURIComponent(window.location.href)}&auth=${mode}`;
+      methodLink.dataset.authGateAction = "true";
+      methodLink.addEventListener("click", async (event) => {
+        event.preventDefault();
+        const nextState = await loadModalAuthAccessState(false);
+        if (nextState.gateActive && !nextState.bypassUnlocked) {
+          if (nextState.bypassEnabled) {
+            setAuthAccessFormOpen(true);
+          }
+          return;
+        }
+        window.location.assign(methodLink.href);
+      });
       methodsToggle.appendChild(methodLink);
       panel.appendChild(methodsToggle);
 
@@ -506,6 +786,7 @@
       authBackdrop.classList.add("is-open");
       authBackdrop.setAttribute("aria-hidden", "false");
       document.body.classList.add("modal-open");
+      void loadModalAuthAccessState(true);
     }
 
     function closeAuthModal() {
@@ -523,6 +804,48 @@
       if (!toggle) return;
       const state = String(toggle.getAttribute("data-auth-toggle") || "login");
       setAuthModalState(state);
+    });
+
+    authAccessToggle?.addEventListener("click", () => {
+      setAuthAccessFeedback("", "");
+      setAuthAccessFormOpen(!authAccessFormOpen);
+    });
+
+    authAccessForm?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const code = authAccessInput instanceof HTMLInputElement ? authAccessInput.value.trim() : "";
+      if (!code) {
+        setAuthAccessFeedback("Enter the access code.", "error");
+        return;
+      }
+      if (authAccessSubmit instanceof HTMLButtonElement) {
+        authAccessSubmit.disabled = true;
+        authAccessSubmit.textContent = "Unlocking...";
+      }
+      setAuthAccessFeedback("", "");
+      try {
+        authAccessState = await unlockAuthAccessGate(AUTH_API_BASE, code);
+        authAccessLoadedAt = Date.now();
+        if (authAccessInput instanceof HTMLInputElement) {
+          authAccessInput.value = "";
+        }
+        setAuthAccessFormOpen(false);
+        setAuthAccessFeedback("Access unlocked.", "success");
+        syncAuthAccessUi();
+      } catch (error) {
+        const message =
+          error?.status === 403
+            ? "Invalid access code."
+            : error?.status === 429
+              ? "Too many attempts. Please wait and try again."
+              : "Unlock is unavailable right now.";
+        setAuthAccessFeedback(message, "error");
+      } finally {
+        if (authAccessSubmit instanceof HTMLButtonElement) {
+          authAccessSubmit.disabled = false;
+          authAccessSubmit.textContent = "Unlock";
+        }
+      }
     });
 
     let lastVisibleSidebarState = SIDEBAR_STATES.expanded;

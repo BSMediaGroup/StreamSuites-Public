@@ -27,6 +27,36 @@
 
         <div class="ss-public-login__body">
           <p id="public-login-status" class="ss-public-login__status">Checking your session...</p>
+          <section id="public-login-access-gate" class="ss-auth-access-gate" hidden>
+            <div class="ss-auth-access-gate__summary">
+              <p id="public-login-access-message" class="ss-auth-access-gate__message"></p>
+              <button
+                id="public-login-access-toggle"
+                class="ss-auth-access-gate__toggle"
+                type="button"
+                aria-expanded="false"
+                aria-controls="public-login-access-form"
+                aria-label="Unlock temporary auth access"
+                hidden
+              >
+                <img class="ss-auth-access-gate__icon" src="/assets/icons/ui/key.svg" alt="" aria-hidden="true" />
+              </button>
+            </div>
+            <form id="public-login-access-form" class="ss-auth-access-gate__form" hidden novalidate>
+              <label class="ss-auth-access-gate__label" for="public-login-access-code">Access code</label>
+              <input
+                id="public-login-access-code"
+                class="ss-auth-access-gate__input"
+                type="password"
+                autocomplete="current-password"
+                spellcheck="false"
+              />
+              <button id="public-login-access-submit" class="ss-auth-access-gate__submit" type="submit">
+                Unlock
+              </button>
+            </form>
+            <p id="public-login-access-feedback" class="ss-auth-access-gate__feedback" hidden></p>
+          </section>
 
           <nav class="ss-public-login__tabs" aria-label="Authentication mode">
             <button type="button" class="ss-public-login__tab is-active" data-tab="login">Log in</button>

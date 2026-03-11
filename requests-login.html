@@ -26,6 +26,36 @@
         </header>
         <div class="ss-requests-auth__body">
           <p id="requests-login-status" class="ss-requests-auth__status">Checking your session...</p>
+          <section id="requests-login-access-gate" class="ss-auth-access-gate" hidden>
+            <div class="ss-auth-access-gate__summary">
+              <p id="requests-login-access-message" class="ss-auth-access-gate__message"></p>
+              <button
+                id="requests-login-access-toggle"
+                class="ss-auth-access-gate__toggle"
+                type="button"
+                aria-expanded="false"
+                aria-controls="requests-login-access-form"
+                aria-label="Unlock temporary auth access"
+                hidden
+              >
+                <img class="ss-auth-access-gate__icon" src="/assets/icons/ui/key.svg" alt="" aria-hidden="true" />
+              </button>
+            </div>
+            <form id="requests-login-access-form" class="ss-auth-access-gate__form" hidden novalidate>
+              <label class="ss-auth-access-gate__label" for="requests-login-access-code">Access code</label>
+              <input
+                id="requests-login-access-code"
+                class="ss-auth-access-gate__input"
+                type="password"
+                autocomplete="current-password"
+                spellcheck="false"
+              />
+              <button id="requests-login-access-submit" class="ss-auth-access-gate__submit" type="submit">
+                Unlock
+              </button>
+            </form>
+            <p id="requests-login-access-feedback" class="ss-auth-access-gate__feedback" hidden></p>
+          </section>
           <div id="requests-login-options" hidden>
             <p class="ss-requests-auth__section-kicker">Sign in with</p>
             <div class="ss-requests-auth__oauth-grid">
@@ -64,9 +94,18 @@
     (function () {
       const API_BASE = "https://api.streamsuites.app";
       const ME_API_URL = `${API_BASE}/api/me`;
+      const ACCESS_STATE_URL = `${API_BASE}/auth/access-state`;
+      const DEBUG_UNLOCK_URL = `${API_BASE}/auth/debug/unlock`;
       const DEFAULT_RETURN_TO = "https://streamsuites.app/requests.html";
       const REQUESTS_COMPLETE_URL = "https://streamsuites.app/requests-auth-complete.html";
       const RETURN_STORAGE_KEY = "ss_requests_auth_return_to";
+      const AUTH_ACCESS_STORAGE_KEY = "streamsuites.creator.authAccessGate";
+      const AUTH_ACCESS_CACHE_MS = 30000;
+      const AUTH_ACCESS_FALLBACK_MESSAGES = Object.freeze({
+        normal: "Authentication is operating normally.",
+        maintenance: "Authentication is temporarily unavailable while maintenance is in progress.",
+        development: "Authentication is temporarily limited while development access mode is active."
+      });
       const ALLOWED_RETURN_ORIGINS = new Set([
         window.location.origin,
         "https://streamsuites.app"
@@ -75,6 +114,13 @@
       const statusEl = document.getElementById("requests-login-status");
       const optionsEl = document.getElementById("requests-login-options");
       const backLinkEl = document.getElementById("requests-login-back");
+      const accessGateEl = document.getElementById("requests-login-access-gate");
+      const accessMessageEl = document.getElementById("requests-login-access-message");
+      const accessToggleEl = document.getElementById("requests-login-access-toggle");
+      const accessFormEl = document.getElementById("requests-login-access-form");
+      const accessCodeEl = document.getElementById("requests-login-access-code");
+      const accessSubmitEl = document.getElementById("requests-login-access-submit");
+      const accessFeedbackEl = document.getElementById("requests-login-access-feedback");
 
       const safeStorageSet = (key, value) => {
         try {
@@ -109,6 +155,220 @@
         return candidates.some((value) => value === true);
       };
 
+      const fallbackAccessMessage = (mode) =>
+        AUTH_ACCESS_FALLBACK_MESSAGES[mode] || AUTH_ACCESS_FALLBACK_MESSAGES.normal;
+
+      const clearAccessUnlockState = () => {
+        try {
+          window.sessionStorage.removeItem(AUTH_ACCESS_STORAGE_KEY);
+        } catch (_error) {
+          // Ignore storage failures.
+        }
+      };
+
+      const readAccessUnlockState = () => {
+        try {
+          const raw = window.sessionStorage.getItem(AUTH_ACCESS_STORAGE_KEY);
+          if (!raw) return { active: false, expiresAt: "" };
+          const parsed = JSON.parse(raw);
+          const expiresAt = typeof parsed?.expiresAt === "string" ? parsed.expiresAt.trim() : "";
+          const expiresAtMs = Date.parse(expiresAt);
+          if (!expiresAt || !Number.isFinite(expiresAtMs) || expiresAtMs <= Date.now()) {
+            clearAccessUnlockState();
+            return { active: false, expiresAt: "" };
+          }
+          return { active: true, expiresAt };
+        } catch (_error) {
+          clearAccessUnlockState();
+          return { active: false, expiresAt: "" };
+        }
+      };
+
+      const persistAccessUnlockState = (expiresAt) => {
+        if (typeof expiresAt !== "string" || !expiresAt.trim()) return;
+        try {
+          window.sessionStorage.setItem(
+            AUTH_ACCESS_STORAGE_KEY,
+            JSON.stringify({
+              unlocked: true,
+              expiresAt: expiresAt.trim()
+            })
+          );
+        } catch (_error) {
+          // Ignore storage failures.
+        }
+      };
+
+      const normalizeAccessState = (payload, available = true) => {
+        const rawMode = typeof payload?.mode === "string" ? payload.mode.trim().toLowerCase() : "";
+        const mode = rawMode === "maintenance" || rawMode === "development" ? rawMode : "normal";
+        const gateActive = mode !== "normal";
+        const bypassEnabled = gateActive && payload?.bypass_enabled === true;
+        const unlockState = bypassEnabled ? readAccessUnlockState() : { active: false, expiresAt: "" };
+        if (!gateActive || !bypassEnabled) {
+          clearAccessUnlockState();
+        }
+        return {
+          available,
+          mode,
+          gateActive,
+          message:
+            typeof payload?.message === "string" && payload.message.trim()
+              ? payload.message.trim()
+              : fallbackAccessMessage(mode),
+          bypassEnabled,
+          bypassUnlocked: bypassEnabled && unlockState.active,
+          unlockExpiresAt: unlockState.expiresAt
+        };
+      };
+
+      let accessState = normalizeAccessState(null, false);
+      let accessStateLoadedAt = 0;
+      let accessStatePromise = null;
+      let accessFormOpen = false;
+
+      const isAccessBlocked = () => accessState.gateActive && !accessState.bypassUnlocked;
+
+      const setAccessFeedback = (message, tone) => {
+        if (!accessFeedbackEl) return;
+        const text = typeof message === "string" ? message.trim() : "";
+        accessFeedbackEl.hidden = !text;
+        accessFeedbackEl.textContent = text;
+        accessFeedbackEl.dataset.tone = tone || "";
+      };
+
+      const setAccessFormOpen = (open) => {
+        accessFormOpen = Boolean(open && accessState.gateActive && accessState.bypassEnabled && !accessState.bypassUnlocked);
+        if (accessFormEl) {
+          accessFormEl.hidden = !accessFormOpen;
+        }
+        if (accessToggleEl instanceof HTMLButtonElement) {
+          accessToggleEl.setAttribute("aria-expanded", accessFormOpen ? "true" : "false");
+        }
+        if (accessFormOpen && accessCodeEl instanceof HTMLInputElement) {
+          window.setTimeout(() => accessCodeEl.focus(), 0);
+        }
+      };
+
+      const syncAccessUi = () => {
+        if (accessGateEl) {
+          accessGateEl.hidden = !accessState.gateActive;
+          accessGateEl.classList.toggle("is-unlocked", accessState.bypassUnlocked);
+        }
+        if (accessMessageEl) {
+          accessMessageEl.textContent = accessState.gateActive ? accessState.message : "";
+        }
+        if (accessToggleEl instanceof HTMLButtonElement) {
+          accessToggleEl.hidden = !(accessState.gateActive && accessState.bypassEnabled);
+          accessToggleEl.classList.toggle("is-active", accessFormOpen);
+        }
+        if (!accessState.gateActive || !accessState.bypassEnabled || accessState.bypassUnlocked) {
+          setAccessFormOpen(false);
+        } else if (accessFormEl) {
+          accessFormEl.hidden = !accessFormOpen;
+        }
+
+        const blocked = isAccessBlocked();
+        document.querySelectorAll("[data-provider]").forEach((link) => {
+          link.classList.toggle("is-disabled", blocked);
+          link.setAttribute("aria-disabled", blocked ? "true" : "false");
+        });
+
+        if (statusEl) {
+          if (accessState.gateActive && accessState.bypassUnlocked) {
+            statusEl.textContent = "Access unlocked. Choose a login method to continue.";
+          } else if (accessState.gateActive) {
+            statusEl.textContent = accessState.bypassEnabled
+              ? "Normal login is paused. Unlock access to continue."
+              : "Normal login is paused right now.";
+          } else {
+            statusEl.textContent = "Choose a login method to continue.";
+          }
+        }
+      };
+
+      const loadAccessState = async (force) => {
+        const shouldUseCache =
+          !force &&
+          accessStateLoadedAt > 0 &&
+          Date.now() - accessStateLoadedAt < AUTH_ACCESS_CACHE_MS;
+        if (shouldUseCache) {
+          syncAccessUi();
+          return accessState;
+        }
+        if (accessStatePromise) return accessStatePromise;
+
+        accessStatePromise = fetch(ACCESS_STATE_URL, {
+          method: "GET",
+          cache: "no-store",
+          credentials: "include",
+          headers: { Accept: "application/json" }
+        })
+          .then((response) => (response.ok ? response.json() : Promise.reject(new Error(`access-state-${response.status}`))))
+          .then((payload) => {
+            accessState = normalizeAccessState(payload, true);
+            accessStateLoadedAt = Date.now();
+            syncAccessUi();
+            return accessState;
+          })
+          .catch(() => {
+            accessState = normalizeAccessState(null, false);
+            accessStateLoadedAt = Date.now();
+            syncAccessUi();
+            return accessState;
+          })
+          .finally(() => {
+            accessStatePromise = null;
+          });
+
+        return accessStatePromise;
+      };
+
+      const submitAccessUnlock = async (code) => {
+        const response = await fetch(DEBUG_UNLOCK_URL, {
+          method: "POST",
+          cache: "no-store",
+          credentials: "include",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ code })
+        });
+        let payload = null;
+        try {
+          payload = await response.json();
+        } catch (_error) {
+          payload = null;
+        }
+        if (!response.ok) {
+          const error = new Error("unlock_failed");
+          error.status = response.status;
+          error.payload = payload;
+          throw error;
+        }
+        const expiresAt = typeof payload?.expires_at === "string" ? payload.expires_at.trim() : "";
+        if (expiresAt) {
+          persistAccessUnlockState(expiresAt);
+        }
+        accessState = {
+          ...normalizeAccessState(
+            {
+              mode: payload?.mode || accessState.mode,
+              message: payload?.message || accessState.message,
+              bypass_enabled: true
+            },
+            true
+          ),
+          bypassUnlocked: true,
+          unlockExpiresAt: expiresAt || accessState.unlockExpiresAt
+        };
+        accessStateLoadedAt = Date.now();
+        setAccessFormOpen(false);
+        setAccessFeedback("Access unlocked.", "success");
+        syncAccessUi();
+      };
+
       const params = new URLSearchParams(window.location.search || "");
       const returnTo = normalizeReturnTo(params.get("return_to") || DEFAULT_RETURN_TO);
       safeStorageSet(RETURN_STORAGE_KEY, returnTo);
@@ -136,15 +396,72 @@
         endpoint.searchParams.set("surface", "creator");
         endpoint.searchParams.set("return_to", completeUrl.toString());
         link.href = endpoint.toString();
+        link.addEventListener("click", async (event) => {
+          event.preventDefault();
+          const nextAccessState = await loadAccessState(false);
+          if (nextAccessState.gateActive && !nextAccessState.bypassUnlocked) {
+            if (nextAccessState.bypassEnabled) {
+              setAccessFormOpen(true);
+            }
+            return;
+          }
+          window.location.assign(link.href);
+        });
       });
 
+      if (accessToggleEl instanceof HTMLButtonElement) {
+        accessToggleEl.addEventListener("click", () => {
+          setAccessFeedback("", "");
+          setAccessFormOpen(!accessFormOpen);
+        });
+      }
+
+      if (accessFormEl instanceof HTMLFormElement) {
+        accessFormEl.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const code = accessCodeEl instanceof HTMLInputElement ? accessCodeEl.value.trim() : "";
+          if (!code) {
+            setAccessFeedback("Enter the access code.", "error");
+            return;
+          }
+          if (accessSubmitEl instanceof HTMLButtonElement) {
+            accessSubmitEl.disabled = true;
+            accessSubmitEl.textContent = "Unlocking...";
+          }
+          setAccessFeedback("", "");
+          try {
+            await submitAccessUnlock(code);
+            if (accessCodeEl instanceof HTMLInputElement) {
+              accessCodeEl.value = "";
+            }
+          } catch (error) {
+            const payload = error?.payload || {};
+            const message =
+              error?.status === 403
+                ? "Invalid access code."
+                : error?.status === 429
+                  ? "Too many attempts. Please wait and try again."
+                  : "Unlock is unavailable right now.";
+            setAccessFeedback(
+              typeof payload?.error === "string" && payload.error.trim() && error?.status !== 403
+                ? payload.error.trim()
+                : message,
+              "error"
+            );
+          } finally {
+            if (accessSubmitEl instanceof HTMLButtonElement) {
+              accessSubmitEl.disabled = false;
+              accessSubmitEl.textContent = "Unlock";
+            }
+          }
+        });
+      }
+
       const showOptions = () => {
-        if (statusEl) {
-          statusEl.textContent = "Choose a login method to continue.";
-        }
         if (optionsEl) {
           optionsEl.hidden = false;
         }
+        syncAccessUi();
       };
 
       const continueToAuthComplete = () => {
@@ -154,14 +471,17 @@
         window.location.replace(completeUrl.toString());
       };
 
-      fetch(ME_API_URL, {
+      Promise.allSettled([
+        loadAccessState(true),
+        fetch(ME_API_URL, {
         method: "GET",
         cache: "no-store",
         credentials: "include",
         headers: { Accept: "application/json" }
-      })
-        .then((response) => (response.ok ? response.json() : null))
-        .then((payload) => {
+      }).then((response) => (response.ok ? response.json() : null))
+      ])
+        .then((results) => {
+          const payload = results[1]?.status === "fulfilled" ? results[1].value : null;
           if (readAuthenticated(payload)) {
             continueToAuthComplete();
             return;
