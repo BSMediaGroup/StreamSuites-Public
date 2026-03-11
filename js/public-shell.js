@@ -40,6 +40,7 @@
   const CURRENT_ORIGIN = String(window.location.origin || "").trim();
   const AUTH_API_BASE = /^https?:\/\//.test(CURRENT_ORIGIN) ? CURRENT_ORIGIN : "https://streamsuites.app";
   const AUTH_COMPLETE_URL = new URL("/public-auth-complete.html", AUTH_API_BASE).toString();
+  const CREATOR_LOGIN_URL = "https://creator.streamsuites.app/login";
   const AUTH_OAUTH_LINKS = Object.freeze([
     { provider: "google", label: "Continue with Google", icon: "/assets/icons/google.svg", path: "/auth/login/google" },
     { provider: "github", label: "Continue with GitHub", icon: "/assets/icons/github.svg", path: "/auth/login/github" },
@@ -206,7 +207,7 @@
 
     const left = create("div", "footer-left");
     const creatorLogin = create("a", "creator-login-btn login-primary", "Creator Login");
-    creatorLogin.href = "/auth/login/google?surface=creator";
+    creatorLogin.href = CREATOR_LOGIN_URL;
     creatorLogin.rel = "noopener noreferrer";
     creatorLogin.target = "_blank";
     creatorLogin.setAttribute("aria-label", "Creator Login");

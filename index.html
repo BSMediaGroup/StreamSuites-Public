@@ -435,6 +435,8 @@
       if (!authModalBackdrop || !authModal) return;
 
       const CREATOR_DASHBOARD_URL = 'https://creator.streamsuites.app';
+      const CREATOR_LOGIN_URL = 'https://creator.streamsuites.app/login';
+      const CREATOR_LOGIN_SUCCESS_URL = 'https://creator.streamsuites.app/login-success.html';
       const CREATOR_ONBOARDING_URL = 'https://creator.streamsuites.app/onboarding';
       const AUTH_API_BASE = '/auth';
       const RESEND_ENDPOINT = `${AUTH_API_BASE}/verify/resend`;
@@ -449,6 +451,19 @@
       const oauthFlow = {
         state: AUTH_FLOW_STATES.idle,
         activeHref: '',
+      };
+
+      const buildCreatorAuthHref = (href) => {
+        try {
+          const endpoint = new URL(href, window.location.origin);
+          const successUrl = new URL(CREATOR_LOGIN_SUCCESS_URL);
+          successUrl.searchParams.set('return_to', CREATOR_DASHBOARD_URL + '/');
+          endpoint.searchParams.set('surface', 'creator');
+          endpoint.searchParams.set('return_to', successUrl.toString());
+          return endpoint.toString();
+        } catch (error) {
+          return CREATOR_LOGIN_URL;
+        }
       };
 
       const hasSpecialCharacter = (value) => /[^A-Za-z0-9]/.test(value);
@@ -488,6 +503,7 @@
         );
         oauthLinks.forEach((link) => {
           if (!(link instanceof HTMLAnchorElement)) return;
+          link.href = buildCreatorAuthHref(link.getAttribute('href') || '');
           if (link.dataset.authFlowWired === 'true') return;
           link.dataset.authFlowWired = 'true';
           link.addEventListener('click', (event) => {
