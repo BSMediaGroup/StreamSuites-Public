@@ -206,7 +206,7 @@
 
     const left = create("div", "footer-left");
     const creatorLogin = create("a", "creator-login-btn login-primary", "Creator Login");
-    creatorLogin.href = "https://api.streamsuites.app/auth/login/google?surface=creator";
+    creatorLogin.href = "/auth/login/google?surface=creator";
     creatorLogin.rel = "noopener noreferrer";
     creatorLogin.target = "_blank";
     creatorLogin.setAttribute("aria-label", "Creator Login");

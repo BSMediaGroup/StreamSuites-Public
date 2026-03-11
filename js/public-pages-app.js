@@ -24,7 +24,7 @@
   const AUTH_PUBLIC_ARTIFACTS_URL = `${AUTH_API_BASE}/api/public/artifacts`;
   const AUTH_LOGOUT_URL = `${AUTH_API_BASE}/auth/logout`;
   const CREATOR_DASHBOARD_URL = "https://creator.streamsuites.app";
-  const CREATOR_SIGNUP_URL = "https://api.streamsuites.app/auth/login/google?surface=creator";
+  const CREATOR_SIGNUP_URL = "/auth/login/google?surface=creator";
   const ADMIN_DASHBOARD_URL = "https://admin.streamsuites.app";
   const PUBLIC_AUTH_COMPLETE_MESSAGE_TYPE = "ss_public_auth_complete";
   const CANONICAL_PROFILE_PREFIX = "/u/";
@@ -3164,7 +3164,7 @@
         { label: "Public Login", action: "public_login" },
         {
           label: "Creator Login",
-          href: "https://api.streamsuites.app/auth/login/google?surface=creator",
+          href: "/auth/login/google?surface=creator",
           target: "_blank",
           rel: "noopener noreferrer",
           action: "creator_login"

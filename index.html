@@ -229,23 +229,23 @@
 
       <div class="auth-panel" data-state="login">
         <div class="auth-oauth-grid" data-auth-primary-methods>
-          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/login/google?surface=creator">
+          <a class="auth-oauth-button" href="/auth/login/google?surface=creator">
             <img src="/assets/icons/google.svg" alt="" />
             Continue with Google
           </a>
-          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/login/github?surface=creator">
+          <a class="auth-oauth-button" href="/auth/login/github?surface=creator">
             <img src="/assets/icons/github.svg" alt="" />
             Continue with GitHub
           </a>
-          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/x/start?surface=creator">
+          <a class="auth-oauth-button" href="/auth/x/start?surface=creator">
             <img src="/assets/icons/x.svg" alt="" />
             Continue with X
           </a>
-          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/login/discord?surface=creator">
+          <a class="auth-oauth-button" href="/auth/login/discord?surface=creator">
             <img src="/assets/icons/discord.svg" alt="" />
             Continue with Discord
           </a>
-          <a class="auth-oauth-button" href="https://api.streamsuites.app/oauth/twitch/start">
+          <a class="auth-oauth-button" href="/oauth/twitch/start?surface=creator">
             <img src="/assets/icons/twitch.svg" alt="" />
             Continue with Twitch
           </a>
@@ -294,23 +294,23 @@
 
       <div class="auth-panel" data-state="signup">
         <div class="auth-oauth-grid" data-auth-primary-methods>
-          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/login/google?surface=creator">
+          <a class="auth-oauth-button" href="/auth/login/google?surface=creator">
             <img src="/assets/icons/google.svg" alt="" />
             Continue with Google
           </a>
-          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/login/github?surface=creator">
+          <a class="auth-oauth-button" href="/auth/login/github?surface=creator">
             <img src="/assets/icons/github.svg" alt="" />
             Continue with GitHub
           </a>
-          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/x/start?surface=creator">
+          <a class="auth-oauth-button" href="/auth/x/start?surface=creator">
             <img src="/assets/icons/x.svg" alt="" />
             Continue with X
           </a>
-          <a class="auth-oauth-button" href="https://api.streamsuites.app/auth/login/discord?surface=creator">
+          <a class="auth-oauth-button" href="/auth/login/discord?surface=creator">
             <img src="/assets/icons/discord.svg" alt="" />
             Continue with Discord
           </a>
-          <a class="auth-oauth-button" href="https://api.streamsuites.app/oauth/twitch/start">
+          <a class="auth-oauth-button" href="/oauth/twitch/start?surface=creator">
             <img src="/assets/icons/twitch.svg" alt="" />
             Continue with Twitch
           </a>
@@ -370,7 +370,7 @@
 
       const LOGIN_LABEL = 'Creator Login';
       const DASHBOARD_LABEL = 'Creator Dashboard';
-      const AUTH_SESSION_URL = 'https://api.streamsuites.app/auth/session';
+      const AUTH_SESSION_URL = '/auth/session';
       const CREATOR_DASHBOARD_URL = 'https://creator.streamsuites.app/';
       let isCreatorSession = false;
 
@@ -436,7 +436,7 @@
 
       const CREATOR_DASHBOARD_URL = 'https://creator.streamsuites.app';
       const CREATOR_ONBOARDING_URL = 'https://creator.streamsuites.app/onboarding';
-      const AUTH_API_BASE = 'https://api.streamsuites.app/auth';
+      const AUTH_API_BASE = '/auth';
       const RESEND_ENDPOINT = `${AUTH_API_BASE}/verify/resend`;
       const PASSWORD_MIN_LENGTH = 8;
       const AUTH_FLOW_STATES = Object.freeze({
@@ -483,7 +483,7 @@
       const wireOauthFlowButtons = () => {
         const oauthLinks = Array.from(
           authModal.querySelectorAll(
-            '.auth-oauth-button[href^="https://api.streamsuites.app/auth/"], .auth-oauth-button[href^="https://api.streamsuites.app/oauth/"]'
+            '.auth-oauth-button[href^="/auth/"], .auth-oauth-button[href^="/oauth/"]'
           )
         );
         oauthLinks.forEach((link) => {
