@@ -435,8 +435,14 @@
       if (!authModalBackdrop || !authModal) return;
 
       const CREATOR_DASHBOARD_URL = 'https://creator.streamsuites.app';
-      const CREATOR_LOGIN_URL = 'https://creator.streamsuites.app/login';
-      const CREATOR_LOGIN_SUCCESS_URL = 'https://creator.streamsuites.app/login-success';
+      const CREATOR_DASHBOARD_RETURN_TO = `${CREATOR_DASHBOARD_URL}/`;
+      const CREATOR_LOGIN_SUCCESS_URL = 'https://creator.streamsuites.app/login-success/';
+      const buildCreatorLoginUrl = (returnTo = CREATOR_DASHBOARD_RETURN_TO) => {
+        const url = new URL('https://creator.streamsuites.app/login/');
+        url.searchParams.set('return_to', returnTo);
+        return url.toString();
+      };
+      const CREATOR_LOGIN_URL = buildCreatorLoginUrl();
       const CREATOR_ONBOARDING_URL = 'https://creator.streamsuites.app/views/onboarding.html';
       const AUTH_API_BASE = '/auth';
       const RESEND_ENDPOINT = `${AUTH_API_BASE}/verify/resend`;
@@ -457,7 +463,7 @@
         try {
           const endpoint = new URL(href, window.location.origin);
           const successUrl = new URL(CREATOR_LOGIN_SUCCESS_URL);
-          successUrl.searchParams.set('return_to', CREATOR_DASHBOARD_URL + '/');
+          successUrl.searchParams.set('return_to', CREATOR_DASHBOARD_RETURN_TO);
           endpoint.searchParams.set('surface', 'creator');
           endpoint.searchParams.set('return_to', successUrl.toString());
           return endpoint.toString();
@@ -513,6 +519,23 @@
             }
             const href = link.href;
             oauthFlow.activeHref = href;
+            try {
+              const endpoint = new URL(href);
+              const callbackLanding = endpoint.searchParams.get('return_to') || CREATOR_LOGIN_SUCCESS_URL;
+              const continueTo =
+                new URL(callbackLanding).searchParams.get('return_to') || CREATOR_DASHBOARD_RETURN_TO;
+              console.info('[Public][CreatorAuth] login_target', {
+                provider: link.textContent.trim(),
+                callbackLanding,
+                continueTo,
+              });
+            } catch (error) {
+              console.info('[Public][CreatorAuth] login_target', {
+                provider: link.textContent.trim(),
+                callbackLanding: href,
+                continueTo: CREATOR_DASHBOARD_RETURN_TO,
+              });
+            }
             setOauthFlowState(AUTH_FLOW_STATES.starting);
             try {
               setOauthFlowState(AUTH_FLOW_STATES.waiting_callback);

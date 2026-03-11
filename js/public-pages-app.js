@@ -23,8 +23,12 @@
   const AUTH_PUBLIC_PROFILE_RESOLVE_URL = `${AUTH_API_BASE}/api/public/profile/resolve`;
   const AUTH_PUBLIC_ARTIFACTS_URL = `${AUTH_API_BASE}/api/public/artifacts`;
   const AUTH_LOGOUT_URL = `${AUTH_API_BASE}/auth/logout`;
-  const CREATOR_DASHBOARD_URL = "https://creator.streamsuites.app";
-  const CREATOR_LOGIN_URL = "https://creator.streamsuites.app/login";
+  const CREATOR_DASHBOARD_URL = "https://creator.streamsuites.app/";
+  const CREATOR_LOGIN_URL = (() => {
+    const url = new URL("/login/", CREATOR_DASHBOARD_URL);
+    url.searchParams.set("return_to", CREATOR_DASHBOARD_URL);
+    return url.toString();
+  })();
   const CREATOR_SIGNUP_URL = CREATOR_LOGIN_URL;
   const ADMIN_DASHBOARD_URL = "https://admin.streamsuites.app";
   const PUBLIC_AUTH_COMPLETE_MESSAGE_TYPE = "ss_public_auth_complete";

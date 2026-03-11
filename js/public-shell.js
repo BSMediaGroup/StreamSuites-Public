@@ -40,7 +40,12 @@
   const CURRENT_ORIGIN = String(window.location.origin || "").trim();
   const AUTH_API_BASE = /^https?:\/\//.test(CURRENT_ORIGIN) ? CURRENT_ORIGIN : "https://streamsuites.app";
   const AUTH_COMPLETE_URL = new URL("/public-auth-complete.html", AUTH_API_BASE).toString();
-  const CREATOR_LOGIN_URL = "https://creator.streamsuites.app/login";
+  const CREATOR_DASHBOARD_URL = "https://creator.streamsuites.app/";
+  const CREATOR_LOGIN_URL = (() => {
+    const url = new URL("/login/", CREATOR_DASHBOARD_URL);
+    url.searchParams.set("return_to", CREATOR_DASHBOARD_URL);
+    return url.toString();
+  })();
   const AUTH_OAUTH_LINKS = Object.freeze([
     { provider: "google", label: "Continue with Google", icon: "/assets/icons/google.svg", path: "/auth/login/google" },
     { provider: "github", label: "Continue with GitHub", icon: "/assets/icons/github.svg", path: "/auth/login/github" },
