@@ -225,6 +225,35 @@
           <span data-auth-title-text>Log in to StreamSuites™</span>
         </h2>
         <p class="auth-modal-subtitle" data-auth-subtitle>Use OAuth or your email to continue.</p>
+        <section class="ss-auth-access-gate" data-auth-access-gate hidden>
+          <div class="ss-auth-access-gate__summary">
+            <p class="ss-auth-access-gate__message" data-auth-access-message></p>
+            <button
+              class="ss-auth-access-gate__toggle"
+              type="button"
+              data-auth-access-toggle
+              aria-expanded="false"
+              aria-controls="public-auth-access-form"
+              aria-label="Unlock temporary auth access"
+              hidden
+            >
+              <img class="ss-auth-access-gate__icon" src="/assets/icons/ui/key.svg" alt="" aria-hidden="true" />
+            </button>
+          </div>
+          <form id="public-auth-access-form" class="ss-auth-access-gate__form" data-auth-access-form hidden novalidate>
+            <label class="ss-auth-access-gate__label" for="public-auth-access-code">Access code</label>
+            <input
+              id="public-auth-access-code"
+              class="ss-auth-access-gate__input"
+              type="password"
+              autocomplete="current-password"
+              spellcheck="false"
+              data-auth-access-input
+            />
+            <button class="ss-auth-access-gate__submit" type="submit" data-auth-access-submit>Unlock</button>
+          </form>
+          <p class="ss-auth-access-gate__feedback" data-auth-access-feedback hidden></p>
+        </section>
       </div>
 
       <div class="auth-panel" data-state="login">
@@ -456,6 +485,13 @@
       const authPanels = Array.from(authModal?.querySelectorAll('.auth-panel') || []);
       const authOtherMethodToggles = Array.from(authModal?.querySelectorAll('[data-auth-other-methods-toggle]') || []);
       const authForms = Array.from(document.querySelectorAll('[data-auth-form]'));
+      const authAccessGate = authModal?.querySelector('[data-auth-access-gate]');
+      const authAccessMessage = authModal?.querySelector('[data-auth-access-message]');
+      const authAccessToggle = authModal?.querySelector('[data-auth-access-toggle]');
+      const authAccessForm = authModal?.querySelector('[data-auth-access-form]');
+      const authAccessInput = authModal?.querySelector('[data-auth-access-input]');
+      const authAccessSubmit = authModal?.querySelector('[data-auth-access-submit]');
+      const authAccessFeedback = authModal?.querySelector('[data-auth-access-feedback]');
 
       if (!authModalBackdrop || !authModal) return;
 
@@ -470,6 +506,15 @@
       const CREATOR_LOGIN_URL = buildCreatorLoginUrl();
       const CREATOR_ONBOARDING_URL = 'https://creator.streamsuites.app/views/onboarding.html';
       const AUTH_API_BASE = '/auth';
+      const AUTH_ACCESS_STATE_URL = `${AUTH_API_BASE}/access-state`;
+      const AUTH_DEBUG_UNLOCK_URL = `${AUTH_API_BASE}/debug/unlock`;
+      const AUTH_ACCESS_STORAGE_KEY = 'streamsuites.public.authAccessGate';
+      const AUTH_ACCESS_CACHE_MS = 30000;
+      const AUTH_ACCESS_FALLBACK_MESSAGES = Object.freeze({
+        normal: 'Authentication is operating normally.',
+        maintenance: 'Authentication is temporarily unavailable while maintenance is in progress.',
+        development: 'Authentication is temporarily limited while development access mode is active.',
+      });
       const RESEND_ENDPOINT = `${AUTH_API_BASE}/verify/resend`;
       const PASSWORD_MIN_LENGTH = 8;
       const AUTH_FLOW_STATES = Object.freeze({
@@ -482,6 +527,12 @@
       const oauthFlow = {
         state: AUTH_FLOW_STATES.idle,
         activeHref: '',
+      };
+      const authAccess = {
+        state: null,
+        loadedAt: 0,
+        refreshPromise: null,
+        formOpen: false,
       };
 
       const buildCreatorAuthHref = (href) => {
@@ -498,6 +549,237 @@
       };
 
       const hasSpecialCharacter = (value) => /[^A-Za-z0-9]/.test(value);
+
+      const fallbackAuthAccessMessage = (mode) => AUTH_ACCESS_FALLBACK_MESSAGES[mode] || AUTH_ACCESS_FALLBACK_MESSAGES.normal;
+
+      const clearAuthAccessUnlockState = () => {
+        try {
+          window.sessionStorage.removeItem(AUTH_ACCESS_STORAGE_KEY);
+        } catch (_error) {
+          // Ignore storage failures.
+        }
+      };
+
+      const readAuthAccessUnlockState = () => {
+        try {
+          const raw = window.sessionStorage.getItem(AUTH_ACCESS_STORAGE_KEY);
+          if (!raw) return { active: false, expiresAt: '' };
+          const parsed = JSON.parse(raw);
+          const expiresAt = typeof parsed?.expiresAt === 'string' ? parsed.expiresAt.trim() : '';
+          const expiresAtMs = Date.parse(expiresAt);
+          if (!expiresAt || !Number.isFinite(expiresAtMs) || expiresAtMs <= Date.now()) {
+            clearAuthAccessUnlockState();
+            return { active: false, expiresAt: '' };
+          }
+          return { active: true, expiresAt };
+        } catch (_error) {
+          clearAuthAccessUnlockState();
+          return { active: false, expiresAt: '' };
+        }
+      };
+
+      const persistAuthAccessUnlockState = (expiresAt) => {
+        if (typeof expiresAt !== 'string' || !expiresAt.trim()) return;
+        try {
+          window.sessionStorage.setItem(
+            AUTH_ACCESS_STORAGE_KEY,
+            JSON.stringify({
+              unlocked: true,
+              expiresAt: expiresAt.trim(),
+            })
+          );
+        } catch (_error) {
+          // Ignore storage failures.
+        }
+      };
+
+      const normalizeAuthAccessState = (payload, available = true) => {
+        const rawMode = typeof payload?.mode === 'string' ? payload.mode.trim().toLowerCase() : '';
+        const mode = rawMode === 'maintenance' || rawMode === 'development' ? rawMode : 'normal';
+        const gateActive = mode !== 'normal';
+        const bypassEnabled = gateActive && payload?.bypass_enabled === true;
+        const unlockState = bypassEnabled ? readAuthAccessUnlockState() : { active: false, expiresAt: '' };
+        if (!gateActive || !bypassEnabled) {
+          clearAuthAccessUnlockState();
+        }
+        return {
+          available,
+          mode,
+          gateActive,
+          message:
+            typeof payload?.message === 'string' && payload.message.trim()
+              ? payload.message.trim()
+              : fallbackAuthAccessMessage(mode),
+          bypassEnabled,
+          bypassUnlocked: bypassEnabled && unlockState.active,
+          unlockExpiresAt: unlockState.expiresAt,
+        };
+      };
+
+      const isAuthAccessBlocked = (state = authAccess.state) => Boolean(state?.gateActive && !state?.bypassUnlocked);
+
+      const setAuthAccessFeedback = (message, tone = '') => {
+        if (!authAccessFeedback) return;
+        const text = typeof message === 'string' ? message.trim() : '';
+        authAccessFeedback.hidden = !text;
+        authAccessFeedback.textContent = text;
+        authAccessFeedback.dataset.tone = tone;
+      };
+
+      const setAuthAccessFormOpen = (open) => {
+        authAccess.formOpen = Boolean(
+          open &&
+          authAccess.state?.gateActive &&
+          authAccess.state?.bypassEnabled &&
+          !authAccess.state?.bypassUnlocked
+        );
+        if (authAccessForm) {
+          authAccessForm.hidden = !authAccess.formOpen;
+        }
+        if (authAccessToggle instanceof HTMLButtonElement) {
+          authAccessToggle.setAttribute('aria-expanded', authAccess.formOpen ? 'true' : 'false');
+          authAccessToggle.classList.toggle('is-active', authAccess.formOpen);
+        }
+        if (authAccess.formOpen && authAccessInput instanceof HTMLInputElement) {
+          window.setTimeout(() => authAccessInput.focus(), 0);
+        }
+      };
+
+      const syncAuthAccessUi = () => {
+        if (authAccessGate) {
+          authAccessGate.hidden = !authAccess.state?.gateActive;
+          authAccessGate.classList.toggle('is-unlocked', authAccess.state?.bypassUnlocked === true);
+        }
+        if (authAccessMessage) {
+          authAccessMessage.textContent = authAccess.state?.gateActive ? authAccess.state.message : '';
+        }
+        if (authAccessToggle instanceof HTMLButtonElement) {
+          authAccessToggle.hidden = !(authAccess.state?.gateActive && authAccess.state?.bypassEnabled);
+        }
+        if (!authAccess.state?.gateActive || !authAccess.state?.bypassEnabled || authAccess.state?.bypassUnlocked) {
+          setAuthAccessFormOpen(false);
+        } else if (authAccessForm) {
+          authAccessForm.hidden = !authAccess.formOpen;
+        }
+
+        const blocked = isAuthAccessBlocked();
+        authModal.querySelectorAll('.auth-oauth-button').forEach((button) => {
+          button.classList.toggle('is-disabled', blocked);
+          button.setAttribute('aria-disabled', blocked ? 'true' : 'false');
+        });
+        authOtherMethodToggles.forEach((toggle) => {
+          if (toggle instanceof HTMLButtonElement) {
+            toggle.disabled = blocked;
+          }
+        });
+        authForms.forEach((form) => {
+          const submitButton = form.querySelector('button[type="submit"]');
+          if (submitButton instanceof HTMLButtonElement && submitButton.getAttribute('aria-busy') !== 'true') {
+            submitButton.disabled = blocked;
+          }
+        });
+      };
+
+      const loadAuthAccessState = async (force = false) => {
+        const shouldUseCache =
+          !force &&
+          authAccess.loadedAt > 0 &&
+          Date.now() - authAccess.loadedAt < AUTH_ACCESS_CACHE_MS;
+        if (shouldUseCache) {
+          syncAuthAccessUi();
+          return authAccess.state;
+        }
+        if (authAccess.refreshPromise) return authAccess.refreshPromise;
+
+        authAccess.refreshPromise = fetch(AUTH_ACCESS_STATE_URL, {
+          method: 'GET',
+          cache: 'no-store',
+          credentials: 'include',
+          headers: {
+            Accept: 'application/json',
+          },
+        })
+          .then(async (response) => {
+            if (!response.ok) {
+              throw new Error(`access-state-${response.status}`);
+            }
+            return response.json();
+          })
+          .then((payload) => {
+            authAccess.state = normalizeAuthAccessState(payload, true);
+            authAccess.loadedAt = Date.now();
+            syncAuthAccessUi();
+            return authAccess.state;
+          })
+          .catch(() => {
+            authAccess.state = normalizeAuthAccessState(null, false);
+            authAccess.loadedAt = Date.now();
+            syncAuthAccessUi();
+            return authAccess.state;
+          })
+          .finally(() => {
+            authAccess.refreshPromise = null;
+          });
+
+        return authAccess.refreshPromise;
+      };
+
+      const ensureAuthAccessReady = async ({ force = false, reveal = false } = {}) => {
+        const nextState = await loadAuthAccessState(force);
+        if (reveal && isAuthAccessBlocked(nextState) && nextState?.bypassEnabled) {
+          setAuthAccessFormOpen(true);
+        }
+        return nextState;
+      };
+
+      const unlockAuthAccess = async (code) => {
+        const response = await fetch(AUTH_DEBUG_UNLOCK_URL, {
+          method: 'POST',
+          cache: 'no-store',
+          credentials: 'include',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ code }),
+        });
+
+        let payload = null;
+        try {
+          payload = await response.json();
+        } catch (_error) {
+          payload = null;
+        }
+
+        if (!response.ok) {
+          const error = new Error('unlock_failed');
+          error.status = response.status;
+          error.payload = payload;
+          throw error;
+        }
+
+        const expiresAt = typeof payload?.expires_at === 'string' ? payload.expires_at.trim() : '';
+        if (expiresAt) {
+          persistAuthAccessUnlockState(expiresAt);
+        }
+        authAccess.state = {
+          ...normalizeAuthAccessState(
+            {
+              mode: payload?.mode || authAccess.state?.mode,
+              message: payload?.message || authAccess.state?.message,
+              bypass_enabled: true,
+            },
+            true
+          ),
+          bypassUnlocked: true,
+          unlockExpiresAt: expiresAt || authAccess.state?.unlockExpiresAt || '',
+        };
+        authAccess.loadedAt = Date.now();
+        setAuthAccessFormOpen(false);
+        setAuthAccessFeedback('Access unlocked.', 'success');
+        syncAuthAccessUi();
+        return authAccess.state;
+      };
 
       const evaluatePasswordStrength = (password) => {
         if (!password) return 'Weak';
@@ -537,8 +819,12 @@
           link.href = buildCreatorAuthHref(link.getAttribute('href') || '');
           if (link.dataset.authFlowWired === 'true') return;
           link.dataset.authFlowWired = 'true';
-          link.addEventListener('click', (event) => {
+          link.addEventListener('click', async (event) => {
             event.preventDefault();
+            const accessState = await ensureAuthAccessReady({ reveal: true });
+            if (isAuthAccessBlocked(accessState)) {
+              return;
+            }
             if (oauthFlow.state === AUTH_FLOW_STATES.starting || oauthFlow.state === AUTH_FLOW_STATES.waiting_callback) {
               return;
             }
@@ -602,6 +888,7 @@
         authModalBackdrop.classList.add('is-open');
         authModalBackdrop.setAttribute('aria-hidden', 'false');
         document.body.classList.add('modal-open');
+        void loadAuthAccessState(true);
       };
 
       const closeModal = () => {
@@ -752,14 +1039,63 @@
         if (secondary?.id) {
           toggle.setAttribute('aria-controls', secondary.id);
         }
-        toggle.addEventListener('click', () => {
+        toggle.addEventListener('click', async () => {
+          const accessState = await ensureAuthAccessReady({ reveal: true });
+          if (isAuthAccessBlocked(accessState)) {
+            return;
+          }
           const expanded = toggle.getAttribute('aria-expanded') === 'true';
           setOtherMethodsExpanded(panel, !expanded);
         });
       });
 
+      authAccess.state = normalizeAuthAccessState(null, false);
+      syncAuthAccessUi();
       setOauthFlowState(AUTH_FLOW_STATES.idle);
       wireOauthFlowButtons();
+
+      authAccessToggle?.addEventListener('click', () => {
+        setAuthAccessFeedback('', '');
+        setAuthAccessFormOpen(!authAccess.formOpen);
+      });
+
+      authAccessForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const code = authAccessInput instanceof HTMLInputElement ? authAccessInput.value.trim() : '';
+        if (!code) {
+          setAuthAccessFeedback('Enter the access code.', 'error');
+          return;
+        }
+        if (authAccessSubmit instanceof HTMLButtonElement) {
+          authAccessSubmit.disabled = true;
+          authAccessSubmit.textContent = 'Unlocking...';
+        }
+        setAuthAccessFeedback('', '');
+        try {
+          await unlockAuthAccess(code);
+          if (authAccessInput instanceof HTMLInputElement) {
+            authAccessInput.value = '';
+          }
+        } catch (error) {
+          const message =
+            error?.status === 403
+              ? 'Invalid access code.'
+              : error?.status === 429
+                ? 'Too many attempts. Please wait and try again.'
+                : 'Unlock is unavailable right now.';
+          setAuthAccessFeedback(
+            typeof error?.payload?.error === 'string' && error.payload.error.trim() && error?.status !== 403
+              ? error.payload.error.trim()
+              : message,
+            'error'
+          );
+        } finally {
+          if (authAccessSubmit instanceof HTMLButtonElement) {
+            authAccessSubmit.disabled = false;
+            authAccessSubmit.textContent = 'Unlock';
+          }
+        }
+      });
 
       authClose?.addEventListener('click', closeModal);
       authModalBackdrop.addEventListener('click', (event) => {
@@ -819,6 +1155,10 @@
 
         form.addEventListener('submit', async (event) => {
           event.preventDefault();
+          const accessState = await ensureAuthAccessReady({ reveal: true });
+          if (isAuthAccessBlocked(accessState)) {
+            return;
+          }
 
           const mode = form.dataset.authForm;
           const email = form.querySelector('input[name="email"]')?.value?.trim();

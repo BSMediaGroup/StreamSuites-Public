@@ -1202,6 +1202,7 @@ body.modal-open { overflow: hidden; }
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.05);
   cursor: pointer;
+  font-family: inherit;
 }
 
 .ss-auth-access-gate__toggle:hover,
@@ -1216,6 +1217,8 @@ body.modal-open { overflow: hidden; }
   width: 13px;
   height: 13px;
   object-fit: contain;
+  opacity: 0.92;
+  filter: brightness(0) saturate(100%) invert(88%) sepia(7%) saturate(426%) hue-rotate(180deg) brightness(102%) contrast(96%);
 }
 
 .ss-auth-access-gate__form {
@@ -1255,6 +1258,7 @@ body.modal-open { overflow: hidden; }
   background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
   font-size: 11px;
+  font-family: inherit;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   cursor: pointer;
