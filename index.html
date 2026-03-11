@@ -258,23 +258,23 @@
 
       <div class="auth-panel" data-state="login">
         <div class="auth-oauth-grid" data-auth-primary-methods>
-          <a class="auth-oauth-button" href="/auth/login/google?surface=creator">
+          <a class="auth-oauth-button" data-auth-oauth="google" href="#">
             <img src="/assets/icons/google.svg" alt="" />
             Continue with Google
           </a>
-          <a class="auth-oauth-button" href="/auth/login/github?surface=creator">
+          <a class="auth-oauth-button" data-auth-oauth="github" href="#">
             <img src="/assets/icons/github.svg" alt="" />
             Continue with GitHub
           </a>
-          <a class="auth-oauth-button" href="/auth/x/start?surface=creator">
+          <a class="auth-oauth-button" data-auth-oauth="x" href="#">
             <img src="/assets/icons/x.svg" alt="" />
             Continue with X
           </a>
-          <a class="auth-oauth-button" href="/auth/login/discord?surface=creator">
+          <a class="auth-oauth-button" data-auth-oauth="discord" href="#">
             <img src="/assets/icons/discord.svg" alt="" />
             Continue with Discord
           </a>
-          <a class="auth-oauth-button" href="/oauth/twitch/start?surface=creator">
+          <a class="auth-oauth-button" data-auth-oauth="twitch" href="#">
             <img src="/assets/icons/twitch.svg" alt="" />
             Continue with Twitch
           </a>
@@ -323,23 +323,23 @@
 
       <div class="auth-panel" data-state="signup">
         <div class="auth-oauth-grid" data-auth-primary-methods>
-          <a class="auth-oauth-button" href="/auth/login/google?surface=creator">
+          <a class="auth-oauth-button" data-auth-oauth="google" href="#">
             <img src="/assets/icons/google.svg" alt="" />
             Continue with Google
           </a>
-          <a class="auth-oauth-button" href="/auth/login/github?surface=creator">
+          <a class="auth-oauth-button" data-auth-oauth="github" href="#">
             <img src="/assets/icons/github.svg" alt="" />
             Continue with GitHub
           </a>
-          <a class="auth-oauth-button" href="/auth/x/start?surface=creator">
+          <a class="auth-oauth-button" data-auth-oauth="x" href="#">
             <img src="/assets/icons/x.svg" alt="" />
             Continue with X
           </a>
-          <a class="auth-oauth-button" href="/auth/login/discord?surface=creator">
+          <a class="auth-oauth-button" data-auth-oauth="discord" href="#">
             <img src="/assets/icons/discord.svg" alt="" />
             Continue with Discord
           </a>
-          <a class="auth-oauth-button" href="/oauth/twitch/start?surface=creator">
+          <a class="auth-oauth-button" data-auth-oauth="twitch" href="#">
             <img src="/assets/icons/twitch.svg" alt="" />
             Continue with Twitch
           </a>
@@ -517,6 +517,13 @@
       });
       const RESEND_ENDPOINT = `${AUTH_API_BASE}/verify/resend`;
       const PASSWORD_MIN_LENGTH = 8;
+      const AUTH_OAUTH_ENDPOINTS = Object.freeze({
+        google: '/auth/login/google',
+        github: '/auth/login/github',
+        x: '/auth/x/start',
+        discord: '/auth/login/discord',
+        twitch: '/oauth/twitch/start',
+      });
       const AUTH_FLOW_STATES = Object.freeze({
         idle: 'idle',
         starting: 'starting',
@@ -535,9 +542,19 @@
         formOpen: false,
       };
 
-      const buildCreatorAuthHref = (href) => {
+      const normalizeProvider = (value) => {
+        const normalized = String(value || '').trim().toLowerCase();
+        if (!normalized) return '';
+        return normalized === 'twitter' ? 'x' : normalized;
+      };
+
+      const buildCreatorAuthHref = (provider) => {
         try {
-          const endpoint = new URL(href, window.location.origin);
+          const endpointPath = AUTH_OAUTH_ENDPOINTS[normalizeProvider(provider)];
+          if (!endpointPath) {
+            return CREATOR_LOGIN_URL;
+          }
+          const endpoint = new URL(endpointPath, window.location.origin);
           const successUrl = new URL(CREATOR_LOGIN_SUCCESS_URL);
           successUrl.searchParams.set('return_to', CREATOR_DASHBOARD_RETURN_TO);
           endpoint.searchParams.set('surface', 'creator');
@@ -809,18 +826,20 @@
       };
 
       const wireOauthFlowButtons = () => {
-        const oauthLinks = Array.from(
-          authModal.querySelectorAll(
-            '.auth-oauth-button[href^="/auth/"], .auth-oauth-button[href^="/oauth/"]'
-          )
-        );
+        const oauthLinks = Array.from(authModal.querySelectorAll('[data-auth-oauth]'));
         oauthLinks.forEach((link) => {
           if (!(link instanceof HTMLAnchorElement)) return;
-          link.href = buildCreatorAuthHref(link.getAttribute('href') || '');
+          const provider = normalizeProvider(link.getAttribute('data-auth-oauth'));
+          if (!provider) return;
+          link.dataset.authOauthHref = buildCreatorAuthHref(provider);
           if (link.dataset.authFlowWired === 'true') return;
           link.dataset.authFlowWired = 'true';
           link.addEventListener('click', async (event) => {
             event.preventDefault();
+            const href = link.dataset.authOauthHref || buildCreatorAuthHref(provider);
+            if (!href) {
+              return;
+            }
             const accessState = await ensureAuthAccessReady({ reveal: true });
             if (isAuthAccessBlocked(accessState)) {
               return;
@@ -828,7 +847,6 @@
             if (oauthFlow.state === AUTH_FLOW_STATES.starting || oauthFlow.state === AUTH_FLOW_STATES.waiting_callback) {
               return;
             }
-            const href = link.href;
             oauthFlow.activeHref = href;
             try {
               const endpoint = new URL(href);
@@ -836,13 +854,13 @@
               const continueTo =
                 new URL(callbackLanding).searchParams.get('return_to') || CREATOR_DASHBOARD_RETURN_TO;
               console.info('[Public][CreatorAuth] login_target', {
-                provider: link.textContent.trim(),
+                provider,
                 callbackLanding,
                 continueTo,
               });
             } catch (error) {
               console.info('[Public][CreatorAuth] login_target', {
-                provider: link.textContent.trim(),
+                provider,
                 callbackLanding: href,
                 continueTo: CREATOR_DASHBOARD_RETURN_TO,
               });
@@ -952,7 +970,7 @@
               },
               body: JSON.stringify({
                 email,
-                surface: 'public',
+                surface: 'creator',
               }),
             });
             let payload = null;
@@ -1204,7 +1222,7 @@
               body: JSON.stringify({
                 email,
                 password,
-                surface: mode === 'signup' ? 'public' : 'creator',
+                surface: 'creator',
               }),
             });
 
