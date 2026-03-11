@@ -1162,6 +1162,10 @@ body.modal-open { overflow: hidden; }
   font-size: 14px;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 .ss-auth-access-gate {
   display: grid;
   gap: 10px;

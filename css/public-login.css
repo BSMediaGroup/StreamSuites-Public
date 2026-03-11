@@ -6,6 +6,10 @@ body.ss-public-login {
   background: linear-gradient(176deg, #070d16 0%, #0a1322 100%);
 }
 
+[hidden] {
+  display: none !important;
+}
+
 .ss-public-login__surface {
   position: relative;
   min-height: 100vh;

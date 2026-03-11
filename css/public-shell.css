@@ -27,6 +27,10 @@
   --ps-content-bottom-gap: 0px;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 * {
   box-sizing: border-box;
 }

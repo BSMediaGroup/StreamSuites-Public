@@ -7,6 +7,10 @@ body.ss-requests-auth {
   background: linear-gradient(176deg, #070d16 0%, #0a1322 100%);
 }
 
+[hidden] {
+  display: none !important;
+}
+
 .ss-requests-auth {
   position: relative;
 }
