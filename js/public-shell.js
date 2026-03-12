@@ -1,10 +1,10 @@
 (() => {
   const MEDIA_NAV = [
-    { href: "/media.html", label: "Home", icon: "/assets/icons/ui/dashboard.svg", group: "main" },
-    { href: "/clips.html", label: "Clips", icon: "/assets/icons/ui/portal.svg", group: "main" },
-    { href: "/polls.html", label: "Polls", icon: "/assets/icons/ui/clickpoint.svg", group: "main" },
-    { href: "/scoreboards.html", label: "Scoreboards", icon: "/assets/icons/ui/tablechart.svg", group: "main" },
-    { href: "/tallies.html", label: "Tallies", icon: "/assets/icons/ui/piechart.svg", group: "main" },
+    { href: "/media", label: "Home", icon: "/assets/icons/ui/dashboard.svg", group: "main" },
+    { href: "/clips", label: "Clips", icon: "/assets/icons/ui/portal.svg", group: "main" },
+    { href: "/polls", label: "Polls", icon: "/assets/icons/ui/clickpoint.svg", group: "main" },
+    { href: "/scoreboards", label: "Scoreboards", icon: "/assets/icons/ui/tablechart.svg", group: "main" },
+    { href: "/tallies", label: "Tallies", icon: "/assets/icons/ui/piechart.svg", group: "main" },
     { href: "/live", label: "Live", icon: "/assets/icons/ui/heart.svg", group: "main" },
     { href: "/community/index.html", label: "Community", icon: "/assets/icons/ui/profile.svg", group: "main" },
     { href: "/support.html", label: "Support", icon: "/assets/icons/ui/checkbox.svg", group: "quick" },
@@ -15,12 +15,12 @@
   ];
 
   const COMMUNITY_NAV = [
-    { href: "/community/index.html", label: "Home", icon: "/assets/icons/ui/dashboard.svg", group: "main" },
+    { href: "/community", label: "Home", icon: "/assets/icons/ui/dashboard.svg", group: "main" },
     { href: "/community/members.html", label: "Members", icon: "/assets/icons/ui/profile.svg", group: "main" },
     { href: "/live", label: "Live", icon: "/assets/icons/ui/heart.svg", group: "main" },
     { href: "/community/notices.html", label: "Notices", icon: "/assets/icons/ui/tickbadge.svg", group: "main" },
     { href: "/community/settings.html", label: "Settings", icon: "/assets/icons/ui/cog.svg", group: "main" },
-    { href: "/media.html", label: "Media", icon: "/assets/icons/ui/portal.svg", group: "main" },
+    { href: "/media", label: "Media", icon: "/assets/icons/ui/portal.svg", group: "main" },
     { href: "/support.html", label: "Support", icon: "/assets/icons/ui/checkbox.svg", group: "quick" },
     { href: "/resources.html", label: "Resources", icon: "/assets/icons/ui/portal.svg", group: "quick" },
     { href: "/donate.html", label: "Donate", icon: "/assets/icons/ui/heart.svg", group: "quick" },
@@ -54,6 +54,7 @@
     { provider: "twitch", label: "Continue with Twitch", icon: "/assets/icons/twitch.svg", path: "/oauth/twitch/start" }
   ]);
   const AUTH_ACCESS_STORAGE_KEY = "streamsuites.public.authAccessGate";
+  const LOCKOUT_BANNER_STORAGE_KEY = "streamsuites.public.lockoutBanner.dismissed";
   const AUTH_ACCESS_CACHE_MS = 30000;
   const AUTH_ACCESS_FALLBACK_MESSAGES = Object.freeze({
     normal: "Authentication is operating normally.",
@@ -96,6 +97,27 @@
 
   function fallbackAuthAccessMessage(mode) {
     return AUTH_ACCESS_FALLBACK_MESSAGES[mode] || AUTH_ACCESS_FALLBACK_MESSAGES.normal;
+  }
+
+  function buildLockoutBannerDismissKey(mode, message) {
+    return `${String(mode || "normal").trim().toLowerCase()}::${String(message || "").trim()}`;
+  }
+
+  function readDismissedLockoutBannerKey() {
+    try {
+      return String(window.sessionStorage.getItem(LOCKOUT_BANNER_STORAGE_KEY) || "").trim();
+    } catch (_err) {
+      return "";
+    }
+  }
+
+  function persistDismissedLockoutBannerKey(key) {
+    if (!key) return;
+    try {
+      window.sessionStorage.setItem(LOCKOUT_BANNER_STORAGE_KEY, key);
+    } catch (_err) {
+      // Ignore session storage failures.
+    }
   }
 
   function clearAuthAccessUnlockState() {
@@ -152,6 +174,7 @@
       available,
       mode,
       gateActive,
+      showLockoutBanner: gateActive && payload?.show_lockout_banner === true,
       message:
         typeof payload?.message === "string" && payload.message.trim()
           ? payload.message.trim()
@@ -407,6 +430,7 @@
       topbarLabel: "Media Gallery",
       searchPlaceholder: "Search",
       showSearch: true,
+      showLockoutBanner: false,
       filters: [],
       filtersCollapsed: true,
       multiFilter: false,
@@ -545,12 +569,28 @@
 
     topbar.append(topbarMain, filterDock);
 
+    const pageBanner = create("section", "public-lockout-banner");
+    pageBanner.hidden = true;
+    pageBanner.setAttribute("aria-live", "polite");
+    const pageBannerBody = create("div", "public-lockout-banner__body");
+    const pageBannerMeta = create("div", "public-lockout-banner__meta");
+    pageBannerMeta.append(
+      create("span", "public-lockout-banner__eyebrow", "Access notice"),
+      create("p", "public-lockout-banner__message")
+    );
+    const pageBannerClose = create("button", "public-lockout-banner__close");
+    pageBannerClose.type = "button";
+    pageBannerClose.setAttribute("aria-label", "Dismiss access notice");
+    pageBannerClose.appendChild(createIcon(UI_ICON_MAP.close, "public-lockout-banner__close-icon"));
+    pageBannerBody.append(pageBannerMeta, pageBannerClose);
+    pageBanner.appendChild(pageBannerBody);
+
     const content = create("main", "public-content");
     content.id = "public-content";
 
     const footer = buildFooter();
 
-    main.append(topbar, loadingBar, content);
+    main.append(topbar, loadingBar, pageBanner, content);
     layout.append(sidebar, main, footer);
     root.append(bg, layout);
 
@@ -578,7 +618,7 @@
                 aria-label="Unlock temporary auth access"
                 hidden
               >
-                <img class="ss-auth-access-gate__icon" src="/assets/icons/ui/key.svg" alt="" aria-hidden="true" />
+                <span class="ss-auth-access-gate__icon" aria-hidden="true"></span>
               </button>
             </div>
             <form id="public-auth-access-form" class="ss-auth-access-gate__form" data-auth-access-form hidden novalidate>
@@ -613,6 +653,7 @@
     const authAccessInput = authBackdrop.querySelector("[data-auth-access-input]");
     const authAccessSubmit = authBackdrop.querySelector("[data-auth-access-submit]");
     const authAccessFeedback = authBackdrop.querySelector("[data-auth-access-feedback]");
+    const pageBannerMessage = pageBanner.querySelector(".public-lockout-banner__message");
     if (authCloseIcon) {
       authCloseIcon.style.setProperty("--icon-mask", `url("${UI_ICON_MAP.close}")`);
     }
@@ -650,6 +691,23 @@
       }
     }
 
+    function syncLockoutBannerUi() {
+      const bannerKey = buildLockoutBannerDismissKey(authAccessState.mode, authAccessState.message);
+      const shouldShow =
+        options.showLockoutBanner === true &&
+        authAccessState.gateActive &&
+        authAccessState.showLockoutBanner === true &&
+        Boolean(authAccessState.message) &&
+        readDismissedLockoutBannerKey() !== bannerKey;
+
+      pageBanner.hidden = !shouldShow;
+      if (pageBannerMessage) {
+        pageBannerMessage.textContent = shouldShow ? authAccessState.message : "";
+      }
+      pageBanner.dataset.mode = shouldShow ? authAccessState.mode : "";
+      pageBanner.dataset.bannerKey = shouldShow ? bannerKey : "";
+    }
+
     function syncAuthAccessUi() {
       if (authAccessGate) {
         authAccessGate.hidden = !authAccessState.gateActive;
@@ -671,6 +729,7 @@
         action.classList.toggle("is-disabled", isAuthAccessBlocked());
         action.setAttribute("aria-disabled", isAuthAccessBlocked() ? "true" : "false");
       });
+      syncLockoutBannerUi();
     }
 
     async function loadModalAuthAccessState(force = false) {
@@ -809,6 +868,13 @@
     authAccessToggle?.addEventListener("click", () => {
       setAuthAccessFeedback("", "");
       setAuthAccessFormOpen(!authAccessFormOpen);
+    });
+
+    pageBannerClose.addEventListener("click", () => {
+      const dismissKey = String(pageBanner.dataset.bannerKey || "").trim();
+      if (!dismissKey) return;
+      persistDismissedLockoutBannerKey(dismissKey);
+      syncLockoutBannerUi();
     });
 
     authAccessForm?.addEventListener("submit", async (event) => {
@@ -1170,6 +1236,11 @@
         setSearchVisible(next.showSearch);
       }
 
+      if (typeof next.showLockoutBanner === "boolean") {
+        options.showLockoutBanner = next.showLockoutBanner;
+        syncLockoutBannerUi();
+      }
+
       if (Array.isArray(next.filters) || typeof next.multiFilter === "boolean") {
         setFilterOptions(Array.isArray(next.filters) ? next.filters : options.filters, next.multiFilter ?? options.multiFilter);
       }
@@ -1290,6 +1361,7 @@
     renderSidebarNav(options.shellKind, options.activeHref);
     setFilterOptions(options.filters, options.multiFilter);
     setSearchVisible(options.showSearch);
+    syncLockoutBannerUi();
     setAccountState({
       accountLabel: options.accountLabel,
       accountAvatar: options.accountAvatar,
@@ -1303,6 +1375,7 @@
       lastVisibleSidebarState = initialSidebarState;
     }
     setSidebarState(initialSidebarState, false);
+    void loadModalAuthAccessState(true);
 
     return {
       root,

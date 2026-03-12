@@ -43,6 +43,17 @@
 
 <body>
   <div class="stage">
+    <section class="landing-lockout-banner" id="landing-lockout-banner" aria-live="polite" hidden>
+      <div class="landing-lockout-banner__body">
+        <div class="landing-lockout-banner__meta">
+          <span class="landing-lockout-banner__eyebrow">Access notice</span>
+          <p class="landing-lockout-banner__message" id="landing-lockout-banner-message"></p>
+        </div>
+        <button class="landing-lockout-banner__close" id="landing-lockout-banner-close" type="button" aria-label="Dismiss access notice">
+          <span class="landing-lockout-banner__close-icon" aria-hidden="true"></span>
+        </button>
+      </div>
+    </section>
     <main class="hero" aria-label="StreamSuites hero">
       <div class="wordmark">
         <img src="./assets/logos/wordmarkchromefull.webp" alt="StreamSuites™" />
@@ -216,7 +227,9 @@
 
   <div class="auth-modal-backdrop" id="auth-modal" aria-hidden="true">
     <div class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title" data-state="login">
-      <button class="auth-modal-close" type="button" aria-label="Close">×</button>
+      <button class="auth-modal-close" type="button" aria-label="Close">
+        <span class="auth-modal-close-icon" aria-hidden="true"></span>
+      </button>
 
       <div class="auth-modal-header">
         <p class="auth-modal-eyebrow">Creator access</p>
@@ -237,7 +250,7 @@
               aria-label="Unlock temporary auth access"
               hidden
             >
-              <img class="ss-auth-access-gate__icon" src="/assets/icons/ui/key.svg" alt="" aria-hidden="true" />
+              <span class="ss-auth-access-gate__icon" aria-hidden="true"></span>
             </button>
           </div>
           <form id="public-auth-access-form" class="ss-auth-access-gate__form" data-auth-access-form hidden novalidate>
@@ -391,6 +404,80 @@
       </div>
     </div>
   </div>
+
+  <script>
+    (function () {
+      const banner = document.getElementById('landing-lockout-banner');
+      const messageEl = document.getElementById('landing-lockout-banner-message');
+      const closeButton = document.getElementById('landing-lockout-banner-close');
+      if (!banner || !messageEl || !closeButton) return;
+
+      const ACCESS_STATE_URL = '/auth/access-state';
+      const DISMISS_KEY = 'streamsuites.public.lockoutBanner.dismissed';
+      const FALLBACK_MESSAGES = Object.freeze({
+        normal: 'Authentication is operating normally.',
+        maintenance: 'Authentication is temporarily unavailable while maintenance is in progress.',
+        development: 'Authentication is temporarily limited while development access mode is active.',
+      });
+
+      const fallbackMessage = (mode) => FALLBACK_MESSAGES[mode] || FALLBACK_MESSAGES.normal;
+      const buildBannerKey = (mode, message) => `${String(mode || 'normal').trim().toLowerCase()}::${String(message || '').trim()}`;
+      const readDismissedKey = () => {
+        try {
+          return String(window.sessionStorage.getItem(DISMISS_KEY) || '').trim();
+        } catch (_error) {
+          return '';
+        }
+      };
+      const persistDismissedKey = (key) => {
+        if (!key) return;
+        try {
+          window.sessionStorage.setItem(DISMISS_KEY, key);
+        } catch (_error) {
+          // Ignore session storage failures.
+        }
+      };
+
+      const syncBanner = (payload) => {
+        const rawMode = typeof payload?.mode === 'string' ? payload.mode.trim().toLowerCase() : '';
+        const mode = rawMode === 'maintenance' || rawMode === 'development' ? rawMode : 'normal';
+        const gateActive = mode !== 'normal';
+        const showLockoutBanner = gateActive && payload?.show_lockout_banner === true;
+        const message =
+          typeof payload?.message === 'string' && payload.message.trim()
+            ? payload.message.trim()
+            : fallbackMessage(mode);
+        const bannerKey = buildBannerKey(mode, message);
+        const shouldShow = showLockoutBanner && readDismissedKey() !== bannerKey;
+
+        banner.hidden = !shouldShow;
+        banner.dataset.bannerKey = shouldShow ? bannerKey : '';
+        banner.dataset.mode = shouldShow ? mode : '';
+        messageEl.textContent = shouldShow ? message : '';
+      };
+
+      closeButton.addEventListener('click', () => {
+        const bannerKey = String(banner.dataset.bannerKey || '').trim();
+        if (!bannerKey) return;
+        persistDismissedKey(bannerKey);
+        banner.hidden = true;
+      });
+
+      fetch(ACCESS_STATE_URL, {
+        method: 'GET',
+        cache: 'no-store',
+        credentials: 'include',
+        headers: { Accept: 'application/json' },
+      })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((payload) => {
+          syncBanner(payload);
+        })
+        .catch(() => {
+          syncBanner(null);
+        });
+    })();
+  </script>
 
   <script>
     (function () {

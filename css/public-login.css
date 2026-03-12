@@ -76,31 +76,32 @@ body.ss-public-login {
 
 .ss-auth-access-gate {
   display: grid;
-  gap: 10px;
+  gap: 12px;
   margin-top: -2px;
-  padding: 11px 12px;
-  border: 1px solid rgba(214, 226, 245, 0.16);
-  border-radius: 12px;
-  background: rgba(14, 19, 29, 0.68);
+  padding: 13px 14px;
+  border: 1px solid rgba(214, 226, 245, 0.18);
+  border-radius: 14px;
+  background: linear-gradient(150deg, rgba(34, 41, 26, 0.2), rgba(14, 19, 29, 0.74));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .ss-auth-access-gate.is-unlocked {
-  border-color: rgba(140, 199, 54, 0.3);
-  background: rgba(20, 31, 15, 0.42);
+  border-color: rgba(140, 199, 54, 0.32);
+  background: linear-gradient(160deg, rgba(37, 56, 26, 0.56), rgba(14, 21, 18, 0.68));
 }
 
 .ss-auth-access-gate__summary {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
 }
 
 .ss-auth-access-gate__message {
   margin: 0;
-  color: rgba(222, 233, 248, 0.88);
-  font-size: 0.78rem;
-  line-height: 1.55;
+  color: rgba(233, 240, 251, 0.92);
+  font-size: 0.8rem;
+  line-height: 1.58;
 }
 
 .ss-auth-access-gate__toggle {
@@ -108,12 +109,14 @@ body.ss-public-login {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: 1px solid rgba(214, 226, 245, 0.18);
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(214, 226, 245, 0.2);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.04);
+  color: #edf4ff;
   cursor: pointer;
+  font-family: "SuiGenerisRg", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .ss-auth-access-gate__toggle:hover,
@@ -121,51 +124,69 @@ body.ss-public-login {
 .ss-auth-access-gate__toggle.is-active {
   outline: none;
   border-color: rgba(154, 209, 255, 0.64);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.09);
+  color: #ffffff;
 }
 
 .ss-auth-access-gate__icon {
-  width: 13px;
-  height: 13px;
-  object-fit: contain;
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  background-color: currentColor;
+  -webkit-mask-image: url("/assets/icons/ui/key.svg");
+  mask-image: url("/assets/icons/ui/key.svg");
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
 }
 
 .ss-auth-access-gate__form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
+  gap: 10px;
   align-items: end;
 }
 
 .ss-auth-access-gate__label {
   grid-column: 1 / -1;
   font-size: 0.68rem;
+  font-family: "SuiGenerisRg", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(206, 220, 243, 0.74);
 }
 
 .ss-auth-access-gate__input {
-  min-height: 34px;
-  border-radius: 9px;
-  border: 1px solid rgba(170, 191, 226, 0.24);
-  background: rgba(8, 13, 22, 0.78);
+  min-height: 38px;
+  border-radius: 11px;
+  border: 1px solid rgba(170, 191, 226, 0.28);
+  background: rgba(8, 13, 22, 0.82);
   color: #edf4ff;
-  padding: 0 10px;
+  padding: 0 12px;
+  font-family: "SuiGenerisRg", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.78rem;
 }
 
 .ss-auth-access-gate__input:focus {
   outline: none;
   border-color: rgba(154, 209, 255, 0.72);
+  box-shadow: 0 0 0 1px rgba(154, 209, 255, 0.16);
 }
 
 .ss-auth-access-gate__submit {
-  min-height: 34px;
-  padding: 0 12px;
+  min-height: 38px;
+  padding: 0 14px;
   border: 1px solid rgba(154, 209, 255, 0.4);
-  border-radius: 9px;
-  background: rgba(41, 63, 95, 0.84);
+  border-radius: 11px;
+  background: linear-gradient(165deg, rgba(41, 63, 95, 0.9), rgba(25, 39, 62, 0.92));
   color: #eef5ff;
+  font-family: "SuiGenerisRg", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   cursor: pointer;
 }
 
@@ -173,6 +194,7 @@ body.ss-public-login {
 .ss-auth-access-gate__submit:focus-visible {
   outline: none;
   border-color: rgba(154, 209, 255, 0.72);
+  box-shadow: 0 0 0 1px rgba(154, 209, 255, 0.18);
 }
 
 .ss-auth-access-gate__submit[disabled] {

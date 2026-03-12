@@ -7,10 +7,10 @@
   ];
 
   const TYPE_TO_PAGE = {
-    clips: "/clips.html",
-    polls: "/polls.html",
-    scoreboards: "/scoreboards.html",
-    tallies: "/tallies.html"
+    clips: "/clips",
+    polls: "/polls",
+    scoreboards: "/scoreboards",
+    tallies: "/tallies"
   };
 
   const DETAIL_LAYOUT_STORAGE_KEY = "ss-public-detail-layout";
@@ -68,31 +68,36 @@
   const PAGE_CONFIG = {
     "media-home": {
       path: "/media.html",
+      aliases: ["/media", "/media/"],
       shellKind: "media",
-      activeHref: "/media.html",
+      activeHref: "/media",
       topbarLabel: "Media Home",
       searchPlaceholder: "Search clips, polls, scoreboards, tallies",
       filterMode: "multi",
       filtersCollapsed: true,
       defaultFilters: ["clips", "polls", "scoreboards", "tallies"],
+      showLockoutBanner: true,
       render: renderMediaHome
     },
     "media-clips": {
       path: "/clips.html",
+      aliases: ["/clips", "/clips/"],
       shellKind: "media",
-      activeHref: "/clips.html",
+      activeHref: "/clips",
       topbarLabel: "Clips",
       searchPlaceholder: "Search clips",
       filterMode: "single-nav",
       filtersCollapsed: true,
       defaultFilters: ["clips"],
+      showLockoutBanner: true,
       render: renderMediaList,
       listType: "clips"
     },
     "media-polls": {
       path: "/polls.html",
+      aliases: ["/polls", "/polls/"],
       shellKind: "media",
-      activeHref: "/polls.html",
+      activeHref: "/polls",
       topbarLabel: "Polls",
       searchPlaceholder: "Search polls",
       filterMode: "single-nav",
@@ -103,8 +108,9 @@
     },
     "media-scoreboards": {
       path: "/scoreboards.html",
+      aliases: ["/scoreboards", "/scoreboards/"],
       shellKind: "media",
-      activeHref: "/scoreboards.html",
+      activeHref: "/scoreboards",
       topbarLabel: "Scoreboards",
       searchPlaceholder: "Search scoreboards",
       filterMode: "single-nav",
@@ -115,8 +121,9 @@
     },
     "media-tallies": {
       path: "/tallies.html",
+      aliases: ["/tallies", "/tallies/"],
       shellKind: "media",
-      activeHref: "/tallies.html",
+      activeHref: "/tallies",
       topbarLabel: "Tallies",
       searchPlaceholder: "Search tallies",
       filterMode: "single-nav",
@@ -128,7 +135,7 @@
     "detail-clip": {
       path: "/clips/detail.html",
       shellKind: "media",
-      activeHref: "/clips.html",
+      activeHref: "/clips",
       topbarLabel: "Clip Detail",
       searchPlaceholder: "Search",
       hideSearch: true,
@@ -141,7 +148,7 @@
     "detail-poll": {
       path: "/polls/detail.html",
       shellKind: "media",
-      activeHref: "/polls.html",
+      activeHref: "/polls",
       topbarLabel: "Poll Detail",
       searchPlaceholder: "Search",
       hideSearch: true,
@@ -154,7 +161,7 @@
     "detail-poll-results": {
       path: "/polls/results.html",
       shellKind: "media",
-      activeHref: "/polls.html",
+      activeHref: "/polls",
       topbarLabel: "Poll Results",
       searchPlaceholder: "Search",
       hideSearch: true,
@@ -167,7 +174,7 @@
     "detail-scoreboard": {
       path: "/scoreboards/detail.html",
       shellKind: "media",
-      activeHref: "/scoreboards.html",
+      activeHref: "/scoreboards",
       topbarLabel: "Scoreboard Detail",
       searchPlaceholder: "Search",
       hideSearch: true,
@@ -180,7 +187,7 @@
     "detail-tally": {
       path: "/tallies/detail.html",
       shellKind: "media",
-      activeHref: "/tallies.html",
+      activeHref: "/tallies",
       topbarLabel: "Tally Detail",
       searchPlaceholder: "Search",
       hideSearch: true,
@@ -194,12 +201,13 @@
       path: "/community/index.html",
       aliases: ["/community", "/community/"],
       shellKind: "community",
-      activeHref: "/community/index.html",
+      activeHref: "/community",
       topbarLabel: "Community",
       searchPlaceholder: "Search members and notices",
       filterMode: "none",
       filtersCollapsed: true,
       defaultFilters: [],
+      showLockoutBanner: true,
       render: renderCommunityHome
     },
     "community-members": {
@@ -863,10 +871,10 @@
     );
 
     const sections = [
-      { type: "clips", title: "Clips", seeAll: "/clips.html", limitRows: 2, showSnippet: false },
-      { type: "polls", title: "Polls", seeAll: "/polls.html", limitRows: 1 },
-      { type: "scoreboards", title: "Scoreboards", seeAll: "/scoreboards.html", limitRows: 1 },
-      { type: "tallies", title: "Tallies", seeAll: "/tallies.html", limitRows: 1 }
+      { type: "clips", title: "Clips", seeAll: "/clips", limitRows: 2, showSnippet: false },
+      { type: "polls", title: "Polls", seeAll: "/polls", limitRows: 1 },
+      { type: "scoreboards", title: "Scoreboards", seeAll: "/scoreboards", limitRows: 1 },
+      { type: "tallies", title: "Tallies", seeAll: "/tallies", limitRows: 1 }
     ];
 
     let renderedAny = false;
@@ -3337,11 +3345,12 @@
       ? mountStandaloneRoot()
       : window.StreamSuitesPublicShell.mount({
           shellKind: currentConfig.shellKind,
-          activeHref: currentConfig.activeHref,
-          topbarLabel: currentConfig.topbarLabel,
-          searchPlaceholder: currentConfig.searchPlaceholder,
-          showSearch: currentConfig.hideSearch !== true,
-          filters: buildFiltersForConfig(currentConfig),
+        activeHref: currentConfig.activeHref,
+        topbarLabel: currentConfig.topbarLabel,
+        searchPlaceholder: currentConfig.searchPlaceholder,
+        showSearch: currentConfig.hideSearch !== true,
+        showLockoutBanner: currentConfig.showLockoutBanner === true,
+        filters: buildFiltersForConfig(currentConfig),
           filtersCollapsed: currentConfig.filtersCollapsed,
           multiFilter: currentConfig.filterMode === "multi",
           accountLabel: "Guest"
@@ -3438,6 +3447,7 @@
         topbarLabel: nextConfig.topbarLabel,
         searchPlaceholder: nextConfig.searchPlaceholder,
         showSearch: nextConfig.hideSearch !== true,
+        showLockoutBanner: nextConfig.showLockoutBanner === true,
         filters: buildFiltersForConfig(nextConfig),
         multiFilter: nextConfig.filterMode === "multi",
         filtersCollapsed: nextConfig.filtersCollapsed,

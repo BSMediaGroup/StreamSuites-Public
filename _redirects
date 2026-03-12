@@ -1,3 +1,15 @@
+/community /community/index.html 200
+/community/ /community/index.html 200
+/media /media.html 200
+/media/ /media.html 200
+/clips /clips.html 200
+/clips/ /clips.html 200
+/polls /polls.html 200
+/polls/ /polls.html 200
+/scoreboards /scoreboards.html 200
+/scoreboards/ /scoreboards.html 200
+/tallies /tallies.html 200
+/tallies/ /tallies.html 200
 /live /live/index.html 200
 /live/ /live/index.html 200
 /u /u/index.html 200
