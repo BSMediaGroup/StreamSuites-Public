@@ -1199,7 +1199,7 @@ body.modal-open { overflow: hidden; }
 .landing-lockout-banner__eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 3px;
   font-size: 11px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
