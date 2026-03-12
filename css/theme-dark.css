@@ -21,6 +21,14 @@
   font-weight: 400;
 }
 
+@font-face {
+  font-family: "SUSEMono";
+  src: url("/assets/fonts/mono/SUSEMono-Variable.ttf") format("truetype");
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ----------------------------------------------------------------------
    CSS Variables — Dark Theme Palette
    ---------------------------------------------------------------------- */

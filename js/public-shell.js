@@ -40,12 +40,6 @@
   const CURRENT_ORIGIN = String(window.location.origin || "").trim();
   const AUTH_API_BASE = /^https?:\/\//.test(CURRENT_ORIGIN) ? CURRENT_ORIGIN : "https://streamsuites.app";
   const AUTH_COMPLETE_URL = new URL("/public-auth-complete.html", AUTH_API_BASE).toString();
-  const CREATOR_DASHBOARD_URL = "https://creator.streamsuites.app/";
-  const CREATOR_LOGIN_URL = (() => {
-    const url = new URL("/login/", CREATOR_DASHBOARD_URL);
-    url.searchParams.set("return_to", CREATOR_DASHBOARD_URL);
-    return url.toString();
-  })();
   const AUTH_OAUTH_LINKS = Object.freeze([
     { provider: "google", label: "Continue with Google", icon: "/assets/icons/google.svg", path: "/auth/login/google" },
     { provider: "github", label: "Continue with GitHub", icon: "/assets/icons/github.svg", path: "/auth/login/github" },
@@ -71,13 +65,13 @@
   });
   const UI_ICON_MAP = Object.freeze({
     menu: "/assets/icons/ui/sidebar.svg",
-    hide: "/assets/icons/ui/minus.svg",
+    hideVisible: "/assets/icons/ui/sidebarclose.svg",
+    hideHidden: "/assets/icons/ui/sidebaropen.svg",
     close: "/assets/icons/ui/close.svg",
     info: "/assets/icons/ui/info.svg",
-    search: "/assets/icons/ui/querystats.svg",
-    filterExpand: "/assets/icons/ui/plus.svg",
-    filterCollapse: "/assets/icons/ui/minus.svg",
-    copy: "/assets/icons/ui/portal.svg",
+    search: "/assets/icons/ui/search.svg",
+    filters: "/assets/icons/ui/filters.svg",
+    cmd: "/assets/icons/ui/cmdkey.svg",
     layoutSide: "/assets/icons/ui/cards.svg",
     layoutStack: "/assets/icons/ui/tablechart.svg",
     check: "/assets/icons/ui/tickyes.svg"
@@ -95,6 +89,11 @@
     icon.setAttribute("aria-hidden", "true");
     icon.style.setProperty("--icon-mask", `url("${String(path || "").trim()}")`);
     return icon;
+  }
+
+  function setIconMask(icon, path) {
+    if (!icon) return;
+    icon.style.setProperty("--icon-mask", `url("${String(path || "").trim()}")`);
   }
 
   function fallbackAuthAccessMessage(mode) {
@@ -417,15 +416,6 @@
     const bar = create("div", "footer-bar");
 
     const cluster = create("div", "footer-cluster");
-
-    const left = create("div", "footer-left");
-    const creatorLogin = create("a", "creator-login-btn login-primary", "Creator Login");
-    creatorLogin.href = CREATOR_LOGIN_URL;
-    creatorLogin.rel = "noopener noreferrer";
-    creatorLogin.target = "_blank";
-    creatorLogin.setAttribute("aria-label", "Creator Login");
-    left.appendChild(creatorLogin);
-
     const links = create("div", "footer-links");
     links.append(
       Object.assign(create("a", "", "/support"), { href: "/support.html" }),
@@ -434,7 +424,7 @@
       Object.assign(create("a", "", "/about"), { href: "/about.html" })
     );
 
-    cluster.append(left, links);
+    cluster.appendChild(links);
 
     const meta = create("div", "footer-meta");
     const copyright = create("a", "footer-copyright", "© 2026 Brainstream Media Group");
@@ -477,7 +467,7 @@
       showSearch: true,
       showLockoutBanner: false,
       filters: [],
-      filtersCollapsed: true,
+      filtersCollapsed: false,
       multiFilter: false,
       accountLabel: "Guest",
       accountAvatar: "",
@@ -499,6 +489,7 @@
       throw new Error("Missing shell root element");
     }
 
+    document.body.classList.remove("public-standalone-page", "modal-open");
     document.body.classList.add("public-shell-page");
 
     root.innerHTML = "";
@@ -541,12 +532,14 @@
     const modeBtn = create("button", "topbar-menu-btn");
     modeBtn.type = "button";
     modeBtn.setAttribute("aria-label", "Toggle sidebar size");
-    modeBtn.appendChild(createIcon(UI_ICON_MAP.menu, "topbar-btn-icon"));
+    const modeBtnIcon = createIcon(UI_ICON_MAP.menu, "topbar-btn-icon");
+    modeBtn.appendChild(modeBtnIcon);
 
     const hideBtn = create("button", "topbar-hide-btn");
     hideBtn.type = "button";
     hideBtn.setAttribute("aria-label", "Hide sidebar");
-    hideBtn.appendChild(createIcon(UI_ICON_MAP.hide, "topbar-btn-icon topbar-btn-icon-close"));
+    const hideBtnIcon = createIcon(UI_ICON_MAP.hideVisible, "topbar-btn-icon");
+    hideBtn.appendChild(hideBtnIcon);
 
     const topbarTitle = create("span", "topbar-title", options.topbarLabel || "Media Gallery");
     topbarLeft.append(modeBtn, hideBtn, topbarTitle);
@@ -560,7 +553,10 @@
     searchInput.placeholder = options.searchPlaceholder || "Search";
     searchInput.setAttribute("data-shell-search", "");
     const searchHint = create("span", "search-kbd-hint");
-    searchHint.innerHTML = "<kbd>Ctrl</kbd>/<kbd>Cmd</kbd> K";
+    const searchCmdHint = create("span", "search-kbd-key");
+    searchCmdHint.appendChild(createIcon(UI_ICON_MAP.cmd, "search-kbd-cmd-icon"));
+    const searchKeyHint = create("kbd", "", "K");
+    searchHint.append(searchCmdHint, searchKeyHint);
     searchShell.append(searchIcon, searchInput, searchHint);
     topbarCenter.appendChild(searchShell);
 
@@ -592,10 +588,8 @@
     filterToggle.setAttribute("aria-label", "Show filters");
     filterToggle.setAttribute("aria-expanded", "false");
     filterToggle.setAttribute("aria-controls", "public-filter-row");
-    const filterToggleLabel = create("span", "filter-toggle-label", "Filters");
-    const filterToggleCaret = create("span", "filter-toggle-caret");
-    filterToggleCaret.setAttribute("aria-hidden", "true");
-    filterToggle.append(filterToggleLabel, filterToggleCaret);
+    filterToggle.title = "Toggle filters";
+    filterToggle.appendChild(createIcon(UI_ICON_MAP.filters, "filter-toggle-icon"));
     topbarLeft.appendChild(filterToggle);
 
     const filterDock = create("div", "filter-dock");
@@ -1162,6 +1156,8 @@
       modeBtn.setAttribute("aria-label", state === SIDEBAR_STATES.expanded ? "Collapse sidebar" : "Expand sidebar");
       hideBtn.setAttribute("aria-label", state === SIDEBAR_STATES.hidden ? "Show sidebar" : "Hide sidebar");
       hideBtn.classList.toggle("is-hidden-state", state === SIDEBAR_STATES.hidden);
+      setIconMask(modeBtnIcon, UI_ICON_MAP.menu);
+      setIconMask(hideBtnIcon, state === SIDEBAR_STATES.hidden ? UI_ICON_MAP.hideHidden : UI_ICON_MAP.hideVisible);
 
       if (persist) {
         useAutoSidebarState = false;
@@ -1209,9 +1205,8 @@
       });
     }
 
-    const storedFilterCollapsed = readFilterCollapsedState();
-    let hasPersistedFilterPreference = typeof storedFilterCollapsed === "boolean";
-    let filterCollapsed = hasPersistedFilterPreference ? storedFilterCollapsed : Boolean(options.filtersCollapsed);
+    let hasPersistedFilterPreference = false;
+    let filterCollapsed = Boolean(options.filtersCollapsed);
 
     function setFilterCollapsed(collapsed, { persist = false } = {}) {
       const hasFilters = filterRow.childElementCount > 0;

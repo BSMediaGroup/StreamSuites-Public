@@ -42,7 +42,7 @@
     pro: "/assets/icons/tierbadge-pro.svg"
   });
   const UI_ICON_MAP = Object.freeze({
-    copy: "/assets/icons/ui/portal.svg",
+    copy: "/assets/icons/ui/clipboard.svg",
     check: "/assets/icons/ui/tickyes.svg",
     layoutSide: "/assets/icons/ui/cards.svg",
     layoutStack: "/assets/icons/ui/tablechart.svg",
@@ -51,7 +51,9 @@
     edit: "/assets/icons/ui/cog.svg",
     share: "/assets/icons/ui/send.svg",
     visibility: "/assets/icons/ui/globe.svg",
-    social: "/assets/icons/ui/integrations.svg"
+    social: "/assets/icons/ui/integrations.svg",
+    streamsuites: "/assets/icons/ui/streamsuitesicon.svg",
+    findmehere: "/assets/icons/ui/findmehereicon.svg"
   });
   const SOCIAL_ICON_MAP = Object.freeze({
     youtube: "/assets/icons/youtube.svg",
@@ -283,6 +285,10 @@
       render: renderStandaloneProfile
     }
   };
+
+  Object.values(PAGE_CONFIG).forEach((config) => {
+    config.filtersCollapsed = false;
+  });
 
   const PAGE_ID_BY_PATH = Object.entries(PAGE_CONFIG).reduce((acc, [, cfg]) => {
     acc[normalizePath(cfg.path)] = cfg;
@@ -1074,6 +1080,14 @@
     }
   }
 
+  function setShareCopyButtonState(button, copied) {
+    if (!button) return;
+    const isCopied = copied === true;
+    button.classList.toggle("is-copied", isCopied);
+    button.setAttribute("aria-label", isCopied ? "Share link copied" : "Copy share link");
+    button.setAttribute("title", isCopied ? "Copied" : "Copy");
+  }
+
   function buildShareBox(url) {
     const box = create("div", "share-box");
     const text = create("code", "share-link-text", url);
@@ -1081,18 +1095,20 @@
 
     const copyButton = create("button", "share-copy-btn");
     copyButton.type = "button";
-    copyButton.setAttribute("aria-label", "Copy share link");
-    copyButton.appendChild(createIcon(UI_ICON_MAP.copy, "button-icon-mask"));
+    copyButton.append(
+      createIcon(UI_ICON_MAP.copy, "button-icon-mask share-copy-icon share-copy-icon-copy"),
+      createIcon(UI_ICON_MAP.check, "button-icon-mask share-copy-icon share-copy-icon-check")
+    );
+    setShareCopyButtonState(copyButton, false);
 
+    let resetTimer = 0;
     copyButton.addEventListener("click", () => {
       copyTextToClipboard(url).then((copied) => {
-        copyButton.classList.toggle("is-copied", copied);
-        copyButton.innerHTML = "";
-        copyButton.appendChild(createIcon(copied ? UI_ICON_MAP.check : UI_ICON_MAP.copy, "button-icon-mask"));
-        window.setTimeout(() => {
-          copyButton.classList.remove("is-copied");
-          copyButton.innerHTML = "";
-          copyButton.appendChild(createIcon(UI_ICON_MAP.copy, "button-icon-mask"));
+        window.clearTimeout(resetTimer);
+        setShareCopyButtonState(copyButton, copied);
+        if (!copied) return;
+        resetTimer = window.setTimeout(() => {
+          setShareCopyButtonState(copyButton, false);
         }, 1300);
       });
     });
@@ -1234,18 +1250,20 @@
     const streamSuitesUrl = String(profile?.streamsuitesShareUrl || profile?.streamsuitesProfileUrl || "").trim();
     const findMeHereUrl = profile?.findmehereVisible ? String(profile?.findmehereShareUrl || profile?.findmehereProfileUrl || "").trim() : "";
 
-    const createShareOption = (label, url, tone = "") => {
+    const createShareOption = (label, iconPath, url, tone = "") => {
       const card = create("div", `profile-share-option${tone ? ` ${tone}` : ""}`);
-      card.append(create("div", "profile-share-option-title", label), buildShareBox(url));
+      const title = create("div", "profile-share-option-title");
+      title.append(createIcon(iconPath, "profile-share-option-icon"), create("span", "", label));
+      card.append(title, buildShareBox(url));
       return card;
     };
 
     if (streamSuitesUrl) {
-      options.appendChild(createShareOption("StreamSuites", streamSuitesUrl));
+      options.appendChild(createShareOption("STREAMSUITES", UI_ICON_MAP.streamsuites, streamSuitesUrl));
     }
 
     if (findMeHereUrl) {
-      options.appendChild(createShareOption("FindMeHere", findMeHereUrl));
+      options.appendChild(createShareOption("FINDMEHERE", UI_ICON_MAP.findmehere, findMeHereUrl));
     } else {
       const note = create("div", "profile-share-note", buildFindMeHereStatusText(profile));
       if (note.textContent) {
@@ -3303,6 +3321,7 @@
   function mountStandaloneRoot() {
     const root = document.querySelector("#public-app");
     if (!root) return null;
+    document.body.classList.remove("public-shell-page", "modal-open");
     document.body.classList.add("public-standalone-page");
     root.classList.add("public-standalone-root");
     clear(root);

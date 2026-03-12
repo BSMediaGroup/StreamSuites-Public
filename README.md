@@ -109,6 +109,23 @@ StreamSuites-Public/
 │   ├── requests-auth.css
 │   ├── requests.css
 │   └── status-widget.css
+├── assets/
+│   ├── css/
+│   │   └── ss-profile-hovercard.css
+│   ├── fonts/
+│   │   └── mono/
+│   │       └── SUSEMono-Variable.ttf
+│   └── icons/
+│       └── ui/
+│           ├── clipboard.svg
+│           ├── cmdkey.svg
+│           ├── filters.svg
+│           ├── findmehereicon.svg
+│           ├── search.svg
+│           ├── sidebar.svg
+│           ├── sidebarclose.svg
+│           ├── sidebaropen.svg
+│           └── streamsuitesicon.svg
 ├── _redirects
 ├── 404.html
 ├── about.html
