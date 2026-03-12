@@ -2357,6 +2357,7 @@ body.public-shell-page.modal-open {
   box-shadow: 0 24px 52px rgba(0, 0, 0, 0.52);
   padding: 24px 28px 20px;
   position: relative;
+  scrollbar-width: none;
 }
 
 .auth-modal-header {
