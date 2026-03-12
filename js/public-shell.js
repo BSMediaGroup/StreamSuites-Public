@@ -71,7 +71,9 @@
   });
   const UI_ICON_MAP = Object.freeze({
     menu: "/assets/icons/ui/sidebar.svg",
-    close: "/assets/icons/ui/minus.svg",
+    hide: "/assets/icons/ui/minus.svg",
+    close: "/assets/icons/ui/close.svg",
+    info: "/assets/icons/ui/info.svg",
     search: "/assets/icons/ui/querystats.svg",
     filterExpand: "/assets/icons/ui/plus.svg",
     filterCollapse: "/assets/icons/ui/minus.svg",
@@ -544,7 +546,7 @@
     const hideBtn = create("button", "topbar-hide-btn");
     hideBtn.type = "button";
     hideBtn.setAttribute("aria-label", "Hide sidebar");
-    hideBtn.appendChild(createIcon(UI_ICON_MAP.close, "topbar-btn-icon topbar-btn-icon-close"));
+    hideBtn.appendChild(createIcon(UI_ICON_MAP.hide, "topbar-btn-icon topbar-btn-icon-close"));
 
     const topbarTitle = create("span", "topbar-title", options.topbarLabel || "Media Gallery");
     topbarLeft.append(modeBtn, hideBtn, topbarTitle);
@@ -617,8 +619,13 @@
     pageBanner.setAttribute("aria-live", "polite");
     const pageBannerBody = create("div", "public-lockout-banner__body");
     const pageBannerMeta = create("div", "public-lockout-banner__meta");
+    const pageBannerEyebrow = create("span", "public-lockout-banner__eyebrow");
+    pageBannerEyebrow.append(
+      createIcon(UI_ICON_MAP.info, "public-lockout-banner__eyebrow-icon"),
+      create("span", "", "ACCESS NOTICE")
+    );
     pageBannerMeta.append(
-      create("span", "public-lockout-banner__eyebrow", "Access notice"),
+      pageBannerEyebrow,
       create("p", "public-lockout-banner__message")
     );
     const pageBannerClose = create("button", "public-lockout-banner__close");

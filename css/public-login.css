@@ -79,10 +79,12 @@ body.ss-public-login {
   gap: 12px;
   margin-top: -2px;
   padding: 13px 14px;
-  border: 1px solid rgba(214, 226, 245, 0.18);
+  border: 1px solid rgba(162, 183, 255, 0.2);
   border-radius: 14px;
-  background: linear-gradient(150deg, rgba(34, 41, 26, 0.2), rgba(14, 19, 29, 0.74));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  background:
+    linear-gradient(145deg, rgba(92, 116, 255, 0.14), rgba(147, 121, 255, 0.1)),
+    linear-gradient(155deg, rgba(14, 21, 39, 0.86), rgba(10, 15, 28, 0.78));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .ss-auth-access-gate.is-unlocked {

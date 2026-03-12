@@ -7,9 +7,22 @@ function isPassthroughPath(pathname, allowedNames = [], passthroughExtensions = 
   return passthroughExtensions.includes(extensionMatch[1].toLowerCase());
 }
 
+function normalizePathname(pathname) {
+  const raw = String(pathname || "/").trim() || "/";
+  return raw.length > 1 && raw.endsWith("/") ? raw.slice(0, -1) : raw;
+}
+
 export async function serveArtifactRoute(context, options) {
   const requestUrl = new URL(context.request.url);
   const pathname = requestUrl.pathname;
+  const normalizedPathname = normalizePathname(pathname);
+  const basePath = normalizePathname(options.basePath || "");
+  const indexAssetPath = String(options.indexAssetPath || "").trim();
+
+  if (basePath && normalizedPathname === basePath && indexAssetPath) {
+    return serveAssetPath(context, indexAssetPath);
+  }
+
   if (isPassthroughPath(pathname, options.allowedPassthrough || [], options.passthroughExtensions || [])) {
     return context.next();
   }

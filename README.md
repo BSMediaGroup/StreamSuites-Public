@@ -24,7 +24,7 @@ Canonical public StreamSuites surface deployed to Cloudflare Pages at `https://s
 - Cloudflare Pages routing is handled by the root `_redirects` file plus Pages Functions under `functions/`.
 - Same-origin auth and API proxy paths forward browser requests to the authoritative Auth API without moving backend ownership into this repo.
 - Public auth entry points now consume `/auth/access-state` and the short-lived `/auth/debug/unlock` bypass flow so public pages remain browseable while new auth starts can be gated by runtime mode.
-- Route handlers under `functions/clips`, `functions/polls`, `functions/scores`, and `functions/u` preserve deep links for clean artifact and profile routes.
+- Route handlers under `functions/clips`, `functions/polls`, `functions/scoreboards`, `functions/scores`, `functions/tallies`, and `functions/u` preserve gallery deep links plus clean artifact and profile routes.
 - Public shell/profile code in `js/public-pages-app.js` and `js/public-data-hub.js` consumes the authoritative slug, visibility, FindMeHere eligibility, media, and live-status fields.
 
 ## Repository Tree (Abridged, Current)
@@ -47,8 +47,12 @@ StreamSuites-Public/
 │   ├── polls/
 │   │   ├── [[artifact]].js
 │   │   └── index.js
+│   ├── scoreboards/
+│   │   └── index.js
 │   ├── scores/
 │   │   ├── [[artifact]].js
+│   │   └── index.js
+│   ├── tallies/
 │   │   └── index.js
 │   └── u/
 │       └── [[slug]].js
