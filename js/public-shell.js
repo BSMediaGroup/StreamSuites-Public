@@ -644,6 +644,21 @@
     layout.append(sidebar, main, footer);
     root.append(bg, layout);
 
+    function syncLockoutBannerOffset() {
+      const topbarHeight = Math.max(52, Math.ceil(topbar.getBoundingClientRect().height || topbar.offsetHeight || 0));
+      main.style.setProperty("--ps-lockout-banner-offset", `${topbarHeight}px`);
+    }
+
+    syncLockoutBannerOffset();
+    if (typeof ResizeObserver === "function") {
+      const topbarObserver = new ResizeObserver(() => {
+        syncLockoutBannerOffset();
+      });
+      topbarObserver.observe(topbar);
+    } else {
+      window.addEventListener("resize", syncLockoutBannerOffset);
+    }
+
     const authBackdrop = create("div", "auth-modal-backdrop");
     authBackdrop.setAttribute("aria-hidden", "true");
     authBackdrop.innerHTML = `
