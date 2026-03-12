@@ -99,6 +99,22 @@
     return AUTH_ACCESS_FALLBACK_MESSAGES[mode] || AUTH_ACCESS_FALLBACK_MESSAGES.normal;
   }
 
+  function normalizePassiveAccessState(payload, available = true) {
+    const rawMode = typeof payload?.mode === "string" ? payload.mode.trim().toLowerCase() : "";
+    const mode = rawMode === "maintenance" || rawMode === "development" ? rawMode : "normal";
+    const gateActive = mode !== "normal";
+    return {
+      available,
+      mode,
+      gateActive,
+      showLockoutBanner: gateActive && payload?.show_lockout_banner === true,
+      message:
+        typeof payload?.message === "string" && payload.message.trim()
+          ? payload.message.trim()
+          : fallbackAuthAccessMessage(mode)
+    };
+  }
+
   function buildLockoutBannerDismissKey(mode, message) {
     return `${String(mode || "normal").trim().toLowerCase()}::${String(message || "").trim()}`;
   }
@@ -185,20 +201,47 @@
     };
   }
 
+  async function parseAccessStateResponse(response) {
+    if (!response.ok) {
+      throw new Error(`access-state-${response.status}`);
+    }
+    const contentType = String(response.headers.get("content-type") || "").toLowerCase();
+    if (!contentType.includes("application/json")) {
+      throw new Error("access-state-non-json");
+    }
+    return response.json();
+  }
+
+  async function fetchPassiveAccessState(baseUrl) {
+    try {
+      const response = await fetch(new URL("/auth/access-state", baseUrl).toString(), {
+        method: "GET",
+        cache: "no-store",
+        credentials: "include",
+        redirect: "error",
+        headers: {
+          Accept: "application/json"
+        }
+      });
+      const payload = await parseAccessStateResponse(response);
+      return normalizePassiveAccessState(payload, true);
+    } catch (_err) {
+      return normalizePassiveAccessState(null, false);
+    }
+  }
+
   async function fetchAuthAccessState(baseUrl) {
     try {
       const response = await fetch(new URL("/auth/access-state", baseUrl).toString(), {
         method: "GET",
         cache: "no-store",
         credentials: "include",
+        redirect: "error",
         headers: {
           Accept: "application/json"
         }
       });
-      if (!response.ok) {
-        throw new Error(`access-state-${response.status}`);
-      }
-      const payload = await response.json();
+      const payload = await parseAccessStateResponse(response);
       return normalizeAuthAccessState(payload, true);
     } catch (_err) {
       return normalizeAuthAccessState(null, false);
@@ -662,6 +705,9 @@
     let authAccessLoadedAt = 0;
     let authAccessPromise = null;
     let authAccessFormOpen = false;
+    let pageBannerAccessState = normalizePassiveAccessState(null, false);
+    let pageBannerAccessLoadedAt = 0;
+    let pageBannerAccessPromise = null;
 
     function isAuthAccessBlocked() {
       return authAccessState.gateActive && !authAccessState.bypassUnlocked;
@@ -692,19 +738,19 @@
     }
 
     function syncLockoutBannerUi() {
-      const bannerKey = buildLockoutBannerDismissKey(authAccessState.mode, authAccessState.message);
+      const bannerKey = buildLockoutBannerDismissKey(pageBannerAccessState.mode, pageBannerAccessState.message);
       const shouldShow =
         options.showLockoutBanner === true &&
-        authAccessState.gateActive &&
-        authAccessState.showLockoutBanner === true &&
-        Boolean(authAccessState.message) &&
+        pageBannerAccessState.gateActive &&
+        pageBannerAccessState.showLockoutBanner === true &&
+        Boolean(pageBannerAccessState.message) &&
         readDismissedLockoutBannerKey() !== bannerKey;
 
       pageBanner.hidden = !shouldShow;
       if (pageBannerMessage) {
-        pageBannerMessage.textContent = shouldShow ? authAccessState.message : "";
+        pageBannerMessage.textContent = shouldShow ? pageBannerAccessState.message : "";
       }
-      pageBanner.dataset.mode = shouldShow ? authAccessState.mode : "";
+      pageBanner.dataset.mode = shouldShow ? pageBannerAccessState.mode : "";
       pageBanner.dataset.bannerKey = shouldShow ? bannerKey : "";
     }
 
@@ -729,7 +775,31 @@
         action.classList.toggle("is-disabled", isAuthAccessBlocked());
         action.setAttribute("aria-disabled", isAuthAccessBlocked() ? "true" : "false");
       });
-      syncLockoutBannerUi();
+    }
+
+    async function loadPageBannerAccessState(force = false) {
+      const shouldUseCache =
+        !force &&
+        pageBannerAccessLoadedAt > 0 &&
+        Date.now() - pageBannerAccessLoadedAt < AUTH_ACCESS_CACHE_MS;
+      if (shouldUseCache) {
+        syncLockoutBannerUi();
+        return pageBannerAccessState;
+      }
+      if (pageBannerAccessPromise) return pageBannerAccessPromise;
+
+      pageBannerAccessPromise = fetchPassiveAccessState(AUTH_API_BASE)
+        .then((nextState) => {
+          pageBannerAccessState = nextState;
+          pageBannerAccessLoadedAt = Date.now();
+          syncLockoutBannerUi();
+          return pageBannerAccessState;
+        })
+        .finally(() => {
+          pageBannerAccessPromise = null;
+        });
+
+      return pageBannerAccessPromise;
     }
 
     async function loadModalAuthAccessState(force = false) {
@@ -1239,6 +1309,9 @@
       if (typeof next.showLockoutBanner === "boolean") {
         options.showLockoutBanner = next.showLockoutBanner;
         syncLockoutBannerUi();
+        if (options.showLockoutBanner) {
+          void loadPageBannerAccessState(false);
+        }
       }
 
       if (Array.isArray(next.filters) || typeof next.multiFilter === "boolean") {
@@ -1375,7 +1448,9 @@
       lastVisibleSidebarState = initialSidebarState;
     }
     setSidebarState(initialSidebarState, false);
-    void loadModalAuthAccessState(true);
+    if (options.showLockoutBanner) {
+      void loadPageBannerAccessState(true);
+    }
 
     return {
       root,

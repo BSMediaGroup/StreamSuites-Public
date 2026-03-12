@@ -92,6 +92,17 @@
     return AUTH_ACCESS_FALLBACK_MESSAGES[mode] || AUTH_ACCESS_FALLBACK_MESSAGES.normal;
   }
 
+  async function parseAccessStateResponse(response) {
+    if (!response.ok) {
+      throw new Error(`access-state-${response.status}`);
+    }
+    const contentType = String(response.headers.get("content-type") || "").toLowerCase();
+    if (!contentType.includes("application/json")) {
+      throw new Error("access-state-non-json");
+    }
+    return response.json();
+  }
+
   function clearAccessUnlockState() {
     try {
       window.sessionStorage.removeItem(AUTH_ACCESS_STORAGE_KEY);
@@ -316,14 +327,10 @@
       method: "GET",
       cache: "no-store",
       credentials: "include",
+      redirect: "error",
       headers: { Accept: "application/json" }
     })
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error(`access-state-${response.status}`);
-        }
-        return response.json();
-      })
+      .then((response) => parseAccessStateResponse(response))
       .then((payload) => {
         accessState = normalizeAccessState(payload, true);
         accessStateLoadedAt = Date.now();
