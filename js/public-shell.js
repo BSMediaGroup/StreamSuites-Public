@@ -69,6 +69,7 @@
     hideHidden: "/assets/icons/ui/sidebaropen.svg",
     close: "/assets/icons/ui/close.svg",
     info: "/assets/icons/ui/info.svg",
+    profile: "/assets/icons/ui/profile.svg",
     search: "/assets/icons/ui/search.svg",
     filters: "/assets/icons/ui/filters.svg",
     cmd: "/assets/icons/ui/cmdkey.svg",
@@ -94,6 +95,11 @@
   function setIconMask(icon, path) {
     if (!icon) return;
     icon.style.setProperty("--icon-mask", `url("${String(path || "").trim()}")`);
+  }
+
+  function renderAccountAvatarFallback(accountAvatar) {
+    if (!accountAvatar) return;
+    accountAvatar.replaceChildren(createIcon(UI_ICON_MAP.profile, "account-avatar-icon"));
   }
 
   function fallbackAuthAccessMessage(mode) {
@@ -1031,7 +1037,7 @@
       });
 
       if (avatarUrl) {
-        accountAvatar.textContent = "";
+        accountAvatar.replaceChildren();
         accountAvatar.classList.add("has-image");
         accountAvatar.style.backgroundImage = `url(${avatarUrl})`;
         accountAvatar.style.backgroundSize = "cover";
@@ -1041,8 +1047,7 @@
 
       accountAvatar.classList.remove("has-image");
       accountAvatar.style.backgroundImage = "";
-      const initial = nextLabel.charAt(0).toUpperCase();
-      accountAvatar.textContent = initial || "G";
+      renderAccountAvatarFallback(accountAvatar);
     }
 
     function closeAccountMenu() {

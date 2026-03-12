@@ -528,6 +528,13 @@ body.public-standalone-page {
   color: rgba(188, 201, 223, 0.68);
 }
 
+.search-shell input:focus,
+.search-shell input:focus-visible {
+  border-color: transparent;
+  box-shadow: none;
+  outline: none;
+}
+
 .search-kbd-hint {
   display: inline-flex;
   align-items: center;
@@ -746,6 +753,20 @@ body.public-standalone-page {
   background: linear-gradient(135deg, #9ec6ff, #6ce1ff);
   background-size: cover;
   background-position: center;
+}
+
+.account-avatar-icon {
+  width: 14px;
+  height: 14px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--icon-mask);
+  mask-image: var(--icon-mask);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
 }
 
 .account-avatar.has-image {
@@ -3083,14 +3104,17 @@ body.public-standalone-page {
 
   .topbar-left {
     grid-column: 1;
+    grid-row: 1;
   }
 
   .topbar-right {
     grid-column: 2;
+    grid-row: 1;
   }
 
   .topbar-center {
     grid-column: 1 / -1;
+    grid-row: 2;
   }
 
   .search-shell {
