@@ -31,6 +31,7 @@ Canonical public StreamSuites surface deployed to Cloudflare Pages at `https://s
 
 ```text
 StreamSuites-Public/
+├── BUMP_NOTES.md
 ├── functions/
 │   ├── _shared/
 │   │   ├── artifact-route.js
