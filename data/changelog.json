@@ -2,10 +2,33 @@
   "meta": {
     "source": "runtime",
     "project": "StreamSuites™",
-    "version": "0.2.3-alpha",
-    "generated_at": "2026-02-01"
+    "version": "0.4.2-alpha",
+    "generated_at": "2026-03-20"
   },
   "entries": [
+    {
+      "id": "2026-03-20-public-v0-4-2-alpha",
+      "date": "2026-03-20",
+      "version": "0.4.2-alpha",
+      "scope": "global",
+      "title": "StreamSuites Public v0.4.2-alpha",
+      "summary": "Tightened the public shell, aligned auth-gate UX with the runtime contract, and expanded public-surface presentation around profiles, directory visibility, and release-ready sample content.",
+      "details": [
+        "Wired public auth entry points and login surfaces to the runtime-owned access-state and debug-unlock flow while keeping ordinary public routes browseable.",
+        "Added the passive lockout banner model and follow-up fixes so maintenance messaging can inform visitors without turning public pages into gated routes.",
+        "Improved top-bar user widget alignment, fallback avatar behavior, footer and shell polish, and profile share-link handling across the current public shell.",
+        "Continued the public profile and directory work with canonical slug routing, FindMeHere-aware dual-share behavior, and live badge or live-ring presentation tied to centralized runtime state.",
+        "Added and refreshed release-facing sample content, including the public resources and statistics surfaces plus updated clip media packaging.",
+        "Compare: v0.4.0-alpha...v0.4.2-alpha"
+      ],
+      "tags": [
+        "public",
+        "profiles",
+        "auth",
+        "ui",
+        "release"
+      ]
+    },
     {
       "id": "2026-01-capability-tier-0-3-0",
       "date": "2026-01-17",
