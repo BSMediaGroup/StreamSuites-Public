@@ -5,7 +5,8 @@
 ## Release Prep Completion - v0.4.2-alpha
 
 - Public-facing runtime-fed version labels remain downstream of `https://admin.streamsuites.app/runtime/exports/version.json`, and this release-prep pass now aligns the repo's local release state to `0.4.2-alpha`.
-- Repo-local release-note source material for this bump now lives in `data/changelog.json`, using the compare range `v0.4.0-alpha...v0.4.2-alpha`.
+- Repo-local release-note source material for this bump now lives in `changelog/v0.4.2-alpha.md`, using the compare range `v0.4.0-alpha...v0.4.2-alpha`.
+- The existing `data/changelog.json` entry remains in place for the hydrated public changelog page and is not the GitHub-release markdown artifact.
 - The repo-local HTML version comments in `index.html`, `404.html`, and `requests.html` are now consistent with the release-prep state instead of trailing at `v0.4.1-alpha`.
 - Earlier sections below remain the cumulative milestone record for the public auth-gate, shell, and profile-surface work behind this bump.
 
