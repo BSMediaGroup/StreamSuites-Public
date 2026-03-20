@@ -4,6 +4,17 @@
 
 Packaged / released and no longer the active pending bucket. Preserve new notes for the open `0.4.8-alpha` section below.
 
+## Cross-Repo README Architecture Alignment - 2026-03-21
+
+- The public README now includes a repo-scoped Mermaid flowchart, clearer consumer-boundary wording for Functions versus runtime/Auth ownership, normalized repo-tree formatting, and direct links back to the runtime and sibling-surface READMEs.
+- Public profile, artifact, live-view, and FindMeHere relationship wording was aligned to the runtime-owned slug, visibility, and share-policy model already reflected in the repo.
+- This was a documentation-only pass. No public routing, proxy behavior, SEO surface, or profile/live implementation changed in this note.
+
+### Files / Areas Touched
+
+- `README.md`
+- `BUMP_NOTES.md`
+
 ## Release Prep Completion - v0.4.2-alpha
 
 - Public-facing runtime-fed version labels remain downstream of `https://admin.streamsuites.app/runtime/exports/version.json`, and this release-prep pass now aligns the repo's local release state to `0.4.2-alpha`.

@@ -8,6 +8,36 @@ Canonical public StreamSuites surface deployed to Cloudflare Pages at `https://s
 - Runtime-displayed version/build labels are consumed at runtime from `https://admin.streamsuites.app/runtime/exports/version.json`.
 - This repo is not a canonical state authority. It renders authoritative runtime exports and Auth API responses.
 
+## Scope & Authority
+
+- This repo is the public-facing site shell for profiles, public artifacts, viewer-facing pages, and public live discovery.
+- Same-origin Cloudflare Pages Functions proxy browser requests to the authoritative Auth API, but they do not move backend ownership into this repo.
+- Canonical slug resolution, profile visibility, share URLs, and FindMeHere eligibility remain runtime/Auth-owned in `StreamSuites`.
+- Public routes render authoritative runtime exports and Auth payloads; they do not mint competing profile or live-status truth.
+
+## Repo-Scoped Flowchart
+
+```mermaid
+flowchart TD
+    Viewer["Viewer / public browser"] --> Shell["Public shell and routes<br/>/ /u/<slug> /live /clips/* /polls/* /scores/* /community/*"]
+    Shell --> Functions["Cloudflare Pages Functions<br/>functions/auth, functions/api, functions/u, artifact route handlers"]
+    Shell --> Data["Published public data<br/>data/profiles.json, clips.json, polls.json, live-status.json"]
+
+    Functions --> Auth["StreamSuites runtime/Auth API<br/>sessions, public profile reads, public profile save path"]
+    Data --> Runtime["StreamSuites runtime exports authority"]
+    Auth --> Runtime
+
+    Shell --> Profiles["Canonical public profile surfaces"]
+    Shell --> Artifacts["Public clips, polls, scores, tallies"]
+    Shell --> Community["Viewer settings and public account pages"]
+    Shell --> Live["Public live surface"]
+
+    Auth -->|slug resolution, visibility, share policy| Profiles
+    Data -->|artifact and live-status payloads| Artifacts
+    Data -->|live-status payload| Live
+    Profiles -->|FindMeHere link only when authoritative payload allows it| Members["StreamSuites-Members / FindMeHere"]
+```
+
 ## Current Surface Model
 
 - Canonical public profiles resolve at `/u/<slug>`, backed by the authoritative public slug model exported by `StreamSuites`.
@@ -27,10 +57,30 @@ Canonical public StreamSuites surface deployed to Cloudflare Pages at `https://s
 - Route handlers under `functions/clips`, `functions/polls`, `functions/scoreboards`, `functions/scores`, `functions/tallies`, and `functions/u` preserve gallery deep links plus clean artifact and profile routes.
 - Public shell/profile code in `js/public-pages-app.js` and `js/public-data-hub.js` consumes the authoritative slug, visibility, FindMeHere eligibility, media, and live-status fields.
 
+## Cross-Repo Orientation
+
+- Top-level authority map: [StreamSuites runtime README](https://github.com/BSMediaGroup/StreamSuites)
+- Admin-surface detail: [StreamSuites-Dashboard README](https://github.com/BSMediaGroup/StreamSuites-Dashboard)
+- Creator-surface detail: [StreamSuites-Creator README](https://github.com/BSMediaGroup/StreamSuites-Creator)
+- FindMeHere detail: [StreamSuites-Members README](https://github.com/BSMediaGroup/StreamSuites-Members)
+
 ## Repository Tree (Abridged, Current)
 
 ```text
 StreamSuites-Public/
+├── .gitignore
+├── _redirects
+├── 404.html
+├── about.html
+├── auth-bridge.html
+├── changelog.html
+├── index.html
+├── public-login.html
+├── README.md
+├── requests.html
+├── stats.html
+├── support.html
+├── tools.html
 ├── BUMP_NOTES.md
 ├── changelog/
 │   └── v0.4.2-alpha.md
@@ -59,18 +109,18 @@ StreamSuites-Public/
 │   │   └── index.js
 │   └── u/
 │       └── [[slug]].js
-├── u/
-│   └── index.html
-├── live/
-│   └── index.html
-├── login/
-│   └── index.html
 ├── community/
 │   ├── index.html
 │   ├── members.html
 │   ├── notices.html
 │   ├── profile.html
 │   └── settings.html
+├── live/
+│   └── index.html
+├── login/
+│   └── index.html
+├── u/
+│   └── index.html
 ├── clips/
 │   ├── detail.html
 │   └── [sample media files]
@@ -96,9 +146,9 @@ StreamSuites-Public/
 ├── js/
 │   ├── public-data-hub.js
 │   ├── public-pages-app.js
-│   ├── public-toast.js
 │   ├── public-requests.js
 │   ├── public-shell.js
+│   ├── public-toast.js
 │   ├── status-widget.js
 │   └── utils/
 │       ├── about-data.js
@@ -112,32 +162,21 @@ StreamSuites-Public/
 │   ├── requests-auth.css
 │   ├── requests.css
 │   └── status-widget.css
-├── assets/
-│   ├── css/
-│   │   └── ss-profile-hovercard.css
-│   ├── fonts/
-│   │   └── mono/
-│   │       └── SUSEMono-Variable.ttf
-│   └── icons/
-│       └── ui/
-│           ├── clipboard.svg
-│           ├── cmdkey.svg
-│           ├── filters.svg
-│           ├── findmehereicon.svg
-│           ├── search.svg
-│           ├── sidebar.svg
-│           ├── sidebarclose.svg
-│           ├── sidebaropen.svg
-│           └── streamsuitesicon.svg
-├── _redirects
-├── 404.html
-├── about.html
-├── auth-bridge.html
-├── index.html
-├── public-auth-complete.html
-├── public-login.html
-├── requests-auth-complete.html
-├── requests-login.html
-├── requests.html
-└── README.md
+└── assets/
+    ├── css/
+    │   └── ss-profile-hovercard.css
+    ├── fonts/
+    │   └── mono/
+    │       └── SUSEMono-Variable.ttf
+    └── icons/
+        └── ui/
+            ├── clipboard.svg
+            ├── cmdkey.svg
+            ├── filters.svg
+            ├── findmehereicon.svg
+            ├── search.svg
+            ├── sidebar.svg
+            ├── sidebarclose.svg
+            ├── sidebaropen.svg
+            └── streamsuitesicon.svg
 ```
