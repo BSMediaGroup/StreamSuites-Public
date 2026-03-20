@@ -1,6 +1,8 @@
 # Bump Notes
 
-## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
+## RELEASED / PACKAGED: 0.4.2-alpha
+
+Packaged / released and no longer the active pending bucket. Preserve new notes for the open `0.4.8-alpha` section below.
 
 ## Release Prep Completion - v0.4.2-alpha
 
@@ -60,3 +62,23 @@
 ### Pending / Follow-Up
 
 - Dedicated `/clips` and `/polls` gallery routes, detail routes, and hydration codepaths are present in `js/public-pages-app.js`, `js/public-data-hub.js`, `functions/clips/*`, and `functions/polls/*`, but there is no repo-visible automated verification here proving that all same-pattern category pages are fully resolved end-to-end. Keep `/clips` / `/polls` category hydration as a follow-up verification item for release readiness.
+
+## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
+
+Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into the released `0.4.2-alpha` section above.
+
+### Technical Notes
+
+- Pending entries for `0.4.8-alpha` go here.
+
+### Human-Readable Notes
+
+- Pending entries for `0.4.8-alpha` go here.
+
+### Files / Areas Touched
+
+- Pending entries for `0.4.8-alpha` go here.
+
+### Risks / Follow-Ups
+
+- Pending entries for `0.4.8-alpha` go here.
