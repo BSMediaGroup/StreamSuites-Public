@@ -578,7 +578,14 @@
       normalized = buildAccountBadges(accountType, tier);
     }
     const hasAdminBadge = normalized.some((badge) => badge?.key === "admin");
-    return normalized.filter((badge) => !(hasAdminBadge && ["core", "gold", "pro"].includes(badge?.key)));
+    const hasDeveloperBadge = normalized.some((badge) => badge?.key === "developer");
+    return normalized.filter(
+      (badge) =>
+        !(
+          (hasAdminBadge && ["core", "gold", "pro"].includes(badge?.key)) ||
+          (hasDeveloperBadge && badge?.key === "pro")
+        )
+    );
   }
 
   function roleLabel(role) {
