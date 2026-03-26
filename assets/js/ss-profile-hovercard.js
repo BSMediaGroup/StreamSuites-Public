@@ -163,7 +163,7 @@
 
   function normalizeBadges(value, role, tier) {
     const source = Array.isArray(value) ? value : buildBadgesFromRole(role, tier);
-    return source
+    const normalized = source
       .map((badge) => {
         if (!badge || typeof badge !== "object") return null;
         const key = normalizeBadgeKey(badge.key || badge.icon_key || badge.iconKey || badge.value);
@@ -180,6 +180,8 @@
         };
       })
       .filter(Boolean);
+    const hasAdminBadge = normalized.some((badge) => badge?.key === "admin");
+    return normalized.filter((badge) => !(hasAdminBadge && ["core", "gold", "pro"].includes(badge?.key)));
   }
 
   function resolveBadgeIconPath(kind, value) {

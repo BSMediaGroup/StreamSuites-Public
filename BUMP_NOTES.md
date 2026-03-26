@@ -4,6 +4,17 @@
 
 Packaged / released and no longer the active pending bucket. Preserve new notes for the open `0.4.8-alpha` section below.
 
+## Public Admin Badge Priority Alignment - 2026-03-27
+
+- Public badge normalization now drops creator-tier icons whenever an Admin badge is present, so public account widgets, creator rows, and hovercards no longer show redundant admin-plus-tier combinations from stale fallback or legacy payload shapes.
+- The public repo still acts only as a contract consumer: admin creator capability and implicit Pro entitlement are resolved by StreamSuites/Auth, while this repo now mirrors the authoritative Admin-over-Pro display rule more reliably.
+
+### Files / Areas Touched
+
+- `js/public-pages-app.js`
+- `assets/js/ss-profile-hovercard.js`
+- `BUMP_NOTES.md`
+
 ## Public Badge Contract Alignment - 2026-03-26
 
 - Public profile normalization and public auth-state hydration now prefer the backend-authored badge arrays, falling back to old role/tier-only badge derivation only when the payload is still legacy-shaped.

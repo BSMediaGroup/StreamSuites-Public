@@ -558,8 +558,9 @@
   }
 
   function normalizeAuthoritativeBadges(value, accountType, tier) {
+    let normalized = [];
     if (Array.isArray(value) && value.length) {
-      return value
+      normalized = value
         .map((badge) => {
           if (!badge || typeof badge !== "object") return null;
           const key = normalizeBadgeKey(badge.key || badge.icon_key || badge.iconKey || badge.value);
@@ -573,7 +574,11 @@
         })
         .filter(Boolean);
     }
-    return buildAccountBadges(accountType, tier);
+    if (!normalized.length) {
+      normalized = buildAccountBadges(accountType, tier);
+    }
+    const hasAdminBadge = normalized.some((badge) => badge?.key === "admin");
+    return normalized.filter((badge) => !(hasAdminBadge && ["core", "gold", "pro"].includes(badge?.key)));
   }
 
   function roleLabel(role) {
@@ -3114,10 +3119,9 @@
     const badges = [];
     if (role === "admin") {
       badges.push({ key: "admin", kind: "role", value: "admin", label: "Admin" });
+      return badges;
     }
     if (role === "creator") {
-      badges.push({ key: tierValue, kind: "tier", value: tierValue, label: tierValue.toUpperCase() });
-    } else if (role === "admin") {
       badges.push({ key: tierValue, kind: "tier", value: tierValue, label: tierValue.toUpperCase() });
     }
     return badges;
