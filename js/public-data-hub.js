@@ -23,6 +23,15 @@
     streamsuites: "/assets/icons/pilled.svg",
     generic: "/assets/icons/pilled.svg"
   });
+  const AUTHORITATIVE_BADGE_KEYS = new Set([
+    "admin",
+    "core",
+    "gold",
+    "pro",
+    "founder",
+    "moderator",
+    "developer"
+  ]);
 
   const DEFAULT_PROFILE = {
     id: "public-user",
@@ -314,16 +323,70 @@
     return toTitle(raw);
   }
 
+  function normalizeBadgeKey(value) {
+    const normalized = String(value || "").trim().toLowerCase();
+    return AUTHORITATIVE_BADGE_KEYS.has(normalized) ? normalized : "";
+  }
+
   function buildProfileBadges(role, tier) {
+    const tierLabel = normalizeTier(tier || "CORE");
+    const tierKey = normalizeBadgeKey(tierLabel);
     const badges = [];
     if (role === "admin") {
-      badges.push({ kind: "admin", label: "Admin" });
+      badges.push({
+        key: "admin",
+        kind: "role",
+        value: "admin",
+        label: "Admin",
+        title: "Administrator"
+      });
       return badges;
     }
-    if (role === "creator" && tier) {
-      badges.push({ kind: "tier", label: tier, tier });
+    if (role === "creator" && tierKey) {
+      badges.push({
+        key: tierKey,
+        kind: "tier",
+        value: tierKey,
+        label: tierLabel,
+        title: `${tierLabel} Creator`
+      });
     }
     return badges;
+  }
+
+  function normalizeAuthoritativeBadges(value, role, tier) {
+    let normalized = [];
+    if (Array.isArray(value) && value.length) {
+      normalized = value
+        .map((badge) => {
+          if (!badge || typeof badge !== "object") return null;
+          const key = normalizeBadgeKey(badge.key || badge.icon_key || badge.iconKey || badge.value);
+          if (!key) return null;
+          const rawKind = String(badge.kind || "").trim().toLowerCase();
+          const kind =
+            rawKind.includes("tier") ? "tier" : rawKind.includes("role") ? "role" : rawKind || (key === "admin" ? "role" : "entitlement");
+          return {
+            key,
+            kind,
+            value: key,
+            label: String(badge.label || badge.title || key).trim(),
+            title: String(badge.title || badge.tooltip || badge.label || key).trim()
+          };
+        })
+        .filter(Boolean);
+    }
+    if (!normalized.length) {
+      normalized = buildProfileBadges(role, tier);
+    }
+    const hasAdminBadge = normalized.some((badge) => badge?.key === "admin");
+    const hasDeveloperBadge = normalized.some((badge) => badge?.key === "developer");
+    return normalized.filter(
+      (badge) =>
+        !(
+          (hasAdminBadge && ["core", "gold", "pro"].includes(badge?.key)) ||
+          (hasDeveloperBadge && badge?.key === "pro")
+        )
+    );
   }
 
   function pickSourceUrl(raw) {
@@ -452,7 +515,11 @@
       role,
       accountType,
       tier,
-      badges: buildProfileBadges(role, tier),
+      badges: normalizeAuthoritativeBadges(
+        raw?.badges || raw?.display_badges || raw?.displayBadges,
+        role,
+        tier
+      ),
       bio: raw.bio || raw.summary || "",
       socialLinks,
       coverImageUrl,

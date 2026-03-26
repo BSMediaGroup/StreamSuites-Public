@@ -4,6 +4,16 @@
 
 Packaged / released and no longer the active pending bucket. Preserve new notes for the open `0.4.8-alpha` section below.
 
+## Public Static Badge Contract Alignment - 2026-03-27
+
+- The static public/community data-hub path now consumes authoritative badge arrays from profile payloads instead of rebuilding badge display from role and tier alone, which keeps non-API-backed profile rows aligned with the runtime-owned badge contract.
+- Admin-over-tier suppression and Developer-over-Pro suppression now apply on that fallback/static path too, so community/profile surfaces do not regress back to redundant tier icons when developer or admin badges are already present.
+
+### Files / Areas Touched
+
+- `js/public-data-hub.js`
+- `BUMP_NOTES.md`
+
 ## Public Admin Badge Priority Alignment - 2026-03-27
 
 - Public badge normalization now drops creator-tier icons whenever an Admin badge is present, so public account widgets, creator rows, and hovercards no longer show redundant admin-plus-tier combinations from stale fallback or legacy payload shapes.
