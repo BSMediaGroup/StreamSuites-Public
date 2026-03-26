@@ -4,6 +4,18 @@
 
 Packaged / released and no longer the active pending bucket. Preserve new notes for the open `0.4.8-alpha` section below.
 
+## Public Badge Contract Alignment - 2026-03-26
+
+- Public profile normalization and public auth-state hydration now prefer the backend-authored badge arrays, falling back to old role/tier-only badge derivation only when the payload is still legacy-shaped.
+- Public badge icon rendering and hovercard normalization now understand the expanded authoritative badge set, including founder, moderator, and developer badge keys, while still resolving the repo-local icon assets.
+- This keeps the public surface as a badge consumer only: badge possession, visibility policy, FindMeHere subset rules, and founder automation remain runtime/Auth-owned.
+
+### Files / Areas Touched
+
+- `js/public-pages-app.js`
+- `assets/js/ss-profile-hovercard.js`
+- `BUMP_NOTES.md`
+
 ## Cross-Repo README Architecture Alignment - 2026-03-21
 
 - The public README now includes a repo-scoped Mermaid flowchart, clearer consumer-boundary wording for Functions versus runtime/Auth ownership, normalized repo-tree formatting, and direct links back to the runtime and sibling-surface READMEs.

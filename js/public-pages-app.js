@@ -33,13 +33,14 @@
   const ADMIN_DASHBOARD_URL = "https://admin.streamsuites.app";
   const PUBLIC_AUTH_COMPLETE_MESSAGE_TYPE = "ss_public_auth_complete";
   const CANONICAL_PROFILE_PREFIX = "/u/";
-  const ROLE_ICON_MAP = Object.freeze({
-    admin: "/assets/icons/tierbadge-admin.svg"
-  });
-  const TIER_ICON_MAP = Object.freeze({
+  const BADGE_ICON_MAP = Object.freeze({
+    admin: "/assets/icons/tierbadge-admin.svg",
     core: "/assets/icons/tierbadge-core.svg",
     gold: "/assets/icons/tierbadge-gold.svg",
-    pro: "/assets/icons/tierbadge-pro.svg"
+    pro: "/assets/icons/tierbadge-pro.svg",
+    founder: "/assets/icons/founder-gold.svg",
+    moderator: "/assets/icons/modgavel-blue.svg",
+    developer: "/assets/icons/dev-green.svg"
   });
   const UI_ICON_MAP = Object.freeze({
     copy: "/assets/icons/ui/clipboard.svg",
@@ -551,6 +552,30 @@
     return "core";
   }
 
+  function normalizeBadgeKey(value) {
+    const normalized = String(value || "").trim().toLowerCase();
+    return BADGE_ICON_MAP[normalized] ? normalized : "";
+  }
+
+  function normalizeAuthoritativeBadges(value, accountType, tier) {
+    if (Array.isArray(value) && value.length) {
+      return value
+        .map((badge) => {
+          if (!badge || typeof badge !== "object") return null;
+          const key = normalizeBadgeKey(badge.key || badge.icon_key || badge.iconKey || badge.value);
+          if (!key) return null;
+          return {
+            key,
+            kind: String(badge.kind || (key === "admin" ? "role" : "entitlement")).trim().toLowerCase(),
+            value: key,
+            label: String(badge.label || badge.title || key).trim(),
+          };
+        })
+        .filter(Boolean);
+    }
+    return buildAccountBadges(accountType, tier);
+  }
+
   function roleLabel(role) {
     if (role === "admin") return "ADMIN";
     if (role === "creator") return "CREATOR";
@@ -559,22 +584,13 @@
 
   function createBadgeIcon(type, value) {
     const icon = create("img", "badge-icon");
-    const normalized = String(value || "").trim().toLowerCase();
-    if (type === "tier") {
-      icon.src = TIER_ICON_MAP[normalized];
-      if (!icon.src) return null;
-      icon.alt = `${normalized || "core"} tier`;
-      icon.classList.add("badge-icon-tier");
-      icon.classList.add("ss-tier-badge");
-      icon.setAttribute("data-ss-role-badge", normalized || "core");
-      return icon;
-    }
-    icon.src = ROLE_ICON_MAP[normalized];
+    const normalized = normalizeBadgeKey(value);
+    icon.src = BADGE_ICON_MAP[normalized];
     if (!icon.src) return null;
-    icon.alt = `${normalized || "viewer"} role`;
-    icon.classList.add("badge-icon-role");
-    icon.classList.add("ss-role-badge");
-    icon.setAttribute("data-ss-role-badge", normalized || "role");
+    icon.alt = `${normalized || "badge"} badge`;
+    icon.classList.add(["core", "gold", "pro"].includes(normalized) ? "badge-icon-tier" : "badge-icon-role");
+    icon.classList.add(["core", "gold", "pro"].includes(normalized) ? "ss-tier-badge" : "ss-role-badge");
+    icon.setAttribute("data-ss-role-badge", normalized || "badge");
     return icon;
   }
 
@@ -583,14 +599,14 @@
     const row = create("span", "creator-badges ss-role-badges");
     row.setAttribute("data-ss-badge-kind", "role");
     const role = normalizeRoleForUi(profile?.role);
-    const tier = normalizeTierForUi(profile?.tier);
-    if (role === "admin") {
-      const adminIcon = createBadgeIcon("role", "admin");
-      if (adminIcon) row.appendChild(adminIcon);
-    } else if (role === "creator") {
-      const tierIcon = createBadgeIcon("tier", tier);
-      if (tierIcon) row.appendChild(tierIcon);
-    }
+    normalizeAuthoritativeBadges(
+      profile?.badges,
+      profile?.accountType || profile?.account_type || roleLabel(role),
+      profile?.tier
+    ).forEach((badge) => {
+      const icon = createBadgeIcon(badge.kind, badge.key || badge.value);
+      if (icon) row.appendChild(icon);
+    });
 
     if (includeRoleChip) {
       const chip = create("span", "badge-role-chip", roleLabel(role));
@@ -2185,7 +2201,7 @@
       backgroundImageUrl,
       isAnonymous,
       isListed,
-      badges: buildAccountBadges(accountType, tier),
+      badges: normalizeAuthoritativeBadges(payload?.badges, accountType, tier),
       publicSurfaceAccountType: String(
         payload?.public_surface_account_type || payload?.publicSurfaceAccountType || fallbackProfile?.publicSurfaceAccountType || (creatorCapable ? "creator_capable" : "viewer_only")
       ).trim(),
@@ -3095,13 +3111,14 @@
   function buildAccountBadges(accountType, tier) {
     const role = accountType === "ADMIN" ? "admin" : accountType === "CREATOR" ? "creator" : "viewer";
     const tierValue = normalizeTierForUi(tier);
-    const badges = [{ kind: "role-chip", value: role, label: roleLabel(role) }];
+    const badges = [];
     if (role === "admin") {
-      badges.unshift({ kind: "role-icon", value: "admin" });
-      return badges;
+      badges.push({ key: "admin", kind: "role", value: "admin", label: "Admin" });
     }
     if (role === "creator") {
-      badges.unshift({ kind: "tier-icon", value: tierValue });
+      badges.push({ key: tierValue, kind: "tier", value: tierValue, label: tierValue.toUpperCase() });
+    } else if (role === "admin") {
+      badges.push({ key: tierValue, kind: "tier", value: tierValue, label: tierValue.toUpperCase() });
     }
     return badges;
   }
@@ -3185,7 +3202,7 @@
       avatarUrl,
       accountType,
       tier,
-      badges: buildAccountBadges(accountType, tier)
+      badges: normalizeAuthoritativeBadges(payload?.badges, accountType, tier)
     };
   }
 

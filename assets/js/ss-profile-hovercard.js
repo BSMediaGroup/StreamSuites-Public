@@ -5,13 +5,14 @@
   const HIDE_DELAY_MS = 120;
   const OFFSET = 10;
   const VIEWPORT_GAP = 12;
-  const ROLE_ICON_MAP = Object.freeze({
-    admin: "/assets/icons/tierbadge-admin.svg"
-  });
-  const TIER_ICON_MAP = Object.freeze({
+  const BADGE_ICON_MAP = Object.freeze({
+    admin: "/assets/icons/tierbadge-admin.svg",
     core: "/assets/icons/tierbadge-core.svg",
     gold: "/assets/icons/tierbadge-gold.svg",
-    pro: "/assets/icons/tierbadge-pro.svg"
+    pro: "/assets/icons/tierbadge-pro.svg",
+    founder: "/assets/icons/founder-gold.svg",
+    moderator: "/assets/icons/modgavel-blue.svg",
+    developer: "/assets/icons/dev-green.svg"
   });
   const SOCIAL_ICON_MAP = Object.freeze({
     youtube: "/assets/icons/youtube.svg",
@@ -85,6 +86,11 @@
     return tier === "gold" || tier === "pro" ? tier : "core";
   }
 
+  function normalizeBadgeKey(value) {
+    const normalized = safeText(value).toLowerCase();
+    return BADGE_ICON_MAP[normalized] ? normalized : "";
+  }
+
   function normalizeSocialLinks(value) {
     if (!value || typeof value !== "object" || Array.isArray(value)) return {};
     return Object.entries(value).reduce((acc, [key, raw]) => {
@@ -147,8 +153,11 @@
 
   function buildBadgesFromRole(role, tier = "core") {
     const normalizedRole = normalizeRole(role);
-    if (normalizedRole === "ADMIN") return [{ kind: "role", value: "admin" }];
-    if (normalizedRole === "CREATOR") return [{ kind: "tier", value: normalizeTier(tier) }];
+    if (normalizedRole === "ADMIN") return [{ key: "admin", kind: "role", value: "admin" }];
+    if (normalizedRole === "CREATOR") {
+      const tierKey = normalizeTier(tier);
+      return [{ key: tierKey, kind: "tier", value: tierKey }];
+    }
     return [];
   }
 
@@ -157,22 +166,24 @@
     return source
       .map((badge) => {
         if (!badge || typeof badge !== "object") return null;
+        const key = normalizeBadgeKey(badge.key || badge.icon_key || badge.iconKey || badge.value);
+        if (!key) return null;
         const rawKind = safeText(badge.kind).toLowerCase();
-        const badgeValue = safeText(badge.value).toLowerCase();
-        if (!rawKind || !badgeValue) return null;
-        const kind = rawKind.includes("tier") ? "tier" : rawKind.includes("role") ? "role" : "";
-        if (!kind) return null;
-        if (kind === "role" && badgeValue !== "admin") return null;
-        if (kind === "tier" && !TIER_ICON_MAP[badgeValue]) return null;
-        return { kind, value: badgeValue };
+        const kind =
+          rawKind.includes("tier") ? "tier" : rawKind.includes("role") ? "role" : rawKind || (key === "admin" ? "role" : "tier");
+        return {
+          key,
+          kind,
+          value: key,
+          label: safeText(badge.label),
+          title: safeText(badge.title || badge.tooltip)
+        };
       })
       .filter(Boolean);
   }
 
   function resolveBadgeIconPath(kind, value) {
-    if (kind === "role") return ROLE_ICON_MAP[value] || "";
-    if (kind === "tier") return TIER_ICON_MAP[value] || "";
-    return "";
+    return BADGE_ICON_MAP[normalizeBadgeKey(value)] || "";
   }
 
   function normalizeProfileLookup(value) {
