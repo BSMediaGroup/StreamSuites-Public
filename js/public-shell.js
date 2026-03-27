@@ -56,12 +56,18 @@
     development: "Authentication is temporarily limited while development access mode is active."
   });
   const ROLE_ICON_MAP = Object.freeze({
-    admin: "/assets/icons/tierbadge-admin.svg"
+    admin: "/assets/icons/tierbadge-admin.svg",
+    developer: "/assets/icons/dev-green.svg",
+    founder: "/assets/icons/founder-gold.svg"
   });
   const TIER_ICON_MAP = Object.freeze({
     core: "/assets/icons/tierbadge-core.svg",
     gold: "/assets/icons/tierbadge-gold.svg",
     pro: "/assets/icons/tierbadge-pro.svg"
+  });
+  const ACCOUNT_BADGE_ICON_MAP = Object.freeze({
+    ...ROLE_ICON_MAP,
+    ...TIER_ICON_MAP
   });
   const UI_ICON_MAP = Object.freeze({
     menu: "/assets/icons/ui/sidebar.svg",
@@ -95,6 +101,41 @@
   function setIconMask(icon, path) {
     if (!icon) return;
     icon.style.setProperty("--icon-mask", `url("${String(path || "").trim()}")`);
+  }
+
+  function normalizeCompactAccountBadges(badges = []) {
+    const normalized = (Array.isArray(badges) ? badges : [])
+      .map((badge) => {
+        if (!badge || typeof badge !== "object") return null;
+        const key = String(
+          badge.key ||
+          badge.icon_key ||
+          badge.iconKey ||
+          badge.value ||
+          ""
+        ).trim().toLowerCase();
+        if (!ACCOUNT_BADGE_ICON_MAP[key]) return null;
+        return {
+          key,
+          label: String(badge.label || badge.title || key).trim() || key,
+        };
+      })
+      .filter(Boolean);
+
+    const hasAdminBadge = normalized.some((badge) => badge?.key === "admin");
+    const hasDeveloperBadge = normalized.some((badge) => badge?.key === "developer");
+    const filtered = normalized.filter(
+      (badge) =>
+        !(
+          badge?.key === "founder" ||
+          (hasAdminBadge && ["core", "gold", "pro"].includes(badge?.key)) ||
+          (hasDeveloperBadge && badge?.key === "pro")
+        )
+    );
+    const roleBadge = filtered.find((badge) => badge.key === "admin" || badge.key === "developer");
+    if (roleBadge) return [roleBadge];
+    const tierBadge = filtered.find((badge) => ["core", "gold", "pro"].includes(badge.key));
+    return tierBadge ? [tierBadge] : [];
   }
 
   function renderAccountAvatarFallback(accountAvatar) {
@@ -1015,25 +1056,12 @@
       accountName.textContent = nextLabel;
       accountBadges.innerHTML = "";
 
-      (Array.isArray(badges) ? badges : []).forEach((badge) => {
-        if (!badge || typeof badge !== "object") return;
-        const kind = String(badge.kind || "").trim().toLowerCase();
-        const value = String(badge.value || "").trim().toLowerCase();
-        if (kind === "role-icon" || kind === "tier-icon") {
-          if (kind === "role-icon" && value !== "admin") return;
-          const icon = create("img", "account-badge-icon");
-          icon.src = kind === "tier-icon" ? TIER_ICON_MAP[value] : ROLE_ICON_MAP[value];
-          if (!icon.src) return;
-          icon.alt = "";
-          accountBadges.appendChild(icon);
-          return;
-        }
-        if (kind === "role-chip") {
-          const chip = create("span", "account-badge-role-chip", String(badge.label || value || "").trim());
-          if (chip.textContent) {
-            accountBadges.appendChild(chip);
-          }
-        }
+      normalizeCompactAccountBadges(badges).forEach((badge) => {
+        const icon = create("img", "account-badge-icon");
+        icon.src = ACCOUNT_BADGE_ICON_MAP[badge.key];
+        if (!icon.src) return;
+        icon.alt = badge.label || badge.key;
+        accountBadges.appendChild(icon);
       });
 
       if (avatarUrl) {

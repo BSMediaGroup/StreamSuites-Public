@@ -4,6 +4,24 @@
 
 Packaged / released and no longer the active pending bucket. Preserve new notes for the open `0.4.8-alpha` section below.
 
+## Public Compact Widget Cleanup - 2026-03-27
+
+### Technical Notes
+
+- The public shell top-bar account widget now normalizes authoritative badge arrays into a compact-only subset, allowing admin or developer to suppress tier where appropriate, falling back to a single tier badge otherwise, and explicitly excluding founder from the compact widget.
+- Widget spacing, avatar sizing, and badge sizing were tightened so the public account pill stays visually closer to adjacent top-bar controls without touching richer profile/card badge rendering.
+
+### Human-Readable Notes
+
+- The public header account pill is slimmer and cleaner.
+- Founder still exists on fuller profile surfaces where intended, but it no longer crowds the compact top-bar widget.
+
+### Files / Areas Touched
+
+- `js/public-shell.js`
+- `css/public-shell.css`
+- `BUMP_NOTES.md`
+
 ## Public Static Badge Contract Alignment - 2026-03-27
 
 - The static public/community data-hub path now consumes authoritative badge arrays from profile payloads instead of rebuilding badge display from role and tier alone, which keeps non-API-backed profile rows aligned with the runtime-owned badge contract.
