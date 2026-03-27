@@ -15,12 +15,12 @@
   ];
 
   const COMMUNITY_NAV = [
-    { href: "/community", label: "Home", icon: "/assets/icons/ui/community.svg", group: "main" },
+    { href: "/community", label: "Home", icon: "/assets/icons/ui/home.svg", group: "main" },
     { href: "/community/members.html", label: "Members", icon: "/assets/icons/ui/profilecard.svg", group: "main" },
     { href: "/live", label: "Live", icon: "/assets/icons/ui/cast.svg", group: "main" },
     { href: "/community/notices.html", label: "Notices", icon: "/assets/icons/ui/campaign.svg", group: "main" },
     { href: "/community/settings.html", label: "Settings", icon: "/assets/icons/ui/cog.svg", group: "main" },
-    { href: "/media", label: "Media", icon: "/assets/icons/ui/home.svg", group: "main" },
+    { href: "/media", label: "Media", icon: "/assets/icons/ui/mediafill.svg", group: "main" },
     { href: "/support.html", label: "Support", icon: "/assets/icons/ui/support.svg", group: "quick" },
     { href: "/resources.html", label: "Resources", icon: "/assets/icons/ui/contactbook.svg", group: "quick" },
     { href: "/donate.html", label: "Donate", icon: "/assets/icons/ui/donate.svg", group: "quick" },
