@@ -122,16 +122,7 @@
       })
       .filter(Boolean);
 
-    const hasAdminBadge = normalized.some((badge) => badge?.key === "admin");
-    const hasDeveloperBadge = normalized.some((badge) => badge?.key === "developer");
-    const filtered = normalized.filter(
-      (badge) =>
-        !(
-          badge?.key === "founder" ||
-          (hasAdminBadge && ["core", "gold", "pro"].includes(badge?.key)) ||
-          (hasDeveloperBadge && badge?.key === "pro")
-        )
-    );
+    const filtered = normalized.filter((badge) => badge?.key !== "founder");
     const roleBadge = filtered.find((badge) => badge.key === "admin" || badge.key === "developer");
     if (roleBadge) return [roleBadge];
     const tierBadge = filtered.find((badge) => ["core", "gold", "pro"].includes(badge.key));

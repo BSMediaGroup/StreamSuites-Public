@@ -83,7 +83,7 @@
 
   function normalizeTier(value) {
     const tier = safeText(value).toLowerCase();
-    return tier === "gold" || tier === "pro" ? tier : "core";
+    return tier === "gold" || tier === "pro" || tier === "developer" ? tier : "core";
   }
 
   function normalizeBadgeKey(value) {
@@ -180,15 +180,7 @@
         };
       })
       .filter(Boolean);
-    const hasAdminBadge = normalized.some((badge) => badge?.key === "admin");
-    const hasDeveloperBadge = normalized.some((badge) => badge?.key === "developer");
-    return normalized.filter(
-      (badge) =>
-        !(
-          (hasAdminBadge && ["core", "gold", "pro"].includes(badge?.key)) ||
-          (hasDeveloperBadge && badge?.key === "pro")
-        )
-    );
+    return normalized;
   }
 
   function resolveBadgeIconPath(kind, value) {

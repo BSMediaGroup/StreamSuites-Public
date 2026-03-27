@@ -144,3 +144,24 @@ Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into t
 ### Risks / Follow-Ups
 
 - Pending entries for `0.4.8-alpha` go here.
+
+## Task 3P - Developer Tier + Badge Surface Matrix - 2026-03-28
+
+### Technical Notes
+
+- Public badge consumers now stop applying the old local admin/developer suppression rules and trust the backend-authored badge payload more directly.
+- Public hover/profile-card badge inputs can now prefer the backend profile-card/directory badge projections when they are present.
+
+### Human-Readable Notes
+
+- Public-facing profile and card badges are now much closer to the backend source of truth, which reduces client-side badge mismatches.
+
+### Files / Areas Touched
+
+- `js/public-pages-app.js`
+- `js/public-shell.js`
+- `assets/js/ss-profile-hovercard.js`
+
+### Risks / Follow-Ups
+
+- The compact shell widget still intentionally compresses badges for space, so future widget design work should decide whether to keep that curated subset or show the full backend-visible list for the widget surface.

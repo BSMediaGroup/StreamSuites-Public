@@ -509,7 +509,11 @@
     const bio = String(profile.bio || "").trim();
     const coverUrl = String(profile.coverImageUrl || profile.cover_image_url || "").trim();
     const socialLinks = normalizeSocialLinks(profile.socialLinks || profile.social_links);
-    const badges = Array.isArray(profile.badges) ? profile.badges : [];
+    const badges = Array.isArray(profile?.badge_state?.surface_badges?.profile_card)
+      ? profile.badge_state.surface_badges.profile_card
+      : Array.isArray(profile.badges)
+      ? profile.badges
+      : [];
     const liveStatus = getLiveStatus(profile);
 
     setHoverDataAttr(node, "data-ss-user-code", userCode);
@@ -548,7 +552,7 @@
 
   function normalizeTierForUi(value) {
     const tier = String(value || "").trim().toLowerCase();
-    if (tier === "gold" || tier === "pro") return tier;
+    if (tier === "gold" || tier === "pro" || tier === "developer") return tier;
     return "core";
   }
 
@@ -577,15 +581,7 @@
     if (!normalized.length) {
       normalized = buildAccountBadges(accountType, tier);
     }
-    const hasAdminBadge = normalized.some((badge) => badge?.key === "admin");
-    const hasDeveloperBadge = normalized.some((badge) => badge?.key === "developer");
-    return normalized.filter(
-      (badge) =>
-        !(
-          (hasAdminBadge && ["core", "gold", "pro"].includes(badge?.key)) ||
-          (hasDeveloperBadge && badge?.key === "pro")
-        )
-    );
+    return normalized;
   }
 
   function roleLabel(role) {
@@ -612,7 +608,9 @@
     row.setAttribute("data-ss-badge-kind", "role");
     const role = normalizeRoleForUi(profile?.role);
     normalizeAuthoritativeBadges(
-      profile?.badges,
+      profile?.badge_state?.surface_badges?.directory ||
+        profile?.badge_state?.surface_badges?.public_surface ||
+        profile?.badges,
       profile?.accountType || profile?.account_type || roleLabel(role),
       profile?.tier
     ).forEach((badge) => {
