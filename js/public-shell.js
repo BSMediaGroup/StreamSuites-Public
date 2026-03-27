@@ -1,31 +1,31 @@
 (() => {
   const MEDIA_NAV = [
-    { href: "/media", label: "Home", icon: "/assets/icons/ui/dashboard.svg", group: "main" },
-    { href: "/clips", label: "Clips", icon: "/assets/icons/ui/portal.svg", group: "main" },
-    { href: "/polls", label: "Polls", icon: "/assets/icons/ui/clickpoint.svg", group: "main" },
+    { href: "/media", label: "Home", icon: "/assets/icons/ui/home.svg", group: "main" },
+    { href: "/clips", label: "Clips", icon: "/assets/icons/ui/clipcards.svg", group: "main" },
+    { href: "/polls", label: "Polls", icon: "/assets/icons/ui/vote.svg", group: "main" },
     { href: "/scoreboards", label: "Scoreboards", icon: "/assets/icons/ui/tablechart.svg", group: "main" },
-    { href: "/tallies", label: "Tallies", icon: "/assets/icons/ui/piechart.svg", group: "main" },
-    { href: "/live", label: "Live", icon: "/assets/icons/ui/heart.svg", group: "main" },
-    { href: "/community/index.html", label: "Community", icon: "/assets/icons/ui/profile.svg", group: "main" },
-    { href: "/support.html", label: "Support", icon: "/assets/icons/ui/checkbox.svg", group: "quick" },
-    { href: "/resources.html", label: "Resources", icon: "/assets/icons/ui/portal.svg", group: "quick" },
-    { href: "/donate.html", label: "Donate", icon: "/assets/icons/ui/heart.svg", group: "quick" },
-    { href: "/stats.html", label: "Statistics", icon: "/assets/icons/ui/chartdata.svg", group: "quick" },
-    { href: "/about.html", label: "About", icon: "/assets/icons/ui/identity.svg", group: "quick" }
+    { href: "/tallies", label: "Tallies", icon: "/assets/icons/ui/ballot.svg", group: "main" },
+    { href: "/live", label: "Live", icon: "/assets/icons/ui/cast.svg", group: "main" },
+    { href: "/community/index.html", label: "Community", icon: "/assets/icons/ui/community.svg", group: "main" },
+    { href: "/support.html", label: "Support", icon: "/assets/icons/ui/support.svg", group: "quick" },
+    { href: "/resources.html", label: "Resources", icon: "/assets/icons/ui/contactbook.svg", group: "quick" },
+    { href: "/donate.html", label: "Donate", icon: "/assets/icons/ui/donate.svg", group: "quick" },
+    { href: "/stats.html", label: "Statistics", icon: "/assets/icons/ui/statgraph.svg", group: "quick" },
+    { href: "/about.html", label: "About", icon: "/assets/icons/ui/info.svg", group: "quick" }
   ];
 
   const COMMUNITY_NAV = [
-    { href: "/community", label: "Home", icon: "/assets/icons/ui/dashboard.svg", group: "main" },
-    { href: "/community/members.html", label: "Members", icon: "/assets/icons/ui/profile.svg", group: "main" },
-    { href: "/live", label: "Live", icon: "/assets/icons/ui/heart.svg", group: "main" },
-    { href: "/community/notices.html", label: "Notices", icon: "/assets/icons/ui/tickbadge.svg", group: "main" },
+    { href: "/community", label: "Home", icon: "/assets/icons/ui/community.svg", group: "main" },
+    { href: "/community/members.html", label: "Members", icon: "/assets/icons/ui/profilecard.svg", group: "main" },
+    { href: "/live", label: "Live", icon: "/assets/icons/ui/cast.svg", group: "main" },
+    { href: "/community/notices.html", label: "Notices", icon: "/assets/icons/ui/campaign.svg", group: "main" },
     { href: "/community/settings.html", label: "Settings", icon: "/assets/icons/ui/cog.svg", group: "main" },
-    { href: "/media", label: "Media", icon: "/assets/icons/ui/portal.svg", group: "main" },
-    { href: "/support.html", label: "Support", icon: "/assets/icons/ui/checkbox.svg", group: "quick" },
-    { href: "/resources.html", label: "Resources", icon: "/assets/icons/ui/portal.svg", group: "quick" },
-    { href: "/donate.html", label: "Donate", icon: "/assets/icons/ui/heart.svg", group: "quick" },
-    { href: "/stats.html", label: "Statistics", icon: "/assets/icons/ui/chartdata.svg", group: "quick" },
-    { href: "/about.html", label: "About", icon: "/assets/icons/ui/identity.svg", group: "quick" }
+    { href: "/media", label: "Media", icon: "/assets/icons/ui/home.svg", group: "main" },
+    { href: "/support.html", label: "Support", icon: "/assets/icons/ui/support.svg", group: "quick" },
+    { href: "/resources.html", label: "Resources", icon: "/assets/icons/ui/contactbook.svg", group: "quick" },
+    { href: "/donate.html", label: "Donate", icon: "/assets/icons/ui/donate.svg", group: "quick" },
+    { href: "/stats.html", label: "Statistics", icon: "/assets/icons/ui/statgraph.svg", group: "quick" },
+    { href: "/about.html", label: "About", icon: "/assets/icons/ui/info.svg", group: "quick" }
   ];
 
   const SIDEBAR_STATE_KEY = "ss-public-sidebar-state";
