@@ -4,6 +4,24 @@
 
 Packaged / released and no longer the active pending bucket. Preserve new notes for the open `0.4.8-alpha` section below.
 
+## Public Badge Payload Trust Cleanup - 2026-03-28
+
+### Technical Notes
+
+- Removed the stale local admin-over-tier and developer-over-Pro badge filter from `js/public-data-hub.js` when normalizing authoritative profile badges for public profile consumers.
+- The backend already resolves the final visible badge set through the matrix model, so this extra client filter could incorrectly strip legitimate runtime-owned combinations and was no longer a safe compatibility shim.
+- The file became shorter because the legacy `hasAdminBadge` / `hasDeveloperBadge` suppression branch was deleted outright.
+
+### Human-Readable Notes
+
+- Public profile consumers now follow the badge payload they receive instead of hiding badges with older rules.
+- The compact public header widget still keeps its deliberate one-badge summary behavior as a separate space-constrained presentation choice.
+
+### Files / Areas Touched
+
+- `js/public-data-hub.js`
+- `BUMP_NOTES.md`
+
 ## Public Compact Widget Cleanup - 2026-03-27
 
 ### Technical Notes
