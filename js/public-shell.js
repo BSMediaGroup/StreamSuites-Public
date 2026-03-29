@@ -4,7 +4,7 @@
     { href: "/clips", label: "Clips", icon: "/assets/icons/ui/clipcards.svg", group: "main" },
     { href: "/polls", label: "Polls", icon: "/assets/icons/ui/vote.svg", group: "main" },
     { href: "/scoreboards", label: "Scoreboards", icon: "/assets/icons/ui/tablechart.svg", group: "main" },
-    { href: "/tallies", label: "Tallies", icon: "/assets/icons/ui/ballot.svg", group: "main" },
+    { href: "/tallies", label: "Tallies", icon: "/assets/icons/ui/bulletlist.svg", group: "main" },
     { href: "/live", label: "Live", icon: "/assets/icons/ui/cast.svg", group: "main" },
     { href: "/community/index.html", label: "Community", icon: "/assets/icons/ui/community.svg", group: "main" },
     { href: "/support.html", label: "Support", icon: "/assets/icons/ui/support.svg", group: "quick" },
