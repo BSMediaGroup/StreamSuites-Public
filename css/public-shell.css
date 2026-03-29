@@ -214,7 +214,7 @@ body.public-standalone-page {
   overflow-y: auto;
   overflow-x: hidden;
   padding: 10px 8px 12px;
-  scrollbar-width: thin;
+  scrollbar-width: none;
   scrollbar-color: var(--ps-scrollbar-thumb) var(--ps-scrollbar-track);
 }
 
