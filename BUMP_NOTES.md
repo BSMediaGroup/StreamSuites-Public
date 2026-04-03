@@ -147,6 +147,25 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into the released `0.4.2-alpha` section above.
 
+### Public Requests Redirect To Developer Console Feedback Hub - 2026-04-04
+
+### Technical Notes
+
+- Updated the root `_redirects` manifest so the legacy `/requests`, `/requests/`, and `/requests.html` entry points now redirect to `https://console.streamsuites.app/feedback` using a simple Pages-compatible external redirect.
+- This milestone intentionally does not move runtime authority into the public repo and does not add a duplicate local feedback implementation here. The public repo now hands off the feedback/request intake role to the dedicated developer console surface.
+- No files were created or removed in this repo during this change.
+
+### Human-Readable Notes
+
+- The old public requests route now points visitors to the new console feedback hub.
+- The public site keeps its existing role as the main public surface instead of also trying to host the new intake workflow.
+
+### Files / Areas Touched
+
+- `_redirects`
+- `README.md`
+- `BUMP_NOTES.md`
+
 ### Technical Notes
 
 - Pending entries for `0.4.8-alpha` go here.

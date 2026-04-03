@@ -52,6 +52,7 @@ flowchart TD
 ## Routing and Runtime Integration
 
 - Cloudflare Pages routing is handled by the root `_redirects` file plus Pages Functions under `functions/`.
+- The legacy public `/requests` route is now expected to hand off to the developer console feedback hub at `https://console.streamsuites.app/feedback`, while authoritative request data remains runtime-owned.
 - Same-origin auth and API proxy paths forward browser requests to the authoritative Auth API without moving backend ownership into this repo.
 - Public auth entry points now consume `/auth/access-state` and the short-lived `/auth/debug/unlock` bypass flow so public pages remain browseable while new auth starts can be gated by runtime mode.
 - Route handlers under `functions/clips`, `functions/polls`, `functions/scoreboards`, `functions/scores`, `functions/tallies`, and `functions/u` preserve gallery deep links plus clean artifact and profile routes.
