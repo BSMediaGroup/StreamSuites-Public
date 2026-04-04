@@ -1,5 +1,18 @@
 # Bump Notes
 
+## Public User Menu Dropdown Parity + Developer-Link Gating - 2026-04-05
+
+### Technical Notes
+
+- Added a compact Creator-style account overview card to the shared public shell dropdown by extending `js/public-shell.js` plus `css/public-shell.css` rather than inventing a separate public-only menu design.
+- Updated `js/public-pages-app.js` auth normalization to consume the existing runtime `access_class`, `effective_tier.display_tier_label`, `creator_workspace_access`, `admin_access`, and `developer_console_access` fields so cross-surface menu links are capability-aware.
+- The Public dropdown now shows `Developer Console` only when `developer_console_access.allowed === true`; Creator and Admin links now follow the same authoritative access posture instead of relying on coarse account-type guesses.
+
+### Human-Readable Notes
+
+- The Public account menu now starts with the same compact account-summary card style used on Creator.
+- Developer Console only appears for sessions that actually have developer access.
+
 ## RELEASED / PACKAGED: 0.4.2-alpha
 
 Packaged / released and no longer the active pending bucket. Preserve new notes for the open `0.4.8-alpha` section below.

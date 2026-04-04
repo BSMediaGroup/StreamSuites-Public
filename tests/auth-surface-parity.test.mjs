@@ -57,3 +57,16 @@ test("public lander defers auth modal turnstile init until deferred helper is re
   assert.match(lander, /document\.addEventListener\('DOMContentLoaded', initLandingPageAuth, \{ once: true \}\)/);
   assert.match(lander, /window\.StreamSuitesTurnstileInline\?\.createController\?\.\(/);
 });
+
+test("public account menu keeps the overview card and capability-aware console link", () => {
+  const app = read("js/public-pages-app.js");
+  const shell = read("js/public-shell.js");
+  const css = read("css/public-shell.css");
+
+  assert.match(app, /developer_console_access/);
+  assert.match(app, /creator_workspace_access/);
+  assert.match(app, /admin_access/);
+  assert.match(app, /Developer Console/);
+  assert.match(shell, /account-menu-overview/);
+  assert.match(css, /account-menu-overview/);
+});

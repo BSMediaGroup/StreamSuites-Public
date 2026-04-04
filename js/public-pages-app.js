@@ -3035,10 +3035,29 @@
 
   function normalizeAccountType(value) {
     const normalized = String(value || "").trim().toUpperCase();
-    if (normalized === "ADMIN" || normalized === "CREATOR" || normalized === "PUBLIC") {
+    if (normalized === "ADMIN" || normalized === "CREATOR" || normalized === "DEVELOPER" || normalized === "PUBLIC") {
       return normalized;
     }
     return "";
+  }
+
+  function normalizeAccessContract(value) {
+    return value && typeof value === "object" ? value : { allowed: false };
+  }
+
+  function resolveDisplayTier(payload) {
+    return String(
+      payload?.effective_tier?.display_tier_label ||
+      payload?.effective_tier?.tier_label ||
+      payload?.effectiveTier?.display_tier_label ||
+      payload?.effectiveTier?.displayTierLabel ||
+      payload?.effectiveTier?.tier_label ||
+      payload?.effectiveTier?.tierLabel ||
+      payload?.tier ||
+      payload?.data?.tier ||
+      payload?.user?.tier ||
+      "core"
+    ).trim();
   }
 
   function normalizeUserCode(value, fallback = "public-user") {
@@ -3119,11 +3138,19 @@
   }
 
   function buildAccountBadges(accountType, tier) {
-    const role = accountType === "ADMIN" ? "admin" : accountType === "CREATOR" ? "creator" : "viewer";
+    const role =
+      accountType === "ADMIN" ? "admin" :
+      accountType === "DEVELOPER" ? "developer" :
+      accountType === "CREATOR" ? "creator" :
+      "viewer";
     const tierValue = normalizeTierForUi(tier);
     const badges = [];
     if (role === "admin") {
       badges.push({ key: "admin", kind: "role", value: "admin", label: "Admin" });
+      return badges;
+    }
+    if (role === "developer") {
+      badges.push({ key: "developer", kind: "role", value: "developer", label: "Developer" });
       return badges;
     }
     if (role === "creator") {
@@ -3172,6 +3199,9 @@
       ""
     ).trim();
     const accountType =
+      normalizeAccountType(payload?.access_class) ||
+      normalizeAccountType(payload?.data?.access_class) ||
+      normalizeAccountType(payload?.user?.access_class) ||
       normalizeAccountType(payload?.account_type) ||
       normalizeAccountType(payload?.role) ||
       normalizeAccountType(payload?.data?.role) ||
@@ -3183,6 +3213,7 @@
       payload?.user?.tier ||
       "core"
     ).trim().toLowerCase() || "core";
+    const displayTier = resolveDisplayTier(payload) || tier;
     const userCode = normalizeUserCode(
       payload?.user_code ||
       payload?.data?.user_code ||
@@ -3210,7 +3241,32 @@
       displayName,
       avatarUrl,
       accountType,
+      accessClass: accountType,
       tier,
+      displayTier,
+      developerConsoleAccess: normalizeAccessContract(
+        payload?.developer_console_access ||
+        payload?.developerConsoleAccess ||
+        payload?.data?.developer_console_access ||
+        payload?.user?.developer_console_access
+      ),
+      adminAccess: normalizeAccessContract(
+        payload?.admin_access ||
+        payload?.adminAccess ||
+        payload?.data?.admin_access ||
+        payload?.user?.admin_access
+      ),
+      creatorWorkspaceAccess: normalizeAccessContract(
+        payload?.creator_workspace_access ||
+        payload?.creatorWorkspaceAccess ||
+        payload?.data?.creator_workspace_access ||
+        payload?.user?.creator_workspace_access
+      ),
+      creatorCapable:
+        payload?.creator_workspace_access?.allowed === true ||
+        payload?.creatorWorkspaceAccess?.allowed === true ||
+        payload?.creator_capable === true ||
+        payload?.creatorCapable === true,
       badges: normalizeAuthoritativeBadges(payload?.badges, accountType, tier)
     };
   }
@@ -3246,7 +3302,7 @@
       });
     }
 
-    if (authState.accountType === "CREATOR" || authState.accountType === "ADMIN") {
+    if (authState.creatorWorkspaceAccess?.allowed === true || authState.creatorCapable === true) {
       items.push({ separator: true });
       items.push({
         label: "Creator Dashboard",
@@ -3257,13 +3313,23 @@
       });
     }
 
-    if (authState.accountType === "ADMIN") {
+    if (authState.adminAccess?.allowed === true || authState.accountType === "ADMIN") {
       items.push({
         label: "Admin Dashboard",
         href: ADMIN_DASHBOARD_URL,
         target: "_blank",
         rel: "noopener noreferrer",
         action: "admin_dashboard"
+      });
+    }
+
+    if (authState.developerConsoleAccess?.allowed === true) {
+      items.push({
+        label: "Developer Console",
+        href: "https://console.streamsuites.app/dashboard/",
+        target: "_blank",
+        rel: "noopener noreferrer",
+        action: "developer_console"
       });
     }
 
@@ -3278,6 +3344,14 @@
       accountAvatar: authState?.authenticated ? authState.avatarUrl : "",
       accountBadges: authState?.authenticated ? authState.badges : [],
       accountAuthenticated: Boolean(authState?.authenticated),
+      accountOverview: authState?.authenticated ? {
+        rows: [
+          { label: "Display name", value: authState.displayName },
+          { label: "User code", value: authState.userCode || "Not available" },
+          { label: "Account type", value: authState.accessClass || authState.accountType },
+          { label: "Tier", value: authState.displayTier || authState.tier || "core" },
+        ],
+      } : null,
       accountMenuItems: buildAccountMenuItems(authState),
       onAccountMenuAction(action, item) {
         if (typeof onMenuAction === "function") {

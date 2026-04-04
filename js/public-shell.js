@@ -511,6 +511,7 @@
       accountAvatar: "",
       accountBadges: [],
       accountAuthenticated: false,
+      accountOverview: null,
       accountMenuItems: [],
       ...userOptions
     };
@@ -1150,6 +1151,25 @@
         accountMenu.appendChild(header);
       }
 
+      if (options.accountAuthenticated && options.accountOverview && Array.isArray(options.accountOverview.rows)) {
+        const overview = create("div", "account-menu-overview");
+        options.accountOverview.rows.forEach((row) => {
+          if (!row || typeof row !== "object") return;
+          const label = String(row.label || "").trim();
+          const value = String(row.value || "").trim();
+          if (!label || !value) return;
+          const item = create("div", "account-menu-overview-row");
+          item.append(
+            create("span", "account-menu-overview-label", label),
+            create("span", "account-menu-overview-value", value)
+          );
+          overview.appendChild(item);
+        });
+        if (overview.childElementCount) {
+          accountMenu.appendChild(overview);
+        }
+      }
+
       options.accountMenuItems.forEach((item) => {
         if (!item || typeof item !== "object") return;
         if (item.separator) {
@@ -1212,6 +1232,13 @@
       }
       if (typeof next.accountAuthenticated === "boolean") {
         options.accountAuthenticated = next.accountAuthenticated;
+      }
+      if (next.accountOverview === null) {
+        options.accountOverview = null;
+      } else if (next.accountOverview && typeof next.accountOverview === "object") {
+        options.accountOverview = {
+          rows: Array.isArray(next.accountOverview.rows) ? next.accountOverview.rows.slice() : [],
+        };
       }
       if (Array.isArray(next.accountMenuItems)) {
         options.accountMenuItems = next.accountMenuItems.slice();
@@ -1421,6 +1448,8 @@
         typeof next.accountAvatar === "string" ||
         Array.isArray(next.accountBadges) ||
         typeof next.accountAuthenticated === "boolean" ||
+        next.accountOverview === null ||
+        (next.accountOverview && typeof next.accountOverview === "object") ||
         Array.isArray(next.accountMenuItems)
       ) {
         setAccountState(next);
@@ -1533,6 +1562,7 @@
       accountAvatar: options.accountAvatar,
       accountBadges: options.accountBadges,
       accountAuthenticated: options.accountAuthenticated,
+      accountOverview: options.accountOverview,
       accountMenuItems: options.accountMenuItems
     });
 
