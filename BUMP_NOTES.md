@@ -222,3 +222,40 @@ Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into t
 ### Risks / Follow-Ups
 
 - Public auth starts still depend on the runtime's deployed Turnstile config endpoint. A stale runtime deployment will hide the widget rather than creating local fallback validation.
+
+## Task 3Y - Auth Surface Parity + Turnstile Repair Pass - 2026-04-05
+
+### Technical Notes
+
+- Added the shared `js/turnstile-inline.js` helper to every `public-shell` route that opens the shared auth modal, closing the missed parity gap on routes such as `/media`, `/clips`, `/polls`, `/scoreboards`, and `/tallies`.
+- Added the same low-footprint alternate-surface login link strip to the shared modal plus the direct `public-login.html` and `requests-login.html` routes, and tightened the inline Turnstile panel spacing so the widget reads like part of the form instead of a dropped-in block.
+- Added a lightweight source-audit regression at `tests/auth-surface-parity.test.mjs` covering both helper inclusion and alternate-surface link presence.
+
+### Human-Readable Notes
+
+- Public login modals now show Turnstile consistently across the previously missed route variants.
+- Public login surfaces now expose the same small “elsewhere” links for Creator, Admin, and Developer access without changing the overall auth layout.
+
+### Files / Areas Touched
+
+- `media.html`
+- `clips.html`
+- `clips/detail.html`
+- `polls.html`
+- `polls/detail.html`
+- `polls/results.html`
+- `scoreboards.html`
+- `scoreboards/detail.html`
+- `tallies.html`
+- `tallies/detail.html`
+- `public-login.html`
+- `requests-login.html`
+- `js/public-shell.js`
+- `css/public-pages-v2.css`
+- `tests/auth-surface-parity.test.mjs`
+- `README.md`
+- `BUMP_NOTES.md`
+
+### Risks / Follow-Ups
+
+- The shared modal now depends on the helper being loaded on every shell entrypoint. Future route additions that use `public-shell.js` need to keep that helper script include or the modal will regress again.

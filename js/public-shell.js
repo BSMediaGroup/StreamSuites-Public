@@ -736,6 +736,13 @@
             <div class="ss-turnstile-slot" data-auth-turnstile-slot></div>
             <p class="ss-turnstile-status" data-auth-turnstile-status></p>
           </section>
+          <nav class="ss-auth-surface-links" aria-label="Alternate login surfaces">
+            <span class="ss-auth-surface-links__label">Elsewhere</span>
+            <a href="/public-login.html">Public</a>
+            <a href="https://creator.streamsuites.app/auth/login.html">Creator</a>
+            <a href="https://admin.streamsuites.app/auth/login.html">Admin</a>
+            <a href="https://console.streamsuites.app/login/">Developer</a>
+          </nav>
         </div>
         <div class="auth-panel" data-state="login"></div>
         <div class="auth-panel" data-state="signup"></div>

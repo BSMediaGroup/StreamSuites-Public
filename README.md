@@ -165,6 +165,8 @@ StreamSuites-Public/
 │   ├── requests-auth.css
 │   ├── requests.css
 │   └── status-widget.css
+├── tests/
+│   └── auth-surface-parity.test.mjs
 └── assets/
     ├── css/
     │   └── ss-profile-hovercard.css
