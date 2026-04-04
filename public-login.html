@@ -61,12 +61,26 @@
             <div id="public-login-turnstile" class="ss-turnstile-slot"></div>
             <p id="public-login-turnstile-status" class="ss-turnstile-status"></p>
           </section>
-          <nav class="ss-auth-surface-links ss-auth-surface-links--page" aria-label="Alternate login surfaces">
-            <span class="ss-auth-surface-links__label">Elsewhere</span>
-            <a href="https://creator.streamsuites.app/auth/login.html">Creator</a>
-            <a href="https://admin.streamsuites.app/auth/login.html">Admin</a>
-            <a href="https://console.streamsuites.app/login/">Developer</a>
-          </nav>
+          <details class="ss-auth-surface-links ss-auth-surface-links--page" aria-label="Login to other surfaces">
+            <summary class="ss-auth-surface-links__summary">
+              <span class="ss-auth-surface-links__summary-label">Login to other surfaces</span>
+              <span class="ss-auth-surface-links__chevron" aria-hidden="true"></span>
+            </summary>
+            <div class="ss-auth-surface-links__list">
+              <a class="ss-auth-surface-links__link" href="https://creator.streamsuites.app/auth/login.html">
+                <span class="ss-auth-surface-links__icon ss-auth-surface-links__icon--creator" aria-hidden="true"></span>
+                <span>Creator Dashboard</span>
+              </a>
+              <a class="ss-auth-surface-links__link" href="https://admin.streamsuites.app/auth/login.html">
+                <span class="ss-auth-surface-links__icon ss-auth-surface-links__icon--admin" aria-hidden="true"></span>
+                <span>Admin Dashboard</span>
+              </a>
+              <a class="ss-auth-surface-links__link" href="https://console.streamsuites.app/login/">
+                <span class="ss-auth-surface-links__icon ss-auth-surface-links__icon--developer" aria-hidden="true"></span>
+                <span>Developer Console</span>
+              </a>
+            </div>
+          </details>
 
           <nav class="ss-public-login__tabs" aria-label="Authentication mode">
             <button type="button" class="ss-public-login__tab is-active" data-tab="login">Log in</button>

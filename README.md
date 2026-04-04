@@ -180,6 +180,10 @@ StreamSuites-Public/
             ├── filters.svg
             ├── findmehereicon.svg
             ├── search.svg
+            ├── ss-admin.svg
+            ├── ss-creator.svg
+            ├── ss-developer.svg
+            ├── ss-public.svg
             ├── sidebar.svg
             ├── sidebarclose.svg
             ├── sidebaropen.svg

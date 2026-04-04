@@ -37,14 +37,23 @@ test("every public-shell route loads the shared turnstile helper", () => {
 });
 
 test("public login surfaces expose alternate surface links", () => {
+  const lander = read("index.html");
   const publicLogin = read("public-login.html");
   const requestsLogin = read("requests-login.html");
   const shellScript = read("js/public-shell.js");
 
-  for (const text of [publicLogin, requestsLogin, shellScript]) {
-    assert.match(text, /Alternate login surfaces/);
-    assert.match(text, /Creator/);
-    assert.match(text, /Admin/);
-    assert.match(text, /Developer/);
+  for (const text of [lander, publicLogin, requestsLogin, shellScript]) {
+    assert.match(text, /Login to other surfaces/);
+    assert.doesNotMatch(text, /Elsewhere/);
+    assert.match(text, /Creator Dashboard|Public/);
+    assert.match(text, /Admin Dashboard/);
+    assert.match(text, /Developer Console/);
   }
+});
+
+test("public lander defers auth modal turnstile init until deferred helper is ready", () => {
+  const lander = read("index.html");
+  assert.match(lander, /function initLandingPageAuth\(\)/);
+  assert.match(lander, /document\.addEventListener\('DOMContentLoaded', initLandingPageAuth, \{ once: true \}\)/);
+  assert.match(lander, /window\.StreamSuitesTurnstileInline\?\.createController\?\.\(/);
 });
