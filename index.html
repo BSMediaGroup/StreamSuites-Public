@@ -270,6 +270,10 @@
           </form>
           <p class="ss-auth-access-gate__feedback" data-auth-access-feedback hidden></p>
         </section>
+        <section class="ss-turnstile-panel" data-auth-turnstile-panel hidden aria-live="polite">
+          <div class="ss-turnstile-slot" data-auth-turnstile-slot></div>
+          <p class="ss-turnstile-status" data-auth-turnstile-status></p>
+        </section>
       </div>
 
       <div class="auth-panel" data-state="login">
@@ -408,6 +412,7 @@
     </div>
   </div>
 
+  <script src="/js/turnstile-inline.js" defer></script>
   <script>
     (function () {
       const banner = document.getElementById('landing-lockout-banner');
@@ -591,6 +596,16 @@
       const authAccessInput = authModal?.querySelector('[data-auth-access-input]');
       const authAccessSubmit = authModal?.querySelector('[data-auth-access-submit]');
       const authAccessFeedback = authModal?.querySelector('[data-auth-access-feedback]');
+      const authTurnstilePanel = authModal?.querySelector('[data-auth-turnstile-panel]');
+      const authTurnstileSlot = authModal?.querySelector('[data-auth-turnstile-slot]');
+      const authTurnstileStatus = authModal?.querySelector('[data-auth-turnstile-status]');
+      const authTurnstile = window.StreamSuitesTurnstileInline?.createController?.({
+        configUrl: '/auth/turnstile/config',
+        panel: authTurnstilePanel,
+        slot: authTurnstileSlot,
+        status: authTurnstileStatus,
+        onStateChange: () => syncAuthAccessUi(),
+      });
 
       if (!authModalBackdrop || !authModal) return;
 
@@ -733,6 +748,7 @@
       };
 
       const isAuthAccessBlocked = (state = authAccess.state) => Boolean(state?.gateActive && !state?.bypassUnlocked);
+      const isAuthTurnstileBlocked = () => authTurnstile?.isEnabled?.() && !authTurnstile?.hasToken?.();
 
       const setAuthAccessFeedback = (message, tone = '') => {
         if (!authAccessFeedback) return;
@@ -778,7 +794,7 @@
           authAccessForm.hidden = !authAccess.formOpen;
         }
 
-        const blocked = isAuthAccessBlocked();
+        const blocked = isAuthAccessBlocked() || isAuthTurnstileBlocked();
         authModal.querySelectorAll('.auth-oauth-button').forEach((button) => {
           button.classList.toggle('is-disabled', blocked);
           button.setAttribute('aria-disabled', blocked ? 'true' : 'false');
@@ -935,20 +951,28 @@
           link.dataset.authFlowWired = 'true';
           link.addEventListener('click', async (event) => {
             event.preventDefault();
-            const href = link.dataset.authOauthHref || buildCreatorAuthHref(provider);
-            if (!href) {
-              return;
-            }
             const accessState = await ensureAuthAccessReady({ reveal: true });
             if (isAuthAccessBlocked(accessState)) {
               return;
             }
+            const turnstileToken = await authTurnstile?.requireToken?.();
+            if (authTurnstile?.isEnabled?.() && !turnstileToken) {
+              return;
+            }
+            const href = link.dataset.authOauthHref || buildCreatorAuthHref(provider);
+            if (!href) {
+              return;
+            }
+            const destination = new URL(href);
+            if (turnstileToken) {
+              destination.searchParams.set('turnstile_token', turnstileToken);
+            }
             if (oauthFlow.state === AUTH_FLOW_STATES.starting || oauthFlow.state === AUTH_FLOW_STATES.waiting_callback) {
               return;
             }
-            oauthFlow.activeHref = href;
+            oauthFlow.activeHref = destination.toString();
             try {
-              const endpoint = new URL(href);
+              const endpoint = new URL(destination.toString());
               const callbackLanding = endpoint.searchParams.get('return_to') || CREATOR_LOGIN_SUCCESS_URL;
               const continueTo =
                 new URL(callbackLanding).searchParams.get('return_to') || CREATOR_DASHBOARD_RETURN_TO;
@@ -967,7 +991,7 @@
             setOauthFlowState(AUTH_FLOW_STATES.starting);
             try {
               setOauthFlowState(AUTH_FLOW_STATES.waiting_callback);
-              window.location.assign(href);
+              window.location.assign(destination.toString());
             } catch (error) {
               setOauthFlowState(AUTH_FLOW_STATES.error);
             }
@@ -1006,6 +1030,7 @@
         authModalBackdrop.setAttribute('aria-hidden', 'false');
         document.body.classList.add('modal-open');
         void loadAuthAccessState(true);
+        void authTurnstile?.init?.();
       };
 
       const closeModal = () => {
@@ -1051,6 +1076,14 @@
         if (!button) return;
         button.addEventListener('click', async (event) => {
           event.preventDefault();
+          const turnstileToken = await authTurnstile?.requireToken?.();
+          if (authTurnstile?.isEnabled?.() && !turnstileToken) {
+            setResendState(form, {
+              visible: true,
+              message: 'Complete the security check to resend the verification link.',
+            });
+            return;
+          }
           const email = getResendEmail(form);
           if (!email || !email.includes('@')) {
             setResendState(form, {
@@ -1070,6 +1103,7 @@
               body: JSON.stringify({
                 email,
                 surface: 'creator',
+                turnstile_token: turnstileToken,
               }),
             });
             let payload = null;
@@ -1093,6 +1127,10 @@
             setResendState(form, { visible: true, message: payload?.error || 'Unable to resend verification email.' });
           } catch (error) {
             setResendState(form, { visible: true, message: 'Unable to resend verification email.' });
+          } finally {
+            if (authTurnstile?.isEnabled?.()) {
+              authTurnstile.reset();
+            }
           }
         });
       };
@@ -1282,8 +1320,14 @@
           const password = form.querySelector('input[name="password"]')?.value || '';
           const confirmPassword = form.querySelector('input[name="confirmPassword"]')?.value || '';
           const submitButton = form.querySelector('button[type="submit"]');
+          const turnstileToken = await authTurnstile?.requireToken?.();
 
           clearError(form);
+
+          if (authTurnstile?.isEnabled?.() && !turnstileToken) {
+            renderError(form, 'Complete the security check to continue.');
+            return;
+          }
 
           if (!email || !password) {
             renderError(form, 'Please provide an email and password.');
@@ -1322,6 +1366,7 @@
                 email,
                 password,
                 surface: 'creator',
+                turnstile_token: turnstileToken,
               }),
             });
 
@@ -1384,6 +1429,9 @@
               renderError(form, 'Network error. Please try again.');
             }
           } finally {
+            if (authTurnstile?.isEnabled?.()) {
+              authTurnstile.reset();
+            }
             if (submitButton) {
               submitButton.disabled = false;
               submitButton.removeAttribute('aria-busy');

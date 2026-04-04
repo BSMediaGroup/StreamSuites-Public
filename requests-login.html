@@ -56,6 +56,10 @@
             </form>
             <p id="requests-login-access-feedback" class="ss-auth-access-gate__feedback" hidden></p>
           </section>
+          <section id="requests-login-turnstile-panel" class="ss-turnstile-panel" hidden aria-live="polite">
+            <div id="requests-login-turnstile" class="ss-turnstile-slot"></div>
+            <p id="requests-login-turnstile-status" class="ss-turnstile-status"></p>
+          </section>
           <div id="requests-login-options" hidden>
             <p class="ss-requests-auth__section-kicker">Sign in with</p>
             <div class="ss-requests-auth__oauth-grid">
@@ -90,6 +94,7 @@
     </main>
   </div>
 
+  <script src="/js/turnstile-inline.js" defer></script>
   <script>
     (function () {
       const API_BASE = "https://api.streamsuites.app";
@@ -121,6 +126,16 @@
       const accessCodeEl = document.getElementById("requests-login-access-code");
       const accessSubmitEl = document.getElementById("requests-login-access-submit");
       const accessFeedbackEl = document.getElementById("requests-login-access-feedback");
+      const turnstilePanelEl = document.getElementById("requests-login-turnstile-panel");
+      const turnstileSlotEl = document.getElementById("requests-login-turnstile");
+      const turnstileStatusEl = document.getElementById("requests-login-turnstile-status");
+      const turnstileController = window.StreamSuitesTurnstileInline?.createController?.({
+        configUrl: `${API_BASE}/auth/turnstile/config`,
+        panel: turnstilePanelEl,
+        slot: turnstileSlotEl,
+        status: turnstileStatusEl,
+        onStateChange: () => syncAccessUi()
+      });
 
       const safeStorageSet = (key, value) => {
         try {
@@ -228,6 +243,7 @@
       let accessFormOpen = false;
 
       const isAccessBlocked = () => accessState.gateActive && !accessState.bypassUnlocked;
+      const isTurnstileBlocked = () => turnstileController?.isEnabled?.() && !turnstileController?.hasToken?.();
 
       const setAccessFeedback = (message, tone) => {
         if (!accessFeedbackEl) return;
@@ -268,7 +284,7 @@
           accessFormEl.hidden = !accessFormOpen;
         }
 
-        const blocked = isAccessBlocked();
+        const blocked = isAccessBlocked() || isTurnstileBlocked();
         document.querySelectorAll("[data-provider]").forEach((link) => {
           link.classList.toggle("is-disabled", blocked);
           link.setAttribute("aria-disabled", blocked ? "true" : "false");
@@ -405,7 +421,15 @@
             }
             return;
           }
-          window.location.assign(link.href);
+          const turnstileToken = await turnstileController?.requireToken?.();
+          if (turnstileController?.isEnabled?.() && !turnstileToken) {
+            return;
+          }
+          const destination = new URL(link.href);
+          if (turnstileToken) {
+            destination.searchParams.set("turnstile_token", turnstileToken);
+          }
+          window.location.assign(destination.toString());
         });
       });
 
@@ -472,6 +496,7 @@
       };
 
       Promise.allSettled([
+        turnstileController?.init?.(),
         loadAccessState(true),
         fetch(ME_API_URL, {
         method: "GET",

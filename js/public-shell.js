@@ -732,6 +732,10 @@
             </form>
             <p class="ss-auth-access-gate__feedback" data-auth-access-feedback hidden></p>
           </section>
+          <section class="ss-turnstile-panel" data-auth-turnstile-panel hidden aria-live="polite">
+            <div class="ss-turnstile-slot" data-auth-turnstile-slot></div>
+            <p class="ss-turnstile-status" data-auth-turnstile-status></p>
+          </section>
         </div>
         <div class="auth-panel" data-state="login"></div>
         <div class="auth-panel" data-state="signup"></div>
@@ -750,6 +754,16 @@
     const authAccessInput = authBackdrop.querySelector("[data-auth-access-input]");
     const authAccessSubmit = authBackdrop.querySelector("[data-auth-access-submit]");
     const authAccessFeedback = authBackdrop.querySelector("[data-auth-access-feedback]");
+    const authTurnstilePanel = authBackdrop.querySelector("[data-auth-turnstile-panel]");
+    const authTurnstileSlot = authBackdrop.querySelector("[data-auth-turnstile-slot]");
+    const authTurnstileStatus = authBackdrop.querySelector("[data-auth-turnstile-status]");
+    const authTurnstile = window.StreamSuitesTurnstileInline?.createController?.({
+      configUrl: `${AUTH_API_BASE}/auth/turnstile/config`,
+      panel: authTurnstilePanel,
+      slot: authTurnstileSlot,
+      status: authTurnstileStatus,
+      onStateChange: () => syncAuthAccessUi(),
+    });
     const pageBannerMessage = pageBanner.querySelector(".public-lockout-banner__message");
     if (authCloseIcon) {
       authCloseIcon.style.setProperty("--icon-mask", `url("${UI_ICON_MAP.close}")`);
@@ -765,6 +779,10 @@
 
     function isAuthAccessBlocked() {
       return authAccessState.gateActive && !authAccessState.bypassUnlocked;
+    }
+
+    function isAuthTurnstileBlocked() {
+      return authTurnstile?.isEnabled?.() && !authTurnstile?.hasToken?.();
     }
 
     function setAuthAccessFeedback(message, tone) {
@@ -825,9 +843,10 @@
         authAccessForm.hidden = !authAccessFormOpen;
       }
 
+      const blocked = isAuthAccessBlocked() || isAuthTurnstileBlocked();
       authBackdrop.querySelectorAll("[data-auth-gate-action]").forEach((action) => {
-        action.classList.toggle("is-disabled", isAuthAccessBlocked());
-        action.setAttribute("aria-disabled", isAuthAccessBlocked() ? "true" : "false");
+        action.classList.toggle("is-disabled", blocked);
+        action.setAttribute("aria-disabled", blocked ? "true" : "false");
       });
     }
 
@@ -907,7 +926,15 @@
             }
             return;
           }
-          window.location.assign(link.href);
+          const turnstileToken = await authTurnstile?.requireToken?.();
+          if (authTurnstile?.isEnabled?.() && !turnstileToken) {
+            return;
+          }
+          const destination = new URL(link.href);
+          if (turnstileToken) {
+            destination.searchParams.set("turnstile_token", turnstileToken);
+          }
+          window.location.assign(destination.toString());
         });
         link.prepend(icon);
         oauthGrid.appendChild(link);
@@ -925,6 +952,10 @@
           if (nextState.bypassEnabled) {
             setAuthAccessFormOpen(true);
           }
+          return;
+        }
+        const turnstileToken = await authTurnstile?.requireToken?.();
+        if (authTurnstile?.isEnabled?.() && !turnstileToken) {
           return;
         }
         window.location.assign(methodLink.href);
@@ -970,6 +1001,7 @@
       authBackdrop.setAttribute("aria-hidden", "false");
       document.body.classList.add("modal-open");
       void loadModalAuthAccessState(true);
+      void authTurnstile?.init?.();
     }
 
     function closeAuthModal() {

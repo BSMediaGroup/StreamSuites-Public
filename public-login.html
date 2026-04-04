@@ -57,6 +57,10 @@
             </form>
             <p id="public-login-access-feedback" class="ss-auth-access-gate__feedback" hidden></p>
           </section>
+          <section id="public-login-turnstile-panel" class="ss-turnstile-panel" hidden aria-live="polite">
+            <div id="public-login-turnstile" class="ss-turnstile-slot"></div>
+            <p id="public-login-turnstile-status" class="ss-turnstile-status"></p>
+          </section>
 
           <nav class="ss-public-login__tabs" aria-label="Authentication mode">
             <button type="button" class="ss-public-login__tab is-active" data-tab="login">Log in</button>
@@ -119,6 +123,7 @@
   </div>
 
   <script src="/js/public-toast.js" defer></script>
+  <script src="/js/turnstile-inline.js" defer></script>
   <script src="/js/public-login.js" defer></script>
 </body>
 </html>

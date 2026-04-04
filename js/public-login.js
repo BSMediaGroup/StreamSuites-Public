@@ -44,7 +44,19 @@
   const accessCodeEl = document.getElementById("public-login-access-code");
   const accessSubmitEl = document.getElementById("public-login-access-submit");
   const accessFeedbackEl = document.getElementById("public-login-access-feedback");
+  const turnstilePanelEl = document.getElementById("public-login-turnstile-panel");
+  const turnstileSlotEl = document.getElementById("public-login-turnstile");
+  const turnstileStatusEl = document.getElementById("public-login-turnstile-status");
   const toast = window.StreamSuitesPublicToast;
+  const turnstileController = window.StreamSuitesTurnstileInline?.createController?.({
+    configUrl: "/auth/turnstile/config",
+    panel: turnstilePanelEl,
+    slot: turnstileSlotEl,
+    status: turnstileStatusEl,
+    onStateChange: () => {
+      syncSubmitAvailability();
+    }
+  });
 
   const params = new URLSearchParams(window.location.search || "");
   const returnTo = normalizeReturnTo(params.get("return_to") || DEFAULT_RETURN_TO);
@@ -171,6 +183,10 @@
     return accessState.gateActive && !accessState.bypassUnlocked;
   }
 
+  function isTurnstileBlocked() {
+    return turnstileController?.isEnabled?.() && !turnstileController?.hasToken?.();
+  }
+
   function setStatus(message) {
     if (statusEl) statusEl.textContent = message || "";
   }
@@ -196,14 +212,15 @@
 
   function syncSubmitAvailability() {
     if (loginSubmitEl instanceof HTMLButtonElement) {
-      loginSubmitEl.disabled = loginBusy || isAccessBlocked();
+      loginSubmitEl.disabled = loginBusy || isAccessBlocked() || isTurnstileBlocked();
     }
     if (signupSubmitEl instanceof HTMLButtonElement) {
-      signupSubmitEl.disabled = signupBusy || isAccessBlocked();
+      signupSubmitEl.disabled = signupBusy || isAccessBlocked() || isTurnstileBlocked();
     }
     providerLinks.forEach((link) => {
-      link.classList.toggle("is-disabled", isAccessBlocked());
-      link.setAttribute("aria-disabled", isAccessBlocked() ? "true" : "false");
+      const disabled = isAccessBlocked() || isTurnstileBlocked();
+      link.classList.toggle("is-disabled", disabled);
+      link.setAttribute("aria-disabled", disabled ? "true" : "false");
     });
   }
 
@@ -211,7 +228,7 @@
     if (!(button instanceof HTMLButtonElement)) return;
     if (button === loginSubmitEl) loginBusy = Boolean(busy);
     if (button === signupSubmitEl) signupBusy = Boolean(busy);
-    button.disabled = Boolean(busy) || isAccessBlocked();
+    button.disabled = Boolean(busy) || isAccessBlocked() || isTurnstileBlocked();
     button.textContent = busy ? labelBusy : labelIdle;
   }
 
@@ -450,7 +467,15 @@
           }
           return;
         }
-        window.location.assign(link.href);
+        const turnstileToken = await turnstileController?.requireToken?.();
+        if (turnstileController?.isEnabled?.() && !turnstileToken) {
+          return;
+        }
+        const destination = new URL(link.href);
+        if (turnstileToken) {
+          destination.searchParams.set("turnstile_token", turnstileToken);
+        }
+        window.location.assign(destination.toString());
       });
     });
   }
@@ -484,6 +509,10 @@
 
     setBusy(loginSubmitEl, true, "Logging in...", "Log in");
     try {
+      const turnstileToken = await turnstileController?.requireToken?.();
+      if (turnstileController?.isEnabled?.() && !turnstileToken) {
+        return;
+      }
       const response = await fetchWithTimeout(LOGIN_PASSWORD_URL, {
         method: "POST",
         cache: "no-store",
@@ -497,7 +526,8 @@
           email,
           password,
           surface: "public",
-          login_intent: "public"
+          login_intent: "public",
+          turnstile_token: turnstileToken,
         })
       });
 
@@ -537,6 +567,9 @@
       }
       setError("login", "Network error during login. Please try again.");
     } finally {
+      if (turnstileController?.isEnabled?.()) {
+        turnstileController.reset();
+      }
       setBusy(loginSubmitEl, false, "Logging in...", "Log in");
       syncSubmitAvailability();
     }
@@ -570,6 +603,10 @@
 
     setBusy(signupSubmitEl, true, "Creating...", "Create account");
     try {
+      const turnstileToken = await turnstileController?.requireToken?.();
+      if (turnstileController?.isEnabled?.() && !turnstileToken) {
+        return;
+      }
       const response = await fetchWithTimeout(SIGNUP_PASSWORD_URL, {
         method: "POST",
         cache: "no-store",
@@ -582,7 +619,8 @@
           email,
           password,
           surface: "public",
-          login_intent: "public"
+          login_intent: "public",
+          turnstile_token: turnstileToken,
         })
       });
 
@@ -611,6 +649,9 @@
       }
       setError("signup", "Network error during signup. Please try again.");
     } finally {
+      if (turnstileController?.isEnabled?.()) {
+        turnstileController.reset();
+      }
       setBusy(signupSubmitEl, false, "Creating...", "Create account");
       syncSubmitAvailability();
     }
@@ -695,6 +736,7 @@
     wireTabs();
     wireNavigation();
     wireAccessGate();
+    void turnstileController?.init?.();
     showTab("login");
 
     if (loginForm instanceof HTMLFormElement) {
