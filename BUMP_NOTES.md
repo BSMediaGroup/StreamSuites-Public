@@ -202,3 +202,23 @@ Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into t
 ### Risks / Follow-Ups
 
 - The compact shell widget still intentionally compresses badges for space, so future widget design work should decide whether to keep that curated subset or show the full backend-visible list for the widget surface.
+
+## Task 3X - Turnstile Auth Rollout Verification - 2026-04-04
+
+### Technical Notes
+
+- Confirmed the public-surface inline Turnstile rollout covers the modal auth shell, the standalone public login route, and the requests-login handoff flow using `/auth/turnstile/config` plus the shared explicit-render controller in `js/turnstile-inline.js`.
+- Updated the repo tree so the auth rollout's newly created `requests-login.html` route and `js/turnstile-inline.js` helper are reflected in the root README.
+
+### Human-Readable Notes
+
+- Public login starts and the requests-login bridge now stay behind the inline Cloudflare Turnstile check without changing the existing page layouts.
+
+### Files / Areas Touched
+
+- `README.md`
+- `BUMP_NOTES.md`
+
+### Risks / Follow-Ups
+
+- Public auth starts still depend on the runtime's deployed Turnstile config endpoint. A stale runtime deployment will hide the widget rather than creating local fallback validation.
