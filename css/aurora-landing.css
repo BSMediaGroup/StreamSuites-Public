@@ -1162,6 +1162,35 @@ body.modal-open { overflow: hidden; }
   font-size: 14px;
 }
 
+.ss-turnstile-panel {
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(153, 164, 255, 0.18);
+  border-radius: 14px;
+  background: rgba(13, 16, 24, 0.72);
+}
+
+.ss-turnstile-slot {
+  min-height: 66px;
+}
+
+.ss-turnstile-status {
+  margin: 0;
+  font-size: 9px;
+  line-height: 1.35;
+  color: rgba(228, 235, 255, 0.82);
+}
+
+.ss-turnstile-status[data-tone="error"] {
+  color: #ffc9c9;
+}
+
+.ss-turnstile-status[data-tone="success"] {
+  color: #d2f5c6;
+}
+
 [hidden] {
   display: none !important;
 }

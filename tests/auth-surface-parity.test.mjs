@@ -55,7 +55,21 @@ test("public lander defers auth modal turnstile init until deferred helper is re
   const lander = read("index.html");
   assert.match(lander, /function initLandingPageAuth\(\)/);
   assert.match(lander, /document\.addEventListener\('DOMContentLoaded', initLandingPageAuth, \{ once: true \}\)/);
+  assert.match(lander, /function initLandingPageAuthModal\(\)/);
+  assert.match(lander, /if \(!window\.StreamSuitesTurnstileInline\?\.createController\) \{/);
+  assert.match(lander, /document\.addEventListener\('DOMContentLoaded', initLandingPageAuthModal, \{ once: true \}\)/);
   assert.match(lander, /window\.StreamSuitesTurnstileInline\?\.createController\?\.\(/);
+});
+
+test("public auth surfaces keep alternate-surface links above the lower turnstile block", () => {
+  for (const relativePath of ["index.html", "public-login.html", "requests-login.html"]) {
+    const html = read(relativePath);
+    const surfaceLinksIndex = html.indexOf("Login to other surfaces");
+    const turnstileIndex = html.indexOf("turnstile-status");
+    assert.notEqual(surfaceLinksIndex, -1, `${relativePath} missing alternate surface links`);
+    assert.notEqual(turnstileIndex, -1, `${relativePath} missing turnstile status slot`);
+    assert.ok(surfaceLinksIndex < turnstileIndex, `${relativePath} should keep Turnstile below alternate surface links`);
+  }
 });
 
 test("public account menu keeps the overview card and capability-aware console link", () => {

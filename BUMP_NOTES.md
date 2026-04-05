@@ -1,5 +1,19 @@
 # Bump Notes
 
+## Emergency Login Turnstile Parity Hotfix - 2026-04-06
+
+### Technical Notes
+
+- Root-caused the live `streamsuites.app` lander modal omission to `index.html`: the page loaded `/js/turnstile-inline.js` with `defer`, but the separate auth-modal inline script still attempted to construct the controller immediately during parse, so `window.StreamSuitesTurnstileInline` was not ready and the modal never mounted a widget.
+- Replaced that broken lander-only init timing with an explicit `initLandingPageAuthModal()` bootstrap that waits for the deferred helper before creating the inline controller, while leaving runtime-side Turnstile enforcement untouched.
+- Moved the Turnstile blocks to the lower auth section in `index.html`, `js/public-shell.js`, `public-login.html`, and `requests-login.html`, and capped the shared helper/status text at `9px` in both `css/public-pages-v2.css` and the lander-specific `css/aurora-landing.css`.
+- Tightened `tests/auth-surface-parity.test.mjs` so the lander now fails source review if the modal controller is moved back to eager init or if the lower auth surfaces lose the expected alternate-surface-links then Turnstile ordering.
+
+### Human-Readable Notes
+
+- The main public lander modal was missing Turnstile because its login script ran too early, not because the widget markup was absent.
+- Public login surfaces now keep the security check lower in the auth block with smaller helper text, and the main lander modal once again has a real Turnstile controller path.
+
 ## Public User Menu Dropdown Parity + Developer-Link Gating - 2026-04-05
 
 ### Technical Notes

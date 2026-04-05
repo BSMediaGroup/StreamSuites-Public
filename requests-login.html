@@ -56,30 +56,6 @@
             </form>
             <p id="requests-login-access-feedback" class="ss-auth-access-gate__feedback" hidden></p>
           </section>
-          <section id="requests-login-turnstile-panel" class="ss-turnstile-panel" hidden aria-live="polite">
-            <div id="requests-login-turnstile" class="ss-turnstile-slot"></div>
-            <p id="requests-login-turnstile-status" class="ss-turnstile-status"></p>
-          </section>
-          <details class="ss-auth-surface-links ss-auth-surface-links--page" aria-label="Login to other surfaces">
-            <summary class="ss-auth-surface-links__summary">
-              <span class="ss-auth-surface-links__summary-label">Login to other surfaces</span>
-              <span class="ss-auth-surface-links__chevron" aria-hidden="true"></span>
-            </summary>
-            <div class="ss-auth-surface-links__list">
-              <a class="ss-auth-surface-links__link" href="https://creator.streamsuites.app/auth/login.html">
-                <span class="ss-auth-surface-links__icon ss-auth-surface-links__icon--creator" aria-hidden="true"></span>
-                <span>Creator Dashboard</span>
-              </a>
-              <a class="ss-auth-surface-links__link" href="https://admin.streamsuites.app/auth/login.html">
-                <span class="ss-auth-surface-links__icon ss-auth-surface-links__icon--admin" aria-hidden="true"></span>
-                <span>Admin Dashboard</span>
-              </a>
-              <a class="ss-auth-surface-links__link" href="https://console.streamsuites.app/login/">
-                <span class="ss-auth-surface-links__icon ss-auth-surface-links__icon--developer" aria-hidden="true"></span>
-                <span>Developer Console</span>
-              </a>
-            </div>
-          </details>
           <div id="requests-login-options" hidden>
             <p class="ss-requests-auth__section-kicker">Sign in with</p>
             <div class="ss-requests-auth__oauth-grid">
@@ -106,6 +82,30 @@
             </div>
           </div>
           <div class="ss-requests-auth__divider"><span>Feature requests</span></div>
+          <details class="ss-auth-surface-links ss-auth-surface-links--page" aria-label="Login to other surfaces">
+            <summary class="ss-auth-surface-links__summary">
+              <span class="ss-auth-surface-links__summary-label">Login to other surfaces</span>
+              <span class="ss-auth-surface-links__chevron" aria-hidden="true"></span>
+            </summary>
+            <div class="ss-auth-surface-links__list">
+              <a class="ss-auth-surface-links__link" href="https://creator.streamsuites.app/auth/login.html">
+                <span class="ss-auth-surface-links__icon ss-auth-surface-links__icon--creator" aria-hidden="true"></span>
+                <span>Creator Dashboard</span>
+              </a>
+              <a class="ss-auth-surface-links__link" href="https://admin.streamsuites.app/auth/login.html">
+                <span class="ss-auth-surface-links__icon ss-auth-surface-links__icon--admin" aria-hidden="true"></span>
+                <span>Admin Dashboard</span>
+              </a>
+              <a class="ss-auth-surface-links__link" href="https://console.streamsuites.app/login/">
+                <span class="ss-auth-surface-links__icon ss-auth-surface-links__icon--developer" aria-hidden="true"></span>
+                <span>Developer Console</span>
+              </a>
+            </div>
+          </details>
+          <section id="requests-login-turnstile-panel" class="ss-turnstile-panel" hidden aria-live="polite">
+            <div id="requests-login-turnstile" class="ss-turnstile-slot"></div>
+            <p id="requests-login-turnstile-status" class="ss-turnstile-status"></p>
+          </section>
           <div class="ss-requests-auth__actions">
             <a id="requests-login-back" class="ss-btn ss-btn-secondary" href="/requests.html">Back to Feature Requests</a>
           </div>

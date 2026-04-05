@@ -270,30 +270,6 @@
           </form>
           <p class="ss-auth-access-gate__feedback" data-auth-access-feedback hidden></p>
         </section>
-        <section class="ss-turnstile-panel" data-auth-turnstile-panel hidden aria-live="polite">
-          <div class="ss-turnstile-slot" data-auth-turnstile-slot></div>
-          <p class="ss-turnstile-status" data-auth-turnstile-status></p>
-        </section>
-        <details class="ss-auth-surface-links ss-auth-surface-links--compact" aria-label="Login to other surfaces">
-          <summary class="ss-auth-surface-links__summary">
-            <span class="ss-auth-surface-links__summary-label">Login to other surfaces</span>
-            <span class="ss-auth-surface-links__chevron" aria-hidden="true"></span>
-          </summary>
-          <div class="ss-auth-surface-links__list">
-            <a class="ss-auth-surface-links__link" href="https://streamsuites.app/public-login.html">
-              <span class="ss-auth-surface-links__icon ss-auth-surface-links__icon--public" aria-hidden="true"></span>
-              <span>Public</span>
-            </a>
-            <a class="ss-auth-surface-links__link" href="https://admin.streamsuites.app/auth/login.html">
-              <span class="ss-auth-surface-links__icon ss-auth-surface-links__icon--admin" aria-hidden="true"></span>
-              <span>Admin Dashboard</span>
-            </a>
-            <a class="ss-auth-surface-links__link" href="https://console.streamsuites.app/login/">
-              <span class="ss-auth-surface-links__icon ss-auth-surface-links__icon--developer" aria-hidden="true"></span>
-              <span>Developer Console</span>
-            </a>
-          </div>
-        </details>
       </div>
 
       <div class="auth-panel" data-state="login">
@@ -429,6 +405,31 @@
           <button type="button" data-auth-toggle="login">Log in</button>
         </div>
       </div>
+
+      <details class="ss-auth-surface-links ss-auth-surface-links--compact" aria-label="Login to other surfaces">
+        <summary class="ss-auth-surface-links__summary">
+          <span class="ss-auth-surface-links__summary-label">Login to other surfaces</span>
+          <span class="ss-auth-surface-links__chevron" aria-hidden="true"></span>
+        </summary>
+        <div class="ss-auth-surface-links__list">
+          <a class="ss-auth-surface-links__link" href="https://streamsuites.app/public-login.html">
+            <span class="ss-auth-surface-links__icon ss-auth-surface-links__icon--public" aria-hidden="true"></span>
+            <span>Public</span>
+          </a>
+          <a class="ss-auth-surface-links__link" href="https://admin.streamsuites.app/auth/login.html">
+            <span class="ss-auth-surface-links__icon ss-auth-surface-links__icon--admin" aria-hidden="true"></span>
+            <span>Admin Dashboard</span>
+          </a>
+          <a class="ss-auth-surface-links__link" href="https://console.streamsuites.app/login/">
+            <span class="ss-auth-surface-links__icon ss-auth-surface-links__icon--developer" aria-hidden="true"></span>
+            <span>Developer Console</span>
+          </a>
+        </div>
+      </details>
+      <section class="ss-turnstile-panel" data-auth-turnstile-panel hidden aria-live="polite">
+        <div class="ss-turnstile-slot" data-auth-turnstile-slot></div>
+        <p class="ss-turnstile-status" data-auth-turnstile-status></p>
+      </section>
     </div>
   </div>
 
@@ -604,7 +605,14 @@
   </script>
 
   <script>
-    (function () {
+    function initLandingPageAuthModal() {
+      if (window.__streamsuitesLandingAuthModalInitialized) {
+        return;
+      }
+      if (!window.StreamSuitesTurnstileInline?.createController) {
+        return;
+      }
+      window.__streamsuitesLandingAuthModalInitialized = true;
       const authModalBackdrop = document.getElementById('auth-modal');
       const authModal = authModalBackdrop?.querySelector('.auth-modal');
       const authTitle = authModal?.querySelector('[data-auth-title-text]');
@@ -1465,7 +1473,13 @@
           }
         });
       });
-    })();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initLandingPageAuthModal, { once: true });
+    } else {
+      initLandingPageAuthModal();
+    }
   </script>
 
   <script src="/js/utils/versioning.js"></script>

@@ -657,7 +657,8 @@ body {
 
 .ss-turnstile-status {
   margin: 0;
-  font-size: 12px;
+  font-size: 9px;
+  line-height: 1.35;
   color: rgba(225, 235, 248, 0.86);
 }
 
