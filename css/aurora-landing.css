@@ -1435,13 +1435,13 @@ body.modal-open { overflow: hidden; }
 }
 
 .ss-auth-surface-links {
-  margin-top: 6px;
+  margin-top: 8px;
   color: rgba(231, 238, 255, 0.72);
 }
 
 .auth-modal-section-divider {
   height: 1px;
-  margin: 8px 0 0;
+  margin: 10px 0 0;
   background: linear-gradient(90deg, rgba(203, 214, 255, 0), rgba(203, 214, 255, 0.12), rgba(203, 214, 255, 0));
 }
 

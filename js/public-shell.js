@@ -737,7 +737,7 @@
         <div class="auth-panel" data-state="login"></div>
         <div class="auth-panel" data-state="signup"></div>
         <div class="auth-modal-section-divider" aria-hidden="true"></div>
-        <details class="ss-auth-surface-links" aria-label="Login to other surfaces">
+        <details class="ss-auth-surface-links ss-auth-surface-links--compact" aria-label="Login to other surfaces">
           <summary class="ss-auth-surface-links__summary">
             <span class="ss-auth-surface-links__summary-label">Login to other surfaces</span>
             <span class="ss-auth-surface-links__chevron" aria-hidden="true"></span>

@@ -80,6 +80,7 @@ test("public modal surfaces keep the shared divider hook above alternate surface
 
   assert.match(lander, /auth-modal-section-divider/);
   assert.match(shell, /auth-modal-section-divider/);
+  assert.match(shell, /ss-auth-surface-links ss-auth-surface-links--compact/);
   assert.match(auroraCss, /\.auth-modal-section-divider/);
   assert.match(shellCss, /\.auth-modal-section-divider/);
 });
@@ -89,7 +90,28 @@ test("public modal disclaimer links use the shared blue treatment", () => {
   const shellCss = read("css/public-shell.css");
 
   assert.match(auroraCss, /\.auth-legal a,[\s\S]*#9ad1ff/);
-  assert.match(shellCss, /\.auth-legal a \{[\s\S]*#9ad1ff/);
+  assert.match(shellCss, /\.auth-legal a,[\s\S]*#9ad1ff/);
+});
+
+test("shared public-shell modal ships the lander selector set and divider rhythm", () => {
+  const auroraCss = read("css/aurora-landing.css");
+  const shellCss = read("css/public-shell.css");
+
+  for (const selector of [
+    ".ss-turnstile-panel",
+    ".ss-turnstile-status",
+    ".ss-auth-surface-links",
+    ".ss-auth-surface-links__summary-label",
+    ".ss-auth-surface-links__link",
+  ]) {
+    assert.match(auroraCss, new RegExp(selector.replaceAll(".", "\\.")));
+    assert.match(shellCss, new RegExp(selector.replaceAll(".", "\\.")));
+  }
+
+  assert.match(auroraCss, /\.auth-modal-section-divider\s*\{[\s\S]*margin:\s*10px 0 0/);
+  assert.match(shellCss, /\.auth-modal-section-divider\s*\{[\s\S]*margin:\s*10px 0 0/);
+  assert.match(auroraCss, /\.ss-auth-surface-links\s*\{[\s\S]*margin-top:\s*8px/);
+  assert.match(shellCss, /\.ss-auth-surface-links\s*\{[\s\S]*margin-top:\s*8px/);
 });
 
 test("public account menu keeps the overview card and capability-aware console link", () => {

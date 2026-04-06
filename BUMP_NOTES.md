@@ -1,5 +1,19 @@
 # Bump Notes
 
+## Emergency Public Login Modal Visual Parity Hotfix - 2026-04-06
+
+### Technical Notes
+
+- Traced the source-of-truth public lander modal in `index.html` plus `css/aurora-landing.css` against the shared non-lander modal in `js/public-shell.js` plus `css/public-shell.css` and fixed the parity gap at the implementation path instead of adding more override-only styling.
+- Replaced the malformed non-lander variant path where the shared modal rendered lander-style `auth-modal-section-divider`, `ss-auth-surface-links`, and `ss-turnstile-*` markup without the matching `public-shell.css` selector set; the shared modal now ships the same canonical hooks, typography, pill treatment, chevron treatment, and Turnstile wrapper styling as the lander reference.
+- Added the lander's compact alternate-surface hook to the shared modal markup in `js/public-shell.js`, aligned the shared modal disclaimer/toggle treatment to the same blue-link and muted-copy pattern, and increased the divider rhythm on both modal paths by moving the divider to `10px` top spacing plus `8px` spacing before the alternate-surface block.
+- Extended `tests/auth-surface-parity.test.mjs` so the shared modal now fails source review if the compact alternate-surface hook or the required lander-parity selector set drops out again.
+
+### Human-Readable Notes
+
+- The `/media`-style public login modal no longer falls back to malformed plain text for `Login to other surfaces`; it now uses the same muted expandable pill treatment and lower Turnstile block presentation as the main `index` modal.
+- The disclaimer copy, link sizing, and divider spacing now read the same between the lander modal and the shared public-page modal without touching auth logic or Turnstile enforcement.
+
 ## Public Login Modal Parity Polish - 2026-04-06
 
 ### Technical Notes
