@@ -1178,7 +1178,7 @@ body.modal-open { overflow: hidden; }
 
 .ss-turnstile-status {
   margin: 0;
-  font-size: 9px;
+  font-size: 10px;
   line-height: 1.35;
   color: rgba(228, 235, 255, 0.82);
 }
