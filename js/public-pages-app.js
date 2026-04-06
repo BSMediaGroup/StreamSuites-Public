@@ -1830,6 +1830,7 @@
     host.appendChild(noticeSection);
 
     const memberCap = window.matchMedia("(max-width: 900px)").matches ? 4 : 8;
+    const membersSourceOk = data.sourceStatus?.profiles?.ok !== false;
     const members = (data.profiles || [])
       .filter((profile) => profile?.isListed !== false && isProfileVisibleOnStreamSuites(profile))
       .filter((profile) => norm(profile.displayName).includes(norm(state.query)) || norm(profile.username).includes(norm(state.query)))
@@ -1842,7 +1843,9 @@
     });
     memberSection.appendChild(grid);
 
-    if (!members.length) {
+    if (!members.length && !membersSourceOk) {
+      memberSection.appendChild(create("div", "empty-state", "Member directory unavailable right now. Please try again shortly."));
+    } else if (!members.length) {
       memberSection.appendChild(create("div", "empty-state", "No members match this search."));
     }
 
@@ -1951,6 +1954,7 @@
     clear(host);
     host.appendChild(buildPageHeading("Members Directory", "Search all public creator/member profiles."));
 
+    const membersSourceOk = data.sourceStatus?.profiles?.ok !== false;
     const grid = create("section", "profile-grid");
     const members = (data.profiles || []).filter((profile) => {
       if (profile?.isListed === false || !isProfileVisibleOnStreamSuites(profile)) return false;
@@ -1963,7 +1967,9 @@
     });
 
     host.appendChild(grid);
-    if (!members.length) {
+    if (!members.length && !membersSourceOk) {
+      host.appendChild(create("div", "empty-state", "Member directory unavailable right now. Please try again shortly."));
+    } else if (!members.length) {
       host.appendChild(create("div", "empty-state", "No members match this search."));
     }
   }

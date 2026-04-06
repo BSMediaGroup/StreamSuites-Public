@@ -4,7 +4,7 @@
     polls: "/data/polls.json",
     scoreboards: "/data/scoreboards.json",
     tallies: "/data/tallies.json",
-    profiles: "/data/profiles.json",
+    profiles: "/api/public/community/members",
     notices: "/data/notices.json",
     meta: "/data/meta.json",
     liveStatus: "/data/live-status.json"
@@ -288,6 +288,30 @@
       return await response.json();
     } catch (_err) {
       return fallback;
+    }
+  }
+
+  async function loadJsonResult(path, fallback) {
+    try {
+      const response = await fetch(path, { cache: "no-store", credentials: "same-origin" });
+      if (!response.ok) {
+        return {
+          ok: false,
+          status: response.status,
+          payload: fallback
+        };
+      }
+      return {
+        ok: true,
+        status: response.status,
+        payload: await response.json()
+      };
+    } catch (_err) {
+      return {
+        ok: false,
+        status: 0,
+        payload: fallback
+      };
     }
   }
 
@@ -860,7 +884,7 @@
         pollsPayload,
         scoreboardsPayload,
         talliesPayload,
-        profilesPayload,
+        profilesResult,
         noticesPayload,
         metaPayload,
         liveStatusPayload
@@ -869,12 +893,13 @@
         loadJson(DATA_PATHS.polls, { items: [] }),
         loadJson(DATA_PATHS.scoreboards, { items: [] }),
         loadJson(DATA_PATHS.tallies, { items: [] }),
-        loadJson(DATA_PATHS.profiles, { items: [] }),
+        loadJsonResult(DATA_PATHS.profiles, { items: [] }),
         loadJson(DATA_PATHS.notices, { items: [] }),
         loadJson(DATA_PATHS.meta, null),
         loadJson(DATA_PATHS.liveStatus, EMPTY_LIVE_STATUS_SNAPSHOT)
       ]);
 
+      const profilesPayload = profilesResult.payload;
       const profileItems = toArray(profilesPayload);
       const liveStatusMap = buildLiveStatusMap(liveStatusPayload);
       const profilesMap = buildProfileMap(profileItems, liveStatusMap);
@@ -935,6 +960,13 @@
         artifactsByProfile,
         meta: metaPayload,
         liveStatus: liveStatusPayload,
+        sourceStatus: {
+          profiles: {
+            ok: profilesResult.ok,
+            status: profilesResult.status,
+            path: DATA_PATHS.profiles
+          }
+        },
         helpers: {
           toTimestamp,
           toTitle,

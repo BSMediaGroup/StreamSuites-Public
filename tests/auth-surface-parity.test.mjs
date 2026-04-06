@@ -126,3 +126,12 @@ test("public account menu keeps the overview card and capability-aware console l
   assert.match(shell, /account-menu-overview/);
   assert.match(css, /account-menu-overview/);
 });
+
+test("community member hydration uses the authoritative runtime endpoint", () => {
+  const dataHub = read("js/public-data-hub.js");
+  const app = read("js/public-pages-app.js");
+
+  assert.match(dataHub, /profiles:\s*"\/api\/public\/community\/members"/);
+  assert.doesNotMatch(dataHub, /\/data\/profiles\.json/);
+  assert.match(app, /Member directory unavailable right now/);
+});

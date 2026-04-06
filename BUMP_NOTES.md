@@ -1,5 +1,18 @@
 # Bump Notes
 
+## Public Community Member Hydration Authority Fix - 2026-04-07
+
+### Technical Notes
+
+- Replaced the public community member source in `js/public-data-hub.js` from the checked-in scaffold file `data/profiles.json` to the authoritative runtime/Auth endpoint `/api/public/community/members`, while leaving clips, polls, tallies, scoreboards, notices, and other artifact/sample payloads on their existing placeholder/static paths.
+- Added a minimal member-directory fetch status contract in `js/public-data-hub.js` and used it in `js/public-pages-app.js` so `/community/index.html` and `/community/members.html` now show a truthful directory-unavailable state instead of the old misleading empty-search message when the authoritative member fetch fails.
+- Removed `data/profiles.json` outright because it contained the scaffold/sample member records that were still feeding the community pages; the repo tree in `README.md` was updated accordingly, and `tests/auth-surface-parity.test.mjs` now checks that the public data hub points at the runtime endpoint instead of the deleted sample file.
+
+### Human-Readable Notes
+
+- The community home and members directory now load the real member list from StreamSuites instead of showing placeholder people.
+- Only the member directory hydration changed. Public clips, polls, tallies, scoreboards, notices, and other sample artifact sections remain intentionally placeholder content for now.
+
 ## Emergency Public Login Modal Visual Parity Hotfix - 2026-04-06
 
 ### Technical Notes

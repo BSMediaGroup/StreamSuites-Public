@@ -21,10 +21,12 @@ Canonical public StreamSuites surface deployed to Cloudflare Pages at `https://s
 flowchart TD
     Viewer["Viewer / public browser"] --> Shell["Public shell and routes<br/>/ /u/<slug> /live /clips/* /polls/* /scores/* /community/*"]
     Shell --> Functions["Cloudflare Pages Functions<br/>functions/auth, functions/api, functions/u, artifact route handlers"]
-    Shell --> Data["Published public data<br/>data/profiles.json, clips.json, polls.json, live-status.json"]
+    Shell --> Data["Published public data<br/>clips.json, polls.json, live-status.json, notices.json"]
+    Shell --> AuthDirectory["Auth API public member directory<br/>/api/public/community/members"]
 
     Functions --> Auth["StreamSuites runtime/Auth API<br/>sessions, public profile reads, public profile save path"]
     Data --> Runtime["StreamSuites runtime exports authority"]
+    AuthDirectory --> Auth
     Auth --> Runtime
 
     Shell --> Profiles["Canonical public profile surfaces"]
@@ -56,7 +58,7 @@ flowchart TD
 - Same-origin auth and API proxy paths forward browser requests to the authoritative Auth API without moving backend ownership into this repo.
 - Public auth entry points now consume `/auth/access-state` and the short-lived `/auth/debug/unlock` bypass flow so public pages remain browseable while new auth starts can be gated by runtime mode.
 - Route handlers under `functions/clips`, `functions/polls`, `functions/scoreboards`, `functions/scores`, `functions/tallies`, and `functions/u` preserve gallery deep links plus clean artifact and profile routes.
-- Public shell/profile code in `js/public-pages-app.js` and `js/public-data-hub.js` consumes the authoritative slug, visibility, FindMeHere eligibility, media, and live-status fields.
+- Public shell/profile code in `js/public-pages-app.js` and `js/public-data-hub.js` consumes the authoritative slug, visibility, FindMeHere eligibility, media, live-status fields, and the runtime-owned community member directory API.
 
 ## Cross-Repo Orientation
 
@@ -141,7 +143,6 @@ StreamSuites-Public/
 │   ├── meta.json
 │   ├── notices.json
 │   ├── polls.json
-│   ├── profiles.json
 │   ├── roadmap.json
 │   ├── scoreboards.json
 │   └── tallies.json
