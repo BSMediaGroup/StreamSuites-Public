@@ -1435,8 +1435,14 @@ body.modal-open { overflow: hidden; }
 }
 
 .ss-auth-surface-links {
-  margin-top: 12px;
+  margin-top: 6px;
   color: rgba(231, 238, 255, 0.72);
+}
+
+.auth-modal-section-divider {
+  height: 1px;
+  margin: 8px 0 0;
+  background: linear-gradient(90deg, rgba(203, 214, 255, 0), rgba(203, 214, 255, 0.12), rgba(203, 214, 255, 0));
 }
 
 .ss-auth-surface-links[open] {
@@ -1706,7 +1712,7 @@ body.modal-open { overflow: hidden; }
 .auth-legal a,
 .auth-toggle button,
 .auth-resend-button {
-  color: #f0f2f5;
+  color: #9ad1ff;
 }
 
 .auth-legal a { text-decoration: underline; }

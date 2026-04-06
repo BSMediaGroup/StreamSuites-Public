@@ -72,6 +72,26 @@ test("public auth surfaces keep alternate-surface links above the lower turnstil
   }
 });
 
+test("public modal surfaces keep the shared divider hook above alternate surface links", () => {
+  const lander = read("index.html");
+  const shell = read("js/public-shell.js");
+  const auroraCss = read("css/aurora-landing.css");
+  const shellCss = read("css/public-shell.css");
+
+  assert.match(lander, /auth-modal-section-divider/);
+  assert.match(shell, /auth-modal-section-divider/);
+  assert.match(auroraCss, /\.auth-modal-section-divider/);
+  assert.match(shellCss, /\.auth-modal-section-divider/);
+});
+
+test("public modal disclaimer links use the shared blue treatment", () => {
+  const auroraCss = read("css/aurora-landing.css");
+  const shellCss = read("css/public-shell.css");
+
+  assert.match(auroraCss, /\.auth-legal a,[\s\S]*#9ad1ff/);
+  assert.match(shellCss, /\.auth-legal a \{[\s\S]*#9ad1ff/);
+});
+
 test("public account menu keeps the overview card and capability-aware console link", () => {
   const app = read("js/public-pages-app.js");
   const shell = read("js/public-shell.js");

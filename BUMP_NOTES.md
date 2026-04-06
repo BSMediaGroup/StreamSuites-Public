@@ -1,5 +1,20 @@
 # Bump Notes
 
+## Public Login Modal Parity Polish - 2026-04-06
+
+### Technical Notes
+
+- Added a shared `auth-modal-section-divider` hook in `index.html` and `js/public-shell.js` so both public login modals now place the same ultra-subtle separator directly above the `Login to other surfaces` details block with minimal extra spacing.
+- Updated `css/aurora-landing.css` so the lander modal legal links now use the same blue link treatment as the public-shell modal while keeping the rest of the lander modal intact.
+- Re-tuned the shared public-shell modal presentation in `css/public-shell.css` to match the lander reference values for modal shell, access-gate chrome, close control, auth copy rhythm, disclaimer styling, and alternate-surface spacing instead of keeping a separate visual variant.
+- Aligned the shared modal disclaimer copy in `js/public-shell.js` to the lander login/signup wording without changing any auth, Turnstile, or cross-surface routing logic.
+- Extended `tests/auth-surface-parity.test.mjs` with lightweight source checks covering the new divider hook and the shared blue disclaimer-link treatment.
+
+### Human-Readable Notes
+
+- The main lander login modal now keeps its existing design, but its Terms and Privacy links are blue and there is a faint separator above the other-surfaces section.
+- The `/media`-style public modal now follows the same visual rhythm and disclaimer treatment as the lander modal, so the two no longer read like separate modal designs.
+
 ## Emergency Login Turnstile Parity Hotfix - 2026-04-06
 
 ### Technical Notes

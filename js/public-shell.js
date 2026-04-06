@@ -736,6 +736,7 @@
         </div>
         <div class="auth-panel" data-state="login"></div>
         <div class="auth-panel" data-state="signup"></div>
+        <div class="auth-modal-section-divider" aria-hidden="true"></div>
         <details class="ss-auth-surface-links" aria-label="Login to other surfaces">
           <summary class="ss-auth-surface-links__summary">
             <span class="ss-auth-surface-links__summary-label">Login to other surfaces</span>
@@ -985,7 +986,9 @@
       panel.appendChild(methodsToggle);
 
       const legal = create("p", "auth-legal muted");
-      legal.innerHTML = `By continuing, you agree to the <a href="/terms.html">Terms of Service</a> and acknowledge the <a href="/privacy.html">Privacy page</a>.`;
+      legal.innerHTML = mode === "signup"
+        ? `By creating an account, you agree to the <a href="/terms.html">Terms of Service</a> and acknowledge the <a href="/privacy.html">Privacy page</a>. Certain StreamSuites™ software and features may be subject to additional <a href="https://docs.streamsuites.app/docs/legal/eula">license</a> terms.`
+        : `By logging in, you agree to the <a href="/terms.html">Terms of Service</a> and acknowledge the <a href="/privacy.html">Privacy page</a>.`;
       panel.appendChild(legal);
 
       const swap = create("div", "auth-toggle");
