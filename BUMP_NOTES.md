@@ -1,5 +1,15 @@
 # Bump Notes
 
+## Runtime Turnstile Kill-Switch Coverage - 2026-04-09
+
+### Technical Notes
+
+- Added focused source coverage in `tests/auth-surface-parity.test.mjs` so the shared public auth helper keeps Turnstile visibility tied to the runtime `/auth/turnstile/config` `enabled` flag and preserves the hidden-panel collapse path when the runtime disables it.
+
+### Human-Readable Notes
+
+- Public login surfaces still trust the runtime-owned Turnstile state, and the hidden widget path stays gap-free.
+
 ## Public Community Member Hydration Authority Fix - 2026-04-07
 
 ### Technical Notes

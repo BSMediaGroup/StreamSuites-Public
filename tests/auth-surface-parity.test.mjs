@@ -72,6 +72,15 @@ test("public auth surfaces keep alternate-surface links above the lower turnstil
   }
 });
 
+test("shared public turnstile helper collapses auth surfaces cleanly when runtime config disables it", () => {
+  const helper = read("js/turnstile-inline.js");
+
+  assert.match(helper, /enabled:\s*payload\?\.enabled === true && sitekey\.length > 0/);
+  assert.match(helper, /panel\.hidden = !state\.enabled/);
+  assert.match(helper, /if \(!state\.enabled \|\| !slot\)/);
+  assert.match(helper, /if \(!state\.enabled\) return "";/);
+});
+
 test("public modal surfaces keep the shared divider hook above alternate surface links", () => {
   const lander = read("index.html");
   const shell = read("js/public-shell.js");
