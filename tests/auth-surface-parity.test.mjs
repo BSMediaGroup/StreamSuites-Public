@@ -158,3 +158,25 @@ test("community member galleries keep shared alpha filtering and 20-per-page pag
   assert.match(css, /\.member-alpha-btn/);
   assert.match(css, /\.member-gallery-pagination/);
 });
+
+test("community member gallery cards keep slug-first handles and the cleaned tooltip-style footer composition", () => {
+  const app = read("js/public-pages-app.js");
+  const dataHub = read("js/public-data-hub.js");
+  const css = read("css/public-shell.css");
+  const memberCardBlock = app.match(/function buildMemberGalleryCard\(profile, data\) \{[\s\S]*?return card;\n  \}/)?.[0] || "";
+
+  assert.match(app, /function getMemberPublicHandle\(profile\)/);
+  assert.match(app, /function getCanonicalSlugFromUrl\(value\)/);
+  assert.match(dataHub, /function normalizeCanonicalSlug\(value\)/);
+  assert.match(dataHub, /const publicSlug = normalizeCanonicalSlug/);
+  assert.match(app, /member-gallery-card-handle/);
+  assert.match(app, /createIcon\(socialIconPath\(network\), "ss-profile-hovercard-social-icon"\)/);
+  assert.match(app, /function buildMemberArtifactSummary\(profile, data\)/);
+  assert.ok(memberCardBlock, "member gallery card builder should exist");
+  assert.doesNotMatch(memberCardBlock, /buildPlatformChip/);
+  assert.doesNotMatch(memberCardBlock, /buildStatusChip/);
+  assert.doesNotMatch(memberCardBlock, /watching/);
+  assert.match(css, /\.member-gallery-card-subtitle/);
+  assert.match(css, /\.member-gallery-card-artifact-count/);
+  assert.match(css, /\.ss-profile-hovercard-social-icon/);
+});

@@ -64,7 +64,10 @@
     twitter: "/assets/icons/twitter.svg",
     twitch: "/assets/icons/twitch.svg",
     kick: "/assets/icons/kick.svg",
-    tiktok: "/assets/icons/ui/widget.svg"
+    tiktok: "/assets/icons/ui/widget.svg",
+    github: "/assets/icons/github.svg",
+    instagram: "/assets/icons/ui/widget.svg",
+    website: "/assets/icons/ui/globe.svg"
   });
   const MEMBER_PAGE_SIZE = 20;
   const SOCIAL_NETWORK_ORDER = Object.freeze([
@@ -75,7 +78,10 @@
     "twitch",
     "kick",
     "discord",
-    "tiktok"
+    "instagram",
+    "tiktok",
+    "github",
+    "website"
   ]);
   const MEMBER_ALPHA_OPTIONS = Object.freeze([
     { value: "all", label: "All" },
@@ -912,8 +918,46 @@
     return String(profile?.displayName || profile?.username || profile?.userCode || profile?.id || "Public User").trim() || "Public User";
   }
 
-  function getMemberUsername(profile) {
-    return String(profile?.username || profile?.userCode || "").trim().replace(/^@+/, "");
+  function normalizePublicHandle(value, fallback = "") {
+    const raw = String(value || "").trim().toLowerCase().replace(/^@+/, "");
+    const normalized = raw
+      .replace(/[^a-z0-9_-]+/g, "")
+      .replace(/^[-_]+|[-_]+$/g, "");
+    if (!normalized || isUuidLike(normalized)) return fallback;
+    return normalized;
+  }
+
+  function getMemberLegacyUsername(profile) {
+    return normalizePublicHandle(profile?.username || profile?.userCode || "", "");
+  }
+
+  function getCanonicalSlugFromUrl(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    try {
+      const url = new URL(raw, window.location.origin);
+      const normalizedPath = normalizePath(url.pathname);
+      if (!normalizedPath.startsWith(CANONICAL_PROFILE_PREFIX)) return "";
+      return normalizePublicHandle(decodeURIComponent(normalizedPath.slice(CANONICAL_PROFILE_PREFIX.length).split("/")[0] || ""), "");
+    } catch (_err) {
+      return "";
+    }
+  }
+
+  function getMemberPublicSlug(profile) {
+    return (
+      normalizePublicHandle(profile?.publicSlug || profile?.public_slug || profile?.slug || "", "") ||
+      getCanonicalSlugFromUrl(
+        profile?.streamsuitesProfileUrl ||
+          profile?.streamsuites_profile_url ||
+          profile?.streamsuitesShareUrl ||
+          profile?.streamsuites_share_url
+      )
+    );
+  }
+
+  function getMemberPublicHandle(profile) {
+    return getMemberPublicSlug(profile) || getMemberLegacyUsername(profile) || "";
   }
 
   function compareMembersAlphabetically(left, right) {
@@ -922,8 +966,8 @@
     const byName = leftName.localeCompare(rightName, undefined, { sensitivity: "base", numeric: true });
     if (byName) return byName;
 
-    const leftUser = getMemberUsername(left);
-    const rightUser = getMemberUsername(right);
+    const leftUser = getMemberPublicHandle(left);
+    const rightUser = getMemberPublicHandle(right);
     const byUser = leftUser.localeCompare(rightUser, undefined, { sensitivity: "base", numeric: true });
     if (byUser) return byUser;
 
@@ -948,7 +992,8 @@
 
     const haystack = [
       getMemberDisplayName(profile),
-      getMemberUsername(profile),
+      getMemberPublicHandle(profile),
+      getMemberLegacyUsername(profile),
       profile?.publicSlug,
       profile?.role,
       profile?.platform,
@@ -1054,15 +1099,23 @@
     return row;
   }
 
+  function buildMemberRoleLabel(profile) {
+    const role = normalizeRoleForUi(profile?.role);
+    if (role === "admin") return "Admin";
+    if (role === "creator") return "Creator";
+    return "Member";
+  }
+
   function buildMemberSubtitle(profile) {
-    const parts = [roleLabel(normalizeRoleForUi(profile?.role))];
-    const username = getMemberUsername(profile);
-    const normalizedDisplay = normalizeUserCode(getMemberDisplayName(profile), "");
-    const normalizedUsername = normalizeUserCode(username, "");
-    if (username && normalizedUsername && normalizedUsername !== normalizedDisplay) {
-      parts.push(`@${username}`);
+    const subtitle = create("p", "ss-profile-hovercard-subtitle member-gallery-card-subtitle");
+    const handle = getMemberPublicHandle(profile);
+    if (handle) {
+      subtitle.appendChild(create("span", "member-gallery-card-handle", `@${handle}`));
     }
-    return parts.join(" · ");
+    const subline = create("span", "member-gallery-card-subline", buildMemberRoleLabel(profile));
+    if (!handle) subline.classList.add("member-gallery-card-subline-plain");
+    subtitle.appendChild(subline);
+    return subtitle;
   }
 
   function getProfileArtifactCount(profile, data) {
@@ -1088,14 +1141,17 @@
       anchor.target = "_blank";
       anchor.rel = "noopener noreferrer";
       anchor.setAttribute("aria-label", network);
-      const icon = create("img");
-      icon.src = socialIconPath(network);
-      icon.alt = "";
-      anchor.appendChild(icon);
+      anchor.appendChild(createIcon(socialIconPath(network), "ss-profile-hovercard-social-icon"));
       row.appendChild(anchor);
     });
 
     return row;
+  }
+
+  function buildMemberArtifactSummary(profile, data) {
+    const count = getProfileArtifactCount(profile, data);
+    if (count <= 0) return null;
+    return create("p", "member-gallery-card-artifact-count", `${formatNumber(count)} public artifact${count === 1 ? "" : "s"}`);
   }
 
   function buildMemberGalleryCard(profile, data) {
@@ -1119,28 +1175,22 @@
     );
     head.append(
       nameRow,
-      create("p", "ss-profile-hovercard-subtitle", buildMemberSubtitle(profile))
+      buildMemberSubtitle(profile)
     );
     identity.appendChild(head);
 
-    const meta = create("div", "item-meta member-gallery-card-meta");
-    meta.appendChild(buildPlatformChip(profile?.platform || "StreamSuites", profile?.platformIcon));
-    const liveStatus = getLiveStatus(profile);
-    if (liveStatus) {
-      meta.appendChild(buildStatusChip("Live"));
-      if (liveStatus.viewerCount != null) {
-        meta.appendChild(create("span", "meta-pill", `${formatNumber(liveStatus.viewerCount)} watching`));
-      }
-    }
-    meta.appendChild(create("span", "meta-pill", `${formatNumber(getProfileArtifactCount(profile, data))} artifacts`));
-
     const bio = create("p", "ss-profile-hovercard-bio", String(profile?.bio || "Profile details are being updated.").trim());
+    const artifactSummary = buildMemberArtifactSummary(profile, data);
+    const socialRow = buildMemberCardSocialRow(profile);
     const actions = create("div", "ss-profile-hovercard-actions member-gallery-card-actions");
-    const profileLink = create("a", "ss-profile-hovercard-action", "Open profile");
+    const profileLink = create("a", "ss-profile-hovercard-action", "View profile");
     profileLink.href = buildProfileHref(profile);
     actions.appendChild(profileLink);
 
-    body.append(identity, meta, bio, buildMemberCardSocialRow(profile), actions);
+    body.append(identity, bio);
+    if (artifactSummary) body.appendChild(artifactSummary);
+    if (!socialRow.hidden) body.appendChild(socialRow);
+    body.appendChild(actions);
     card.append(cover, body);
     return card;
   }

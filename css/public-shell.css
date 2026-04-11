@@ -1581,6 +1581,25 @@ body.public-standalone-page {
   outline: none;
 }
 
+.ss-profile-hovercard-social {
+  color: rgba(214, 228, 248, 0.88);
+}
+
+.ss-profile-hovercard-social-icon {
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  background-color: currentColor;
+  -webkit-mask-image: var(--icon-mask);
+  mask-image: var(--icon-mask);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
 .profile-bio-text {
   margin: 0;
   color: rgba(201, 214, 235, 0.92);
@@ -1983,6 +2002,14 @@ body.public-standalone-page {
     gap: 8px;
   }
 
+  .member-gallery-card .ss-profile-hovercard-name-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .member-gallery-card .ss-profile-hovercard-badges {
+    justify-content: flex-start;
+  }
+
   .member-gallery-card .ss-profile-hovercard-avatar {
     margin-top: -24px;
   }
@@ -2273,6 +2300,8 @@ body.public-standalone-page {
   padding: 0;
   overflow: hidden;
   gap: 0;
+  display: flex;
+  flex-direction: column;
   transition: border-color 130ms ease, box-shadow 130ms ease, transform 130ms ease;
 }
 
@@ -2288,8 +2317,10 @@ body.public-standalone-page {
 
 .member-gallery-card-body {
   padding: 0 14px 14px;
-  display: grid;
-  gap: 10px;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .member-gallery-card-identity {
@@ -2306,18 +2337,64 @@ body.public-standalone-page {
 
 .member-gallery-card .ss-profile-hovercard-head {
   margin-top: 10px;
+  gap: 5px;
 }
 
 .member-gallery-card .ss-profile-hovercard-name-row {
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 8px;
 }
 
 .member-gallery-card .ss-profile-hovercard-name {
   white-space: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 
-.member-gallery-card-meta {
-  margin-top: 2px;
+.member-gallery-card .ss-profile-hovercard-badges {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  row-gap: 4px;
+}
+
+.member-gallery-card-subtitle {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.69rem;
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+
+.member-gallery-card-handle {
+  color: rgba(239, 247, 255, 0.95);
+  font-family: "SUSE Mono", "SUSEMono", "Source Code Pro", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0;
+}
+
+.member-gallery-card-subline {
+  color: rgba(186, 198, 225, 0.78);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.member-gallery-card-subline::before {
+  content: "";
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(154, 209, 255, 0.5);
+}
+
+.member-gallery-card-subline-plain::before {
+  display: none;
 }
 
 .member-gallery-card .ss-profile-hovercard-bio {
@@ -2329,8 +2406,29 @@ body.public-standalone-page {
   overflow: hidden;
 }
 
-.member-gallery-card .ss-profile-hovercard-actions {
+.member-gallery-card-artifact-count {
+  margin: 0;
+  color: rgba(186, 198, 225, 0.8);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+}
+
+.member-gallery-card .ss-profile-hovercard-social-row {
   margin-top: 0;
+  gap: 8px;
+}
+
+.member-gallery-card .ss-profile-hovercard-social {
+  width: 26px;
+  height: 26px;
+}
+
+.member-gallery-card .ss-profile-hovercard-actions {
+  margin-top: auto;
+}
+
+.member-gallery-card .ss-profile-hovercard-action {
+  min-height: 28px;
 }
 
 .member-gallery-pagination {

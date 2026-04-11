@@ -1,5 +1,20 @@
 # Bump Notes
 
+## Community Member Card Composition Cleanup - 2026-04-12
+
+### Technical Notes
+
+- Reworked the shared member gallery card composition in `js/public-pages-app.js`, `js/public-data-hub.js`, and `css/public-shell.css` so `/community/index.html` and `/community/members.html` now follow the existing profile-hovercard hierarchy more closely: avatar, name row, grouped badges/live state, slug-derived handle subline, bio, optional artifact summary, social row, and profile CTA.
+- Replaced the old gallery-only metadata pill row on those cards by removing the meaningless default `StreamSuites` platform chip, dropping the duplicate `LIVE` status pill, and moving artifact counts into a quieter text summary that only renders when a member actually has public artifacts.
+- Stopped exposing internal user codes as public handles on the gallery cards by introducing slug-first handle resolution that prefers authoritative slug fields and canonical `/u/<slug>` URLs before any fallback username/user-code path.
+- Updated the gallery-card social buttons to render their icons through themed mask slots instead of raw `<img>` SVGs so the website/globe icon now follows the intended current-color button treatment rather than showing its original black fill.
+- Extended `tests/auth-surface-parity.test.mjs` with source checks covering the cleaned gallery-card composition, the slug-first handle helper, and the scoped removal of the old platform/live pill row from the member-card renderer.
+
+### Human-Readable Notes
+
+- Community member cards now read like deliberate profile previews instead of loose chips and scattered metadata.
+- Public handles on those cards now come from the canonical profile slug, duplicate live labels are gone, and website links match the themed icon styling used by the rest of the card actions.
+
 ## Public Community Member Gallery Pagination Refresh - 2026-04-12
 
 ### Technical Notes

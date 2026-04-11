@@ -106,6 +106,15 @@
       .replace(/^_+|_+$/g, "");
   }
 
+  function normalizeCanonicalSlug(value) {
+    const raw = String(value || "").trim().toLowerCase().replace(/^@+/, "");
+    if (!raw || isUuidLike(raw)) return "";
+    return raw
+      .replace(/[^a-z0-9_-]+/g, "-")
+      .replace(/-{2,}/g, "-")
+      .replace(/^[-_]+|[-_]+$/g, "");
+  }
+
   function normalizeArtifactLookup(value) {
     return String(value || "")
       .trim()
@@ -135,7 +144,7 @@
     const items = Array.isArray(value) ? value : [];
     const seen = new Set();
     return items.reduce((acc, entry) => {
-      const normalized = normalizeProfileLookup(entry);
+      const normalized = normalizeCanonicalSlug(entry);
       if (!normalized || seen.has(normalized)) return acc;
       seen.add(normalized);
       acc.push(normalized);
@@ -482,7 +491,7 @@
       .replace(/[^a-z0-9_-]+/g, "-")
       .replace(/^-+|-+$/g, "");
     const userCode = !normalizedCode || isUuidLike(normalizedCode) ? "public-user" : normalizedCode;
-    const publicSlug = normalizeProfileLookup(raw?.public_slug || raw?.publicSlug || raw?.slug || "");
+    const publicSlug = normalizeCanonicalSlug(raw?.public_slug || raw?.publicSlug || raw?.slug || "");
     const slugAliases = normalizeSlugAliases(raw?.slug_aliases || raw?.slugAliases);
 
     const accountTypeRaw = String(raw.account_type || raw.accountType || raw.role || "").trim().toUpperCase();
