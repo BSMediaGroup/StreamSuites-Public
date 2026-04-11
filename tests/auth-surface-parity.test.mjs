@@ -144,3 +144,17 @@ test("community member hydration uses the authoritative runtime endpoint", () =>
   assert.doesNotMatch(dataHub, /\/data\/profiles\.json/);
   assert.match(app, /Member directory unavailable right now/);
 });
+
+test("community member galleries keep shared alpha filtering and 20-per-page pagination", () => {
+  const app = read("js/public-pages-app.js");
+  const css = read("css/public-shell.css");
+
+  assert.match(app, /const MEMBER_PAGE_SIZE = 20/);
+  assert.match(app, /member-alpha-rail/);
+  assert.match(app, /member-gallery-grid/);
+  assert.match(app, /ctx\.state\.memberPage = 1/);
+  assert.match(app, /No members match this search\/filter/);
+  assert.match(css, /\.member-gallery-grid/);
+  assert.match(css, /\.member-alpha-btn/);
+  assert.match(css, /\.member-gallery-pagination/);
+});

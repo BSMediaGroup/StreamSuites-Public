@@ -1,5 +1,18 @@
 # Bump Notes
 
+## Public Community Member Gallery Pagination Refresh - 2026-04-12
+
+### Technical Notes
+
+- `js/public-pages-app.js` now routes both `/community/index.html` and `/community/members.html` through a shared member-gallery renderer that preserves the existing authoritative member-directory visibility rules while sorting by the displayed public/member name, applying search plus A-Z or `#` filtering together, and paginating the filtered result set at `20` members per page.
+- Replaced the old simple member-card/list rendering on those two surfaces with full gallery cards composed from the existing public profile fields already exposed to the page: avatar, display name, supporting identity line, authoritative badges/live state, bio, artifact counts, platform/status pills, social links, and the canonical open-profile CTA.
+- Scoped tooltip suppression to the affected member galleries by removing hover-trigger wiring from those page-specific cards instead of changing the global hovercard script, and added the additive gallery/filter/pagination styling in `css/public-shell.css` so the cards inherit the existing hovercard visual language directly on-page.
+
+### Human-Readable Notes
+
+- The Community home members block and the standalone Members directory now browse as a paginated card gallery instead of long repeated rows.
+- Search still works from the existing top bar, and now combines with an A-Z rail plus previous/next paging so larger directories are easier to browse without hover-only profile details.
+
 ## Runtime Turnstile Kill-Switch Coverage - 2026-04-09
 
 ### Technical Notes

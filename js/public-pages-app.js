@@ -66,6 +66,25 @@
     kick: "/assets/icons/kick.svg",
     tiktok: "/assets/icons/ui/widget.svg"
   });
+  const MEMBER_PAGE_SIZE = 20;
+  const SOCIAL_NETWORK_ORDER = Object.freeze([
+    "x",
+    "twitter",
+    "youtube",
+    "rumble",
+    "twitch",
+    "kick",
+    "discord",
+    "tiktok"
+  ]);
+  const MEMBER_ALPHA_OPTIONS = Object.freeze([
+    { value: "all", label: "All" },
+    ...Array.from({ length: 26 }, (_, index) => {
+      const letter = String.fromCharCode(65 + index);
+      return { value: letter, label: letter };
+    }),
+    { value: "#", label: "#" }
+  ]);
   const DEFAULT_PROFILE_COVER = "/assets/placeholders/defaultprofilecover.webp";
 
   const PAGE_CONFIG = {
@@ -887,6 +906,356 @@
     }
     section.appendChild(head);
     return { section, contentHost: section };
+  }
+
+  function getMemberDisplayName(profile) {
+    return String(profile?.displayName || profile?.username || profile?.userCode || profile?.id || "Public User").trim() || "Public User";
+  }
+
+  function getMemberUsername(profile) {
+    return String(profile?.username || profile?.userCode || "").trim().replace(/^@+/, "");
+  }
+
+  function compareMembersAlphabetically(left, right) {
+    const leftName = getMemberDisplayName(left);
+    const rightName = getMemberDisplayName(right);
+    const byName = leftName.localeCompare(rightName, undefined, { sensitivity: "base", numeric: true });
+    if (byName) return byName;
+
+    const leftUser = getMemberUsername(left);
+    const rightUser = getMemberUsername(right);
+    const byUser = leftUser.localeCompare(rightUser, undefined, { sensitivity: "base", numeric: true });
+    if (byUser) return byUser;
+
+    return String(left?.id || "").localeCompare(String(right?.id || ""), undefined, { sensitivity: "base", numeric: true });
+  }
+
+  function resolveMemberAlpha(value) {
+    const normalized = String(value || "all").trim().toUpperCase();
+    if (normalized === "ALL") return "all";
+    if (normalized === "#" || /^[A-Z]$/.test(normalized)) return normalized;
+    return "all";
+  }
+
+  function getMemberAlphaBucket(profile) {
+    const firstChar = getMemberDisplayName(profile).trim().charAt(0).toUpperCase();
+    return /^[A-Z]$/.test(firstChar) ? firstChar : "#";
+  }
+
+  function matchesMemberSearch(profile, query) {
+    const q = norm(query).trim();
+    if (!q) return true;
+
+    const haystack = [
+      getMemberDisplayName(profile),
+      getMemberUsername(profile),
+      profile?.publicSlug,
+      profile?.role,
+      profile?.platform,
+      profile?.bio
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return haystack.includes(q);
+  }
+
+  function collectCommunityMembers(data, query) {
+    return (data.profiles || [])
+      .filter((profile) => profile?.isListed !== false && isProfileVisibleOnStreamSuites(profile))
+      .filter((profile) => matchesMemberSearch(profile, query))
+      .sort(compareMembersAlphabetically);
+  }
+
+  function filterMembersByAlpha(members, alphaValue) {
+    const activeAlpha = resolveMemberAlpha(alphaValue);
+    if (activeAlpha === "all") return members.slice();
+    return members.filter((profile) => getMemberAlphaBucket(profile) === activeAlpha);
+  }
+
+  function buildMemberAlphaCounts(members) {
+    return (members || []).reduce((acc, profile) => {
+      const bucket = getMemberAlphaBucket(profile);
+      acc[bucket] = (acc[bucket] || 0) + 1;
+      return acc;
+    }, { all: members.length });
+  }
+
+  function normalizeExternalUrl(url) {
+    const raw = String(url || "").trim();
+    if (!raw) return "";
+    if (/^https?:\/\//i.test(raw)) return raw;
+    if (/^(mailto:|tel:)/i.test(raw)) return raw;
+    if (/^[a-z][a-z0-9+.-]*:/i.test(raw)) return "";
+    return `https://${raw.replace(/^\/+/, "")}`;
+  }
+
+  function collectMemberSocialEntries(socialLinks) {
+    const normalized = normalizeSocialLinks(socialLinks);
+    const entries = [];
+    const seen = new Set();
+
+    SOCIAL_NETWORK_ORDER.forEach((network) => {
+      const url = normalizeExternalUrl(normalized[network]);
+      if (!url) return;
+      entries.push({ network, url });
+      seen.add(network);
+    });
+
+    Object.entries(normalized).forEach(([network, rawUrl]) => {
+      if (seen.has(network)) return;
+      const url = normalizeExternalUrl(rawUrl);
+      if (!url) return;
+      entries.push({ network, url });
+    });
+
+    return entries;
+  }
+
+  function buildMemberCardAvatar(profile) {
+    const avatar = create("div", "ss-profile-hovercard-avatar");
+    if (getLiveStatus(profile)) avatar.classList.add("is-live");
+    if (profile?.avatar) {
+      avatar.style.backgroundImage = `url(${profile.avatar})`;
+      avatar.textContent = "";
+      return avatar;
+    }
+
+    avatar.textContent = textInitial(getMemberDisplayName(profile));
+    return avatar;
+  }
+
+  function buildMemberCardBadges(profile) {
+    const row = create("span", "ss-profile-hovercard-badges");
+    normalizeAuthoritativeBadges(
+      profile?.badge_state?.surface_badges?.directory ||
+        profile?.badge_state?.surface_badges?.public_surface ||
+        profile?.badges,
+      profile?.accountType || profile?.account_type || roleLabel(normalizeRoleForUi(profile?.role)),
+      profile?.tier
+    ).forEach((badge) => {
+      const normalized = normalizeBadgeKey(badge?.key || badge?.value);
+      const iconPath = BADGE_ICON_MAP[normalized];
+      if (!iconPath) return;
+      const icon = create("img", "ss-profile-hovercard-badge");
+      icon.src = iconPath;
+      icon.alt = "";
+      row.appendChild(icon);
+    });
+
+    const liveStatus = getLiveStatus(profile);
+    if (liveStatus) {
+      const liveBadge = create("span", "ss-profile-hovercard-live-badge", "LIVE");
+      liveBadge.setAttribute("aria-label", `${liveStatus.providerLabel || "Live"} live now`);
+      row.appendChild(liveBadge);
+    }
+
+    row.hidden = row.childElementCount === 0;
+    return row;
+  }
+
+  function buildMemberSubtitle(profile) {
+    const parts = [roleLabel(normalizeRoleForUi(profile?.role))];
+    const username = getMemberUsername(profile);
+    const normalizedDisplay = normalizeUserCode(getMemberDisplayName(profile), "");
+    const normalizedUsername = normalizeUserCode(username, "");
+    if (username && normalizedUsername && normalizedUsername !== normalizedDisplay) {
+      parts.push(`@${username}`);
+    }
+    return parts.join(" · ");
+  }
+
+  function getProfileArtifactCount(profile, data) {
+    const identifiers = collectProfileIdentifiers(profile);
+    for (const key of identifiers) {
+      const artifacts = data.artifactsByProfile?.[key];
+      if (Array.isArray(artifacts)) return artifacts.length;
+    }
+    return 0;
+  }
+
+  function buildMemberCardSocialRow(profile) {
+    const row = create("div", "ss-profile-hovercard-social-row");
+    const entries = collectMemberSocialEntries(profile?.socialLinks || profile?.social_links);
+    if (!entries.length) {
+      row.hidden = true;
+      return row;
+    }
+
+    entries.forEach(({ network, url }) => {
+      const anchor = create("a", "ss-profile-hovercard-social");
+      anchor.href = url;
+      anchor.target = "_blank";
+      anchor.rel = "noopener noreferrer";
+      anchor.setAttribute("aria-label", network);
+      const icon = create("img");
+      icon.src = socialIconPath(network);
+      icon.alt = "";
+      anchor.appendChild(icon);
+      row.appendChild(anchor);
+    });
+
+    return row;
+  }
+
+  function buildMemberGalleryCard(profile, data) {
+    const card = create("article", "profile-card member-gallery-card");
+    const cover = create("div", "ss-profile-hovercard-cover");
+    const coverImage = create("img", "ss-profile-hovercard-cover-image");
+    const displayName = getMemberDisplayName(profile);
+    coverImage.src = String(profile?.coverImageUrl || profile?.bannerImageUrl || DEFAULT_PROFILE_COVER).trim() || DEFAULT_PROFILE_COVER;
+    coverImage.alt = `${displayName} cover`;
+    cover.appendChild(coverImage);
+
+    const body = create("div", "ss-profile-hovercard-body member-gallery-card-body");
+    const identity = create("div", "member-gallery-card-identity");
+    identity.appendChild(buildMemberCardAvatar(profile));
+
+    const head = create("div", "ss-profile-hovercard-head");
+    const nameRow = create("div", "ss-profile-hovercard-name-row");
+    nameRow.append(
+      create("h3", "ss-profile-hovercard-name", displayName),
+      buildMemberCardBadges(profile)
+    );
+    head.append(
+      nameRow,
+      create("p", "ss-profile-hovercard-subtitle", buildMemberSubtitle(profile))
+    );
+    identity.appendChild(head);
+
+    const meta = create("div", "item-meta member-gallery-card-meta");
+    meta.appendChild(buildPlatformChip(profile?.platform || "StreamSuites", profile?.platformIcon));
+    const liveStatus = getLiveStatus(profile);
+    if (liveStatus) {
+      meta.appendChild(buildStatusChip("Live"));
+      if (liveStatus.viewerCount != null) {
+        meta.appendChild(create("span", "meta-pill", `${formatNumber(liveStatus.viewerCount)} watching`));
+      }
+    }
+    meta.appendChild(create("span", "meta-pill", `${formatNumber(getProfileArtifactCount(profile, data))} artifacts`));
+
+    const bio = create("p", "ss-profile-hovercard-bio", String(profile?.bio || "Profile details are being updated.").trim());
+    const actions = create("div", "ss-profile-hovercard-actions member-gallery-card-actions");
+    const profileLink = create("a", "ss-profile-hovercard-action", "Open profile");
+    profileLink.href = buildProfileHref(profile);
+    actions.appendChild(profileLink);
+
+    body.append(identity, meta, bio, buildMemberCardSocialRow(profile), actions);
+    card.append(cover, body);
+    return card;
+  }
+
+  function buildMemberGalleryControls(ctx, members, activeAlpha) {
+    const controls = create("div", "member-gallery-controls");
+    const total = members.length;
+    const activeLabel = activeAlpha === "all" ? "All names" : `${activeAlpha} names`;
+    controls.appendChild(
+      create("p", "member-gallery-summary", `${formatNumber(total)} member${total === 1 ? "" : "s"} · ${activeLabel}`)
+    );
+
+    const rail = create("div", "member-alpha-rail");
+    rail.setAttribute("role", "toolbar");
+    rail.setAttribute("aria-label", "Filter members by name");
+
+    const counts = buildMemberAlphaCounts(members);
+    MEMBER_ALPHA_OPTIONS.forEach((option) => {
+      const count = counts[option.value] || 0;
+      const isActive = option.value === activeAlpha;
+      const button = create("button", `member-alpha-btn${isActive ? " is-active" : ""}`, option.label);
+      button.type = "button";
+      button.setAttribute("aria-pressed", isActive ? "true" : "false");
+      button.disabled = count === 0 && !isActive;
+      button.addEventListener("click", () => {
+        if (ctx.state.memberAlpha === option.value) return;
+        ctx.state.memberAlpha = option.value;
+        ctx.state.memberPage = 1;
+        ctx.rerender();
+      });
+      rail.appendChild(button);
+    });
+
+    controls.appendChild(rail);
+    return controls;
+  }
+
+  function buildMemberGalleryPagination(ctx, totalItems, currentPage, totalPages) {
+    const pagination = create("div", "member-gallery-pagination");
+    const previous = create("button", "member-gallery-page-btn", "Previous");
+    previous.type = "button";
+    previous.disabled = currentPage <= 1;
+    previous.addEventListener("click", () => {
+      if (currentPage <= 1) return;
+      ctx.state.memberPage = currentPage - 1;
+      ctx.rerender();
+    });
+
+    const pageStart = totalItems ? (currentPage - 1) * MEMBER_PAGE_SIZE + 1 : 0;
+    const pageEnd = totalItems ? Math.min(totalItems, currentPage * MEMBER_PAGE_SIZE) : 0;
+    const status = create(
+      "p",
+      "member-gallery-page-status",
+      `Page ${formatNumber(currentPage)} of ${formatNumber(totalPages)} · ${formatNumber(pageStart)}-${formatNumber(pageEnd)} of ${formatNumber(totalItems)}`
+    );
+
+    const next = create("button", "member-gallery-page-btn", "Next");
+    next.type = "button";
+    next.disabled = currentPage >= totalPages;
+    next.addEventListener("click", () => {
+      if (currentPage >= totalPages) return;
+      ctx.state.memberPage = currentPage + 1;
+      ctx.rerender();
+    });
+
+    pagination.append(previous, status, next);
+    return pagination;
+  }
+
+  function buildMemberGallerySection(ctx, options = {}) {
+    const section = create("section", "section member-gallery-section");
+    const title = String(options.title || "").trim();
+    const seeAllHref = String(options.seeAllHref || "").trim();
+
+    if (title || seeAllHref) {
+      const head = create("div", "section-heading");
+      if (title) head.appendChild(create("h2", "", title));
+      if (seeAllHref) {
+        const link = create("a", "see-all", "See all");
+        link.href = seeAllHref;
+        head.appendChild(link);
+      }
+      section.appendChild(head);
+    }
+
+    const membersSourceOk = ctx.data.sourceStatus?.profiles?.ok !== false;
+    const searchedMembers = collectCommunityMembers(ctx.data, ctx.state.query);
+    const activeAlpha = resolveMemberAlpha(ctx.state.memberAlpha);
+    const filteredMembers = filterMembersByAlpha(searchedMembers, activeAlpha);
+
+    if (!searchedMembers.length && !membersSourceOk) {
+      section.appendChild(create("div", "empty-state", "Member directory unavailable right now. Please try again shortly."));
+      return section;
+    }
+
+    section.appendChild(buildMemberGalleryControls(ctx, searchedMembers, activeAlpha));
+
+    if (!filteredMembers.length) {
+      section.appendChild(create("div", "empty-state", "No members match this search/filter."));
+      return section;
+    }
+
+    const totalPages = Math.max(1, Math.ceil(filteredMembers.length / MEMBER_PAGE_SIZE));
+    const currentPage = Math.min(Math.max(1, Number(ctx.state.memberPage) || 1), totalPages);
+    ctx.state.memberPage = currentPage;
+    const start = (currentPage - 1) * MEMBER_PAGE_SIZE;
+    const visibleMembers = filteredMembers.slice(start, start + MEMBER_PAGE_SIZE);
+
+    const grid = create("div", "member-gallery-grid");
+    visibleMembers.forEach((profile) => {
+      grid.appendChild(buildMemberGalleryCard(profile, ctx.data));
+    });
+
+    section.append(grid, buildMemberGalleryPagination(ctx, filteredMembers.length, currentPage, totalPages));
+    return section;
   }
 
   function filterItemsByType(data, type, query) {
@@ -1810,7 +2179,7 @@
   }
 
   function renderCommunityHome(ctx) {
-    const { host, data, state } = ctx;
+    const { host, data } = ctx;
     clear(host);
     host.appendChild(buildPageHeading("Community", "Latest notices and public member directory."));
 
@@ -1829,27 +2198,7 @@
     }
     host.appendChild(noticeSection);
 
-    const memberCap = window.matchMedia("(max-width: 900px)").matches ? 4 : 8;
-    const membersSourceOk = data.sourceStatus?.profiles?.ok !== false;
-    const members = (data.profiles || [])
-      .filter((profile) => profile?.isListed !== false && isProfileVisibleOnStreamSuites(profile))
-      .filter((profile) => norm(profile.displayName).includes(norm(state.query)) || norm(profile.username).includes(norm(state.query)))
-      .slice(0, memberCap);
-
-    const memberSection = buildSection("Members", "/community/members.html").section;
-    const grid = create("div", "profile-grid");
-    members.forEach((profile) => {
-      grid.appendChild(buildProfileCard(profile, data));
-    });
-    memberSection.appendChild(grid);
-
-    if (!members.length && !membersSourceOk) {
-      memberSection.appendChild(create("div", "empty-state", "Member directory unavailable right now. Please try again shortly."));
-    } else if (!members.length) {
-      memberSection.appendChild(create("div", "empty-state", "No members match this search."));
-    }
-
-    host.appendChild(memberSection);
+    host.appendChild(buildMemberGallerySection(ctx, { title: "Members", seeAllHref: "/community/members.html" }));
 
     const liveSection = buildSection("Live Now", "/live").section;
     const liveGrid = create("div", "profile-grid");
@@ -1864,21 +2213,6 @@
       liveSection.appendChild(create("div", "empty-state", "No public StreamSuites creators are live right now."));
     }
     host.appendChild(liveSection);
-  }
-
-  function buildProfileCard(profile, data) {
-    const card = create("article", "profile-card");
-    card.appendChild(buildCreatorMeta(profile, { expanded: true, includeRoleChip: false, enableHover: true }));
-
-    const artifactCount = (data.artifactsByProfile?.[profile.id] || []).length;
-    const badge = create("div", "item-meta");
-    badge.append(create("span", "meta-pill", `${artifactCount} artifacts`));
-
-    const link = create("a", "see-all", "Open profile");
-    link.href = buildProfileHref(profile);
-
-    card.append(create("p", "item-snippet", profile.bio || ""), badge, link);
-    return card;
   }
 
   function collectLiveProfiles(data) {
@@ -1950,28 +2284,10 @@
   }
 
   function renderCommunityMembers(ctx) {
-    const { host, data, state } = ctx;
+    const { host } = ctx;
     clear(host);
     host.appendChild(buildPageHeading("Members Directory", "Search all public creator/member profiles."));
-
-    const membersSourceOk = data.sourceStatus?.profiles?.ok !== false;
-    const grid = create("section", "profile-grid");
-    const members = (data.profiles || []).filter((profile) => {
-      if (profile?.isListed === false || !isProfileVisibleOnStreamSuites(profile)) return false;
-      const haystack = `${profile.displayName} ${profile.username} ${profile.role} ${profile.platform}`.toLowerCase();
-      return haystack.includes(norm(state.query));
-    });
-
-    members.forEach((profile) => {
-      grid.appendChild(buildProfileCard(profile, data));
-    });
-
-    host.appendChild(grid);
-    if (!members.length && !membersSourceOk) {
-      host.appendChild(create("div", "empty-state", "Member directory unavailable right now. Please try again shortly."));
-    } else if (!members.length) {
-      host.appendChild(create("div", "empty-state", "No members match this search."));
-    }
+    host.appendChild(buildMemberGallerySection(ctx));
   }
 
   function renderCommunityLive(ctx) {
@@ -3463,7 +3779,9 @@
 
     const state = {
       query: "",
-      activeFilters: [...currentConfig.defaultFilters]
+      activeFilters: [...currentConfig.defaultFilters],
+      memberAlpha: "all",
+      memberPage: 1
     };
 
     const shell = currentConfig.standalone
@@ -3548,7 +3866,7 @@
 
     const rerender = () => {
       if (!loadedData) return;
-      currentConfig.render({ host: shell.content, data: loadedData, state, authState }, currentConfig);
+      currentConfig.render({ host: shell.content, data: loadedData, state, authState, rerender }, currentConfig);
     };
 
     function applyConfig(nextConfig, options = {}) {
@@ -3564,6 +3882,8 @@
       if (!options.keepState) {
         state.query = "";
         state.activeFilters = [...nextConfig.defaultFilters];
+        state.memberAlpha = "all";
+        state.memberPage = 1;
       }
 
       shell.updateOptions({
@@ -3578,6 +3898,7 @@
         filtersCollapsed: nextConfig.filtersCollapsed,
         onSearch(query) {
           state.query = query;
+          state.memberPage = 1;
           rerender();
         },
         onFilter(detail) {
