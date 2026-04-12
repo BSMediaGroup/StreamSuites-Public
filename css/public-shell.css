@@ -1998,12 +1998,12 @@ body.public-standalone-page {
   }
 
   .member-gallery-card-identity {
-    grid-template-columns: 1fr;
+    flex-direction: column;
     gap: 8px;
   }
 
   .member-gallery-card .ss-profile-hovercard-name-row {
-    grid-template-columns: minmax(0, 1fr);
+    flex-wrap: wrap;
   }
 
   .member-gallery-card .ss-profile-hovercard-badges {
@@ -2320,13 +2320,12 @@ body.public-standalone-page {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .member-gallery-card-identity {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
+  display: flex;
+  gap: 10px;
   align-items: start;
 }
 
@@ -2335,16 +2334,24 @@ body.public-standalone-page {
   flex-shrink: 0;
 }
 
-.member-gallery-card .ss-profile-hovercard-head {
+.member-gallery-card-head {
+  flex: 1 1 auto;
+  min-width: 0;
   margin-top: 10px;
-  gap: 5px;
 }
 
-.member-gallery-card .ss-profile-hovercard-name-row {
+.member-gallery-card-heading-text {
+  min-width: 0;
+  flex: 1 1 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
+  gap: 3px;
+}
+
+.member-gallery-card-name-row {
+  display: flex;
+  align-items: flex-start;
   gap: 8px;
+  min-width: 0;
 }
 
 .member-gallery-card .ss-profile-hovercard-name {
@@ -2356,16 +2363,17 @@ body.public-standalone-page {
 }
 
 .member-gallery-card .ss-profile-hovercard-badges {
-  justify-content: flex-end;
+  justify-content: flex-start;
   flex-wrap: wrap;
+  align-self: flex-start;
   row-gap: 4px;
 }
 
 .member-gallery-card-subtitle {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   font-size: 0.69rem;
   letter-spacing: 0.03em;
   text-transform: none;
@@ -2421,6 +2429,20 @@ body.public-standalone-page {
 .member-gallery-card .ss-profile-hovercard-social {
   width: 26px;
   height: 26px;
+}
+
+.member-gallery-card .member-gallery-card-social-icon-image,
+.member-gallery-card .ss-profile-hovercard-social-icon {
+  width: 12px;
+  height: 12px;
+  display: block;
+  object-fit: contain;
+}
+
+.member-gallery-card .ss-profile-hovercard-social-icon-website {
+  display: inline-block;
+  background-color: currentColor;
+  object-fit: unset;
 }
 
 .member-gallery-card .ss-profile-hovercard-actions {

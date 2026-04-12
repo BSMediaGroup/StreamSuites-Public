@@ -1118,6 +1118,15 @@
     return subtitle;
   }
 
+  function buildMemberIdentityText(profile) {
+    const group = create("div", "member-gallery-card-heading-text");
+    group.append(
+      create("h3", "ss-profile-hovercard-name", getMemberDisplayName(profile)),
+      buildMemberSubtitle(profile)
+    );
+    return group;
+  }
+
   function getProfileArtifactCount(profile, data) {
     const identifiers = collectProfileIdentifiers(profile);
     for (const key of identifiers) {
@@ -1141,7 +1150,14 @@
       anchor.target = "_blank";
       anchor.rel = "noopener noreferrer";
       anchor.setAttribute("aria-label", network);
-      anchor.appendChild(createIcon(socialIconPath(network), "ss-profile-hovercard-social-icon"));
+      if (network === "website") {
+        anchor.appendChild(createIcon(socialIconPath(network), "ss-profile-hovercard-social-icon ss-profile-hovercard-social-icon-website"));
+      } else {
+        const icon = create("img", "member-gallery-card-social-icon-image");
+        icon.src = socialIconPath(network);
+        icon.alt = "";
+        anchor.appendChild(icon);
+      }
       row.appendChild(anchor);
     });
 
@@ -1167,16 +1183,10 @@
     const identity = create("div", "member-gallery-card-identity");
     identity.appendChild(buildMemberCardAvatar(profile));
 
-    const head = create("div", "ss-profile-hovercard-head");
-    const nameRow = create("div", "ss-profile-hovercard-name-row");
-    nameRow.append(
-      create("h3", "ss-profile-hovercard-name", displayName),
-      buildMemberCardBadges(profile)
-    );
-    head.append(
-      nameRow,
-      buildMemberSubtitle(profile)
-    );
+    const head = create("div", "ss-profile-hovercard-head member-gallery-card-head");
+    const nameRow = create("div", "ss-profile-hovercard-name-row member-gallery-card-name-row");
+    nameRow.append(buildMemberIdentityText(profile), buildMemberCardBadges(profile));
+    head.appendChild(nameRow);
     identity.appendChild(head);
 
     const bio = create("p", "ss-profile-hovercard-bio", String(profile?.bio || "Profile details are being updated.").trim());

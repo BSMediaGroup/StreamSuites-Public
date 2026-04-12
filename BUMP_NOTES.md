@@ -254,6 +254,26 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into the released `0.4.2-alpha` section above.
 
+### Community Member Card Header + Social Icon Corrective Pass - 2026-04-12
+
+### Technical Notes
+
+- Replaced the gallery-only two-column header split in `js/public-pages-app.js` and `css/public-shell.css` with a tighter grouped identity block so the avatar, display name, slug-derived handle, and badge/live row stay anchored together instead of rendering as separated islands with dead space.
+- Removed the prior blanket masked social-icon rendering from the community member gallery card path and restored native per-platform SVG rendering for non-website links; only the website/globe icon now keeps the themed masked treatment on these cards because the underlying `globe.svg` asset still renders black when used as a raw image.
+- The corrective CSS pass also removed the card-specific grid overrides that had been forcing badge clusters away from the display name, so the affected files are slightly shorter while preserving the existing grid, search, alphabetical filtering, pagination, slug-first handles, duplicate-LIVE suppression, removed `StreamSuites` chip, and tooltip suppression.
+
+### Human-Readable Notes
+
+- Community member cards on `/community` and `/community/members` now keep the avatar, name, handle, and badges packed together like the hovercard reference instead of leaving a floating badge block.
+- Social icons are back to their normal platform appearance, and only the website icon gets the themed fix needed to avoid the original black globe.
+
+### Files / Areas Touched
+
+- `js/public-pages-app.js`
+- `css/public-shell.css`
+- `tests/auth-surface-parity.test.mjs`
+- `BUMP_NOTES.md`
+
 ### Public Requests Redirect To Developer Console Feedback Hub - 2026-04-04
 
 ### Technical Notes
