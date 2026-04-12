@@ -274,6 +274,26 @@ Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into t
 - `tests/auth-surface-parity.test.mjs`
 - `BUMP_NOTES.md`
 
+### Community Member Card Vertical Header Follow-up - 2026-04-12
+
+### Technical Notes
+
+- Replaced the interim left-column gallery identity wrapper in `js/public-pages-app.js` with the hovercard-style vertical stack actually used by the tooltip reference: overlapping avatar first, then the compact name-plus-badge row, then the handle/role subtitle.
+- Removed the gallery-only wrapper styles in `css/public-shell.css` that were still preserving the old side-by-side composition, so the header now changes visibly on real member data instead of only shifting internal flex alignment.
+- This follow-up keeps the website-only social-icon mask fix while preserving native platform SVG rendering for the other social links.
+
+### Human-Readable Notes
+
+- Community member cards now read like the tooltip header instead of a card with a stuck-on avatar column.
+- The badge cluster sits next to the display name, and the handle is directly underneath instead of floating off in a separate block.
+
+### Files / Areas Touched
+
+- `js/public-pages-app.js`
+- `css/public-shell.css`
+- `tests/auth-surface-parity.test.mjs`
+- `BUMP_NOTES.md`
+
 ### Public Requests Redirect To Developer Console Feedback Hub - 2026-04-04
 
 ### Technical Notes

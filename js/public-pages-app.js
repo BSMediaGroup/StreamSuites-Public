@@ -1118,13 +1118,15 @@
     return subtitle;
   }
 
-  function buildMemberIdentityText(profile) {
-    const group = create("div", "member-gallery-card-heading-text");
-    group.append(
+  function buildMemberCardHeader(profile) {
+    const head = create("div", "ss-profile-hovercard-head member-gallery-card-head");
+    const nameRow = create("div", "ss-profile-hovercard-name-row member-gallery-card-name-row");
+    nameRow.append(
       create("h3", "ss-profile-hovercard-name", getMemberDisplayName(profile)),
-      buildMemberSubtitle(profile)
+      buildMemberCardBadges(profile)
     );
-    return group;
+    head.append(nameRow, buildMemberSubtitle(profile));
+    return head;
   }
 
   function getProfileArtifactCount(profile, data) {
@@ -1180,14 +1182,8 @@
     cover.appendChild(coverImage);
 
     const body = create("div", "ss-profile-hovercard-body member-gallery-card-body");
-    const identity = create("div", "member-gallery-card-identity");
-    identity.appendChild(buildMemberCardAvatar(profile));
-
-    const head = create("div", "ss-profile-hovercard-head member-gallery-card-head");
-    const nameRow = create("div", "ss-profile-hovercard-name-row member-gallery-card-name-row");
-    nameRow.append(buildMemberIdentityText(profile), buildMemberCardBadges(profile));
-    head.appendChild(nameRow);
-    identity.appendChild(head);
+    const avatar = buildMemberCardAvatar(profile);
+    const head = buildMemberCardHeader(profile);
 
     const bio = create("p", "ss-profile-hovercard-bio", String(profile?.bio || "Profile details are being updated.").trim());
     const artifactSummary = buildMemberArtifactSummary(profile, data);
@@ -1197,7 +1193,7 @@
     profileLink.href = buildProfileHref(profile);
     actions.appendChild(profileLink);
 
-    body.append(identity, bio);
+    body.append(avatar, head, bio);
     if (artifactSummary) body.appendChild(artifactSummary);
     if (!socialRow.hidden) body.appendChild(socialRow);
     body.appendChild(actions);

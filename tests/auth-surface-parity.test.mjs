@@ -169,7 +169,7 @@ test("community member gallery cards keep slug-first handles and the cleaned too
   assert.match(app, /function getCanonicalSlugFromUrl\(value\)/);
   assert.match(dataHub, /function normalizeCanonicalSlug\(value\)/);
   assert.match(dataHub, /const publicSlug = normalizeCanonicalSlug/);
-  assert.match(app, /function buildMemberIdentityText\(profile\)/);
+  assert.match(app, /function buildMemberCardHeader\(profile\)/);
   assert.match(app, /member-gallery-card-handle/);
   assert.match(app, /createIcon\(socialIconPath\(network\), "ss-profile-hovercard-social-icon ss-profile-hovercard-social-icon-website"\)/);
   assert.match(app, /const icon = create\("img", "member-gallery-card-social-icon-image"\)/);
@@ -178,9 +178,10 @@ test("community member gallery cards keep slug-first handles and the cleaned too
   assert.doesNotMatch(memberCardBlock, /buildPlatformChip/);
   assert.doesNotMatch(memberCardBlock, /buildStatusChip/);
   assert.doesNotMatch(memberCardBlock, /watching/);
-  assert.doesNotMatch(memberCardBlock, /create\("h3", "ss-profile-hovercard-name", displayName\),\s*buildMemberCardBadges\(profile\)/);
+  assert.match(memberCardBlock, /body\.append\(avatar, head, bio\)/);
+  assert.doesNotMatch(memberCardBlock, /member-gallery-card-identity/);
   assert.match(css, /\.member-gallery-card-subtitle/);
-  assert.match(css, /\.member-gallery-card-heading-text/);
+  assert.match(css, /\.member-gallery-card-head/);
   assert.match(css, /\.member-gallery-card-artifact-count/);
   assert.match(css, /\.member-gallery-card-social-icon-image/);
   assert.match(css, /\.ss-profile-hovercard-social-icon-website/);
