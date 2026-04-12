@@ -2261,6 +2261,10 @@ body.public-standalone-page {
   transition: border-color 120ms ease, background 120ms ease, color 120ms ease, box-shadow 120ms ease;
 }
 
+.member-gallery-page-btn {
+  font-family: inherit;
+}
+
 .member-alpha-btn:hover,
 .member-alpha-btn:focus-visible,
 .member-gallery-page-btn:hover,
@@ -3543,6 +3547,85 @@ body.public-standalone-page {
   font-size: 10px;
   text-transform: none;
   color: #ffffff;
+}
+
+.ss-badge-tooltip-target {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  vertical-align: middle;
+  border-radius: 999px;
+}
+
+.ss-badge-tooltip-target--pill {
+  line-height: 1;
+}
+
+.ss-badge-tooltip-target:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(154, 209, 255, 0.3), 0 0 0 4px rgba(65, 117, 182, 0.14);
+}
+
+.ss-badge-floating-tooltip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  min-width: 44px;
+  max-width: min(180px, calc(100vw - 20px));
+  padding: 6px 9px;
+  border-radius: 10px;
+  border: 1px solid rgba(214, 225, 242, 0.18);
+  background: linear-gradient(180deg, rgba(30, 38, 54, 0.88), rgba(12, 16, 24, 0.94));
+  color: rgba(237, 243, 255, 0.96);
+  font-family: "SuiGenerisRg", "SuiGeneris", "Segoe UI", sans-serif;
+  font-size: 0.58rem;
+  line-height: 1.1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  backdrop-filter: blur(16px) saturate(140%);
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 140ms ease, transform 140ms ease, visibility 140ms ease;
+  z-index: 2147483646;
+}
+
+.ss-badge-floating-tooltip::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: rgba(12, 16, 24, 0.94);
+  border-right: 1px solid rgba(214, 225, 242, 0.16);
+  border-bottom: 1px solid rgba(214, 225, 242, 0.16);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.ss-badge-floating-tooltip[data-side="top"]::after {
+  top: calc(100% - 5px);
+}
+
+.ss-badge-floating-tooltip[data-side="bottom"] {
+  transform: translateY(-4px);
+}
+
+.ss-badge-floating-tooltip[data-side="bottom"]::after {
+  top: -5px;
+  transform: translateX(-50%) rotate(225deg);
+}
+
+.ss-badge-floating-tooltip.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }
 
 .footer-status .ss-status-indicator {

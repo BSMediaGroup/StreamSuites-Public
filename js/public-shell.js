@@ -84,6 +84,10 @@
     check: "/assets/icons/ui/tickyes.svg"
   });
 
+  function getPublicBadgeUi() {
+    return window.StreamSuitesPublicBadgeUi || null;
+  }
+
   function create(tag, className, text) {
     const node = document.createElement(tag);
     if (className) node.className = className;
@@ -1108,7 +1112,13 @@
         icon.src = ACCOUNT_BADGE_ICON_MAP[badge.key];
         if (!icon.src) return;
         icon.alt = badge.label || badge.key;
-        accountBadges.appendChild(icon);
+        accountBadges.appendChild(
+          getPublicBadgeUi()?.wrapTooltipTarget?.(
+            icon,
+            getPublicBadgeUi()?.resolveBadgeLabel?.(badge, "Badge") || badge.label || badge.key,
+            { className: "ss-badge-tooltip-target ss-badge-tooltip-target--icon" }
+          ) || icon
+        );
       });
 
       if (avatarUrl) {

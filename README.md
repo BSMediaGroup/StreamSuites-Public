@@ -147,6 +147,7 @@ StreamSuites-Public/
 │   ├── scoreboards.json
 │   └── tallies.json
 ├── js/
+│   ├── public-badge-ui.js
 │   ├── public-data-hub.js
 │   ├── public-pages-app.js
 │   ├── public-requests.js

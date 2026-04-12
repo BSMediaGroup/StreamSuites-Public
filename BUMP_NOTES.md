@@ -1,5 +1,19 @@
 # Bump Notes
 
+## Shared Public Badge Tooltip Upgrade - 2026-04-12
+
+### Technical Notes
+
+- Added the shared helper `js/public-badge-ui.js` and wired it into the public entry points that already load the public shell/app stack so badge and live-status tooltip behavior comes from one floating tooltip implementation instead of page-local `title` hacks or duplicated per-surface tooltip DOM.
+- Updated `js/public-pages-app.js`, `js/public-shell.js`, and `assets/js/ss-profile-hovercard.js` so the real public-facing badge/status set already rendered by this repo now resolves tooltip labels from the existing badge payloads and maps: Admin, Core, Gold, Pro, Founder, Moderator, Developer, plus the existing public `LIVE` status pills where they render in badge rows.
+- Added the compact dark glass tooltip styling in `css/public-shell.css` and fixed the members-directory pagination font regression at the shared control layer by restoring inheritance on `.member-gallery-page-btn` instead of adding page-specific overrides.
+- Extended `tests/auth-surface-parity.test.mjs` with source checks for the shared badge-tooltip helper wiring and the pagination-font fix.
+
+### Human-Readable Notes
+
+- Public profile badges and live pills now explain themselves on hover and keyboard focus across the shared public profile surfaces instead of appearing as unlabeled icons.
+- The `/community` and `/community/members` pagination buttons now use the same font as the surrounding public UI again.
+
 ## Community Member Card Composition Cleanup - 2026-04-12
 
 ### Technical Notes

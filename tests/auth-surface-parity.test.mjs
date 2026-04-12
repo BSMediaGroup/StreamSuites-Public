@@ -159,6 +159,35 @@ test("community member galleries keep shared alpha filtering and 20-per-page pag
   assert.match(css, /\.member-gallery-pagination/);
 });
 
+test("public badge surfaces share the floating badge-tooltip helper", () => {
+  const htmlFiles = walkHtml(repoRoot);
+  const missing = htmlFiles
+    .filter((file) => {
+      const text = fs.readFileSync(file, "utf8");
+      return text.includes("/js/public-pages-app.js") && !text.includes("/js/public-badge-ui.js");
+    })
+    .map((file) => path.relative(repoRoot, file));
+
+  const app = read("js/public-pages-app.js");
+  const shell = read("js/public-shell.js");
+  const hovercard = read("assets/js/ss-profile-hovercard.js");
+  const badgeUi = read("js/public-badge-ui.js");
+  const css = read("css/public-shell.css");
+
+  assert.deepEqual(missing, []);
+  assert.match(app, /StreamSuitesPublicBadgeUi/);
+  assert.match(shell, /StreamSuitesPublicBadgeUi/);
+  assert.match(hovercard, /StreamSuitesPublicBadgeUi/);
+  assert.match(badgeUi, /ss-shared-badge-tooltip/);
+  assert.match(css, /\.ss-badge-floating-tooltip/);
+  assert.match(css, /\.ss-badge-tooltip-target/);
+});
+
+test("members pagination buttons inherit the shared public font stack", () => {
+  const css = read("css/public-shell.css");
+  assert.match(css, /\.member-gallery-page-btn\s*\{[\s\S]*font-family:\s*inherit/);
+});
+
 test("community member gallery cards keep slug-first handles and the cleaned tooltip-style footer composition", () => {
   const app = read("js/public-pages-app.js");
   const dataHub = read("js/public-data-hub.js");

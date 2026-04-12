@@ -93,6 +93,10 @@
   ]);
   const DEFAULT_PROFILE_COVER = "/assets/placeholders/defaultprofilecover.webp";
 
+  function getPublicBadgeUi() {
+    return window.StreamSuitesPublicBadgeUi || null;
+  }
+
   const PAGE_CONFIG = {
     "media-home": {
       path: "/media.html",
@@ -437,7 +441,11 @@
     if (!liveStatus) return null;
     const badge = create("span", options.compact ? "live-badge live-badge-compact" : "live-badge", "LIVE");
     badge.setAttribute("aria-label", `${liveStatus.providerLabel || "Live"} live now`);
-    return badge;
+    return getPublicBadgeUi()?.wrapTooltipTarget?.(
+      badge,
+      getPublicBadgeUi()?.resolveLiveLabel?.(liveStatus) || `${liveStatus.providerLabel || "Live"} live now`,
+      { className: "ss-badge-tooltip-target ss-badge-tooltip-target--pill" }
+    ) || badge;
   }
 
   function buildLiveSummary(profile) {
@@ -615,7 +623,7 @@
     return "VIEWER";
   }
 
-  function createBadgeIcon(type, value) {
+  function createBadgeIcon(type, value, label = "") {
     const icon = create("img", "badge-icon");
     const normalized = normalizeBadgeKey(value);
     icon.src = BADGE_ICON_MAP[normalized];
@@ -624,7 +632,11 @@
     icon.classList.add(["core", "gold", "pro"].includes(normalized) ? "badge-icon-tier" : "badge-icon-role");
     icon.classList.add(["core", "gold", "pro"].includes(normalized) ? "ss-tier-badge" : "ss-role-badge");
     icon.setAttribute("data-ss-role-badge", normalized || "badge");
-    return icon;
+    return getPublicBadgeUi()?.wrapTooltipTarget?.(
+      icon,
+      getPublicBadgeUi()?.resolveBadgeLabel?.(label || normalized, "Badge") || label || normalized,
+      { className: "ss-badge-tooltip-target ss-badge-tooltip-target--icon" }
+    ) || icon;
   }
 
   function buildBadgeSuffix(profile, options = {}) {
@@ -639,7 +651,7 @@
       profile?.accountType || profile?.account_type || roleLabel(role),
       profile?.tier
     ).forEach((badge) => {
-      const icon = createBadgeIcon(badge.kind, badge.key || badge.value);
+      const icon = createBadgeIcon(badge.kind, badge.key || badge.value, badge.label || badge.title || badge.key || badge.value);
       if (icon) row.appendChild(icon);
     });
 
@@ -1085,14 +1097,26 @@
       const icon = create("img", "ss-profile-hovercard-badge");
       icon.src = iconPath;
       icon.alt = "";
-      row.appendChild(icon);
+      row.appendChild(
+        getPublicBadgeUi()?.wrapTooltipTarget?.(
+          icon,
+          getPublicBadgeUi()?.resolveBadgeLabel?.(badge, "Badge") || badge.label || badge.title || normalized,
+          { className: "ss-badge-tooltip-target ss-badge-tooltip-target--icon" }
+        ) || icon
+      );
     });
 
     const liveStatus = getLiveStatus(profile);
     if (liveStatus) {
       const liveBadge = create("span", "ss-profile-hovercard-live-badge", "LIVE");
       liveBadge.setAttribute("aria-label", `${liveStatus.providerLabel || "Live"} live now`);
-      row.appendChild(liveBadge);
+      row.appendChild(
+        getPublicBadgeUi()?.wrapTooltipTarget?.(
+          liveBadge,
+          getPublicBadgeUi()?.resolveLiveLabel?.(liveStatus) || `${liveStatus.providerLabel || "Live"} live now`,
+          { className: "ss-badge-tooltip-target ss-badge-tooltip-target--pill" }
+        ) || liveBadge
+      );
     }
 
     row.hidden = row.childElementCount === 0;

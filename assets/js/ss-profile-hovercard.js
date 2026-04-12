@@ -50,6 +50,10 @@
 
   const profileCache = new Map();
 
+  function getPublicBadgeUi() {
+    return window.StreamSuitesPublicBadgeUi || null;
+  }
+
   function safeText(value, fallback = "") {
     const text = String(value || "").trim();
     return text || fallback;
@@ -300,7 +304,13 @@
       icon.className = "ss-profile-hovercard-badge ss-hover-badge-icon";
       icon.src = iconPath;
       icon.alt = "";
-      row.appendChild(icon);
+      row.appendChild(
+        getPublicBadgeUi()?.wrapTooltipTarget?.(
+          icon,
+          getPublicBadgeUi()?.resolveBadgeLabel?.(badge, "Badge") || badge.label || badge.title || badge.key || badge.value,
+          { className: "ss-badge-tooltip-target ss-badge-tooltip-target--icon" }
+        ) || icon
+      );
     });
     row.hidden = row.childElementCount === 0;
   }
@@ -350,7 +360,11 @@
     badge.className = "ss-profile-hovercard-live-badge";
     badge.textContent = "LIVE";
     badge.setAttribute("aria-label", `${liveStatus.providerLabel || "Live"} live now`);
-    return badge;
+    return getPublicBadgeUi()?.wrapTooltipTarget?.(
+      badge,
+      getPublicBadgeUi()?.resolveLiveLabel?.(liveStatus) || `${liveStatus.providerLabel || "Live"} live now`,
+      { className: "ss-badge-tooltip-target ss-badge-tooltip-target--pill" }
+    ) || badge;
   }
 
   function updateCardContent(profile) {
