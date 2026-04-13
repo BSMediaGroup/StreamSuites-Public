@@ -7,7 +7,8 @@
     profiles: "/api/public/community/members",
     notices: "/data/notices.json",
     meta: "/data/meta.json",
-    liveStatus: "/data/live-status.json"
+    liveStatus: ["/shared/state/live_status.json", "/data/live-status.json"],
+    rumbleDiscovery: ["/shared/state/rumble_live_discovery.json", "/data/rumble_live_discovery.json"]
   };
 
   const FALLBACK_AVATAR = "/assets/logos/logocircle.png";
@@ -77,6 +78,14 @@
     schema_version: "v1",
     generated_at: null,
     providers: [],
+    creators: []
+  });
+  const EMPTY_RUMBLE_DISCOVERY_SNAPSHOT = Object.freeze({
+    schema_version: "v1",
+    provider: "rumble",
+    generated_at: null,
+    scan: {},
+    streams: [],
     creators: []
   });
 
@@ -191,11 +200,109 @@
     };
   }
 
-  function buildLiveStatusMap(payload) {
+  function normalizeRumbleDiscoveryStatus(raw) {
+    if (!raw || typeof raw !== "object" || raw?.is_live !== true) return null;
+    return {
+      isLive: true,
+      provider: "rumble",
+      providerLabel: "Rumble",
+      title: String(raw?.live_title || "").trim(),
+      url: String(raw?.live_url || raw?.channel_url || "").trim(),
+      viewerCount: parseViewerCount(raw?.viewer_count),
+      startedAt: String(raw?.started_at || "").trim(),
+      lastCheckedAt: String(raw?.last_checked_at || "").trim(),
+      channelUrl: String(raw?.channel_url || "").trim(),
+      channelSlug: String(raw?.channel_slug || "").trim(),
+      streamKey: String(raw?.stream_key || "").trim(),
+      numericVideoId: String(raw?.numeric_video_id || "").trim()
+    };
+  }
+
+  function mergeLiveStatuses(primary, fallback) {
+    if (!primary?.isLive) return fallback?.isLive ? { ...fallback } : null;
+    if (!fallback?.isLive || primary.provider !== fallback.provider) return { ...primary };
+    return {
+      ...fallback,
+      ...primary,
+      title: primary.title || fallback.title || "",
+      url: primary.url || fallback.url || "",
+      viewerCount: primary.viewerCount ?? fallback.viewerCount ?? null,
+      startedAt: primary.startedAt || fallback.startedAt || "",
+      lastCheckedAt: primary.lastCheckedAt || fallback.lastCheckedAt || "",
+      thumbnailUrl: primary.thumbnailUrl || fallback.thumbnailUrl || "",
+      channelUrl: primary.channelUrl || fallback.channelUrl || "",
+      channelSlug: primary.channelSlug || fallback.channelSlug || "",
+      streamKey: primary.streamKey || fallback.streamKey || "",
+      numericVideoId: primary.numericVideoId || fallback.numericVideoId || ""
+    };
+  }
+
+  function buildRumbleDiscoveryMap(payload) {
+    const map = new Map();
+    const add = (entry) => {
+      const normalized = normalizeRumbleDiscoveryStatus(entry);
+      if (!normalized) return;
+      [
+        entry?.creator_id,
+        entry?.display_name,
+        entry?.channel_slug,
+        entry?.channel_url
+      ].forEach((value) => {
+        const key = normalizeProfileLookup(value);
+        if (key) map.set(key, normalized);
+      });
+    };
+
+    (Array.isArray(payload?.creators) ? payload.creators : []).forEach(add);
+    (Array.isArray(payload?.streams) ? payload.streams : []).forEach((entry) => {
+      const matched = entry?.matched_creator;
+      add({
+        creator_id: matched?.creator_id,
+        display_name: matched?.display_name,
+        channel_slug: entry?.channel?.slug || matched?.matched_value,
+        channel_url: entry?.channel?.canonical_url,
+        is_live: entry?.is_live === true,
+        live_title: entry?.title,
+        live_url: entry?.watch_url,
+        viewer_count: entry?.viewer_count,
+        started_at: entry?.started_at
+      });
+    });
+
+    return map;
+  }
+
+  function resolveRumbleDiscovery(raw, rumbleDiscoveryMap) {
+    const candidates = [
+      raw?.id,
+      raw?.creator_id,
+      raw?.creatorId,
+      raw?.public_slug,
+      raw?.publicSlug,
+      raw?.slug,
+      raw?.user_code,
+      raw?.userCode,
+      raw?.username,
+      raw?.display_name,
+      raw?.displayName,
+      raw?.name,
+      raw?.social_links?.rumble,
+      raw?.socialLinks?.rumble
+    ];
+    for (const candidate of candidates) {
+      const key = normalizeProfileLookup(candidate);
+      if (key && rumbleDiscoveryMap?.has(key)) {
+        return rumbleDiscoveryMap.get(key) || null;
+      }
+    }
+    return null;
+  }
+
+  function buildLiveStatusMap(payload, rumbleDiscoveryMap = null) {
     const map = new Map();
     const items = Array.isArray(payload?.creators) ? payload.creators : [];
     items.forEach((entry) => {
-      const normalized = normalizeLiveStatus(entry);
+      const normalized = mergeLiveStatuses(normalizeLiveStatus(entry), resolveRumbleDiscovery(entry, rumbleDiscoveryMap));
       if (!normalized) return;
       [
         entry?.creator_id,
@@ -215,12 +322,7 @@
     return Object.prototype.hasOwnProperty.call(raw, "live_status") || Object.prototype.hasOwnProperty.call(raw, "liveStatus");
   }
 
-  function resolveLiveStatus(raw, liveStatusMap) {
-    if (hasEmbeddedLiveStatus(raw)) {
-      return normalizeLiveStatus(raw?.live_status || raw?.liveStatus);
-    }
-    const direct = normalizeLiveStatus(raw);
-    if (direct) return direct;
+  function resolveMappedLiveStatus(raw, liveStatusMap) {
     const candidates = [
       raw?.id,
       raw?.creator_id,
@@ -242,6 +344,21 @@
       }
     }
     return null;
+  }
+
+  function resolveLiveStatus(raw, liveStatusMap, rumbleDiscoveryMap = null) {
+    if (hasEmbeddedLiveStatus(raw)) {
+      return mergeLiveStatuses(
+        mergeLiveStatuses(
+          normalizeLiveStatus(raw?.live_status || raw?.liveStatus),
+          resolveMappedLiveStatus(raw, liveStatusMap)
+        ),
+        resolveRumbleDiscovery(raw, rumbleDiscoveryMap)
+      );
+    }
+    const direct = mergeLiveStatuses(normalizeLiveStatus(raw), resolveRumbleDiscovery(raw, rumbleDiscoveryMap));
+    if (direct) return direct;
+    return mergeLiveStatuses(resolveMappedLiveStatus(raw, liveStatusMap), resolveRumbleDiscovery(raw, rumbleDiscoveryMap));
   }
 
   function toArray(payload) {
@@ -298,6 +415,23 @@
     } catch (_err) {
       return fallback;
     }
+  }
+
+  async function loadJsonFromPaths(paths, fallback, options = {}) {
+    const candidates = Array.isArray(paths) ? paths : [paths];
+    for (const path of candidates) {
+      try {
+        const response = await fetch(path, {
+          cache: "no-store",
+          ...(options.sameOrigin ? { credentials: "same-origin" } : {})
+        });
+        if (!response.ok) continue;
+        return await response.json();
+      } catch (_err) {
+        // Try the next candidate.
+      }
+    }
+    return fallback;
   }
 
   async function loadJsonResult(path, fallback) {
@@ -896,7 +1030,8 @@
         profilesResult,
         noticesPayload,
         metaPayload,
-        liveStatusPayload
+        liveStatusPayload,
+        rumbleDiscoveryPayload
       ] = await Promise.all([
         loadJson(DATA_PATHS.clips, { items: [] }),
         loadJson(DATA_PATHS.polls, { items: [] }),
@@ -905,12 +1040,14 @@
         loadJsonResult(DATA_PATHS.profiles, { items: [] }),
         loadJson(DATA_PATHS.notices, { items: [] }),
         loadJson(DATA_PATHS.meta, null),
-        loadJson(DATA_PATHS.liveStatus, EMPTY_LIVE_STATUS_SNAPSHOT)
+        loadJsonFromPaths(DATA_PATHS.liveStatus, EMPTY_LIVE_STATUS_SNAPSHOT),
+        loadJsonFromPaths(DATA_PATHS.rumbleDiscovery, EMPTY_RUMBLE_DISCOVERY_SNAPSHOT)
       ]);
 
       const profilesPayload = profilesResult.payload;
       const profileItems = toArray(profilesPayload);
-      const liveStatusMap = buildLiveStatusMap(liveStatusPayload);
+      const rumbleDiscoveryMap = buildRumbleDiscoveryMap(rumbleDiscoveryPayload);
+      const liveStatusMap = buildLiveStatusMap(liveStatusPayload, rumbleDiscoveryMap);
       const profilesMap = buildProfileMap(profileItems, liveStatusMap);
 
       const clips = sortByUpdated(toArray(clipsPayload).map((item, index) => normalizeClip(item, index, profilesMap)));
@@ -969,6 +1106,7 @@
         artifactsByProfile,
         meta: metaPayload,
         liveStatus: liveStatusPayload,
+        rumbleDiscovery: rumbleDiscoveryPayload,
         sourceStatus: {
           profiles: {
             ok: profilesResult.ok,
@@ -997,6 +1135,10 @@
     buildArtifactHref,
     normalizeArtifactLookup,
     normalizeLiveStatus,
+    mergeLiveStatuses,
+    buildRumbleDiscoveryMap,
+    buildLiveStatusMap,
+    resolveLiveStatus,
     platformIconFor,
     normalizePlatformKey
   };

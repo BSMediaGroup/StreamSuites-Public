@@ -268,6 +268,29 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into the released `0.4.2-alpha` section above.
 
+### Public Authoritative Live Status Downstream Pass - 2026-04-13
+
+### Technical Notes
+
+- Replaced the public repo’s fallback-first live-status hydration path in `js/public-data-hub.js` with runtime-export-first loading from `/shared/state/live_status.json`, keeping `data/live-status.json` only as a graceful mirror fallback instead of the primary source.
+- Added a narrow Rumble discovery enrichment adapter in `js/public-data-hub.js` that optionally reads `/shared/state/rumble_live_discovery.json` and only fills already-existing live presentation fields such as watch URL, title, and viewer count when the aggregate runtime `live_status` entry is already authoritative but sparse.
+- Kept source-of-truth separation intact by leaving the live/offline decision owned by the aggregate runtime export: stale or offline aggregate entries still render as not-live even if Rumble discovery data exists, and `js/public-pages-app.js` now merges sparse embedded profile live payloads with the already-normalized fallback export state instead of inventing new local truth.
+- Added focused regression coverage in `tests/live-status-authority.test.mjs` for Rumble enrichment, stale/offline handling, and the shared-state-to-mirror fallback path.
+- No files were removed in this repo during this pass. The placeholder-style `data/live-status.json` file was not deleted because it remains the intentional static fallback, but the consuming code path is now shorter-lived and secondary to the runtime export.
+
+### Human-Readable Notes
+
+- Public profile pages, community live cards, and `/live` now prefer the real runtime live export instead of treating the checked-in sample mirror as the main source.
+- When the runtime already knows the creator is live on Rumble but the aggregate payload is missing a watch URL or title, the public site now fills that detail from the runtime’s Rumble discovery export without turning the public repo into a new authority layer.
+
+### Files / Areas Touched
+
+- `js/public-data-hub.js`
+- `js/public-pages-app.js`
+- `tests/live-status-authority.test.mjs`
+- `README.md`
+- `BUMP_NOTES.md`
+
 ### Community Member Card Header + Social Icon Corrective Pass - 2026-04-12
 
 ### Technical Notes

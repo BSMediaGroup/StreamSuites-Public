@@ -47,7 +47,7 @@ flowchart TD
 - Clean public artifact routes are supported for clips, polls, and scores via `/clips/<id-or-slug>`, `/polls/<id-or-slug>`, and `/scores/<id-or-slug>`, while legacy detail entry points remain available.
 - `/community/settings.html` is the viewer/public account profile settings surface and loads or saves supported authoritative fields through the public profile API.
 - Public profiles render dual share behavior truthfully: StreamSuites links always use the canonical slug URL, and FindMeHere links render only when the authoritative payload marks the account eligible and visible there.
-- Live badge, live ring, and live profile-banner treatment consume the centralized runtime `live-status` payload.
+- Live badge, live ring, live-directory cards, and live profile-banner treatment consume the centralized runtime `live_status` export first, with optional Rumble discovery enrichment only when the existing UI needs missing watch/title metadata.
 - `/live` is the dedicated public live view and only lists creators whose StreamSuites public profile is currently eligible and visible.
 - Reserved media fields are reflected from the authoritative payload, including cover or banner usage plus reserved `background_image_url`.
 
@@ -168,7 +168,8 @@ StreamSuites-Public/
 │   ├── requests.css
 │   └── status-widget.css
 ├── tests/
-│   └── auth-surface-parity.test.mjs
+│   ├── auth-surface-parity.test.mjs
+│   └── live-status-authority.test.mjs
 └── assets/
     ├── css/
     │   └── ss-profile-hovercard.css
