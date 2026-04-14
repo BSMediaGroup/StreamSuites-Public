@@ -522,7 +522,7 @@
       socialLinks: normalizeSocialLinks(profile?.social_links || profile?.socialLinks || fallback.socialLinks),
       badges: normalizeBadges(profile?.badges, accountType, tier),
       tier,
-      liveStatus: normalizeLiveStatus(profile?.live_status || profile?.liveStatus || fallback.liveStatus)
+      liveStatus: normalizeLiveStatus(fallback.liveStatus)
     };
   }
 

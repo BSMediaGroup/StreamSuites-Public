@@ -88,6 +88,7 @@
     streams: [],
     creators: []
   });
+  const AUTHORITATIVE_LIVE_PROVIDERS = new Set(["rumble"]);
 
   let cachePromise = null;
 
@@ -185,6 +186,7 @@
     }
 
     const provider = String(raw?.active_provider || raw?.activeProvider || activeStatus?.provider || "").trim().toLowerCase();
+    if (!AUTHORITATIVE_LIVE_PROVIDERS.has(provider)) return null;
     return {
       isLive: true,
       provider,
@@ -235,6 +237,11 @@
       streamKey: primary.streamKey || fallback.streamKey || "",
       numericVideoId: primary.numericVideoId || fallback.numericVideoId || ""
     };
+  }
+
+  function enrichAuthoritativeLiveStatus(authoritative, discovery) {
+    if (!authoritative?.isLive) return null;
+    return mergeLiveStatuses(authoritative, discovery);
   }
 
   function buildRumbleDiscoveryMap(payload) {
@@ -302,7 +309,7 @@
     const map = new Map();
     const items = Array.isArray(payload?.creators) ? payload.creators : [];
     items.forEach((entry) => {
-      const normalized = mergeLiveStatuses(normalizeLiveStatus(entry), resolveRumbleDiscovery(entry, rumbleDiscoveryMap));
+      const normalized = enrichAuthoritativeLiveStatus(normalizeLiveStatus(entry), resolveRumbleDiscovery(entry, rumbleDiscoveryMap));
       if (!normalized) return;
       [
         entry?.creator_id,
@@ -347,18 +354,8 @@
   }
 
   function resolveLiveStatus(raw, liveStatusMap, rumbleDiscoveryMap = null) {
-    if (hasEmbeddedLiveStatus(raw)) {
-      return mergeLiveStatuses(
-        mergeLiveStatuses(
-          normalizeLiveStatus(raw?.live_status || raw?.liveStatus),
-          resolveMappedLiveStatus(raw, liveStatusMap)
-        ),
-        resolveRumbleDiscovery(raw, rumbleDiscoveryMap)
-      );
-    }
-    const direct = mergeLiveStatuses(normalizeLiveStatus(raw), resolveRumbleDiscovery(raw, rumbleDiscoveryMap));
-    if (direct) return direct;
-    return mergeLiveStatuses(resolveMappedLiveStatus(raw, liveStatusMap), resolveRumbleDiscovery(raw, rumbleDiscoveryMap));
+    const authoritative = resolveMappedLiveStatus(raw, liveStatusMap);
+    return enrichAuthoritativeLiveStatus(authoritative, resolveRumbleDiscovery(raw, rumbleDiscoveryMap));
   }
 
   function toArray(payload) {

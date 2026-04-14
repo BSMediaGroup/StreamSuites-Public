@@ -1,69 +1,9 @@
 {
   "schema_version": "v1",
-  "generated_at": "2026-03-10T00:28:12.340723Z",
+  "generated_at": null,
   "provider_priority": [
-    "twitch",
-    "youtube",
     "rumble"
   ],
-  "providers": [
-    {
-      "provider": "twitch",
-      "cadence_seconds": 30,
-      "stale_after_seconds": 90,
-      "batch_size": 100,
-      "creators_configured": 1,
-      "last_refresh_started_at": "2026-03-10T00:28:12.340723Z",
-      "last_refresh_completed_at": "2026-03-10T00:28:12.340723Z",
-      "last_error": null
-    }
-  ],
-  "creators": [
-    {
-      "creator_id": "creator-1",
-      "display_name": "Daniel Clancy",
-      "is_live": true,
-      "active_provider": "twitch",
-      "active_status": {
-        "creator_id": "creator-1",
-        "provider": "twitch",
-        "is_live": true,
-        "provider_account_id": "100",
-        "provider_account_login": null,
-        "live_title": "Going live",
-        "live_url": null,
-        "thumbnail_url": null,
-        "viewer_count": null,
-        "game_name": null,
-        "started_at": null,
-        "last_checked_at": "2026-03-10T00:28:12.320585Z",
-        "stale": false,
-        "freshness": "fresh",
-        "error": null
-      },
-      "last_checked_at": "2026-03-10T00:28:12.320585Z",
-      "freshness": "fresh",
-      "stale": false,
-      "checked_provider_count": 1,
-      "statuses": [
-        {
-          "creator_id": "creator-1",
-          "provider": "twitch",
-          "is_live": true,
-          "provider_account_id": "100",
-          "provider_account_login": null,
-          "live_title": "Going live",
-          "live_url": null,
-          "thumbnail_url": null,
-          "viewer_count": null,
-          "game_name": null,
-          "started_at": null,
-          "last_checked_at": "2026-03-10T00:28:12.320585Z",
-          "stale": false,
-          "freshness": "fresh",
-          "error": null
-        }
-      ]
-    }
-  ]
+  "providers": [],
+  "creators": []
 }

@@ -268,6 +268,14 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into the released `0.4.2-alpha` section above.
 
+## Public Rumble-Only Live Truth Cleanup - 2026-04-14
+
+- Replaced the remaining fake/sample live authority in `js/public-data-hub.js` by removing embedded-profile live-state participation from `resolveLiveStatus(...)`, restricting renderable live providers to authoritative Rumble entries only, and treating `rumble_live_discovery.json` as enrichment-only metadata instead of a source that can create live state by itself.
+- Replaced the standalone public profile fallback in `js/public-pages-app.js` so detailed profile pages now trust only the already-hydrated runtime-backed `fallbackProfile.liveStatus` instead of re-merging `payload.live_status` from the profile response.
+- Replaced the hovercard fetch fallback in `assets/js/ss-profile-hovercard.js` so card hover state no longer rehydrates `LIVE` from fetched profile payload samples; it now reads only the runtime-backed card state that was already attached by the page.
+- Removed the fake checked-in Twitch sample from `data/live-status.json` and replaced it with an intentionally empty Rumble-phase mirror snapshot. The file is much shorter now because it no longer ships a demo `LIVE` creator.
+- Added focused regression coverage in `tests/live-status-authority.test.mjs` for Rumble-only gating, discovery-without-aggregate staying offline, and embedded/sample `live_status` no longer overriding missing runtime truth.
+
 ### Public Authoritative Live Status Downstream Pass - 2026-04-13
 
 ### Technical Notes

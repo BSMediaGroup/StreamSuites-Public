@@ -85,6 +85,41 @@ test("public authoritative live adapter enriches rumble entries from discovery m
   assert.equal(resolved?.viewerCount, 88);
 });
 
+test("public authoritative live adapter does not create live state from discovery alone", () => {
+  const api = instantiatePublicData(async () => jsonResponse({ items: [] }));
+  const rumbleDiscoveryMap = api.buildRumbleDiscoveryMap({
+    creators: [
+      {
+        creator_id: "creator-1",
+        display_name: "Creator One",
+        is_live: true,
+        live_title: "Discovery Only",
+        live_url: "https://rumble.com/v123-discovery-only"
+      }
+    ]
+  });
+
+  const liveStatusMap = api.buildLiveStatusMap(
+    {
+      creators: [
+        {
+          creator_id: "creator-1",
+          display_name: "Creator One",
+          is_live: false,
+          active_provider: null,
+          active_status: null,
+          freshness: "fresh",
+          stale: false
+        }
+      ]
+    },
+    rumbleDiscoveryMap
+  );
+
+  assert.equal(liveStatusMap.get("creator-1") || null, null);
+  assert.equal(api.resolveLiveStatus({ user_code: "creator-1" }, liveStatusMap, rumbleDiscoveryMap), null);
+});
+
 test("public authoritative live adapter keeps stale aggregate entries offline", () => {
   const api = instantiatePublicData(async () => jsonResponse({ items: [] }));
   const resolved = api.normalizeLiveStatus({
@@ -97,6 +132,47 @@ test("public authoritative live adapter keeps stale aggregate entries offline", 
       freshness: "stale"
     }
   });
+  assert.equal(resolved, null);
+});
+
+test("public authoritative live adapter suppresses non-rumble live providers for this phase", () => {
+  const api = instantiatePublicData(async () => jsonResponse({ items: [] }));
+  const resolved = api.normalizeLiveStatus({
+    is_live: true,
+    freshness: "fresh",
+    active_provider: "twitch",
+    active_status: {
+      provider: "twitch",
+      is_live: true,
+      freshness: "fresh",
+      stale: false
+    }
+  });
+  assert.equal(resolved, null);
+});
+
+test("public authoritative live adapter ignores embedded live payloads when aggregate truth is absent", () => {
+  const api = instantiatePublicData(async () => jsonResponse({ items: [] }));
+  const resolved = api.resolveLiveStatus(
+    {
+      user_code: "creator-1",
+      live_status: {
+        is_live: true,
+        active_provider: "rumble",
+        active_status: {
+          provider: "rumble",
+          is_live: true,
+          live_title: "Embedded Sample",
+          freshness: "fresh",
+          stale: false
+        },
+        freshness: "fresh",
+        stale: false
+      }
+    },
+    new Map(),
+    new Map()
+  );
   assert.equal(resolved, null);
 });
 

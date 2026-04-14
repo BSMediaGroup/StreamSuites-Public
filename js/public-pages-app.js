@@ -2586,15 +2586,7 @@
     const findmehereStatusReason = String(
       payload?.findmehere_status_reason || payload?.findmehereStatusReason || fallbackProfile?.findmehereStatusReason || ""
     ).trim();
-    const hasLiveStatusPayload =
-      Object.prototype.hasOwnProperty.call(payload || {}, "live_status") ||
-      Object.prototype.hasOwnProperty.call(payload || {}, "liveStatus");
-    const liveStatus = hasLiveStatusPayload
-      ? window.StreamSuitesPublicData?.mergeLiveStatuses?.(
-          window.StreamSuitesPublicData?.normalizeLiveStatus?.(payload?.live_status || payload?.liveStatus) || null,
-          fallbackProfile?.liveStatus || null
-        ) || null
-      : fallbackProfile?.liveStatus || null;
+    const liveStatus = fallbackProfile?.liveStatus || null;
     return {
       id: fallbackProfile?.id || userCode,
       userCode,
