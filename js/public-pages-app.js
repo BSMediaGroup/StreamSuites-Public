@@ -56,33 +56,7 @@
     streamsuites: "/assets/icons/ui/streamsuitesicon.svg",
     findmehere: "/assets/icons/ui/findmehereicon.svg"
   });
-  const SOCIAL_ICON_MAP = Object.freeze({
-    youtube: "/assets/icons/youtube.svg",
-    rumble: "/assets/icons/rumble.svg",
-    discord: "/assets/icons/discord.svg",
-    x: "/assets/icons/x.svg",
-    twitter: "/assets/icons/twitter.svg",
-    twitch: "/assets/icons/twitch.svg",
-    kick: "/assets/icons/kick.svg",
-    tiktok: "/assets/icons/ui/widget.svg",
-    github: "/assets/icons/github.svg",
-    instagram: "/assets/icons/ui/widget.svg",
-    website: "/assets/icons/ui/globe.svg"
-  });
   const MEMBER_PAGE_SIZE = 20;
-  const SOCIAL_NETWORK_ORDER = Object.freeze([
-    "x",
-    "twitter",
-    "youtube",
-    "rumble",
-    "twitch",
-    "kick",
-    "discord",
-    "instagram",
-    "tiktok",
-    "github",
-    "website"
-  ]);
   const MEMBER_ALPHA_OPTIONS = Object.freeze([
     { value: "all", label: "All" },
     ...Array.from({ length: 26 }, (_, index) => {
@@ -380,6 +354,10 @@
   }
 
   function normalizeSocialLinks(value) {
+    const api = getSocialDataApi();
+    if (typeof api?.normalizeSocialLinks === "function") {
+      return api.normalizeSocialLinks(value);
+    }
     if (!value || typeof value !== "object" || Array.isArray(value)) return {};
     return Object.entries(value).reduce((acc, [key, raw]) => {
       const normalizedKey = String(key || "").trim().toLowerCase();
@@ -1047,26 +1025,60 @@
     return `https://${raw.replace(/^\/+/, "")}`;
   }
 
+  function getSocialDataApi() {
+    return window.StreamSuitesPublicData || null;
+  }
+
+  function collectOrderedSocialEntries(socialLinks) {
+    const api = getSocialDataApi();
+    if (typeof api?.collectOrderedSocialEntries === "function") {
+      return api.collectOrderedSocialEntries(socialLinks);
+    }
+    const normalized =
+      typeof api?.normalizeSocialLinks === "function"
+        ? api.normalizeSocialLinks(socialLinks)
+        : {};
+    return Object.entries(normalized).map(([network, url]) => ({
+      network,
+      url: normalizeExternalUrl(url),
+      label: network,
+      iconPath: typeof api?.socialIconPath === "function" ? api.socialIconPath(network) : "/assets/icons/link.svg"
+    })).filter((entry) => entry.url);
+  }
+
+  function socialLabel(network) {
+    const api = getSocialDataApi();
+    return typeof api?.socialLabel === "function" ? api.socialLabel(network) : String(network || "").trim();
+  }
+
+  function getProfileSocialVisibleLimit() {
+    if (window.matchMedia("(max-width: 640px)").matches) return 8;
+    if (window.matchMedia("(max-width: 900px)").matches) return 10;
+    return 14;
+  }
+
+  function createSocialOverflowIndicator(hiddenCount, className = "social-overflow-indicator") {
+    const chip = create("span", className, `+${hiddenCount}`);
+    chip.setAttribute("aria-label", `${hiddenCount} more social link${hiddenCount === 1 ? "" : "s"} available`);
+    chip.title = `${hiddenCount} more social link${hiddenCount === 1 ? "" : "s"} on the full profile`;
+    return chip;
+  }
+
+  function buildSocialIconLink(entry, className = "social-icon-btn", iconClass = "") {
+    const anchor = create("a", className);
+    anchor.href = entry.url;
+    anchor.target = "_blank";
+    anchor.rel = "noopener noreferrer";
+    anchor.setAttribute("aria-label", entry.label || socialLabel(entry.network));
+    const icon = create("img", iconClass);
+    icon.src = entry.iconPath || socialIconPath(entry.network);
+    icon.alt = "";
+    anchor.appendChild(icon);
+    return anchor;
+  }
+
   function collectMemberSocialEntries(socialLinks) {
-    const normalized = normalizeSocialLinks(socialLinks);
-    const entries = [];
-    const seen = new Set();
-
-    SOCIAL_NETWORK_ORDER.forEach((network) => {
-      const url = normalizeExternalUrl(normalized[network]);
-      if (!url) return;
-      entries.push({ network, url });
-      seen.add(network);
-    });
-
-    Object.entries(normalized).forEach(([network, rawUrl]) => {
-      if (seen.has(network)) return;
-      const url = normalizeExternalUrl(rawUrl);
-      if (!url) return;
-      entries.push({ network, url });
-    });
-
-    return entries;
+    return collectOrderedSocialEntries(socialLinks);
   }
 
   function buildMemberCardAvatar(profile) {
@@ -1170,22 +1182,12 @@
       return row;
     }
 
-    entries.forEach(({ network, url }) => {
-      const anchor = create("a", "ss-profile-hovercard-social");
-      anchor.href = url;
-      anchor.target = "_blank";
-      anchor.rel = "noopener noreferrer";
-      anchor.setAttribute("aria-label", network);
-      if (network === "website") {
-        anchor.appendChild(createIcon(socialIconPath(network), "ss-profile-hovercard-social-icon ss-profile-hovercard-social-icon-website"));
-      } else {
-        const icon = create("img", "member-gallery-card-social-icon-image");
-        icon.src = socialIconPath(network);
-        icon.alt = "";
-        anchor.appendChild(icon);
-      }
-      row.appendChild(anchor);
+    entries.slice(0, 8).forEach((entry) => {
+      row.appendChild(buildSocialIconLink(entry, "ss-profile-hovercard-social", "member-gallery-card-social-icon-image"));
     });
+    if (entries.length > 8) {
+      row.appendChild(createSocialOverflowIndicator(entries.length - 8));
+    }
 
     return row;
   }
@@ -2507,8 +2509,9 @@
   }
 
   function socialIconPath(network) {
-    const normalized = String(network || "").trim().toLowerCase();
-    return SOCIAL_ICON_MAP[normalized] || "/assets/icons/ui/globe.svg";
+    const api = getSocialDataApi();
+    if (typeof api?.socialIconPath === "function") return api.socialIconPath(network);
+    return "/assets/icons/link.svg";
   }
 
   function normalizeProfilePayload(payload, fallbackProfile, fallbackCode) {
@@ -2819,23 +2822,36 @@
 
   function buildSocialLinksRow(socialLinks) {
     const row = create("div", "profile-social-row");
-    const entries = Object.entries(normalizeSocialLinks(socialLinks));
+    const entries = collectOrderedSocialEntries(socialLinks);
     if (!entries.length) {
       row.appendChild(create("span", "muted", "No social links set."));
       return row;
     }
-    entries.forEach(([network, url]) => {
-      const anchor = create("a", "social-icon-btn");
-      anchor.href = url;
-      anchor.target = "_blank";
-      anchor.rel = "noopener noreferrer";
-      anchor.setAttribute("aria-label", network);
-      const icon = create("img");
-      icon.src = socialIconPath(network);
-      icon.alt = "";
-      anchor.appendChild(icon);
-      row.appendChild(anchor);
-    });
+    const collapsedLimit = getProfileSocialVisibleLimit();
+    const hiddenEntries = entries.slice(collapsedLimit);
+    let expanded = false;
+    const render = () => {
+      row.innerHTML = "";
+      const visibleEntries = expanded ? entries : entries.slice(0, collapsedLimit);
+      visibleEntries.forEach((entry) => {
+        row.appendChild(buildSocialIconLink(entry));
+      });
+      if (hiddenEntries.length) {
+        const toggle = create("button", "social-overflow-toggle", expanded ? "Less" : `+${hiddenEntries.length}`);
+        toggle.type = "button";
+        toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+        toggle.setAttribute(
+          "aria-label",
+          expanded ? "Collapse extra social links" : `Show ${hiddenEntries.length} more social links`
+        );
+        toggle.addEventListener("click", () => {
+          expanded = !expanded;
+          render();
+        });
+        row.appendChild(toggle);
+      }
+    };
+    render();
     return row;
   }
 

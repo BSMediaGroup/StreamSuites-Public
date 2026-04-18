@@ -198,10 +198,13 @@ test("community member gallery cards keep slug-first handles and the cleaned too
   assert.match(app, /function getCanonicalSlugFromUrl\(value\)/);
   assert.match(dataHub, /function normalizeCanonicalSlug\(value\)/);
   assert.match(dataHub, /const publicSlug = normalizeCanonicalSlug/);
+  assert.match(dataHub, /const SOCIAL_PLATFORM_REGISTRY = Object\.freeze\(\[/);
+  assert.match(dataHub, /function collectOrderedSocialEntries\(value\)/);
   assert.match(app, /function buildMemberCardHeader\(profile\)/);
   assert.match(app, /member-gallery-card-handle/);
-  assert.match(app, /createIcon\(socialIconPath\(network\), "ss-profile-hovercard-social-icon ss-profile-hovercard-social-icon-website"\)/);
-  assert.match(app, /const icon = create\("img", "member-gallery-card-social-icon-image"\)/);
+  assert.match(app, /entries\.slice\(0, 8\)/);
+  assert.match(app, /createSocialOverflowIndicator\(entries\.length - 8\)/);
+  assert.match(app, /buildSocialIconLink\(entry, "ss-profile-hovercard-social", "member-gallery-card-social-icon-image"\)/);
   assert.match(app, /function buildMemberArtifactSummary\(profile, data\)/);
   assert.ok(memberCardBlock, "member gallery card builder should exist");
   assert.doesNotMatch(memberCardBlock, /buildPlatformChip/);
@@ -213,5 +216,5 @@ test("community member gallery cards keep slug-first handles and the cleaned too
   assert.match(css, /\.member-gallery-card-head/);
   assert.match(css, /\.member-gallery-card-artifact-count/);
   assert.match(css, /\.member-gallery-card-social-icon-image/);
-  assert.match(css, /\.ss-profile-hovercard-social-icon-website/);
+  assert.match(css, /\.social-overflow-indicator/);
 });

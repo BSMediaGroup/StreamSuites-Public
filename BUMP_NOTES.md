@@ -268,6 +268,31 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into the released `0.4.2-alpha` section above.
 
+## Public Social Platform Registry + Overflow Pass - 2026-04-19
+
+### Technical Notes
+
+- Replaced the duplicated partial social icon/order maps in `js/public-pages-app.js` and `assets/js/ss-profile-hovercard.js` with one canonical social-platform registry exported from `js/public-data-hub.js`, including alias normalization for existing payload variants such as `twitter` -> `x`, `site`/`web` -> `website`, `apple_podcasts`, `whatsapp_channels`, and `ko-fi`.
+- Expanded downstream public rendering support to the full first-class plus extended platform list, switched website rendering to the canonical full-color `assets/icons/website.svg`, and kept WhatsApp Channels on the existing `assets/icons/whatsapp.svg` asset instead of adding a separate channel-specific icon file.
+- Replaced the old member-card social-row renderer in `js/public-pages-app.js` so compact gallery/card surfaces now hard-cap at eight icons and append a restrained `+N` overflow indicator instead of spilling indefinitely.
+- Replaced the old hovercard social-row ordering/icon logic in `assets/js/ss-profile-hovercard.js` with the shared canonical registry and the same compact max-eight rule plus `+N` indicator.
+- Replaced the full-profile social strip path in `js/public-pages-app.js` so canonical ordering is preserved and narrower layouts collapse only the overflow portion behind a slim inline toggle rather than growing the row without bound.
+
+### Human-Readable Notes
+
+- Public profile pages, community member cards, and profile hovercards now recognize the expanded social-platform set in one consistent order instead of showing only the older short list.
+- Compact preview surfaces stay visually restrained at eight icons, while full profile pages still expose the rest of the links through a small inline expander when space gets tight.
+
+### Files / Areas Touched
+
+- `js/public-data-hub.js`
+- `js/public-pages-app.js`
+- `assets/js/ss-profile-hovercard.js`
+- `css/public-shell.css`
+- `assets/css/ss-profile-hovercard.css`
+- `README.md`
+- `BUMP_NOTES.md`
+
 ## Public Rumble-Only Live Truth Cleanup - 2026-04-14
 
 - Replaced the remaining fake/sample live authority in `js/public-data-hub.js` by removing embedded-profile live-state participation from `resolveLiveStatus(...)`, restricting renderable live providers to authoritative Rumble entries only, and treating `rumble_live_discovery.json` as enrichment-only metadata instead of a source that can create live state by itself.

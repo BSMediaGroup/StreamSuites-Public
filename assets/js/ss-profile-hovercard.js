@@ -14,33 +14,6 @@
     moderator: "/assets/icons/modgavel-blue.svg",
     developer: "/assets/icons/dev-green.svg"
   });
-  const SOCIAL_ICON_MAP = Object.freeze({
-    youtube: "/assets/icons/youtube.svg",
-    rumble: "/assets/icons/rumble.svg",
-    discord: "/assets/icons/discord.svg",
-    x: "/assets/icons/x.svg",
-    twitter: "/assets/icons/twitter.svg",
-    twitch: "/assets/icons/twitch.svg",
-    kick: "/assets/icons/kick.svg",
-    tiktok: "/assets/icons/ui/widget.svg",
-    github: "/assets/icons/github.svg",
-    website: "/assets/icons/ui/globe.svg",
-    instagram: "/assets/icons/ui/widget.svg"
-  });
-  const SOCIAL_ORDER = Object.freeze([
-    "x",
-    "twitter",
-    "youtube",
-    "rumble",
-    "twitch",
-    "kick",
-    "discord",
-    "instagram",
-    "tiktok",
-    "github",
-    "website"
-  ]);
-
   let card = null;
   let activeTrigger = null;
   let hideTimer = 0;
@@ -52,6 +25,10 @@
 
   function getPublicBadgeUi() {
     return window.StreamSuitesPublicBadgeUi || null;
+  }
+
+  function getPublicSocialData() {
+    return window.StreamSuitesPublicData || null;
   }
 
   function safeText(value, fallback = "") {
@@ -96,6 +73,10 @@
   }
 
   function normalizeSocialLinks(value) {
+    const api = getPublicSocialData();
+    if (typeof api?.normalizeSocialLinks === "function") {
+      return api.normalizeSocialLinks(value);
+    }
     if (!value || typeof value !== "object" || Array.isArray(value)) return {};
     return Object.entries(value).reduce((acc, [key, raw]) => {
       const normalizedKey = safeText(key).toLowerCase();
@@ -132,27 +113,29 @@
   }
 
   function collectSocialEntries(value) {
+    const api = getPublicSocialData();
+    if (typeof api?.collectOrderedSocialEntries === "function") {
+      return api.collectOrderedSocialEntries(value);
+    }
     const normalized = normalizeSocialLinks(value);
-    const entries = [];
-    const seen = new Set();
-    SOCIAL_ORDER.forEach((network) => {
-      if (!normalized[network]) return;
-      const url = normalizeExternalUrl(normalized[network]);
-      if (!url) return;
-      entries.push({ network, url });
-      seen.add(network);
-    });
-    Object.entries(normalized).forEach(([network, rawUrl]) => {
-      if (seen.has(network)) return;
-      const url = normalizeExternalUrl(rawUrl);
-      if (!url) return;
-      entries.push({ network, url });
-    });
-    return entries;
+    return Object.entries(normalized).map(([network, url]) => ({
+      network,
+      url: normalizeExternalUrl(url),
+      label: network,
+      iconPath: socialIconPath(network)
+    })).filter((entry) => entry.url);
   }
 
   function socialIconPath(network) {
-    return SOCIAL_ICON_MAP[safeText(network).toLowerCase()] || "/assets/icons/ui/globe.svg";
+    const api = getPublicSocialData();
+    if (typeof api?.socialIconPath === "function") return api.socialIconPath(network);
+    return "/assets/icons/link.svg";
+  }
+
+  function socialLabel(network) {
+    const api = getPublicSocialData();
+    if (typeof api?.socialLabel === "function") return api.socialLabel(network);
+    return safeText(network, "Social");
   }
 
   function buildBadgesFromRole(role, tier = "core") {
@@ -323,19 +306,26 @@
       row.hidden = true;
       return;
     }
-    links.forEach(({ network, url }) => {
+    links.slice(0, 8).forEach(({ network, url, iconPath, label }) => {
       const anchor = document.createElement("a");
       anchor.className = "ss-profile-hovercard-social";
       anchor.href = url;
       anchor.target = "_blank";
       anchor.rel = "noopener noreferrer";
-      anchor.setAttribute("aria-label", network);
+      anchor.setAttribute("aria-label", label || socialLabel(network));
       const icon = document.createElement("img");
-      icon.src = socialIconPath(network);
+      icon.src = iconPath || socialIconPath(network);
       icon.alt = "";
       anchor.appendChild(icon);
       row.appendChild(anchor);
     });
+    if (links.length > 8) {
+      const overflow = document.createElement("span");
+      overflow.className = "social-overflow-indicator";
+      overflow.textContent = `+${links.length - 8}`;
+      overflow.setAttribute("aria-label", `${links.length - 8} more social links on the full profile`);
+      row.appendChild(overflow);
+    }
     row.hidden = false;
   }
 
