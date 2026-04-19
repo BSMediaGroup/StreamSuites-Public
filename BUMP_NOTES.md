@@ -1,5 +1,20 @@
 # Bump Notes
 
+## Public Authority Contract Wiring - 2026-04-20
+
+### Technical Notes
+
+- Extended `js/public-data-hub.js` so the public shell now consumes the runtime-published `public_identities.json` and `public_artifacts.json` authority summaries, indexing real `identity_code` targets for profile surfaces and only enabling artifact-side request actions when a real `artifact_code` is already present instead of guessing.
+- Replaced the old placeholder-only authority scaffold in `js/public-pages-app.js` with real `POST /api/public/authority/requests` submission handling on contextual profile/detail surfaces, including truthful duplicate-pending, validation, auth-required, success, and failure messaging plus guest sign-in handoff through the existing shared auth modal.
+- Reworked `/community/my-data.html` through the existing shared SPA renderer so signed-in users now load `GET /api/public/authority/requests/mine`, see real request type/status/target/note history, and get a proper empty state instead of a fake account-history placeholder.
+- Added authority-panel styling in `css/public-shell.css`, updated `README.md`, and added `tests/public-authority-wiring.test.mjs` so the repo now pins the export hydration and real request-history wiring.
+
+### Human-Readable Notes
+
+- Public profile surfaces can now submit real authority review requests when the page can resolve a real backend identity target.
+- My Data now shows your real request history instead of placeholder copy.
+- Artifact pages stay honest: if the public payload does not expose a real authority artifact code yet, the request UI remains visible but disabled rather than guessing.
+
 ## Public /@slug Alias Bootstrap Repair - 2026-04-19
 
 ### Technical Notes

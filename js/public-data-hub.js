@@ -5,6 +5,8 @@
     scoreboards: "/data/scoreboards.json",
     tallies: "/data/tallies.json",
     profiles: "/api/public/community/members",
+    publicAuthorityIdentities: ["/shared/state/public_identities.json", "/runtime/exports/public_identities.json"],
+    publicAuthorityArtifacts: ["/shared/state/public_artifacts.json", "/runtime/exports/public_artifacts.json"],
     notices: "/data/notices.json",
     meta: "/data/meta.json",
     liveStatus: ["/shared/state/live_status.json", "/data/live-status.json"],
@@ -149,6 +151,18 @@
     streams: [],
     creators: []
   });
+  const EMPTY_PUBLIC_AUTHORITY_IDENTITIES = Object.freeze({
+    schema_version: "v1",
+    generated_at: null,
+    counts: {},
+    identities: []
+  });
+  const EMPTY_PUBLIC_AUTHORITY_ARTIFACTS = Object.freeze({
+    schema_version: "v1",
+    generated_at: null,
+    counts: {},
+    artifacts: []
+  });
   const AUTHORITATIVE_LIVE_PROVIDERS = new Set(["rumble"]);
 
   let cachePromise = null;
@@ -254,6 +268,88 @@
       .toLowerCase()
       .replace(/[^a-z0-9_-]+/g, "-")
       .replace(/^-+|-+$/g, "");
+  }
+
+  function normalizeAuthorityKey(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function normalizePublicAuthorityIdentity(raw) {
+    if (!raw || typeof raw !== "object") return null;
+    const identityCode = String(raw.identity_code || "").trim();
+    if (!identityCode) return null;
+    return {
+      identityCode,
+      identityKind: String(raw.identity_kind || "").trim().toLowerCase(),
+      accountUserCode: normalizeAuthorityKey(raw.account_user_code),
+      displayName: String(raw.display_name || raw.source_display_name || "").trim(),
+      listingState: String(raw.listing_state || "").trim().toLowerCase(),
+      sourcePlatform: String(raw.source_platform || "").trim().toLowerCase(),
+      sourceDisplayName: String(raw.source_display_name || "").trim(),
+      sourceChannelScope: String(raw.source_channel_scope || "").trim(),
+      sourceConfidence: String(raw.source_confidence || "").trim().toLowerCase(),
+      createdAt: String(raw.created_at || "").trim(),
+      updatedAt: String(raw.updated_at || "").trim(),
+      assignedAt: String(raw.assigned_at || "").trim()
+    };
+  }
+
+  function compareAuthorityIdentityPriority(left, right) {
+    const score = (entry) => {
+      if (!entry) return -1;
+      let total = 0;
+      if (entry.identityKind === "assigned") total += 20;
+      if (entry.listingState === "listed") total += 10;
+      if (entry.listingState === "unlisted") total += 5;
+      if (entry.sourceConfidence === "observed") total += 3;
+      if (entry.assignedAt) total += 2;
+      return total;
+    };
+    return score(right) - score(left);
+  }
+
+  function buildPublicAuthorityIdentityMap(payload) {
+    const byUserCode = new Map();
+    const identities = Array.isArray(payload?.identities) ? payload.identities : [];
+    identities
+      .map(normalizePublicAuthorityIdentity)
+      .filter(Boolean)
+      .sort(compareAuthorityIdentityPriority)
+      .forEach((identity) => {
+        if (!identity.accountUserCode || byUserCode.has(identity.accountUserCode)) return;
+        byUserCode.set(identity.accountUserCode, identity);
+      });
+    return byUserCode;
+  }
+
+  function normalizePublicAuthorityArtifact(raw) {
+    if (!raw || typeof raw !== "object") return null;
+    const artifactCode = String(raw.artifact_code || "").trim();
+    if (!artifactCode) return null;
+    return {
+      artifactCode,
+      artifactType: String(raw.artifact_type || "").trim().toLowerCase(),
+      ownerIdentityCode: String(raw.owner_identity_code || "").trim(),
+      linkedAccountUserCode: normalizeAuthorityKey(raw.linked_account_user_code),
+      title: String(raw.title || raw.display_label || "").trim(),
+      displayLabel: String(raw.display_label || raw.title || "").trim(),
+      visibilityState: String(raw.visibility_state || "").trim().toLowerCase(),
+      lifecycleState: String(raw.lifecycle_state || "").trim().toLowerCase(),
+      createdAt: String(raw.created_at || "").trim(),
+      updatedAt: String(raw.updated_at || "").trim()
+    };
+  }
+
+  function buildPublicAuthorityArtifactMap(payload) {
+    const byCode = new Map();
+    const artifacts = Array.isArray(payload?.artifacts) ? payload.artifacts : [];
+    artifacts
+      .map(normalizePublicAuthorityArtifact)
+      .filter(Boolean)
+      .forEach((artifact) => {
+        byCode.set(artifact.artifactCode, artifact);
+      });
+    return { byCode };
   }
 
   function firstArtifactIdentifier(raw, keys) {
@@ -735,7 +831,7 @@
     };
   }
 
-  function normalizeProfile(raw, liveStatusMap = null) {
+  function normalizeProfile(raw, liveStatusMap = null, authorityIdentityMap = null) {
     const id = raw?.id || raw?.profile_id || raw?.user_code || raw?.userCode || raw?.username || raw?.name;
     if (!id) return null;
     const userCodeRaw = raw?.user_code || raw?.userCode || raw?.username || id;
@@ -779,6 +875,9 @@
     const findmehereShareUrl = String(raw?.findmehere_share_url || raw?.findmehereShareUrl || findmehereProfileUrl).trim();
     const findmehereStatusReason = String(raw?.findmehere_status_reason || raw?.findmehereStatusReason || "").trim();
 
+    const authorityIdentity =
+      authorityIdentityMap?.get(normalizeAuthorityKey(raw?.user_code || raw?.userCode || raw?.username || id)) || null;
+
     return {
       id: userCode || String(id),
       userCode,
@@ -821,7 +920,8 @@
       findmehereProfileUrl,
       findmehereShareUrl,
       findmehereStatusReason,
-      liveStatus: resolveLiveStatus(raw, liveStatusMap)
+      liveStatus: resolveLiveStatus(raw, liveStatusMap),
+      authorityIdentity
     };
   }
 
@@ -842,11 +942,11 @@
     });
   }
 
-  function buildProfileMap(items, liveStatusMap = null) {
+  function buildProfileMap(items, liveStatusMap = null, authorityIdentityMap = null) {
     const map = new Map();
     indexProfile(map, { ...DEFAULT_PROFILE });
     items.forEach((raw) => {
-      const profile = normalizeProfile(raw, liveStatusMap);
+      const profile = normalizeProfile(raw, liveStatusMap, authorityIdentityMap);
       if (!profile) return;
       indexProfile(map, profile);
     });
@@ -893,7 +993,7 @@
     return profiles.get(DEFAULT_PROFILE.id);
   }
 
-  function normalizeClip(raw, index, profiles) {
+  function normalizeClip(raw, index, profiles, authorityArtifacts = null) {
     const id = raw?.id || raw?.clip_id || `clip-${index + 1}`;
     const routeId =
       firstArtifactIdentifier(raw, ["public_slug", "slug", "clip_slug", "clipSlug", "canonical_id", "canonicalId"]) || id;
@@ -902,6 +1002,8 @@
     const removal = resolveRemovalState(raw);
 
     const platform = raw?.platform || profile.platform || "StreamSuites";
+
+    const authorityArtifactCode = String(raw?.artifact_code || raw?.artifactCode || "").trim();
 
     return {
       id,
@@ -928,6 +1030,10 @@
       profileId: profile.id,
       profileCode: profile.publicSlug || profile.userCode || profile.username || profile.id,
       creator: profile,
+      authorityArtifact:
+        authorityArtifactCode && authorityArtifacts?.byCode?.has(authorityArtifactCode)
+          ? authorityArtifacts.byCode.get(authorityArtifactCode)
+          : null,
       href: buildArtifactHref("clips", routeId)
     };
   }
@@ -964,7 +1070,7 @@
     });
   }
 
-  function normalizePoll(raw, index, profiles) {
+  function normalizePoll(raw, index, profiles, authorityArtifacts = null) {
     const id = raw?.id || raw?.poll_id || `poll-${index + 1}`;
     const routeId =
       firstArtifactIdentifier(raw, ["public_slug", "slug", "poll_slug", "pollSlug", "canonical_id", "canonicalId"]) || id;
@@ -973,6 +1079,8 @@
     const removal = resolveRemovalState(raw);
 
     const chartType = String(raw?.chart_type || raw?.chartType || "").toLowerCase() === "pie" ? "pie" : "bar";
+
+    const authorityArtifactCode = String(raw?.artifact_code || raw?.artifactCode || "").trim();
 
     return {
       id,
@@ -1000,6 +1108,10 @@
       profileId: profile.id,
       profileCode: profile.publicSlug || profile.userCode || profile.username || profile.id,
       creator: profile,
+      authorityArtifact:
+        authorityArtifactCode && authorityArtifacts?.byCode?.has(authorityArtifactCode)
+          ? authorityArtifacts.byCode.get(authorityArtifactCode)
+          : null,
       href: buildArtifactHref("polls", routeId),
       resultsHref: `/polls/results.html?id=${encodeURIComponent(id)}`
     };
@@ -1043,12 +1155,14 @@
     }));
   }
 
-  function normalizeScoreboard(raw, index, profiles) {
+  function normalizeScoreboard(raw, index, profiles, authorityArtifacts = null) {
     const id = raw?.id || raw?.scoreboard_id || `score-${index + 1}`;
     const routeId =
       firstArtifactIdentifier(raw, ["public_slug", "slug", "score_slug", "scoreSlug", "scoreboard_slug", "scoreboardSlug", "canonical_id", "canonicalId"]) || id;
     const profile = resolveProfileRef(raw?.creator, profiles);
     const removal = resolveRemovalState(raw);
+
+    const authorityArtifactCode = String(raw?.artifact_code || raw?.artifactCode || "").trim();
 
     return {
       id,
@@ -1072,14 +1186,20 @@
       profileId: profile.id,
       profileCode: profile.publicSlug || profile.userCode || profile.username || profile.id,
       creator: profile,
+      authorityArtifact:
+        authorityArtifactCode && authorityArtifacts?.byCode?.has(authorityArtifactCode)
+          ? authorityArtifacts.byCode.get(authorityArtifactCode)
+          : null,
       href: buildArtifactHref("scoreboards", routeId)
     };
   }
 
-  function normalizeTally(raw, index, profiles) {
+  function normalizeTally(raw, index, profiles, authorityArtifacts = null) {
     const id = raw?.id || raw?.tally_id || `tally-${index + 1}`;
     const profile = resolveProfileRef(raw?.creator, profiles);
     const removal = resolveRemovalState(raw);
+
+    const authorityArtifactCode = String(raw?.artifact_code || raw?.artifactCode || "").trim();
 
     return {
       id,
@@ -1102,6 +1222,10 @@
       profileId: profile.id,
       profileCode: profile.publicSlug || profile.userCode || profile.username || profile.id,
       creator: profile,
+      authorityArtifact:
+        authorityArtifactCode && authorityArtifacts?.byCode?.has(authorityArtifactCode)
+          ? authorityArtifacts.byCode.get(authorityArtifactCode)
+          : null,
       href: `/tallies/detail.html?id=${encodeURIComponent(id)}`
     };
   }
@@ -1148,6 +1272,8 @@
         scoreboardsPayload,
         talliesPayload,
         profilesResult,
+        authorityIdentitiesPayload,
+        authorityArtifactsPayload,
         noticesPayload,
         metaPayload,
         liveStatusPayload,
@@ -1158,6 +1284,8 @@
         loadJson(DATA_PATHS.scoreboards, { items: [] }),
         loadJson(DATA_PATHS.tallies, { items: [] }),
         loadJsonResult(DATA_PATHS.profiles, { items: [] }),
+        loadJsonFromPaths(DATA_PATHS.publicAuthorityIdentities, EMPTY_PUBLIC_AUTHORITY_IDENTITIES),
+        loadJsonFromPaths(DATA_PATHS.publicAuthorityArtifacts, EMPTY_PUBLIC_AUTHORITY_ARTIFACTS),
         loadJson(DATA_PATHS.notices, { items: [] }),
         loadJson(DATA_PATHS.meta, null),
         loadJsonFromPaths(DATA_PATHS.liveStatus, EMPTY_LIVE_STATUS_SNAPSHOT),
@@ -1168,14 +1296,16 @@
       const profileItems = toArray(profilesPayload);
       const rumbleDiscoveryMap = buildRumbleDiscoveryMap(rumbleDiscoveryPayload);
       const liveStatusMap = buildLiveStatusMap(liveStatusPayload, rumbleDiscoveryMap);
-      const profilesMap = buildProfileMap(profileItems, liveStatusMap);
+      const authorityIdentityMap = buildPublicAuthorityIdentityMap(authorityIdentitiesPayload);
+      const authorityArtifacts = buildPublicAuthorityArtifactMap(authorityArtifactsPayload);
+      const profilesMap = buildProfileMap(profileItems, liveStatusMap, authorityIdentityMap);
 
-      const clips = sortByUpdated(toArray(clipsPayload).map((item, index) => normalizeClip(item, index, profilesMap)));
-      const polls = sortByUpdated(toArray(pollsPayload).map((item, index) => normalizePoll(item, index, profilesMap)));
+      const clips = sortByUpdated(toArray(clipsPayload).map((item, index) => normalizeClip(item, index, profilesMap, authorityArtifacts)));
+      const polls = sortByUpdated(toArray(pollsPayload).map((item, index) => normalizePoll(item, index, profilesMap, authorityArtifacts)));
       const scoreboards = sortByUpdated(
-        toArray(scoreboardsPayload).map((item, index) => normalizeScoreboard(item, index, profilesMap))
+        toArray(scoreboardsPayload).map((item, index) => normalizeScoreboard(item, index, profilesMap, authorityArtifacts))
       );
-      const tallies = sortByUpdated(toArray(talliesPayload).map((item, index) => normalizeTally(item, index, profilesMap)));
+      const tallies = sortByUpdated(toArray(talliesPayload).map((item, index) => normalizeTally(item, index, profilesMap, authorityArtifacts)));
       const notices = sortByUpdated(toArray(noticesPayload).map((item, index) => normalizeNotice(item, index, profilesMap)));
 
       const profileList = [];
@@ -1227,6 +1357,12 @@
         meta: metaPayload,
         liveStatus: liveStatusPayload,
         rumbleDiscovery: rumbleDiscoveryPayload,
+        authority: {
+          identities: authorityIdentitiesPayload,
+          artifacts: authorityArtifactsPayload,
+          identityByUserCode: authorityIdentityMap,
+          artifactByCode: authorityArtifacts.byCode
+        },
         sourceStatus: {
           profiles: {
             ok: profilesResult.ok,

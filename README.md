@@ -47,7 +47,8 @@ flowchart TD
 - Legacy `user_code` compatibility is still preserved during profile resolution and migration-safe routing.
 - Clean public artifact routes are supported for clips, polls, and scores via `/clips/<id-or-slug>`, `/polls/<id-or-slug>`, and `/scores/<id-or-slug>`, while legacy detail entry points remain available.
 - `/community/settings.html` is the viewer/public account profile settings surface and loads or saves supported authoritative fields through the public profile API.
-- `/community/my-data.html`, `/wheels.html`, and `/economy.html` are intentional public dashboard destinations for future account/data and artifact expansion. They are currently truthful placeholder surfaces rather than backend-wired workflows.
+- `/community/my-data.html` now reads the signed-in user’s real public-authority request history from the authoritative `/api/public/authority/requests/mine` contract, while `/wheels.html` and `/economy.html` remain intentional dashboard destinations that keep authority CTAs informational until a real target can be resolved.
+- Standalone and in-shell public profile surfaces now consume the runtime-published public authority identity summaries so profile claim, assignment, issue, and removal requests submit against real `identity_code` targets instead of placeholder payloads.
 - Public profiles render dual share behavior truthfully: StreamSuites links always use the canonical slug URL, and FindMeHere links render only when the authoritative payload marks the account eligible and visible there.
 - Live badge, live ring, live-directory cards, and live profile-banner treatment consume the centralized runtime `live_status` export first, with optional Rumble discovery enrichment only when the existing UI needs missing watch/title metadata.
 - `/live` is the dedicated public live view and only lists creators whose StreamSuites public profile is currently eligible and visible.
@@ -175,7 +176,8 @@ StreamSuites-Public/
 │   └── status-widget.css
 ├── tests/
 │   ├── auth-surface-parity.test.mjs
-│   └── live-status-authority.test.mjs
+│   ├── live-status-authority.test.mjs
+│   └── public-authority-wiring.test.mjs
 └── assets/
     ├── css/
     │   └── ss-profile-hovercard.css

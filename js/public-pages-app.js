@@ -21,6 +21,8 @@
   const AUTH_PUBLIC_PROFILE_URL = `${AUTH_API_BASE}/api/public/profile`;
   const AUTH_PUBLIC_PROFILE_ME_URL = `${AUTH_API_BASE}/api/public/profile/me`;
   const AUTH_PUBLIC_PROFILE_RESOLVE_URL = `${AUTH_API_BASE}/api/public/profile/resolve`;
+  const AUTH_PUBLIC_AUTHORITY_REQUESTS_URL = `${AUTH_API_BASE}/api/public/authority/requests`;
+  const AUTH_PUBLIC_AUTHORITY_REQUESTS_MINE_URL = `${AUTH_API_BASE}/api/public/authority/requests/mine`;
   const AUTH_PUBLIC_ARTIFACTS_URL = `${AUTH_API_BASE}/api/public/artifacts`;
   const AUTH_LOGOUT_URL = `${AUTH_API_BASE}/auth/logout`;
   const CREATOR_DASHBOARD_URL = "https://creator.streamsuites.app/";
@@ -1098,19 +1100,179 @@
     return buildDashboardCard({
       title: options.title || "Claim, assign, or report",
       kicker: options.kicker || "Future workflow scaffold",
-      badge: "Not wired",
-      state: "planned",
+      badge: "Context required",
+      state: "preview",
       body:
         options.body ||
-        "Claim, assign, report, and removal-request actions will land here once the public workflow is connected to authoritative backend review paths.",
-      meta: options.meta || ["No backend action on this surface yet", "Support can receive context manually today"],
+        "Public authority requests now submit against the real review contract only on surfaces that can resolve a real identity or artifact target. This location stays informational until that context exists.",
+      meta: options.meta || ["Real backend contract is now live", "Submission stays disabled until a real target can be resolved"],
       actions: [
         { label: "Open support", href: "/support.html" },
-        { label: "Removal request", disabled: true, muted: true, note: "UI scaffold only. No backend request is submitted in this milestone." },
-        { label: "Claim / assign", disabled: true, muted: true, note: "UI scaffold only. Ownership workflows are not implemented yet." }
+        { label: "Removal request", disabled: true, muted: true, note: "A real identity or artifact target is required before the request can be submitted." },
+        { label: "Claim / assign", disabled: true, muted: true, note: "Only contextual profile or artifact surfaces can submit to the authority backend." }
       ],
-      footnote: "This card is intentionally non-submitting in the current milestone."
+      footnote: "This card stays informational unless the current page can map to a real public authority target."
     });
+  }
+
+  const PUBLIC_AUTHORITY_TYPE_CONFIG = Object.freeze({
+    claim_profile: {
+      label: "Claim profile",
+      requiresAuth: true,
+      buttonLabel: "Claim profile",
+      help: "Approval records review state only. It does not promise instant profile transfer."
+    },
+    assign_to_profile: {
+      label: "Assign to profile",
+      requiresAuth: true,
+      buttonLabel: "Assign to my profile",
+      help: "Use this when the public identity is mapped to the wrong StreamSuites profile."
+    },
+    report_issue: {
+      label: "Report issue",
+      requiresAuth: false,
+      buttonLabel: "Report issue",
+      help: "Use this for incorrect metadata, attribution, or listing issues."
+    },
+    request_removal: {
+      label: "Request removal",
+      requiresAuth: false,
+      buttonLabel: "Request removal",
+      help: "Approval suppresses or unlists the public item. It does not physically delete history-backed records."
+    }
+  });
+  const PUBLIC_AUTHORITY_STATUS_LABELS = Object.freeze({
+    pending: "Pending review",
+    approved: "Approved",
+    rejected: "Rejected",
+    cancelled: "Cancelled"
+  });
+
+  function publicAuthorityTypeLabel(value) {
+    return PUBLIC_AUTHORITY_TYPE_CONFIG[String(value || "").trim().toLowerCase()]?.label || "Request";
+  }
+
+  function publicAuthorityStatusLabel(value) {
+    return PUBLIC_AUTHORITY_STATUS_LABELS[String(value || "").trim().toLowerCase()] || "Unknown";
+  }
+
+  function createAuthorityContext(value = {}) {
+    if (!value || typeof value !== "object") return null;
+    const targetIdentityCode = String(value.targetIdentityCode || value.target_identity_code || "").trim();
+    const targetArtifactCode = String(value.targetArtifactCode || value.target_artifact_code || "").trim();
+    if (!targetIdentityCode && !targetArtifactCode) return null;
+    return {
+      targetIdentityCode,
+      targetArtifactCode,
+      title: String(value.title || "").trim() || "Authority request",
+      summary: String(value.summary || "").trim(),
+      meta: Array.isArray(value.meta) ? value.meta.filter(Boolean).map((entry) => String(entry).trim()) : [],
+      unsupportedReason: String(value.unsupportedReason || "").trim()
+    };
+  }
+
+  function resolveProfileAuthorityContext(profile) {
+    const identity = profile?.authorityIdentity || null;
+    if (!identity?.identityCode) {
+      return createAuthorityContext({
+        title: "Profile authority requests",
+        summary: "This profile does not currently expose a published public authority identity code, so claim, assignment, issue, and removal requests cannot be submitted from this page yet.",
+        unsupportedReason: "Authority target unavailable for this profile."
+      });
+    }
+    return createAuthorityContext({
+      targetIdentityCode: identity.identityCode,
+      title: "Profile authority requests",
+      summary: "Submit a real claim, assignment, issue, or removal request against this public profile identity. Approval changes request state and review metadata; it does not imply instant ownership transfer.",
+      meta: [
+        `Identity: ${identity.identityCode}`,
+        `Listing: ${toTitle(identity.listingState || "listed")}`,
+        identity.sourcePlatform ? `Source: ${toTitle(identity.sourcePlatform)}` : ""
+      ]
+    });
+  }
+
+  function resolveArtifactAuthorityContext(item) {
+    const authorityArtifact = item?.authorityArtifact || null;
+    if (!authorityArtifact?.artifactCode) {
+      return createAuthorityContext({
+        title: "Artifact authority requests",
+        summary: "This artifact route does not currently expose a published authority artifact code in the public payload, so requests stay informational here instead of guessing a target.",
+        unsupportedReason: "Authority artifact target unavailable for this page."
+      });
+    }
+    return createAuthorityContext({
+      targetArtifactCode: authorityArtifact.artifactCode,
+      targetIdentityCode: authorityArtifact.ownerIdentityCode,
+      title: "Artifact authority requests",
+      summary: "Submit a real issue or removal request against this public artifact. Removal approval suppresses public visibility rather than deleting the record.",
+      meta: [
+        `Artifact: ${authorityArtifact.artifactCode}`,
+        `Type: ${toTitle(authorityArtifact.artifactType || item?.type || "artifact")}`,
+        authorityArtifact.ownerIdentityCode ? `Owner identity: ${authorityArtifact.ownerIdentityCode}` : ""
+      ]
+    });
+  }
+
+  async function parseJsonResponse(response) {
+    const contentType = String(response?.headers?.get?.("content-type") || "").toLowerCase();
+    if (!contentType.includes("application/json")) return {};
+    try {
+      return await response.json();
+    } catch (_err) {
+      return {};
+    }
+  }
+
+  function resolveAuthorityErrorMessage(payload, fallbackStatus) {
+    const raw = String(payload?.error || payload?.message || "").trim();
+    if (!raw) return fallbackStatus ? `Request failed (${fallbackStatus}).` : "Request failed.";
+    const normalized = raw.toLowerCase();
+    if (normalized.includes("authentication required")) return "Sign in is required for that request type.";
+    if (normalized === "request_target_required") return "A real public identity or artifact target is required before submission.";
+    if (normalized === "claim_profile_requires_identity_target") return "Claim requests currently require a resolved public identity target.";
+    if (normalized === "account_required_for_claim_or_assignment") return "Sign in is required for claim or assignment requests.";
+    if (normalized === "target_public_identity_not_found") return "The selected public identity could not be resolved by the authority layer.";
+    if (normalized === "target_public_artifact_not_found") return "The selected public artifact could not be resolved by the authority layer.";
+    return raw.replace(/_/g, " ");
+  }
+
+  async function submitPublicAuthorityRequest(payload) {
+    const response = await fetch(AUTH_PUBLIC_AUTHORITY_REQUESTS_URL, {
+      method: "POST",
+      cache: "no-store",
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+    const body = await parseJsonResponse(response);
+    if (!response.ok || body?.success === false) {
+      const error = new Error(resolveAuthorityErrorMessage(body, response.status));
+      error.status = response.status;
+      error.payload = body;
+      throw error;
+    }
+    return body;
+  }
+
+  async function fetchMyPublicAuthorityRequests() {
+    const response = await fetch(AUTH_PUBLIC_AUTHORITY_REQUESTS_MINE_URL, {
+      method: "GET",
+      cache: "no-store",
+      credentials: "include",
+      headers: { Accept: "application/json" }
+    });
+    const body = await parseJsonResponse(response);
+    if (!response.ok || body?.success === false) {
+      const error = new Error(resolveAuthorityErrorMessage(body, response.status));
+      error.status = response.status;
+      error.payload = body;
+      throw error;
+    }
+    return Array.isArray(body?.requests) ? body.requests : [];
   }
 
   function getMemberDisplayName(profile) {
@@ -2084,6 +2246,195 @@
     return section;
   }
 
+  function buildAuthorityRequestPanel(context, options = {}) {
+    const authorityContext = createAuthorityContext(context);
+    const authState = options.authState || null;
+    const openAuthModal = typeof options.openAuthModal === "function" ? options.openAuthModal : null;
+    const panel = create("section", "profile-card authority-request-panel");
+    const header = create("div", "profile-inline-header");
+    header.append(create("h3", "", authorityContext?.title || "Public authority requests"));
+    panel.appendChild(header);
+
+    const intro = create(
+      "p",
+      "authority-request-copy",
+      authorityContext?.summary ||
+        "Use this panel to submit a real public authority request once the current page can resolve a real identity or artifact target."
+    );
+    panel.appendChild(intro);
+
+    const meta = create("div", "dashboard-meta-list");
+    (authorityContext?.meta || []).forEach((entry) => {
+      if (!entry) return;
+      meta.appendChild(create("span", "dashboard-meta-pill", entry));
+    });
+    if (meta.childElementCount) {
+      panel.appendChild(meta);
+    }
+
+    const noteRow = create("label", "ss-form-row");
+    const noteLabel = create("span", "", "Request note");
+    const noteInput = create("textarea", "authority-request-note");
+    noteInput.rows = 4;
+    noteInput.placeholder = "Add the review context operators should see.";
+    noteRow.append(noteLabel, noteInput);
+    panel.appendChild(noteRow);
+
+    const status = create("div", "authority-request-status muted");
+    panel.appendChild(status);
+
+    const actionGrid = create("div", "authority-request-actions");
+    Object.entries(PUBLIC_AUTHORITY_TYPE_CONFIG).forEach(([requestType, config]) => {
+      const button = create("button", "dashboard-card-link");
+      button.type = "button";
+      button.textContent = config.buttonLabel;
+
+      const targetAvailable =
+        requestType === "claim_profile" || requestType === "assign_to_profile"
+          ? Boolean(authorityContext?.targetIdentityCode)
+          : Boolean(authorityContext?.targetIdentityCode || authorityContext?.targetArtifactCode);
+      const authRequired = config.requiresAuth === true;
+      const needsAuthPrompt = authRequired && !authState?.authenticated;
+      const unavailableReason =
+        authorityContext?.unsupportedReason ||
+        (requestType === "claim_profile" || requestType === "assign_to_profile"
+          ? "A real identity target is required for this request type."
+          : "A real identity or artifact target is required for this request type.");
+
+      if (!targetAvailable) {
+        button.disabled = true;
+        button.title = unavailableReason;
+      } else if (needsAuthPrompt) {
+        button.title = "Sign in is required before this request can be submitted.";
+      }
+
+      button.addEventListener("click", async () => {
+        if (!targetAvailable) {
+          status.textContent = unavailableReason;
+          status.className = "authority-request-status authority-request-status-error";
+          return;
+        }
+        if (needsAuthPrompt) {
+          status.textContent = "Sign in to submit that request type.";
+          status.className = "authority-request-status muted";
+          openAuthModal?.("login");
+          return;
+        }
+
+        const originalLabel = button.textContent;
+        status.textContent = `${config.label} submitting…`;
+        status.className = "authority-request-status muted";
+        button.disabled = true;
+        button.textContent = "Submitting…";
+        try {
+          const payload = await submitPublicAuthorityRequest({
+            request_type: requestType,
+            target_identity_code: authorityContext?.targetIdentityCode || undefined,
+            target_artifact_code: authorityContext?.targetArtifactCode || undefined,
+            requester_note: String(noteInput.value || "").trim() || undefined
+          });
+          const requestId = String(payload?.request?.request_id || "").trim();
+          if (payload?.duplicate === true) {
+            status.textContent = requestId
+              ? `A pending ${config.label.toLowerCase()} request already exists for this target. (${requestId})`
+              : `A pending ${config.label.toLowerCase()} request already exists for this target.`;
+            status.className = "authority-request-status authority-request-status-warning";
+          } else {
+            status.textContent = requestId
+              ? `${config.label} submitted for review. (${requestId})`
+              : `${config.label} submitted for review.`;
+            status.className = "authority-request-status authority-request-status-success";
+          }
+          if (typeof options.onSubmitted === "function") {
+            options.onSubmitted(payload?.request || null, payload?.duplicate === true);
+          }
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Request failed.";
+          status.textContent = message;
+          status.className = "authority-request-status authority-request-status-error";
+          if ((error?.status === 401 || error?.status === 403) && needsAuthPrompt) {
+            openAuthModal?.("login");
+          }
+        } finally {
+          button.disabled = !targetAvailable;
+          button.textContent = originalLabel;
+        }
+      });
+
+      const action = create("div", "authority-request-action");
+      const help = create("p", "authority-request-action-help", config.help);
+      action.append(button, help);
+      actionGrid.appendChild(action);
+    });
+    panel.appendChild(actionGrid);
+
+    panel.appendChild(
+      create(
+        "p",
+        "dashboard-card-footnote authority-request-footnote",
+        "Approved requests update review state and metadata first. Profile claim or assignment approval does not imply automatic transfer, and removal approval suppresses public visibility rather than deleting the underlying record."
+      )
+    );
+
+    return panel;
+  }
+
+  function buildAuthorityHistoryCard(request) {
+    const type = String(request?.request_type || "").trim().toLowerCase();
+    const status = String(request?.status || "").trim().toLowerCase();
+    const card = create("article", "dashboard-card authority-history-card");
+    card.dataset.state = status || "pending";
+
+    const head = create("div", "dashboard-card-head");
+    const titleWrap = create("div", "dashboard-card-title-wrap");
+    titleWrap.append(
+      create("h3", "dashboard-card-title", publicAuthorityTypeLabel(type)),
+      create("p", "dashboard-card-kicker", request?.created_at ? `Submitted ${String(request.created_at)}` : "Submission time unavailable")
+    );
+    head.append(titleWrap, create("span", "dashboard-state-badge", publicAuthorityStatusLabel(status)));
+    card.appendChild(head);
+
+    const targetBits = [];
+    if (request?.target_identity?.display_name) targetBits.push(request.target_identity.display_name);
+    if (request?.target_identity_code) targetBits.push(request.target_identity_code);
+    if (request?.target_artifact?.display_label || request?.target_artifact?.title) {
+      targetBits.push(String(request.target_artifact.display_label || request.target_artifact.title));
+    }
+    if (request?.target_artifact_code) targetBits.push(request.target_artifact_code);
+    card.appendChild(
+      create(
+        "p",
+        "dashboard-card-body",
+        targetBits.length
+          ? `Target: ${targetBits.join(" | ")}`
+          : "Target metadata was not included in the current response."
+      )
+    );
+
+    const meta = create("div", "dashboard-meta-list");
+    [
+      request?.updated_at ? `Updated ${String(request.updated_at)}` : "",
+      request?.resolved_at ? `Resolved ${String(request.resolved_at)}` : "",
+      request?.requester_user_code ? `Requester ${String(request.requester_user_code)}` : ""
+    ].forEach((entry) => {
+      if (!entry) return;
+      meta.appendChild(create("span", "dashboard-meta-pill", entry));
+    });
+    if (meta.childElementCount) {
+      card.appendChild(meta);
+    }
+
+    if (request?.requester_note) {
+      card.appendChild(create("p", "dashboard-card-footnote", `Submitted note: ${String(request.requester_note)}`));
+    }
+    if (request?.resolution_note) {
+      card.appendChild(create("p", "dashboard-card-footnote", `Admin note: ${String(request.resolution_note)}`));
+    } else if (status === "pending") {
+      card.appendChild(create("p", "dashboard-card-footnote", "Pending review. No admin resolution note yet."));
+    }
+    return card;
+  }
+
   function buildExternalSourceBlock(item) {
     const wrap = create("div", "external-source");
     const link = create("a", "external-source-link");
@@ -2387,6 +2738,7 @@
   function buildDetailSide(item, helpers, options = {}) {
     const authState = options.authState || null;
     const onRemoved = options.onRemoved;
+    const openAuthModal = typeof options.openAuthModal === "function" ? options.openAuthModal : null;
     const side = create("aside", "detail-side");
 
     const profileCard = create("div", "profile-card");
@@ -2467,6 +2819,12 @@
     }
 
     side.appendChild(profileCard);
+    side.appendChild(
+      buildAuthorityRequestPanel(resolveArtifactAuthorityContext(item), {
+        authState,
+        openAuthModal
+      })
+    );
 
     if (item.resultsHref) {
       const resultsLink = create("a", "see-all", "Open results page");
@@ -2520,6 +2878,7 @@
     const main = buildDetailMain(item, config, data.helpers);
     const side = buildDetailSide(item, data.helpers, {
       authState,
+      openAuthModal: ctx.openAuthModal,
       onRemoved() {
         renderDetail(ctx, config);
       }
@@ -2583,6 +2942,7 @@
 
     const side = buildDetailSide(poll, data.helpers, {
       authState,
+      openAuthModal: ctx.openAuthModal,
       onRemoved() {
         renderPollResults(ctx);
       }
@@ -2937,52 +3297,92 @@
   }
 
   function renderCommunityMyData(ctx) {
-    const { authState } = ctx;
+    const { host, authState, openAuthModal } = ctx;
+    clear(host);
     const authReady = Boolean(authState?.authenticated);
-    buildPlaceholderWorkspacePage(ctx, {
-      eyebrow: "Account workspace",
-      title: "My Data",
-      body: "This page establishes the member-facing data workspace for future exports, activity history, saved preferences, and public-surface account controls. It is intentionally truthful about the fact that those backend-backed views are not active yet.",
-      tone: authReady ? "preview" : "planned",
-      actions: authReady
-        ? [
-            { label: "Open settings", href: "/community/settings.html", emphasis: "strong" },
-            { label: "Browse community", href: "/community" }
-          ]
-        : [
-            { label: "Public login", disabled: true, emphasis: "strong", note: "Sign-in is available from the account widget. This page does not submit anything directly." },
-            { label: "Open community", href: "/community" }
-          ],
-      stats: [
-        { label: "Access", value: authReady ? "Preview" : "Guest", note: authReady ? authState.displayName : "Login required for future exports" },
-        { label: "Exports", value: "Pending", note: "No backend export job yet" },
-        { label: "Activity history", value: "Pending", note: "No member timeline yet" }
-      ],
-      cards: [
+    host.appendChild(
+      buildDashboardHero({
+        eyebrow: "Account workspace",
+        title: "My Data",
+        body: authReady
+          ? "Review your real public authority submissions here. Request status remains backend-owned, and pending requests are not treated as completed outcomes."
+          : "Sign in to view your real public authority submission history. This page does not fabricate account history for guest sessions.",
+        tone: authReady ? "active" : "preview",
+        actions: authReady
+          ? [
+              { label: "Open settings", href: "/community/settings.html", emphasis: "strong" },
+              { label: "Browse community", href: "/community" }
+            ]
+          : [
+              { label: "Use account menu", disabled: true, emphasis: "strong", note: "Open the existing account menu to sign in." },
+              { label: "Browse community", href: "/community" }
+            ],
+        stats: [
+          { label: "Access", value: authReady ? "Signed in" : "Guest", note: authReady ? authState.displayName : "Login required for request history" },
+          { label: "Authority history", value: authReady ? "Live" : "Locked", note: authReady ? "Backed by /requests/mine" : "Unavailable without session" },
+          { label: "Exports", value: "Planned", note: "No export job exposed yet" }
+        ]
+      })
+    );
+
+    if (!authReady) {
+      const empty = create("div", "empty-state");
+      empty.textContent = "Sign in to load your public authority requests.";
+      const cta = create("button", "dashboard-action is-strong", "Sign in");
+      cta.type = "button";
+      cta.addEventListener("click", () => openAuthModal?.("login"));
+      host.append(empty, cta);
+      return;
+    }
+
+    host.appendChild(
+      buildDashboardGrid([
         buildDashboardCard({
-          title: "Profile-linked data",
-          kicker: "Planned",
-          badge: "Pending",
-          state: "planned",
-          body: authReady
-            ? `Signed in as ${authState.displayName}. This workspace is reserved for account-linked exports, activity, and retention controls once those backend endpoints exist.`
-            : "Sign in from the account widget to use future account-linked exports and history once they become active.",
-          meta: ["No export archive yet", "No request log yet", "No saved reports yet"]
+          title: "Authority request history",
+          kicker: "Live backend data",
+          badge: "Active",
+          state: "active",
+          body: "This panel reflects the real `/api/public/authority/requests/mine` response. Pending requests remain pending until an operator changes status.",
+          meta: ["Claim, assign, report, and removal requests", "Admin notes appear when the backend returns them", "No fake completion states"]
         }),
         buildDashboardCard({
-          title: "Saved preferences",
-          kicker: "Planned",
-          badge: "Pending",
-          state: "planned",
-          body: "Future notification choices, dashboard preferences, and public-surface defaults will live here. This milestone only establishes the page, route, and shell treatment.",
-          meta: ["Preference storage not wired", "No backend mutation on this page"]
+          title: "Important behavior",
+          kicker: "Truthful workflow",
+          badge: "Review-first",
+          state: "preview",
+          body: "Approval updates request state and review metadata. It does not imply automatic identity transfer, and removal approval suppresses public visibility rather than deleting the underlying record.",
+          meta: ["Pending stays pending", "Removal is suppression/unlisting", "Transfer is not auto-executed here"]
         }),
         buildActionScaffoldCard({
-          title: "Data correction / removal requests",
-          body: "Future account-level claim, correction, or removal request actions can attach here once the public workflow is backed by authoritative review endpoints."
+          title: "New authority requests",
+          body: "Use profile or artifact pages that can resolve a real authority target to submit new requests. This account view is for truthful history, not blind target entry."
         })
-      ]
-    });
+      ], "dashboard-card-grid--three")
+    );
+
+    const section = buildSection("My authority requests").section;
+    const status = create("p", "muted authority-history-status", "Loading your request history…");
+    const list = create("div", "dashboard-card-grid dashboard-card-grid--three authority-history-grid");
+    section.append(status, list);
+    host.appendChild(section);
+
+    (async () => {
+      try {
+        const requests = await fetchMyPublicAuthorityRequests();
+        if (!requests.length) {
+          status.textContent = "No public authority requests submitted yet.";
+          list.appendChild(create("div", "empty-state", "You have not submitted any public authority requests yet."));
+          return;
+        }
+        status.textContent = `${formatNumber(requests.length)} request${requests.length === 1 ? "" : "s"} loaded.`;
+        requests.forEach((request) => {
+          list.appendChild(buildAuthorityHistoryCard(request));
+        });
+      } catch (error) {
+        status.textContent = error instanceof Error ? error.message : "Unable to load your request history.";
+        list.appendChild(create("div", "empty-state", "Request history is unavailable right now."));
+      }
+    })();
   }
 
   function resolveLocalProfile(data, code) {
@@ -3174,7 +3574,8 @@
       findmehereProfileUrl,
       findmehereShareUrl,
       findmehereStatusReason,
-      liveStatus
+      liveStatus,
+      authorityIdentity: payload?.authorityIdentity || payload?.authority_identity || fallbackProfile?.authorityIdentity || null
     };
   }
 
@@ -3439,7 +3840,7 @@
     host.appendChild(grid);
   }
 
-  function renderProfileBody(profileCard, profile, canEdit) {
+  function renderProfileBody(profileCard, profile, canEdit, options = {}) {
     clear(profileCard);
     const coverWrap = create("div", "profile-cover");
     const coverImage = create("img");
@@ -3523,6 +3924,12 @@
     shareTitle.prepend(createIcon(UI_ICON_MAP.share, "inline-icon-mask"));
     shareHeader.appendChild(shareTitle);
     profileCard.append(shareHeader, buildProfileShareSection(profile));
+    profileCard.appendChild(
+      buildAuthorityRequestPanel(resolveProfileAuthorityContext(profile), {
+        authState: options.authState || null,
+        openAuthModal: options.openAuthModal || null
+      })
+    );
 
     if (canEdit) {
       const privacyWrap = create("label", "profile-visibility-toggle");
@@ -3621,7 +4028,10 @@
       } else {
         host.prepend(nextHeading);
       }
-      renderProfileBody(profileCard, profile, canEdit);
+      renderProfileBody(profileCard, profile, canEdit, {
+        authState,
+        openAuthModal: ctx.openAuthModal
+      });
       ownerCanEdit = canEdit;
       profileArtifacts = artifactItems;
       if (currentArtifactMode === "list") {
@@ -3697,7 +4107,10 @@
         host.prepend(nextHeading);
       }
       document.title = `${profile.displayName} | StreamSuites Public Profile`;
-      renderProfileBody(profileCard, profile, canEdit);
+      renderProfileBody(profileCard, profile, canEdit, {
+        authState,
+        openAuthModal: ctx.openAuthModal
+      });
     })();
   }
 
@@ -4435,7 +4848,11 @@
       setQuery() {},
       setFilterState() {},
       setActiveHref() {},
-      openAuthModal() {}
+      openAuthModal() {
+        const loginUrl = new URL("/public-login.html", window.location.origin);
+        loginUrl.searchParams.set("return_to", `${window.location.pathname}${window.location.search}${window.location.hash}`);
+        window.location.assign(loginUrl.toString());
+      }
     };
   }
 
@@ -4552,7 +4969,17 @@
 
     const rerender = () => {
       if (!loadedData) return;
-      currentConfig.render({ host: shell.content, data: loadedData, state, authState, rerender }, currentConfig);
+      currentConfig.render(
+        {
+          host: shell.content,
+          data: loadedData,
+          state,
+          authState,
+          rerender,
+          openAuthModal: typeof shell.openAuthModal === "function" ? shell.openAuthModal.bind(shell) : null
+        },
+        currentConfig
+      );
     };
 
     function applyConfig(nextConfig, options = {}) {
