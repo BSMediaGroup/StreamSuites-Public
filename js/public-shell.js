@@ -1,26 +1,26 @@
 (() => {
-  const MEDIA_NAV = [
-    { href: "/media", label: "Home", icon: "/assets/icons/ui/home.svg", group: "main" },
-    { href: "/clips", label: "Clips", icon: "/assets/icons/ui/clipcards.svg", group: "main" },
-    { href: "/polls", label: "Polls", icon: "/assets/icons/ui/vote.svg", group: "main" },
-    { href: "/scoreboards", label: "Scoreboards", icon: "/assets/icons/ui/tablechart.svg", group: "main" },
-    { href: "/tallies", label: "Tallies", icon: "/assets/icons/ui/bulletlist.svg", group: "main" },
-    { href: "/live", label: "Live", icon: "/assets/icons/ui/cast.svg", group: "main" },
-    { href: "/community/index.html", label: "Community", icon: "/assets/icons/ui/community.svg", group: "main" },
-    { href: "/support.html", label: "Support", icon: "/assets/icons/ui/support.svg", group: "quick" },
-    { href: "/resources.html", label: "Resources", icon: "/assets/icons/ui/contactbook.svg", group: "quick" },
-    { href: "/donate.html", label: "Donate", icon: "/assets/icons/ui/donate.svg", group: "quick" },
-    { href: "/stats.html", label: "Statistics", icon: "/assets/icons/ui/statgraph.svg", group: "quick" },
-    { href: "/about.html", label: "About", icon: "/assets/icons/ui/info.svg", group: "quick" }
-  ];
+  const NAV_GROUP_ORDER = Object.freeze(["dashboard", "community", "account", "quick"]);
+  const NAV_GROUP_LABELS = Object.freeze({
+    dashboard: "Dashboard",
+    community: "Community",
+    account: "Account",
+    quick: "Quicklinks"
+  });
 
-  const COMMUNITY_NAV = [
-    { href: "/community", label: "Home", icon: "/assets/icons/ui/home.svg", group: "main" },
-    { href: "/community/members.html", label: "Members", icon: "/assets/icons/ui/profilecard.svg", group: "main" },
-    { href: "/live", label: "Live", icon: "/assets/icons/ui/cast.svg", group: "main" },
-    { href: "/community/notices.html", label: "Notices", icon: "/assets/icons/ui/campaign.svg", group: "main" },
-    { href: "/community/settings.html", label: "Settings", icon: "/assets/icons/ui/cog.svg", group: "main" },
-    { href: "/media", label: "Media", icon: "/assets/icons/ui/mediafill.svg", group: "main" },
+  const PUBLIC_DASHBOARD_NAV = [
+    { href: "/media", label: "Home", icon: "/assets/icons/ui/home.svg", group: "dashboard" },
+    { href: "/clips", label: "Clips", icon: "/assets/icons/ui/clipcards.svg", group: "dashboard" },
+    { href: "/polls", label: "Polls", icon: "/assets/icons/ui/vote.svg", group: "dashboard" },
+    { href: "/wheels.html", label: "Wheels", icon: "/assets/icons/ui/refresh.svg", group: "dashboard" },
+    { href: "/scoreboards", label: "Scoreboards", icon: "/assets/icons/ui/tablechart.svg", group: "dashboard" },
+    { href: "/tallies", label: "Tallies", icon: "/assets/icons/ui/bulletlist.svg", group: "dashboard" },
+    { href: "/economy.html", label: "Games / Economy", icon: "/assets/icons/ui/joystick.svg", group: "dashboard" },
+    { href: "/live", label: "Live", icon: "/assets/icons/ui/cast.svg", group: "community" },
+    { href: "/community", label: "Community", icon: "/assets/icons/ui/community.svg", group: "community" },
+    { href: "/community/members.html", label: "Members", icon: "/assets/icons/ui/profilecard.svg", group: "community" },
+    { href: "/community/notices.html", label: "Notices", icon: "/assets/icons/ui/campaign.svg", group: "community" },
+    { href: "/community/my-data.html", label: "My Data", icon: "/assets/icons/ui/storage.svg", group: "account" },
+    { href: "/community/settings.html", label: "Settings", icon: "/assets/icons/ui/cog.svg", group: "account" },
     { href: "/support.html", label: "Support", icon: "/assets/icons/ui/support.svg", group: "quick" },
     { href: "/resources.html", label: "Resources", icon: "/assets/icons/ui/contactbook.svg", group: "quick" },
     { href: "/donate.html", label: "Donate", icon: "/assets/icons/ui/donate.svg", group: "quick" },
@@ -415,7 +415,8 @@
   }
 
   function shellSubheading(shellKind) {
-    return shellKind === "community" ? "COMMUNITY HUB" : "PUBLIC SURFACE";
+    if (shellKind === "public") return "PUBLIC PROFILE";
+    return "VIEWER DASHBOARD";
   }
 
   function createSidebarLink(item, currentPath) {
@@ -1281,30 +1282,18 @@
       }
     }
 
-    function renderSidebarNav(shellKind, activeHref) {
-      const navItems = shellKind === "community" ? COMMUNITY_NAV : MEDIA_NAV;
+    function renderSidebarNav(_shellKind, activeHref) {
+      const navItems = PUBLIC_DASHBOARD_NAV;
       const currentPath = normalizePath(activeHref || window.location.pathname);
 
-      const mainLinks = [];
-      const quickLinks = [];
-
-      navItems.forEach((item) => {
-        const link = createSidebarLink(item, currentPath);
-        if (item.group === "quick") {
-          quickLinks.push(link);
-        } else {
-          mainLinks.push(link);
-        }
-      });
-
       sidebarScroll.innerHTML = "";
-      if (mainLinks.length) {
-        sidebarScroll.appendChild(createSidebarGroup("", mainLinks));
-      }
-
-      if (quickLinks.length) {
-        sidebarScroll.appendChild(createSidebarGroup("Quicklinks", quickLinks));
-      }
+      NAV_GROUP_ORDER.forEach((groupKey) => {
+        const links = navItems
+          .filter((item) => item.group === groupKey)
+          .map((item) => createSidebarLink(item, currentPath));
+        if (!links.length) return;
+        sidebarScroll.appendChild(createSidebarGroup(NAV_GROUP_LABELS[groupKey] || "", links));
+      });
     }
 
     function setActiveNav(href) {

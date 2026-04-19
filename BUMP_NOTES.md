@@ -268,6 +268,39 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into the released `0.4.2-alpha` section above.
 
+## Public Viewer Dashboard Shell Unification - 2026-04-19
+
+### Technical Notes
+
+- Replaced the old split media-vs-community sidebar model in `js/public-shell.js` with one shared public dashboard navigation tree that now covers Home, Clips, Polls, Wheels, Scoreboards, Tallies, Games / Economy, Live, Community, My Data, Settings, and the existing quicklinks.
+- Reworked the `/media` and `/community` landing renderers in `js/public-pages-app.js` so both surfaces now use the same dashboard-oriented hero, overview-card, and placeholder language instead of feeling like separate apps that merely shared a stylesheet.
+- Added new public dashboard route wrappers and SPA-aware page configs for `/wheels.html`, `/economy.html`, and `/community/my-data.html`, keeping the existing router/fetch navigation pattern intact while truthfully marking those destinations as not-yet-wired placeholders.
+- Added reusable dashboard card/hero/action-scaffold styling in `css/public-shell.css`, including a discreet non-submitting claim / assign / report / removal-request CTA pattern that prepares future moderation or ownership workflows without faking backend behavior.
+- Expanded the existing `/community/settings.html` render path so the settings surface now reads like part of the same viewer/member dashboard while still preserving the current authoritative public-profile save behavior and clearly separating planned controls from active ones.
+- No runtime-side artifact authority, FFmpeg clip generation, approval workflows, launcher work, OBS overlay transport, or creator/admin trigger logic were implemented in this milestone.
+
+### Human-Readable Notes
+
+- The public media and community areas now feel like one viewer/member dashboard instead of two different shells.
+- `/media` remains the default public home, but it now introduces the broader dashboard structure for clips, polls, scoreboards, tallies, live, community, and future modules.
+- New My Data, Wheels, and Games / Economy destinations exist as polished placeholders so the public shell can grow without another navigation reset later.
+
+### Files / Areas Touched
+
+- `js/public-shell.js`
+- `js/public-pages-app.js`
+- `css/public-shell.css`
+- `wheels.html`
+- `economy.html`
+- `community/my-data.html`
+- `README.md`
+- `BUMP_NOTES.md`
+
+### Risks / Follow-Ups
+
+- The new placeholder routes are intentionally UI-only until authoritative backend/public-runtime support exists for wheels, economy, and member data exports/history.
+- The shared dashboard language is now in place, but later milestone work should decide whether additional public artifact families need dedicated detail routes or remain placeholder-only.
+
 ## Public Social Platform Registry + Overflow Pass - 2026-04-19
 
 ### Technical Notes

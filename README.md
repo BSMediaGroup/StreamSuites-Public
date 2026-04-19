@@ -42,10 +42,12 @@ flowchart TD
 
 ## Current Surface Model
 
+- The public `/media` and `/community` experiences now share one dashboard-style shell and one sidebar/navigation model, with `/media` remaining the default public home tab for the viewer/member dashboard.
 - Canonical public profiles resolve at `/u/<slug>`, backed by the authoritative public slug model exported by `StreamSuites`.
 - Legacy `user_code` compatibility is still preserved during profile resolution and migration-safe routing.
 - Clean public artifact routes are supported for clips, polls, and scores via `/clips/<id-or-slug>`, `/polls/<id-or-slug>`, and `/scores/<id-or-slug>`, while legacy detail entry points remain available.
 - `/community/settings.html` is the viewer/public account profile settings surface and loads or saves supported authoritative fields through the public profile API.
+- `/community/my-data.html`, `/wheels.html`, and `/economy.html` are intentional public dashboard destinations for future account/data and artifact expansion. They are currently truthful placeholder surfaces rather than backend-wired workflows.
 - Public profiles render dual share behavior truthfully: StreamSuites links always use the canonical slug URL, and FindMeHere links render only when the authoritative payload marks the account eligible and visible there.
 - Live badge, live ring, live-directory cards, and live profile-banner treatment consume the centralized runtime `live_status` export first, with optional Rumble discovery enrichment only when the existing UI needs missing watch/title metadata.
 - `/live` is the dedicated public live view and only lists creators whose StreamSuites public profile is currently eligible and visible.
@@ -77,6 +79,7 @@ StreamSuites-Public/
 ├── about.html
 ├── auth-bridge.html
 ├── changelog.html
+├── economy.html
 ├── index.html
 ├── public-login.html
 ├── README.md
@@ -85,6 +88,7 @@ StreamSuites-Public/
 ├── stats.html
 ├── support.html
 ├── tools.html
+├── wheels.html
 ├── BUMP_NOTES.md
 ├── changelog/
 │   └── v0.4.2-alpha.md
@@ -116,6 +120,7 @@ StreamSuites-Public/
 ├── community/
 │   ├── index.html
 │   ├── members.html
+│   ├── my-data.html
 │   ├── notices.html
 │   ├── profile.html
 │   └── settings.html

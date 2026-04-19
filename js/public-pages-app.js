@@ -125,6 +125,18 @@
       render: renderMediaList,
       listType: "scoreboards"
     },
+    "media-wheels": {
+      path: "/wheels.html",
+      shellKind: "media",
+      activeHref: "/wheels.html",
+      topbarLabel: "Wheels",
+      searchPlaceholder: "Search",
+      hideSearch: true,
+      filterMode: "none",
+      filtersCollapsed: true,
+      defaultFilters: [],
+      render: renderWheelsWorkspace
+    },
     "media-tallies": {
       path: "/tallies.html",
       aliases: ["/tallies", "/tallies/"],
@@ -137,6 +149,18 @@
       defaultFilters: ["tallies"],
       render: renderMediaList,
       listType: "tallies"
+    },
+    "media-economy": {
+      path: "/economy.html",
+      shellKind: "media",
+      activeHref: "/economy.html",
+      topbarLabel: "Games / Economy",
+      searchPlaceholder: "Search",
+      hideSearch: true,
+      filterMode: "none",
+      filtersCollapsed: true,
+      defaultFilters: [],
+      render: renderGamesEconomyWorkspace
     },
     "detail-clip": {
       path: "/clips/detail.html",
@@ -273,6 +297,18 @@
       filtersCollapsed: true,
       defaultFilters: [],
       render: renderCommunitySettings
+    },
+    "community-my-data": {
+      path: "/community/my-data.html",
+      shellKind: "community",
+      activeHref: "/community/my-data.html",
+      topbarLabel: "My Data",
+      searchPlaceholder: "Search",
+      hideSearch: true,
+      filterMode: "none",
+      filtersCollapsed: true,
+      defaultFilters: [],
+      render: renderCommunityMyData
     },
     "public-profile-standalone": {
       path: "/u/index.html",
@@ -904,6 +940,152 @@
     return { section, contentHost: section };
   }
 
+  function buildDashboardHero(options = {}) {
+    const hero = create("section", "dashboard-hero");
+    if (options.tone) {
+      hero.dataset.tone = String(options.tone).trim().toLowerCase();
+    }
+
+    const intro = create("div", "dashboard-hero-copy");
+    if (options.eyebrow) {
+      intro.appendChild(create("p", "dashboard-eyebrow", options.eyebrow));
+    }
+    intro.append(
+      create("h1", "dashboard-hero-title", options.title || "Public Dashboard"),
+      create("p", "dashboard-hero-body", options.body || "")
+    );
+
+    if (Array.isArray(options.highlights) && options.highlights.length) {
+      const highlights = create("div", "dashboard-chip-row");
+      options.highlights.forEach((highlight) => {
+        const chip = create("span", "dashboard-chip", String(highlight || "").trim());
+        if (chip.textContent) highlights.appendChild(chip);
+      });
+      if (highlights.childElementCount) intro.appendChild(highlights);
+    }
+
+    if (Array.isArray(options.actions) && options.actions.length) {
+      const actions = create("div", "dashboard-action-row");
+      options.actions.forEach((action) => {
+        if (!action || typeof action !== "object" || !action.label) return;
+        const tag = action.href ? "a" : "button";
+        const control = create(tag, `dashboard-action${action.emphasis === "strong" ? " is-strong" : ""}`, action.label);
+        if (tag === "a") {
+          control.href = action.href;
+          if (action.target) control.target = String(action.target);
+          if (action.rel) control.rel = String(action.rel);
+        } else {
+          control.type = "button";
+          control.disabled = action.disabled === true;
+        }
+        if (action.note) control.title = String(action.note);
+        actions.appendChild(control);
+      });
+      if (actions.childElementCount) intro.appendChild(actions);
+    }
+
+    const aside = create("div", "dashboard-hero-aside");
+    (Array.isArray(options.stats) ? options.stats : []).forEach((stat) => {
+      if (!stat || typeof stat !== "object") return;
+      const card = create("article", "dashboard-stat-card");
+      card.append(
+        create("span", "dashboard-stat-label", stat.label || ""),
+        create("strong", "dashboard-stat-value", stat.value || "0")
+      );
+      if (stat.note) {
+        card.appendChild(create("span", "dashboard-stat-note", stat.note));
+      }
+      aside.appendChild(card);
+    });
+
+    hero.append(intro, aside);
+    return hero;
+  }
+
+  function buildDashboardCard(options = {}) {
+    const card = create("article", "dashboard-card");
+    if (options.state) {
+      card.dataset.state = String(options.state).trim().toLowerCase();
+    }
+
+    const head = create("div", "dashboard-card-head");
+    const titleWrap = create("div", "dashboard-card-title-wrap");
+    titleWrap.appendChild(create("h3", "dashboard-card-title", options.title || "Card"));
+    if (options.kicker) {
+      titleWrap.appendChild(create("p", "dashboard-card-kicker", options.kicker));
+    }
+    head.appendChild(titleWrap);
+
+    if (options.badge) {
+      const badge = create("span", "dashboard-state-badge", options.badge);
+      if (options.state) badge.dataset.state = String(options.state).trim().toLowerCase();
+      head.appendChild(badge);
+    }
+
+    card.append(head, create("p", "dashboard-card-body", options.body || ""));
+
+    if (Array.isArray(options.meta) && options.meta.length) {
+      const list = create("div", "dashboard-meta-list");
+      options.meta.forEach((entry) => {
+        const text = String(entry || "").trim();
+        if (text) list.appendChild(create("span", "dashboard-meta-pill", text));
+      });
+      if (list.childElementCount) card.appendChild(list);
+    }
+
+    if (Array.isArray(options.actions) && options.actions.length) {
+      const actions = create("div", "dashboard-card-actions");
+      options.actions.forEach((action) => {
+        if (!action || typeof action !== "object" || !action.label) return;
+        const control = create(action.href ? "a" : "button", `dashboard-card-link${action.muted ? " is-muted" : ""}`, action.label);
+        if (action.href) {
+          control.href = action.href;
+          if (action.target) control.target = String(action.target);
+          if (action.rel) control.rel = String(action.rel);
+        } else {
+          control.type = "button";
+          control.disabled = action.disabled === true;
+        }
+        if (action.note) control.title = String(action.note);
+        actions.appendChild(control);
+      });
+      if (actions.childElementCount) card.appendChild(actions);
+    }
+
+    if (options.footnote) {
+      card.appendChild(create("p", "dashboard-card-footnote", options.footnote));
+    }
+
+    return card;
+  }
+
+  function buildDashboardGrid(cards = [], className = "") {
+    const grid = create("div", `dashboard-card-grid${className ? ` ${className}` : ""}`);
+    cards.forEach((card) => {
+      if (card) grid.appendChild(card);
+    });
+    return grid;
+  }
+
+  function buildActionScaffoldCard(options = {}) {
+    return buildDashboardCard({
+      title: options.title || "Claim, assign, or report",
+      kicker: options.kicker || "Future workflow scaffold",
+      badge: "Not wired",
+      state: "planned",
+      body:
+        options.body ||
+        "Claim, assign, report, and removal-request actions will land here once the public workflow is connected to authoritative backend review paths.",
+      meta: options.meta || ["No backend action on this surface yet", "Support can receive context manually today"],
+      actions: [
+        { label: "Open support", href: "/support.html" },
+        { label: "Removal request", disabled: true, muted: true, note: "UI scaffold only. No backend request is submitted in this milestone." },
+        { label: "Claim / assign", disabled: true, muted: true, note: "UI scaffold only. Ownership workflows are not implemented yet." }
+      ],
+      footnote: "This card is intentionally non-submitting in the current milestone."
+    });
+  }
+
   function getMemberDisplayName(profile) {
     return String(profile?.displayName || profile?.username || profile?.userCode || profile?.id || "Public User").trim() || "Public User";
   }
@@ -1347,11 +1529,138 @@
   function renderMediaHome(ctx) {
     const { host, data, state } = ctx;
     clear(host);
-    host.appendChild(buildPageHeading("Media Gallery", "Browse public clips, polls, scoreboards, and tallies."));
-
     const activeFilters = new Set(
       state.activeFilters.length ? state.activeFilters : ["clips", "polls", "scoreboards", "tallies"]
     );
+    const liveCount = collectLiveProfiles(data).length;
+    const memberCount = collectCommunityMembers(data, "").length;
+    const noticeCount = Array.isArray(data.notices) ? data.notices.length : 0;
+    const clips = filterItemsByType(data, "clips", state.query);
+    const polls = filterItemsByType(data, "polls", state.query);
+    const scoreboards = filterItemsByType(data, "scoreboards", state.query);
+    const tallies = filterItemsByType(data, "tallies", state.query);
+
+    host.appendChild(
+      buildDashboardHero({
+        eyebrow: "Viewer dashboard",
+        title: "Media home",
+        body: "One public dashboard for clips, polls, scoreboards, tallies, live discovery, and community surfaces. Planned systems are staged honestly without pretending they are active.",
+        highlights: [
+          "Public-facing shell consolidated",
+          `${formatNumber(liveCount)} live creator${liveCount === 1 ? "" : "s"} now`,
+          `${formatNumber(memberCount)} listed member${memberCount === 1 ? "" : "s"}`
+        ],
+        actions: [
+          { label: "Browse clips", href: "/clips", emphasis: "strong" },
+          { label: "Open community", href: "/community" }
+        ],
+        stats: [
+          { label: "Clips", value: formatNumber(clips.length), note: "Public artifacts" },
+          { label: "Polls", value: formatNumber(polls.length), note: "Published questions" },
+          { label: "Scoreboards", value: formatNumber(scoreboards.length), note: "Visible boards" },
+          { label: "Notices", value: formatNumber(noticeCount), note: "Community updates" }
+        ]
+      })
+    );
+
+    host.appendChild(
+      buildDashboardGrid([
+        buildDashboardCard({
+          title: "Clips",
+          kicker: "Operational now",
+          badge: "Active",
+          state: "active",
+          body: "Public clip cards, detail routes, and creator attribution are already live in the shared shell.",
+          meta: [`${formatNumber(clips.length)} available`, "Deep links preserved", "Gallery and detail views"],
+          actions: [{ label: "Open clips", href: "/clips" }]
+        }),
+        buildDashboardCard({
+          title: "Polls",
+          kicker: "Operational now",
+          badge: "Active",
+          state: "active",
+          body: "Published poll surfaces stay browseable from the same dashboard instead of living in a separate media identity.",
+          meta: [`${formatNumber(polls.length)} available`, "Results routes preserved"],
+          actions: [{ label: "Open polls", href: "/polls" }]
+        }),
+        buildDashboardCard({
+          title: "Scoreboards",
+          kicker: "Operational now",
+          badge: "Active",
+          state: "active",
+          body: "Scoreboard and tally views keep their current routes while inheriting the unified public shell.",
+          meta: [`${formatNumber(scoreboards.length)} scoreboards`, `${formatNumber(tallies.length)} tallies`],
+          actions: [{ label: "Open scoreboards", href: "/scoreboards" }, { label: "Open tallies", href: "/tallies", muted: true }]
+        }),
+        buildDashboardCard({
+          title: "Live + Community",
+          kicker: "Shared dashboard area",
+          badge: liveCount ? "Live now" : "Monitoring",
+          state: liveCount ? "active" : "planned",
+          body: "Live discovery, member browsing, and notices now sit inside the same dashboard model as media instead of branching into a separate shell.",
+          meta: [`${formatNumber(liveCount)} live now`, `${formatNumber(memberCount)} listed members`],
+          actions: [{ label: "Open live", href: "/live" }, { label: "Open community", href: "/community", muted: true }]
+        })
+      ])
+    );
+
+    host.appendChild(
+      buildDashboardGrid(
+        [
+          buildDashboardCard({
+            title: "Wheels",
+            kicker: "Planned public module",
+            badge: "Planned",
+            state: "planned",
+            body: "Competition wheels and related public interactions will land in this shell later. This milestone only establishes the route, shell, and placeholder surface.",
+            meta: ["Route reserved", "No wheel runtime wired yet"],
+            actions: [{ label: "Open wheels", href: "/wheels.html" }]
+          }),
+          buildDashboardCard({
+            title: "Games / Economy",
+            kicker: "Planned public module",
+            badge: "Planned",
+            state: "planned",
+            body: "Public games, economy snapshots, and viewer-facing balances are staged as dashboard destinations without inventing data before the runtime is ready.",
+            meta: ["Route reserved", "No balance or inventory backend on this surface yet"],
+            actions: [{ label: "Open games / economy", href: "/economy.html" }]
+          }),
+          buildDashboardCard({
+            title: "My Data",
+            kicker: "Account workspace",
+            badge: "Preview",
+            state: "preview",
+            body: "A dedicated member/data workspace now exists as a truthful placeholder for exports, history, and preferences that have not been activated yet.",
+            meta: ["Account-facing destination added", "No data export backend wired in this milestone"],
+            actions: [{ label: "Open my data", href: "/community/my-data.html" }]
+          }),
+          buildActionScaffoldCard({
+            title: "Ownership and reporting",
+            body: "Future claim, assign, report, and removal-request flows are now represented inside the public dashboard language without simulating any backend approval behavior."
+          })
+        ],
+        "dashboard-card-grid--four"
+      )
+    );
+
+    const spotlightSection = buildSection("Current public media", "/clips").section;
+    const spotlightGrid = create("div", "media-grid");
+    [
+      ...sliceRows(clips, 2, 1),
+      ...sliceRows(polls, 1, 1),
+      ...sliceRows(scoreboards, 1, 1),
+      ...sliceRows(tallies, 1, 1)
+    ]
+      .filter((item) => activeFilters.has(item.type))
+      .slice(0, 5)
+      .forEach((item) => {
+        spotlightGrid.appendChild(buildMediaCard(item, { showSnippet: item.type !== "clips" }));
+      });
+
+    if (spotlightGrid.childElementCount) {
+      spotlightSection.appendChild(spotlightGrid);
+      host.appendChild(spotlightSection);
+    }
 
     const sections = [
       { type: "clips", title: "Clips", seeAll: "/clips", limitRows: 2, showSnippet: false },
@@ -1366,18 +1675,14 @@
     sections.forEach((config) => {
       if (!activeFilters.has(config.type)) return;
       let items = filterItemsByType(data, config.type, state.query);
-
       const perRow = config.type === "clips" ? 5 : 4;
       items = sliceRows(items, perRow, config.limitRows || 1);
       if (!items.length) return;
 
       renderedAny = true;
-
       const section = buildSection(config.title, config.seeAll).section;
       section.classList.add(`section-${config.type}`);
-      if (sectionIndex > 0) {
-        section.classList.add("section-divided");
-      }
+      if (sectionIndex > 0) section.classList.add("section-divided");
       sectionIndex += 1;
 
       const grid = create("div", "media-grid");
@@ -2263,10 +2568,70 @@
   function renderCommunityHome(ctx) {
     const { host, data } = ctx;
     clear(host);
-    host.appendChild(buildPageHeading("Community", "Latest notices and public member directory."));
-
     const latestNotice = (data.notices || [])[0] || null;
-    const noticeSection = buildSection("Latest Notice", "/community/notices.html").section;
+    const liveEntries = sortLiveProfiles(collectLiveProfiles(data));
+    const members = collectCommunityMembers(data, "");
+
+    host.appendChild(
+      buildDashboardHero({
+        eyebrow: "Community workspace",
+        title: "Community",
+        body: "Member discovery, live visibility, notices, and account destinations now live inside the same public dashboard shell as media. The shell is unified even where later systems are still placeholder-only.",
+        highlights: [
+          `${formatNumber(members.length)} listed members`,
+          `${formatNumber(liveEntries.length)} creators live now`,
+          latestNotice ? "Latest notice surfaced below" : "Notice feed ready"
+        ],
+        actions: [
+          { label: "Browse members", href: "/community/members.html", emphasis: "strong" },
+          { label: "Open my data", href: "/community/my-data.html" }
+        ],
+        stats: [
+          { label: "Members", value: formatNumber(members.length), note: "Directory entries" },
+          { label: "Live now", value: formatNumber(liveEntries.length), note: "Public creators" },
+          { label: "Notices", value: formatNumber((data.notices || []).length), note: "Published updates" },
+          { label: "Public routes", value: "Unified", note: "Shared shell + nav" }
+        ]
+      })
+    );
+
+    host.appendChild(
+      buildDashboardGrid([
+        buildDashboardCard({
+          title: "Member directory",
+          kicker: "Operational now",
+          badge: "Active",
+          state: "active",
+          body: "The public community landing now feels like part of the main dashboard instead of a second application with its own navigation identity.",
+          meta: [`${formatNumber(members.length)} listed members`, "Alphabetical browse", "Search-ready"],
+          actions: [{ label: "Open directory", href: "/community/members.html" }]
+        }),
+        buildDashboardCard({
+          title: "Live visibility",
+          kicker: "Operational now",
+          badge: liveEntries.length ? "Live now" : "Monitoring",
+          state: liveEntries.length ? "active" : "preview",
+          body: "Live creators remain grounded in the existing public live logic while inheriting the same dashboard structure and entry points as the rest of the public surface.",
+          meta: [`${formatNumber(liveEntries.length)} creators live`, "Canonical public profiles only"],
+          actions: [{ label: "Open live", href: "/live" }]
+        }),
+        buildDashboardCard({
+          title: "Member settings + data",
+          kicker: "Account area",
+          badge: "Expanded",
+          state: "preview",
+          body: "The community side now includes direct account destinations for My Data and Settings, even where later export/history features are still intentionally inactive.",
+          meta: ["My Data placeholder added", "Settings kept truthful"],
+          actions: [{ label: "Open my data", href: "/community/my-data.html" }, { label: "Open settings", href: "/community/settings.html", muted: true }]
+        }),
+        buildActionScaffoldCard({
+          title: "Community moderation requests",
+          body: "Future member-facing claim, report, and removal workflows can reuse this shared CTA language without creating fake moderation behavior in the current milestone."
+        })
+      ])
+    );
+
+    const noticeSection = buildSection("Latest notice", "/community/notices.html").section;
     if (latestNotice) {
       const noticeCard = create("article", "notice-card");
       noticeCard.append(
@@ -2280,21 +2645,49 @@
     }
     host.appendChild(noticeSection);
 
-    host.appendChild(buildMemberGallerySection(ctx, { title: "Members", seeAllHref: "/community/members.html" }));
+    host.appendChild(buildMemberGallerySection(ctx, { title: "Member directory", seeAllHref: "/community/members.html" }));
 
-    const liveSection = buildSection("Live Now", "/live").section;
+    const liveSection = buildSection("Live now", "/live").section;
     const liveGrid = create("div", "profile-grid");
-    sortLiveProfiles(collectLiveProfiles(data))
-      .slice(0, 4)
-      .forEach(({ profile, liveStatus }) => {
-        liveGrid.appendChild(buildLiveProfileCard(profile, liveStatus));
-      });
+    liveEntries.slice(0, 4).forEach(({ profile, liveStatus }) => {
+      liveGrid.appendChild(buildLiveProfileCard(profile, liveStatus));
+    });
     if (liveGrid.childElementCount) {
       liveSection.appendChild(liveGrid);
     } else {
       liveSection.appendChild(create("div", "empty-state", "No public StreamSuites creators are live right now."));
     }
     host.appendChild(liveSection);
+  }
+
+  function buildPlaceholderWorkspacePage(ctx, options = {}) {
+    const { host, authState } = ctx;
+    clear(host);
+
+    const authReady = Boolean(authState?.authenticated);
+    const authLabel = authReady ? authState.displayName : "Guest";
+    host.appendChild(
+      buildDashboardHero({
+        eyebrow: options.eyebrow || "Dashboard workspace",
+        title: options.title || "Workspace",
+        body: options.body || "",
+        tone: options.tone || "planned",
+        highlights: [
+          authReady ? `Signed in as ${authLabel}` : "Public preview visible without backend actions",
+          options.highlight || "Route and shell reserved for later expansion"
+        ],
+        actions: Array.isArray(options.actions) ? options.actions : [],
+        stats: Array.isArray(options.stats) ? options.stats : []
+      })
+    );
+
+    if (Array.isArray(options.cards) && options.cards.length) {
+      host.appendChild(buildDashboardGrid(options.cards, options.gridClass || ""));
+    }
+
+    if (Array.isArray(options.followupCards) && options.followupCards.length) {
+      host.appendChild(buildDashboardGrid(options.followupCards, options.followupGridClass || ""));
+    }
   }
 
   function collectLiveProfiles(data) {
@@ -2438,6 +2831,131 @@
     if (!notices.length) {
       host.appendChild(create("div", "empty-state", "No notices match this search."));
     }
+  }
+
+  function renderWheelsWorkspace(ctx) {
+    buildPlaceholderWorkspacePage(ctx, {
+      eyebrow: "Planned public module",
+      title: "Wheels",
+      body: "This route now lives inside the unified public dashboard so future competition wheels, prize wheels, or community pickers can land without introducing another separate shell.",
+      actions: [
+        { label: "Back to media home", href: "/media", emphasis: "strong" },
+        { label: "Browse polls", href: "/polls" }
+      ],
+      stats: [
+        { label: "Runtime status", value: "Planned", note: "No wheel engine wired" },
+        { label: "Shell status", value: "Ready", note: "Route + nav reserved" }
+      ],
+      cards: [
+        buildDashboardCard({
+          title: "Viewer wheel surface",
+          kicker: "Not active yet",
+          badge: "Planned",
+          state: "planned",
+          body: "Wheel rendering, result state, and trigger authority are out of scope for this milestone. Only the public dashboard destination and visual language are being prepared here.",
+          meta: ["No backend actions", "No trigger wiring", "No runtime-owned wheel logic copied locally"]
+        }),
+        buildDashboardCard({
+          title: "Planned future uses",
+          kicker: "Direction only",
+          badge: "Reserved",
+          state: "preview",
+          body: "This workspace is intended to absorb public contest wheels, event pickers, or on-stream selection views when the authoritative runtime implementations are ready.",
+          meta: ["Contest wheels", "Community picks", "Event surfaces"]
+        }),
+        buildActionScaffoldCard({
+          title: "Wheel ownership / report requests",
+          body: "Future claim, dispute, or removal-report actions can use this pattern when public wheels become real artifacts."
+        })
+      ]
+    });
+  }
+
+  function renderGamesEconomyWorkspace(ctx) {
+    buildPlaceholderWorkspacePage(ctx, {
+      eyebrow: "Planned public module",
+      title: "Games / Economy",
+      body: "Games, balances, rewards, and public economy views are staged as first-class destinations in the unified dashboard without fabricating balances, inventory, or progression data before the backend exists.",
+      actions: [
+        { label: "Back to media home", href: "/media", emphasis: "strong" },
+        { label: "Open community", href: "/community" }
+      ],
+      stats: [
+        { label: "Economy data", value: "Offline", note: "No public authority yet" },
+        { label: "Route status", value: "Ready", note: "Destination reserved" }
+      ],
+      cards: [
+        buildDashboardCard({
+          title: "Viewer economy summary",
+          kicker: "Not active yet",
+          badge: "Planned",
+          state: "planned",
+          body: "No balances, wallet, inventory, or reward history are being simulated here. This page exists to establish the public shell and navigation footprint only.",
+          meta: ["No fake hydration", "No wallet logic", "No rewards ledger"]
+        }),
+        buildDashboardCard({
+          title: "Games surface",
+          kicker: "Reserved for later",
+          badge: "Planned",
+          state: "planned",
+          body: "Future lightweight public game modules can attach to this route family later without splitting the public experience away from media and community again.",
+          meta: ["Route family reserved", "Shared dashboard styling"]
+        }),
+        buildActionScaffoldCard({
+          title: "Economy support requests",
+          body: "This CTA pattern is reserved for future balance disputes or data-correction requests when public economy systems become authoritative."
+        })
+      ]
+    });
+  }
+
+  function renderCommunityMyData(ctx) {
+    const { authState } = ctx;
+    const authReady = Boolean(authState?.authenticated);
+    buildPlaceholderWorkspacePage(ctx, {
+      eyebrow: "Account workspace",
+      title: "My Data",
+      body: "This page establishes the member-facing data workspace for future exports, activity history, saved preferences, and public-surface account controls. It is intentionally truthful about the fact that those backend-backed views are not active yet.",
+      tone: authReady ? "preview" : "planned",
+      actions: authReady
+        ? [
+            { label: "Open settings", href: "/community/settings.html", emphasis: "strong" },
+            { label: "Browse community", href: "/community" }
+          ]
+        : [
+            { label: "Public login", disabled: true, emphasis: "strong", note: "Sign-in is available from the account widget. This page does not submit anything directly." },
+            { label: "Open community", href: "/community" }
+          ],
+      stats: [
+        { label: "Access", value: authReady ? "Preview" : "Guest", note: authReady ? authState.displayName : "Login required for future exports" },
+        { label: "Exports", value: "Pending", note: "No backend export job yet" },
+        { label: "Activity history", value: "Pending", note: "No member timeline yet" }
+      ],
+      cards: [
+        buildDashboardCard({
+          title: "Profile-linked data",
+          kicker: "Planned",
+          badge: "Pending",
+          state: "planned",
+          body: authReady
+            ? `Signed in as ${authState.displayName}. This workspace is reserved for account-linked exports, activity, and retention controls once those backend endpoints exist.`
+            : "Sign in from the account widget to use future account-linked exports and history once they become active.",
+          meta: ["No export archive yet", "No request log yet", "No saved reports yet"]
+        }),
+        buildDashboardCard({
+          title: "Saved preferences",
+          kicker: "Planned",
+          badge: "Pending",
+          state: "planned",
+          body: "Future notification choices, dashboard preferences, and public-surface defaults will live here. This milestone only establishes the page, route, and shell treatment.",
+          meta: ["Preference storage not wired", "No backend mutation on this page"]
+        }),
+        buildActionScaffoldCard({
+          title: "Data correction / removal requests",
+          body: "Future account-level claim, correction, or removal request actions can attach here once the public workflow is backed by authoritative review endpoints."
+        })
+      ]
+    });
   }
 
   function resolveLocalProfile(data, code) {
@@ -3159,7 +3677,22 @@
   function renderCommunitySettings(ctx) {
     const { host, authState } = ctx;
     clear(host);
-    host.appendChild(buildPageHeading("Public Account Settings", "Manage your StreamSuites public profile and review creator-only FindMeHere eligibility."));
+    host.appendChild(
+      buildDashboardHero({
+        eyebrow: "Account workspace",
+        title: "Settings",
+        body: "Viewer/public settings now sit inside the same dashboard system as media and community. Writable fields remain limited to the existing authoritative public-profile endpoint, and future controls stay clearly marked as inactive.",
+        tone: "preview",
+        actions: [
+          { label: "Open my data", href: "/community/my-data.html", emphasis: "strong" },
+          { label: "Back to community", href: "/community" }
+        ],
+        stats: [
+          { label: "Writable today", value: "Profile", note: "Existing public profile endpoint" },
+          { label: "Future controls", value: "Planned", note: "Notifications, exports, privacy expansions" }
+        ]
+      })
+    );
 
     if (!authState?.authenticated) {
       host.appendChild(create("div", "empty-state", "Log in to access Public Account Settings."));
@@ -3171,6 +3704,33 @@
       host.appendChild(create("div", "empty-state", "This settings view is available for Viewer/Public accounts only."));
       return;
     }
+
+    host.appendChild(
+      buildDashboardGrid([
+        buildDashboardCard({
+          title: "Authoritative settings scope",
+          kicker: "Grounded behavior",
+          badge: "Active",
+          state: "active",
+          body: "Only fields already supported by the current public profile API are writable here. This milestone does not invent extra mutation paths for alerts, approvals, or creator-only workflows.",
+          meta: ["Public profile visibility", "Directory listing", "Cover/background URLs", "Bio + supported social links"]
+        }),
+        buildDashboardCard({
+          title: "Future account controls",
+          kicker: "Not active yet",
+          badge: "Planned",
+          state: "planned",
+          body: "Notification settings, export controls, member-level privacy presets, and deeper dashboard preferences are intentionally deferred until their backend paths exist.",
+          meta: ["No notification center", "No export controls here yet", "No backend-side preference bundle"]
+        }),
+        buildActionScaffoldCard({
+          title: "Profile correction / removal requests",
+          body: "This shared CTA treatment prepares the public account surface for future profile correction and removal workflows without pretending those backend reviews exist yet."
+        })
+      ],
+      "dashboard-card-grid--three"
+      )
+    );
 
     const panel = create("section", "profile-card settings-form");
     const status = create("div", "muted settings-status");
