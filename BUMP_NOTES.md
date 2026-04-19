@@ -1,5 +1,19 @@
 # Bump Notes
 
+## Public /@slug Alias Bootstrap Repair - 2026-04-19
+
+### Technical Notes
+
+- Removed the alias-specific `_redirects` rewrite pair for `/@` and `/@*` because that redirect layer was collapsing real `/@slug` requests into `/u/` before the standalone profile bootstrap could preserve the slug.
+- Added `functions/@/[[slug]].js` so direct entry and refresh on `/@slug` still serve the existing `/u/index.html` standalone profile bootstrap without rewriting the browser-visible pathname away from the raw alias request.
+- Kept alias normalization in `js/public-pages-app.js`, where the bootstrap and same-origin navigation paths continue to read `window.location.pathname`, normalize only valid `/@slug` or `/@slug/` requests to canonical `/u/<slug>`, preserve query strings and hashes, and avoid generating an empty `/u/` state from a valid alias.
+- Replaced the prior redirect assertions in `tests/auth-surface-parity.test.mjs` with coverage that the bad `_redirects` rule is gone and the alias Pages Function now carries direct-entry traffic into the existing standalone profile bootstrap.
+
+### Human-Readable Notes
+
+- Public `@handle` profile links now normalize to `/u/handle` in the app without depending on the broken redirect rule that was dropping the slug in real browser navigation.
+- The redirect manifest is shorter because the bad alias-specific rewrite pair was removed and replaced by a dedicated Pages Function that preserves the original alias URL until bootstrap canonicalizes it.
+
 ## Public /@slug Profile Alias Shim - 2026-04-19
 
 ### Technical Notes

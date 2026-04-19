@@ -162,9 +162,12 @@ test("community member galleries keep shared alpha filtering and 20-per-page pag
 test("public profile route shim canonicalizes /@slug to /u/slug without adding a second profile route", () => {
   const redirects = read("_redirects");
   const app = read("js/public-pages-app.js");
+  const aliasFunction = read("functions/@/[[slug]].js");
 
-  assert.match(redirects, /^\/@\s+\/u\/index\.html 200$/m);
-  assert.match(redirects, /^\/@\*\s+\/u\/index\.html 200$/m);
+  assert.doesNotMatch(redirects, /^\/@\s+\/u\/index\.html 200$/m);
+  assert.doesNotMatch(redirects, /^\/@\*\s+\/u\/index\.html 200$/m);
+  assert.match(aliasFunction, /url\.pathname = "\/u\/index\.html";/);
+  assert.match(aliasFunction, /return context\.env\.ASSETS\.fetch\(assetRequest\);/);
   assert.match(app, /function getProfileAliasSlug\(pathname\)/);
   assert.match(app, /const match = normalized\.match\(\/\^\\\/@\(\[\^\\\/\?#\]\+\)\$\/\);/);
   assert.match(app, /return normalizeUserCode\(decodePathSegment\(match\[1\]\), ""\);/);

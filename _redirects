@@ -3,7 +3,5 @@
 /requests.html https://console.streamsuites.app/feedback 302
 /live /live/index.html 200
 /live/ /live/index.html 200
-/@ /u/index.html 200
-/@* /u/index.html 200
 /u /u/index.html 200
 /u/* /u/index.html 200

@@ -93,6 +93,8 @@ StreamSuites-Public/
 ├── changelog/
 │   └── v0.4.2-alpha.md
 ├── functions/
+│   ├── @/
+│   │   └── [[slug]].js
 │   ├── _shared/
 │   │   ├── artifact-route.js
 │   │   └── auth-api-proxy.js
