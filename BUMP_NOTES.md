@@ -1,5 +1,21 @@
 # Bump Notes
 
+## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
+
+## 2026-04-20 - Public Wheel / Scoreboard Artifact Flow
+
+### Technical Notes
+
+- Replaced the old `/wheels` placeholder path by extending `js/public-data-hub.js` to consume the authoritative runtime `wheels.json` export first, normalize wheel artifact records, and derive the `/scoreboards` gallery from the same wheel artifacts rather than inventing a second scoreboard authority layer.
+- Extended `js/public-pages-app.js`, `js/public-shell.js`, and `css/public-shell.css` so the unified public shell now has a real `/wheels` gallery, clean `/wheels/<artifact>` detail routing, an interactive local-only wheel spin viewer, a ranked scoreboard presentation for the same artifact data, persisted default-view respect on the wheel route, and clean `/scores/<artifact>` routing as the scoreboard lens over the same wheel artifact.
+- Added `functions/wheels/index.js`, `functions/wheels/[[artifact]].js`, `wheels/detail.html`, `data/wheels.json`, and `tests/wheels-authority.test.mjs` so direct entry, refresh, local fallback hydration, and focused source-level regression checks now exist for the wheel route family. The public viewer remains consumer-only: it does not expose editing, fake owner controls, winner-history persistence, or livechat automation.
+
+### Human-Readable Notes
+
+- Public now has a real wheel gallery and detail viewer instead of a reserved placeholder route.
+- The same published wheel artifact can be viewed either as a spinning wheel or as a scoreboard, and the scoreboard route is now just that alternate lens rather than a separate data source.
+- Spins on the public page are explicitly local to the browser session, so viewers get a polished interaction without fake backend winner history.
+
 ## Public Authority Contract Wiring - 2026-04-20
 
 ### Technical Notes

@@ -47,7 +47,8 @@ flowchart TD
 - Legacy `user_code` compatibility is still preserved during profile resolution and migration-safe routing.
 - Clean public artifact routes are supported for clips, polls, and scores via `/clips/<id-or-slug>`, `/polls/<id-or-slug>`, and `/scores/<id-or-slug>`, while legacy detail entry points remain available.
 - `/community/settings.html` is the viewer/public account profile settings surface and loads or saves supported authoritative fields through the public profile API.
-- `/community/my-data.html` now reads the signed-in user’s real public-authority request history from the authoritative `/api/public/authority/requests/mine` contract, while `/wheels.html` and `/economy.html` remain intentional dashboard destinations that keep authority CTAs informational until a real target can be resolved.
+- `/community/my-data.html` now reads the signed-in user’s real public-authority request history from the authoritative `/api/public/authority/requests/mine` contract.
+- `/wheels` is now a real public consumer route for authoritative wheel artifacts published by `StreamSuites`, and `/scoreboards` acts as the ranked-scoreboard lens over that same wheel artifact data instead of introducing a second scoreboard authority.
 - Standalone and in-shell public profile surfaces now consume the runtime-published public authority identity summaries so profile claim, assignment, issue, and removal requests submit against real `identity_code` targets instead of placeholder payloads.
 - Public profiles render dual share behavior truthfully: StreamSuites links always use the canonical slug URL, and FindMeHere links render only when the authoritative payload marks the account eligible and visible there.
 - Live badge, live ring, live-directory cards, and live profile-banner treatment consume the centralized runtime `live_status` export first, with optional Rumble discovery enrichment only when the existing UI needs missing watch/title metadata.
@@ -60,7 +61,7 @@ flowchart TD
 - The legacy public `/requests` route is now expected to hand off to the developer console feedback hub at `https://console.streamsuites.app/feedback`, while authoritative request data remains runtime-owned.
 - Same-origin auth and API proxy paths forward browser requests to the authoritative Auth API without moving backend ownership into this repo.
 - Public auth entry points now consume `/auth/access-state` and the short-lived `/auth/debug/unlock` bypass flow so public pages remain browseable while new auth starts can be gated by runtime mode.
-- Route handlers under `functions/clips`, `functions/polls`, `functions/scoreboards`, `functions/scores`, `functions/tallies`, and `functions/u` preserve gallery deep links plus clean artifact and profile routes.
+- Route handlers under `functions/clips`, `functions/polls`, `functions/scoreboards`, `functions/scores`, `functions/tallies`, `functions/wheels`, and `functions/u` preserve gallery deep links plus clean artifact and profile routes.
 - Public shell/profile code in `js/public-pages-app.js` and `js/public-data-hub.js` consumes the authoritative slug, visibility, FindMeHere eligibility, media, live-status fields, and the runtime-owned community member directory API.
 
 ## Cross-Repo Orientation
@@ -117,6 +118,9 @@ StreamSuites-Public/
 │   │   └── index.js
 │   ├── tallies/
 │   │   └── index.js
+│   ├── wheels/
+│   │   ├── [[artifact]].js
+│   │   └── index.js
 │   └── u/
 │       └── [[slug]].js
 ├── community/
@@ -142,6 +146,8 @@ StreamSuites-Public/
 │   └── detail.html
 ├── tallies/
 │   └── detail.html
+├── wheels/
+│   └── detail.html
 ├── data/
 │   ├── changelog.json
 │   ├── changelog.runtime.json
@@ -152,7 +158,8 @@ StreamSuites-Public/
 │   ├── polls.json
 │   ├── roadmap.json
 │   ├── scoreboards.json
-│   └── tallies.json
+│   ├── tallies.json
+│   └── wheels.json
 ├── js/
 │   ├── public-badge-ui.js
 │   ├── public-data-hub.js
@@ -177,7 +184,8 @@ StreamSuites-Public/
 ├── tests/
 │   ├── auth-surface-parity.test.mjs
 │   ├── live-status-authority.test.mjs
-│   └── public-authority-wiring.test.mjs
+│   ├── public-authority-wiring.test.mjs
+│   └── wheels-authority.test.mjs
 └── assets/
     ├── css/
     │   └── ss-profile-hovercard.css

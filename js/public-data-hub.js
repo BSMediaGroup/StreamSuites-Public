@@ -2,6 +2,7 @@
   const DATA_PATHS = {
     clips: "/data/clips.json",
     polls: "/data/polls.json",
+    wheels: ["/runtime/exports/wheels.json", "/shared/state/wheels.json", "/data/wheels.json"],
     scoreboards: "/data/scoreboards.json",
     tallies: "/data/tallies.json",
     profiles: "/api/public/community/members",
@@ -364,6 +365,7 @@
     const encoded = encodeURIComponent(String(identifier || "").trim());
     if (type === "clips") return `/clips/${encoded}`;
     if (type === "polls") return `/polls/${encoded}`;
+    if (type === "wheels") return `/wheels/${encoded}`;
     if (type === "scoreboards") return `/scores/${encoded}`;
     if (type === "tallies") return `/tallies/detail.html?id=${encoded}`;
     return `/media.html`;
@@ -582,6 +584,7 @@
     if (Array.isArray(payload?.items)) return payload.items;
     if (Array.isArray(payload?.clips)) return payload.clips;
     if (Array.isArray(payload?.polls)) return payload.polls;
+    if (Array.isArray(payload?.wheels)) return payload.wheels;
     if (Array.isArray(payload?.scoreboards)) return payload.scoreboards;
     if (Array.isArray(payload?.tallies)) return payload.tallies;
     return [];
@@ -1155,6 +1158,135 @@
     }));
   }
 
+  function normalizeWheelEntries(rawEntries) {
+    const entries = Array.isArray(rawEntries) ? rawEntries : [];
+    const fallback = entries.length
+      ? entries
+      : [
+          { label: "Alpha", weight: 1, color: "#ff6b6b" },
+          { label: "Bravo", weight: 1, color: "#ffd166" },
+          { label: "Charlie", weight: 1, color: "#06d6a0" }
+        ];
+
+    const totalWeight = fallback.reduce((sum, entry) => {
+      const weight = Number(entry?.weight ?? entry?.value ?? 1);
+      return sum + (Number.isFinite(weight) && weight > 0 ? weight : 1);
+    }, 0);
+
+    return fallback.map((entry, index) => {
+      const weight = Number(entry?.weight ?? entry?.value ?? 1);
+      const resolvedWeight = Number.isFinite(weight) && weight > 0 ? weight : 1;
+      const percent = totalWeight > 0 ? Math.round((resolvedWeight / totalWeight) * 100) : 0;
+      return {
+        id: entry?.entry_id || entry?.entryId || entry?.id || `entry-${index + 1}`,
+        entryId: entry?.entry_id || entry?.entryId || entry?.id || `entry-${index + 1}`,
+        label: entry?.label || entry?.name || `Entry ${index + 1}`,
+        weight: resolvedWeight,
+        value: resolvedWeight,
+        votes: resolvedWeight,
+        percent,
+        sharePercent: percent,
+        color: entry?.color || ["#ff6b6b", "#ffd166", "#06d6a0", "#118ab2", "#9b5de5", "#f15bb5"][index % 6],
+        notes: String(entry?.notes || "").trim()
+      };
+    });
+  }
+
+  function normalizeWheel(raw, index, profiles, authorityArtifacts = null) {
+    const artifactCode = String(raw?.artifact_code || raw?.artifactCode || raw?.id || `wheel-${index + 1}`).trim();
+    const slug = String(raw?.slug || "").trim();
+    const routeId =
+      firstArtifactIdentifier(raw, ["slug", "public_slug", "publicSlug", "artifact_code", "artifactCode", "id"]) || artifactCode;
+    const creatorRef =
+      raw?.creator && typeof raw.creator === "object"
+        ? { role: "creator", platform: "StreamSuites", ...raw.creator }
+        : raw?.creator;
+    const profile = resolveProfileRef(creatorRef, profiles);
+    const removal = resolveRemovalState(raw);
+    const entries = normalizeWheelEntries(raw?.entries);
+    const totalWeight = entries.reduce((sum, entry) => sum + (Number(entry?.weight) || 0), 0);
+    const scoreboardEntries = [...entries]
+      .sort((left, right) => (Number(right?.weight) || 0) - (Number(left?.weight) || 0) || String(left?.label || "").localeCompare(String(right?.label || "")))
+      .map((entry, position) => ({
+        ...entry,
+        rank: position + 1
+      }));
+    const palette = raw?.palette && typeof raw.palette === "object" ? raw.palette : {};
+    const presentation = raw?.presentation && typeof raw.presentation === "object" ? raw.presentation : {};
+
+    return {
+      id: artifactCode,
+      artifactCode,
+      artifactType: "wheel",
+      sourceType: "wheel",
+      viewFamily: "wheel",
+      type: "wheels",
+      title: raw?.title || raw?.name || `Wheel ${index + 1}`,
+      summary: raw?.summary || raw?.description || raw?.notes || "Portable wheel artifact.",
+      description: raw?.description || "",
+      notes: raw?.notes || "",
+      status: removal.isRemoved ? "Removed" : toTitle(raw?.status || raw?.state || "active"),
+      defaultDisplayMode: String(raw?.default_display_mode || raw?.defaultDisplayMode || "wheel").trim().toLowerCase() === "scoreboard" ? "scoreboard" : "wheel",
+      allowDuplicates: raw?.allow_duplicates !== false && raw?.allowDuplicates !== false,
+      autoRemoveWinner: raw?.auto_remove_winner === true || raw?.autoRemoveWinner === true,
+      entries,
+      scoreboardEntries,
+      entryCount: entries.length,
+      totalWeight,
+      palette: {
+        segment_colors: Array.isArray(palette.segment_colors) ? palette.segment_colors : [],
+        background_color: String(palette.background_color || "#0f172a").trim() || "#0f172a",
+        text_color: String(palette.text_color || "#f8fafc").trim() || "#f8fafc",
+        accent_color: String(palette.accent_color || "#38bdf8").trim() || "#38bdf8"
+      },
+      presentation: {
+        animation_enabled: presentation.animation_enabled !== false,
+        sound_enabled: presentation.sound_enabled !== false,
+        confetti_enabled: presentation.confetti_enabled === true,
+        show_entry_labels: presentation.show_entry_labels !== false,
+        spin_duration_ms: Number.isFinite(Number(presentation.spin_duration_ms)) ? Number(presentation.spin_duration_ms) : 8500,
+        scoreboard_max_rows: Number.isFinite(Number(presentation.scoreboard_max_rows)) ? Number(presentation.scoreboard_max_rows) : 24
+      },
+      unsupportedImportFields: Array.isArray(raw?.unsupported_import_fields)
+        ? raw.unsupported_import_fields.map((value) => String(value || "").trim()).filter(Boolean)
+        : [],
+      importProvenance: raw?.import_provenance && typeof raw.import_provenance === "object" ? raw.import_provenance : {},
+      provenance: String(raw?.provenance || "manual").trim() || "manual",
+      sourcePlatform: String(raw?.source_platform || "").trim(),
+      createdAt: raw?.created_at || raw?.createdAt || null,
+      updatedAt: raw?.updated_at || raw?.updatedAt || null,
+      ownerAccountId: normalizeOwnerAccountId(raw) || String(raw?.creator?.account_id || raw?.creator?.accountId || "").trim(),
+      visibility: removal.visibility || String(raw?.visibility || "listed").trim().toLowerCase(),
+      removedState: removal.removedState,
+      isRemoved: removal.isRemoved,
+      slug,
+      routeId,
+      routeKeys: [artifactCode, slug, routeId].map(normalizeArtifactLookup).filter(Boolean),
+      platform: profile.platform,
+      platformKey: profile.platformKey,
+      platformIcon: profile.platformIcon,
+      profileId: profile.id,
+      profileCode: profile.publicSlug || profile.userCode || profile.username || profile.id,
+      creator: profile,
+      authorityArtifact:
+        artifactCode && authorityArtifacts?.byCode?.has(artifactCode)
+          ? authorityArtifacts.byCode.get(artifactCode)
+          : null,
+      href: buildArtifactHref("wheels", routeId),
+      scoreboardHref: buildArtifactHref("scoreboards", routeId)
+    };
+  }
+
+  function buildScoreboardLensFromWheel(wheel) {
+    return {
+      ...wheel,
+      type: "scoreboards",
+      href: wheel.scoreboardHref,
+      wheelHref: wheel.href,
+      summary: wheel.summary || "Wheel artifact rendered in scoreboard mode."
+    };
+  }
+
   function normalizeScoreboard(raw, index, profiles, authorityArtifacts = null) {
     const id = raw?.id || raw?.scoreboard_id || `score-${index + 1}`;
     const routeId =
@@ -1269,7 +1401,7 @@
       const [
         clipsPayload,
         pollsPayload,
-        scoreboardsPayload,
+        wheelsPayload,
         talliesPayload,
         profilesResult,
         authorityIdentitiesPayload,
@@ -1281,7 +1413,7 @@
       ] = await Promise.all([
         loadJson(DATA_PATHS.clips, { items: [] }),
         loadJson(DATA_PATHS.polls, { items: [] }),
-        loadJson(DATA_PATHS.scoreboards, { items: [] }),
+        loadJsonFromPaths(DATA_PATHS.wheels, { wheels: [] }),
         loadJson(DATA_PATHS.tallies, { items: [] }),
         loadJsonResult(DATA_PATHS.profiles, { items: [] }),
         loadJsonFromPaths(DATA_PATHS.publicAuthorityIdentities, EMPTY_PUBLIC_AUTHORITY_IDENTITIES),
@@ -1302,9 +1434,8 @@
 
       const clips = sortByUpdated(toArray(clipsPayload).map((item, index) => normalizeClip(item, index, profilesMap, authorityArtifacts)));
       const polls = sortByUpdated(toArray(pollsPayload).map((item, index) => normalizePoll(item, index, profilesMap, authorityArtifacts)));
-      const scoreboards = sortByUpdated(
-        toArray(scoreboardsPayload).map((item, index) => normalizeScoreboard(item, index, profilesMap, authorityArtifacts))
-      );
+      const wheels = sortByUpdated(toArray(wheelsPayload).map((item, index) => normalizeWheel(item, index, profilesMap, authorityArtifacts)));
+      const scoreboards = sortByUpdated(wheels.map((item) => buildScoreboardLensFromWheel(item)));
       const tallies = sortByUpdated(toArray(talliesPayload).map((item, index) => normalizeTally(item, index, profilesMap, authorityArtifacts)));
       const notices = sortByUpdated(toArray(noticesPayload).map((item, index) => normalizeNotice(item, index, profilesMap)));
 
@@ -1317,7 +1448,7 @@
       });
 
       const artifactsByProfile = profileList.reduce((acc, profile) => {
-        const artifacts = buildProfileArtifacts({ clips, polls, scoreboards, tallies }, profile.id);
+        const artifacts = buildProfileArtifacts({ clips, polls, wheels, tallies }, profile.id);
         [
           profile?.id,
           profile?.publicSlug,
@@ -1335,6 +1466,7 @@
       return {
         clips,
         polls,
+        wheels,
         scoreboards,
         tallies,
         notices,

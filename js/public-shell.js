@@ -11,7 +11,7 @@
     { href: "/media", label: "Home", icon: "/assets/icons/ui/home.svg", group: "dashboard" },
     { href: "/clips", label: "Clips", icon: "/assets/icons/ui/clipcards.svg", group: "dashboard" },
     { href: "/polls", label: "Polls", icon: "/assets/icons/ui/vote.svg", group: "dashboard" },
-    { href: "/wheels.html", label: "Wheels", icon: "/assets/icons/ui/refresh.svg", group: "dashboard" },
+    { href: "/wheels", label: "Wheels", icon: "/assets/icons/ui/refresh.svg", group: "dashboard" },
     { href: "/scoreboards", label: "Scoreboards", icon: "/assets/icons/ui/tablechart.svg", group: "dashboard" },
     { href: "/tallies", label: "Tallies", icon: "/assets/icons/ui/bulletlist.svg", group: "dashboard" },
     { href: "/economy.html", label: "Games / Economy", icon: "/assets/icons/ui/joystick.svg", group: "dashboard" },
@@ -355,7 +355,7 @@
     if (fromQuery) return fromQuery;
 
     const pathname = normalizePath(window.location.pathname);
-    const cleanPrefixes = ["/clips/", "/polls/", "/scores/"];
+    const cleanPrefixes = ["/clips/", "/polls/", "/scores/", "/wheels/"];
     for (const prefix of cleanPrefixes) {
       if (pathname.startsWith(prefix) && pathname.length > prefix.length) {
         return decodeURIComponent(pathname.slice(prefix.length));

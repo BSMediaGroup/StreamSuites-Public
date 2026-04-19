@@ -2,13 +2,14 @@
   const MEDIA_FILTERS = [
     { value: "clips", label: "Clips" },
     { value: "polls", label: "Polls" },
-    { value: "scoreboards", label: "Scoreboards" },
+    { value: "wheels", label: "Wheels" },
     { value: "tallies", label: "Tallies" }
   ];
 
   const TYPE_TO_PAGE = {
     clips: "/clips",
     polls: "/polls",
+    wheels: "/wheels",
     scoreboards: "/scoreboards",
     tallies: "/tallies"
   };
@@ -80,10 +81,10 @@
       shellKind: "media",
       activeHref: "/media",
       topbarLabel: "Media Home",
-      searchPlaceholder: "Search clips, polls, scoreboards, tallies",
+      searchPlaceholder: "Search clips, polls, wheels, tallies",
       filterMode: "multi",
       filtersCollapsed: true,
-      defaultFilters: ["clips", "polls", "scoreboards", "tallies"],
+      defaultFilters: ["clips", "polls", "wheels", "tallies"],
       showLockoutBanner: true,
       render: renderMediaHome
     },
@@ -129,15 +130,16 @@
     },
     "media-wheels": {
       path: "/wheels.html",
+      aliases: ["/wheels", "/wheels/"],
       shellKind: "media",
-      activeHref: "/wheels.html",
+      activeHref: "/wheels",
       topbarLabel: "Wheels",
-      searchPlaceholder: "Search",
-      hideSearch: true,
-      filterMode: "none",
+      searchPlaceholder: "Search wheels",
+      filterMode: "single-nav",
       filtersCollapsed: true,
-      defaultFilters: [],
-      render: renderWheelsWorkspace
+      defaultFilters: ["wheels"],
+      render: renderMediaList,
+      listType: "wheels"
     },
     "media-tallies": {
       path: "/tallies.html",
@@ -215,6 +217,19 @@
       defaultFilters: ["scoreboards"],
       render: renderDetail,
       detailType: "scoreboards"
+    },
+    "detail-wheel": {
+      path: "/wheels/detail.html",
+      shellKind: "media",
+      activeHref: "/wheels",
+      topbarLabel: "Wheel Detail",
+      searchPlaceholder: "Search",
+      hideSearch: true,
+      filterMode: "single-nav",
+      filtersCollapsed: true,
+      defaultFilters: ["wheels"],
+      render: renderDetail,
+      detailType: "wheels"
     },
     "detail-tally": {
       path: "/tallies/detail.html",
@@ -342,6 +357,7 @@
   const ARTIFACT_ROUTE_CONFIG = Object.freeze([
     { prefix: "/clips/", pageId: "detail-clip", detailType: "clips" },
     { prefix: "/polls/", pageId: "detail-poll", detailType: "polls" },
+    { prefix: "/wheels/", pageId: "detail-wheel", detailType: "wheels" },
     { prefix: "/scores/", pageId: "detail-scoreboard", detailType: "scoreboards" }
   ]);
 
@@ -891,6 +907,35 @@
     return card;
   }
 
+  function buildWheelCard(item) {
+    const card = create("article", "item-card type-wheels");
+    const link = create("a", "item-link");
+    link.href = item.href;
+
+    const body = create("div", "item-body");
+    body.append(
+      create("h3", "item-title", buildCardTitle(item)),
+      buildCreatorMeta(item.creator, { enableHover: item?.enableProfileHover !== false }),
+      buildResultsRows(item.scoreboardEntries || item.entries || [], "percent", 3)
+    );
+
+    if (item.summary) {
+      body.appendChild(create("p", "item-snippet", item.summary));
+    }
+
+    const meta = create("div", "item-meta");
+    meta.append(
+      buildStatusChip(item.status),
+      create("span", "meta-pill", `${formatNumber(item.entryCount || (item.entries || []).length)} entries`),
+      create("span", "meta-pill", `${item.defaultDisplayMode === "scoreboard" ? "Scoreboard" : "Wheel"} default`)
+    );
+
+    body.appendChild(meta);
+    link.appendChild(body);
+    card.appendChild(link);
+    return card;
+  }
+
   function buildScoreboardCard(item) {
     const card = create("article", "item-card type-scoreboards");
     const link = create("a", "item-link");
@@ -943,6 +988,7 @@
     const nextItem = { ...item, enableProfileHover: options.enableProfileHover };
     if (item.type === "clips") return buildClipCard(nextItem, options);
     if (item.type === "polls") return buildPollCard(nextItem, options);
+    if (item.type === "wheels") return buildWheelCard(nextItem, options);
     if (item.type === "scoreboards") return buildScoreboardCard(nextItem, options);
     if (item.type === "tallies") return buildTallyCard(nextItem, options);
     return buildClipCard(nextItem, options);
@@ -1719,13 +1765,14 @@
     const { host, data, state } = ctx;
     clear(host);
     const activeFilters = new Set(
-      state.activeFilters.length ? state.activeFilters : ["clips", "polls", "scoreboards", "tallies"]
+      state.activeFilters.length ? state.activeFilters : ["clips", "polls", "wheels", "tallies"]
     );
     const liveCount = collectLiveProfiles(data).length;
     const memberCount = collectCommunityMembers(data, "").length;
     const noticeCount = Array.isArray(data.notices) ? data.notices.length : 0;
     const clips = filterItemsByType(data, "clips", state.query);
     const polls = filterItemsByType(data, "polls", state.query);
+    const wheels = filterItemsByType(data, "wheels", state.query);
     const scoreboards = filterItemsByType(data, "scoreboards", state.query);
     const tallies = filterItemsByType(data, "tallies", state.query);
 
@@ -1733,20 +1780,20 @@
       buildDashboardHero({
         eyebrow: "Viewer dashboard",
         title: "Media home",
-        body: "One public dashboard for clips, polls, scoreboards, tallies, live discovery, and community surfaces. Planned systems are staged honestly without pretending they are active.",
+        body: "One public dashboard for clips, polls, wheels, tallies, live discovery, and community surfaces. Wheel artifacts now render from the authoritative runtime export, with scoreboards acting as a second lens over the same published data.",
         highlights: [
           "Public-facing shell consolidated",
           `${formatNumber(liveCount)} live creator${liveCount === 1 ? "" : "s"} now`,
           `${formatNumber(memberCount)} listed member${memberCount === 1 ? "" : "s"}`
         ],
         actions: [
-          { label: "Browse clips", href: "/clips", emphasis: "strong" },
+          { label: "Browse wheels", href: "/wheels", emphasis: "strong" },
           { label: "Open community", href: "/community" }
         ],
         stats: [
+          { label: "Wheels", value: formatNumber(wheels.length), note: "Published artifacts" },
+          { label: "Scoreboards", value: formatNumber(scoreboards.length), note: "Alternate lens" },
           { label: "Clips", value: formatNumber(clips.length), note: "Public artifacts" },
-          { label: "Polls", value: formatNumber(polls.length), note: "Published questions" },
-          { label: "Scoreboards", value: formatNumber(scoreboards.length), note: "Visible boards" },
           { label: "Notices", value: formatNumber(noticeCount), note: "Community updates" }
         ]
       })
@@ -1773,13 +1820,13 @@
           actions: [{ label: "Open polls", href: "/polls" }]
         }),
         buildDashboardCard({
-          title: "Scoreboards",
+          title: "Wheels",
           kicker: "Operational now",
           badge: "Active",
           state: "active",
-          body: "Scoreboard and tally views keep their current routes while inheriting the unified public shell.",
-          meta: [`${formatNumber(scoreboards.length)} scoreboards`, `${formatNumber(tallies.length)} tallies`],
-          actions: [{ label: "Open scoreboards", href: "/scoreboards" }, { label: "Open tallies", href: "/tallies", muted: true }]
+          body: "Wheel artifacts now hydrate from the authoritative runtime export, render with their persisted configuration, and keep the local spin interaction explicitly non-authoritative.",
+          meta: [`${formatNumber(wheels.length)} wheels`, "Wheel and scoreboard views", "No fake winner history"],
+          actions: [{ label: "Open wheels", href: "/wheels" }, { label: "Open scoreboards", href: "/scoreboards", muted: true }]
         }),
         buildDashboardCard({
           title: "Live + Community",
@@ -1797,13 +1844,13 @@
       buildDashboardGrid(
         [
           buildDashboardCard({
-            title: "Wheels",
-            kicker: "Planned public module",
-            badge: "Planned",
-            state: "planned",
-            body: "Competition wheels and related public interactions will land in this shell later. This milestone only establishes the route, shell, and placeholder surface.",
-            meta: ["Route reserved", "No wheel runtime wired yet"],
-            actions: [{ label: "Open wheels", href: "/wheels.html" }]
+            title: "Scoreboards",
+            kicker: "Alternate artifact lens",
+            badge: "Active",
+            state: "active",
+            body: "The scoreboards route now renders the same authoritative wheel artifacts in ranked order, without inventing a separate scoreboard authority layer.",
+            meta: [`${formatNumber(scoreboards.length)} scoreboard views`, "Same wheel artifacts", "Route preserved"],
+            actions: [{ label: "Open scoreboards", href: "/scoreboards" }]
           }),
           buildDashboardCard({
             title: "Games / Economy",
@@ -1835,9 +1882,9 @@
     const spotlightSection = buildSection("Current public media", "/clips").section;
     const spotlightGrid = create("div", "media-grid");
     [
+      ...sliceRows(wheels, 1, 1),
       ...sliceRows(clips, 2, 1),
       ...sliceRows(polls, 1, 1),
-      ...sliceRows(scoreboards, 1, 1),
       ...sliceRows(tallies, 1, 1)
     ]
       .filter((item) => activeFilters.has(item.type))
@@ -1852,9 +1899,9 @@
     }
 
     const sections = [
+      { type: "wheels", title: "Wheels", seeAll: "/wheels", limitRows: 1, showSnippet: true },
       { type: "clips", title: "Clips", seeAll: "/clips", limitRows: 2, showSnippet: false },
       { type: "polls", title: "Polls", seeAll: "/polls", limitRows: 1 },
-      { type: "scoreboards", title: "Scoreboards", seeAll: "/scoreboards", limitRows: 1 },
       { type: "tallies", title: "Tallies", seeAll: "/tallies", limitRows: 1 }
     ];
 
@@ -1895,7 +1942,8 @@
     const titles = {
       clips: ["Clips Gallery", "Creator clips with larger thumbnails and quick metadata."],
       polls: ["Polls Gallery", "Public poll questions and vote snapshots."],
-      scoreboards: ["Scoreboards Gallery", "Scoreboard overlays and metric snapshots."],
+      wheels: ["Wheels Gallery", "Authoritative wheel artifacts with a local spin viewer and scoreboard toggle."],
+      scoreboards: ["Scoreboards Gallery", "The same authoritative wheel artifacts rendered as ranked scoreboards."],
       tallies: ["Tallies Gallery", "Programmatic tally summaries with pie previews."]
     };
 
@@ -1931,6 +1979,12 @@
     make("Creator", item.creator?.displayName || "Public User");
     make("Platform", item.platform || "StreamSuites");
     make("Status", item.status || "Pending");
+    if (item.viewFamily === "wheel" || item.type === "wheels" || item.artifactType === "wheel") {
+      make("Entries", formatNumber(item.entryCount || (item.entries || []).length));
+      make("Default view", item.defaultDisplayMode === "scoreboard" ? "Scoreboard" : "Wheel");
+      make("Duplicates", item.allowDuplicates ? "Allowed" : "Blocked");
+      make("Auto-remove winner", item.autoRemoveWinner ? "Enabled" : "Disabled");
+    }
     make("Created", helpers.toTimestamp(item.createdAt));
     make("Updated", helpers.toTimestamp(item.updatedAt));
 
@@ -1958,6 +2012,7 @@
       const encoded = encodeURIComponent(String(identifier || "").trim());
       if (type === "clips") return `/clips/${encoded}`;
       if (type === "polls") return `/polls/${encoded}`;
+      if (type === "wheels") return `/wheels/${encoded}`;
       if (type === "scoreboards") return `/scores/${encoded}`;
       return `/media.html`;
     }
@@ -2835,6 +2890,330 @@
     return side;
   }
 
+  function createSvgElement(name, attributes = {}) {
+    const node = document.createElementNS("http://www.w3.org/2000/svg", name);
+    Object.entries(attributes).forEach(([key, value]) => {
+      if (value == null) return;
+      node.setAttribute(key, String(value));
+    });
+    return node;
+  }
+
+  function polarToCartesian(cx, cy, radius, angle) {
+    const radians = ((Number(angle) || 0) - 90) * (Math.PI / 180);
+    return {
+      x: cx + radius * Math.cos(radians),
+      y: cy + radius * Math.sin(radians)
+    };
+  }
+
+  function describeWheelSlice(cx, cy, radius, startAngle, endAngle) {
+    const start = polarToCartesian(cx, cy, radius, startAngle);
+    const end = polarToCartesian(cx, cy, radius, endAngle);
+    const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+    return `M ${cx} ${cy} L ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArc} 1 ${end.x} ${end.y} Z`;
+  }
+
+  function buildWheelSvg(item) {
+    const entries = Array.isArray(item?.entries) ? item.entries : [];
+    const palette = item?.palette || {};
+    const totalWeight = entries.reduce((sum, entry) => sum + (Number(entry?.weight) || 0), 0) || 1;
+    const svg = createSvgElement("svg", {
+      viewBox: "0 0 440 440",
+      role: "img",
+      "aria-label": `${item?.title || "Wheel"} artifact viewer`
+    });
+
+    const background = createSvgElement("circle", {
+      cx: 220,
+      cy: 220,
+      r: 212,
+      fill: palette.background_color || "#0f172a",
+      stroke: palette.accent_color || "#38bdf8",
+      "stroke-width": 6
+    });
+    svg.appendChild(background);
+
+    let cursor = 0;
+    entries.forEach((entry, index) => {
+      const sliceAngle = ((Number(entry?.weight) || 0) / totalWeight) * 360;
+      const startAngle = cursor;
+      const endAngle = cursor + sliceAngle;
+      cursor = endAngle;
+
+      const path = createSvgElement("path", {
+        d: describeWheelSlice(220, 220, 200, startAngle, endAngle),
+        fill: entry?.color || (palette.segment_colors || [])[index % Math.max(1, (palette.segment_colors || []).length)] || "#475569",
+        stroke: "rgba(15, 23, 42, 0.68)",
+        "stroke-width": 2
+      });
+      svg.appendChild(path);
+
+      if (entries.length <= 10 && sliceAngle >= 12 && item?.presentation?.show_entry_labels !== false) {
+        const labelPoint = polarToCartesian(220, 220, 128, startAngle + sliceAngle / 2);
+        const text = createSvgElement("text", {
+          x: labelPoint.x,
+          y: labelPoint.y,
+          fill: palette.text_color || "#f8fafc",
+          "font-size": entries.length <= 6 ? "17" : "13",
+          "font-weight": "700",
+          "text-anchor": "middle",
+          "dominant-baseline": "middle"
+        });
+        const label = String(entry?.label || "Entry").trim();
+        text.textContent = label.length > 16 ? `${label.slice(0, 15)}…` : label;
+        svg.appendChild(text);
+      }
+    });
+
+    svg.appendChild(
+      createSvgElement("circle", {
+        cx: 220,
+        cy: 220,
+        r: 48,
+        fill: "rgba(15, 23, 42, 0.92)",
+        stroke: palette.accent_color || "#38bdf8",
+        "stroke-width": 4
+      })
+    );
+    const title = createSvgElement("text", {
+      x: 220,
+      y: 214,
+      fill: palette.text_color || "#f8fafc",
+      "font-size": "15",
+      "font-weight": "800",
+      "text-anchor": "middle"
+    });
+    title.textContent = "SPIN";
+    const subtitle = createSvgElement("text", {
+      x: 220,
+      y: 234,
+      fill: "rgba(226, 232, 240, 0.82)",
+      "font-size": "10",
+      "font-weight": "700",
+      "text-anchor": "middle"
+    });
+    subtitle.textContent = `${formatNumber(entries.length)} entries`;
+    svg.append(title, subtitle);
+    return svg;
+  }
+
+  function pickWheelWinner(entries) {
+    const list = Array.isArray(entries) ? entries : [];
+    const totalWeight = list.reduce((sum, entry) => sum + (Number(entry?.weight) || 0), 0);
+    if (!list.length || totalWeight <= 0) return null;
+    let cursor = Math.random() * totalWeight;
+    for (const entry of list) {
+      cursor -= Number(entry?.weight) || 0;
+      if (cursor <= 0) return entry;
+    }
+    return list[list.length - 1] || null;
+  }
+
+  function buildWheelScoreboardTable(item, options = {}) {
+    const wrap = create("div", `wheel-scoreboard-table${options.compact ? " is-compact" : ""}`);
+    const header = create("div", "wheel-scoreboard-row wheel-scoreboard-row-head");
+    header.append(
+      create("span", "", "#"),
+      create("span", "", "Entry"),
+      create("span", "", "Weight"),
+      create("span", "", "Share")
+    );
+    wrap.appendChild(header);
+
+    const entries = (item?.scoreboardEntries || item?.entries || []).slice(
+      0,
+      Math.max(1, Number(options.maxRows) || Number(item?.presentation?.scoreboard_max_rows) || 24)
+    );
+    if (!entries.length) {
+      wrap.appendChild(create("div", "empty-state", "No wheel entries available."));
+      return wrap;
+    }
+
+    entries.forEach((entry, index) => {
+      const row = create("div", "wheel-scoreboard-row");
+      const swatch = create("span", "wheel-scoreboard-swatch");
+      swatch.style.background = entry?.color || "#64748b";
+
+      const entryCell = create("div", "wheel-scoreboard-entry");
+      entryCell.append(swatch, create("strong", "", entry?.label || `Entry ${index + 1}`));
+      if (entry?.notes) {
+        entryCell.appendChild(create("span", "timestamp", entry.notes));
+      }
+
+      row.append(
+        create("span", "wheel-scoreboard-rank", String(entry?.rank || index + 1)),
+        entryCell,
+        create("span", "", formatNumber(Number(entry?.weight) || 0)),
+        create("span", "", `${Math.max(0, Math.min(100, Number(entry?.percent) || 0))}%`)
+      );
+      wrap.appendChild(row);
+    });
+
+    return wrap;
+  }
+
+  function buildWheelDetailMain(item, config) {
+    const main = create("article", "detail-main wheel-detail-main");
+    const card = create("div", "wheel-detail-card");
+    const toolbar = create("div", "wheel-detail-toolbar");
+    const toggle = create("div", "wheel-view-toggle");
+    toggle.setAttribute("role", "tablist");
+    toggle.setAttribute("aria-label", "Switch wheel artifact view");
+
+    const wheelButton = create("button", "wheel-view-toggle-btn", "Wheel");
+    wheelButton.type = "button";
+    wheelButton.dataset.view = "wheel";
+    const scoreboardButton = create("button", "wheel-view-toggle-btn", "Scoreboard");
+    scoreboardButton.type = "button";
+    scoreboardButton.dataset.view = "scoreboard";
+    toggle.append(wheelButton, scoreboardButton);
+
+    const alternateLens = create(
+      "a",
+      "see-all",
+      config.detailType === "scoreboards" ? "Open wheel route" : "Open scoreboard route"
+    );
+    alternateLens.href = config.detailType === "scoreboards" ? item.wheelHref || "/wheels" : item.scoreboardHref || "/scoreboards";
+    toolbar.append(toggle, alternateLens);
+
+    const views = create("div", "wheel-detail-views");
+    const wheelView = create("section", "wheel-detail-view");
+    const wheelShell = create("div", "wheel-spin-shell");
+    const wheelStage = create("div", "wheel-spin-stage");
+    const wheelDisc = create("div", "wheel-spin-disc");
+    const spinDurationMs = Math.max(2000, Math.min(60000, Number(item?.presentation?.spin_duration_ms) || 8500));
+    wheelDisc.style.setProperty("--wheel-spin-duration", `${spinDurationMs}ms`);
+    wheelDisc.style.setProperty("--wheel-rotation", "0deg");
+    wheelDisc.appendChild(buildWheelSvg(item));
+    const pointer = create("div", "wheel-spin-pointer");
+    wheelStage.append(wheelDisc, pointer);
+
+    const wheelSide = create("div", "wheel-spin-side");
+    const emphasis = create("div", "dashboard-chip-row");
+    emphasis.append(
+      create("span", "dashboard-chip", `${formatNumber(item.entryCount || (item.entries || []).length)} entries`),
+      create("span", "dashboard-chip", item.allowDuplicates ? "Duplicates allowed" : "No duplicate winners"),
+      create("span", "dashboard-chip", item.autoRemoveWinner ? "Auto-remove winner enabled" : "Winner remains listed")
+    );
+
+    const resultBox = create("div", "wheel-spin-result");
+    const resultLabel = create("p", "dashboard-card-kicker", "Local viewer result");
+    const resultValue = create("h3", "wheel-spin-result__title", "Ready to spin");
+    const resultMeta = create(
+      "p",
+      "dashboard-card-footnote",
+      "Spins are local to this browser session only. No winner history or backend state is written from this surface."
+    );
+    resultBox.append(resultLabel, resultValue, resultMeta);
+
+    const actionRow = create("div", "dashboard-action-row");
+    const spinButton = create("button", "dashboard-action is-strong", "Spin locally");
+    spinButton.type = "button";
+    const sampleButton = create("button", "dashboard-action", "Pick weighted sample");
+    sampleButton.type = "button";
+    actionRow.append(spinButton, sampleButton);
+
+    wheelSide.append(
+      create("p", "dashboard-card-body", item.summary || "This wheel artifact is rendered directly from the authoritative runtime export."),
+      emphasis,
+      resultBox,
+      actionRow,
+      buildWheelScoreboardTable(item, { compact: true, maxRows: 5 })
+    );
+    wheelShell.append(wheelStage, wheelSide);
+    wheelView.appendChild(wheelShell);
+
+    const scoreboardView = create("section", "wheel-detail-view");
+    scoreboardView.hidden = true;
+    scoreboardView.appendChild(buildWheelScoreboardTable(item));
+
+    views.append(wheelView, scoreboardView);
+    card.append(toolbar, views);
+    main.appendChild(card);
+
+    const importNotes = [];
+    if (String(item?.importProvenance?.notes || "").trim()) {
+      importNotes.push(String(item.importProvenance.notes).trim());
+    }
+    if (Array.isArray(item?.unsupportedImportFields) && item.unsupportedImportFields.length) {
+      importNotes.push(`Unsupported imported fields are preserved as metadata only: ${item.unsupportedImportFields.join(", ")}`);
+    }
+    if (importNotes.length) {
+      const notesCard = create("div", "detail-card wheel-import-notes-card");
+      const notesHeading = create("div", "detail-heading");
+      notesHeading.append(create("h3", "detail-title", "Import notes"));
+      notesCard.appendChild(notesHeading);
+      importNotes.forEach((note) => {
+        notesCard.appendChild(create("p", "dashboard-card-footnote", note));
+      });
+      main.appendChild(notesCard);
+    }
+
+    let currentRotation = 0;
+    let spinning = false;
+
+    function setView(nextView) {
+      const resolved = nextView === "scoreboard" ? "scoreboard" : "wheel";
+      wheelButton.classList.toggle("is-active", resolved === "wheel");
+      scoreboardButton.classList.toggle("is-active", resolved === "scoreboard");
+      wheelButton.setAttribute("aria-pressed", resolved === "wheel" ? "true" : "false");
+      scoreboardButton.setAttribute("aria-pressed", resolved === "scoreboard" ? "true" : "false");
+      wheelView.hidden = resolved !== "wheel";
+      scoreboardView.hidden = resolved !== "scoreboard";
+    }
+
+    function publishLocalWinner(winner, contextLabel) {
+      if (!winner) return;
+      resultValue.textContent = winner.label || "Winner";
+      resultMeta.textContent = `${contextLabel} Weight ${formatNumber(Number(winner.weight) || 0)} · ${Math.max(0, Math.min(100, Number(winner.percent) || 0))}% share. Public viewer interactions remain local and non-authoritative.`;
+    }
+
+    function spinWheel() {
+      if (spinning || !(item?.entries || []).length) return;
+      const winner = pickWheelWinner(item.entries);
+      if (!winner) return;
+      const winnerIndex = Math.max(0, (item.entries || []).findIndex((entry) => entry.id === winner.id || entry.entryId === winner.entryId || entry.label === winner.label));
+      const totalWeight = (item.entries || []).reduce((sum, entry) => sum + (Number(entry?.weight) || 0), 0) || 1;
+      let cursor = 0;
+      let centerAngle = 0;
+      (item.entries || []).forEach((entry, index) => {
+        const sliceAngle = ((Number(entry?.weight) || 0) / totalWeight) * 360;
+        if (index === winnerIndex) {
+          centerAngle = cursor + sliceAngle / 2;
+        }
+        cursor += sliceAngle;
+      });
+
+      const targetRotation = (360 - centerAngle + 360) % 360;
+      const currentPhase = ((currentRotation % 360) + 360) % 360;
+      const delta = (targetRotation - currentPhase + 360) % 360;
+      currentRotation += delta + (4 + Math.floor(Math.random() * 3)) * 360;
+
+      spinning = true;
+      spinButton.disabled = true;
+      sampleButton.disabled = true;
+      resultValue.textContent = "Spinning locally…";
+      resultMeta.textContent = "This animation does not write winner history, remove entries, or update backend state.";
+      wheelDisc.style.setProperty("--wheel-rotation", `${currentRotation}deg`);
+
+      window.setTimeout(() => {
+        spinning = false;
+        spinButton.disabled = false;
+        sampleButton.disabled = false;
+        publishLocalWinner(winner, "Local result.");
+      }, spinDurationMs + 120);
+    }
+
+    wheelButton.addEventListener("click", () => setView("wheel"));
+    scoreboardButton.addEventListener("click", () => setView("scoreboard"));
+    spinButton.addEventListener("click", spinWheel);
+    sampleButton.addEventListener("click", () => publishLocalWinner(pickWheelWinner(item.entries), "Weighted sample."));
+
+    setView(config.detailType === "scoreboards" ? "scoreboard" : item.defaultDisplayMode);
+    return main;
+  }
+
   function renderDetail(ctx, config) {
     const { host, data, authState } = ctx;
     clear(host);
@@ -2869,6 +3248,20 @@
       removedCard.append(removedTitle, removedBody, backLink);
       removedLayout.appendChild(removedCard);
       host.appendChild(removedLayout);
+      return;
+    }
+
+    if (item.viewFamily === "wheel" || config.detailType === "wheels") {
+      const wheelLayout = create("section", "detail-layout");
+      wheelLayout.append(
+        buildWheelDetailMain(item, config),
+        buildDetailSide(item, data.helpers, {
+          authState,
+          openAuthModal: ctx.openAuthModal,
+          onRemoved: () => renderDetail(ctx, config)
+        })
+      );
+      host.append(buildLayoutToggle(wheelLayout), wheelLayout);
       return;
     }
 
@@ -5016,7 +5409,7 @@
         },
         onFilter(detail) {
           if (nextConfig.filterMode === "multi") {
-            state.activeFilters = detail.activeFilters.length ? detail.activeFilters : ["clips", "polls", "scoreboards", "tallies"];
+            state.activeFilters = detail.activeFilters.length ? detail.activeFilters : ["clips", "polls", "wheels", "tallies"];
             rerender();
             return;
           }
