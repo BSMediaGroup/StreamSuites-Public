@@ -1,5 +1,19 @@
 # Bump Notes
 
+## Public /@slug Profile Alias Shim - 2026-04-19
+
+### Technical Notes
+
+- Added additive Cloudflare Pages rewrites in `_redirects` for `/@` and `/@*` so direct entry and refresh on the profile alias path resolve through the existing `/u/index.html` standalone profile bootstrap instead of falling through to the static 404 surface.
+- Updated `js/public-pages-app.js` with a narrow profile-alias normalizer that matches only `^/@([^/?#]+)/?$`, converts the captured identifier into the existing canonical `/u/<slug>` route, preserves the current query string and hash, and calls `history.replaceState()` before initial standalone route resolution.
+- Reused that same alias normalizer inside client-side navigation so intercepted in-app links or manual same-origin `/@slug` navigation fetch and store only the canonical `/u/<slug>` URL, avoiding redirect loops and keeping `/u/*` as the sole real profile route.
+- Extended `tests/auth-surface-parity.test.mjs` with focused source coverage for the new `_redirects` rewrite pair and the early `/@slug` to `/u/<slug>` normalization hook in the public app bootstrap.
+
+### Human-Readable Notes
+
+- Profile links in the `@handle` format now land on the same public profile as before and immediately normalize to the canonical `/u/handle` address.
+- Direct loads, refreshes, and internal public-site navigation now treat `@handle` profile links as a compatibility alias instead of a separate route system.
+
 ## Shared Public Badge Tooltip Upgrade - 2026-04-12
 
 ### Technical Notes

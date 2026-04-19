@@ -159,6 +159,22 @@ test("community member galleries keep shared alpha filtering and 20-per-page pag
   assert.match(css, /\.member-gallery-pagination/);
 });
 
+test("public profile route shim canonicalizes /@slug to /u/slug without adding a second profile route", () => {
+  const redirects = read("_redirects");
+  const app = read("js/public-pages-app.js");
+
+  assert.match(redirects, /^\/@\s+\/u\/index\.html 200$/m);
+  assert.match(redirects, /^\/@\*\s+\/u\/index\.html 200$/m);
+  assert.match(app, /function getProfileAliasSlug\(pathname\)/);
+  assert.match(app, /const match = normalized\.match\(\/\^\\\/@\(\[\^\\\/\?#\]\+\)\$\/\);/);
+  assert.match(app, /return normalizeUserCode\(decodePathSegment\(match\[1\]\), ""\);/);
+  assert.match(app, /function getCanonicalProfileAliasUrl\(value, search = "", hash = ""\)/);
+  assert.match(app, /const initialAliasUrl = getCanonicalProfileAliasUrl\(window\.location\.href\);/);
+  assert.match(app, /window\.history\.replaceState\(window\.history\.state, "", initialAliasUrl\.toString\(\)\);/);
+  assert.match(app, /const nextUrl = getCanonicalProfileAliasUrl\(url\) \|\| url;/);
+  assert.match(app, /window\.history\.pushState\(\{ path: nextUrl\.pathname \+ nextUrl\.search \}, "", nextUrl\.toString\(\)\);/);
+});
+
 test("public badge surfaces share the floating badge-tooltip helper", () => {
   const htmlFiles = walkHtml(repoRoot);
   const missing = htmlFiles

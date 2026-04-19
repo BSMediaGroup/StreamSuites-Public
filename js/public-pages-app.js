@@ -385,6 +385,33 @@
     return normalized === "/u" || normalized === "/u/index.html" || normalized.startsWith(CANONICAL_PROFILE_PREFIX);
   }
 
+  function decodePathSegment(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    try {
+      return decodeURIComponent(raw);
+    } catch (_err) {
+      return raw;
+    }
+  }
+
+  function getProfileAliasSlug(pathname) {
+    const normalized = normalizePath(pathname);
+    const match = normalized.match(/^\/@([^\/?#]+)$/);
+    if (!match) return "";
+    return normalizeUserCode(decodePathSegment(match[1]), "");
+  }
+
+  function getCanonicalProfileAliasUrl(value, search = "", hash = "") {
+    const source = value instanceof URL ? value : new URL(String(value || window.location.href), window.location.origin);
+    const slug = getProfileAliasSlug(source.pathname);
+    if (!slug) return null;
+    const canonicalUrl = new URL(buildCanonicalProfileHref(slug), window.location.origin);
+    canonicalUrl.search = source.search || search || "";
+    canonicalUrl.hash = source.hash || hash || "";
+    return canonicalUrl;
+  }
+
   function isUuidLike(value) {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
   }
@@ -4360,6 +4387,9 @@
     if (isCanonicalProfilePath(normalizedPath)) {
       return PAGE_CONFIG["public-profile-standalone"];
     }
+    if (getProfileAliasSlug(normalizedPath)) {
+      return PAGE_CONFIG["public-profile-standalone"];
+    }
     return null;
   }
 
@@ -4410,6 +4440,11 @@
   }
 
   function init() {
+    const initialAliasUrl = getCanonicalProfileAliasUrl(window.location.href);
+    if (initialAliasUrl) {
+      window.history.replaceState(window.history.state, "", initialAliasUrl.toString());
+    }
+
     const initialPageId = document.body.dataset.publicPage;
     if (!initialPageId || !PAGE_CONFIG[initialPageId]) return;
 
@@ -4586,8 +4621,9 @@
 
     async function navigateTo(url, navOptions = {}) {
       const historyMode = navOptions.historyMode || "push";
-      if (!canHandleUrl(url)) {
-        window.location.assign(url.toString());
+      const nextUrl = getCanonicalProfileAliasUrl(url) || url;
+      if (!canHandleUrl(nextUrl)) {
+        window.location.assign(nextUrl.toString());
         return;
       }
 
@@ -4595,7 +4631,7 @@
       shell.setLoading(true);
 
       try {
-        const response = await fetch(url.toString(), {
+        const response = await fetch(nextUrl.toString(), {
           cache: "no-store",
           credentials: "same-origin"
         });
@@ -4610,15 +4646,15 @@
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, "text/html");
         const fetchedPageId = parsePageIdFromDocument(doc);
-        const nextConfig = fetchedPageId ? PAGE_CONFIG[fetchedPageId] : resolveConfigFromPath(url.pathname);
+        const nextConfig = fetchedPageId ? PAGE_CONFIG[fetchedPageId] : resolveConfigFromPath(nextUrl.pathname);
 
         if (!nextConfig) {
-          window.location.assign(url.toString());
+          window.location.assign(nextUrl.toString());
           return;
         }
 
         if (Boolean(nextConfig.standalone) !== Boolean(currentConfig.standalone)) {
-          window.location.assign(url.toString());
+          window.location.assign(nextUrl.toString());
           return;
         }
 
@@ -4631,15 +4667,15 @@
         }
 
         if (historyMode === "push") {
-          window.history.pushState({ path: url.pathname + url.search }, "", url.toString());
+          window.history.pushState({ path: nextUrl.pathname + nextUrl.search }, "", nextUrl.toString());
         } else if (historyMode === "replace") {
-          window.history.replaceState({ path: url.pathname + url.search }, "", url.toString());
+          window.history.replaceState({ path: nextUrl.pathname + nextUrl.search }, "", nextUrl.toString());
         }
 
         await ensureData();
         applyConfig(nextConfig, { keepState: false });
       } catch (_err) {
-        window.location.assign(url.toString());
+        window.location.assign(nextUrl.toString());
       } finally {
         if (token === navigationToken) {
           shell.setLoading(false);
@@ -4664,18 +4700,19 @@
         return;
       }
 
-      if (!canHandleUrl(url)) return;
+      const nextUrl = getCanonicalProfileAliasUrl(url) || url;
+      if (!canHandleUrl(nextUrl)) return;
 
       if (
-        normalizePath(url.pathname) === normalizePath(window.location.pathname) &&
-        url.search === window.location.search &&
-        url.hash === window.location.hash
+        normalizePath(nextUrl.pathname) === normalizePath(window.location.pathname) &&
+        nextUrl.search === window.location.search &&
+        nextUrl.hash === window.location.hash
       ) {
         return;
       }
 
       event.preventDefault();
-      navigateTo(url, { historyMode: "push" });
+      navigateTo(nextUrl, { historyMode: "push" });
     });
 
     window.addEventListener("popstate", () => {
