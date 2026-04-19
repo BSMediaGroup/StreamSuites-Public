@@ -162,16 +162,21 @@ test("community member galleries keep shared alpha filtering and 20-per-page pag
 test("public profile route shim canonicalizes /@slug to /u/slug without adding a second profile route", () => {
   const redirects = read("_redirects");
   const app = read("js/public-pages-app.js");
-  const aliasFunction = read("functions/@/[[slug]].js");
+  const aliasCatchAllFunction = read("functions/[[path]].js");
 
   assert.doesNotMatch(redirects, /^\/@\s+\/u\/index\.html 200$/m);
   assert.doesNotMatch(redirects, /^\/@\*\s+\/u\/index\.html 200$/m);
-  assert.match(aliasFunction, /url\.pathname = "\/u\/index\.html";/);
-  assert.match(aliasFunction, /return context\.env\.ASSETS\.fetch\(assetRequest\);/);
+  assert.match(aliasCatchAllFunction, /const PROFILE_ALIAS_PATHNAME_RE = \/\^\\\/@\(\[\^\\\/\?#\]\+\)\\\/\?\$\/;/);
+  assert.match(aliasCatchAllFunction, /if \(!isDirectProfileAliasPath\(requestUrl\.pathname\)\) \{\s*return context\.next\(\);/s);
+  assert.match(aliasCatchAllFunction, /requestUrl\.pathname = "\/u\/index\.html";/);
+  assert.match(aliasCatchAllFunction, /requestUrl\.search = "";/);
+  assert.match(aliasCatchAllFunction, /return context\.env\.ASSETS\.fetch\(assetRequest\);/);
   assert.match(app, /function getProfileAliasSlug\(pathname\)/);
   assert.match(app, /const match = normalized\.match\(\/\^\\\/@\(\[\^\\\/\?#\]\+\)\$\/\);/);
   assert.match(app, /return normalizeUserCode\(decodePathSegment\(match\[1\]\), ""\);/);
   assert.match(app, /function getCanonicalProfileAliasUrl\(value, search = "", hash = ""\)/);
+  assert.match(app, /canonicalUrl\.search = source\.search \|\| search \|\| "";/);
+  assert.match(app, /canonicalUrl\.hash = source\.hash \|\| hash \|\| "";/);
   assert.match(app, /const initialAliasUrl = getCanonicalProfileAliasUrl\(window\.location\.href\);/);
   assert.match(app, /window\.history\.replaceState\(window\.history\.state, "", initialAliasUrl\.toString\(\)\);/);
   assert.match(app, /const nextUrl = getCanonicalProfileAliasUrl\(url\) \|\| url;/);

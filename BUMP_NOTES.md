@@ -296,6 +296,31 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into the released `0.4.2-alpha` section above.
 
+## Public /@slug Catch-All Intercept Repair - 2026-04-20
+
+### Technical Notes
+
+- Removed `functions/@/[[slug]].js` because the literal `@` Pages Function route was not being matched reliably for direct public `/@slug` entry in the deployed Pages runtime, which left those requests falling through to a real 404 before the client bootstrap could run.
+- Replaced it with the supported root catch-all handler `functions/[[path]].js`, which intercepts only `^/@([^/?#]+)/?$`, internally serves the existing `/u/index.html` standalone profile bootstrap, and calls `context.next()` for every non-alias request so unrelated public routes keep their existing behavior.
+- Kept `_redirects` free of alias-specific `/@` rewrites and kept `js/public-pages-app.js` as the canonicalization layer, where valid `/@slug` requests still normalize client-side to `/u/slug`, preserve query strings and hashes, and avoid generating an empty canonical slug.
+- Updated `tests/auth-surface-parity.test.mjs` to assert the supported catch-all intercept is present, the broken alias-specific function path is no longer the mechanism, and alias canonicalization still preserves query/hash handling on the client.
+
+### Human-Readable Notes
+
+- Direct public `/@handle` links should now reach the same standalone profile bootstrap as `/u/handle` instead of 404ing before the app can normalize them.
+- The server-side alias implementation is simpler now: one supported catch-all intercept replaced the non-matching literal `@` function route, so the routed files are shorter overall.
+
+### Files / Areas Touched
+
+- `functions/[[path]].js`
+- `tests/auth-surface-parity.test.mjs`
+- `README.md`
+- `BUMP_NOTES.md`
+
+### Risks / Follow-Ups
+
+- This repair is based on the supported Pages catch-all shape and local verification; final confirmation still needs deployed browser checks for direct entry, refresh, and trailing-slash/query variants on `https://streamsuites.app/@slug`.
+
 ## Public Viewer Dashboard Shell Unification - 2026-04-19
 
 ### Technical Notes
