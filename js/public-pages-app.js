@@ -96,6 +96,15 @@
   ]);
   const DEFAULT_PROFILE_COVER = "/assets/placeholders/defaultprofilecover.webp";
 
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
   function getPublicBadgeUi() {
     return window.StreamSuitesPublicBadgeUi || null;
   }
@@ -3175,9 +3184,10 @@
       if (item?.presentation?.show_entry_labels !== false && segment.sliceAngle >= 8) {
         const labelPoint = polarToCartesian(240, 240, segment.sliceAngle >= 24 ? 136 : 150, segment.midAngle);
         const labelGroup = createSvgElement("g", { class: "wheel-slice-label" });
-        const labelRotation = shouldFlipSliceLabel(segment.midAngle)
-          ? segment.midAngle + 180
-          : segment.midAngle;
+        let labelRotation = segment.midAngle - 90;
+        if (shouldFlipSliceLabel(segment.midAngle)) {
+          labelRotation += 180;
+        }
         const labelText = getWheelLabelText(entry, item);
         const labelMode = String(item?.presentation?.slice_label_mode || "full_name").trim();
         if (labelMode === "avatar" && segment.sliceAngle >= 12) {
@@ -3333,28 +3343,6 @@
   function buildWheelDetailMain(item, config) {
     const main = create("article", "detail-main wheel-detail-main");
     const card = create("div", "wheel-detail-card");
-    const toolbar = create("div", "wheel-detail-toolbar");
-    const toggle = create("div", "wheel-view-toggle");
-    toggle.setAttribute("role", "tablist");
-    toggle.setAttribute("aria-label", "Switch wheel artifact view");
-
-    const wheelButton = create("button", "wheel-view-toggle-btn", "Wheel");
-    wheelButton.type = "button";
-    wheelButton.dataset.view = "wheel";
-    const scoreboardButton = create("button", "wheel-view-toggle-btn", "List view");
-    scoreboardButton.type = "button";
-    scoreboardButton.dataset.view = "scoreboard";
-    toggle.append(wheelButton, scoreboardButton);
-
-    const alternateLens = create(
-      "a",
-      "see-all",
-      config.detailType === "scoreboards" ? "Open wheel route" : "Open scoreboard route"
-    );
-    alternateLens.href = config.detailType === "scoreboards" ? item.wheelHref || "/wheels" : item.scoreboardHref || "/scoreboards";
-    toolbar.append(toggle, alternateLens);
-
-    const views = create("div", "wheel-detail-views");
     const wheelView = create("section", "wheel-detail-view");
     const wheelShell = create("div", "wheel-spin-shell wheel-spin-shell-premium");
     const wheelStageWrap = create("div", "wheel-stage-wrap");
@@ -3365,11 +3353,18 @@
 
     const wheelStage = create("div", "wheel-spin-stage wheel-spin-stage-premium");
     const celebrationLayer = create("div", "wheel-celebration-layer");
+    const stageAssembly = create("div", "wheel-stage-assembly");
+    const stageGlow = create("div", "wheel-stage-aura");
     const trimRing = create("div", "wheel-stage-trim");
+    const trimNoise = create("div", "wheel-stage-trim-noise");
     const wheelDisc = create("div", "wheel-spin-disc wheel-spin-disc-premium");
     const pointer = create("div", "wheel-spin-pointer wheel-spin-pointer-premium");
     const pointerGlow = create("div", "wheel-spin-pointer-glow");
-    wheelStage.append(liveLabel, trimRing, celebrationLayer, wheelDisc, pointerGlow, pointer);
+    trimRing.appendChild(trimNoise);
+    stageAssembly.append(stageGlow, trimRing, wheelDisc);
+    wheelStage.style.setProperty("--wheel-trim-color", item?.palette?.trim_color || item?.palette?.accent_color || "#7c92ff");
+    wheelStage.style.setProperty("--wheel-glow-color", item?.palette?.glow_color || item?.palette?.accent_color || "#4de9ff");
+    wheelStage.append(liveLabel, celebrationLayer, stageAssembly, pointerGlow, pointer);
     wheelStageWrap.appendChild(wheelStage);
 
     const wheelSide = create("div", "wheel-spin-side wheel-session-side");
@@ -3401,11 +3396,11 @@
     resultBox.append(resultLabel, resultValue, resultMeta);
 
     const actionRow = create("div", "dashboard-action-row wheel-action-row");
-    const spinButton = create("button", "dashboard-action is-strong", "Spin locally");
+    const spinButton = create("button", "dashboard-action is-strong", "Spin");
     spinButton.type = "button";
-    const respinButton = create("button", "dashboard-action", "Respin");
+    const respinButton = create("button", "dashboard-action", "Re-spin");
     respinButton.type = "button";
-    const resetButton = create("button", "dashboard-action", "Reset session");
+    const resetButton = create("button", "dashboard-action", "Reset Wheel");
     resetButton.type = "button";
     actionRow.append(spinButton, respinButton, resetButton);
 
@@ -3432,19 +3427,7 @@
     wheelShell.append(wheelStageWrap, wheelSide);
     wheelView.appendChild(wheelShell);
 
-    const scoreboardView = create("section", "wheel-detail-view");
-    scoreboardView.hidden = true;
-    const scoreboardCard = create("div", "detail-card");
-    const scoreboardHeading = create("div", "detail-heading");
-    scoreboardHeading.append(
-      create("h3", "detail-title", "List view"),
-      create("span", "timestamp", "Alternate preserved wheel lens")
-    );
-    scoreboardCard.append(scoreboardHeading, buildWheelScoreboardTable(item));
-    scoreboardView.appendChild(scoreboardCard);
-
-    views.append(wheelView, scoreboardView);
-    card.append(toolbar, views);
+    card.append(wheelView);
     main.appendChild(card);
 
     const importNotes = [];
@@ -3468,9 +3451,12 @@
     const sessionState = {
       winnerLimit: clampNumber(item?.winnerLimit || 1, 1, 100, 1),
       winners: [],
+      drawHistory: [],
       removedEntryIds: new Set(),
       selectedEntryId: "",
       pointerEntryId: "",
+      lastSpinPointerEntryId: "",
+      lastClickSoundAt: 0,
       hoverEntryId: "",
       isHoveringStage: false,
       isSpinning: false,
@@ -3483,6 +3469,41 @@
     };
     const spinDurationMs = clampNumber(item?.presentation?.spin_duration_ms || 8500, 2000, 60000, 8500);
     let lastFrameTs = 0;
+
+    function cloneWinnerRecord(winner) {
+      return winner && typeof winner === "object" ? { ...winner } : winner;
+    }
+
+    function buildSessionSnapshot() {
+      return {
+        winners: sessionState.winners.map((winner) => cloneWinnerRecord(winner)),
+        removedEntryIds: Array.from(sessionState.removedEntryIds),
+        selectedEntryId: sessionState.selectedEntryId,
+        rotation: sessionState.rotation
+      };
+    }
+
+    function applySessionSnapshot(snapshot) {
+      const source = snapshot && typeof snapshot === "object" ? snapshot : {};
+      sessionState.winners = Array.isArray(source.winners) ? source.winners.map((winner) => cloneWinnerRecord(winner)) : [];
+      sessionState.removedEntryIds = new Set(Array.isArray(source.removedEntryIds) ? source.removedEntryIds : []);
+      sessionState.selectedEntryId = String(source.selectedEntryId || "");
+      sessionState.hoverEntryId = "";
+      sessionState.rotation = Number(source.rotation) || 0;
+      sessionState.lastSpinPointerEntryId = "";
+      wheelDisc.style.transform = `rotate(${sessionState.rotation}deg)`;
+      if (sessionState.winners.length) {
+        const lastWinner = sessionState.winners[sessionState.winners.length - 1];
+        resultValue.textContent = getWheelEntryName(lastWinner);
+        resultMeta.textContent = `Local result. Weight ${formatNumber(Number(lastWinner?.weight) || 0)} · ${Math.max(0, Math.min(100, Number(lastWinner?.percent ?? lastWinner?.sharePercent) || 0))}% share. No winner history or backend state is written from this surface.`;
+      } else {
+        resultValue.textContent = "Ready to spin";
+        resultMeta.textContent = "Spins are local to this browser session only. No winner history or backend state is written from this surface.";
+      }
+      rebuildWheel();
+      renderWinnerList();
+      updateControls();
+    }
 
     function getDisplayedEntries() {
       const base = Array.isArray(item?.entries) ? item.entries : [];
@@ -3612,22 +3633,56 @@
     function updateControls() {
       const eligibleEntries = getEligibleEntries();
       const remainingSlots = Math.max(0, sessionState.winnerLimit - sessionState.winners.length);
-      spinButton.disabled = sessionState.isSpinning || !eligibleEntries.length || remainingSlots <= 0;
-      respinButton.disabled = sessionState.isSpinning || sessionState.winnerLimit <= 1 || !eligibleEntries.length || remainingSlots <= 0;
-      respinButton.hidden = sessionState.winnerLimit <= 1;
+      const canAdvance = !sessionState.isSpinning && eligibleEntries.length > 0 && remainingSlots > 0;
+      const hasCompletedDraw = sessionState.drawHistory.length > 0;
+      spinButton.textContent = hasCompletedDraw && canAdvance ? "Spin Again" : "Spin";
+      spinButton.disabled = !canAdvance;
+      respinButton.disabled = sessionState.isSpinning || !sessionState.drawHistory.length;
+      respinButton.hidden = false;
+      resetButton.disabled =
+        sessionState.isSpinning ||
+        (!sessionState.drawHistory.length && !sessionState.winners.length && !sessionState.removedEntryIds.size);
     }
 
     function flashCelebration() {
       if (item?.presentation?.celebration_enabled === false && item?.presentation?.confetti_enabled !== true) return;
       clear(celebrationLayer);
-      for (let index = 0; index < 18; index += 1) {
-        const confetti = create("span", "wheel-confetti");
-        confetti.style.left = `${8 + Math.random() * 84}%`;
-        confetti.style.setProperty("--confetti-rotate", `${Math.random() * 360}deg`);
-        confetti.style.setProperty("--confetti-delay", `${Math.random() * 0.18}s`);
-        confetti.style.setProperty("--confetti-color", resolveEntryColor(item.entries[index % Math.max(1, item.entries.length)] || {}, item, index));
-        celebrationLayer.appendChild(confetti);
-      }
+      const count = 200;
+      const bursts = [
+        { particleRatio: 0.25, spread: 26, startVelocity: 55, decay: 0.91, scalar: 1 },
+        { particleRatio: 0.2, spread: 60, startVelocity: 40, decay: 0.9, scalar: 1 },
+        { particleRatio: 0.35, spread: 100, startVelocity: 48, decay: 0.91, scalar: 0.8 },
+        { particleRatio: 0.1, spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 },
+        { particleRatio: 0.1, spread: 120, startVelocity: 45, decay: 0.9, scalar: 1 }
+      ];
+      let colorIndex = 0;
+      bursts.forEach((burst, burstIndex) => {
+        const particleCount = Math.max(1, Math.floor(count * burst.particleRatio));
+        for (let index = 0; index < particleCount; index += 1) {
+          const confetti = create("span", "wheel-confetti");
+          const spreadAngle = (-90 + (Math.random() - 0.5) * burst.spread) * (Math.PI / 180);
+          const velocity = burst.startVelocity * (0.55 + Math.random() * 0.8) * (burst.scalar || 1);
+          const distance = velocity * (burst.decay || 0.9) * 3.2;
+          const drift = Math.cos(spreadAngle) * distance;
+          const rise = Math.sin(spreadAngle) * distance;
+          const spin = (Math.random() * 480 - 240).toFixed(2);
+          const duration = 860 + Math.round(Math.random() * 520) + burstIndex * 40;
+          confetti.style.left = "50%";
+          confetti.style.top = "70%";
+          confetti.style.setProperty("--confetti-x", `${drift.toFixed(2)}px`);
+          confetti.style.setProperty("--confetti-y", `${rise.toFixed(2)}px`);
+          confetti.style.setProperty("--confetti-rotate", `${spin}deg`);
+          confetti.style.setProperty("--confetti-scale", `${(0.72 + Math.random() * 0.75 * (burst.scalar || 1)).toFixed(2)}`);
+          confetti.style.setProperty("--confetti-delay", `${(Math.random() * 0.12 + burstIndex * 0.02).toFixed(3)}s`);
+          confetti.style.setProperty("--confetti-duration", `${duration}ms`);
+          confetti.style.setProperty(
+            "--confetti-color",
+            resolveEntryColor(item.entries[colorIndex % Math.max(1, item.entries.length)] || {}, item, colorIndex)
+          );
+          colorIndex += 1;
+          celebrationLayer.appendChild(confetti);
+        }
+      });
       celebrationLayer.classList.remove("is-active");
       window.requestAnimationFrame(() => celebrationLayer.classList.add("is-active"));
     }
@@ -3683,7 +3738,6 @@
           sessionState.selectedEntryId = entryId;
           sessionState.isHoveringStage = true;
           updatePointerState();
-          void playSound("click");
         });
         group.addEventListener("mouseleave", () => {
           sessionState.hoverEntryId = "";
@@ -3693,17 +3747,24 @@
           unlockAudio();
           sessionState.selectedEntryId = entryId;
           renderDetailCard(findEntryById(entryId));
-          void playSound("click");
         });
       });
       updatePointerState();
     }
 
-    function updatePointerState() {
+    function updatePointerState(options = {}) {
       const segments = getWheelSegments(getDisplayedEntries());
       const pointed = resolveWheelPointerEntry(segments, sessionState.rotation);
       const pointedId = String(pointed?.entry?.entryId || pointed?.entry?.id || "");
+      if (options.allowClickSound && sessionState.isSpinning && pointedId && pointedId !== sessionState.lastSpinPointerEntryId) {
+        const timestamp = Number(options.timestamp) || performance.now();
+        if (timestamp - sessionState.lastClickSoundAt > 48) {
+          sessionState.lastClickSoundAt = timestamp;
+          void playSound("click");
+        }
+      }
       sessionState.pointerEntryId = pointedId;
+      sessionState.lastSpinPointerEntryId = pointedId;
       liveLabelValue.textContent = pointed?.entry ? getWheelEntryName(pointed.entry) : "Ready";
       renderDetailCard(resolveActiveEntry());
       const groups = wheelDisc.querySelectorAll("[data-wheel-entry-id]");
@@ -3717,7 +3778,7 @@
       });
     }
 
-    function finishSpin(winner) {
+    function finishSpin(winner, spinContext = {}) {
       sessionState.isSpinning = false;
       trimRing.dataset.state = "winner";
       wheelStage.dataset.state = "winner";
@@ -3729,6 +3790,11 @@
         if (item?.autoRemoveWinner) {
           sessionState.removedEntryIds.add(String(winner?.entryId || winner?.id || ""));
         }
+        sessionState.drawHistory.push({
+          mode: spinContext.mode || "spin",
+          winnerId: String(winner?.entryId || winner?.id || ""),
+          beforeState: spinContext.beforeState || buildSessionSnapshot()
+        });
         publishLocalWinner(winner, "Local result.");
         rebuildWheel();
       }
@@ -3739,7 +3805,7 @@
       }, 1100);
     }
 
-    function spinWheel(mode = "spin") {
+    function spinWheel(mode = "spin", context = {}) {
       const eligibleEntries = getEligibleEntries();
       const remainingSlots = Math.max(0, sessionState.winnerLimit - sessionState.winners.length);
       if (sessionState.isSpinning || !eligibleEntries.length || remainingSlots <= 0) return;
@@ -3756,12 +3822,17 @@
       const endRotation = sessionState.rotation + delta + (4 + Math.floor(Math.random() * 3)) * 360;
       const startRotation = sessionState.rotation;
       const startTime = performance.now();
+      const beforeState = context.beforeState || buildSessionSnapshot();
 
       sessionState.isSpinning = true;
+      sessionState.lastSpinPointerEntryId = sessionState.pointerEntryId || "";
       trimRing.dataset.state = "spinning";
       wheelStage.dataset.state = "spinning";
-      resultValue.textContent = mode === "respin" ? "Respinning locally…" : "Spinning locally…";
-      resultMeta.textContent = "This animation does not write winner history, remove entries, or update backend state.";
+      resultValue.textContent = mode === "respin" ? "Re-spinning…" : sessionState.drawHistory.length ? "Spinning again…" : "Spinning…";
+      resultMeta.textContent =
+        mode === "respin"
+          ? "Re-spin replays the most recent draw from the pre-draw session state. No backend history is written."
+          : "This animation advances the local browser-session draw history only. No backend state is written.";
       void playSound(mode === "respin" ? "respin" : "startspin");
       stopMusic();
       playSound("music", { loop: true }).then((audio) => {
@@ -3773,16 +3844,23 @@
         const eased = 1 - Math.pow(1 - progress, 4);
         sessionState.rotation = startRotation + (endRotation - startRotation) * eased;
         wheelDisc.style.transform = `rotate(${sessionState.rotation}deg)`;
-        updatePointerState();
+        updatePointerState({ allowClickSound: true, timestamp: now });
         if (progress < 1) {
           sessionState.spinTimer = window.requestAnimationFrame(step);
           return;
         }
-        finishSpin(winner);
+        finishSpin(winner, { mode, beforeState });
       }
 
       updateControls();
       sessionState.spinTimer = window.requestAnimationFrame(step);
+    }
+
+    function respinWheel() {
+      if (sessionState.isSpinning || !sessionState.drawHistory.length) return;
+      const previousDraw = sessionState.drawHistory.pop();
+      applySessionSnapshot(previousDraw?.beforeState || buildSessionSnapshot());
+      spinWheel("respin", { beforeState: previousDraw?.beforeState || buildSessionSnapshot() });
     }
 
     function resetSession() {
@@ -3790,9 +3868,11 @@
       window.cancelAnimationFrame(sessionState.spinTimer);
       sessionState.isSpinning = false;
       sessionState.winners = [];
+      sessionState.drawHistory = [];
       sessionState.removedEntryIds.clear();
       sessionState.selectedEntryId = "";
       sessionState.hoverEntryId = "";
+      sessionState.lastSpinPointerEntryId = "";
       trimRing.dataset.state = "idle";
       wheelStage.dataset.state = "idle";
       resultValue.textContent = "Ready to spin";
@@ -3813,16 +3893,6 @@
       sessionState.frameId = window.requestAnimationFrame(tick);
     }
 
-    function setView(nextView) {
-      const resolved = nextView === "scoreboard" ? "scoreboard" : "wheel";
-      wheelButton.classList.toggle("is-active", resolved === "wheel");
-      scoreboardButton.classList.toggle("is-active", resolved === "scoreboard");
-      wheelButton.setAttribute("aria-pressed", resolved === "wheel" ? "true" : "false");
-      scoreboardButton.setAttribute("aria-pressed", resolved === "scoreboard" ? "true" : "false");
-      wheelView.hidden = resolved !== "wheel";
-      scoreboardView.hidden = resolved !== "scoreboard";
-    }
-
     wheelStage.addEventListener("mouseenter", () => {
       sessionState.isHoveringStage = true;
     });
@@ -3831,17 +3901,14 @@
       sessionState.hoverEntryId = "";
       updatePointerState();
     });
-    wheelButton.addEventListener("click", () => setView("wheel"));
-    scoreboardButton.addEventListener("click", () => setView("scoreboard"));
     spinButton.addEventListener("click", () => spinWheel("spin"));
-    respinButton.addEventListener("click", () => spinWheel("respin"));
+    respinButton.addEventListener("click", respinWheel);
     resetButton.addEventListener("click", resetSession);
 
     renderDetailCard(item?.entries?.[0] || null);
     renderWinnerList();
     rebuildWheel();
     updateControls();
-    setView(config.detailType === "scoreboards" ? "scoreboard" : item.defaultDisplayMode);
     sessionState.frameId = window.requestAnimationFrame(tick);
     main._cleanupWheelDetail = () => {
       stopMusic();
@@ -3880,7 +3947,11 @@
         spin_duration_ms: clampNumber(item?.presentation?.spin_duration_ms || 8500, 2000, 60000, 8500),
         scoreboard_max_rows: clampNumber(item?.presentation?.scoreboard_max_rows || 24, 3, 100, 24),
         sound: Object.keys(WHEEL_SOUND_LIBRARY).reduce((acc, category) => {
-          acc[category] = resolveWheelSoundConfig(item, category);
+          const resolved = resolveWheelSoundConfig(item, category);
+          acc[category] = {
+            enabled: resolved.enabled,
+            asset_id: resolved.assetId
+          };
           return acc;
         }, {})
       },
@@ -3971,6 +4042,49 @@
     const lookupState = Object.create(null);
     const lookupTimers = new Map();
     const lookupAborters = new Map();
+    let previewAudio = null;
+    let previewCategory = "";
+
+    function stopPreviewSound() {
+      if (!previewAudio) return;
+      try {
+        previewAudio.pause();
+        previewAudio.currentTime = 0;
+      } catch (_error) {
+        // Ignore preview stop failures.
+      }
+      previewAudio = null;
+      previewCategory = "";
+    }
+
+    async function previewSound(category) {
+      const sound = draft.presentation?.sound?.[category];
+      const assetId = String(sound?.asset_id || "").trim();
+      if (!category || !assetId) return;
+      if (previewCategory === category && previewAudio) {
+        stopPreviewSound();
+        renderEditor();
+        return;
+      }
+      stopPreviewSound();
+      const audio = new Audio(buildWheelSoundUrl(category, assetId));
+      audio.volume = category === "music" ? 0.36 : 0.78;
+      previewAudio = audio;
+      previewCategory = category;
+      audio.addEventListener("ended", () => {
+        if (previewAudio === audio) {
+          previewAudio = null;
+          previewCategory = "";
+          renderEditor();
+        }
+      }, { once: true });
+      try {
+        await audio.play();
+      } catch (_error) {
+        stopPreviewSound();
+      }
+      renderEditor();
+    }
 
     function getEntryLookup(entryId) {
       if (!lookupState[entryId]) {
@@ -4048,12 +4162,15 @@
         </div>
         <div class="wheel-owner-sound-grid">
           ${Object.keys(WHEEL_SOUND_LIBRARY).map((category) => `
-            <label class="wheel-owner-field">
-              <span>${escapeHtml(category)}</span>
-              <select data-wheel-editor-field="presentation.sound.${category}.asset_id">
-                ${WHEEL_SOUND_LIBRARY[category].map((assetId) => `<option value="${escapeHtml(assetId)}" ${draft.presentation.sound[category].assetId === assetId ? "selected" : ""}>${escapeHtml(assetId)}</option>`).join("")}
-              </select>
-            </label>
+            <div class="wheel-owner-sound-row">
+              <label class="wheel-owner-field">
+                <span>${escapeHtml(category)}</span>
+                <select data-wheel-editor-field="presentation.sound.${category}.asset_id">
+                  ${WHEEL_SOUND_LIBRARY[category].map((assetId) => `<option value="${escapeHtml(assetId)}" ${draft.presentation.sound[category].asset_id === assetId ? "selected" : ""}>${escapeHtml(assetId)}</option>`).join("")}
+                </select>
+              </label>
+              <button type="button" class="dashboard-action" data-wheel-sound-preview="true" data-wheel-sound-category="${escapeHtml(category)}">${previewCategory === category ? "Stop" : "Preview"}</button>
+            </div>
           `).join("")}
         </div>
         <div class="wheel-owner-entry-stack">
@@ -4190,8 +4307,12 @@
     });
 
     body.addEventListener("click", async (event) => {
-      const trigger = event.target.closest("[data-entry-lookup-assign='true'], [data-wheel-editor-save='true']");
+      const trigger = event.target.closest("[data-entry-lookup-assign='true'], [data-wheel-editor-save='true'], [data-wheel-sound-preview='true']");
       if (!(trigger instanceof HTMLElement)) return;
+      if (trigger.matches("[data-wheel-sound-preview='true']")) {
+        void previewSound(String(trigger.dataset.wheelSoundCategory || ""));
+        return;
+      }
       const statusNode = body.querySelector("[data-wheel-editor-status='true']");
       if (trigger.matches("[data-entry-lookup-assign='true']")) {
         const entryIndex = Number(trigger.dataset.entryIndex);
@@ -4247,6 +4368,12 @@
     });
 
     renderEditor();
+    details.addEventListener("toggle", () => {
+      if (!details.open) {
+        stopPreviewSound();
+        renderEditor();
+      }
+    });
     return wrapper;
   }
 
@@ -4322,7 +4449,7 @@
           onRemoved: () => renderDetail(ctx, config)
         })
       );
-      host.append(buildLayoutToggle(wheelLayout), wheelLayout);
+      host.append(wheelLayout);
       return;
     }
 
