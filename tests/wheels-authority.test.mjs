@@ -31,11 +31,18 @@ test("public wheels route preserves the shell and provides clean list/detail art
   assert.match(app, /aliases: \["\/wheels", "\/wheels\/"\]/);
   assert.match(app, /detailType: "wheels"/);
   assert.match(app, /prefix: "\/wheels\/", pageId: "detail-wheel", detailType: "wheels"/);
+  assert.match(app, /function resolveDefaultSidebarState\(config\)/);
+  assert.match(app, /return String\(config\.path \|\| ""\)\.includes\("\/detail\.html"\) \? "icon" : "";/);
+  assert.match(app, /defaultSidebarState: resolveDefaultSidebarState\(currentConfig\)/);
+  assert.match(app, /defaultSidebarState: resolveDefaultSidebarState\(nextConfig\)/);
   assert.match(app, /function buildWheelDetailMain\(item, config\)/);
   assert.match(app, /Spin locally/);
   assert.match(app, /No winner history or backend state is written from this surface/);
   assert.match(shell, /href: "\/wheels", label: "Wheels"/);
   assert.match(shell, /const cleanPrefixes = \["\/clips\/", "\/polls\/", "\/scores\/", "\/wheels\/"\]/);
+  assert.match(shell, /defaultSidebarState: ""/);
+  assert.match(shell, /autoSidebarStateOverride = normalizeSidebarState\(options\.defaultSidebarState\)/);
+  assert.match(shell, /if \(useAutoSidebarState\) \{/);
   assert.match(listHtml, /data-public-page="media-wheels"/);
   assert.match(detailHtml, /data-public-page="detail-wheel"/);
   assert.match(indexFn, /serveAssetPath\(context, "\/wheels\.html"\)/);

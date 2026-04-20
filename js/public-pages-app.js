@@ -361,6 +361,11 @@
     { prefix: "/scores/", pageId: "detail-scoreboard", detailType: "scoreboards" }
   ]);
 
+  function resolveDefaultSidebarState(config) {
+    if (!config || config.standalone) return "";
+    return String(config.path || "").includes("/detail.html") ? "icon" : "";
+  }
+
   function create(tag, className, text) {
     const node = document.createElement(tag);
     if (className) node.className = className;
@@ -5290,6 +5295,7 @@
         showSearch: currentConfig.hideSearch !== true,
         showLockoutBanner: currentConfig.showLockoutBanner === true,
         filters: buildFiltersForConfig(currentConfig),
+        defaultSidebarState: resolveDefaultSidebarState(currentConfig),
           filtersCollapsed: currentConfig.filtersCollapsed,
           multiFilter: currentConfig.filterMode === "multi",
           accountLabel: "Guest"
@@ -5400,6 +5406,7 @@
         showSearch: nextConfig.hideSearch !== true,
         showLockoutBanner: nextConfig.showLockoutBanner === true,
         filters: buildFiltersForConfig(nextConfig),
+        defaultSidebarState: resolveDefaultSidebarState(nextConfig),
         multiFilter: nextConfig.filterMode === "multi",
         filtersCollapsed: nextConfig.filtersCollapsed,
         onSearch(query) {

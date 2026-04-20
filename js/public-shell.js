@@ -414,6 +414,10 @@
     return window.matchMedia(MOBILE_MEDIA_QUERY).matches;
   }
 
+  function normalizeSidebarState(value) {
+    return Object.values(SIDEBAR_STATES).includes(value) ? value : "";
+  }
+
   function shellSubheading(shellKind) {
     if (shellKind === "public") return "PUBLIC PROFILE";
     return "VIEWER DASHBOARD";
@@ -511,6 +515,7 @@
       showLockoutBanner: false,
       filters: [],
       filtersCollapsed: false,
+      defaultSidebarState: "",
       multiFilter: false,
       accountLabel: "Guest",
       accountAvatar: "",
@@ -1102,6 +1107,7 @@
     let lastVisibleSidebarState = SIDEBAR_STATES.expanded;
     const storedSidebarState = readSidebarState();
     let useAutoSidebarState = !storedSidebarState;
+    let autoSidebarStateOverride = normalizeSidebarState(options.defaultSidebarState);
 
     function setAccountIdentity(label, avatarUrl, badges = []) {
       const nextLabel = (label || "Guest").trim() || "Guest";
@@ -1414,6 +1420,18 @@
         setActiveNav(options.activeHref);
       }
 
+      if ("defaultSidebarState" in next) {
+        autoSidebarStateOverride = normalizeSidebarState(next.defaultSidebarState);
+        options.defaultSidebarState = autoSidebarStateOverride;
+        if (useAutoSidebarState) {
+          const autoState = autoSidebarStateOverride || (isMobileViewport() ? SIDEBAR_STATES.icon : SIDEBAR_STATES.expanded);
+          if (autoState !== SIDEBAR_STATES.hidden) {
+            lastVisibleSidebarState = autoState;
+          }
+          setSidebarState(autoState, false);
+        }
+      }
+
       if (typeof next.topbarLabel === "string") {
         options.topbarLabel = next.topbarLabel;
         topbarTitle.textContent = next.topbarLabel;
@@ -1568,7 +1586,10 @@
       accountMenuItems: options.accountMenuItems
     });
 
-    const initialSidebarState = storedSidebarState || (isMobileViewport() ? SIDEBAR_STATES.icon : SIDEBAR_STATES.expanded);
+    const initialSidebarState =
+      storedSidebarState
+      || autoSidebarStateOverride
+      || (isMobileViewport() ? SIDEBAR_STATES.icon : SIDEBAR_STATES.expanded);
     if (initialSidebarState !== SIDEBAR_STATES.hidden) {
       lastVisibleSidebarState = initialSidebarState;
     }

@@ -2,6 +2,14 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+## 2026-04-20 - Public Artifact Detail Sidebar Default-Collapse Repair
+
+### Technical Notes
+
+- Extended `js/public-pages-app.js` with a narrow `resolveDefaultSidebarState(...)` path so individual artifact detail pages default the shared public shell sidebar to icon-only mode while gallery/index pages keep their normal defaults. The behavior is route-aware and reuses the existing shell state contract instead of introducing a parallel detail-page-only sidebar system.
+- Updated `js/public-shell.js` so `defaultSidebarState` is treated only as an auto-mode default when no stored user preference exists. Detail pages can therefore open collapsed on first render without overwriting persisted sidebar preference, without forcing later interactions, and without breaking the existing mobile/icon default path.
+- Expanded `tests/wheels-authority.test.mjs` additively to pin the new detail-page sidebar default wiring. No files were removed or replaced in this repair; the touched public JS files are slightly longer because they now carry the route-aware shell default logic and the matching regression coverage.
+
 ## 2026-04-20 - Public Wheel / Scoreboard Artifact Flow
 
 ### Technical Notes
