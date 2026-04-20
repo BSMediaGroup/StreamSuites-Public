@@ -1,0 +1,164 @@
+{
+  "schema_version": "v1",
+  "generated_at": "2026-04-20T04:19:21.882485Z",
+  "provider": "rumble",
+  "count": 1,
+  "summary": {
+    "desired_count": 0,
+    "active_count": 0,
+    "blocked_count": 1,
+    "error_count": 0,
+    "by_state": {
+      "blocked": 1
+    }
+  },
+  "sessions": [
+    {
+      "session_id": "rumble-auto-dd161e7934a892a0",
+      "platform": "rumble",
+      "session_kind": "auto",
+      "creator_account_id": "acct-1",
+      "creator_user_code": "creator-one",
+      "creator_display_name": "Creator One",
+      "lifecycle_state": "blocked",
+      "desired": false,
+      "enabled": true,
+      "eligible": false,
+      "blocking_reason": "creator_identity_unmatched",
+      "runner_kind": "placeholder",
+      "runner_state": "stopped",
+      "transport_status": "stopped",
+      "status_reason": "Runtime found Rumble activity, but it does not match this creator's resolved identity yet.",
+      "error": null,
+      "last_transport_error": null,
+      "resolved_target": {
+        "watch_url": null,
+        "stream_identity": null,
+        "video_id": null,
+        "chat_id": null,
+        "channel_handle": "@creator",
+        "channel_url": "https://rumble.com/c/creator",
+        "channel_slug": null
+      },
+      "decision": {
+        "platform": "rumble",
+        "enabled": true,
+        "eligible": false,
+        "decision_state": "identity_unmatched",
+        "blocking_reason": "creator_identity_unmatched",
+        "blocking_reason_detail": null,
+        "blocking_reason_category": "identity_unmatched",
+        "connected": true,
+        "creator_identifiable": true,
+        "creator_match_status": "identity_unmatched",
+        "live_status": "unknown",
+        "live_truth_source": "none",
+        "resolved_watch_url": null,
+        "resolved_live_target_url": null,
+        "resolved_watch_home_url": "https://rumble.com/c/creator",
+        "resolved_stream_identity": null,
+        "resolved_video_id": null,
+        "resolved_chat_id": null,
+        "resolved_channel_handle": "@creator",
+        "resolved_channel_url": "https://rumble.com/c/creator",
+        "resolved_channel_slug": null,
+        "creator_offline": false,
+        "awaiting_live_stream": false,
+        "live_target_unresolved": false,
+        "attach_identity_incomplete": false,
+        "attach_identity_ready": false,
+        "managed_session_desired": false,
+        "managed_session_absent_because_offline": false,
+        "managed_session_absent_because_target_unresolved": false,
+        "runtime_diagnostics": [
+          "discovery_missing_live_row",
+          "creator_status_unknown"
+        ],
+        "last_live_status_checked_at": "2026-04-13T10:00:00Z",
+        "last_evaluated_at": "2026-04-20T04:19:21.897378Z",
+        "authoritative_identity": {
+          "source": "creator_integration",
+          "selected_fields": {
+            "channel_handle": "@creator",
+            "public_url": "https://rumble.com/c/creator",
+            "channel_id": "creator-channel",
+            "profile_id": "creator-profile"
+          },
+          "field_sources": {
+            "channel_ids": "creator_integration",
+            "slugs": "creator_integration",
+            "paths": "creator_integration",
+            "urls": "creator_integration"
+          },
+          "normalized_inputs": {
+            "creator_keys": [
+              "acct-1",
+              "creator-one"
+            ],
+            "channel_ids": [
+              "creator-channel",
+              "creator-profile"
+            ],
+            "slugs": [
+              "creator"
+            ],
+            "paths": [
+              "/c/creator"
+            ],
+            "urls": [
+              "https://rumble.com/c/creator"
+            ]
+          },
+          "ignored_identities": []
+        },
+        "live_snapshot": {
+          "matched": false,
+          "matched_by": null,
+          "matched_value": null,
+          "matched_creator_id": null,
+          "is_live": false,
+          "freshness": null,
+          "stale": null,
+          "error": null,
+          "export_status": "stale",
+          "export_checked_at": "2026-04-13T10:00:00Z"
+        },
+        "discovery": {
+          "matched": false,
+          "matched_by": null,
+          "match_reason": null,
+          "matched_value": null,
+          "source": null,
+          "stop_stage": null,
+          "stop_reason": null,
+          "stop_detail": null,
+          "export_status": "missing",
+          "export_checked_at": null,
+          "pages_succeeded": 0,
+          "pages_requested": 0,
+          "streams_resolved": 0
+        }
+      },
+      "runtime_diagnostics": [
+        "discovery_missing_live_row",
+        "creator_status_unknown"
+      ],
+      "transport_capabilities": {},
+      "manual_override_active": false,
+      "last_evaluated_at": "2026-04-20T04:19:21.882485Z",
+      "last_attach_attempt_at": null,
+      "last_attach_success_at": null,
+      "last_transport_heartbeat_at": null,
+      "last_heartbeat_at": null,
+      "last_transition_at": "2026-04-20T04:19:21.882485Z",
+      "desired_since": null,
+      "started_at": null,
+      "stopped_at": "2026-04-20T04:19:21.882485Z",
+      "last_event": {
+        "type": "transport_stopped",
+        "at": "2026-04-20T04:19:21.882485Z",
+        "message": "Placeholder Rumble transport runner was stopped."
+      }
+    }
+  ]
+}

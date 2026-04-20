@@ -1,0 +1,20 @@
+{
+  "schema_version": "v1",
+  "generated_at": "2026-04-13T10:00:00Z",
+  "providers": [],
+  "creators": [
+    {
+      "creator_id": "someone-else",
+      "statuses": [
+        {
+          "provider": "rumble",
+          "is_live": true,
+          "provider_channel_url": "https://rumble.com/c/someone-else",
+          "last_checked_at": "2026-04-13T10:00:00Z",
+          "freshness": "fresh",
+          "stale": false
+        }
+      ]
+    }
+  ]
+}
