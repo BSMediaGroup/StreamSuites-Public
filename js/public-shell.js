@@ -12,7 +12,8 @@
     { href: "/clips", label: "Clips", icon: "/assets/icons/ui/clipcards.svg", group: "dashboard" },
     { href: "/polls", label: "Polls", icon: "/assets/icons/ui/vote.svg", group: "dashboard" },
     { href: "/wheels", label: "Wheels", icon: "/assets/icons/ui/wheelpie.svg", group: "dashboard" },
-    { href: "/scoreboards", label: "Scoreboards", icon: "/assets/icons/ui/tablechart.svg", group: "dashboard" },
+    { href: "/scoreboards", label: "List Views", icon: "/assets/icons/ui/tablechart.svg", group: "dashboard" },
+    { href: "/leaderboards", label: "Leaderboards", icon: "/assets/icons/ui/statgraph.svg", group: "dashboard" },
     { href: "/tallies", label: "Tallies", icon: "/assets/icons/ui/bulletlist.svg", group: "dashboard" },
     { href: "/economy.html", label: "Games / Economy", icon: "/assets/icons/ui/joystick.svg", group: "dashboard" },
     { href: "/live", label: "Live", icon: "/assets/icons/ui/cast.svg", group: "community" },
@@ -355,7 +356,7 @@
     if (fromQuery) return fromQuery;
 
     const pathname = normalizePath(window.location.pathname);
-    const cleanPrefixes = ["/clips/", "/polls/", "/scores/", "/wheels/"];
+    const cleanPrefixes = ["/clips/", "/polls/", "/scores/", "/wheels/", "/leaderboards/"];
     for (const prefix of cleanPrefixes) {
       if (pathname.startsWith(prefix) && pathname.length > prefix.length) {
         return decodeURIComponent(pathname.slice(prefix.length));

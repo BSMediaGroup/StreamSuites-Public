@@ -1213,18 +1213,43 @@
     return fallback.map((entry, index) => {
       const weight = Number(entry?.weight ?? entry?.value ?? 1);
       const resolvedWeight = Number.isFinite(weight) && weight > 0 ? weight : 1;
+      const share = Number(entry?.share);
+      const resolvedShare = Number.isFinite(share) && share > 0 ? share : resolvedWeight;
       const percent = totalWeight > 0 ? Math.round((resolvedWeight / totalWeight) * 100) : 0;
+      const assignment = entry?.assignment && typeof entry.assignment === "object" ? entry.assignment : null;
+      const displayName = String(entry?.display_name || entry?.label || entry?.name || `Entry ${index + 1}`).trim() || `Entry ${index + 1}`;
       return {
         id: entry?.entry_id || entry?.entryId || entry?.id || `entry-${index + 1}`,
         entryId: entry?.entry_id || entry?.entryId || entry?.id || `entry-${index + 1}`,
-        label: entry?.label || entry?.name || `Entry ${index + 1}`,
+        label: entry?.label || entry?.name || displayName,
+        displayName,
+        avatarUrl: String(entry?.avatar_url || assignment?.avatar_url || "").trim(),
         weight: resolvedWeight,
+        share: resolvedShare,
         value: resolvedWeight,
         votes: resolvedWeight,
         percent,
         sharePercent: percent,
         color: entry?.color || ["#ff6b6b", "#ffd166", "#06d6a0", "#118ab2", "#9b5de5", "#f15bb5"][index % 6],
-        notes: String(entry?.notes || "").trim()
+        notes: String(entry?.notes || "").trim(),
+        assignment: assignment
+          ? {
+              accountId: String(assignment.account_id || "").trim(),
+              userCode: String(assignment.user_code || "").trim(),
+              displayName: String(assignment.display_name || displayName).trim() || displayName,
+              avatarUrl: String(assignment.avatar_url || "").trim(),
+              role: String(assignment.role || "").trim(),
+              tier: String(assignment.tier || "").trim(),
+              publicSlug: String(assignment.public_slug || "").trim(),
+              badges: Array.isArray(assignment.badges) ? assignment.badges : [],
+              publicProfile:
+                assignment.public_profile && typeof assignment.public_profile === "object"
+                  ? assignment.public_profile
+                  : null
+            }
+          : null,
+        roleBadges: Array.isArray(entry?.role_badges) ? entry.role_badges : [],
+        statsStub: entry?.stats_stub && typeof entry.stats_stub === "object" ? entry.stats_stub : {}
       };
     });
   }
@@ -1264,6 +1289,9 @@
       notes: raw?.notes || "",
       status: removal.isRemoved ? "Removed" : toTitle(raw?.status || raw?.state || "active"),
       defaultDisplayMode: String(raw?.default_display_mode || raw?.defaultDisplayMode || "wheel").trim().toLowerCase() === "scoreboard" ? "scoreboard" : "wheel",
+      winnerLimit: Number.isFinite(Number(raw?.winner_limit ?? raw?.max_winners))
+        ? Math.max(1, Math.min(100, Number(raw?.winner_limit ?? raw?.max_winners)))
+        : 1,
       allowDuplicates: raw?.allow_duplicates !== false && raw?.allowDuplicates !== false,
       autoRemoveWinner: raw?.auto_remove_winner === true || raw?.autoRemoveWinner === true,
       entries,
@@ -1274,15 +1302,29 @@
         segment_colors: Array.isArray(palette.segment_colors) ? palette.segment_colors : [],
         background_color: String(palette.background_color || "#0f172a").trim() || "#0f172a",
         text_color: String(palette.text_color || "#f8fafc").trim() || "#f8fafc",
-        accent_color: String(palette.accent_color || "#38bdf8").trim() || "#38bdf8"
+        accent_color: String(palette.accent_color || "#38bdf8").trim() || "#38bdf8",
+        trim_color: String(palette.trim_color || palette.accent_color || "#7c92ff").trim() || "#7c92ff",
+        glow_color: String(palette.glow_color || palette.accent_color || "#4de9ff").trim() || "#4de9ff"
       },
       presentation: {
         animation_enabled: presentation.animation_enabled !== false,
         sound_enabled: presentation.sound_enabled !== false,
-        confetti_enabled: presentation.confetti_enabled === true,
+        celebration_enabled: presentation.celebration_enabled !== false,
+        confetti_enabled: presentation.confetti_enabled === true || presentation.celebration_enabled === true,
         show_entry_labels: presentation.show_entry_labels !== false,
+        show_display_names_on_slices: presentation.show_display_names_on_slices !== false,
+        slice_label_mode: ["full_name", "initials", "avatar"].includes(String(presentation.slice_label_mode || "").trim())
+          ? String(presentation.slice_label_mode).trim()
+          : "full_name",
+        slow_drift_enabled: presentation.slow_drift_enabled !== false,
         spin_duration_ms: Number.isFinite(Number(presentation.spin_duration_ms)) ? Number(presentation.spin_duration_ms) : 8500,
-        scoreboard_max_rows: Number.isFinite(Number(presentation.scoreboard_max_rows)) ? Number(presentation.scoreboard_max_rows) : 24
+        scoreboard_max_rows: Number.isFinite(Number(presentation.scoreboard_max_rows)) ? Number(presentation.scoreboard_max_rows) : 24,
+        sound:
+          presentation.sound && typeof presentation.sound === "object"
+            ? presentation.sound
+            : presentation.sound_config && typeof presentation.sound_config === "object"
+              ? presentation.sound_config
+              : {}
       },
       unsupportedImportFields: Array.isArray(raw?.unsupported_import_fields)
         ? raw.unsupported_import_fields.map((value) => String(value || "").trim()).filter(Boolean)
@@ -1320,7 +1362,7 @@
       type: "scoreboards",
       href: wheel.scoreboardHref,
       wheelHref: wheel.href,
-      summary: wheel.summary || "Wheel artifact rendered in scoreboard mode."
+      summary: wheel.summary || "Wheel artifact rendered in list view mode."
     };
   }
 
