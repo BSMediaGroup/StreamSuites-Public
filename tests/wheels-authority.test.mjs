@@ -31,6 +31,8 @@ test("public wheels route preserves the shell and provides clean list/detail art
   assert.match(app, /aliases: \["\/wheels", "\/wheels\/"\]/);
   assert.match(app, /detailType: "wheels"/);
   assert.match(app, /prefix: "\/wheels\/", pageId: "detail-wheel", detailType: "wheels"/);
+  assert.match(app, /function findArtifactByIdentifier\(items, identifier\)/);
+  assert.match(app, /entry\?\.routeKeys\) && entry\.routeKeys\.includes\(normalizedRequested\)/);
   assert.match(app, /function resolveDefaultSidebarState\(config\)/);
   assert.match(app, /return String\(config\.path \|\| ""\)\.includes\("\/detail\.html"\) \? "icon" : "";/);
   assert.match(app, /defaultSidebarState: resolveDefaultSidebarState\(currentConfig\)/);

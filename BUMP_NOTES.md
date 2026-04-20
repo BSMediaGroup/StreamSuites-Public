@@ -2,6 +2,13 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+## 2026-04-20 - Public Wheel Slug Resolution Guard
+
+### Technical Notes
+
+- Expanded `tests/wheels-authority.test.mjs` additively to pin slug-based detail lookup through `findArtifactByIdentifier(...)` and normalized `routeKeys` matching, so the real `/wheels/<slug>` path remains locked to the authoritative wheel normalization contract once mirrored wheel data is present.
+- No production files were removed or replaced in this public repo pass. The test file is only slightly longer because it now guards the exact slug-resolution seam involved in the empty-shell regression.
+
 ## 2026-04-20 - Public Artifact Detail Sidebar Default-Collapse Repair
 
 ### Technical Notes
