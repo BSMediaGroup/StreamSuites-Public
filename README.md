@@ -49,6 +49,7 @@ flowchart TD
 - `/community/settings.html` is the viewer/public account profile settings surface and loads or saves supported authoritative fields through the public profile API.
 - `/community/my-data.html` now reads the signed-in user’s real public-authority request history from the authoritative `/api/public/authority/requests/mine` contract.
 - `/wheels` is now a real public consumer route for authoritative wheel artifacts published by `StreamSuites`, and `/scoreboards` acts as the ranked-scoreboard lens over that same wheel artifact data instead of introducing a second scoreboard authority.
+- Public wheel gallery/detail hydration is now API-first against `/api/public/wheels`, with the shared-state/runtime-export copies retained only as fallback mirrors and a narrow runtime SSE stream keeping already-open wheel pages in sync.
 - Standalone and in-shell public profile surfaces now consume the runtime-published public authority identity summaries so profile claim, assignment, issue, and removal requests submit against real `identity_code` targets instead of placeholder payloads.
 - Public profiles render dual share behavior truthfully: StreamSuites links always use the canonical slug URL, and FindMeHere links render only when the authoritative payload marks the account eligible and visible there.
 - Live badge, live ring, live-directory cards, and live profile-banner treatment consume the centralized runtime `live_status` export first, with optional Rumble discovery enrichment only when the existing UI needs missing watch/title metadata.

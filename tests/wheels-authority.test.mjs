@@ -9,10 +9,15 @@ function read(relativePath) {
   return fs.readFileSync(path.join(repoRoot, relativePath), "utf8");
 }
 
-test("public data hub hydrates wheels from the authoritative runtime export and reuses them for scoreboard mode", () => {
+test("public data hub hydrates wheels from the authoritative live API first and reuses them for scoreboard mode", () => {
   const source = read("js/public-data-hub.js");
 
-  assert.match(source, /wheels:\s*\["\/runtime\/exports\/wheels\.json", "\/shared\/state\/wheels\.json", "\/data\/wheels\.json"\]/);
+  assert.match(source, /const WHEELS_API_PATH = "\/api\/public\/wheels";/);
+  assert.match(source, /wheels:\s*\["\/shared\/state\/wheels\.json", "\/runtime\/exports\/wheels\.json", "\/data\/wheels\.json"\]/);
+  assert.match(source, /async function loadLiveWheelPayload\(\)/);
+  assert.match(source, /fetch\(`\$\{API_BASE\}\$\{WHEELS_API_PATH\}`/);
+  assert.match(source, /const wheelsPayload = wheelsApiPayload && Array\.isArray\(wheelsApiPayload\.items\)/);
+  assert.match(source, /mode: wheelsApiPayload && Array\.isArray\(wheelsApiPayload\.items\) \? "api" : "mirror"/);
   assert.match(source, /function normalizeWheel\(raw, index, profiles, authorityArtifacts = null\)/);
   assert.match(source, /function buildScoreboardLensFromWheel\(wheel\)/);
   assert.match(source, /const wheels = sortByUpdated\(toArray\(wheelsPayload\)\.map\(\(item, index\) => normalizeWheel\(item, index, profilesMap, authorityArtifacts\)\)\);/);
@@ -38,6 +43,13 @@ test("public wheels route preserves the shell and provides clean list/detail art
   assert.match(app, /defaultSidebarState: resolveDefaultSidebarState\(currentConfig\)/);
   assert.match(app, /defaultSidebarState: resolveDefaultSidebarState\(nextConfig\)/);
   assert.match(app, /function buildWheelDetailMain\(item, config\)/);
+  assert.match(app, /const PUBLIC_WHEEL_EVENTS_URL = `\$\{AUTH_API_BASE\}\/api\/public\/wheels\/events`;/);
+  assert.match(app, /function syncWheelLiveSubscription\(\)/);
+  assert.match(app, /wheelEventSource = new EventSource\(PUBLIC_WHEEL_EVENTS_URL, \{ withCredentials: true \}\);/);
+  assert.match(app, /wheelEventSource\.addEventListener\("wheel\.changed"/);
+  assert.match(app, /refreshWheelDataFromAuthority\(\)\.catch\(\(\) => \{\}\);/);
+  assert.match(app, /function toTitle\(value\)/);
+  assert.match(app, /buildAuthorityRequestPanel\(resolveArtifactAuthorityContext\(item\), \{/);
   assert.match(app, /Spin locally/);
   assert.match(app, /No winner history or backend state is written from this surface/);
   assert.match(shell, /href: "\/wheels", label: "Wheels"/);

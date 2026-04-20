@@ -2,6 +2,10 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+- Reworked `js/public-data-hub.js` so wheel hydration is now API-first against `/api/public/wheels`, with `/shared/state/wheels.json`, `/runtime/exports/wheels.json`, and `data/wheels.json` retained only as fallback mirrors. Added cache invalidation so open pages can truthfully rehydrate from the live wheel authority contract when wheel events arrive.
+- Extended `js/public-pages-app.js` with a narrow wheel live-sync subscription to `/api/public/wheels/events` and fixed the public wheel detail crash by restoring a real `toTitle(...)` helper used by the detail/authority render path. Open `/wheels` and `/wheels/<slug>` pages now refresh live without pretending mirrored exports are the active truth source.
+- Expanded `tests/wheels-authority.test.mjs` additively to pin the API-first wheel loader, SSE subscription wiring, and the repaired `toTitle(...)` detail helper. No files were removed or replaced in this pass; the touched public JS/test files are slightly longer because of the additive live-sync and crash-fix coverage.
+
 ## 2026-04-20 - Public Wheel Slug Resolution Guard
 
 ### Technical Notes

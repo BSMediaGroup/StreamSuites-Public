@@ -2,7 +2,7 @@
   const DATA_PATHS = {
     clips: "/data/clips.json",
     polls: "/data/polls.json",
-    wheels: ["/runtime/exports/wheels.json", "/shared/state/wheels.json", "/data/wheels.json"],
+    wheels: ["/shared/state/wheels.json", "/runtime/exports/wheels.json", "/data/wheels.json"],
     scoreboards: "/data/scoreboards.json",
     tallies: "/data/tallies.json",
     profiles: "/api/public/community/members",
@@ -165,8 +165,27 @@
     artifacts: []
   });
   const AUTHORITATIVE_LIVE_PROVIDERS = new Set(["rumble"]);
+  const WHEELS_API_PATH = "/api/public/wheels";
 
   let cachePromise = null;
+
+  function detectFallbackApiBase() {
+    const host = String(window.location.hostname || "").trim().toLowerCase();
+    if (host === "localhost" || host === "127.0.0.1") {
+      return "http://127.0.0.1:18087";
+    }
+    return "";
+  }
+
+  function resolveApiBase() {
+    const apiBaseUrl = window.StreamSuitesAuth?.apiBaseUrl;
+    if (typeof apiBaseUrl === "string" && apiBaseUrl.trim()) {
+      return apiBaseUrl.replace(/\/$/, "");
+    }
+    return detectFallbackApiBase();
+  }
+
+  const API_BASE = resolveApiBase();
 
   function isUuidLike(value) {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
@@ -674,6 +693,24 @@
         status: 0,
         payload: fallback
       };
+    }
+  }
+
+  async function loadLiveWheelPayload() {
+    try {
+      const response = await fetch(`${API_BASE}${WHEELS_API_PATH}`, {
+        cache: "no-store",
+        credentials: "include",
+        headers: {
+          Accept: "application/json"
+        }
+      });
+      if (!response.ok) return null;
+      const payload = await response.json();
+      if (payload?.success === false) return null;
+      return payload;
+    } catch (_err) {
+      return null;
     }
   }
 
@@ -1394,14 +1431,18 @@
     return sortByUpdated(artifacts);
   }
 
-  async function loadAll() {
+  async function loadAll(options = {}) {
+    if (options.force === true) {
+      cachePromise = null;
+    }
     if (cachePromise) return cachePromise;
 
     cachePromise = (async () => {
       const [
         clipsPayload,
         pollsPayload,
-        wheelsPayload,
+        wheelsApiPayload,
+        wheelsMirrorPayload,
         talliesPayload,
         profilesResult,
         authorityIdentitiesPayload,
@@ -1413,6 +1454,7 @@
       ] = await Promise.all([
         loadJson(DATA_PATHS.clips, { items: [] }),
         loadJson(DATA_PATHS.polls, { items: [] }),
+        loadLiveWheelPayload(),
         loadJsonFromPaths(DATA_PATHS.wheels, { wheels: [] }),
         loadJson(DATA_PATHS.tallies, { items: [] }),
         loadJsonResult(DATA_PATHS.profiles, { items: [] }),
@@ -1434,6 +1476,9 @@
 
       const clips = sortByUpdated(toArray(clipsPayload).map((item, index) => normalizeClip(item, index, profilesMap, authorityArtifacts)));
       const polls = sortByUpdated(toArray(pollsPayload).map((item, index) => normalizePoll(item, index, profilesMap, authorityArtifacts)));
+      const wheelsPayload = wheelsApiPayload && Array.isArray(wheelsApiPayload.items)
+        ? { wheels: wheelsApiPayload.items }
+        : wheelsMirrorPayload;
       const wheels = sortByUpdated(toArray(wheelsPayload).map((item, index) => normalizeWheel(item, index, profilesMap, authorityArtifacts)));
       const scoreboards = sortByUpdated(wheels.map((item) => buildScoreboardLensFromWheel(item)));
       const tallies = sortByUpdated(toArray(talliesPayload).map((item, index) => normalizeTally(item, index, profilesMap, authorityArtifacts)));
@@ -1496,6 +1541,11 @@
           artifactByCode: authorityArtifacts.byCode
         },
         sourceStatus: {
+          wheels: {
+            ok: Boolean(wheelsApiPayload && Array.isArray(wheelsApiPayload.items)),
+            mode: wheelsApiPayload && Array.isArray(wheelsApiPayload.items) ? "api" : "mirror",
+            path: wheelsApiPayload && Array.isArray(wheelsApiPayload.items) ? `${API_BASE}${WHEELS_API_PATH}` : DATA_PATHS.wheels[0]
+          },
           profiles: {
             ok: profilesResult.ok,
             status: profilesResult.status,
@@ -1516,6 +1566,9 @@
 
   window.StreamSuitesPublicData = {
     loadAll,
+    invalidateCache: () => {
+      cachePromise = null;
+    },
     parseDetailId: () => window.StreamSuitesPublicShell?.parseDetailId?.() || "",
     toTimestamp,
     toTitle,

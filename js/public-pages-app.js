@@ -17,7 +17,20 @@
   const DETAIL_LAYOUT_STORAGE_KEY = "ss-public-detail-layout";
   const PROFILE_ARTIFACT_LAYOUT_STORAGE_KEY = "ss-public-profile-artifact-layout";
   const CURRENT_ORIGIN = String(window.location.origin || "").trim();
-  const AUTH_API_BASE = /^https?:\/\//.test(CURRENT_ORIGIN) ? CURRENT_ORIGIN : "https://streamsuites.app";
+  function detectFallbackAuthApiBase() {
+    const host = String(window.location.hostname || "").trim().toLowerCase();
+    if (host === "localhost" || host === "127.0.0.1") {
+      return "http://127.0.0.1:18087";
+    }
+    return /^https?:\/\//.test(CURRENT_ORIGIN) ? CURRENT_ORIGIN : "https://streamsuites.app";
+  }
+  const AUTH_API_BASE = (() => {
+    const apiBaseUrl = window.StreamSuitesAuth?.apiBaseUrl;
+    if (typeof apiBaseUrl === "string" && apiBaseUrl.trim()) {
+      return apiBaseUrl.replace(/\/$/, "");
+    }
+    return detectFallbackAuthApiBase();
+  })();
   const AUTH_ME_URL = `${AUTH_API_BASE}/api/public/me`;
   const AUTH_PUBLIC_PROFILE_URL = `${AUTH_API_BASE}/api/public/profile`;
   const AUTH_PUBLIC_PROFILE_ME_URL = `${AUTH_API_BASE}/api/public/profile/me`;
@@ -25,6 +38,7 @@
   const AUTH_PUBLIC_AUTHORITY_REQUESTS_URL = `${AUTH_API_BASE}/api/public/authority/requests`;
   const AUTH_PUBLIC_AUTHORITY_REQUESTS_MINE_URL = `${AUTH_API_BASE}/api/public/authority/requests/mine`;
   const AUTH_PUBLIC_ARTIFACTS_URL = `${AUTH_API_BASE}/api/public/artifacts`;
+  const PUBLIC_WHEEL_EVENTS_URL = `${AUTH_API_BASE}/api/public/wheels/events`;
   const AUTH_LOGOUT_URL = `${AUTH_API_BASE}/auth/logout`;
   const CREATOR_DASHBOARD_URL = "https://creator.streamsuites.app/";
   const CREATOR_LOGIN_URL = (() => {
@@ -1449,6 +1463,15 @@
 
   function getSocialDataApi() {
     return window.StreamSuitesPublicData || null;
+  }
+
+  function toTitle(value) {
+    const api = window.StreamSuitesPublicData || null;
+    if (typeof api?.toTitle === "function") {
+      return api.toTitle(value);
+    }
+    const raw = String(value || "").trim().replace(/[_-]+/g, " ");
+    return raw ? raw.replace(/\b\w/g, (char) => char.toUpperCase()) : "";
   }
 
   function collectOrderedSocialEntries(socialLinks) {
@@ -5268,6 +5291,9 @@
     let loadedData = null;
     let navigationToken = 0;
     let pendingLegacyProfileUuid = "";
+    let wheelEventSource = null;
+    let wheelRefreshPromise = null;
+    let wheelRefreshQueued = false;
 
     if (normalizePath(window.location.pathname) === "/community/profile.html") {
       const params = new URLSearchParams(window.location.search || "");
@@ -5381,6 +5407,58 @@
       );
     };
 
+    function shouldUseWheelLiveSync(config) {
+      return Boolean(
+        config?.listType === "wheels" ||
+        config?.detailType === "wheels" ||
+        config?.detailType === "scoreboards"
+      );
+    }
+
+    function closeWheelLiveSync() {
+      if (!wheelEventSource) return;
+      wheelEventSource.close();
+      wheelEventSource = null;
+    }
+
+    async function refreshWheelDataFromAuthority() {
+      if (wheelRefreshPromise) {
+        wheelRefreshQueued = true;
+        return wheelRefreshPromise;
+      }
+      wheelRefreshPromise = (async () => {
+        do {
+          wheelRefreshQueued = false;
+          window.StreamSuitesPublicData.invalidateCache?.();
+          loadedData = await window.StreamSuitesPublicData.loadAll({ force: true });
+        } while (wheelRefreshQueued);
+        rerender();
+        return loadedData;
+      })();
+      try {
+        return await wheelRefreshPromise;
+      } finally {
+        wheelRefreshPromise = null;
+      }
+    }
+
+    function syncWheelLiveSubscription() {
+      if (!shouldUseWheelLiveSync(currentConfig)) {
+        closeWheelLiveSync();
+        return;
+      }
+      if (wheelEventSource) return;
+      wheelEventSource = new EventSource(PUBLIC_WHEEL_EVENTS_URL, { withCredentials: true });
+      wheelEventSource.addEventListener("wheel.changed", () => {
+        refreshWheelDataFromAuthority().catch(() => {});
+      });
+      wheelEventSource.addEventListener("error", () => {
+        if (wheelEventSource?.readyState === EventSource.CLOSED) {
+          closeWheelLiveSync();
+        }
+      });
+    }
+
     function applyConfig(nextConfig, options = {}) {
       currentConfig = nextConfig;
       currentPageId = Object.keys(PAGE_CONFIG).find((key) => PAGE_CONFIG[key] === nextConfig) || currentPageId;
@@ -5437,6 +5515,7 @@
       shell.setFilterState(state.activeFilters);
       shell.setActiveHref(nextConfig.activeHref);
 
+      syncWheelLiveSubscription();
       rerender();
     }
 
@@ -5549,6 +5628,9 @@
         return;
       }
       navigateTo(url, { historyMode: "none" });
+    });
+    window.addEventListener("beforeunload", () => {
+      closeWheelLiveSync();
     });
 
     ensureData()
