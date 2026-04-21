@@ -35,11 +35,15 @@ test("public wheels route preserves the shell and provides clean list/detail art
   const leaderboardsFn = read("functions/leaderboards/index.js");
   const css = read("css/public-shell.css");
 
+  assert.match(app, /scoreboards: "\/leaderboards"/);
   assert.match(app, /aliases: \["\/wheels", "\/wheels\/"\]/);
   assert.match(app, /path: "\/leaderboards\.html"/);
   assert.match(app, /render: renderLeaderboardsPlaceholder/);
+  assert.match(app, /"media-scoreboards": \{[\s\S]*activeHref: "\/leaderboards"[\s\S]*topbarLabel: "Leaderboards"[\s\S]*render: renderLeaderboardsPlaceholder/);
   assert.match(app, /detailType: "wheels"/);
   assert.match(app, /prefix: "\/wheels\/", pageId: "detail-wheel", detailType: "wheels"/);
+  assert.doesNotMatch(app, /config\.filtersCollapsed = false/);
+  assert.match(app, /function applyDocumentTitle\(label, options = \{\}\)/);
   assert.match(app, /function findArtifactByIdentifier\(items, identifier\)/);
   assert.match(app, /entry\?\.routeKeys\) && entry\.routeKeys\.includes\(normalizedRequested\)/);
   assert.match(app, /function resolveDefaultSidebarState\(config\)/);
@@ -53,11 +57,18 @@ test("public wheels route preserves the shell and provides clean list/detail art
   assert.match(app, /wheelEventSource\.addEventListener\("wheel\.changed"/);
   assert.match(app, /refreshWheelDataFromAuthority\(\)\.catch\(\(\) => \{\}\);/);
   assert.match(app, /function toTitle\(value\)/);
+  assert.match(app, /applyDocumentTitle\(item\.title \|\| item\.question \|\| config\.topbarLabel\)/);
+  assert.match(app, /updateShell\?\.\(\{ topbarLabel: item\.title \|\| item\.question \|\| config\.topbarLabel, filtersCollapsed: true \}\)/);
+  assert.match(app, /function resolveWheelShareModel\(item\)/);
+  assert.match(app, /function buildWheelShareField\(label, url, options = \{\}\)/);
   assert.match(app, /function buildWheelSupportRail\(item, helpers, options = \{\}\)/);
   assert.match(app, /function buildWheelOwnerEditorPanel\(item, options = \{\}\)/);
   assert.match(app, /const CREATOR_WHEEL_ACCOUNT_LOOKUP_URL = `\$\{AUTH_API_BASE\}\/api\/creator\/wheels\/account-lookup`;/);
   assert.match(app, /function escapeHtml\(value\)/);
   assert.match(app, /winnerLimit/);
+  assert.match(app, /spin_owner_only/);
+  assert.match(app, /center_image_url/);
+  assert.match(app, /shortlinkSlug/);
   assert.match(app, /slice_label_mode/);
   assert.match(app, /wheel-stage-trim/);
   assert.match(app, /Spin Again/);
@@ -87,5 +98,8 @@ test("public wheels route preserves the shell and provides clean list/detail art
   assert.match(css, /\.wheel-owner-editor-panel/);
   assert.match(css, /\.wheel-scoreboard-table/);
   assert.match(css, /\.wheel-stage-assembly/);
+  assert.match(css, /\.wheel-hardware-pointer/);
+  assert.match(css, /\.wheel-share-field/);
+  assert.match(css, /\.wheel-entry-detail-color-chip/);
   assert.match(css, /\.wheel-owner-sound-row/);
 });

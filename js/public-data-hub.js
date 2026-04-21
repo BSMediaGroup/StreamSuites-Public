@@ -1256,9 +1256,18 @@
 
   function normalizeWheel(raw, index, profiles, authorityArtifacts = null) {
     const artifactCode = String(raw?.artifact_code || raw?.artifactCode || raw?.id || `wheel-${index + 1}`).trim();
-    const slug = String(raw?.slug || "").trim();
+    const defaultSlug = String(raw?.default_slug || raw?.defaultSlug || raw?.slug || "").trim();
+    const customSlug = String(raw?.custom_slug || raw?.customSlug || "").trim();
+    const shortlinkSlug = String(raw?.shortlink_slug || raw?.shortlinkSlug || "").trim();
+    const slug = customSlug || String(raw?.slug || defaultSlug).trim();
+    const slugAliases = Array.isArray(raw?.slug_aliases || raw?.slugAliases)
+      ? (raw?.slug_aliases || raw?.slugAliases).map((value) => String(value || "").trim()).filter(Boolean)
+      : [];
     const routeId =
-      firstArtifactIdentifier(raw, ["slug", "public_slug", "publicSlug", "artifact_code", "artifactCode", "id"]) || artifactCode;
+      firstArtifactIdentifier(
+        { ...raw, slug, default_slug: defaultSlug, custom_slug: customSlug, shortlink_slug: shortlinkSlug },
+        ["custom_slug", "customSlug", "default_slug", "defaultSlug", "slug", "public_slug", "publicSlug", "artifact_code", "artifactCode", "id"]
+      ) || artifactCode;
     const creatorRef =
       raw?.creator && typeof raw.creator === "object"
         ? { role: "creator", platform: "StreamSuites", ...raw.creator }
@@ -1316,6 +1325,17 @@
         slice_label_mode: ["full_name", "initials", "avatar"].includes(String(presentation.slice_label_mode || "").trim())
           ? String(presentation.slice_label_mode).trim()
           : "full_name",
+        center_image_url:
+          String(
+            presentation.center_image_url ||
+              presentation.centerImageUrl ||
+              "/assets/placeholders/wheelcenterdefault.webp"
+          ).trim() || "/assets/placeholders/wheelcenterdefault.webp",
+        spin_owner_only:
+          presentation.spin_owner_only === true ||
+          presentation.spinOwnerOnly === true ||
+          presentation.owner_spin_only === true ||
+          presentation.ownerSpinOnly === true,
         slow_drift_enabled: presentation.slow_drift_enabled !== false,
         spin_duration_ms: Number.isFinite(Number(presentation.spin_duration_ms)) ? Number(presentation.spin_duration_ms) : 8500,
         scoreboard_max_rows: Number.isFinite(Number(presentation.scoreboard_max_rows)) ? Number(presentation.scoreboard_max_rows) : 24,
@@ -1339,8 +1359,14 @@
       removedState: removal.removedState,
       isRemoved: removal.isRemoved,
       slug,
+      defaultSlug,
+      customSlug,
+      shortlinkSlug,
+      slugAliases,
       routeId,
-      routeKeys: [artifactCode, slug, routeId].map(normalizeArtifactLookup).filter(Boolean),
+      routeKeys: [artifactCode, slug, defaultSlug, customSlug, shortlinkSlug, routeId, ...slugAliases]
+        .map(normalizeArtifactLookup)
+        .filter(Boolean),
       platform: profile.platform,
       platformKey: profile.platformKey,
       platformIcon: profile.platformIcon,

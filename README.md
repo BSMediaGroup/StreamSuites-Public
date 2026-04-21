@@ -196,7 +196,10 @@ StreamSuites-Public/
     ├── fonts/
     │   └── mono/
     │       └── SUSEMono-Variable.ttf
+    ├── placeholders/
+    │   └── wheelcenterdefault.webp
     └── icons/
+        ├── wheelarrow.svg
         └── ui/
             ├── clipboard.svg
             ├── cmdkey.svg

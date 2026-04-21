@@ -10,7 +10,7 @@
     clips: "/clips",
     polls: "/polls",
     wheels: "/wheels",
-    scoreboards: "/scoreboards",
+    scoreboards: "/leaderboards",
     leaderboards: "/leaderboards",
     tallies: "/tallies"
   };
@@ -75,6 +75,8 @@
     findmehere: "/assets/icons/ui/findmehereicon.svg"
   });
   const WHEEL_DEFAULT_AVATAR = "/assets/icons/ui/wheeluser.svg";
+  const WHEEL_CENTER_DEFAULT = "/assets/placeholders/wheelcenterdefault.webp";
+  const WHEEL_CENTER_ACCEPT = ".webp,.png,.jpg,.jpeg,.gif,.svg";
   const WHEEL_SOUND_BASE = "/assets/sounds/wheels";
   const WHEEL_SOUND_LIBRARY = Object.freeze({
     music: ["music0.mp3", "music1.mp3", "music2.mp3", "music3.mp3", "music4.mp3", "music5.mp3", "music6.mp3"],
@@ -103,6 +105,15 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
+  }
+
+  function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.addEventListener("load", () => resolve(String(reader.result || "")), { once: true });
+      reader.addEventListener("error", () => reject(reader.error || new Error("Unable to read file.")), { once: true });
+      reader.readAsDataURL(file);
+    });
   }
 
   function getPublicBadgeUi() {
@@ -154,14 +165,13 @@
       path: "/scoreboards.html",
       aliases: ["/scoreboards", "/scoreboards/"],
       shellKind: "media",
-      activeHref: "/scoreboards",
-      topbarLabel: "List Views",
-      searchPlaceholder: "Search list views",
-      filterMode: "single-nav",
+      activeHref: "/leaderboards",
+      topbarLabel: "Leaderboards",
+      searchPlaceholder: "Search leaderboards",
+      filterMode: "none",
       filtersCollapsed: true,
-      defaultFilters: ["scoreboards"],
-      render: renderMediaList,
-      listType: "scoreboards"
+      defaultFilters: [],
+      render: renderLeaderboardsPlaceholder
     },
     "media-leaderboards": {
       path: "/leaderboards.html",
@@ -255,13 +265,13 @@
     "detail-scoreboard": {
       path: "/scoreboards/detail.html",
       shellKind: "media",
-      activeHref: "/scoreboards",
+      activeHref: "/wheels",
       topbarLabel: "List View Detail",
       searchPlaceholder: "Search",
       hideSearch: true,
-      filterMode: "single-nav",
+      filterMode: "none",
       filtersCollapsed: true,
-      defaultFilters: ["scoreboards"],
+      defaultFilters: [],
       render: renderDetail,
       detailType: "scoreboards"
     },
@@ -390,10 +400,6 @@
     }
   };
 
-  Object.values(PAGE_CONFIG).forEach((config) => {
-    config.filtersCollapsed = false;
-  });
-
   const PAGE_ID_BY_PATH = Object.entries(PAGE_CONFIG).reduce((acc, [, cfg]) => {
     acc[normalizePath(cfg.path)] = cfg;
     (cfg.aliases || []).forEach((alias) => {
@@ -411,6 +417,12 @@
   function resolveDefaultSidebarState(config) {
     if (!config || config.standalone) return "";
     return String(config.path || "").includes("/detail.html") ? "icon" : "";
+  }
+
+  function applyDocumentTitle(label, options = {}) {
+    const productName = String(options.productName || "StreamSuites").trim() || "StreamSuites";
+    const trimmed = String(label || "").trim();
+    document.title = trimmed ? `${trimmed} | ${productName}` : productName;
   }
 
   function create(tag, className, text) {
@@ -1845,7 +1857,7 @@
       buildDashboardHero({
         eyebrow: "Viewer dashboard",
         title: "Media home",
-        body: "One public dashboard for clips, polls, wheels, tallies, live discovery, and community surfaces. Wheel artifacts now render from the authoritative runtime export, with list views acting as a second lens over the same published data.",
+        body: "One public dashboard for clips, polls, wheels, tallies, live discovery, and community surfaces. Wheel artifacts now render from the authoritative runtime export, keep list view as an internal wheel presentation mode, and reserve Leaderboards as the future standalone scoring IA.",
         highlights: [
           "Public-facing shell consolidated",
           `${formatNumber(liveCount)} live creator${liveCount === 1 ? "" : "s"} now`,
@@ -1857,7 +1869,7 @@
         ],
         stats: [
           { label: "Wheels", value: formatNumber(wheels.length), note: "Published artifacts" },
-          { label: "List Views", value: formatNumber(scoreboards.length), note: "Wheel lens" },
+          { label: "Leaderboards", value: "Scaffold", note: "Reserved route" },
           { label: "Clips", value: formatNumber(clips.length), note: "Public artifacts" },
           { label: "Notices", value: formatNumber(noticeCount), note: "Community updates" }
         ]
@@ -1889,9 +1901,9 @@
           kicker: "Operational now",
           badge: "Active",
           state: "active",
-          body: "Wheel artifacts now hydrate from the authoritative runtime export, render with their persisted configuration, and keep the local spin interaction explicitly non-authoritative.",
+          body: "Wheel artifacts now hydrate from the authoritative runtime export, render with their persisted configuration, and keep list view attached to each wheel instead of splitting that mode into a second top-level destination.",
           meta: [`${formatNumber(wheels.length)} wheels`, "Wheel and list view modes", "No fake winner history"],
-          actions: [{ label: "Open wheels", href: "/wheels" }, { label: "Open list views", href: "/scoreboards", muted: true }]
+          actions: [{ label: "Open wheels", href: "/wheels" }, { label: "Open leaderboards", href: "/leaderboards", muted: true }]
         }),
         buildDashboardCard({
           title: "Live + Community",
@@ -1909,21 +1921,12 @@
       buildDashboardGrid(
         [
           buildDashboardCard({
-            title: "List Views",
-            kicker: "Legacy wheel lens",
-            badge: "Active",
-            state: "active",
-            body: "The legacy scoreboards route now acts as a preserved list-view lens over wheel artifacts instead of implying that wheels live there first.",
-            meta: [`${formatNumber(scoreboards.length)} list views`, "Same wheel artifacts", "Route preserved for compatibility"],
-            actions: [{ label: "Open list views", href: "/scoreboards" }]
-          }),
-          buildDashboardCard({
             title: "Leaderboards",
             kicker: "Planned artifact surface",
             badge: "Scaffold",
             state: "planned",
-            body: "A distinct leaderboard destination now exists as truthful information architecture for the future standalone leaderboard artifact type. XP, rank, and scoring authority are not active here yet.",
-            meta: ["Route reserved", "No XP/rank backend yet", "Separate from wheel list view"],
+            body: "Leaderboards is now the truthful public scaffold destination for future standalone scoring artifacts, while legacy /scoreboards remains only as a compatibility alias and wheel list view stays inside each wheel.",
+            meta: ["Legacy /scoreboards alias preserved", "No XP/rank backend yet", "Wheel list view stays internal"],
             actions: [{ label: "Open leaderboards", href: "/leaderboards" }]
           }),
           buildDashboardCard({
@@ -2105,9 +2108,30 @@
     return TYPE_TO_PAGE[type] || "/media.html";
   }
 
+  function resolveWheelShareModel(item) {
+    const slug = String(item?.slug || item?.customSlug || item?.custom_slug || item?.defaultSlug || item?.default_slug || "").trim();
+    const defaultSlug = String(item?.defaultSlug || item?.default_slug || item?.slug || "").trim();
+    const customSlug = String(item?.customSlug || item?.custom_slug || "").trim();
+    const shortlinkSlug = String(item?.shortlinkSlug || item?.shortlink_slug || "").trim();
+    const publicPath = slug ? `/wheels/${encodeURIComponent(slug)}` : "";
+    const defaultPublicPath = defaultSlug ? `/wheels/${encodeURIComponent(defaultSlug)}` : "";
+    return {
+      slug,
+      defaultSlug,
+      customSlug,
+      shortlinkSlug,
+      publicPath,
+      defaultPublicPath,
+      publicUrl: publicPath ? new URL(publicPath, window.location.origin).toString() : "",
+      defaultPublicUrl: defaultPublicPath ? new URL(defaultPublicPath, window.location.origin).toString() : "",
+      shortlinkUrl: shortlinkSlug ? `https://ssvx.cc/${encodeURIComponent(shortlinkSlug)}` : ""
+    };
+  }
+
   function renderLeaderboardsPlaceholder(ctx) {
     const { host } = ctx;
     clear(host);
+    applyDocumentTitle("Leaderboards");
     host.appendChild(
       buildPageHeading(
         "Leaderboards",
@@ -2121,9 +2145,9 @@
           kicker: "Truthful placeholder",
           badge: "Pending",
           state: "planned",
-          body: "This route exists so leaderboards can become a first-class public artifact later without reusing the wheel list-view route forever.",
-          meta: ["No XP logic", "No rank backend", "No winner persistence implied"],
-          actions: [{ label: "Open wheels", href: "/wheels" }, { label: "Open list views", href: "/scoreboards", muted: true }]
+          body: "This route exists so leaderboards can become a first-class public artifact later without reusing the old standalone list-view route forever.",
+          meta: ["Legacy /scoreboards resolves here", "No rank backend", "No winner persistence implied"],
+          actions: [{ label: "Open wheels", href: "/wheels" }, { label: "Open scoreboards alias", href: "/scoreboards", muted: true }]
         })
       ])
     );
@@ -2241,6 +2265,34 @@
 
     box.append(text, copyButton);
     return box;
+  }
+
+  function buildWheelShareField(label, url, options = {}) {
+    const shell = create("div", "wheel-share-field");
+    const heading = create("div", "wheel-share-field__label", label);
+    const row = create("div", "wheel-share-field__row");
+    const value = create("code", "wheel-share-field__value", url || String(options.emptyText || "Unavailable"));
+    value.title = url || "";
+    if (!url) value.dataset.empty = "true";
+    const copyButton = create("button", "wheel-share-field__copy", options.copyLabel || "Copy");
+    copyButton.type = "button";
+    copyButton.disabled = !url;
+    copyButton.addEventListener("click", () => {
+      if (!url) return;
+      copyTextToClipboard(url).then((copied) => {
+        copyButton.textContent = copied ? "Copied" : (options.copyLabel || "Copy");
+        if (!copied) return;
+        window.setTimeout(() => {
+          copyButton.textContent = options.copyLabel || "Copy";
+        }, 1200);
+      });
+    });
+    row.append(value, copyButton);
+    shell.append(heading, row);
+    if (options.caption) {
+      shell.appendChild(create("div", "wheel-share-field__caption", options.caption));
+    }
+    return shell;
   }
 
   function resolveProfileVisibilityReason(profile) {
@@ -3123,6 +3175,13 @@
     const entries = Array.isArray(item?.entries) ? item.entries : [];
     const palette = item?.palette || {};
     const segments = getWheelSegments(entries);
+    const graphicIdBase = String(item?.artifactCode || item?.artifact_code || item?.slug || item?.title || "wheel")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "wheel";
+    const glowId = `${graphicIdBase}-center-glow`;
+    const centerClipId = `${graphicIdBase}-center-clip`;
+    const centerImageUrl = String(item?.presentation?.center_image_url || item?.presentation?.centerImageUrl || WHEEL_CENTER_DEFAULT).trim() || WHEEL_CENTER_DEFAULT;
     const svg = createSvgElement("svg", {
       viewBox: "0 0 480 480",
       role: "img",
@@ -3131,12 +3190,14 @@
     svg.classList.add("wheel-svg");
 
     const defs = createSvgElement("defs");
-    const glowGradient = createSvgElement("radialGradient", { id: "wheel-center-glow", cx: "50%", cy: "50%", r: "65%" });
+    const glowGradient = createSvgElement("radialGradient", { id: glowId, cx: "50%", cy: "50%", r: "65%" });
     glowGradient.append(
       createSvgElement("stop", { offset: "0%", "stop-color": palette.glow_color || "#4de9ff", "stop-opacity": "0.36" }),
       createSvgElement("stop", { offset: "100%", "stop-color": palette.background_color || "#08111f", "stop-opacity": "0" })
     );
-    defs.appendChild(glowGradient);
+    const centerClip = createSvgElement("clipPath", { id: centerClipId });
+    centerClip.appendChild(createSvgElement("circle", { cx: 240, cy: 240, r: 48 }));
+    defs.append(glowGradient, centerClip);
     svg.appendChild(defs);
 
     svg.append(
@@ -3152,7 +3213,7 @@
         cx: 240,
         cy: 240,
         r: 222,
-        fill: "url(#wheel-center-glow)",
+        fill: `url(#${glowId})`,
         opacity: "0.88"
       })
     );
@@ -3254,34 +3315,42 @@
         stroke: palette.trim_color || palette.accent_color || "#7c92ff",
         "stroke-width": 4
       }),
+      createSvgElement("image", {
+        href: centerImageUrl,
+        x: 192,
+        y: 192,
+        width: 96,
+        height: 96,
+        preserveAspectRatio: "xMidYMid slice",
+        "clip-path": `url(#${centerClipId})`
+      }),
       createSvgElement("circle", {
         cx: 240,
         cy: 240,
         r: 52,
-        fill: "rgba(255, 255, 255, 0.03)",
-        stroke: "rgba(255, 255, 255, 0.12)",
-        "stroke-width": 1.4
+        fill: "rgba(255, 255, 255, 0.02)",
+        stroke: "rgba(255, 255, 255, 0.16)",
+        "stroke-width": 1.8
+      }),
+      createSvgElement("circle", {
+        cx: 240,
+        cy: 240,
+        r: 48,
+        fill: "transparent",
+        stroke: "rgba(255, 255, 255, 0.16)",
+        "stroke-width": 1.2
       })
     );
-    const title = createSvgElement("text", {
-      x: 240,
-      y: 235,
-      fill: palette.text_color || "#f8fafc",
-      "font-size": "16",
-      "font-weight": "800",
-      "text-anchor": "middle"
-    });
-    title.textContent = "SPIN";
     const subtitle = createSvgElement("text", {
       x: 240,
-      y: 256,
+      y: 309,
       fill: "rgba(226, 232, 240, 0.8)",
       "font-size": "10",
       "font-weight": "700",
       "text-anchor": "middle"
     });
     subtitle.textContent = `${formatNumber(entries.length)} entrants`;
-    svg.append(title, subtitle);
+    svg.appendChild(subtitle);
     return svg;
   }
 
@@ -3341,13 +3410,17 @@
   }
 
   function buildWheelDetailMain(item, config) {
+    const authState = config?.authState || null;
+    const isOwner = isArtifactOwner(authState, item);
+    const spinOwnerOnly = item?.presentation?.spin_owner_only === true || item?.presentation?.spinOwnerOnly === true;
+    const shareModel = resolveWheelShareModel(item);
     const main = create("article", "detail-main wheel-detail-main");
     const card = create("div", "wheel-detail-card");
     const wheelView = create("section", "wheel-detail-view");
     const wheelShell = create("div", "wheel-spin-shell wheel-spin-shell-premium");
     const wheelStageWrap = create("div", "wheel-stage-wrap");
     const liveLabel = create("div", "wheel-live-selection");
-    const liveLabelTitle = create("span", "wheel-live-selection__eyebrow", "Under pointer");
+    const liveLabelTitle = create("span", "wheel-live-selection__eyebrow", "Current entrant");
     const liveLabelValue = create("strong", "wheel-live-selection__value", "Ready");
     liveLabel.append(liveLabelTitle, liveLabelValue);
 
@@ -3358,22 +3431,51 @@
     const trimRing = create("div", "wheel-stage-trim");
     const trimNoise = create("div", "wheel-stage-trim-noise");
     const wheelDisc = create("div", "wheel-spin-disc wheel-spin-disc-premium");
+    const hardwarePointer = create("div", "wheel-hardware-pointer");
+    const hardwarePointerMount = create("div", "wheel-hardware-pointer-mount");
     const pointer = create("div", "wheel-spin-pointer wheel-spin-pointer-premium");
     const pointerGlow = create("div", "wheel-spin-pointer-glow");
     trimRing.appendChild(trimNoise);
-    stageAssembly.append(stageGlow, trimRing, wheelDisc);
+    hardwarePointer.append(hardwarePointerMount, pointer);
+    stageAssembly.append(stageGlow, trimRing, wheelDisc, hardwarePointer);
     wheelStage.style.setProperty("--wheel-trim-color", item?.palette?.trim_color || item?.palette?.accent_color || "#7c92ff");
     wheelStage.style.setProperty("--wheel-glow-color", item?.palette?.glow_color || item?.palette?.accent_color || "#4de9ff");
-    wheelStage.append(liveLabel, celebrationLayer, stageAssembly, pointerGlow, pointer);
+    wheelStage.append(liveLabel, celebrationLayer, stageAssembly, pointerGlow);
     wheelStageWrap.appendChild(wheelStage);
 
-    const wheelSide = create("div", "wheel-spin-side wheel-session-side");
+    const wheelSide = create("details", "wheel-spin-side wheel-session-side");
+    wheelSide.open = true;
+    const sideSummary = create("summary", "wheel-session-side__summary");
+    sideSummary.append(
+      create("span", "wheel-session-side__title", "Wheel details"),
+      create("span", "wheel-session-side__caption", spinOwnerOnly ? "Owner-locked spin" : "Session controls")
+    );
+    const sideBody = create("div", "wheel-session-side__body");
     const emphasis = create("div", "dashboard-chip-row");
     emphasis.append(
       create("span", "dashboard-chip", `${formatNumber(item.entryCount || (item.entries || []).length)} entrants`),
       create("span", "dashboard-chip", item.allowDuplicates ? "Duplicate winners allowed" : "Duplicate winners blocked"),
-      create("span", "dashboard-chip", item.autoRemoveWinner ? "Auto-remove after win" : "Winner remains on wheel")
+      create("span", "dashboard-chip", item.autoRemoveWinner ? "Auto-remove after win" : "Winner remains on wheel"),
+      create("span", "dashboard-chip", spinOwnerOnly ? "Spin locked to owner" : "Public spin enabled")
     );
+
+    const creatorCard = create("div", "wheel-meta-card");
+    creatorCard.appendChild(buildCreatorMeta(item.creator, { expanded: true, includeRoleChip: true, enableHover: true }));
+    creatorCard.appendChild(buildDetailRows(item, config.helpers || window.StreamSuitesPublicData.helpers));
+
+    const shareCard = create("div", "wheel-meta-card wheel-meta-card--share");
+    shareCard.append(
+      create("div", "detail-subtle-label", "Share"),
+      buildWheelShareField("Primary public URL", shareModel.publicUrl, { emptyText: "Unavailable until a slug resolves", copyLabel: "Copy link" }),
+      buildWheelShareField("Generated slug URL", shareModel.defaultPublicUrl, { emptyText: "Unavailable until saved", copyLabel: "Copy default" }),
+      buildWheelShareField("Shortlink", shareModel.shortlinkUrl, { emptyText: "Generated shortlink unavailable", copyLabel: "Copy short" })
+    );
+    if (shareModel.customSlug) {
+      shareCard.appendChild(create("p", "dashboard-card-footnote", `Custom slug claimed: ${shareModel.customSlug}`));
+    }
+    if (Array.isArray(item?.slugAliases) && item.slugAliases.length) {
+      shareCard.appendChild(create("p", "dashboard-card-footnote", `Legacy aliases still resolve: ${item.slugAliases.join(", ")}`));
+    }
 
     const detailCard = create("div", "wheel-entry-detail-card");
     const detailHeading = create("div", "wheel-entry-detail-heading");
@@ -3404,6 +3506,21 @@
     resetButton.type = "button";
     actionRow.append(spinButton, respinButton, resetButton);
 
+    const accessNote = create("div", "wheel-access-note");
+    accessNote.hidden = !spinOwnerOnly;
+    if (spinOwnerOnly) {
+      const accessText = isOwner
+        ? "Owner-only spin is active. This wheel can only be advanced from the logged-in owner session."
+        : "Owner-only spin is active. Public viewers can inspect the wheel, but only the logged-in owner can spin it.";
+      accessNote.appendChild(create("p", "dashboard-card-footnote", accessText));
+      if (!isOwner && typeof config?.openAuthModal === "function") {
+        const accessButton = create("button", "dashboard-action", "Owner Sign In");
+        accessButton.type = "button";
+        accessButton.addEventListener("click", () => config.openAuthModal("login"));
+        accessNote.appendChild(accessButton);
+      }
+    }
+
     const winnersPanel = create("div", "wheel-winners-panel");
     const winnersTitle = create("h3", "wheel-panel-title", "Session winners");
     const winnersList = create("div", "wheel-winners-list");
@@ -3415,15 +3532,21 @@
       buildWheelScoreboardTable(item, { compact: true, maxRows: 5 })
     );
 
-    wheelSide.append(
+    sideBody.append(
+      creatorCard,
+      shareCard,
       create("p", "dashboard-card-body", item.summary || "This wheel artifact is rendered directly from the authoritative runtime export."),
       emphasis,
       detailCard,
       resultBox,
+      accessNote,
       actionRow,
       winnersPanel,
-      compactList
+      compactList,
+      buildWheelOwnerEditorPanel(item, config),
+      buildCompactWheelAuthorityPanel(item, config)
     );
+    wheelSide.append(sideSummary, sideBody);
     wheelShell.append(wheelStageWrap, wheelSide);
     wheelView.appendChild(wheelShell);
 
@@ -3467,8 +3590,19 @@
       audioUnlocked: false,
       musicAudio: null
     };
+    const ownerSpinLocked = spinOwnerOnly && !isOwner;
     const spinDurationMs = clampNumber(item?.presentation?.spin_duration_ms || 8500, 2000, 60000, 8500);
     let lastFrameTs = 0;
+
+    function setWheelStageState(nextState = "idle") {
+      const resolved =
+        nextState === "winner" ? "winner" :
+        sessionState.isSpinning ? "spinning" :
+        nextState === "hover" ? "hover" :
+        "idle";
+      trimRing.dataset.state = resolved;
+      wheelStage.dataset.state = resolved;
+    }
 
     function cloneWinnerRecord(winner) {
       return winner && typeof winner === "object" ? { ...winner } : winner;
@@ -3541,12 +3675,19 @@
 
     function renderDetailAvatar(entry) {
       clear(detailAvatar);
-      const avatarImg = create("img", "wheel-entry-detail-avatar-img");
-      avatarImg.src = entry?.avatarUrl || entry?.assignment?.avatarUrl || WHEEL_DEFAULT_AVATAR;
-      avatarImg.alt = "";
       detailAvatar.dataset.tone = buildWheelAvatarTone(entry);
       detailAvatar.style.setProperty("--wheel-entry-color", entry?.color || item?.palette?.accent_color || "#4de9ff");
-      detailAvatar.appendChild(avatarImg);
+      const avatarUrl = String(entry?.avatarUrl || entry?.assignment?.avatarUrl || "").trim();
+      if (avatarUrl) {
+        const avatarImg = create("img", "wheel-entry-detail-avatar-img");
+        avatarImg.src = avatarUrl;
+        avatarImg.alt = "";
+        detailAvatar.appendChild(avatarImg);
+        return;
+      }
+      const fallbackIcon = create("span", "wheel-entry-detail-avatar-icon");
+      fallbackIcon.setAttribute("aria-hidden", "true");
+      detailAvatar.appendChild(fallbackIcon);
     }
 
     function renderDetailCard(entry) {
@@ -3585,7 +3726,14 @@
       ];
       rows.forEach(([label, value]) => {
         const row = create("div", "wheel-entry-detail-row");
-        row.append(create("span", "", label), create("strong", "", value));
+        const valueNode = create("strong", "", value);
+        if (label === "Color") {
+          valueNode.classList.add("wheel-entry-detail-color-value");
+          const swatch = create("span", "wheel-entry-detail-color-chip");
+          swatch.style.background = String(activeEntry?.color || "#64748b").trim() || "#64748b";
+          valueNode.prepend(swatch);
+        }
+        row.append(create("span", "", label), valueNode);
         detailMeta.appendChild(row);
       });
 
@@ -3633,13 +3781,14 @@
     function updateControls() {
       const eligibleEntries = getEligibleEntries();
       const remainingSlots = Math.max(0, sessionState.winnerLimit - sessionState.winners.length);
-      const canAdvance = !sessionState.isSpinning && eligibleEntries.length > 0 && remainingSlots > 0;
+      const canAdvance = !ownerSpinLocked && !sessionState.isSpinning && eligibleEntries.length > 0 && remainingSlots > 0;
       const hasCompletedDraw = sessionState.drawHistory.length > 0;
       spinButton.textContent = hasCompletedDraw && canAdvance ? "Spin Again" : "Spin";
       spinButton.disabled = !canAdvance;
-      respinButton.disabled = sessionState.isSpinning || !sessionState.drawHistory.length;
+      respinButton.disabled = ownerSpinLocked || sessionState.isSpinning || !sessionState.drawHistory.length;
       respinButton.hidden = false;
       resetButton.disabled =
+        ownerSpinLocked ||
         sessionState.isSpinning ||
         (!sessionState.drawHistory.length && !sessionState.winners.length && !sessionState.removedEntryIds.size);
     }
@@ -3771,17 +3920,16 @@
       groups.forEach((group) => {
         const entryId = group.getAttribute("data-wheel-entry-id") || "";
         const isActive = entryId === sessionState.hoverEntryId || entryId === pointedId;
-        const offsetX = Number(group.getAttribute("data-offset-x") || 0);
-        const offsetY = Number(group.getAttribute("data-offset-y") || 0);
         group.classList.toggle("is-active", isActive);
-        group.style.transform = isActive ? `translate(${offsetX}px, ${offsetY}px) scale(1.03)` : "";
       });
+      if (!sessionState.isSpinning) {
+        setWheelStageState(sessionState.hoverEntryId || sessionState.isHoveringStage ? "hover" : "idle");
+      }
     }
 
     function finishSpin(winner, spinContext = {}) {
       sessionState.isSpinning = false;
-      trimRing.dataset.state = "winner";
-      wheelStage.dataset.state = "winner";
+      setWheelStageState("winner");
       stopMusic();
       void playSound("winner");
       flashCelebration();
@@ -3800,8 +3948,7 @@
       }
       window.clearTimeout(sessionState.pulseTimer);
       sessionState.pulseTimer = window.setTimeout(() => {
-        trimRing.dataset.state = "idle";
-        wheelStage.dataset.state = "idle";
+        setWheelStageState(sessionState.hoverEntryId || sessionState.isHoveringStage ? "hover" : "idle");
       }, 1100);
     }
 
@@ -3826,8 +3973,7 @@
 
       sessionState.isSpinning = true;
       sessionState.lastSpinPointerEntryId = sessionState.pointerEntryId || "";
-      trimRing.dataset.state = "spinning";
-      wheelStage.dataset.state = "spinning";
+      setWheelStageState("spinning");
       resultValue.textContent = mode === "respin" ? "Re-spinning…" : sessionState.drawHistory.length ? "Spinning again…" : "Spinning…";
       resultMeta.textContent =
         mode === "respin"
@@ -3873,8 +4019,7 @@
       sessionState.selectedEntryId = "";
       sessionState.hoverEntryId = "";
       sessionState.lastSpinPointerEntryId = "";
-      trimRing.dataset.state = "idle";
-      wheelStage.dataset.state = "idle";
+      setWheelStageState("idle");
       resultValue.textContent = "Ready to spin";
       resultMeta.textContent = "Spins are local to this browser session only. No winner history or backend state is written from this surface.";
       rebuildWheel();
@@ -3895,6 +4040,7 @@
 
     wheelStage.addEventListener("mouseenter", () => {
       sessionState.isHoveringStage = true;
+      if (!sessionState.isSpinning) setWheelStageState("hover");
     });
     wheelStage.addEventListener("mouseleave", () => {
       sessionState.isHoveringStage = false;
@@ -3921,6 +4067,13 @@
 
   function buildWheelEditorDraft(item) {
     return {
+      slug: String(item?.slug || item?.defaultSlug || "").trim(),
+      default_slug: String(item?.defaultSlug || item?.slug || "").trim(),
+      custom_slug: String(item?.customSlug || item?.custom_slug || "").trim(),
+      shortlink_slug: String(item?.shortlinkSlug || item?.shortlink_slug || "").trim(),
+      slug_aliases: Array.isArray(item?.slugAliases || item?.slug_aliases)
+        ? (item?.slugAliases || item?.slug_aliases).map((value) => String(value || "").trim()).filter(Boolean)
+        : [],
       title: String(item?.title || "").trim(),
       description: String(item?.description || "").trim(),
       notes: String(item?.notes || "").trim(),
@@ -3943,6 +4096,12 @@
         show_entry_labels: item?.presentation?.show_entry_labels !== false,
         show_display_names_on_slices: item?.presentation?.show_display_names_on_slices !== false,
         slice_label_mode: String(item?.presentation?.slice_label_mode || "full_name").trim() || "full_name",
+        center_image_url: String(item?.presentation?.center_image_url || item?.presentation?.centerImageUrl || WHEEL_CENTER_DEFAULT).trim() || WHEEL_CENTER_DEFAULT,
+        spin_owner_only:
+          item?.presentation?.spin_owner_only === true ||
+          item?.presentation?.spinOwnerOnly === true ||
+          item?.presentation?.owner_spin_only === true ||
+          item?.presentation?.ownerSpinOnly === true,
         slow_drift_enabled: item?.presentation?.slow_drift_enabled !== false,
         spin_duration_ms: clampNumber(item?.presentation?.spin_duration_ms || 8500, 2000, 60000, 8500),
         scoreboard_max_rows: clampNumber(item?.presentation?.scoreboard_max_rows || 24, 3, 100, 24),
@@ -3974,6 +4133,7 @@
   function buildWheelEditorPayload(draft) {
     return {
       title: draft.title,
+      custom_slug: draft.custom_slug,
       description: draft.description,
       notes: draft.notes,
       default_display_mode: draft.default_display_mode,
@@ -4044,6 +4204,7 @@
     const lookupAborters = new Map();
     let previewAudio = null;
     let previewCategory = "";
+    let centerImageUploadName = "";
 
     function stopPreviewSound() {
       if (!previewAudio) return;
@@ -4094,8 +4255,15 @@
     }
 
     function renderEditor() {
+      const shareModel = resolveWheelShareModel(draft);
+      const centerImageUrl = String(draft.presentation.center_image_url || WHEEL_CENTER_DEFAULT).trim() || WHEEL_CENTER_DEFAULT;
+      const centerImageLabel = centerImageUploadName || centerImageUrl.split("/").pop() || "Embedded center image";
       body.innerHTML = `
         <div class="wheel-owner-editor-grid">
+          <label class="wheel-owner-field">
+            <span>Custom slug</span>
+            <input type="text" data-wheel-editor-field="custom_slug" value="${escapeHtml(draft.custom_slug || "")}" placeholder="mycustomwheel" />
+          </label>
           <label class="wheel-owner-field">
             <span>Title</span>
             <input type="text" data-wheel-editor-field="title" value="${escapeHtml(draft.title)}" />
@@ -4127,6 +4295,10 @@
             <input type="checkbox" data-wheel-editor-field="auto_remove_winner" ${draft.auto_remove_winner ? "checked" : ""} />
             <span>Auto-remove after win</span>
           </label>
+          <label class="wheel-owner-toggle">
+            <input type="checkbox" data-wheel-editor-field="presentation.spin_owner_only" ${draft.presentation.spin_owner_only ? "checked" : ""} />
+            <span>Owner-only spin</span>
+          </label>
           <label class="wheel-owner-field">
             <span>Slice label mode</span>
             <select data-wheel-editor-field="presentation.slice_label_mode">
@@ -4134,6 +4306,10 @@
               <option value="initials" ${draft.presentation.slice_label_mode === "initials" ? "selected" : ""}>Initials</option>
               <option value="avatar" ${draft.presentation.slice_label_mode === "avatar" ? "selected" : ""}>Avatar</option>
             </select>
+          </label>
+          <label class="wheel-owner-field">
+            <span>Center image URL / embedded data URL</span>
+            <input type="text" data-wheel-editor-field="presentation.center_image_url" value="${escapeHtml(centerImageUrl)}" />
           </label>
           <label class="wheel-owner-toggle">
             <input type="checkbox" data-wheel-editor-field="presentation.show_display_names_on_slices" ${draft.presentation.show_display_names_on_slices ? "checked" : ""} />
@@ -4159,6 +4335,36 @@
             <span>Glow</span>
             <input type="color" data-wheel-editor-field="palette.glow_color" value="${escapeHtml(draft.palette.glow_color)}" />
           </label>
+        </div>
+        <div class="wheel-owner-inline-meta">
+          <div class="wheel-owner-share-stack">
+            <div class="wheel-owner-share-row">
+              <span>Primary URL</span>
+              <code>${escapeHtml(shareModel.publicUrl || "Generated on save")}</code>
+            </div>
+            <div class="wheel-owner-share-row">
+              <span>Generated URL</span>
+              <code>${escapeHtml(shareModel.defaultPublicUrl || "Generated on save")}</code>
+            </div>
+            <div class="wheel-owner-share-row">
+              <span>Shortlink</span>
+              <code>${escapeHtml(shareModel.shortlinkUrl || "Generated on save")}</code>
+            </div>
+          </div>
+          <div class="wheel-owner-center-tools">
+            <label class="wheel-file-picker wheel-file-picker--inline">
+              <span>Choose center image</span>
+              <input type="file" accept="${escapeHtml(WHEEL_CENTER_ACCEPT)}" data-wheel-owner-center-file="true" />
+            </label>
+            <button type="button" class="dashboard-action" data-wheel-center-reset="true">Use default</button>
+            <div class="wheel-owner-center-preview">
+              <img src="${escapeHtml(centerImageUrl)}" alt="" loading="lazy" decoding="async" />
+              <div>
+                <strong>${escapeHtml(centerImageLabel)}</strong>
+                <span>Local files are embedded inline into the wheel payload so the saved config stays truthful.</span>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="wheel-owner-sound-grid">
           ${Object.keys(WHEEL_SOUND_LIBRARY).map((category) => `
@@ -4307,10 +4513,16 @@
     });
 
     body.addEventListener("click", async (event) => {
-      const trigger = event.target.closest("[data-entry-lookup-assign='true'], [data-wheel-editor-save='true'], [data-wheel-sound-preview='true']");
+      const trigger = event.target.closest("[data-entry-lookup-assign='true'], [data-wheel-editor-save='true'], [data-wheel-sound-preview='true'], [data-wheel-center-reset='true']");
       if (!(trigger instanceof HTMLElement)) return;
       if (trigger.matches("[data-wheel-sound-preview='true']")) {
         void previewSound(String(trigger.dataset.wheelSoundCategory || ""));
+        return;
+      }
+      if (trigger.matches("[data-wheel-center-reset='true']")) {
+        draft.presentation.center_image_url = WHEEL_CENTER_DEFAULT;
+        centerImageUploadName = "";
+        renderEditor();
         return;
       }
       const statusNode = body.querySelector("[data-wheel-editor-status='true']");
@@ -4367,6 +4579,24 @@
       }
     });
 
+    body.addEventListener("change", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) return;
+      if (!target.matches("[data-wheel-owner-center-file='true']")) return;
+      const file = target.files?.[0];
+      if (!file) return;
+      readFileAsDataUrl(file)
+        .then((dataUrl) => {
+          draft.presentation.center_image_url = dataUrl || WHEEL_CENTER_DEFAULT;
+          centerImageUploadName = file.name || "";
+          renderEditor();
+        })
+        .catch(() => {
+          const statusNode = body.querySelector("[data-wheel-editor-status='true']");
+          if (statusNode) statusNode.textContent = "Unable to load center image.";
+        });
+    });
+
     renderEditor();
     details.addEventListener("toggle", () => {
       if (!details.open) {
@@ -4391,7 +4621,7 @@
   }
 
   function renderDetail(ctx, config) {
-    const { host, data, authState } = ctx;
+    const { host, data, authState, updateShell } = ctx;
     if (typeof host._cleanupWheelDetail === "function") {
       try {
         host._cleanupWheelDetail();
@@ -4407,6 +4637,8 @@
     const item = findArtifactByIdentifier(allItems, id);
 
     if (!item) {
+      applyDocumentTitle(config.topbarLabel);
+      updateShell?.({ topbarLabel: config.topbarLabel, filtersCollapsed: true });
       const typeLabel = config.detailType === "scoreboards" ? "Score" : toTitle(config.detailType).replace(/s$/, "");
       host.appendChild(buildPageHeading(`${typeLabel} unavailable`, `No public ${typeLabel.toLowerCase()} matches the requested identifier.`));
       const state = create("div", "empty-state", "Check the artifact link or return to the gallery.");
@@ -4415,6 +4647,8 @@
     }
 
     syncCanonicalArtifactRoute(item, config);
+    applyDocumentTitle(item.title || item.question || config.topbarLabel);
+    updateShell?.({ topbarLabel: item.title || item.question || config.topbarLabel, filtersCollapsed: true });
 
     host.appendChild(buildPageHeading(item.title || item.question || "Detail", item.summary || "Public detail view."));
 
@@ -4436,19 +4670,12 @@
     }
 
     if (item.viewFamily === "wheel" || config.detailType === "wheels") {
-      const wheelLayout = create("section", "detail-layout");
-      const wheelMain = buildWheelDetailMain(item, { ...config, authState, openAuthModal: ctx.openAuthModal });
+      const wheelLayout = create("section", "detail-layout is-stacked");
+      const wheelMain = buildWheelDetailMain(item, { ...config, authState, helpers: data.helpers, openAuthModal: ctx.openAuthModal });
       if (typeof wheelMain?._cleanupWheelDetail === "function") {
         host._cleanupWheelDetail = wheelMain._cleanupWheelDetail;
       }
-      wheelLayout.append(
-        wheelMain,
-        buildWheelSupportRail(item, data.helpers, {
-          authState,
-          openAuthModal: ctx.openAuthModal,
-          onRemoved: () => renderDetail(ctx, config)
-        })
-      );
+      wheelLayout.append(wheelMain);
       host.append(wheelLayout);
       return;
     }
@@ -6487,6 +6714,7 @@
           accountLabel: "Guest"
         });
     if (!shell) return;
+    applyDocumentTitle(currentConfig.topbarLabel);
 
     let authState = normalizeAuthState(null);
     let authRefreshPromise = null;
@@ -6561,6 +6789,7 @@
           state,
           authState,
           rerender,
+          updateShell: typeof shell.updateOptions === "function" ? shell.updateOptions.bind(shell) : null,
           openAuthModal: typeof shell.openAuthModal === "function" ? shell.openAuthModal.bind(shell) : null
         },
         currentConfig
@@ -6671,6 +6900,7 @@
         }
       });
 
+      applyDocumentTitle(nextConfig.topbarLabel);
       shell.setQuery(state.query);
       shell.setFilterState(state.activeFilters);
       shell.setActiveHref(nextConfig.activeHref);
