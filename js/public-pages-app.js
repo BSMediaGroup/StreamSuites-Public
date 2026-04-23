@@ -76,6 +76,12 @@
     streamsuites: "/assets/icons/ui/streamsuitesicon.svg",
     findmehere: "/assets/icons/ui/findmehereicon.svg"
   });
+  const STREAM_PLATFORM_LABELS = Object.freeze({
+    rumble: "Rumble",
+    youtube: "YouTube",
+    twitch: "Twitch",
+    kick: "Kick"
+  });
   const WHEEL_DEFAULT_AVATAR = "/assets/icons/ui/wheeluser.svg";
   const WHEEL_CENTER_DEFAULT = "/assets/placeholders/wheelcenterdefault.webp";
   const WHEEL_CENTER_ACCEPT = ".webp,.png,.jpg,.jpeg,.gif,.svg";
@@ -617,6 +623,76 @@
       banner.appendChild(link);
     }
     return banner;
+  }
+
+  function normalizeLatestStreamPayload(value) {
+    if (!value || typeof value !== "object") return null;
+    const platform = String(value.platform || value.source_platform || value.sourcePlatform || "").trim().toLowerCase();
+    if (!Object.prototype.hasOwnProperty.call(STREAM_PLATFORM_LABELS, platform)) return null;
+    const sourceUrl = String(value.source_url || value.sourceUrl || "").trim();
+    const url = String(value.url || value.live_url || value.liveUrl || sourceUrl || "").trim();
+    const channelHandle = String(value.channel_handle || value.channelHandle || "").trim();
+    const configured = value.configured === true || Boolean(sourceUrl || url || channelHandle);
+    if (!configured) return null;
+    const viewerCount = value.viewer_count ?? value.viewerCount;
+    return {
+      platform,
+      platformLabel: String(value.platform_label || value.platformLabel || STREAM_PLATFORM_LABELS[platform]).trim() || STREAM_PLATFORM_LABELS[platform],
+      sourceUrl,
+      channelHandle,
+      configured,
+      isLive: value.is_live === true || value.isLive === true,
+      title: String(value.title || value.live_title || value.liveTitle || "").trim(),
+      url,
+      thumbnailUrl: String(value.thumbnail_url || value.thumbnailUrl || "").trim(),
+      viewerCount: Number.isFinite(Number(viewerCount)) ? Number(viewerCount) : null,
+      gameName: String(value.game_name || value.gameName || "").trim(),
+      startedAt: String(value.started_at || value.startedAt || "").trim(),
+      lastCheckedAt: String(value.last_checked_at || value.lastCheckedAt || "").trim(),
+      status: String(value.status || "").trim()
+    };
+  }
+
+  function parseUrl(value) {
+    try {
+      return new URL(String(value || ""), window.location.origin);
+    } catch (_err) {
+      return null;
+    }
+  }
+
+  function resolveYouTubeEmbedUrl(value) {
+    const url = parseUrl(value);
+    if (!url) return "";
+    const host = url.hostname.replace(/^www\./i, "").toLowerCase();
+    let videoId = "";
+    if (host === "youtu.be") {
+      videoId = url.pathname.split("/").filter(Boolean)[0] || "";
+    } else if (host.endsWith("youtube.com") || host.endsWith("youtube-nocookie.com")) {
+      const parts = url.pathname.split("/").filter(Boolean);
+      if (url.searchParams.get("v")) videoId = url.searchParams.get("v") || "";
+      else if (["embed", "live", "shorts"].includes(parts[0])) videoId = parts[1] || "";
+    }
+    videoId = String(videoId || "").trim().replace(/[^a-zA-Z0-9_-]/g, "");
+    return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}?rel=0` : "";
+  }
+
+  function resolveTwitchEmbedUrl(stream) {
+    const host = encodeURIComponent(window.location.hostname || "streamsuites.app");
+    const url = parseUrl(stream?.url || stream?.sourceUrl || "");
+    const pathParts = (url?.pathname || "").split("/").filter(Boolean);
+    if (pathParts[0] === "videos" && pathParts[1]) {
+      return `https://player.twitch.tv/?video=${encodeURIComponent(pathParts[1])}&parent=${host}`;
+    }
+    const channel = String(stream?.channelHandle || pathParts[0] || "").trim().replace(/^@+/, "").replace(/[^a-zA-Z0-9_]/g, "");
+    return channel ? `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${host}` : "";
+  }
+
+  function resolveLatestStreamEmbedUrl(stream) {
+    if (!stream?.isLive && !stream?.title) return "";
+    if (stream.platform === "youtube") return resolveYouTubeEmbedUrl(stream.url || stream.sourceUrl);
+    if (stream.platform === "twitch") return resolveTwitchEmbedUrl(stream);
+    return "";
   }
 
   function buildAvatar(profile) {
@@ -5459,6 +5535,7 @@
       payload?.findmehere_status_reason || payload?.findmehereStatusReason || fallbackProfile?.findmehereStatusReason || ""
     ).trim();
     const liveStatus = fallbackProfile?.liveStatus || null;
+    const latestStream = normalizeLatestStreamPayload(payload?.latest_stream || payload?.latestStream || fallbackProfile?.latestStream);
     return {
       id: fallbackProfile?.id || userCode,
       userCode,
@@ -5500,6 +5577,7 @@
       findmehereShareUrl,
       findmehereStatusReason,
       liveStatus,
+      latestStream,
       authorityIdentity: payload?.authorityIdentity || payload?.authority_identity || fallbackProfile?.authorityIdentity || null
     };
   }
@@ -6149,6 +6227,14 @@
     }, { total: 0 });
   }
 
+  function buildProfileTierChip(tier) {
+    const normalized = normalizeTierForUi(tier);
+    const chip = create("span", `profile-tier-chip profile-tier-chip--${normalized}`, toTitle(normalized));
+    const icon = BADGE_ICON_MAP[normalized];
+    if (icon) chip.prepend(createIcon(icon, "profile-tier-chip-icon"));
+    return chip;
+  }
+
   function buildProfileOverviewPanel(profile, artifacts, helpers) {
     const counts = countProfileArtifactsByType(artifacts);
     const section = create("section", "profile-utility-section profile-overview-panel");
@@ -6157,13 +6243,16 @@
 
     const statGrid = create("div", "profile-overview-stat-grid");
     [
-      { label: "Tier", value: toTitle(profile?.tier || "core") || "Core" },
+      { label: "Tier", value: buildProfileTierChip(profile?.tier || "core") },
       { label: "Artifacts", value: formatNumber(counts.total) },
       { label: "Clips", value: formatNumber(counts.clips || 0) },
       { label: "Polls", value: formatNumber(counts.polls || 0) }
     ].forEach((entry) => {
       const stat = create("div", "profile-overview-stat");
-      stat.append(create("span", "profile-overview-stat-label", entry.label), create("strong", "", entry.value));
+      const value = create("strong");
+      if (entry.value instanceof Node) value.appendChild(entry.value);
+      else value.textContent = entry.value;
+      stat.append(create("span", "profile-overview-stat-label", entry.label), value);
       statGrid.appendChild(stat);
     });
 
@@ -6177,12 +6266,131 @@
 
     addRow("Joined", formatProfileDate(profile?.joinedAt || profile?.createdAt, helpers) || "Pending public data", !profile?.joinedAt && !profile?.createdAt);
     addRow("Profile type", profile?.viewerOnly ? "Viewer/public" : profile?.creatorCapable ? "Creator-capable" : roleLabel(normalizeRoleForUi(profile?.role)));
-    addRow("StreamSuites", profile?.streamsuitesProfileVisible ? "Visible" : "Not public");
-    addRow("FindMeHere", profile?.findmehereVisible ? "Visible" : "Not listed");
     addRow("XP", "Pending", true);
     addRow("Rank", "Pending", true);
 
     section.append(header, statGrid, details);
+    return section;
+  }
+
+  function buildLatestStreamSection(profile, helpers) {
+    const stream = profile?.creatorCapable ? profile.latestStream : null;
+    if (!stream) return null;
+    const details = create("details", "profile-authority-collapsible profile-stream-collapsible");
+    details.open = true;
+    const summary = create("summary", "profile-authority-summary profile-stream-summary");
+    const action = create("span", "profile-authority-summary-action profile-stream-summary-action");
+    action.append(
+      createIcon("/assets/icons/ui/visible.svg", "profile-authority-summary-action-icon"),
+      create("span", "", "LATEST STREAM")
+    );
+    const meta = create("span", "profile-authority-summary-meta");
+    [stream.platformLabel, stream.isLive ? "Current live" : "Source ready"].forEach((entry) => {
+      if (entry) meta.appendChild(create("span", "", entry));
+    });
+    const stateIcon = createIcon("/assets/icons/ui/visible.svg", "profile-authority-summary-icon");
+    const syncStateIcon = () => {
+      stateIcon.style.setProperty(
+        "--icon-mask",
+        details.open ? 'url("/assets/icons/ui/visible.svg")' : 'url("/assets/icons/ui/hidden.svg")'
+      );
+    };
+    details.addEventListener("toggle", syncStateIcon);
+    syncStateIcon();
+    summary.append(action, meta, stateIcon);
+
+    const panel = create("div", "profile-stream-panel");
+    const card = create("article", `profile-latest-stream-card${stream.isLive ? " is-live" : ""}`);
+    const media = create("div", "profile-latest-stream-media");
+    const embedUrl = resolveLatestStreamEmbedUrl(stream);
+    if (embedUrl) {
+      const iframe = create("iframe");
+      iframe.src = embedUrl;
+      iframe.title = `${stream.platformLabel} stream player`;
+      iframe.loading = "lazy";
+      iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture";
+      iframe.allowFullscreen = true;
+      media.appendChild(iframe);
+    } else if (stream.thumbnailUrl) {
+      const thumbnail = create("img");
+      thumbnail.src = stream.thumbnailUrl;
+      thumbnail.alt = "";
+      thumbnail.loading = "lazy";
+      thumbnail.decoding = "async";
+      media.appendChild(thumbnail);
+    } else {
+      const placeholder = create("div", "profile-latest-stream-placeholder");
+      placeholder.append(
+        createIcon(UI_ICON_MAP.social, "profile-latest-stream-placeholder-icon"),
+        create("span", "", stream.isLive ? "Player unavailable" : "No current public stream")
+      );
+      media.appendChild(placeholder);
+    }
+
+    const body = create("div", "profile-latest-stream-body");
+    const eyebrow = create("div", "profile-latest-stream-eyebrow");
+    eyebrow.append(
+      create("span", "profile-stream-platform", stream.platformLabel),
+      create("span", stream.isLive ? "profile-stream-state is-live" : "profile-stream-state", stream.isLive ? "Live now" : "Current stream unavailable")
+    );
+    body.append(
+      eyebrow,
+      create("h3", "", stream.title || (stream.isLive ? `${stream.platformLabel} stream` : "No current public stream available")),
+      create(
+        "p",
+        "",
+        stream.isLive
+          ? "This source is selected from the creator's configured platform priority."
+          : "This creator has a supported source configured. Current public stream media will appear here when available."
+      )
+    );
+    const facts = create("div", "profile-latest-stream-facts");
+    if (stream.viewerCount != null) facts.appendChild(create("span", "", `${formatNumber(stream.viewerCount)} watching`));
+    if (stream.gameName) facts.appendChild(create("span", "", stream.gameName));
+    if (stream.startedAt) facts.appendChild(create("span", "", `Started ${formatProfileDate(stream.startedAt, helpers) || stream.startedAt}`));
+    if (stream.lastCheckedAt) facts.appendChild(create("span", "", `Checked ${formatProfileDate(stream.lastCheckedAt, helpers) || stream.lastCheckedAt}`));
+    if (facts.childElementCount) body.appendChild(facts);
+    const streamUrl = stream.url || stream.sourceUrl;
+    if (streamUrl) {
+      const link = create("a", "profile-latest-stream-link", stream.isLive ? "Watch on platform" : "Open source");
+      link.href = streamUrl;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      body.appendChild(link);
+    }
+    card.append(media, body);
+    panel.appendChild(card);
+    details.append(summary, panel);
+    return details;
+  }
+
+  function buildProfileGameCompetitionSection() {
+    const section = create("section", "profile-utility-section profile-game-section");
+    const header = create("div", "profile-inline-header");
+    header.append(
+      create("h3", "", "Game & competition"),
+      create("span", "profile-section-count", "Preview")
+    );
+    const grid = create("div", "profile-game-grid");
+    [
+      { label: "Economy balance", value: "Future system", note: "No live wallet data" },
+      { label: "Resource inventory", value: "Reserved", note: "Items not issued yet" },
+      { label: "Competition points", value: "Pending launch", note: "No season is active" },
+      { label: "Season standing", value: "Not seeded", note: "Ladders arrive later" }
+    ].forEach((item) => {
+      const card = create("article", "profile-game-preview-card");
+      card.append(
+        create("span", "profile-game-preview-label", item.label),
+        create("strong", "", item.value),
+        create("span", "profile-game-preview-note", item.note)
+      );
+      grid.appendChild(card);
+    });
+    section.append(
+      header,
+      grid,
+      create("p", "profile-game-disclaimer", "Preview-only fields. They are not hydrated from economy, inventory, or competition services yet.")
+    );
     return section;
   }
 
@@ -6295,8 +6503,12 @@
   function renderStandaloneProfileUtilityBody(profileCard, profile, canEdit, options = {}) {
     clear(profileCard);
     const profileArtifacts = Array.isArray(options.profileArtifacts) ? options.profileArtifacts : [];
-    const liveBanner = buildProfileLiveBanner(profile);
-    if (liveBanner) profileCard.appendChild(liveBanner);
+    const latestStreamSection = buildLatestStreamSection(profile, options.helpers || null);
+    if (latestStreamSection) profileCard.appendChild(latestStreamSection);
+    else {
+      const liveBanner = buildProfileLiveBanner(profile);
+      if (liveBanner) profileCard.appendChild(liveBanner);
+    }
 
     const primaryGrid = create("div", "profile-body-grid");
     primaryGrid.append(
@@ -6304,6 +6516,7 @@
       buildProfileMiniArtifactGallery(profileArtifacts, canEdit, options.helpers || null)
     );
     profileCard.appendChild(primaryGrid);
+    profileCard.appendChild(buildProfileGameCompetitionSection());
 
     const grid = create("div", "profile-utility-grid profile-utility-grid--slim");
     const shareSection = create("section", "profile-utility-section");

@@ -165,6 +165,7 @@
     artifacts: []
   });
   const AUTHORITATIVE_LIVE_PROVIDERS = new Set(["rumble"]);
+  const PUBLIC_PROFILE_STREAM_PLATFORMS = new Set(["rumble", "youtube", "twitch", "kick"]);
   const WHEELS_API_PATH = "/api/public/wheels";
   const CLIP_THUMBNAIL_FALLBACK = "/assets/backgrounds/seodash.jpg";
   const KNOWN_PUBLIC_BACKGROUND_THUMBNAILS = new Set([
@@ -613,6 +614,33 @@
     return enrichAuthoritativeLiveStatus(authoritative, resolveRumbleDiscovery(raw, rumbleDiscoveryMap));
   }
 
+  function normalizeLatestStreamPayload(value) {
+    if (!value || typeof value !== "object") return null;
+    const platform = String(value.platform || value.source_platform || value.sourcePlatform || "").trim().toLowerCase();
+    if (!PUBLIC_PROFILE_STREAM_PLATFORMS.has(platform)) return null;
+    const sourceUrl = String(value.source_url || value.sourceUrl || "").trim();
+    const url = String(value.url || value.live_url || value.liveUrl || sourceUrl || "").trim();
+    const channelHandle = String(value.channel_handle || value.channelHandle || "").trim();
+    if (value.configured !== true && !sourceUrl && !url && !channelHandle) return null;
+    const viewerCount = value.viewer_count ?? value.viewerCount;
+    return {
+      platform,
+      platformLabel: String(value.platform_label || value.platformLabel || toTitle(platform)).trim() || toTitle(platform),
+      sourceUrl,
+      channelHandle,
+      configured: true,
+      isLive: value.is_live === true || value.isLive === true,
+      title: String(value.title || value.live_title || value.liveTitle || "").trim(),
+      url,
+      thumbnailUrl: String(value.thumbnail_url || value.thumbnailUrl || "").trim(),
+      viewerCount: Number.isFinite(Number(viewerCount)) ? Number(viewerCount) : null,
+      gameName: String(value.game_name || value.gameName || "").trim(),
+      startedAt: String(value.started_at || value.startedAt || "").trim(),
+      lastCheckedAt: String(value.last_checked_at || value.lastCheckedAt || "").trim(),
+      status: String(value.status || "").trim()
+    };
+  }
+
   function toArray(payload) {
     if (Array.isArray(payload)) return payload;
     if (Array.isArray(payload?.items)) return payload.items;
@@ -989,6 +1017,7 @@
       findmehereShareUrl,
       findmehereStatusReason,
       liveStatus: resolveLiveStatus(raw, liveStatusMap),
+      latestStream: normalizeLatestStreamPayload(raw?.latest_stream || raw?.latestStream),
       authorityIdentity
     };
   }

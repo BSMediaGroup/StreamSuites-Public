@@ -2,6 +2,12 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+- Corrected the standalone `/u/*` profile header default `StreamSuites™` label again by removing inherited tracking from the shared text wrapper, using a normal case-preserving bold UI font for the default state, and keeping uppercase/tracking only on the hover/focus `Community Home` label. No files were created or removed.
+
+- Upgraded the standalone `/u/*` profile body in `js/public-pages-app.js` and `css/public-shell.css` with a default-open premium latest/current stream module for creator-capable profiles, consuming the new public-safe `latest_stream` contract and falling back to polished source-unavailable states instead of broken iframes. Viewer-only profiles do not render the stream section.
+- Cleaned up the `/u/*` Public Overview table by removing the StreamSuites and FindMeHere visibility rows, hydrating `Joined` from the authoritative `joined_at` value, and restyling the tier value as a badge/tier-chip instead of plain text.
+- Added a polished `/u/*` game and competition preview section with explicitly non-authoritative future economy, inventory, competition-points, and seasonal-standing placeholders. `js/public-data-hub.js` now preserves the public-safe `latest_stream` shape for local profile normalization, and `tests/auth-surface-parity.test.mjs` pins the route-scoped additions. No files were created or removed.
+
 - Adjusted the standalone `/u/*` profile header brand text so the default `StreamSuites™` label keeps its exact mixed-case casing while the hover/focus `Community Home` label remains uppercase. No files were created or removed.
 
 - Corrected the standalone `/u/*` Public Authority state icon swap so the collapsed icon is set to `/assets/icons/ui/hidden.svg` and the `<details>` toggle handler updates the same inline mask to `/assets/icons/ui/visible.svg` when expanded. The prior CSS-only override could not reliably beat the icon's inline mask custom property. No files were created or removed.
