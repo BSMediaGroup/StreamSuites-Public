@@ -170,7 +170,7 @@
   let cachePromise = null;
 
   function detectFallbackApiBase() {
-    const host = String(window.location.hostname || "").trim().toLowerCase();
+    const host = String(window.location?.hostname || "").trim().toLowerCase();
     if (host === "localhost" || host === "127.0.0.1") {
       return "http://127.0.0.1:18087";
     }
@@ -933,6 +933,8 @@
       role,
       accountType,
       tier,
+      joinedAt: raw?.joined_at || raw?.joinedAt || raw?.created_at || raw?.createdAt || null,
+      createdAt: raw?.created_at || raw?.createdAt || null,
       badges: normalizeAuthoritativeBadges(
         raw?.badges || raw?.display_badges || raw?.displayBadges,
         role,

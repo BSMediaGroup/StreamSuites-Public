@@ -2,6 +2,8 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+- Completed the standalone `/u/*` public profile body polish in `js/public-pages-app.js` and `css/public-shell.css` with a profile-only public overview board, curated mini artifact showcase, compact inline StreamSuites/FindMeHere share rows with copy plus native-share/fallback actions, and a slim collapsed authority request control that preserves the existing full request panel when expanded. The old standalone profile share/authority two-column utility layout was replaced because it left the new hero sitting over clunkier legacy modules; no files were created or removed, so `README.md` repo tree changes were not required. While validating, also hardened `js/public-data-hub.js` so VM-style tests without `window.location` do not crash the API-base fallback.
+
 - Added a focused `/u/*` profile hydration regression in `tests/auth-surface-parity.test.mjs` so standalone public profiles must keep no-store runtime profile fetches and must prefer authoritative API avatar/cover/banner media over local fallback profile data. No public source files were removed or replaced in this pass.
 
 - Corrected the standalone `/u/*` profile body polish by removing the route-scoped decorative body glow and panel orb pseudo-elements that could read as a drifting, misaligned shape between the hero and lower profile card. This was a CSS-only replacement/removal in `css/public-shell.css`; the file is expected to be shorter than the prior profile-body pass because the stray decorative layers were deleted instead of restyled.

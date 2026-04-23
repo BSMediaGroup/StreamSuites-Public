@@ -2256,10 +2256,92 @@
     button.setAttribute("title", isCopied ? "Copied" : "Copy");
   }
 
-  function buildShareBox(url) {
+  function buildNativeShareButton(url, label) {
+    const shareButton = create("button", "share-copy-btn share-native-btn");
+    shareButton.type = "button";
+    shareButton.append(
+      createIcon(UI_ICON_MAP.share, "button-icon-mask share-copy-icon share-copy-icon-copy"),
+      createIcon(UI_ICON_MAP.check, "button-icon-mask share-copy-icon share-copy-icon-check")
+    );
+    shareButton.setAttribute("aria-label", `Share ${label} link`);
+    shareButton.setAttribute("title", navigator.share ? "Share" : "Share unavailable; copy link");
+
+    let resetTimer = 0;
+    shareButton.addEventListener("click", async () => {
+      window.clearTimeout(resetTimer);
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: `${label} profile`, url });
+          shareButton.classList.add("is-copied");
+          shareButton.setAttribute("title", "Shared");
+          resetTimer = window.setTimeout(() => {
+            shareButton.classList.remove("is-copied");
+            shareButton.setAttribute("title", "Share");
+          }, 1300);
+        } catch (_err) {
+          // User cancellation does not need an error state.
+        }
+        return;
+      }
+
+      const copied = await copyTextToClipboard(url);
+      shareButton.classList.toggle("is-copied", copied);
+      shareButton.setAttribute("title", copied ? "Copied fallback link" : "Copy fallback failed");
+      if (copied) {
+        resetTimer = window.setTimeout(() => {
+          shareButton.classList.remove("is-copied");
+          shareButton.setAttribute("title", "Share unavailable; copy link");
+        }, 1300);
+      }
+    });
+
+    return shareButton;
+  }
+
+  function buildShareBox(url, options = {}) {
     const box = create("div", "share-box");
+    const label = String(options.label || "Share").trim() || "Share";
+    if (options.compact !== true) {
+      const text = create("code", "share-link-text", url);
+      text.setAttribute("title", url);
+
+      const copyButton = create("button", "share-copy-btn");
+      copyButton.type = "button";
+      copyButton.append(
+        createIcon(UI_ICON_MAP.copy, "button-icon-mask share-copy-icon share-copy-icon-copy"),
+        createIcon(UI_ICON_MAP.check, "button-icon-mask share-copy-icon share-copy-icon-check")
+      );
+      setShareCopyButtonState(copyButton, false);
+
+      let resetTimer = 0;
+      copyButton.addEventListener("click", () => {
+        copyTextToClipboard(url).then((copied) => {
+          window.clearTimeout(resetTimer);
+          setShareCopyButtonState(copyButton, copied);
+          if (!copied) return;
+          resetTimer = window.setTimeout(() => {
+            setShareCopyButtonState(copyButton, false);
+          }, 1300);
+        });
+      });
+
+      box.append(text, copyButton);
+      return box;
+    }
+
+    const linkPill = create("a", "share-link-pill");
+    linkPill.href = url;
+    linkPill.target = "_blank";
+    linkPill.rel = "noopener noreferrer";
+    linkPill.setAttribute("aria-label", `Open ${label} link`);
+    if (options.iconPath) {
+      linkPill.appendChild(createIcon(options.iconPath, "share-link-brand-icon"));
+    }
+    linkPill.appendChild(create("span", "share-link-brand", label));
+
     const text = create("code", "share-link-text", url);
     text.setAttribute("title", url);
+    linkPill.appendChild(text);
 
     const copyButton = create("button", "share-copy-btn");
     copyButton.type = "button";
@@ -2281,7 +2363,7 @@
       });
     });
 
-    box.append(text, copyButton);
+    box.append(linkPill, copyButton, buildNativeShareButton(url, label));
     return box;
   }
 
@@ -2440,34 +2522,39 @@
     formState.findMeHereUrl.textContent = String(profile.findmehereProfileUrl || "").trim() || "Unavailable for this account type";
   }
 
-  function buildProfileShareSection(profile) {
+  function buildProfileShareSection(profile, renderOptions = {}) {
     const section = create("div", "profile-share-section");
-    const options = create("div", "profile-share-grid");
+    if (renderOptions.compact === true) section.classList.add("profile-share-section--compact");
+    const optionGrid = create("div", "profile-share-grid");
     const streamSuitesUrl = String(profile?.streamsuitesShareUrl || profile?.streamsuitesProfileUrl || "").trim();
     const findMeHereUrl = profile?.findmehereVisible ? String(profile?.findmehereShareUrl || profile?.findmehereProfileUrl || "").trim() : "";
 
     const createShareOption = (label, iconPath, url, tone = "") => {
       const card = create("div", `profile-share-option${tone ? ` ${tone}` : ""}`);
-      const title = create("div", "profile-share-option-title");
-      title.append(createIcon(iconPath, "profile-share-option-icon"), create("span", "", label));
-      card.append(title, buildShareBox(url));
+      if (renderOptions.compact === true) {
+        card.appendChild(buildShareBox(url, { label, iconPath, compact: true }));
+      } else {
+        const title = create("div", "profile-share-option-title");
+        title.append(createIcon(iconPath, "profile-share-option-icon"), create("span", "", label.toUpperCase()));
+        card.append(title, buildShareBox(url));
+      }
       return card;
     };
 
     if (streamSuitesUrl) {
-      options.appendChild(createShareOption("STREAMSUITES", UI_ICON_MAP.streamsuites, streamSuitesUrl));
+      optionGrid.appendChild(createShareOption("StreamSuites", UI_ICON_MAP.streamsuites, streamSuitesUrl));
     }
 
     if (findMeHereUrl) {
-      options.appendChild(createShareOption("FINDMEHERE", UI_ICON_MAP.findmehere, findMeHereUrl));
+      optionGrid.appendChild(createShareOption("FindMeHere", UI_ICON_MAP.findmehere, findMeHereUrl));
     } else {
       const note = create("div", "profile-share-note", buildFindMeHereStatusText(profile));
       if (note.textContent) {
-        options.appendChild(note);
+        optionGrid.appendChild(note);
       }
     }
 
-    section.appendChild(options);
+    section.appendChild(optionGrid);
     return section;
   }
 
@@ -5312,6 +5399,17 @@
     ).trim() || coverImageUrl;
     const backgroundImageUrl = String(payload?.background_image_url || payload?.backgroundImageUrl || fallbackProfile?.backgroundImageUrl || "").trim();
     const bio = String(payload?.bio || fallbackProfile?.bio || "").trim();
+    const joinedAt = String(
+      payload?.joined_at ||
+      payload?.joinedAt ||
+      payload?.created_at ||
+      payload?.createdAt ||
+      payload?.account_created_at ||
+      payload?.accountCreatedAt ||
+      fallbackProfile?.joinedAt ||
+      fallbackProfile?.createdAt ||
+      ""
+    ).trim();
     const socialLinks = normalizeSocialLinks(payload?.social_links || payload?.socialLinks || fallbackProfile?.socialLinks);
     const isAnonymous = payload?.is_anonymous === true || payload?.anonymous === true || fallbackProfile?.isAnonymous === true;
     const isListed = payload?.is_listed !== false && payload?.listed !== false && fallbackProfile?.isListed !== false;
@@ -5375,6 +5473,7 @@
       platformIcon: fallbackProfile?.platformIcon || "/assets/icons/pilled.svg",
       role,
       tier,
+      joinedAt,
       bio,
       socialLinks,
       coverImageUrl,
@@ -6024,29 +6123,182 @@
     return tools;
   }
 
+  function formatProfileDate(value, helpers) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    if (typeof helpers?.toTimestamp === "function") {
+      const formatted = String(helpers.toTimestamp(raw) || "").trim();
+      if (formatted && formatted !== "--") return formatted;
+    }
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) return raw;
+    return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  }
+
+  function countProfileArtifactsByType(artifacts) {
+    return (Array.isArray(artifacts) ? artifacts : []).reduce((acc, item) => {
+      const type = String(item?.type || "artifact").trim().toLowerCase() || "artifact";
+      acc.total += 1;
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, { total: 0 });
+  }
+
+  function buildProfileOverviewPanel(profile, artifacts, helpers) {
+    const counts = countProfileArtifactsByType(artifacts);
+    const section = create("section", "profile-utility-section profile-overview-panel");
+    const header = create("div", "profile-inline-header");
+    header.appendChild(create("h3", "", "Public overview"));
+
+    const statGrid = create("div", "profile-overview-stat-grid");
+    [
+      { label: "Tier", value: toTitle(profile?.tier || "core") || "Core" },
+      { label: "Artifacts", value: formatNumber(counts.total) },
+      { label: "Clips", value: formatNumber(counts.clips || 0) },
+      { label: "Polls", value: formatNumber(counts.polls || 0) }
+    ].forEach((entry) => {
+      const stat = create("div", "profile-overview-stat");
+      stat.append(create("span", "profile-overview-stat-label", entry.label), create("strong", "", entry.value));
+      statGrid.appendChild(stat);
+    });
+
+    const details = create("div", "profile-overview-table");
+    const addRow = (label, value, pending = false) => {
+      const row = create("div", "profile-overview-row");
+      if (pending) row.classList.add("is-pending");
+      row.append(create("span", "profile-overview-label", label), create("span", "profile-overview-value", value));
+      details.appendChild(row);
+    };
+
+    addRow("Joined", formatProfileDate(profile?.joinedAt || profile?.createdAt, helpers) || "Pending public data", !profile?.joinedAt && !profile?.createdAt);
+    addRow("Profile type", profile?.viewerOnly ? "Viewer/public" : profile?.creatorCapable ? "Creator-capable" : roleLabel(normalizeRoleForUi(profile?.role)));
+    addRow("StreamSuites", profile?.streamsuitesProfileVisible ? "Visible" : "Not public");
+    addRow("FindMeHere", profile?.findmehereVisible ? "Visible" : "Not listed");
+    addRow("XP", "Pending", true);
+    addRow("Rank", "Pending", true);
+
+    section.append(header, statGrid, details);
+    return section;
+  }
+
+  function getProfileArtifactPreviewImage(item) {
+    return String(
+      item?.thumbnail ||
+      item?.image ||
+      item?.coverImageUrl ||
+      item?.presentation?.center_image_url ||
+      item?.presentation?.centerImageUrl ||
+      ""
+    ).trim();
+  }
+
+  function buildProfileMiniArtifactCard(item, helpers) {
+    const link = create("a", "profile-mini-artifact-card");
+    link.href = item?.href || buildArtifactGalleryLink(item?.type || "clips");
+    const preview = create("span", "profile-mini-artifact-preview");
+    const previewImage = getProfileArtifactPreviewImage(item);
+    if (previewImage) {
+      const img = create("img");
+      img.src = previewImage;
+      img.alt = "";
+      img.loading = "lazy";
+      img.decoding = "async";
+      preview.appendChild(img);
+    } else {
+      preview.appendChild(createIcon(UI_ICON_MAP.gallery, "profile-mini-artifact-icon"));
+    }
+
+    const body = create("span", "profile-mini-artifact-body");
+    body.append(
+      create("span", "profile-mini-artifact-type", toTitle(item?.type || item?.artifactType || "Artifact")),
+      create("span", "profile-mini-artifact-title", buildCardTitle(item || {})),
+      create(
+        "span",
+        "profile-mini-artifact-meta",
+        `${item?.status || "Public"}${item?.updatedAt || item?.createdAt ? ` | ${formatProfileDate(item.updatedAt || item.createdAt, helpers)}` : ""}`
+      )
+    );
+    link.append(preview, body);
+    return link;
+  }
+
+  function buildProfileMiniArtifactGallery(artifacts, ownerMode, helpers) {
+    const section = create("section", "profile-utility-section profile-mini-artifacts");
+    const header = create("div", "profile-inline-header");
+    header.appendChild(create("h3", "", "Artifact showcase"));
+    if (Array.isArray(artifacts) && artifacts.length) {
+      const count = create("span", "profile-section-count", `${formatNumber(artifacts.length)} public`);
+      header.appendChild(count);
+    }
+    section.appendChild(header);
+
+    if (!Array.isArray(artifacts) || !artifacts.length) {
+      section.appendChild(create("div", "profile-empty-state", "No public artifacts are linked to this profile yet."));
+      return section;
+    }
+
+    const gallery = create("div", "profile-mini-artifact-grid");
+    artifacts.slice(0, 6).forEach((item) => {
+      const wrap = create("article", "profile-mini-artifact-item");
+      wrap.appendChild(buildProfileMiniArtifactCard(item, helpers));
+      if (ownerMode) {
+        const edit = create("a", "edit-affordance artifact-edit-affordance", "Edit");
+        edit.href = item.href;
+        wrap.appendChild(edit);
+      }
+      gallery.appendChild(wrap);
+    });
+    section.appendChild(gallery);
+    return section;
+  }
+
+  function buildCollapsedAuthorityRequestPanel(context, options = {}) {
+    const authorityContext = createAuthorityContext(context);
+    const details = create("details", "profile-authority-collapsible");
+    const summary = create("summary", "profile-authority-summary");
+    const action = create("span", "profile-authority-summary-action", "Review requests");
+    const meta = create("span", "profile-authority-summary-meta");
+    [
+      authorityContext?.targetIdentityCode ? "Identity target" : "Target pending",
+      options.authState?.authenticated ? "Signed in" : "Sign in required"
+    ].forEach((entry) => meta.appendChild(create("span", "", entry)));
+    summary.append(action, meta, createIcon(UI_ICON_MAP.visibility, "profile-authority-summary-icon"));
+
+    const panel = buildAuthorityRequestPanel(context, options);
+    panel.classList.add("profile-authority-expanded-panel");
+    details.append(summary, panel);
+    return details;
+  }
+
   function renderStandaloneProfileUtilityBody(profileCard, profile, canEdit, options = {}) {
     clear(profileCard);
+    const profileArtifacts = Array.isArray(options.profileArtifacts) ? options.profileArtifacts : [];
     const liveBanner = buildProfileLiveBanner(profile);
     if (liveBanner) profileCard.appendChild(liveBanner);
 
-    const grid = create("div", "profile-utility-grid");
+    const primaryGrid = create("div", "profile-body-grid");
+    primaryGrid.append(
+      buildProfileOverviewPanel(profile, profileArtifacts, options.helpers || null),
+      buildProfileMiniArtifactGallery(profileArtifacts, canEdit, options.helpers || null)
+    );
+    profileCard.appendChild(primaryGrid);
+
+    const grid = create("div", "profile-utility-grid profile-utility-grid--slim");
     const shareSection = create("section", "profile-utility-section");
     const shareHeader = create("div", "profile-inline-header");
     const shareTitle = create("h3", "", "Share Links");
-    shareTitle.prepend(createIcon(UI_ICON_MAP.share, "inline-icon-mask"));
     shareHeader.appendChild(shareTitle);
-    shareSection.append(shareHeader, buildProfileShareSection(profile));
+    shareSection.append(shareHeader, buildProfileShareSection(profile, { compact: true }));
 
-    const authoritySection = create("section", "profile-utility-section");
-    authoritySection.appendChild(
-      buildAuthorityRequestPanel(resolveProfileAuthorityContext(profile), {
+    grid.appendChild(shareSection);
+    profileCard.appendChild(grid);
+
+    profileCard.appendChild(
+      buildCollapsedAuthorityRequestPanel(resolveProfileAuthorityContext(profile), {
         authState: options.authState || null,
         openAuthModal: options.openAuthModal || null
       })
     );
-
-    grid.append(shareSection, authoritySection);
-    profileCard.appendChild(grid);
 
     const ownerTools = buildStandaloneProfileOwnerTools(profile, canEdit);
     if (ownerTools) profileCard.appendChild(ownerTools);
@@ -6421,10 +6673,22 @@
 
       syncStandaloneProfileCanonicalUrl(profile, profileCode);
       document.title = `${profile.displayName} | StreamSuites Public Profile`;
+      const profileArtifacts = collectProfileArtifacts(
+        data,
+        profile.publicSlug,
+        profile.userCode,
+        profile.id,
+        profile.username,
+        fallbackProfile?.publicSlug,
+        fallbackProfile?.id,
+        fallbackProfile?.userCode
+      );
       renderStandaloneProfilePage(host, profile, canEdit, {
         authState,
         openAuthModal: ctx.openAuthModal,
-        onMenuAction: ctx.handleAccountMenuAction
+        onMenuAction: ctx.handleAccountMenuAction,
+        profileArtifacts,
+        helpers: data.helpers
       });
     })();
   }

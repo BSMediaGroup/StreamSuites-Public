@@ -141,6 +141,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   const css = read("css/public-shell.css");
   const statusCss = read("css/status-widget.css");
   const profileHtml = read("u/index.html");
+  const standaloneUtilityBlock = app.match(/function renderStandaloneProfileUtilityBody\(profileCard, profile, canEdit, options = \{\}\) \{[\s\S]*?\n  \}\n\n  function renderStandaloneProfilePage/)?.[0] || "";
 
   assert.match(app, /function renderStandaloneProfilePage\(host, profile, canEdit, options = \{\}\)/);
   assert.match(app, /buildStandaloneProfileHero\(profile, options\.authState \|\| null, options\)/);
@@ -155,6 +156,13 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /bio\.scrollHeight > bio\.clientHeight \+ 2/);
   assert.match(app, /Community Home/);
   assert.doesNotMatch(app, /buildStandaloneProfileReturnFooter/);
+  assert.ok(standaloneUtilityBlock, "standalone profile utility body should exist");
+  assert.match(standaloneUtilityBlock, /buildProfileOverviewPanel\(profile, profileArtifacts/);
+  assert.match(standaloneUtilityBlock, /buildProfileMiniArtifactGallery\(profileArtifacts, canEdit/);
+  assert.match(standaloneUtilityBlock, /buildProfileShareSection\(profile, \{ compact: true \}\)/);
+  assert.match(standaloneUtilityBlock, /buildCollapsedAuthorityRequestPanel\(resolveProfileAuthorityContext\(profile\)/);
+  assert.doesNotMatch(standaloneUtilityBlock, /shareTitle\.prepend/);
+  assert.match(app, /function buildNativeShareButton\(url, label\)/);
 
   assert.match(css, /body\[data-public-page="public-profile-standalone"\] \.public-standalone-root/);
   assert.match(css, /\.profile-cinematic-hero/);
@@ -165,6 +173,11 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /\.profile-hero-trim/);
   assert.match(css, /\.profile-hero-bio\s*\{[\s\S]*-webkit-line-clamp:\s*4/);
   assert.match(css, /\.profile-utility-panel\s*\{[\s\S]*backdrop-filter:\s*blur\(18px\) saturate\(122%\)/);
+  assert.match(css, /\.profile-body-grid/);
+  assert.match(css, /\.profile-overview-panel/);
+  assert.match(css, /\.profile-mini-artifacts/);
+  assert.match(css, /\.profile-share-section--compact \.share-box/);
+  assert.match(css, /\.profile-authority-collapsible/);
   assert.match(css, /\.profile-hero-role-chip::after\s*\{[\s\S]*translateX\(-140%\)/);
   assert.match(css, /@keyframes profile-role-chip-sheen/);
   assert.match(css, /\.profile-return-link/);
