@@ -151,6 +151,8 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /profile-overlay-brand-logo/);
   assert.match(app, /\/assets\/logos\/ssnewcon\.webp/);
   assert.doesNotMatch(app, /profile-overlay-brand-icon/);
+  assert.match(app, /profile-overlay-brand-text-default", "StreamSuites™"/);
+  assert.match(app, /profile-overlay-brand-text-hover", "Community Home"/);
   assert.match(app, /profile-hero-trim/);
   assert.match(app, /profile-hero-bio-toggle/);
   assert.match(app, /bio\.scrollHeight > bio\.clientHeight \+ 2/);
@@ -163,6 +165,8 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(standaloneUtilityBlock, /buildCollapsedAuthorityRequestPanel\(resolveProfileAuthorityContext\(profile\)/);
   assert.match(app, /\/assets\/icons\/ui\/shieldtick\.svg/);
   assert.match(app, /\/assets\/icons\/ui\/hidden\.svg/);
+  assert.match(app, /details\.open \? 'url\("\/assets\/icons\/ui\/visible\.svg"\)' : 'url\("\/assets\/icons\/ui\/hidden\.svg"\)'/);
+  assert.match(app, /details\.addEventListener\("toggle", syncStateIcon\)/);
   assert.match(app, /PUBLIC AUTHORITY/);
   assert.doesNotMatch(standaloneUtilityBlock, /shareTitle\.prepend/);
   assert.match(app, /function buildNativeShareButton\(url, label\)/);
@@ -171,6 +175,8 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /\.profile-cinematic-hero/);
   assert.match(css, /\.profile-overlay-header/);
   assert.match(css, /\.profile-overlay-brand-logo/);
+  assert.match(css, /\.profile-overlay-brand-text-default\s*\{[\s\S]*font-family:\s*"RechargeBd"/);
+  assert.match(css, /\.profile-overlay-brand:hover \.profile-overlay-brand-text-hover/);
   assert.match(css, /\.profile-header-social-panel/);
   assert.match(css, /\.profile-header-account \.account-avatar\s*\{[\s\S]*border-radius:\s*7px/);
   assert.match(css, /\.profile-hero-trim/);
@@ -182,7 +188,6 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /\.profile-share-section--compact \.share-box\s*\{[\s\S]*background:\s*transparent/);
   assert.match(css, /\.profile-authority-collapsible/);
   assert.match(css, /\.profile-authority-summary-action-icon/);
-  assert.match(css, /\.profile-authority-collapsible\[open\] \.profile-authority-summary-icon\s*\{[\s\S]*\/assets\/icons\/ui\/visible\.svg/);
   assert.match(css, /share-link-brand-icon[\s\S]*-webkit-mask-image:\s*var\(--icon-mask\)/);
   assert.match(css, /\.profile-hero-role-chip\s*\{[\s\S]*clip-path:\s*inset\(0 round 999px\)/);
   assert.match(css, /\.profile-hero-role-chip\s*\{[\s\S]*contain:\s*paint/);

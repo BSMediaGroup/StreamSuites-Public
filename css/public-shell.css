@@ -2641,9 +2641,39 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 }
 
 .profile-overlay-brand-text {
+  position: relative;
+  display: inline-grid;
+  align-items: center;
+  min-width: 132px;
   font-size: 0.66rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.profile-overlay-brand-text-default,
+.profile-overlay-brand-text-hover {
+  grid-area: 1 / 1;
+  transition: opacity 180ms ease;
+}
+
+.profile-overlay-brand-text-default {
+  font-family: "RechargeBd", "SuiGenerisRg", "SuiGeneris", "Segoe UI", sans-serif;
+  font-weight: 700;
+  opacity: 1;
+}
+
+.profile-overlay-brand-text-hover {
+  opacity: 0;
+}
+
+.profile-overlay-brand:hover .profile-overlay-brand-text-default,
+.profile-overlay-brand:focus-visible .profile-overlay-brand-text-default {
+  opacity: 0;
+}
+
+.profile-overlay-brand:hover .profile-overlay-brand-text-hover,
+.profile-overlay-brand:focus-visible .profile-overlay-brand-text-hover {
+  opacity: 1;
 }
 
 .profile-overlay-actions {
@@ -3373,10 +3403,6 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   height: 15px;
   background-color: rgba(214, 228, 248, 0.72);
   transition: transform 160ms ease;
-}
-
-.profile-authority-collapsible[open] .profile-authority-summary-icon {
-  --icon-mask: url("/assets/icons/ui/visible.svg");
 }
 
 .profile-authority-expanded-panel {

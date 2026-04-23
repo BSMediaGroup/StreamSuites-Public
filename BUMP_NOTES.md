@@ -2,6 +2,10 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+- Corrected the standalone `/u/*` Public Authority state icon swap so the collapsed icon is set to `/assets/icons/ui/hidden.svg` and the `<details>` toggle handler updates the same inline mask to `/assets/icons/ui/visible.svg` when expanded. The prior CSS-only override could not reliably beat the icon's inline mask custom property. No files were created or removed.
+
+- Updated the standalone `/u/*` profile header brand text so the existing Community Home link now shows `StreamSuites™` by default in the bold title font and smoothly crossfades to `Community Home` on hover/focus, without changing the logo image or link destination. No files were created or removed.
+
 - Fixed the standalone `/u/*` profile utility icons that were rendering as solid squares by routing the profile-specific mask classes through the same CSS mask-image rule as the shared icon classes, so share-link brand icons, mini-gallery fallback icons, and authority icons inherit the intended text color. The collapsed authority state icon now uses `/assets/icons/ui/hidden.svg`, and the expanded state swaps to `/assets/icons/ui/visible.svg`. No files were created or removed.
 
 - Cleaned up the standalone `/u/*` profile mini-gallery and utility strip by normalizing stale local clip thumbnail placeholders such as `/assets/backgrounds/seosupport.jpg` and `/assets/backgrounds/seoaccessibility.jpg` to the existing checked-in fallback before render, adding a mini-gallery image error fallback, removing the compact share-row outer container styling so only the three inline controls remain visible, and relabeling the collapsed authority toggle to `PUBLIC AUTHORITY` with the requested shield-tick icon. No files were created or removed.

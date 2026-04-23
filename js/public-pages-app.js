@@ -5940,9 +5940,14 @@
     logo.alt = "";
     logo.loading = "eager";
     logo.decoding = "async";
+    const brandText = create("span", "profile-overlay-brand-text");
+    brandText.append(
+      create("span", "profile-overlay-brand-text-default", "StreamSuites™"),
+      create("span", "profile-overlay-brand-text-hover", "Community Home")
+    );
     left.append(
       logo,
-      create("span", "profile-overlay-brand-text", "Community Home")
+      brandText
     );
 
     const right = create("div", "profile-overlay-actions");
@@ -6270,7 +6275,16 @@
       authorityContext?.targetIdentityCode ? "Identity target" : "Target pending",
       options.authState?.authenticated ? "Signed in" : "Sign in required"
     ].forEach((entry) => meta.appendChild(create("span", "", entry)));
-    summary.append(action, meta, createIcon("/assets/icons/ui/hidden.svg", "profile-authority-summary-icon"));
+    const stateIcon = createIcon("/assets/icons/ui/hidden.svg", "profile-authority-summary-icon");
+    const syncStateIcon = () => {
+      stateIcon.style.setProperty(
+        "--icon-mask",
+        details.open ? 'url("/assets/icons/ui/visible.svg")' : 'url("/assets/icons/ui/hidden.svg")'
+      );
+    };
+    details.addEventListener("toggle", syncStateIcon);
+    syncStateIcon();
+    summary.append(action, meta, stateIcon);
 
     const panel = buildAuthorityRequestPanel(context, options);
     panel.classList.add("profile-authority-expanded-panel");
