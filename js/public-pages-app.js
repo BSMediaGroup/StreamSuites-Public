@@ -62,8 +62,28 @@
   });
   const PROFILE_TIER_BADGE_KEYS = Object.freeze(["core", "gold", "pro"]);
   const PROFILE_MAIN_ROLE_KEYS = Object.freeze(["admin", "creator", "developer", "viewer"]);
-  const PROFILE_PUBLIC_BADGE_KEYS = Object.freeze(["founder", "moderator"]);
+  const PROFILE_PUBLIC_BADGE_KEYS = Object.freeze(["core", "gold", "pro", "admin", "developer", "founder", "moderator"]);
   const PROFILE_PUBLIC_BADGE_COPY = Object.freeze({
+    core: {
+      title: "Core Tier",
+      description: "Baseline StreamSuites entitlement visible on this public profile."
+    },
+    gold: {
+      title: "Gold Tier",
+      description: "Elevated StreamSuites entitlement visible on this public profile."
+    },
+    pro: {
+      title: "Pro Tier",
+      description: "Advanced StreamSuites entitlement visible on this public profile."
+    },
+    admin: {
+      title: "Admin",
+      description: "Administrative StreamSuites account badge surfaced by the public profile contract."
+    },
+    developer: {
+      title: "Developer",
+      description: "Developer access badge surfaced by the public profile contract."
+    },
     founder: {
       title: "Founding Member",
       description: "Joined before the founding member cutoff of July 31, 2026."
@@ -6392,12 +6412,17 @@
     const label = String(options.label || toTitle(normalized) || "Badge").trim() || "Badge";
     const extraClass = String(options.className || "").trim();
     const chip = create("span", `profile-badge-chip profile-badge-chip--${normalized}${extraClass ? ` ${extraClass}` : ""}`, label.toUpperCase());
+    const isTierBadge = PROFILE_TIER_BADGE_KEYS.includes(normalized);
+    chip.setAttribute("data-ss-badge-kind", isTierBadge ? "tier" : "role");
+    if (isTierBadge) chip.dataset.tier = normalized.toUpperCase();
     const iconPath = String(options.icon || BADGE_ICON_MAP[normalized] || "").trim();
     if (iconPath) {
       const icon = create("img", "profile-badge-chip-icon");
       icon.src = iconPath;
       icon.alt = "";
       icon.setAttribute("aria-hidden", "true");
+      icon.setAttribute("data-ss-role-badge", normalized);
+      icon.classList.add(isTierBadge ? "ss-tier-badge" : "ss-role-badge");
       chip.prepend(icon);
     }
     return getPublicBadgeUi()?.registerTarget?.(chip, label) || chip;
@@ -6420,7 +6445,15 @@
 
   function getProfilePublicBadges(profile) {
     const seen = new Set();
-    return normalizeAuthoritativeBadges(
+    const publicBadges = [];
+    const pushBadge = (badge) => {
+      const key = normalizeBadgeKey(badge?.key || badge?.icon_key || badge?.iconKey || badge?.value);
+      if (!key || !PROFILE_PUBLIC_BADGE_KEYS.includes(key) || seen.has(key)) return;
+      seen.add(key);
+      publicBadges.push({ ...badge, key, value: key });
+    };
+
+    normalizeAuthoritativeBadges(
       profile?.badge_state?.surface_badges?.public_surface ||
         profile?.badge_state?.surface_badges?.streamsuites_profile ||
         profile?.badge_state?.surface_badges?.directory ||
@@ -6428,10 +6461,19 @@
       profile?.accountType || profile?.account_type || roleLabel(normalizeRoleForUi(profile?.role)),
       profile?.tier
     )
+      .forEach(pushBadge);
+
+    const tierKey = normalizeTierForUi(profile?.tier || "core");
+    pushBadge({ key: tierKey, kind: "tier", value: tierKey, label: tierKey.toUpperCase() });
+
+    const typeChip = resolveProfileTypeDescriptor(profile);
+    if (typeChip.key === "admin" || typeChip.key === "developer") {
+      pushBadge({ key: typeChip.key, kind: "role", value: typeChip.key, label: typeChip.label });
+    }
+
+    return publicBadges
       .map((badge) => {
-        const key = normalizeBadgeKey(badge?.key || badge?.icon_key || badge?.iconKey || badge?.value);
-        if (!key || !PROFILE_PUBLIC_BADGE_KEYS.includes(key) || seen.has(key)) return null;
-        seen.add(key);
+        const key = badge.key;
         const copy = PROFILE_PUBLIC_BADGE_COPY[key] || {};
         return {
           ...badge,
@@ -6480,6 +6522,43 @@
       gallery.appendChild(card);
     });
     section.appendChild(gallery);
+    return section;
+  }
+
+  function buildProfileSocialGallerySection(profile) {
+    const entries = collectOrderedSocialEntries(profile?.socialLinks || profile?.social_links);
+    if (!entries.length) return null;
+
+    const section = create("section", "profile-utility-section profile-social-gallery-section");
+    const header = create("div", "profile-inline-header");
+    header.append(
+      create("h3", "", "Social links"),
+      create("span", "profile-section-count", `${formatNumber(entries.length)} public`)
+    );
+    const gallery = create("div", "profile-social-gallery-grid");
+    entries.forEach((entry) => {
+      const card = create("a", "profile-social-gallery-card");
+      card.href = entry.url;
+      card.target = "_blank";
+      card.rel = "noopener noreferrer";
+      card.setAttribute("aria-label", `Open ${entry.label || socialLabel(entry.network)}`);
+      const iconWrap = create("span", "profile-social-gallery-icon-wrap");
+      const icon = create("img", "profile-social-gallery-icon");
+      icon.src = entry.iconPath || socialIconPath(entry.network);
+      icon.alt = "";
+      icon.loading = "lazy";
+      icon.decoding = "async";
+      icon.setAttribute("aria-hidden", "true");
+      iconWrap.appendChild(icon);
+      const body = create("span", "profile-social-gallery-body");
+      body.append(
+        create("strong", "", entry.label || socialLabel(entry.network)),
+        create("span", "", entry.url)
+      );
+      card.append(iconWrap, body);
+      gallery.appendChild(card);
+    });
+    section.append(header, gallery);
     return section;
   }
 
@@ -6827,6 +6906,8 @@
     profileCard.appendChild(buildProfileGameCompetitionSection());
 
     const grid = create("div", "profile-utility-grid profile-utility-grid--slim");
+    const socialGallery = buildProfileSocialGallerySection(profile);
+    if (socialGallery) grid.appendChild(socialGallery);
     const shareSection = create("section", "profile-utility-section");
     const shareHeader = create("div", "profile-inline-header");
     const shareTitle = create("h3", "", "Share Links");

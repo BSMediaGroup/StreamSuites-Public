@@ -163,6 +163,8 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(standaloneUtilityBlock, /buildProfileOverviewPanel\(profile, profileArtifacts/);
   assert.match(standaloneUtilityBlock, /buildProfileMiniArtifactGallery\(profileArtifacts, canEdit/);
   assert.match(standaloneUtilityBlock, /profileCard\.appendChild\(buildProfileBadgeGallerySection\(profile\)\)[\s\S]*profileCard\.appendChild\(buildProfileGameCompetitionSection\(\)\)/);
+  assert.match(standaloneUtilityBlock, /const socialGallery = buildProfileSocialGallerySection\(profile\)/);
+  assert.match(standaloneUtilityBlock, /if \(socialGallery\) grid\.appendChild\(socialGallery\)/);
   assert.match(standaloneUtilityBlock, /buildProfileGameCompetitionSection\(\)/);
   assert.match(standaloneUtilityBlock, /buildProfileShareSection\(profile, \{ compact: true \}\)/);
   assert.match(standaloneUtilityBlock, /buildCollapsedAuthorityRequestPanel\(resolveProfileAuthorityContext\(profile\)/);
@@ -186,9 +188,15 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /platformLabel: STREAM_PLATFORM_LABELS\[platform\],\s*disabled: true/);
   assert.match(app, /create\("span", "profile-latest-stream-sources-label", "Other sources"\)/);
   assert.match(app, /function buildProfileBadgeGallerySection\(profile\)/);
-  assert.match(app, /PROFILE_PUBLIC_BADGE_KEYS = Object\.freeze\(\["founder", "moderator"\]\)/);
+  assert.match(app, /PROFILE_PUBLIC_BADGE_KEYS = Object\.freeze\(\["core", "gold", "pro", "admin", "developer", "founder", "moderator"\]\)/);
+  assert.match(app, /title: "Pro Tier"/);
+  assert.match(app, /pushBadge\(\{ key: tierKey, kind: "tier", value: tierKey, label: tierKey\.toUpperCase\(\) \}\)/);
+  assert.match(app, /pushBadge\(\{ key: typeChip\.key, kind: "role", value: typeChip\.key, label: typeChip\.label \}\)/);
   assert.match(app, /Joined before the founding member cutoff of July 31, 2026\./);
   assert.match(app, /Can moderate creator account spaces where this account has an active assignment\./);
+  assert.match(app, /function buildProfileSocialGallerySection\(profile\)/);
+  assert.match(app, /profile-social-gallery-card/);
+  assert.match(app, /profile-social-gallery-body/);
   assert.match(app, /function buildProfileGameCompetitionSection\(\)/);
   assert.match(app, /details\.open = true/);
   assert.match(app, /GAME & COMPETITION/);
@@ -242,6 +250,9 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /\.profile-stream-platform-icon/);
   assert.match(css, /\.profile-hero-role-chip--admin,[\s\S]*--profile-role-chip-bg:\s*linear-gradient\(135deg, rgba\(255, 198, 84, 0\.42\), rgba\(255, 232, 164, 0\.12\)\)/);
   assert.match(css, /\.profile-hero-role-chip--pro,[\s\S]*\.profile-tier-chip--pro,[\s\S]*\.profile-badge-chip--pro/);
+  assert.match(css, /\.profile-tier-chip--core,[\s\S]*\.profile-badge-chip--core[\s\S]*rgba\(92, 176, 188, 0\.24\)/);
+  assert.match(css, /\.profile-tier-chip--gold,[\s\S]*\.profile-badge-chip--gold/);
+  assert.match(css, /\.profile-tier-chip--pro,[\s\S]*rgba\(255, 88, 204, 0\.45\)/);
   assert.match(css, /\.profile-role-chip--viewer/);
   assert.match(css, /\.profile-game-section/);
   assert.match(css, /\.profile-game-collapsible/);
@@ -250,6 +261,11 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /\.profile-badge-gallery-section/);
   assert.match(css, /\.profile-badge-gallery-grid/);
   assert.match(css, /\.profile-badge-gallery-card/);
+  assert.match(css, /\.profile-badge-gallery-card--pro/);
+  assert.match(css, /\.profile-badge-gallery-card--admin/);
+  assert.match(css, /\.profile-social-gallery-section/);
+  assert.match(css, /\.profile-social-gallery-grid/);
+  assert.match(css, /\.profile-social-gallery-card/);
   assert.match(css, /\.profile-badge-chip/);
   assert.match(css, /\.profile-badge-chip-icon/);
   assert.match(css, /\.profile-overview-panel/);
