@@ -189,6 +189,45 @@ footer.ss-footer {
   position: relative;
 }
 
+body[data-public-page="public-profile-standalone"] .profile-footer-status-slot .ss-status-indicator {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  z-index: 1;
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+  font-size: 10px;
+}
+
+body[data-public-page="public-profile-standalone"] .profile-footer-status-slot .ss-status-toggle {
+  min-height: 24px;
+  padding: 0 9px;
+  border: 1px solid rgba(184, 204, 234, 0.24);
+  border-radius: 999px;
+  background: rgba(17, 23, 30, 0.34);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  color: rgba(214, 226, 245, 0.72);
+}
+
+body[data-public-page="public-profile-standalone"] .profile-footer-status-slot .ss-status-toggle:hover,
+body[data-public-page="public-profile-standalone"] .profile-footer-status-slot .ss-status-toggle:focus-visible {
+  border-color: rgba(104, 174, 255, 0.54);
+  color: rgba(238, 244, 255, 0.9);
+  outline: none;
+}
+
+body[data-public-page="public-profile-standalone"] .profile-footer-status-slot .ss-status-label {
+  font-size: 8px;
+  opacity: 0.82;
+}
+
+body[data-public-page="public-profile-standalone"] .profile-footer-status-slot .ss-status-details {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 12px);
+}
+
 @media (max-width: 640px) {
   .ss-status-details {
     min-width: min(300px, 94vw);

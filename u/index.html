@@ -14,6 +14,27 @@
 </head>
 <body data-public-page="public-profile-standalone">
   <div id="public-app"></div>
+  <footer class="profile-shell-footer" data-profile-shell-footer>
+    <div class="profile-footer-left">
+      <a class="profile-return-link" href="https://streamsuites.app/community/">
+        <span class="profile-return-icon" style="--icon-mask: url('/assets/icons/ui/community.svg')" aria-hidden="true"></span>
+        <span>Community Home</span>
+      </a>
+    </div>
+    <div class="profile-footer-center">
+      <span class="footer-version-tooltip-container">
+        <a class="footer-version profile-footer-version" href="/changelog" aria-describedby="profile-footer-version-tooltip">Loading version...</a>
+        <span class="footer-version-tooltip" id="profile-footer-version-tooltip" role="tooltip">
+          <span class="footer-version-tooltip-line" data-footer-version-tooltip="version">Loading version...</span>
+          <span class="footer-version-tooltip-line" data-footer-version-tooltip="build">Build ...</span>
+          <a class="footer-version-tooltip-link" href="/changelog">View changelog</a>
+        </span>
+      </span>
+    </div>
+    <div class="profile-footer-right">
+      <span class="profile-footer-status-slot" data-status-slot data-status-slot-mode="inline"></span>
+    </div>
+  </footer>
 
   <script src="/js/utils/versioning.js" defer></script>
   <script src="/js/public-badge-ui.js" defer></script>

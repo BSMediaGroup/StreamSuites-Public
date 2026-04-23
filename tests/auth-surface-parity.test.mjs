@@ -139,6 +139,8 @@ test("public account menu keeps the overview card and capability-aware console l
 test("standalone /u profile pages own the cinematic header and hero treatment", () => {
   const app = read("js/public-pages-app.js");
   const css = read("css/public-shell.css");
+  const statusCss = read("css/status-widget.css");
+  const profileHtml = read("u/index.html");
 
   assert.match(app, /function renderStandaloneProfilePage\(host, profile, canEdit, options = \{\}\)/);
   assert.match(app, /buildStandaloneProfileHero\(profile, options\.authState \|\| null, options\)/);
@@ -152,6 +154,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /profile-hero-bio-toggle/);
   assert.match(app, /bio\.scrollHeight > bio\.clientHeight \+ 2/);
   assert.match(app, /Community Home/);
+  assert.doesNotMatch(app, /buildStandaloneProfileReturnFooter/);
 
   assert.match(css, /body\[data-public-page="public-profile-standalone"\] \.public-standalone-root/);
   assert.match(css, /\.profile-cinematic-hero/);
@@ -161,7 +164,17 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /\.profile-header-account \.account-avatar\s*\{[\s\S]*border-radius:\s*7px/);
   assert.match(css, /\.profile-hero-trim/);
   assert.match(css, /\.profile-hero-bio\s*\{[\s\S]*-webkit-line-clamp:\s*4/);
+  assert.match(css, /\.profile-utility-panel\s*\{[\s\S]*backdrop-filter:\s*blur\(18px\) saturate\(122%\)/);
+  assert.match(css, /\.profile-hero-role-chip::after\s*\{[\s\S]*translateX\(-140%\)/);
+  assert.match(css, /@keyframes profile-role-chip-sheen/);
   assert.match(css, /\.profile-return-link/);
+  assert.match(css, /\.profile-shell-footer\s*\{[\s\S]*position:\s*fixed/);
+  assert.match(css, /\.profile-footer-status-slot/);
+  assert.match(statusCss, /body\[data-public-page="public-profile-standalone"\] \.profile-footer-status-slot \.ss-status-indicator\s*\{[\s\S]*position:\s*relative/);
+
+  assert.match(profileHtml, /<footer class="profile-shell-footer" data-profile-shell-footer>/);
+  assert.match(profileHtml, /data-status-slot data-status-slot-mode="inline"/);
+  assert.match(profileHtml, /Community Home/);
 });
 
 test("community member hydration uses the authoritative runtime endpoint", () => {

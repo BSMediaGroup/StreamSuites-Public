@@ -6052,15 +6052,6 @@
     if (ownerTools) profileCard.appendChild(ownerTools);
   }
 
-  function buildStandaloneProfileReturnFooter() {
-    const footer = create("footer", "profile-return-footer");
-    const link = create("a", "profile-return-link");
-    link.href = "https://streamsuites.app/community/";
-    link.append(createIcon(UI_ICON_MAP.community, "profile-return-icon"), create("span", "", "Community Home"));
-    footer.appendChild(link);
-    return footer;
-  }
-
   function renderStandaloneProfilePage(host, profile, canEdit, options = {}) {
     cleanupStandaloneProfileInteractions();
     clear(host);
@@ -6071,7 +6062,7 @@
     const body = create("section", "public-standalone-main profile-standalone-body");
     const profileCard = create("div", "profile-utility-panel");
     body.appendChild(profileCard);
-    shell.append(body, buildStandaloneProfileReturnFooter());
+    shell.appendChild(body);
     host.appendChild(shell);
 
     renderStandaloneProfileUtilityBody(profileCard, profile, canEdit, options);
@@ -6103,7 +6094,7 @@
       create("p", "profile-unavailable-copy", subtitle)
     );
     body.appendChild(card);
-    shell.append(body, buildStandaloneProfileReturnFooter());
+    shell.appendChild(body);
     host.appendChild(shell);
   }
 
