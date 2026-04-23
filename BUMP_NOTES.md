@@ -2,6 +2,8 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+- Added a focused `/u/*` profile hydration regression in `tests/auth-surface-parity.test.mjs` so standalone public profiles must keep no-store runtime profile fetches and must prefer authoritative API avatar/cover/banner media over local fallback profile data. No public source files were removed or replaced in this pass.
+
 - Corrected the standalone `/u/*` profile body polish by removing the route-scoped decorative body glow and panel orb pseudo-elements that could read as a drifting, misaligned shape between the hero and lower profile card. This was a CSS-only replacement/removal in `css/public-shell.css`; the file is expected to be shorter than the prior profile-body pass because the stray decorative layers were deleted instead of restyled.
 - Continued the standalone `/u/*` public profile redesign by restyling the below-hero body in `css/public-shell.css` as a route-scoped premium dark glass composition, with richer panel surfaces, improved spacing rhythm, refined share/authority/owner-control cards, stronger strokes, and footer-safe bottom spacing while preserving the existing profile data and action wiring in `js/public-pages-app.js`.
 - Replaced the old standalone profile return-only footer helper with a persistent `/u/index.html` slimline fixed profile footer inspired by the dashboard footer structure, including the existing Community Home affordance, runtime version tooltip wiring, and an inline `data-status-slot` so `js/status-widget.js` mounts the status widget inside the footer instead of floating above the profile page.

@@ -177,6 +177,22 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(profileHtml, /Community Home/);
 });
 
+test("standalone /u profile hydration keeps runtime profile media ahead of local fallback data", () => {
+  const app = read("js/public-pages-app.js");
+  const normalizeProfilePayloadBlock = app.match(/function normalizeProfilePayload\(payload, fallbackProfile, fallbackCode\) \{[\s\S]*?authorityIdentity:[\s\S]*?\n    \};\n  \}/)?.[0] || "";
+  const standaloneProfileBlock = app.match(/function renderStandaloneProfile\(ctx\) \{[\s\S]*?\n  \}\n\n  function renderCommunitySettings/)?.[0] || "";
+
+  assert.ok(normalizeProfilePayloadBlock, "normalizeProfilePayload should exist");
+  assert.match(normalizeProfilePayloadBlock, /payload\?\.avatar_url \|\| payload\?\.avatarUrl \|\| fallbackProfile\?\.avatar/);
+  assert.match(normalizeProfilePayloadBlock, /payload\?\.cover_image_url \|\| payload\?\.coverImageUrl \|\| fallbackProfile\?\.coverImageUrl/);
+  assert.match(normalizeProfilePayloadBlock, /payload\?\.banner_image_url \|\| payload\?\.bannerImageUrl \|\| payload\?\.cover_image_url/);
+
+  assert.ok(standaloneProfileBlock, "renderStandaloneProfile should exist");
+  assert.match(standaloneProfileBlock, /await fetchPublicProfileByIdentifier\(profileCode\)/);
+  assert.match(standaloneProfileBlock, /profile = normalizeProfilePayload\(payload, fallbackProfile, profileCode\)/);
+  assert.match(app, /async function fetchPublicProfileByIdentifier\(identifier\)[\s\S]*cache:\s*"no-store"/);
+});
+
 test("community member hydration uses the authoritative runtime endpoint", () => {
   const dataHub = read("js/public-data-hub.js");
   const app = read("js/public-pages-app.js");
