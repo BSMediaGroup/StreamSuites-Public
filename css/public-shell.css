@@ -2645,7 +2645,10 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   display: inline-grid;
   align-items: center;
   min-width: 142px;
+  font-family: "RechargeBd", "SuiGenerisRg", sans-serif;
   font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: none;
 }
 
 .profile-overlay-brand-text-default,
@@ -2655,25 +2658,16 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 }
 
 .profile-overlay-brand-text-default {
-  width: 142px;
-  height: 18px;
-  display: block;
-  overflow: visible;
+  font-family: inherit;
+  letter-spacing: inherit;
+  text-transform: none;
   opacity: 1;
 }
 
-.profile-overlay-brand-text-default text {
-  fill: currentColor;
-  font-family: "RechargeBd", "SuiGenerisRg", "SuiGeneris", "Segoe UI", sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: none;
-}
-
 .profile-overlay-brand-text-hover {
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-family: inherit;
+  letter-spacing: inherit;
+  text-transform: none;
   opacity: 0;
 }
 

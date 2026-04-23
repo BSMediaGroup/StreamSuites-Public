@@ -6019,19 +6019,9 @@
     logo.loading = "eager";
     logo.decoding = "async";
     const brandText = create("span", "profile-overlay-brand-text");
-    const defaultMark = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    defaultMark.setAttribute("class", "profile-overlay-brand-text-default");
-    defaultMark.setAttribute("viewBox", "0 0 146 18");
-    defaultMark.setAttribute("role", "img");
-    defaultMark.setAttribute("aria-label", "StreamSuites™");
-    const defaultMarkText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    defaultMarkText.setAttribute("x", "0");
-    defaultMarkText.setAttribute("y", "13");
-    defaultMarkText.textContent = "StreamSuites™";
-    defaultMark.appendChild(defaultMarkText);
     brandText.append(
-      defaultMark,
-      create("span", "profile-overlay-brand-text-hover", "Community Home")
+      create("span", "profile-overlay-brand-text-default", "StreamSuites™"),
+      create("span", "profile-overlay-brand-text-hover", "COMMUNITY HOME")
     );
     left.append(
       logo,

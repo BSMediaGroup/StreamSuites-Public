@@ -2,6 +2,8 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+- Reverted the `/u/*` profile header brand label away from the SVG text experiment and back to the original text-label approach, with no CSS uppercase transform on either state and literal label strings of `StreamSuites™` and `COMMUNITY HOME`. This restores the original font behavior while keeping the hover crossfade intact. No files were created or removed.
+
 - Reworked the standalone `/u/*` profile header default `StreamSuites™` label as an inline SVG text mark using the bold title font so the title-font styling and size are restored while the text keeps exact mixed-case casing. The hover/focus `Community Home` label remains unchanged. No files were created or removed.
 
 - Corrected the standalone `/u/*` profile header default `StreamSuites™` label again by removing inherited tracking from the shared text wrapper, using a normal case-preserving bold UI font for the default state, and keeping uppercase/tracking only on the hover/focus `Community Home` label. No files were created or removed.
@@ -668,3 +670,4 @@ Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into t
 ### Risks / Follow-Ups
 
 - The shared modal now depends on the helper being loaded on every shell entrypoint. Future route additions that use `public-shell.js` need to keep that helper script include or the modal will regress again.
+- Restored the standalone `/u/*` profile header brand label to the original text crossfade path with the header title font stack explicitly reapplied on the shared brand-text wrapper, while keeping CSS case transforms disabled and using literal strings `StreamSuites™` and `COMMUNITY HOME`. This removes the fallback-font regression without reintroducing the broken SVG text workaround. No files were created or removed.
