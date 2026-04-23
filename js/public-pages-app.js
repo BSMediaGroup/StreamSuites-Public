@@ -60,6 +60,19 @@
     moderator: "/assets/icons/modgavel-blue.svg",
     developer: "/assets/icons/dev-green.svg"
   });
+  const PROFILE_TIER_BADGE_KEYS = Object.freeze(["core", "gold", "pro"]);
+  const PROFILE_MAIN_ROLE_KEYS = Object.freeze(["admin", "creator", "developer", "viewer"]);
+  const PROFILE_PUBLIC_BADGE_KEYS = Object.freeze(["founder", "moderator"]);
+  const PROFILE_PUBLIC_BADGE_COPY = Object.freeze({
+    founder: {
+      title: "Founding Member",
+      description: "Joined before the founding member cutoff of July 31, 2026."
+    },
+    moderator: {
+      title: "Moderator",
+      description: "Can moderate creator account spaces where this account has an active assignment."
+    }
+  });
   const UI_ICON_MAP = Object.freeze({
     copy: "/assets/icons/ui/clipboard.svg",
     check: "/assets/icons/ui/tickyes.svg",
@@ -678,6 +691,36 @@
     };
   }
 
+  function buildLatestStreamSourceEntries(profile, stream, hasUsableStream) {
+    const alternateSources = Array.isArray(stream?.alternateSources) ? stream.alternateSources : [];
+    const shouldRenderFamily = profile?.creatorCapable || hasUsableStream || alternateSources.length > 0;
+    if (!shouldRenderFamily) return [];
+    const byPlatform = new Map();
+    const remember = (entry) => {
+      const platform = String(entry?.platform || "").trim().toLowerCase();
+      if (!platform || !Object.prototype.hasOwnProperty.call(STREAM_PLATFORM_LABELS, platform)) return;
+      const href = String(entry?.url || entry?.sourceUrl || "").trim();
+      if (!href) return;
+      byPlatform.set(platform, {
+        ...entry,
+        platform,
+        platformLabel: entry?.platformLabel || STREAM_PLATFORM_LABELS[platform],
+        url: href
+      });
+    };
+    alternateSources.forEach(remember);
+    if (hasUsableStream) remember(stream);
+    return STREAM_SOURCE_PRIORITY.map((platform) => {
+      const active = byPlatform.get(platform);
+      if (active) return active;
+      return {
+        platform,
+        platformLabel: STREAM_PLATFORM_LABELS[platform],
+        disabled: true
+      };
+    });
+  }
+
   function parseUrl(value) {
     try {
       return new URL(String(value || ""), window.location.origin);
@@ -929,15 +972,13 @@
       return {
         accountType,
         key: "creator",
-        label: "CREATOR",
-        icon: "/assets/icons/ui/ss-creator.svg"
+        label: "CREATOR"
       };
     }
     return {
       accountType: "VIEWER",
       key: "viewer",
-      label: "VIEWER",
-      icon: "/assets/icons/ui/ss-public.svg"
+      label: "VIEWER"
     };
   }
 
@@ -956,8 +997,8 @@
     icon.src = BADGE_ICON_MAP[normalized];
     if (!icon.src) return null;
     icon.alt = `${normalized || "badge"} badge`;
-    icon.classList.add(["core", "gold", "pro"].includes(normalized) ? "badge-icon-tier" : "badge-icon-role");
-    icon.classList.add(["core", "gold", "pro"].includes(normalized) ? "ss-tier-badge" : "ss-role-badge");
+    icon.classList.add(PROFILE_TIER_BADGE_KEYS.includes(normalized) ? "badge-icon-tier" : "badge-icon-role");
+    icon.classList.add(PROFILE_TIER_BADGE_KEYS.includes(normalized) ? "ss-tier-badge" : "ss-role-badge");
     icon.setAttribute("data-ss-role-badge", normalized || "badge");
     return getPublicBadgeUi()?.wrapTooltipTarget?.(
       icon,
@@ -6349,7 +6390,8 @@
   function buildProfileBadgeChip(key, options = {}) {
     const normalized = String(key || "").trim().toLowerCase() || "core";
     const label = String(options.label || toTitle(normalized) || "Badge").trim() || "Badge";
-    const chip = create("span", `profile-badge-chip profile-badge-chip--${normalized}`, label.toUpperCase());
+    const extraClass = String(options.className || "").trim();
+    const chip = create("span", `profile-badge-chip profile-badge-chip--${normalized}${extraClass ? ` ${extraClass}` : ""}`, label.toUpperCase());
     const iconPath = String(options.icon || BADGE_ICON_MAP[normalized] || "").trim();
     if (iconPath) {
       const icon = create("img", "profile-badge-chip-icon");
@@ -6364,16 +6406,81 @@
   function buildProfileTierChip(tier) {
     const normalized = normalizeTierForUi(tier);
     return buildProfileBadgeChip(normalized, {
-      label: toTitle(normalized)
+      label: toTitle(normalized),
+      className: `profile-tier-chip profile-tier-chip--${normalized}`
     });
   }
 
   function buildProfileTypeChip(profile) {
     const typeChip = resolveProfileTypeDescriptor(profile);
-    return buildProfileBadgeChip(typeChip.key, {
-      label: typeChip.label,
-      icon: typeChip.icon
+    const key = PROFILE_MAIN_ROLE_KEYS.includes(typeChip.key) ? typeChip.key : "viewer";
+    const chip = create("span", `profile-role-chip profile-role-chip--${key}`, typeChip.label);
+    return getPublicBadgeUi()?.registerTarget?.(chip, typeChip.label) || chip;
+  }
+
+  function getProfilePublicBadges(profile) {
+    const seen = new Set();
+    return normalizeAuthoritativeBadges(
+      profile?.badge_state?.surface_badges?.public_surface ||
+        profile?.badge_state?.surface_badges?.streamsuites_profile ||
+        profile?.badge_state?.surface_badges?.directory ||
+        profile?.badges,
+      profile?.accountType || profile?.account_type || roleLabel(normalizeRoleForUi(profile?.role)),
+      profile?.tier
+    )
+      .map((badge) => {
+        const key = normalizeBadgeKey(badge?.key || badge?.icon_key || badge?.iconKey || badge?.value);
+        if (!key || !PROFILE_PUBLIC_BADGE_KEYS.includes(key) || seen.has(key)) return null;
+        seen.add(key);
+        const copy = PROFILE_PUBLIC_BADGE_COPY[key] || {};
+        return {
+          ...badge,
+          key,
+          label: String(badge?.label || copy.title || toTitle(key)).trim(),
+          title: String(badge?.title || copy.title || badge?.label || toTitle(key)).trim(),
+          description: String(badge?.description || badge?.public_description || badge?.publicDescription || copy.description || "").trim(),
+          icon: BADGE_ICON_MAP[key]
+        };
+      })
+      .filter(Boolean);
+  }
+
+  function buildProfileBadgeGallerySection(profile) {
+    const badges = getProfilePublicBadges(profile);
+    const section = create("section", "profile-utility-section profile-badge-gallery-section");
+    const header = create("div", "profile-inline-header");
+    header.appendChild(create("h3", "", "Public badges"));
+    if (badges.length) {
+      header.appendChild(create("span", "profile-section-count", `${formatNumber(badges.length)} public`));
+    }
+    section.appendChild(header);
+
+    if (!badges.length) {
+      section.appendChild(create("div", "profile-empty-state", "No public badges are visible on this profile yet."));
+      return section;
+    }
+
+    const gallery = create("div", "profile-badge-gallery-grid");
+    badges.forEach((badge) => {
+      const card = create("article", `profile-badge-gallery-card profile-badge-gallery-card--${badge.key}`);
+      const iconWrap = create("span", "profile-badge-gallery-icon-wrap");
+      const icon = create("img", "profile-badge-gallery-icon");
+      icon.src = badge.icon;
+      icon.alt = "";
+      icon.loading = "lazy";
+      icon.decoding = "async";
+      icon.setAttribute("aria-hidden", "true");
+      iconWrap.appendChild(icon);
+      const body = create("span", "profile-badge-gallery-body");
+      body.append(
+        create("strong", "", badge.title || badge.label || toTitle(badge.key)),
+        create("span", "", badge.description || "Public badge visible on this StreamSuites profile.")
+      );
+      card.append(iconWrap, body);
+      gallery.appendChild(card);
     });
+    section.appendChild(gallery);
+    return section;
   }
 
   function buildProfileOverviewPanel(profile, artifacts, helpers) {
@@ -6419,7 +6526,6 @@
 
   function buildLatestStreamSection(profile, helpers) {
     const stream = profile?.latestStream || null;
-    const alternateSources = Array.isArray(stream?.alternateSources) ? stream.alternateSources : [];
     const hasUsableStream = Boolean(
       stream &&
       (
@@ -6534,20 +6640,7 @@
       link.prepend(createStreamPlatformIcon(stream.platform, "profile-latest-stream-link-icon"));
       body.appendChild(link);
     }
-    const sourceEntries = (() => {
-      if (hasUsableStream) return alternateSources;
-      const byPlatform = new Map(
-        alternateSources
-          .filter((entry) => entry?.platform)
-          .map((entry) => [entry.platform, entry])
-      );
-      if (!profile?.creatorCapable && !byPlatform.size) return [];
-      return STREAM_SOURCE_PRIORITY.map((platform) => byPlatform.get(platform) || {
-        platform,
-        platformLabel: STREAM_PLATFORM_LABELS[platform],
-        disabled: true
-      });
-    })();
+    const sourceEntries = buildLatestStreamSourceEntries(profile, stream, hasUsableStream);
     if (sourceEntries.length) {
       const sourceRow = create("div", "profile-latest-stream-sources");
       sourceRow.appendChild(create("span", "profile-latest-stream-sources-label", "Other sources"));
@@ -6730,6 +6823,7 @@
       buildProfileMiniArtifactGallery(profileArtifacts, canEdit, options.helpers || null)
     );
     profileCard.appendChild(primaryGrid);
+    profileCard.appendChild(buildProfileBadgeGallerySection(profile));
     profileCard.appendChild(buildProfileGameCompetitionSection());
 
     const grid = create("div", "profile-utility-grid profile-utility-grid--slim");
