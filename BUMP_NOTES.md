@@ -2,6 +2,8 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+- Adjusted the standalone `/u/*` profile header brand text so the default `StreamSuites™` label keeps its exact mixed-case casing while the hover/focus `Community Home` label remains uppercase. No files were created or removed.
+
 - Corrected the standalone `/u/*` Public Authority state icon swap so the collapsed icon is set to `/assets/icons/ui/hidden.svg` and the `<details>` toggle handler updates the same inline mask to `/assets/icons/ui/visible.svg` when expanded. The prior CSS-only override could not reliably beat the icon's inline mask custom property. No files were created or removed.
 
 - Updated the standalone `/u/*` profile header brand text so the existing Community Home link now shows `StreamSuites™` by default in the bold title font and smoothly crossfades to `Community Home` on hover/focus, without changing the logo image or link destination. No files were created or removed.

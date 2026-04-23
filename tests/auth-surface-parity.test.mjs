@@ -176,6 +176,8 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /\.profile-overlay-header/);
   assert.match(css, /\.profile-overlay-brand-logo/);
   assert.match(css, /\.profile-overlay-brand-text-default\s*\{[\s\S]*font-family:\s*"RechargeBd"/);
+  assert.match(css, /\.profile-overlay-brand-text-default\s*\{[\s\S]*text-transform:\s*none/);
+  assert.match(css, /\.profile-overlay-brand-text-hover\s*\{[\s\S]*text-transform:\s*uppercase/);
   assert.match(css, /\.profile-overlay-brand:hover \.profile-overlay-brand-text-hover/);
   assert.match(css, /\.profile-header-social-panel/);
   assert.match(css, /\.profile-header-account \.account-avatar\s*\{[\s\S]*border-radius:\s*7px/);

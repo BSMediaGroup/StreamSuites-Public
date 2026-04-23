@@ -2647,7 +2647,6 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   min-width: 132px;
   font-size: 0.66rem;
   letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
 
 .profile-overlay-brand-text-default,
@@ -2659,10 +2658,12 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 .profile-overlay-brand-text-default {
   font-family: "RechargeBd", "SuiGenerisRg", "SuiGeneris", "Segoe UI", sans-serif;
   font-weight: 700;
+  text-transform: none;
   opacity: 1;
 }
 
 .profile-overlay-brand-text-hover {
+  text-transform: uppercase;
   opacity: 0;
 }
 
