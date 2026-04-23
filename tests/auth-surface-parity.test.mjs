@@ -166,6 +166,11 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(standaloneUtilityBlock, /buildProfileShareSection\(profile, \{ compact: true \}\)/);
   assert.match(standaloneUtilityBlock, /buildCollapsedAuthorityRequestPanel\(resolveProfileAuthorityContext\(profile\)/);
   assert.match(app, /function buildLatestStreamSection\(profile, helpers\)/);
+  assert.match(app, /alternate_sources|alternateSources/);
+  assert.match(app, /function buildLatestStreamSourceButton\(stream, label\)/);
+  assert.match(app, /function buildStreamPlatformPill\(stream, fallbackLabel = "Stream"\)/);
+  assert.match(app, /createStreamPlatformIcon\(hasUsableStream \? stream\?\.platform : "", "profile-latest-stream-placeholder-icon-image"\)/);
+  assert.match(app, /media\.classList\.add\("is-fallback-preview"\)/);
   assert.match(app, /const hasUsableStream = Boolean/);
   assert.match(app, /details\.open = hasUsableStream/);
   assert.match(app, /No livestream data available/);
@@ -208,6 +213,13 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /\.profile-stream-collapsible/);
   assert.match(css, /\.profile-latest-stream-card/);
   assert.match(css, /\.profile-latest-stream-card\.is-empty/);
+  assert.match(css, /\.profile-latest-stream-media\.is-fallback-preview/);
+  assert.match(css, /\.profile-latest-stream-placeholder-icon-image/);
+  assert.match(css, /\.profile-latest-stream-sources/);
+  assert.match(css, /\.profile-latest-stream-source-button/);
+  assert.match(css, /\.profile-stream-platform-icon/);
+  assert.match(css, /\.profile-hero-role-chip--admin,[\s\S]*--profile-role-chip-bg:\s*linear-gradient\(135deg, rgba\(255, 198, 84, 0\.42\), rgba\(255, 232, 164, 0\.12\)\)/);
+  assert.match(css, /\.profile-hero-role-chip--pro,[\s\S]*\.profile-badge-chip--pro/);
   assert.match(css, /\.profile-game-section/);
   assert.match(css, /\.profile-game-collapsible/);
   assert.match(css, /\.profile-game-panel/);

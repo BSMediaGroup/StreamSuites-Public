@@ -625,7 +625,7 @@
     return banner;
   }
 
-  function normalizeLatestStreamPayload(value) {
+  function normalizeLatestStreamSourcePayload(value) {
     if (!value || typeof value !== "object") return null;
     const platform = String(value.platform || value.source_platform || value.sourcePlatform || "").trim().toLowerCase();
     if (!Object.prototype.hasOwnProperty.call(STREAM_PLATFORM_LABELS, platform)) return null;
@@ -638,6 +638,7 @@
     return {
       platform,
       platformLabel: String(value.platform_label || value.platformLabel || STREAM_PLATFORM_LABELS[platform]).trim() || STREAM_PLATFORM_LABELS[platform],
+      platformIcon: getStreamPlatformIconPath(platform),
       sourceUrl,
       channelHandle,
       configured,
@@ -650,6 +651,29 @@
       startedAt: String(value.started_at || value.startedAt || "").trim(),
       lastCheckedAt: String(value.last_checked_at || value.lastCheckedAt || "").trim(),
       status: String(value.status || "").trim()
+    };
+  }
+
+  function normalizeLatestStreamPayload(value) {
+    const primary = normalizeLatestStreamSourcePayload(value);
+    if (!primary) return null;
+    const seen = new Set([
+      `${primary.platform}|${primary.url}|${primary.sourceUrl}`,
+      `${primary.platform}|${primary.sourceUrl}|${primary.url}`
+    ]);
+    const alternateSources = (Array.isArray(value?.alternate_sources) ? value.alternate_sources : Array.isArray(value?.alternateSources) ? value.alternateSources : [])
+      .map((entry) => normalizeLatestStreamSourcePayload(entry))
+      .filter((entry) => {
+        if (!entry) return false;
+        if (!entry.url && !entry.sourceUrl) return false;
+        const key = `${entry.platform}|${entry.url}|${entry.sourceUrl}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    return {
+      ...primary,
+      alternateSources
     };
   }
 
@@ -693,6 +717,30 @@
     if (stream.platform === "youtube") return resolveYouTubeEmbedUrl(stream.url || stream.sourceUrl);
     if (stream.platform === "twitch") return resolveTwitchEmbedUrl(stream);
     return "";
+  }
+
+  function buildStreamPlatformPill(stream, fallbackLabel = "Stream") {
+    const pill = create("span", "profile-stream-platform");
+    if (stream?.platform) {
+      pill.append(createStreamPlatformIcon(stream.platform), create("span", "", stream.platformLabel || fallbackLabel));
+      return pill;
+    }
+    pill.append(createStreamPlatformIcon("", "profile-stream-platform-icon profile-stream-platform-icon--fallback"), create("span", "", fallbackLabel));
+    return pill;
+  }
+
+  function buildLatestStreamSourceButton(stream, label) {
+    const href = String(stream?.url || stream?.sourceUrl || "").trim();
+    if (!href) return null;
+    const button = create("a", "profile-latest-stream-source-button");
+    button.href = href;
+    button.target = "_blank";
+    button.rel = "noopener noreferrer";
+    button.append(
+      createStreamPlatformIcon(stream?.platform, "profile-latest-stream-source-button-icon"),
+      create("span", "", label || stream?.platformLabel || "Source")
+    );
+    return button;
   }
 
   function buildAvatar(profile) {
@@ -914,6 +962,28 @@
     icon.alt = `${platform || "Platform"} icon`;
     chip.append(icon, create("span", "", platform || "Platform"));
     return chip;
+  }
+
+  function getStreamPlatformIconPath(platform) {
+    const normalized = String(platform || "").trim().toLowerCase();
+    const socialData = window.StreamSuitesPublicData;
+    if (typeof socialData?.socialIconPath === "function") {
+      const resolved = String(socialData.socialIconPath(normalized) || "").trim();
+      if (resolved) return resolved;
+    }
+    return normalized && Object.prototype.hasOwnProperty.call(STREAM_PLATFORM_LABELS, normalized)
+      ? `/assets/icons/${normalized}.svg`
+      : "/assets/icons/ui/cast.svg";
+  }
+
+  function createStreamPlatformIcon(platform, className = "profile-stream-platform-icon") {
+    const icon = create("img", className);
+    icon.src = getStreamPlatformIconPath(platform);
+    icon.alt = "";
+    icon.setAttribute("aria-hidden", "true");
+    icon.loading = "lazy";
+    icon.decoding = "async";
+    return icon;
   }
 
   function buildStatusChip(status) {
@@ -6321,6 +6391,7 @@
 
   function buildLatestStreamSection(profile, helpers) {
     const stream = profile?.latestStream || null;
+    const alternateSources = Array.isArray(stream?.alternateSources) ? stream.alternateSources : [];
     const hasUsableStream = Boolean(
       stream &&
       (
@@ -6377,9 +6448,10 @@
       thumbnail.decoding = "async";
       media.appendChild(thumbnail);
     } else {
+      media.classList.add("is-fallback-preview");
       const placeholder = create("div", "profile-latest-stream-placeholder");
       placeholder.append(
-        createIcon(UI_ICON_MAP.social, "profile-latest-stream-placeholder-icon"),
+        createStreamPlatformIcon(hasUsableStream ? stream?.platform : "", "profile-latest-stream-placeholder-icon-image"),
         create("span", "", hasUsableStream ? (stream?.isLive ? "Player unavailable" : "Source preview unavailable") : "No livestream data available")
       );
       media.appendChild(placeholder);
@@ -6389,12 +6461,12 @@
     const eyebrow = create("div", "profile-latest-stream-eyebrow");
     if (hasUsableStream) {
       eyebrow.append(
-        create("span", "profile-stream-platform", stream.platformLabel),
+        buildStreamPlatformPill(stream, stream.platformLabel),
         create("span", stream.isLive ? "profile-stream-state is-live" : "profile-stream-state", stream.isLive ? "Live now" : "Featured source")
       );
     } else {
       eyebrow.append(
-        create("span", "profile-stream-platform", "Stream"),
+        buildStreamPlatformPill(null, "Stream"),
         create("span", "profile-stream-state", "No current data")
       );
     }
@@ -6425,7 +6497,21 @@
       link.href = streamUrl;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
+      link.prepend(createStreamPlatformIcon(stream.platform, "profile-latest-stream-link-icon"));
       body.appendChild(link);
+    }
+    if (alternateSources.length) {
+      const sourceRow = create("div", "profile-latest-stream-sources");
+      sourceRow.appendChild(create("span", "profile-latest-stream-sources-label", "Also streamed to"));
+      const sourceButtons = create("div", "profile-latest-stream-sources-list");
+      alternateSources.forEach((entry) => {
+        const button = buildLatestStreamSourceButton(entry, entry.platformLabel);
+        if (button) sourceButtons.appendChild(button);
+      });
+      if (sourceButtons.childElementCount) {
+        sourceRow.appendChild(sourceButtons);
+        body.appendChild(sourceRow);
+      }
     }
     card.append(media, body);
     panel.appendChild(card);

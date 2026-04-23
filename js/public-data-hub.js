@@ -614,7 +614,7 @@
     return enrichAuthoritativeLiveStatus(authoritative, resolveRumbleDiscovery(raw, rumbleDiscoveryMap));
   }
 
-  function normalizeLatestStreamPayload(value) {
+  function normalizeLatestStreamSourcePayload(value) {
     if (!value || typeof value !== "object") return null;
     const platform = String(value.platform || value.source_platform || value.sourcePlatform || "").trim().toLowerCase();
     if (!PUBLIC_PROFILE_STREAM_PLATFORMS.has(platform)) return null;
@@ -638,6 +638,29 @@
       startedAt: String(value.started_at || value.startedAt || "").trim(),
       lastCheckedAt: String(value.last_checked_at || value.lastCheckedAt || "").trim(),
       status: String(value.status || "").trim()
+    };
+  }
+
+  function normalizeLatestStreamPayload(value) {
+    const primary = normalizeLatestStreamSourcePayload(value);
+    if (!primary) return null;
+    const seen = new Set([
+      `${primary.platform}|${primary.url}|${primary.sourceUrl}`,
+      `${primary.platform}|${primary.sourceUrl}|${primary.url}`
+    ]);
+    const alternateSources = (Array.isArray(value?.alternate_sources) ? value.alternate_sources : Array.isArray(value?.alternateSources) ? value.alternateSources : [])
+      .map((entry) => normalizeLatestStreamSourcePayload(entry))
+      .filter((entry) => {
+        if (!entry) return false;
+        if (!entry.url && !entry.sourceUrl) return false;
+        const key = `${entry.platform}|${entry.url}|${entry.sourceUrl}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    return {
+      ...primary,
+      alternateSources
     };
   }
 
