@@ -136,6 +136,34 @@ test("public account menu keeps the overview card and capability-aware console l
   assert.match(css, /account-menu-overview/);
 });
 
+test("standalone /u profile pages own the cinematic header and hero treatment", () => {
+  const app = read("js/public-pages-app.js");
+  const css = read("css/public-shell.css");
+
+  assert.match(app, /function renderStandaloneProfilePage\(host, profile, canEdit, options = \{\}\)/);
+  assert.match(app, /buildStandaloneProfileHero\(profile, options\.authState \|\| null, options\)/);
+  assert.match(app, /buildStandaloneProfileHeader\(profile, authState, options = \{\}\)/);
+  assert.match(app, /buildProfileHeaderSocialRail\(profile\?\.socialLinks\)/);
+  assert.match(app, /buildProfileHeaderAccountWidget\(authState/);
+  assert.match(app, /profile-overlay-brand-logo/);
+  assert.match(app, /\/assets\/logos\/ssnewcon\.webp/);
+  assert.doesNotMatch(app, /profile-overlay-brand-icon/);
+  assert.match(app, /profile-hero-trim/);
+  assert.match(app, /profile-hero-bio-toggle/);
+  assert.match(app, /bio\.scrollHeight > bio\.clientHeight \+ 2/);
+  assert.match(app, /Community Home/);
+
+  assert.match(css, /body\[data-public-page="public-profile-standalone"\] \.public-standalone-root/);
+  assert.match(css, /\.profile-cinematic-hero/);
+  assert.match(css, /\.profile-overlay-header/);
+  assert.match(css, /\.profile-overlay-brand-logo/);
+  assert.match(css, /\.profile-header-social-panel/);
+  assert.match(css, /\.profile-header-account \.account-avatar\s*\{[\s\S]*border-radius:\s*7px/);
+  assert.match(css, /\.profile-hero-trim/);
+  assert.match(css, /\.profile-hero-bio\s*\{[\s\S]*-webkit-line-clamp:\s*4/);
+  assert.match(css, /\.profile-return-link/);
+});
+
 test("community member hydration uses the authoritative runtime endpoint", () => {
   const dataHub = read("js/public-data-hub.js");
   const app = read("js/public-pages-app.js");

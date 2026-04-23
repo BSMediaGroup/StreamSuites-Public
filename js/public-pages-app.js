@@ -70,6 +70,8 @@
     edit: "/assets/icons/ui/cog.svg",
     share: "/assets/icons/ui/send.svg",
     visibility: "/assets/icons/ui/globe.svg",
+    profile: "/assets/icons/ui/profile.svg",
+    community: "/assets/icons/ui/community.svg",
     social: "/assets/icons/ui/integrations.svg",
     streamsuites: "/assets/icons/ui/streamsuitesicon.svg",
     findmehere: "/assets/icons/ui/findmehereicon.svg"
@@ -97,6 +99,22 @@
     { value: "#", label: "#" }
   ]);
   const DEFAULT_PROFILE_COVER = "/assets/placeholders/defaultprofilecover.webp";
+  let standaloneProfileCleanupFns = [];
+
+  function registerStandaloneProfileCleanup(fn) {
+    if (typeof fn === "function") standaloneProfileCleanupFns.push(fn);
+  }
+
+  function cleanupStandaloneProfileInteractions() {
+    standaloneProfileCleanupFns.forEach((fn) => {
+      try {
+        fn();
+      } catch (_err) {
+        // Ignore cleanup failures from already-detached profile controls.
+      }
+    });
+    standaloneProfileCleanupFns = [];
+  }
 
   function escapeHtml(value) {
     return String(value ?? "")
@@ -5424,55 +5442,33 @@
     return collectProfileIdentifiers(profile || fallbackIdentifier).some((identifier) => authIdentifiers.has(identifier));
   }
 
-  function renderProfileNotFound(host, requestedCode) {
+  function renderProfileNotFound(host, requestedCode, options = {}) {
     const normalizedCode = String(requestedCode || "").trim();
     const title = normalizedCode ? `@${normalizedCode}` : "Profile";
     const subtitle = normalizedCode
       ? "This public profile could not be found."
       : "A public profile slug is required for this route.";
-    const nextHeading = buildPageHeading(title, subtitle);
-    const existingHeading = host.querySelector(".page-heading");
-    if (existingHeading && existingHeading.parentElement === host) {
-      host.replaceChild(nextHeading, existingHeading);
-    } else {
-      host.prepend(nextHeading);
-    }
-
-    const layout = host.querySelector(".public-standalone-main");
-    const profileCard = host.querySelector(".profile-card-standalone");
-    if (!layout || !profileCard) return;
-
-    clear(profileCard);
-    profileCard.append(
-      create("div", "empty-state", normalizedCode ? "Profile not found." : "Missing profile slug."),
-      create("p", "item-snippet", normalizedCode
-        ? "Check the profile link or try searching the community directory."
-        : "Use a canonical public profile URL in the format /u/<slug>.")
-    );
+    renderStandaloneProfileMessage(host, {
+      title,
+      subtitle,
+      authState: options.authState || null,
+      openAuthModal: options.openAuthModal || null,
+      onMenuAction: options.onMenuAction || null
+    });
     document.title = normalizedCode ? `${normalizedCode} | Profile Not Found` : "Profile Not Found | StreamSuites";
   }
 
-  function renderProfileUnavailable(host, profile, requestedCode) {
+  function renderProfileUnavailable(host, profile, requestedCode, options = {}) {
     const normalizedCode = String(profile?.publicSlug || requestedCode || "").trim();
     const title = normalizedCode ? `@${normalizedCode}` : "Profile unavailable";
     const subtitle = "This canonical StreamSuites public profile is currently unavailable.";
-    const nextHeading = buildPageHeading(title, subtitle);
-    const existingHeading = host.querySelector(".page-heading");
-    if (existingHeading && existingHeading.parentElement === host) {
-      host.replaceChild(nextHeading, existingHeading);
-    } else {
-      host.prepend(nextHeading);
-    }
-
-    const layout = host.querySelector(".public-standalone-main");
-    const profileCard = host.querySelector(".profile-card-standalone");
-    if (!layout || !profileCard) return;
-
-    clear(profileCard);
-    profileCard.append(
-      create("div", "empty-state", "Profile unavailable"),
-      create("p", "profile-unavailable-copy", buildUnavailableProfileMessage(profile))
-    );
+    renderStandaloneProfileMessage(host, {
+      title,
+      subtitle: buildUnavailableProfileMessage(profile) || subtitle,
+      authState: options.authState || null,
+      openAuthModal: options.openAuthModal || null,
+      onMenuAction: options.onMenuAction || null
+    });
     document.title = normalizedCode ? `${normalizedCode} | Profile Unavailable` : "Profile Unavailable | StreamSuites";
   }
 
@@ -5607,6 +5603,508 @@
     };
     render();
     return row;
+  }
+
+  function getProfileHeaderSocialVisibleLimit() {
+    if (window.matchMedia("(max-width: 520px)").matches) return 3;
+    if (window.matchMedia("(max-width: 760px)").matches) return 4;
+    if (window.matchMedia("(max-width: 1080px)").matches) return 6;
+    return 10;
+  }
+
+  function buildProfileHeaderSocialRail(socialLinks) {
+    const entries = collectOrderedSocialEntries(socialLinks);
+    if (!entries.length) return null;
+
+    const wrap = create("div", "profile-header-social-wrap");
+    const rail = create("div", "profile-header-social-rail");
+    rail.setAttribute("aria-label", "Profile social links");
+    const toggle = create("button", "profile-header-social-overflow", "+");
+    toggle.type = "button";
+    toggle.setAttribute("aria-expanded", "false");
+    const panel = create("div", "profile-header-social-panel");
+    panel.hidden = true;
+
+    let expanded = false;
+    const render = () => {
+      const visibleLimit = Math.max(1, Math.min(entries.length, getProfileHeaderSocialVisibleLimit()));
+      const visibleEntries = entries.slice(0, visibleLimit);
+      const hiddenEntries = entries.slice(visibleLimit);
+      rail.innerHTML = "";
+      panel.innerHTML = "";
+
+      visibleEntries.forEach((entry) => {
+        rail.appendChild(buildSocialIconLink(entry, "profile-header-social-btn", "profile-header-social-icon"));
+      });
+
+      hiddenEntries.forEach((entry) => {
+        panel.appendChild(buildSocialIconLink(entry, "profile-header-social-panel-btn", "profile-header-social-icon"));
+      });
+
+      toggle.hidden = hiddenEntries.length === 0;
+      toggle.textContent = hiddenEntries.length ? `+${hiddenEntries.length}` : "+";
+      toggle.setAttribute(
+        "aria-label",
+        expanded ? "Collapse extra social links" : `Show ${hiddenEntries.length} more social links`
+      );
+      toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+      panel.hidden = !expanded || hiddenEntries.length === 0;
+      wrap.classList.toggle("is-expanded", expanded && hiddenEntries.length > 0);
+    };
+
+    toggle.addEventListener("click", (event) => {
+      event.stopPropagation();
+      expanded = !expanded;
+      render();
+    });
+    const handleDocumentClick = (event) => {
+      if (!wrap.contains(event.target)) {
+        expanded = false;
+        render();
+      }
+    };
+    const handleDocumentKeydown = (event) => {
+      if (event.key === "Escape" && expanded) {
+        expanded = false;
+        render();
+      }
+    };
+    document.addEventListener("click", handleDocumentClick);
+    document.addEventListener("keydown", handleDocumentKeydown);
+    window.addEventListener("resize", render, { passive: true });
+    registerStandaloneProfileCleanup(() => {
+      document.removeEventListener("click", handleDocumentClick);
+      document.removeEventListener("keydown", handleDocumentKeydown);
+      window.removeEventListener("resize", render);
+    });
+
+    wrap.append(rail, toggle, panel);
+    render();
+    return wrap;
+  }
+
+  function normalizeProfileHeaderAccountBadges(badges = []) {
+    const normalized = (Array.isArray(badges) ? badges : [])
+      .map((badge) => {
+        if (!badge || typeof badge !== "object") return null;
+        const key = normalizeBadgeKey(badge.key || badge.icon_key || badge.iconKey || badge.value);
+        if (!key) return null;
+        return {
+          key,
+          label: String(badge.label || badge.title || key).trim() || key
+        };
+      })
+      .filter(Boolean)
+      .filter((badge) => badge.key !== "founder");
+
+    const roleBadge = normalized.find((badge) => badge.key === "admin" || badge.key === "developer");
+    if (roleBadge) return [roleBadge];
+    const tierBadge = normalized.find((badge) => ["core", "gold", "pro"].includes(badge.key));
+    return tierBadge ? [tierBadge] : [];
+  }
+
+  function buildProfileHeaderAccountWidget(authState, options = {}) {
+    const authenticated = Boolean(authState?.authenticated);
+    const widget = create("div", "account-widget profile-header-account ss-no-profile-hover");
+    widget.setAttribute("data-ss-profile-hover", "off");
+
+    const account = create("button", "account-pill account-trigger");
+    account.type = "button";
+    account.setAttribute("aria-haspopup", "menu");
+    account.setAttribute("aria-expanded", "false");
+    account.classList.toggle("is-authenticated", authenticated);
+
+    const accountAvatar = create("span", "account-avatar");
+    const avatarUrl = authenticated ? String(authState?.avatarUrl || "").trim() : "";
+    if (avatarUrl) {
+      accountAvatar.classList.add("has-image");
+      accountAvatar.style.backgroundImage = `url(${avatarUrl})`;
+    } else {
+      accountAvatar.appendChild(createIcon(UI_ICON_MAP.profile, "account-avatar-icon"));
+    }
+
+    const accountText = create("span", "account-text");
+    const accountName = create("span", "account-name", authenticated ? authState.displayName || "User" : "Login");
+    const accountBadges = create("span", "account-badges");
+    if (authenticated) {
+      normalizeProfileHeaderAccountBadges(authState?.badges).forEach((badge) => {
+        const icon = create("img", "account-badge-icon");
+        icon.src = BADGE_ICON_MAP[badge.key];
+        if (!icon.src) return;
+        icon.alt = badge.label || badge.key;
+        accountBadges.appendChild(
+          getPublicBadgeUi()?.wrapTooltipTarget?.(
+            icon,
+            getPublicBadgeUi()?.resolveBadgeLabel?.(badge, "Badge") || badge.label || badge.key,
+            { className: "ss-badge-tooltip-target ss-badge-tooltip-target--icon" }
+          ) || icon
+        );
+      });
+    }
+    accountText.append(accountName, accountBadges);
+    account.append(accountAvatar, accountText);
+
+    const accountMenu = create("div", "account-menu");
+    accountMenu.hidden = true;
+    accountMenu.setAttribute("role", "menu");
+    const menuItems = buildAccountMenuItems(authState);
+
+    if (authenticated) {
+      const header = create("div", "account-menu-header");
+      header.append(
+        create("div", "account-menu-name", authState.displayName || "User"),
+        create("div", "account-menu-role", authState.accessClass || authState.accountType || "")
+      );
+      accountMenu.appendChild(header);
+      if (authState.accountId || authState.userCode || authState.displayTier) {
+        const overview = create("div", "account-menu-overview");
+        [
+          { label: "User code", value: authState.userCode || "Not available" },
+          { label: "Account type", value: authState.accessClass || authState.accountType || "PUBLIC" },
+          { label: "Tier", value: authState.displayTier || authState.tier || "core" }
+        ].forEach((row) => {
+          const item = create("div", "account-menu-overview-row");
+          item.append(
+            create("span", "account-menu-overview-label", row.label),
+            create("span", "account-menu-overview-value", row.value)
+          );
+          overview.appendChild(item);
+        });
+        accountMenu.appendChild(overview);
+      }
+    }
+
+    menuItems.forEach((item) => {
+      if (!item || typeof item !== "object") return;
+      if (item.separator) {
+        accountMenu.appendChild(create("div", "account-menu-separator"));
+        return;
+      }
+      const label = String(item.label || "").trim();
+      if (!label) return;
+      const menuItem = item.href ? create("a", "account-menu-item", label) : create("button", "account-menu-item", label);
+      if (item.href) {
+        menuItem.href = String(item.href);
+        if (item.target) menuItem.target = String(item.target);
+        if (item.rel) menuItem.rel = String(item.rel);
+      } else {
+        menuItem.type = "button";
+      }
+      menuItem.setAttribute("role", "menuitem");
+      if (item.subtle) menuItem.classList.add("is-subtle");
+      if (String(item.action || "").toLowerCase() === "logout") menuItem.classList.add("is-danger");
+      menuItem.addEventListener("click", (event) => {
+        accountMenu.hidden = true;
+        account.classList.remove("is-open");
+        account.setAttribute("aria-expanded", "false");
+        if (!item.href) event.preventDefault();
+        if (typeof options.onMenuAction === "function") {
+          options.onMenuAction(String(item.action || ""), item);
+          return;
+        }
+        if (item.action === "public_login") options.openAuthModal?.("login");
+        if (item.action === "public_signup") options.openAuthModal?.("signup");
+      });
+      accountMenu.appendChild(menuItem);
+    });
+
+    account.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const open = accountMenu.hidden;
+      accountMenu.hidden = !open;
+      account.classList.toggle("is-open", open);
+      account.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    const handleDocumentClick = (event) => {
+      if (!widget.contains(event.target)) {
+        accountMenu.hidden = true;
+        account.classList.remove("is-open");
+        account.setAttribute("aria-expanded", "false");
+      }
+    };
+    document.addEventListener("click", handleDocumentClick);
+    registerStandaloneProfileCleanup(() => {
+      document.removeEventListener("click", handleDocumentClick);
+    });
+
+    widget.append(account, accountMenu);
+    return widget;
+  }
+
+  function buildStandaloneProfileHeader(profile, authState, options = {}) {
+    const header = create("header", "profile-overlay-header");
+    const left = create("a", "profile-overlay-brand");
+    left.href = "/community/";
+    left.setAttribute("aria-label", "Community home");
+    const logo = create("img", "profile-overlay-brand-logo");
+    logo.src = "/assets/logos/ssnewcon.webp";
+    logo.alt = "";
+    logo.loading = "eager";
+    logo.decoding = "async";
+    left.append(
+      logo,
+      create("span", "profile-overlay-brand-text", "Community Home")
+    );
+
+    const right = create("div", "profile-overlay-actions");
+    const socialRail = buildProfileHeaderSocialRail(profile?.socialLinks);
+    if (socialRail) right.appendChild(socialRail);
+    right.appendChild(
+      buildProfileHeaderAccountWidget(authState, {
+        openAuthModal: options.openAuthModal,
+        onMenuAction: options.onMenuAction
+      })
+    );
+
+    header.append(left, right);
+    return header;
+  }
+
+  function buildStandaloneRoleChips(profile) {
+    const roles = [];
+    const add = (key, label) => {
+      const normalized = String(key || "").trim().toLowerCase();
+      const text = String(label || normalized).trim();
+      if (!normalized || !text || roles.some((role) => role.key === normalized)) return;
+      roles.push({ key: normalized, label: text.toUpperCase() });
+    };
+
+    const role = normalizeRoleForUi(profile?.role);
+    add(role, roleLabel(role));
+    normalizeAuthoritativeBadges(
+      profile?.badge_state?.surface_badges?.public_surface ||
+        profile?.badge_state?.surface_badges?.profile_card ||
+        profile?.badges,
+      profile?.accountType || profile?.account_type || roleLabel(role),
+      profile?.tier
+    ).forEach((badge) => {
+      const key = normalizeBadgeKey(badge?.key || badge?.value);
+      if (["admin", "developer", "founder", "moderator"].includes(key)) {
+        add(key, badge.label || badge.title || key);
+      }
+    });
+
+    const row = create("div", "profile-hero-role-chips");
+    roles.forEach((item) => {
+      row.appendChild(create("span", `profile-hero-role-chip profile-hero-role-chip--${item.key}`, item.label));
+    });
+    row.hidden = row.childElementCount === 0;
+    return row;
+  }
+
+  function buildStandaloneProfileHero(profile, authState, options = {}) {
+    const hero = create("section", "profile-cinematic-hero");
+    const coverUrl = String(profile?.bannerImageUrl || profile?.coverImageUrl || DEFAULT_PROFILE_COVER).trim() || DEFAULT_PROFILE_COVER;
+    hero.style.setProperty("--profile-cover-image", `url("${coverUrl.replace(/"/g, "%22")}")`);
+
+    hero.appendChild(buildStandaloneProfileHeader(profile, authState, options));
+    hero.append(create("div", "profile-hero-cover", ""), create("div", "profile-hero-vignette", ""));
+
+    const content = create("div", "profile-hero-content");
+    const avatar = buildAvatar(profile);
+    avatar.classList.add("profile-hero-avatar");
+
+    const identity = create("div", "profile-hero-identity");
+    const name = create("h1", "profile-hero-name", profile?.displayName || "Public User");
+    const handleText = getCanonicalProfileSlug(profile, "");
+    const handle = create("p", "profile-hero-handle", handleText ? `@${handleText}` : "@public-user");
+    const badgeRow = buildBadgeSuffix(profile, { includeRoleChip: false });
+    badgeRow.classList.add("profile-hero-badges");
+    badgeRow.hidden = badgeRow.childElementCount === 0;
+    identity.append(name, handle);
+    if (!badgeRow.hidden) identity.appendChild(badgeRow);
+
+    const bioText = String(profile?.bio || "").trim();
+    if (bioText) {
+      const bioWrap = create("div", "profile-hero-bio-wrap");
+      const bio = create("p", "profile-hero-bio", bioText);
+      const toggle = create("button", "profile-hero-bio-toggle", "Show more");
+      toggle.type = "button";
+      toggle.setAttribute("aria-expanded", "false");
+      toggle.hidden = true;
+      toggle.addEventListener("click", () => {
+        const expanded = !bioWrap.classList.contains("is-expanded");
+        bioWrap.classList.toggle("is-expanded", expanded);
+        toggle.textContent = expanded ? "Show less" : "Show more";
+        toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+      });
+      bioWrap.append(bio, toggle);
+      identity.appendChild(bioWrap);
+      window.requestAnimationFrame(() => {
+        const isOverflowing = bio.scrollHeight > bio.clientHeight + 2;
+        toggle.hidden = !isOverflowing;
+      });
+    }
+
+    const chips = buildStandaloneRoleChips(profile);
+    if (!chips.hidden) identity.appendChild(chips);
+    content.append(avatar, identity);
+    hero.appendChild(content);
+    return hero;
+  }
+
+  function buildStandaloneProfileOwnerTools(profile, canEdit) {
+    if (!canEdit) return null;
+    const tools = create("section", "profile-utility-section profile-owner-tools");
+    const header = create("div", "profile-inline-header");
+    header.appendChild(create("h3", "", "Owner controls"));
+    const settings = create("a", "edit-affordance", "Edit links");
+    settings.href = "/community/settings.html";
+    header.appendChild(settings);
+
+    const bioHeader = create("div", "profile-inline-header");
+    bioHeader.appendChild(create("h3", "", "Bio editor"));
+    const editBioBtn = create("button", "edit-affordance edit-button-inline", "Edit");
+    editBioBtn.type = "button";
+    editBioBtn.prepend(createIcon(UI_ICON_MAP.edit, "inline-icon-mask"));
+    bioHeader.appendChild(editBioBtn);
+
+    const bioEditor = create("div", "profile-bio-editor");
+    bioEditor.hidden = true;
+    const bioInput = create("textarea");
+    bioInput.value = profile.bio || "";
+    bioInput.rows = 4;
+    const bioSave = create("button", "filter-chip active", "Save");
+    bioSave.type = "button";
+    const bioCancel = create("button", "filter-chip", "Cancel");
+    bioCancel.type = "button";
+    const bioStatus = create("span", "muted");
+    const bioActions = create("div", "profile-bio-actions");
+    bioActions.append(bioSave, bioCancel, bioStatus);
+    bioEditor.append(bioInput, bioActions);
+
+    editBioBtn.addEventListener("click", () => {
+      bioEditor.hidden = false;
+      bioInput.focus();
+      bioInput.select();
+    });
+    bioCancel.addEventListener("click", () => {
+      bioEditor.hidden = true;
+      bioInput.value = profile.bio || "";
+      bioStatus.textContent = "";
+    });
+    bioSave.addEventListener("click", async () => {
+      bioStatus.textContent = "Saving...";
+      bioSave.disabled = true;
+      try {
+        const updated = await saveMyPublicProfile({ bio: bioInput.value.trim() });
+        profile.bio = String(updated?.bio || bioInput.value || "").trim();
+        bioStatus.textContent = "Saved";
+      } catch (error) {
+        bioStatus.textContent = error instanceof Error ? error.message : "Save failed";
+      } finally {
+        bioSave.disabled = false;
+      }
+    });
+
+    const privacyWrap = create("label", "profile-visibility-toggle");
+    const toggle = create("input");
+    toggle.type = "checkbox";
+    toggle.checked = profile.isAnonymous === true;
+    const text = create("span", "", "Anonymous / Private profile");
+    const status = create("span", "muted");
+    privacyWrap.append(toggle, text, status);
+    toggle.addEventListener("change", async () => {
+      status.textContent = "Saving...";
+      toggle.disabled = true;
+      try {
+        const updated = await saveMyPublicProfile({ anonymous: toggle.checked });
+        profile.isAnonymous = updated?.is_anonymous === true || updated?.anonymous === true;
+        toggle.checked = profile.isAnonymous;
+        status.textContent = profile.isAnonymous ? "Anonymous enabled" : "Public profile enabled";
+      } catch (error) {
+        toggle.checked = !toggle.checked;
+        status.textContent = error instanceof Error ? error.message : "Save failed";
+      } finally {
+        toggle.disabled = false;
+      }
+    });
+
+    tools.append(header, bioHeader, bioEditor, privacyWrap);
+    return tools;
+  }
+
+  function renderStandaloneProfileUtilityBody(profileCard, profile, canEdit, options = {}) {
+    clear(profileCard);
+    const liveBanner = buildProfileLiveBanner(profile);
+    if (liveBanner) profileCard.appendChild(liveBanner);
+
+    const grid = create("div", "profile-utility-grid");
+    const shareSection = create("section", "profile-utility-section");
+    const shareHeader = create("div", "profile-inline-header");
+    const shareTitle = create("h3", "", "Share Links");
+    shareTitle.prepend(createIcon(UI_ICON_MAP.share, "inline-icon-mask"));
+    shareHeader.appendChild(shareTitle);
+    shareSection.append(shareHeader, buildProfileShareSection(profile));
+
+    const authoritySection = create("section", "profile-utility-section");
+    authoritySection.appendChild(
+      buildAuthorityRequestPanel(resolveProfileAuthorityContext(profile), {
+        authState: options.authState || null,
+        openAuthModal: options.openAuthModal || null
+      })
+    );
+
+    grid.append(shareSection, authoritySection);
+    profileCard.appendChild(grid);
+
+    const ownerTools = buildStandaloneProfileOwnerTools(profile, canEdit);
+    if (ownerTools) profileCard.appendChild(ownerTools);
+  }
+
+  function buildStandaloneProfileReturnFooter() {
+    const footer = create("footer", "profile-return-footer");
+    const link = create("a", "profile-return-link");
+    link.href = "https://streamsuites.app/community/";
+    link.append(createIcon(UI_ICON_MAP.community, "profile-return-icon"), create("span", "", "Community Home"));
+    footer.appendChild(link);
+    return footer;
+  }
+
+  function renderStandaloneProfilePage(host, profile, canEdit, options = {}) {
+    cleanupStandaloneProfileInteractions();
+    clear(host);
+    const shell = create("div", "standalone-profile-shell");
+    shell.appendChild(buildStandaloneProfileHero(profile, options.authState || null, options));
+    shell.appendChild(create("div", "profile-hero-trim"));
+
+    const body = create("section", "public-standalone-main profile-standalone-body");
+    const profileCard = create("div", "profile-utility-panel");
+    body.appendChild(profileCard);
+    shell.append(body, buildStandaloneProfileReturnFooter());
+    host.appendChild(shell);
+
+    renderStandaloneProfileUtilityBody(profileCard, profile, canEdit, options);
+  }
+
+  function renderStandaloneProfileMessage(host, options = {}) {
+    const title = String(options.title || "Profile").trim();
+    const subtitle = String(options.subtitle || "").trim();
+    const profile = {
+      displayName: title,
+      publicSlug: "",
+      userCode: "",
+      role: "viewer",
+      tier: "core",
+      bio: subtitle,
+      socialLinks: {},
+      coverImageUrl: DEFAULT_PROFILE_COVER,
+      bannerImageUrl: DEFAULT_PROFILE_COVER,
+      badges: []
+    };
+    cleanupStandaloneProfileInteractions();
+    clear(host);
+    const shell = create("div", "standalone-profile-shell standalone-profile-shell--message");
+    shell.appendChild(buildStandaloneProfileHero(profile, options.authState || null, options));
+    const body = create("section", "public-standalone-main profile-standalone-body");
+    const card = create("article", "profile-card profile-card-expanded profile-card-standalone profile-message-panel");
+    card.append(
+      create("div", "empty-state", title),
+      create("p", "profile-unavailable-copy", subtitle)
+    );
+    body.appendChild(card);
+    shell.append(body, buildStandaloneProfileReturnFooter());
+    host.appendChild(shell);
   }
 
   function renderProfileArtifactRows(host, artifacts, ownerMode) {
@@ -5856,12 +6354,13 @@
   function renderStandaloneProfile(ctx) {
     const { host, data, authState } = ctx;
     clear(host);
-    host.appendChild(buildPageHeading("Profile", "Loading public profile…"));
-
-    const layout = create("section", "public-standalone-main");
-    const profileCard = create("article", "profile-card profile-card-expanded profile-card-standalone");
-    layout.appendChild(profileCard);
-    host.appendChild(layout);
+    renderStandaloneProfileMessage(host, {
+      title: "Profile",
+      subtitle: "Loading public profile...",
+      authState,
+      openAuthModal: ctx.openAuthModal,
+      onMenuAction: ctx.handleAccountMenuAction
+    });
 
     const profileCode = resolveStandaloneProfileCode();
     const localProfile = findLocalProfile(data, profileCode);
@@ -5869,7 +6368,11 @@
 
     (async () => {
       if (!profileCode) {
-        renderProfileNotFound(host, "");
+        renderProfileNotFound(host, "", {
+          authState,
+          openAuthModal: ctx.openAuthModal,
+          onMenuAction: ctx.handleAccountMenuAction
+        });
         return;
       }
 
@@ -5881,14 +6384,26 @@
         canEdit = canEditResolvedProfile(authState, profile, profileCode);
       } catch (error) {
         if (!profile) {
-          renderProfileNotFound(host, profileCode);
+          renderProfileNotFound(host, profileCode, {
+            authState,
+            openAuthModal: ctx.openAuthModal,
+            onMenuAction: ctx.handleAccountMenuAction
+          });
           return;
         }
         if (!canEdit && error?.status === 404) {
           if (!isProfileVisibleOnStreamSuites(profile)) {
-            renderProfileUnavailable(host, profile, profileCode);
+            renderProfileUnavailable(host, profile, profileCode, {
+              authState,
+              openAuthModal: ctx.openAuthModal,
+              onMenuAction: ctx.handleAccountMenuAction
+            });
           } else {
-            renderProfileNotFound(host, profileCode);
+            renderProfileNotFound(host, profileCode, {
+              authState,
+              openAuthModal: ctx.openAuthModal,
+              onMenuAction: ctx.handleAccountMenuAction
+            });
           }
           return;
         }
@@ -5896,28 +6411,29 @@
       }
 
       if (!profile) {
-        renderProfileNotFound(host, profileCode);
+        renderProfileNotFound(host, profileCode, {
+          authState,
+          openAuthModal: ctx.openAuthModal,
+          onMenuAction: ctx.handleAccountMenuAction
+        });
         return;
       }
 
       if (!canEdit && !isProfileVisibleOnStreamSuites(profile)) {
-        renderProfileUnavailable(host, profile, profileCode);
+        renderProfileUnavailable(host, profile, profileCode, {
+          authState,
+          openAuthModal: ctx.openAuthModal,
+          onMenuAction: ctx.handleAccountMenuAction
+        });
         return;
       }
 
       syncStandaloneProfileCanonicalUrl(profile, profileCode);
-
-      const nextHeading = buildPageHeading(profile.displayName, `${profile.platform} | ${roleLabel(normalizeRoleForUi(profile.role))}`);
-      const existingHeading = host.querySelector(".page-heading");
-      if (existingHeading && existingHeading.parentElement === host) {
-        host.replaceChild(nextHeading, existingHeading);
-      } else {
-        host.prepend(nextHeading);
-      }
       document.title = `${profile.displayName} | StreamSuites Public Profile`;
-      renderProfileBody(profileCard, profile, canEdit, {
+      renderStandaloneProfilePage(host, profile, canEdit, {
         authState,
-        openAuthModal: ctx.openAuthModal
+        openAuthModal: ctx.openAuthModal,
+        onMenuAction: ctx.handleAccountMenuAction
       });
     })();
   }
@@ -6790,7 +7306,8 @@
           authState,
           rerender,
           updateShell: typeof shell.updateOptions === "function" ? shell.updateOptions.bind(shell) : null,
-          openAuthModal: typeof shell.openAuthModal === "function" ? shell.openAuthModal.bind(shell) : null
+          openAuthModal: typeof shell.openAuthModal === "function" ? shell.openAuthModal.bind(shell) : null,
+          handleAccountMenuAction
         },
         currentConfig
       );
