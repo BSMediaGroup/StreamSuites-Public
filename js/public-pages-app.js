@@ -82,6 +82,7 @@
     twitch: "Twitch",
     kick: "Kick"
   });
+  const STREAM_SOURCE_PRIORITY = Object.freeze(["rumble", "youtube", "twitch", "kick"]);
   const WHEEL_DEFAULT_AVATAR = "/assets/icons/ui/wheeluser.svg";
   const WHEEL_CENTER_DEFAULT = "/assets/placeholders/wheelcenterdefault.webp";
   const WHEEL_CENTER_ACCEPT = ".webp,.png,.jpg,.jpeg,.gif,.svg";
@@ -731,14 +732,20 @@
 
   function buildLatestStreamSourceButton(stream, label) {
     const href = String(stream?.url || stream?.sourceUrl || "").trim();
-    if (!href) return null;
-    const button = create("a", "profile-latest-stream-source-button");
-    button.href = href;
-    button.target = "_blank";
-    button.rel = "noopener noreferrer";
+    const disabled = stream?.disabled === true || !href;
+    const button = create(disabled ? "span" : "a", `profile-latest-stream-source-button${disabled ? " is-disabled" : ""}`);
+    if (!disabled) {
+      button.href = href;
+      button.target = "_blank";
+      button.rel = "noopener noreferrer";
+    } else {
+      button.setAttribute("aria-disabled", "true");
+    }
+    const platform = String(stream?.platform || "").trim().toLowerCase();
+    const platformLabel = label || stream?.platformLabel || STREAM_PLATFORM_LABELS[platform] || "Source";
     button.append(
-      createStreamPlatformIcon(stream?.platform, "profile-latest-stream-source-button-icon"),
-      create("span", "", label || stream?.platformLabel || "Source")
+      createStreamPlatformIcon(platform, "profile-latest-stream-source-button-icon"),
+      create("span", "", platformLabel)
     );
     return button;
   }
@@ -844,13 +851,16 @@
   function normalizeRoleForUi(value) {
     const role = String(value || "").trim().toLowerCase();
     if (role.includes("admin")) return "admin";
+    if (role.includes("developer")) return "developer";
     if (role.includes("creator")) return "creator";
+    if (role.includes("viewer") || role.includes("public")) return "viewer";
     return "viewer";
   }
 
   function normalizeTierForUi(value) {
     const tier = String(value || "").trim().toLowerCase();
-    if (tier === "gold" || tier === "pro" || tier === "developer") return tier;
+    if (tier === "gold" || tier === "pro") return tier;
+    if (tier === "admin" || tier === "developer") return "pro";
     return "core";
   }
 
@@ -884,8 +894,60 @@
 
   function roleLabel(role) {
     if (role === "admin") return "ADMIN";
+    if (role === "developer") return "DEVELOPER";
     if (role === "creator") return "CREATOR";
     return "VIEWER";
+  }
+
+  function accountTypeToRole(accountType) {
+    const normalized = normalizeAccountType(accountType);
+    if (normalized === "ADMIN") return "admin";
+    if (normalized === "DEVELOPER") return "developer";
+    if (normalized === "CREATOR") return "creator";
+    return "viewer";
+  }
+
+  function resolveAccountTypeFromProfile(profile) {
+    const explicit = normalizeAccountType(profile?.accountType || profile?.account_type);
+    if (explicit) return explicit;
+    const role = normalizeRoleForUi(profile?.role);
+    if (role === "admin") return "ADMIN";
+    if (role === "developer") return "DEVELOPER";
+    if (role === "creator" || profile?.creatorCapable) return "CREATOR";
+    return "VIEWER";
+  }
+
+  function resolveProfileTypeDescriptor(profile) {
+    const accountType = resolveAccountTypeFromProfile(profile);
+    if (accountType === "ADMIN") {
+      return { accountType, key: "admin", label: "ADMIN" };
+    }
+    if (accountType === "DEVELOPER") {
+      return { accountType, key: "developer", label: "DEVELOPER" };
+    }
+    if (accountType === "CREATOR") {
+      return {
+        accountType,
+        key: "creator",
+        label: "CREATOR",
+        icon: "/assets/icons/ui/ss-creator.svg"
+      };
+    }
+    return {
+      accountType: "VIEWER",
+      key: "viewer",
+      label: "VIEWER",
+      icon: "/assets/icons/ui/ss-public.svg"
+    };
+  }
+
+  function resolveProfileTier(value, accountType) {
+    const rawTier = String(value || "").trim();
+    const normalizedAccountType = normalizeAccountType(accountType);
+    if (!rawTier && (normalizedAccountType === "ADMIN" || normalizedAccountType === "DEVELOPER")) {
+      return "pro";
+    }
+    return normalizeTierForUi(rawTier);
   }
 
   function createBadgeIcon(type, value, label = "") {
@@ -5519,16 +5581,26 @@
   }
 
   function normalizeProfilePayload(payload, fallbackProfile, fallbackCode) {
+    const inferredCreatorCapable = firstBoolean(payload?.creator_capable, payload?.creatorCapable, fallbackProfile?.creatorCapable);
+    const inferredViewerOnly = firstBoolean(payload?.viewer_only, payload?.viewerOnly, fallbackProfile?.viewerOnly);
     const accountType =
       normalizeAccountType(payload?.account_type) ||
       normalizeAccountType(payload?.accountType) ||
-      (String(payload?.role || "").toLowerCase().includes("admin")
+      normalizeAccountType(fallbackProfile?.accountType) ||
+      normalizeAccountType(fallbackProfile?.account_type) ||
+      (String(payload?.role || fallbackProfile?.role || "").toLowerCase().includes("admin")
         ? "ADMIN"
-        : String(payload?.role || "").toLowerCase().includes("creator")
+        : String(payload?.role || fallbackProfile?.role || "").toLowerCase().includes("developer")
+          ? "DEVELOPER"
+          : String(payload?.role || fallbackProfile?.role || "").toLowerCase().includes("creator")
           ? "CREATOR"
-          : "PUBLIC");
-    const role = accountType === "ADMIN" ? "admin" : accountType === "CREATOR" ? "creator" : "viewer";
-    const tier = normalizeTierForUi(payload?.tier || fallbackProfile?.tier || "core");
+          : inferredCreatorCapable === true
+            ? "CREATOR"
+            : inferredViewerOnly === true
+              ? "VIEWER"
+              : "VIEWER");
+    const role = accountTypeToRole(accountType);
+    const tier = resolveProfileTier(payload?.tier || fallbackProfile?.tier || "", accountType);
     const publicSlug = getCanonicalProfileSlug(
       payload?.public_slug || payload?.publicSlug || payload?.slug || fallbackProfile?.publicSlug || fallbackProfile?.slug || "",
       ""
@@ -5559,9 +5631,9 @@
     const socialLinks = normalizeSocialLinks(payload?.social_links || payload?.socialLinks || fallbackProfile?.socialLinks);
     const isAnonymous = payload?.is_anonymous === true || payload?.anonymous === true || fallbackProfile?.isAnonymous === true;
     const isListed = payload?.is_listed !== false && payload?.listed !== false && fallbackProfile?.isListed !== false;
-    const creatorCapable = firstBoolean(payload?.creator_capable, payload?.creatorCapable, fallbackProfile?.creatorCapable, accountType === "ADMIN" || accountType === "CREATOR") === true;
+    const creatorCapable = firstBoolean(payload?.creator_capable, payload?.creatorCapable, fallbackProfile?.creatorCapable, accountType !== "VIEWER") === true;
     const viewerOnly =
-      firstBoolean(payload?.viewer_only, payload?.viewerOnly, fallbackProfile?.viewerOnly, !creatorCapable && payload?.public_surface_account_type === "viewer_only") === true;
+      firstBoolean(payload?.viewer_only, payload?.viewerOnly, fallbackProfile?.viewerOnly, accountType === "VIEWER" && !creatorCapable) === true;
     const streamsuitesProfileUrl = String(
       payload?.streamsuites_profile_url || payload?.streamsuitesProfileUrl || fallbackProfile?.streamsuitesProfileUrl || canonicalPublicUrl || ""
     ).trim();
@@ -5619,6 +5691,7 @@
       platformKey: fallbackProfile?.platformKey || "streamsuites",
       platformIcon: fallbackProfile?.platformIcon || "/assets/icons/pilled.svg",
       role,
+      accountType,
       tier,
       joinedAt,
       bio,
@@ -6007,7 +6080,7 @@
         const overview = create("div", "account-menu-overview");
         [
           { label: "User code", value: authState.userCode || "Not available" },
-          { label: "Account type", value: authState.accessClass || authState.accountType || "PUBLIC" },
+          { label: "Account type", value: authState.accessClass || authState.accountType || "VIEWER" },
           { label: "Tier", value: authState.displayTier || authState.tier || "core" }
         ].forEach((row) => {
           const item = create("div", "account-menu-overview-row");
@@ -6113,33 +6186,9 @@
   }
 
   function buildStandaloneRoleChips(profile) {
-    const roles = [];
-    const add = (key, label) => {
-      const normalized = String(key || "").trim().toLowerCase();
-      const text = String(label || normalized).trim();
-      if (!normalized || !text || roles.some((role) => role.key === normalized)) return;
-      roles.push({ key: normalized, label: text.toUpperCase() });
-    };
-
-    const role = normalizeRoleForUi(profile?.role);
-    add(role, roleLabel(role));
-    normalizeAuthoritativeBadges(
-      profile?.badge_state?.surface_badges?.public_surface ||
-        profile?.badge_state?.surface_badges?.profile_card ||
-        profile?.badges,
-      profile?.accountType || profile?.account_type || roleLabel(role),
-      profile?.tier
-    ).forEach((badge) => {
-      const key = normalizeBadgeKey(badge?.key || badge?.value);
-      if (["admin", "developer", "founder", "moderator"].includes(key)) {
-        add(key, badge.label || badge.title || key);
-      }
-    });
-
     const row = create("div", "profile-hero-role-chips");
-    roles.forEach((item) => {
-      row.appendChild(create("span", `profile-hero-role-chip profile-hero-role-chip--${item.key}`, item.label));
-    });
+    const typeChip = resolveProfileTypeDescriptor(profile);
+    row.appendChild(create("span", `profile-hero-role-chip profile-hero-role-chip--${typeChip.key}`, typeChip.label));
     row.hidden = row.childElementCount === 0;
     return row;
   }
@@ -6320,31 +6369,10 @@
   }
 
   function buildProfileTypeChip(profile) {
-    const prominentBadge = normalizeAuthoritativeBadges(
-      profile?.badge_state?.surface_badges?.public_surface ||
-        profile?.badge_state?.surface_badges?.profile_card ||
-        profile?.badges,
-      profile?.accountType || profile?.account_type || roleLabel(normalizeRoleForUi(profile?.role)),
-      profile?.tier
-    ).find((badge) => ["admin", "developer", "founder", "moderator"].includes(normalizeBadgeKey(badge?.key || badge?.value)));
-
-    if (prominentBadge) {
-      const badgeKey = normalizeBadgeKey(prominentBadge.key || prominentBadge.value);
-      return buildProfileBadgeChip(badgeKey, {
-        label: prominentBadge.label || prominentBadge.title || badgeKey
-      });
-    }
-
-    if (profile?.creatorCapable) {
-      return buildProfileBadgeChip("creator", {
-        label: "Creator-capable",
-        icon: "/assets/icons/ui/ss-creator.svg"
-      });
-    }
-
-    return buildProfileBadgeChip("public", {
-      label: profile?.viewerOnly ? "Viewer/Public" : roleLabel(normalizeRoleForUi(profile?.role)),
-      icon: "/assets/icons/ui/ss-public.svg"
+    const typeChip = resolveProfileTypeDescriptor(profile);
+    return buildProfileBadgeChip(typeChip.key, {
+      label: typeChip.label,
+      icon: typeChip.icon
     });
   }
 
@@ -6450,10 +6478,16 @@
     } else {
       media.classList.add("is-fallback-preview");
       const placeholder = create("div", "profile-latest-stream-placeholder");
-      placeholder.append(
+      const placeholderCard = create("div", "profile-latest-stream-placeholder-card");
+      placeholderCard.append(
         createStreamPlatformIcon(hasUsableStream ? stream?.platform : "", "profile-latest-stream-placeholder-icon-image"),
-        create("span", "", hasUsableStream ? (stream?.isLive ? "Player unavailable" : "Source preview unavailable") : "No livestream data available")
+        create(
+          "span",
+          "profile-latest-stream-placeholder-text",
+          hasUsableStream ? (stream?.isLive ? "Player unavailable" : "Source preview unavailable") : "No livestream data available"
+        )
       );
+      placeholder.appendChild(placeholderCard);
       media.appendChild(placeholder);
     }
 
@@ -6500,11 +6534,25 @@
       link.prepend(createStreamPlatformIcon(stream.platform, "profile-latest-stream-link-icon"));
       body.appendChild(link);
     }
-    if (alternateSources.length) {
+    const sourceEntries = (() => {
+      if (hasUsableStream) return alternateSources;
+      const byPlatform = new Map(
+        alternateSources
+          .filter((entry) => entry?.platform)
+          .map((entry) => [entry.platform, entry])
+      );
+      if (!profile?.creatorCapable && !byPlatform.size) return [];
+      return STREAM_SOURCE_PRIORITY.map((platform) => byPlatform.get(platform) || {
+        platform,
+        platformLabel: STREAM_PLATFORM_LABELS[platform],
+        disabled: true
+      });
+    })();
+    if (sourceEntries.length) {
       const sourceRow = create("div", "profile-latest-stream-sources");
-      sourceRow.appendChild(create("span", "profile-latest-stream-sources-label", "Also streamed to"));
+      sourceRow.appendChild(create("span", "profile-latest-stream-sources-label", "Other sources"));
       const sourceButtons = create("div", "profile-latest-stream-sources-list");
-      alternateSources.forEach((entry) => {
+      sourceEntries.forEach((entry) => {
         const button = buildLatestStreamSourceButton(entry, entry.platformLabel);
         if (button) sourceButtons.appendChild(button);
       });
@@ -7120,7 +7168,7 @@
     }
 
     const accountType = String(authState.accountType || "").toUpperCase();
-    if (accountType !== "PUBLIC") {
+    if (accountType !== "VIEWER") {
       host.appendChild(create("div", "empty-state", "This settings view is available for Viewer/Public accounts only."));
       return;
     }
@@ -7428,9 +7476,10 @@
 
   function normalizeAccountType(value) {
     const normalized = String(value || "").trim().toUpperCase();
-    if (normalized === "ADMIN" || normalized === "CREATOR" || normalized === "DEVELOPER" || normalized === "PUBLIC") {
+    if (normalized === "ADMIN" || normalized === "CREATOR" || normalized === "DEVELOPER" || normalized === "VIEWER") {
       return normalized;
     }
+    if (normalized === "PUBLIC" || normalized === "USER" || normalized === "MEMBER") return "VIEWER";
     return "";
   }
 
@@ -7562,7 +7611,7 @@
         publicSlug: "public-user",
         displayName: "Login",
         avatarUrl: "",
-        accountType: "PUBLIC",
+        accountType: "VIEWER",
         tier: "core",
         badges: []
       };
@@ -7599,7 +7648,7 @@
       normalizeAccountType(payload?.role) ||
       normalizeAccountType(payload?.data?.role) ||
       normalizeAccountType(payload?.user?.role) ||
-      (payload?.is_admin ? "ADMIN" : payload?.is_creator ? "CREATOR" : "PUBLIC");
+      (payload?.is_admin ? "ADMIN" : payload?.is_creator ? "CREATOR" : "VIEWER");
     const tier = String(
       payload?.tier ||
       payload?.data?.tier ||
@@ -7687,7 +7736,7 @@
       }
     ];
 
-    if (authState.accountType === "PUBLIC") {
+    if (authState.accountType === "VIEWER") {
       items.push({
         label: "Account Settings",
         href: "/community/settings.html",

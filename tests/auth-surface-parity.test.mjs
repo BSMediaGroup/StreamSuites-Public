@@ -167,15 +167,21 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(standaloneUtilityBlock, /buildCollapsedAuthorityRequestPanel\(resolveProfileAuthorityContext\(profile\)/);
   assert.match(app, /function buildLatestStreamSection\(profile, helpers\)/);
   assert.match(app, /alternate_sources|alternateSources/);
+  assert.match(app, /const STREAM_SOURCE_PRIORITY = Object\.freeze\(\["rumble", "youtube", "twitch", "kick"\]\)/);
   assert.match(app, /function buildLatestStreamSourceButton\(stream, label\)/);
   assert.match(app, /function buildStreamPlatformPill\(stream, fallbackLabel = "Stream"\)/);
   assert.match(app, /createStreamPlatformIcon\(hasUsableStream \? stream\?\.platform : "", "profile-latest-stream-placeholder-icon-image"\)/);
+  assert.match(app, /profile-latest-stream-placeholder-card/);
   assert.match(app, /media\.classList\.add\("is-fallback-preview"\)/);
   assert.match(app, /const hasUsableStream = Boolean/);
   assert.match(app, /details\.open = hasUsableStream/);
   assert.match(app, /No livestream data available/);
   assert.match(app, /Expand for details/);
   assert.match(app, /resolveLatestStreamEmbedUrl\(stream\)/);
+  assert.match(app, /profile-latest-stream-source-button\$\{disabled \? " is-disabled" : ""\}/);
+  assert.match(app, /if \(!profile\?\.creatorCapable && !byPlatform\.size\) return \[\]/);
+  assert.match(app, /platformLabel: STREAM_PLATFORM_LABELS\[platform\],\s*disabled: true/);
+  assert.match(app, /create\("span", "profile-latest-stream-sources-label", "Other sources"\)/);
   assert.match(app, /function buildProfileGameCompetitionSection\(\)/);
   assert.match(app, /details\.open = true/);
   assert.match(app, /GAME & COMPETITION/);
@@ -186,6 +192,10 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /function buildProfileBadgeChip\(key, options = \{\}\)/);
   assert.match(app, /function buildProfileTypeChip\(profile\)/);
   assert.match(app, /buildProfileTierChip\(profile\?\.tier \|\| "core"\)/);
+  assert.match(app, /function resolveProfileTypeDescriptor\(profile\)/);
+  assert.match(app, /function accountTypeToRole\(accountType\)/);
+  assert.match(app, /if \(role\.includes\("developer"\)\) return "developer";/);
+  assert.match(app, /if \(normalized === "PUBLIC" \|\| normalized === "USER" \|\| normalized === "MEMBER"\) return "VIEWER";/);
   assert.match(app, /\/assets\/icons\/ui\/shieldtick\.svg/);
   assert.match(app, /\/assets\/icons\/ui\/hidden\.svg/);
   assert.match(app, /details\.open \? 'url\("\/assets\/icons\/ui\/visible\.svg"\)' : 'url\("\/assets\/icons\/ui\/hidden\.svg"\)'/);
@@ -214,9 +224,12 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /\.profile-latest-stream-card/);
   assert.match(css, /\.profile-latest-stream-card\.is-empty/);
   assert.match(css, /\.profile-latest-stream-media\.is-fallback-preview/);
+  assert.match(css, /\.profile-latest-stream-media > iframe,\s*\.profile-latest-stream-media > img/);
   assert.match(css, /\.profile-latest-stream-placeholder-icon-image/);
+  assert.match(css, /\.profile-latest-stream-placeholder-card/);
   assert.match(css, /\.profile-latest-stream-sources/);
   assert.match(css, /\.profile-latest-stream-source-button/);
+  assert.match(css, /\.profile-latest-stream-source-button\.is-disabled/);
   assert.match(css, /\.profile-stream-platform-icon/);
   assert.match(css, /\.profile-hero-role-chip--admin,[\s\S]*--profile-role-chip-bg:\s*linear-gradient\(135deg, rgba\(255, 198, 84, 0\.42\), rgba\(255, 232, 164, 0\.12\)\)/);
   assert.match(css, /\.profile-hero-role-chip--pro,[\s\S]*\.profile-badge-chip--pro/);
@@ -249,12 +262,22 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
 test("standalone /u profile hydration keeps runtime profile media ahead of local fallback data", () => {
   const app = read("js/public-pages-app.js");
   const normalizeProfilePayloadBlock = app.match(/function normalizeProfilePayload\(payload, fallbackProfile, fallbackCode\) \{[\s\S]*?authorityIdentity:[\s\S]*?\n    \};\n  \}/)?.[0] || "";
+  const roleChipBlock = app.match(/function buildStandaloneRoleChips\(profile\) \{[\s\S]*?\n  \}/)?.[0] || "";
+  const profileTypeBlock = app.match(/function buildProfileTypeChip\(profile\) \{[\s\S]*?\n  \}/)?.[0] || "";
   const standaloneProfileBlock = app.match(/function renderStandaloneProfile\(ctx\) \{[\s\S]*?\n  \}\n\n  function renderCommunitySettings/)?.[0] || "";
 
   assert.ok(normalizeProfilePayloadBlock, "normalizeProfilePayload should exist");
+  assert.ok(roleChipBlock, "buildStandaloneRoleChips should exist");
+  assert.ok(profileTypeBlock, "buildProfileTypeChip should exist");
   assert.match(normalizeProfilePayloadBlock, /payload\?\.avatar_url \|\| payload\?\.avatarUrl \|\| fallbackProfile\?\.avatar/);
   assert.match(normalizeProfilePayloadBlock, /payload\?\.cover_image_url \|\| payload\?\.coverImageUrl \|\| fallbackProfile\?\.coverImageUrl/);
   assert.match(normalizeProfilePayloadBlock, /payload\?\.banner_image_url \|\| payload\?\.bannerImageUrl \|\| payload\?\.cover_image_url/);
+  assert.match(normalizeProfilePayloadBlock, /const tier = resolveProfileTier\(payload\?\.tier \|\| fallbackProfile\?\.tier \|\| "", accountType\)/);
+  assert.match(normalizeProfilePayloadBlock, /accountType,/);
+  assert.match(roleChipBlock, /resolveProfileTypeDescriptor\(profile\)/);
+  assert.doesNotMatch(roleChipBlock, /founder|moderator/);
+  assert.match(profileTypeBlock, /resolveProfileTypeDescriptor\(profile\)/);
+  assert.doesNotMatch(profileTypeBlock, /Creator-capable|Viewer\/Public|founder|moderator/);
 
   assert.ok(standaloneProfileBlock, "renderStandaloneProfile should exist");
   assert.match(standaloneProfileBlock, /await fetchPublicProfileByIdentifier\(profileCode\)/);
