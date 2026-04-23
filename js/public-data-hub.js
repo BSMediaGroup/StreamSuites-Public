@@ -166,6 +166,21 @@
   });
   const AUTHORITATIVE_LIVE_PROVIDERS = new Set(["rumble"]);
   const WHEELS_API_PATH = "/api/public/wheels";
+  const CLIP_THUMBNAIL_FALLBACK = "/assets/backgrounds/seodash.jpg";
+  const KNOWN_PUBLIC_BACKGROUND_THUMBNAILS = new Set([
+    "banner1.webp",
+    "fmhwordmarkbg.webp",
+    "fmhwordmarkblockbg.webp",
+    "seodash.jpg",
+    "seodashxs1.png",
+    "seoshare.jpg",
+    "splash-nutty.webp",
+    "splash-streemrz.webp",
+    "ss-ytbanner-01.png",
+    "ssbansml.webp",
+    "sswmbansml.webp",
+    "stss-rumblebanner-01.png"
+  ]);
 
   let cachePromise = null;
 
@@ -830,6 +845,17 @@
     return "";
   }
 
+  function normalizeClipThumbnail(raw) {
+    const thumbnail = String(raw?.thumbnail || raw?.thumbnail_url || "").trim();
+    if (!thumbnail) return CLIP_THUMBNAIL_FALLBACK;
+    const localBackgroundMatch = thumbnail.match(/^\/assets\/backgrounds\/([^/?#]+)(?:[?#].*)?$/i);
+    if (localBackgroundMatch) {
+      const fileName = String(localBackgroundMatch[1] || "").trim().toLowerCase();
+      if (!KNOWN_PUBLIC_BACKGROUND_THUMBNAILS.has(fileName)) return CLIP_THUMBNAIL_FALLBACK;
+    }
+    return thumbnail;
+  }
+
   function normalizeOwnerAccountId(raw) {
     const directKeys = [
       "owner_account_id",
@@ -1057,7 +1083,7 @@
       platformKey: normalizePlatformKey(platform),
       platformIcon: platformIconFor(platform),
       duration: raw?.duration || toDuration(raw?.duration_seconds, "--:--"),
-      thumbnail: raw?.thumbnail || raw?.thumbnail_url || "/assets/backgrounds/seodash.jpg",
+      thumbnail: normalizeClipThumbnail(raw),
       mediaUrl,
       sourceUrl: pickSourceUrl(raw),
       views: raw?.views ?? raw?.view_count ?? null,

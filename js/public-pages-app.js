@@ -6203,6 +6203,10 @@
       img.alt = "";
       img.loading = "lazy";
       img.decoding = "async";
+      img.addEventListener("error", () => {
+        clear(preview);
+        preview.appendChild(createIcon(UI_ICON_MAP.gallery, "profile-mini-artifact-icon"));
+      }, { once: true });
       preview.appendChild(img);
     } else {
       preview.appendChild(createIcon(UI_ICON_MAP.gallery, "profile-mini-artifact-icon"));
@@ -6256,7 +6260,11 @@
     const authorityContext = createAuthorityContext(context);
     const details = create("details", "profile-authority-collapsible");
     const summary = create("summary", "profile-authority-summary");
-    const action = create("span", "profile-authority-summary-action", "Review requests");
+    const action = create("span", "profile-authority-summary-action");
+    action.append(
+      createIcon("/assets/icons/ui/shieldtick.svg", "profile-authority-summary-action-icon"),
+      create("span", "", "PUBLIC AUTHORITY")
+    );
     const meta = create("span", "profile-authority-summary-meta");
     [
       authorityContext?.targetIdentityCode ? "Identity target" : "Target pending",

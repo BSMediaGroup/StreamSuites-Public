@@ -2,6 +2,8 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+- Cleaned up the standalone `/u/*` profile mini-gallery and utility strip by normalizing stale local clip thumbnail placeholders such as `/assets/backgrounds/seosupport.jpg` and `/assets/backgrounds/seoaccessibility.jpg` to the existing checked-in fallback before render, adding a mini-gallery image error fallback, removing the compact share-row outer container styling so only the three inline controls remain visible, and relabeling the collapsed authority toggle to `PUBLIC AUTHORITY` with the requested shield-tick icon. No files were created or removed.
+
 - Fixed the standalone `/u/*` hero role-chip hover artifact by adding paint containment and rounded clipping to the existing chip shell in `css/public-shell.css`, preserving the current role-chip colors, sizing, glow, and sheen animation while preventing the hovered chip compositor layer from leaking onto adjacent chips. No files were created or removed.
 
 - Completed the standalone `/u/*` public profile body polish in `js/public-pages-app.js` and `css/public-shell.css` with a profile-only public overview board, curated mini artifact showcase, compact inline StreamSuites/FindMeHere share rows with copy plus native-share/fallback actions, and a slim collapsed authority request control that preserves the existing full request panel when expanded. The old standalone profile share/authority two-column utility layout was replaced because it left the new hero sitting over clunkier legacy modules; no files were created or removed, so `README.md` repo tree changes were not required. While validating, also hardened `js/public-data-hub.js` so VM-style tests without `window.location` do not crash the API-base fallback.

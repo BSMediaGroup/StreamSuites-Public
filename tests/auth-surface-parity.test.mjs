@@ -161,6 +161,8 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(standaloneUtilityBlock, /buildProfileMiniArtifactGallery\(profileArtifacts, canEdit/);
   assert.match(standaloneUtilityBlock, /buildProfileShareSection\(profile, \{ compact: true \}\)/);
   assert.match(standaloneUtilityBlock, /buildCollapsedAuthorityRequestPanel\(resolveProfileAuthorityContext\(profile\)/);
+  assert.match(app, /\/assets\/icons\/ui\/shieldtick\.svg/);
+  assert.match(app, /PUBLIC AUTHORITY/);
   assert.doesNotMatch(standaloneUtilityBlock, /shareTitle\.prepend/);
   assert.match(app, /function buildNativeShareButton\(url, label\)/);
 
@@ -176,8 +178,9 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /\.profile-body-grid/);
   assert.match(css, /\.profile-overview-panel/);
   assert.match(css, /\.profile-mini-artifacts/);
-  assert.match(css, /\.profile-share-section--compact \.share-box/);
+  assert.match(css, /\.profile-share-section--compact \.share-box\s*\{[\s\S]*background:\s*transparent/);
   assert.match(css, /\.profile-authority-collapsible/);
+  assert.match(css, /\.profile-authority-summary-action-icon/);
   assert.match(css, /\.profile-hero-role-chip\s*\{[\s\S]*clip-path:\s*inset\(0 round 999px\)/);
   assert.match(css, /\.profile-hero-role-chip\s*\{[\s\S]*contain:\s*paint/);
   assert.match(css, /\.profile-hero-role-chip::after\s*\{[\s\S]*translateX\(-140%\)/);
@@ -206,6 +209,14 @@ test("standalone /u profile hydration keeps runtime profile media ahead of local
   assert.match(standaloneProfileBlock, /await fetchPublicProfileByIdentifier\(profileCode\)/);
   assert.match(standaloneProfileBlock, /profile = normalizeProfilePayload\(payload, fallbackProfile, profileCode\)/);
   assert.match(app, /async function fetchPublicProfileByIdentifier\(identifier\)[\s\S]*cache:\s*"no-store"/);
+});
+
+test("public clip normalization does not request missing local SEO placeholder thumbnails", () => {
+  const dataHub = read("js/public-data-hub.js");
+  assert.match(dataHub, /const CLIP_THUMBNAIL_FALLBACK = "\/assets\/backgrounds\/seodash\.jpg"/);
+  assert.match(dataHub, /function normalizeClipThumbnail\(raw\)/);
+  assert.match(dataHub, /KNOWN_PUBLIC_BACKGROUND_THUMBNAILS/);
+  assert.match(dataHub, /thumbnail:\s*normalizeClipThumbnail\(raw\)/);
 });
 
 test("community member hydration uses the authoritative runtime endpoint", () => {

@@ -3322,6 +3322,7 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 7px;
   min-height: 30px;
   padding: 0 12px;
   border-radius: 999px;
@@ -3332,6 +3333,13 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.profile-authority-summary-action-icon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  background-color: currentColor;
 }
 
 .profile-authority-summary-meta {
@@ -5283,7 +5291,10 @@ body[data-public-page="public-profile-standalone"] .edit-affordance:focus-visibl
 .profile-share-section--compact .share-box {
   gap: 8px;
   min-width: 0;
-  padding: 5px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .share-link-pill {
