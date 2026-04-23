@@ -6227,12 +6227,55 @@
     }, { total: 0 });
   }
 
+  function buildProfileBadgeChip(key, options = {}) {
+    const normalized = String(key || "").trim().toLowerCase() || "core";
+    const label = String(options.label || toTitle(normalized) || "Badge").trim() || "Badge";
+    const chip = create("span", `profile-badge-chip profile-badge-chip--${normalized}`, label.toUpperCase());
+    const iconPath = String(options.icon || BADGE_ICON_MAP[normalized] || "").trim();
+    if (iconPath) {
+      const icon = create("img", "profile-badge-chip-icon");
+      icon.src = iconPath;
+      icon.alt = "";
+      icon.setAttribute("aria-hidden", "true");
+      chip.prepend(icon);
+    }
+    return getPublicBadgeUi()?.registerTarget?.(chip, label) || chip;
+  }
+
   function buildProfileTierChip(tier) {
     const normalized = normalizeTierForUi(tier);
-    const chip = create("span", `profile-tier-chip profile-tier-chip--${normalized}`, toTitle(normalized));
-    const icon = BADGE_ICON_MAP[normalized];
-    if (icon) chip.prepend(createIcon(icon, "profile-tier-chip-icon"));
-    return chip;
+    return buildProfileBadgeChip(normalized, {
+      label: toTitle(normalized)
+    });
+  }
+
+  function buildProfileTypeChip(profile) {
+    const prominentBadge = normalizeAuthoritativeBadges(
+      profile?.badge_state?.surface_badges?.public_surface ||
+        profile?.badge_state?.surface_badges?.profile_card ||
+        profile?.badges,
+      profile?.accountType || profile?.account_type || roleLabel(normalizeRoleForUi(profile?.role)),
+      profile?.tier
+    ).find((badge) => ["admin", "developer", "founder", "moderator"].includes(normalizeBadgeKey(badge?.key || badge?.value)));
+
+    if (prominentBadge) {
+      const badgeKey = normalizeBadgeKey(prominentBadge.key || prominentBadge.value);
+      return buildProfileBadgeChip(badgeKey, {
+        label: prominentBadge.label || prominentBadge.title || badgeKey
+      });
+    }
+
+    if (profile?.creatorCapable) {
+      return buildProfileBadgeChip("creator", {
+        label: "Creator-capable",
+        icon: "/assets/icons/ui/ss-creator.svg"
+      });
+    }
+
+    return buildProfileBadgeChip("public", {
+      label: profile?.viewerOnly ? "Viewer/Public" : roleLabel(normalizeRoleForUi(profile?.role)),
+      icon: "/assets/icons/ui/ss-public.svg"
+    });
   }
 
   function buildProfileOverviewPanel(profile, artifacts, helpers) {
@@ -6260,12 +6303,15 @@
     const addRow = (label, value, pending = false) => {
       const row = create("div", "profile-overview-row");
       if (pending) row.classList.add("is-pending");
-      row.append(create("span", "profile-overview-label", label), create("span", "profile-overview-value", value));
+      const valueNode = create("span", "profile-overview-value");
+      if (value instanceof Node) valueNode.appendChild(value);
+      else valueNode.textContent = String(value || "");
+      row.append(create("span", "profile-overview-label", label), valueNode);
       details.appendChild(row);
     };
 
     addRow("Joined", formatProfileDate(profile?.joinedAt || profile?.createdAt, helpers) || "Pending public data", !profile?.joinedAt && !profile?.createdAt);
-    addRow("Profile type", profile?.viewerOnly ? "Viewer/public" : profile?.creatorCapable ? "Creator-capable" : roleLabel(normalizeRoleForUi(profile?.role)));
+    addRow("Profile type", buildProfileTypeChip(profile));
     addRow("XP", "Pending", true);
     addRow("Rank", "Pending", true);
 
@@ -6274,10 +6320,19 @@
   }
 
   function buildLatestStreamSection(profile, helpers) {
-    const stream = profile?.creatorCapable ? profile.latestStream : null;
-    if (!stream) return null;
+    const stream = profile?.latestStream || null;
+    const hasUsableStream = Boolean(
+      stream &&
+      (
+        stream.isLive ||
+        stream.title ||
+        stream.thumbnailUrl ||
+        stream.url ||
+        stream.sourceUrl
+      )
+    );
     const details = create("details", "profile-authority-collapsible profile-stream-collapsible");
-    details.open = true;
+    details.open = hasUsableStream;
     const summary = create("summary", "profile-authority-summary profile-stream-summary");
     const action = create("span", "profile-authority-summary-action profile-stream-summary-action");
     action.append(
@@ -6285,10 +6340,13 @@
       create("span", "", "LATEST STREAM")
     );
     const meta = create("span", "profile-authority-summary-meta");
-    [stream.platformLabel, stream.isLive ? "Current live" : "Source ready"].forEach((entry) => {
+    [
+      hasUsableStream ? stream?.platformLabel : "No data available",
+      hasUsableStream ? (stream?.isLive ? "Current live" : "Featured source") : "Expand for details"
+    ].forEach((entry) => {
       if (entry) meta.appendChild(create("span", "", entry));
     });
-    const stateIcon = createIcon("/assets/icons/ui/visible.svg", "profile-authority-summary-icon");
+    const stateIcon = createIcon(details.open ? "/assets/icons/ui/visible.svg" : "/assets/icons/ui/hidden.svg", "profile-authority-summary-icon");
     const syncStateIcon = () => {
       stateIcon.style.setProperty(
         "--icon-mask",
@@ -6300,9 +6358,9 @@
     summary.append(action, meta, stateIcon);
 
     const panel = create("div", "profile-stream-panel");
-    const card = create("article", `profile-latest-stream-card${stream.isLive ? " is-live" : ""}`);
+    const card = create("article", `profile-latest-stream-card${hasUsableStream && stream?.isLive ? " is-live" : ""}${hasUsableStream ? "" : " is-empty"}`);
     const media = create("div", "profile-latest-stream-media");
-    const embedUrl = resolveLatestStreamEmbedUrl(stream);
+    const embedUrl = hasUsableStream ? resolveLatestStreamEmbedUrl(stream) : "";
     if (embedUrl) {
       const iframe = create("iframe");
       iframe.src = embedUrl;
@@ -6311,7 +6369,7 @@
       iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture";
       iframe.allowFullscreen = true;
       media.appendChild(iframe);
-    } else if (stream.thumbnailUrl) {
+    } else if (hasUsableStream && stream?.thumbnailUrl) {
       const thumbnail = create("img");
       thumbnail.src = stream.thumbnailUrl;
       thumbnail.alt = "";
@@ -6322,35 +6380,46 @@
       const placeholder = create("div", "profile-latest-stream-placeholder");
       placeholder.append(
         createIcon(UI_ICON_MAP.social, "profile-latest-stream-placeholder-icon"),
-        create("span", "", stream.isLive ? "Player unavailable" : "No current public stream")
+        create("span", "", hasUsableStream ? (stream?.isLive ? "Player unavailable" : "Source preview unavailable") : "No livestream data available")
       );
       media.appendChild(placeholder);
     }
 
     const body = create("div", "profile-latest-stream-body");
     const eyebrow = create("div", "profile-latest-stream-eyebrow");
-    eyebrow.append(
-      create("span", "profile-stream-platform", stream.platformLabel),
-      create("span", stream.isLive ? "profile-stream-state is-live" : "profile-stream-state", stream.isLive ? "Live now" : "Current stream unavailable")
-    );
+    if (hasUsableStream) {
+      eyebrow.append(
+        create("span", "profile-stream-platform", stream.platformLabel),
+        create("span", stream.isLive ? "profile-stream-state is-live" : "profile-stream-state", stream.isLive ? "Live now" : "Featured source")
+      );
+    } else {
+      eyebrow.append(
+        create("span", "profile-stream-platform", "Stream"),
+        create("span", "profile-stream-state", "No current data")
+      );
+    }
     body.append(
       eyebrow,
-      create("h3", "", stream.title || (stream.isLive ? `${stream.platformLabel} stream` : "No current public stream available")),
+      create("h3", "", hasUsableStream ? (stream.title || (stream.isLive ? `${stream.platformLabel} stream` : "Latest stream")) : "No livestream data available"),
       create(
         "p",
         "",
-        stream.isLive
-          ? "This source is selected from the creator's configured platform priority."
-          : "This creator has a supported source configured. Current public stream media will appear here when available."
+        hasUsableStream
+          ? stream.isLive
+            ? "This source is selected from the creator's configured platform priority."
+            : "This featured stream source was selected from the supported platform priority for this public profile."
+          : profile?.creatorCapable
+            ? "No supported public livestream data is currently available for this creator profile. Expand this section any time to check again later."
+            : "No supported public livestream data is currently available for this public profile."
       )
     );
     const facts = create("div", "profile-latest-stream-facts");
-    if (stream.viewerCount != null) facts.appendChild(create("span", "", `${formatNumber(stream.viewerCount)} watching`));
-    if (stream.gameName) facts.appendChild(create("span", "", stream.gameName));
-    if (stream.startedAt) facts.appendChild(create("span", "", `Started ${formatProfileDate(stream.startedAt, helpers) || stream.startedAt}`));
-    if (stream.lastCheckedAt) facts.appendChild(create("span", "", `Checked ${formatProfileDate(stream.lastCheckedAt, helpers) || stream.lastCheckedAt}`));
+    if (hasUsableStream && stream?.viewerCount != null) facts.appendChild(create("span", "", `${formatNumber(stream.viewerCount)} watching`));
+    if (hasUsableStream && stream?.gameName) facts.appendChild(create("span", "", stream.gameName));
+    if (hasUsableStream && stream?.startedAt) facts.appendChild(create("span", "", `Started ${formatProfileDate(stream.startedAt, helpers) || stream.startedAt}`));
+    if (stream?.lastCheckedAt) facts.appendChild(create("span", "", `Checked ${formatProfileDate(stream.lastCheckedAt, helpers) || stream.lastCheckedAt}`));
     if (facts.childElementCount) body.appendChild(facts);
-    const streamUrl = stream.url || stream.sourceUrl;
+    const streamUrl = hasUsableStream ? (stream.url || stream.sourceUrl) : "";
     if (streamUrl) {
       const link = create("a", "profile-latest-stream-link", stream.isLive ? "Watch on platform" : "Open source");
       link.href = streamUrl;
@@ -6365,12 +6434,28 @@
   }
 
   function buildProfileGameCompetitionSection() {
-    const section = create("section", "profile-utility-section profile-game-section");
-    const header = create("div", "profile-inline-header");
-    header.append(
-      create("h3", "", "Game & competition"),
-      create("span", "profile-section-count", "Preview")
+    const details = create("details", "profile-authority-collapsible profile-game-collapsible");
+    details.open = true;
+    const summary = create("summary", "profile-authority-summary profile-game-summary");
+    const action = create("span", "profile-authority-summary-action profile-game-summary-action");
+    action.append(
+      createIcon("/assets/icons/ui/gamecontroller.svg", "profile-authority-summary-action-icon"),
+      create("span", "", "GAME & COMPETITION")
     );
+    const meta = create("span", "profile-authority-summary-meta");
+    ["Preview only", "Future-facing"].forEach((entry) => meta.appendChild(create("span", "", entry)));
+    const stateIcon = createIcon("/assets/icons/ui/visible.svg", "profile-authority-summary-icon");
+    const syncStateIcon = () => {
+      stateIcon.style.setProperty(
+        "--icon-mask",
+        details.open ? 'url("/assets/icons/ui/visible.svg")' : 'url("/assets/icons/ui/hidden.svg")'
+      );
+    };
+    details.addEventListener("toggle", syncStateIcon);
+    syncStateIcon();
+    summary.append(action, meta, stateIcon);
+
+    const panel = create("div", "profile-game-panel");
     const grid = create("div", "profile-game-grid");
     [
       { label: "Economy balance", value: "Future system", note: "No live wallet data" },
@@ -6386,12 +6471,12 @@
       );
       grid.appendChild(card);
     });
-    section.append(
-      header,
+    panel.append(
       grid,
       create("p", "profile-game-disclaimer", "Preview-only fields. They are not hydrated from economy, inventory, or competition services yet.")
     );
-    return section;
+    details.append(summary, panel);
+    return details;
   }
 
   function getProfileArtifactPreviewImage(item) {
@@ -6503,12 +6588,7 @@
   function renderStandaloneProfileUtilityBody(profileCard, profile, canEdit, options = {}) {
     clear(profileCard);
     const profileArtifacts = Array.isArray(options.profileArtifacts) ? options.profileArtifacts : [];
-    const latestStreamSection = buildLatestStreamSection(profile, options.helpers || null);
-    if (latestStreamSection) profileCard.appendChild(latestStreamSection);
-    else {
-      const liveBanner = buildProfileLiveBanner(profile);
-      if (liveBanner) profileCard.appendChild(liveBanner);
-    }
+    profileCard.appendChild(buildLatestStreamSection(profile, options.helpers || null));
 
     const primaryGrid = create("div", "profile-body-grid");
     primaryGrid.append(
