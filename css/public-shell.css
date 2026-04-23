@@ -1735,7 +1735,11 @@ body.public-standalone-page {
 }
 
 .inline-icon-mask,
-.button-icon-mask {
+.button-icon-mask,
+.profile-mini-artifact-icon,
+.profile-authority-summary-action-icon,
+.profile-authority-summary-icon,
+.share-link-brand-icon {
   width: 14px;
   height: 14px;
   display: inline-block;
@@ -3372,7 +3376,7 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 }
 
 .profile-authority-collapsible[open] .profile-authority-summary-icon {
-  transform: rotate(180deg);
+  --icon-mask: url("/assets/icons/ui/visible.svg");
 }
 
 .profile-authority-expanded-panel {

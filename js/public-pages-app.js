@@ -6270,7 +6270,7 @@
       authorityContext?.targetIdentityCode ? "Identity target" : "Target pending",
       options.authState?.authenticated ? "Signed in" : "Sign in required"
     ].forEach((entry) => meta.appendChild(create("span", "", entry)));
-    summary.append(action, meta, createIcon(UI_ICON_MAP.visibility, "profile-authority-summary-icon"));
+    summary.append(action, meta, createIcon("/assets/icons/ui/hidden.svg", "profile-authority-summary-icon"));
 
     const panel = buildAuthorityRequestPanel(context, options);
     panel.classList.add("profile-authority-expanded-panel");

@@ -162,6 +162,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(standaloneUtilityBlock, /buildProfileShareSection\(profile, \{ compact: true \}\)/);
   assert.match(standaloneUtilityBlock, /buildCollapsedAuthorityRequestPanel\(resolveProfileAuthorityContext\(profile\)/);
   assert.match(app, /\/assets\/icons\/ui\/shieldtick\.svg/);
+  assert.match(app, /\/assets\/icons\/ui\/hidden\.svg/);
   assert.match(app, /PUBLIC AUTHORITY/);
   assert.doesNotMatch(standaloneUtilityBlock, /shareTitle\.prepend/);
   assert.match(app, /function buildNativeShareButton\(url, label\)/);
@@ -181,6 +182,8 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /\.profile-share-section--compact \.share-box\s*\{[\s\S]*background:\s*transparent/);
   assert.match(css, /\.profile-authority-collapsible/);
   assert.match(css, /\.profile-authority-summary-action-icon/);
+  assert.match(css, /\.profile-authority-collapsible\[open\] \.profile-authority-summary-icon\s*\{[\s\S]*\/assets\/icons\/ui\/visible\.svg/);
+  assert.match(css, /share-link-brand-icon[\s\S]*-webkit-mask-image:\s*var\(--icon-mask\)/);
   assert.match(css, /\.profile-hero-role-chip\s*\{[\s\S]*clip-path:\s*inset\(0 round 999px\)/);
   assert.match(css, /\.profile-hero-role-chip\s*\{[\s\S]*contain:\s*paint/);
   assert.match(css, /\.profile-hero-role-chip::after\s*\{[\s\S]*translateX\(-140%\)/);

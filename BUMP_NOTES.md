@@ -2,6 +2,8 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+- Fixed the standalone `/u/*` profile utility icons that were rendering as solid squares by routing the profile-specific mask classes through the same CSS mask-image rule as the shared icon classes, so share-link brand icons, mini-gallery fallback icons, and authority icons inherit the intended text color. The collapsed authority state icon now uses `/assets/icons/ui/hidden.svg`, and the expanded state swaps to `/assets/icons/ui/visible.svg`. No files were created or removed.
+
 - Cleaned up the standalone `/u/*` profile mini-gallery and utility strip by normalizing stale local clip thumbnail placeholders such as `/assets/backgrounds/seosupport.jpg` and `/assets/backgrounds/seoaccessibility.jpg` to the existing checked-in fallback before render, adding a mini-gallery image error fallback, removing the compact share-row outer container styling so only the three inline controls remain visible, and relabeling the collapsed authority toggle to `PUBLIC AUTHORITY` with the requested shield-tick icon. No files were created or removed.
 
 - Fixed the standalone `/u/*` hero role-chip hover artifact by adding paint containment and rounded clipping to the existing chip shell in `css/public-shell.css`, preserving the current role-chip colors, sizing, glow, and sheen animation while preventing the hovered chip compositor layer from leaking onto adjacent chips. No files were created or removed.
