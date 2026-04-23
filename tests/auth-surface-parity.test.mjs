@@ -187,6 +187,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /\.profile-overlay-brand-logo/);
   assert.match(css, /\.profile-overlay-brand-text\s*\{[\s\S]*letter-spacing:\s*0\.12em/);
   assert.match(css, /\.profile-overlay-brand-text\s*\{[\s\S]*text-transform:\s*none/);
+  assert.match(css, /\.profile-overlay-brand-text-default\s*\{[\s\S]*font-size:\s*1\.15em/);
   assert.match(css, /\.profile-overlay-brand-text-default\s*\{[\s\S]*text-transform:\s*none/);
   assert.match(css, /\.profile-overlay-brand-text-hover\s*\{[\s\S]*text-transform:\s*none/);
   assert.match(css, /\.profile-overlay-brand:hover \.profile-overlay-brand-text-hover/);

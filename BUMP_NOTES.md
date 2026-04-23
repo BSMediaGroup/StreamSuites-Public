@@ -671,3 +671,4 @@ Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into t
 
 - The shared modal now depends on the helper being loaded on every shell entrypoint. Future route additions that use `public-shell.js` need to keep that helper script include or the modal will regress again.
 - Restored the standalone `/u/*` profile header brand label to the original text crossfade path with the header title font stack explicitly reapplied on the shared brand-text wrapper, while keeping CSS case transforms disabled and using literal strings `StreamSuites™` and `COMMUNITY HOME`. This removes the fallback-font regression without reintroducing the broken SVG text workaround. No files were created or removed.
+- Increased only the default standalone `/u/*` profile header `StreamSuites™` label by about 15% via the default-state span, leaving the `COMMUNITY HOME` hover label size unchanged. No files were created or removed.

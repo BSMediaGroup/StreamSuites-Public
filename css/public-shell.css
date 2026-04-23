@@ -2659,6 +2659,7 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 
 .profile-overlay-brand-text-default {
   font-family: inherit;
+  font-size: 1.15em;
   letter-spacing: inherit;
   text-transform: none;
   opacity: 1;
