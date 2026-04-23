@@ -2964,19 +2964,6 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   z-index: 4;
 }
 
-.profile-standalone-body::before {
-  content: "";
-  position: absolute;
-  inset: -40px -8vw auto;
-  height: 320px;
-  pointer-events: none;
-  background:
-    radial-gradient(520px 220px at 18% 20%, rgba(94, 142, 215, 0.08), transparent 72%),
-    radial-gradient(460px 220px at 82% 0%, rgba(232, 238, 248, 0.05), transparent 70%);
-  opacity: 0.9;
-  z-index: -1;
-}
-
 .profile-hero-trim {
   position: relative;
   z-index: 6;
@@ -3019,8 +3006,7 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   overflow: hidden;
 }
 
-.profile-utility-panel::before,
-.profile-utility-panel::after {
+.profile-utility-panel::before {
   content: "";
   position: absolute;
   pointer-events: none;
@@ -3030,15 +3016,6 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   inset: 0 0 auto;
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(238, 244, 255, 0.42), transparent);
-}
-
-.profile-utility-panel::after {
-  right: -160px;
-  top: -180px;
-  width: 380px;
-  height: 380px;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(130, 170, 225, 0.12), transparent 66%);
 }
 
 .profile-utility-panel > * {
