@@ -151,7 +151,8 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /profile-overlay-brand-logo/);
   assert.match(app, /\/assets\/logos\/ssnewcon\.webp/);
   assert.doesNotMatch(app, /profile-overlay-brand-icon/);
-  assert.match(app, /profile-overlay-brand-text-default", "StreamSuites™"/);
+  assert.match(app, /document\.createElementNS\("http:\/\/www\.w3\.org\/2000\/svg", "svg"\)/);
+  assert.match(app, /defaultMarkText\.textContent = "StreamSuites™"/);
   assert.match(app, /profile-overlay-brand-text-hover", "Community Home"/);
   assert.match(app, /profile-hero-trim/);
   assert.match(app, /profile-hero-bio-toggle/);
@@ -185,10 +186,10 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /\.profile-cinematic-hero/);
   assert.match(css, /\.profile-overlay-header/);
   assert.match(css, /\.profile-overlay-brand-logo/);
-  assert.match(css, /\.profile-overlay-brand-text-default\s*\{[\s\S]*font-family:\s*"Segoe UI"/);
-  assert.match(css, /\.profile-overlay-brand-text-default\s*\{[\s\S]*letter-spacing:\s*0/);
-  assert.match(css, /\.profile-overlay-brand-text-default\s*\{[\s\S]*text-transform:\s*none !important/);
-  assert.match(css, /\.profile-overlay-brand-text-default\s*\{[\s\S]*font-variant-caps:\s*normal/);
+  assert.match(css, /\.profile-overlay-brand-text-default\s*\{[\s\S]*width:\s*142px/);
+  assert.match(css, /\.profile-overlay-brand-text-default text\s*\{[\s\S]*font-family:\s*"RechargeBd"/);
+  assert.match(css, /\.profile-overlay-brand-text-default text\s*\{[\s\S]*letter-spacing:\s*0/);
+  assert.match(css, /\.profile-overlay-brand-text-default text\s*\{[\s\S]*text-transform:\s*none/);
   assert.match(css, /\.profile-overlay-brand-text-hover\s*\{[\s\S]*text-transform:\s*uppercase/);
   assert.match(css, /\.profile-overlay-brand:hover \.profile-overlay-brand-text-hover/);
   assert.match(css, /\.profile-header-social-panel/);

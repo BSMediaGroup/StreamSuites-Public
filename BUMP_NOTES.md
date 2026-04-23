@@ -2,6 +2,8 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+- Reworked the standalone `/u/*` profile header default `StreamSuites™` label as an inline SVG text mark using the bold title font so the title-font styling and size are restored while the text keeps exact mixed-case casing. The hover/focus `Community Home` label remains unchanged. No files were created or removed.
+
 - Corrected the standalone `/u/*` profile header default `StreamSuites™` label again by removing inherited tracking from the shared text wrapper, using a normal case-preserving bold UI font for the default state, and keeping uppercase/tracking only on the hover/focus `Community Home` label. No files were created or removed.
 
 - Upgraded the standalone `/u/*` profile body in `js/public-pages-app.js` and `css/public-shell.css` with a default-open premium latest/current stream module for creator-capable profiles, consuming the new public-safe `latest_stream` contract and falling back to polished source-unavailable states instead of broken iframes. Viewer-only profiles do not render the stream section.

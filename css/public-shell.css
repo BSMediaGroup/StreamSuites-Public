@@ -2644,7 +2644,7 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   position: relative;
   display: inline-grid;
   align-items: center;
-  min-width: 132px;
+  min-width: 142px;
   font-size: 0.66rem;
 }
 
@@ -2655,12 +2655,20 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 }
 
 .profile-overlay-brand-text-default {
-  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  font-weight: 800;
-  letter-spacing: 0;
-  text-transform: none !important;
-  font-variant-caps: normal;
+  width: 142px;
+  height: 18px;
+  display: block;
+  overflow: visible;
   opacity: 1;
+}
+
+.profile-overlay-brand-text-default text {
+  fill: currentColor;
+  font-family: "RechargeBd", "SuiGenerisRg", "SuiGeneris", "Segoe UI", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .profile-overlay-brand-text-hover {
