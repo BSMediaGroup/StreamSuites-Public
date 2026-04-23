@@ -2,6 +2,8 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+- Fixed the standalone `/u/*` hero role-chip hover artifact by adding paint containment and rounded clipping to the existing chip shell in `css/public-shell.css`, preserving the current role-chip colors, sizing, glow, and sheen animation while preventing the hovered chip compositor layer from leaking onto adjacent chips. No files were created or removed.
+
 - Completed the standalone `/u/*` public profile body polish in `js/public-pages-app.js` and `css/public-shell.css` with a profile-only public overview board, curated mini artifact showcase, compact inline StreamSuites/FindMeHere share rows with copy plus native-share/fallback actions, and a slim collapsed authority request control that preserves the existing full request panel when expanded. The old standalone profile share/authority two-column utility layout was replaced because it left the new hero sitting over clunkier legacy modules; no files were created or removed, so `README.md` repo tree changes were not required. While validating, also hardened `js/public-data-hub.js` so VM-style tests without `window.location` do not crash the API-base fallback.
 
 - Added a focused `/u/*` profile hydration regression in `tests/auth-surface-parity.test.mjs` so standalone public profiles must keep no-store runtime profile fetches and must prefer authoritative API avatar/cover/banner media over local fallback profile data. No public source files were removed or replaced in this pass.

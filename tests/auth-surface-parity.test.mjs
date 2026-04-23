@@ -178,6 +178,8 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /\.profile-mini-artifacts/);
   assert.match(css, /\.profile-share-section--compact \.share-box/);
   assert.match(css, /\.profile-authority-collapsible/);
+  assert.match(css, /\.profile-hero-role-chip\s*\{[\s\S]*clip-path:\s*inset\(0 round 999px\)/);
+  assert.match(css, /\.profile-hero-role-chip\s*\{[\s\S]*contain:\s*paint/);
   assert.match(css, /\.profile-hero-role-chip::after\s*\{[\s\S]*translateX\(-140%\)/);
   assert.match(css, /@keyframes profile-role-chip-sheen/);
   assert.match(css, /\.profile-return-link/);

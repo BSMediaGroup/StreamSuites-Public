@@ -2888,6 +2888,9 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
     0 0 12px var(--profile-role-chip-glow);
   backdrop-filter: blur(12px);
   overflow: hidden;
+  clip-path: inset(0 round 999px);
+  contain: paint;
+  transform: translateZ(0);
   isolation: isolate;
 }
 
