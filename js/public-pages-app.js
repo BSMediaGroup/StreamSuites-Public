@@ -6503,13 +6503,22 @@
     return PROFILE_PUBLIC_BADGE_COPY[key] || {};
   }
 
+  function getProfilePublicBadgeDetailMeta(key, kind) {
+    const normalized = normalizeBadgeKey(key);
+    const normalizedKind = String(kind || "").trim().toLowerCase();
+    if (normalizedKind === "tier") {
+      return PROFILE_TIER_CHIP_META[normalized] || PROFILE_TIER_CHIP_META[normalizeTierForUi(normalized)] || {};
+    }
+    return PROFILE_BADGE_CHIP_META[normalized] || {};
+  }
+
   function getProfilePublicBadges(profile) {
     const seen = new Set();
     const publicBadges = [];
     const pushBadge = (badge) => {
       const key = normalizeBadgeKey(badge?.key || badge?.icon_key || badge?.iconKey || badge?.value);
       const kind = String(badge?.kind || (PROFILE_TIER_CHIP_META[key] ? "tier" : "badge")).trim().toLowerCase();
-      const contextKind = kind === "tier" || kind === "entitlement" ? "tier" : kind === "role" ? "role" : "badge";
+      const contextKind = kind === "tier" ? "tier" : kind === "role" ? "role" : "badge";
       const identity = `${contextKind}:${key}`;
       if (!key || !PROFILE_PUBLIC_BADGE_KEYS.includes(key) || seen.has(identity)) return;
       seen.add(identity);
@@ -6534,12 +6543,14 @@
       pushBadge({ key: typeChip.key, kind: "role", value: typeChip.key, label: typeChip.label });
     }
 
+    const hasDeveloperRoleDetail = publicBadges.some((badge) => badge.key === "developer" && badge.kind === "role");
     return publicBadges
+      .filter((badge) => !(hasDeveloperRoleDetail && badge.key === "developer" && badge.kind === "tier"))
       .map((badge) => {
         const key = badge.key;
         const kind = String(badge.kind || "").trim().toLowerCase();
         const copy = getProfilePublicBadgeCopy(key, kind);
-        const meta = resolveProfileChipMeta(kind === "tier" ? "tier" : "badge", key, { kind });
+        const meta = getProfilePublicBadgeDetailMeta(key, kind);
         return {
           ...badge,
           key,

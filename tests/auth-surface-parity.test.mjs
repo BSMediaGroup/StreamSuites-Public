@@ -198,6 +198,11 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /title: "Pro Tier"/);
   assert.match(app, /pushBadge\(\{ key: tierKey, kind: "tier", value: tierKey, label: tierKey\.toUpperCase\(\) \}\)/);
   assert.match(app, /pushBadge\(\{ key: typeChip\.key, kind: "role", value: typeChip\.key, label: typeChip\.label \}\)/);
+  assert.match(app, /function getProfilePublicBadgeDetailMeta\(key, kind\)/);
+  assert.match(app, /const contextKind = kind === "tier" \? "tier" : kind === "role" \? "role" : "badge"/);
+  assert.match(app, /const hasDeveloperRoleDetail = publicBadges\.some\(\(badge\) => badge\.key === "developer" && badge\.kind === "role"\)/);
+  assert.match(app, /\.filter\(\(badge\) => !\(hasDeveloperRoleDetail && badge\.key === "developer" && badge\.kind === "tier"\)\)/);
+  assert.match(app, /const meta = getProfilePublicBadgeDetailMeta\(key, kind\)/);
   assert.match(app, /Joined before the founding member cutoff of July 31, 2026\./);
   assert.match(app, /Can moderate creator account spaces where this account has an active assignment\./);
   assert.match(app, /function buildProfileSocialGallerySection\(profile\)/);
