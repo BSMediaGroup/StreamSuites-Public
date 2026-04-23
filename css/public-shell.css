@@ -2904,24 +2904,27 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   margin-top: 4px;
 }
 
-.profile-hero-role-chip {
+.profile-hero-role-chip,
+.profile-badge-chip {
   --profile-role-chip-bg: linear-gradient(135deg, rgba(94, 114, 146, 0.24), rgba(24, 34, 50, 0.68));
   --profile-role-chip-border: rgba(164, 187, 220, 0.42);
   --profile-role-chip-glow: rgba(125, 162, 216, 0.22);
   --profile-role-chip-text: rgba(237, 244, 255, 0.94);
   position: relative;
-  min-height: 22px;
+  min-height: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   padding: 2px 10px;
   border-radius: 999px;
   border: 1px solid var(--profile-role-chip-border);
   background: var(--profile-role-chip-bg);
   color: var(--profile-role-chip-text);
-  font-size: 0.62rem;
+  font-size: 0.64rem;
   line-height: 1.2;
   letter-spacing: 0.12em;
+  text-transform: uppercase;
   text-shadow: 0 1px 8px rgba(5, 8, 14, 0.55);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
@@ -2935,14 +2938,17 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 }
 
 .profile-hero-role-chip::before,
-.profile-hero-role-chip::after {
+.profile-hero-role-chip::after,
+.profile-badge-chip::before,
+.profile-badge-chip::after {
   content: "";
   position: absolute;
   pointer-events: none;
   border-radius: inherit;
 }
 
-.profile-hero-role-chip::before {
+.profile-hero-role-chip::before,
+.profile-badge-chip::before {
   top: 50%;
   left: 50%;
   width: 140%;
@@ -2954,7 +2960,8 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   z-index: -1;
 }
 
-.profile-hero-role-chip::after {
+.profile-hero-role-chip::after,
+.profile-badge-chip::after {
   inset: 0;
   background: linear-gradient(
     120deg,
@@ -2970,12 +2977,23 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 }
 
 .profile-hero-role-chip:hover::after,
-.profile-hero-role-chip:focus-visible::after {
+.profile-hero-role-chip:focus-visible::after,
+.profile-badge-chip:hover::after,
+.profile-badge-chip:focus-visible::after {
   opacity: 0.34;
   animation: profile-role-chip-sheen 3.2s cubic-bezier(0.2, 0.8, 0.3, 1) infinite;
 }
 
-.profile-hero-role-chip--admin {
+.profile-badge-chip-icon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 4px rgba(145, 192, 255, 0.22));
+}
+
+.profile-hero-role-chip--admin,
+.profile-badge-chip--admin {
   --profile-role-chip-bg: linear-gradient(130deg, rgba(255, 88, 204, 0.45), rgba(132, 102, 255, 0.24) 55%, rgba(80, 160, 255, 0.22));
   --profile-role-chip-border: rgba(255, 110, 214, 0.62);
   --profile-role-chip-glow: rgba(170, 90, 255, 0.42);
@@ -2983,25 +3001,46 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 }
 
 .profile-hero-role-chip--creator,
-.profile-hero-role-chip--moderator {
+.profile-hero-role-chip--moderator,
+.profile-badge-chip--creator,
+.profile-badge-chip--moderator {
   --profile-role-chip-bg: linear-gradient(135deg, rgba(92, 176, 188, 0.28), rgba(62, 130, 150, 0.16));
   --profile-role-chip-border: rgba(101, 194, 207, 0.58);
   --profile-role-chip-glow: rgba(72, 160, 170, 0.24);
   --profile-role-chip-text: #d7f3f4;
 }
 
-.profile-hero-role-chip--developer {
+.profile-hero-role-chip--developer,
+.profile-badge-chip--developer {
   --profile-role-chip-bg: linear-gradient(135deg, rgba(103, 193, 36, 0.38), rgba(189, 233, 102, 0.14));
   --profile-role-chip-border: rgba(171, 226, 88, 0.62);
   --profile-role-chip-glow: rgba(143, 217, 72, 0.34);
   --profile-role-chip-text: #f3ffd5;
 }
 
-.profile-hero-role-chip--founder {
+.profile-hero-role-chip--founder,
+.profile-badge-chip--founder,
+.profile-badge-chip--gold {
   --profile-role-chip-bg: linear-gradient(135deg, rgba(255, 198, 84, 0.42), rgba(255, 232, 164, 0.12));
   --profile-role-chip-border: rgba(255, 210, 110, 0.64);
   --profile-role-chip-glow: rgba(255, 195, 92, 0.38);
   --profile-role-chip-text: #fff3c9;
+}
+
+.profile-badge-chip--pro {
+  --profile-role-chip-bg: linear-gradient(135deg, rgba(87, 168, 255, 0.34), rgba(124, 118, 255, 0.2));
+  --profile-role-chip-border: rgba(121, 185, 255, 0.62);
+  --profile-role-chip-glow: rgba(96, 164, 255, 0.34);
+  --profile-role-chip-text: #e6f2ff;
+}
+
+.profile-badge-chip--public,
+.profile-badge-chip--viewer,
+.profile-badge-chip--core {
+  --profile-role-chip-bg: linear-gradient(135deg, rgba(94, 114, 146, 0.24), rgba(24, 34, 50, 0.72));
+  --profile-role-chip-border: rgba(164, 187, 220, 0.42);
+  --profile-role-chip-glow: rgba(125, 162, 216, 0.22);
+  --profile-role-chip-text: rgba(237, 244, 255, 0.94);
 }
 
 .profile-standalone-body {
@@ -3165,49 +3204,9 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   overflow-wrap: anywhere;
 }
 
-.profile-tier-chip {
-  --profile-tier-chip-bg: linear-gradient(135deg, rgba(94, 114, 146, 0.24), rgba(24, 34, 50, 0.72));
-  --profile-tier-chip-border: rgba(164, 187, 220, 0.42);
-  --profile-tier-chip-glow: rgba(125, 162, 216, 0.22);
-  --profile-tier-chip-text: rgba(237, 244, 255, 0.94);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.profile-overview-stat .profile-badge-chip,
+.profile-overview-value .profile-badge-chip {
   justify-self: start;
-  gap: 6px;
-  min-height: 24px;
-  padding: 2px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--profile-tier-chip-border);
-  background: var(--profile-tier-chip-bg);
-  color: var(--profile-tier-chip-text);
-  font-size: 0.68rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    0 0 12px var(--profile-tier-chip-glow);
-}
-
-.profile-tier-chip--gold {
-  --profile-tier-chip-bg: linear-gradient(135deg, rgba(255, 198, 84, 0.42), rgba(255, 232, 164, 0.12));
-  --profile-tier-chip-border: rgba(255, 210, 110, 0.64);
-  --profile-tier-chip-glow: rgba(255, 195, 92, 0.38);
-  --profile-tier-chip-text: #fff3c9;
-}
-
-.profile-tier-chip--pro {
-  --profile-tier-chip-bg: linear-gradient(135deg, rgba(87, 168, 255, 0.34), rgba(124, 118, 255, 0.2));
-  --profile-tier-chip-border: rgba(121, 185, 255, 0.62);
-  --profile-tier-chip-glow: rgba(96, 164, 255, 0.34);
-  --profile-tier-chip-text: #e6f2ff;
-}
-
-.profile-tier-chip-icon {
-  width: 14px;
-  height: 14px;
-  flex: 0 0 auto;
-  background-color: currentColor;
 }
 
 .profile-overview-table {
@@ -3387,6 +3386,10 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   border-color: rgba(255, 116, 116, 0.28);
 }
 
+.profile-latest-stream-card.is-empty {
+  grid-template-columns: minmax(0, 0.95fr) minmax(280px, 1.05fr);
+}
+
 .profile-latest-stream-media {
   min-height: 280px;
   aspect-ratio: 16 / 9;
@@ -3510,6 +3513,24 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 
 .profile-game-section {
   border-color: rgba(194, 214, 242, 0.16);
+}
+
+.profile-game-collapsible {
+  border-color: rgba(194, 214, 242, 0.16);
+  background:
+    linear-gradient(180deg, rgba(18, 25, 38, 0.54), rgba(8, 11, 17, 0.72)),
+    rgba(8, 11, 16, 0.62);
+}
+
+.profile-game-summary-action {
+  border-color: rgba(184, 204, 234, 0.24);
+  background: linear-gradient(180deg, rgba(31, 43, 63, 0.72), rgba(12, 17, 27, 0.86));
+}
+
+.profile-game-panel {
+  display: grid;
+  gap: 14px;
+  padding: 0 clamp(10px, 1.8vw, 16px) clamp(12px, 2vw, 16px);
 }
 
 .profile-game-preview-card {
