@@ -3028,6 +3028,7 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 
 .profile-hero-role-chip--developer,
 .profile-role-chip--developer,
+.profile-tier-chip--developer,
 .profile-badge-chip--developer {
   --profile-role-chip-bg: linear-gradient(135deg, rgba(103, 193, 36, 0.38), rgba(189, 233, 102, 0.14));
   --profile-role-chip-border: rgba(171, 226, 88, 0.62);

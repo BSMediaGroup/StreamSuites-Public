@@ -188,7 +188,13 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /platformLabel: STREAM_PLATFORM_LABELS\[platform\],\s*disabled: true/);
   assert.match(app, /create\("span", "profile-latest-stream-sources-label", "Other sources"\)/);
   assert.match(app, /function buildProfileBadgeGallerySection\(profile\)/);
+  assert.match(app, /PROFILE_TIER_BADGE_KEYS = Object\.freeze\(\["core", "gold", "pro", "developer"\]\)/);
   assert.match(app, /PROFILE_PUBLIC_BADGE_KEYS = Object\.freeze\(\["core", "gold", "pro", "admin", "developer", "founder", "moderator"\]\)/);
+  assert.match(app, /PROFILE_CHIP_CONTEXTS = Object\.freeze/);
+  assert.match(app, /PROFILE_ROLE_CHIP_META = Object\.freeze/);
+  assert.match(app, /PROFILE_TIER_CHIP_META = Object\.freeze/);
+  assert.match(app, /developer:\s*Object\.freeze\(\{ key: "developer", label: "DEVELOPER", palette: "developer", icon: BADGE_ICON_MAP\.developer \}\)/);
+  assert.match(app, /developer_tier:\s*\{[\s\S]*title: "Developer Tier"/);
   assert.match(app, /title: "Pro Tier"/);
   assert.match(app, /pushBadge\(\{ key: tierKey, kind: "tier", value: tierKey, label: tierKey\.toUpperCase\(\) \}\)/);
   assert.match(app, /pushBadge\(\{ key: typeChip\.key, kind: "role", value: typeChip\.key, label: typeChip\.label \}\)/);
@@ -204,10 +210,13 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /Preview-only fields\. They are not hydrated from economy, inventory, or competition services yet\./);
   assert.doesNotMatch(app, /addRow\("StreamSuites"/);
   assert.doesNotMatch(app, /addRow\("FindMeHere"/);
+  assert.match(app, /function buildProfileContextChip\(contextName, key, options = \{\}\)/);
+  assert.match(app, /const iconPath = context\.icons \? String\(options\.icon \|\| meta\.icon \|\| ""\)\.trim\(\) : ""/);
   assert.match(app, /function buildProfileBadgeChip\(key, options = \{\}\)/);
   assert.match(app, /function buildProfileTypeChip\(profile\)/);
-  assert.match(app, /create\("span", `profile-role-chip profile-role-chip--\$\{key\}`/);
+  assert.match(app, /buildProfileContextChip\("role", key, \{ label: typeChip\.label, kind: "role" \}\)/);
   assert.doesNotMatch(app, /buildProfileBadgeChip\(typeChip\.key/);
+  assert.match(app, /buildProfileContextChip\("tier", normalized/);
   assert.match(app, /buildProfileTierChip\(profile\?\.tier \|\| "core"\)/);
   assert.match(app, /function resolveProfileTypeDescriptor\(profile\)/);
   assert.match(app, /function accountTypeToRole\(accountType\)/);
@@ -253,6 +262,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /\.profile-tier-chip--core,[\s\S]*\.profile-badge-chip--core[\s\S]*rgba\(92, 176, 188, 0\.24\)/);
   assert.match(css, /\.profile-tier-chip--gold,[\s\S]*\.profile-badge-chip--gold/);
   assert.match(css, /\.profile-tier-chip--pro,[\s\S]*rgba\(255, 88, 204, 0\.45\)/);
+  assert.match(css, /\.profile-tier-chip--developer,[\s\S]*\.profile-badge-chip--developer[\s\S]*rgba\(103, 193, 36, 0\.38\)/);
   assert.match(css, /\.profile-role-chip--viewer/);
   assert.match(css, /\.profile-game-section/);
   assert.match(css, /\.profile-game-collapsible/);
@@ -309,11 +319,12 @@ test("standalone /u profile hydration keeps runtime profile media ahead of local
   assert.match(roleChipBlock, /resolveProfileTypeDescriptor\(profile\)/);
   assert.doesNotMatch(roleChipBlock, /founder|moderator/);
   assert.match(profileTypeBlock, /resolveProfileTypeDescriptor\(profile\)/);
-  assert.match(profileTypeBlock, /profile-role-chip/);
+  assert.match(profileTypeBlock, /buildProfileContextChip\("role", key/);
   assert.doesNotMatch(profileTypeBlock, /profile-badge-chip-icon|create\("img"|typeChip\.icon/);
   assert.doesNotMatch(profileTypeBlock, /Creator-capable|Viewer\/Public|founder|moderator/);
-  assert.match(profileTierBlock, /buildProfileBadgeChip\(normalized/);
+  assert.match(profileTierBlock, /buildProfileContextChip\("tier", normalized/);
   assert.match(profileTierBlock, /profile-tier-chip/);
+  assert.match(app, /if \(normalizedAccountType === "DEVELOPER"\) \{[\s\S]*return "developer";/);
 
   assert.ok(standaloneProfileBlock, "renderStandaloneProfile should exist");
   assert.match(standaloneProfileBlock, /await fetchPublicProfileByIdentifier\(profileCode\)/);

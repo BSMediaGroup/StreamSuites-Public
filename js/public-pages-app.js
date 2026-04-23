@@ -60,9 +60,34 @@
     moderator: "/assets/icons/modgavel-blue.svg",
     developer: "/assets/icons/dev-green.svg"
   });
-  const PROFILE_TIER_BADGE_KEYS = Object.freeze(["core", "gold", "pro"]);
+  const PROFILE_TIER_BADGE_KEYS = Object.freeze(["core", "gold", "pro", "developer"]);
   const PROFILE_MAIN_ROLE_KEYS = Object.freeze(["admin", "creator", "developer", "viewer"]);
   const PROFILE_PUBLIC_BADGE_KEYS = Object.freeze(["core", "gold", "pro", "admin", "developer", "founder", "moderator"]);
+  const PROFILE_CHIP_CONTEXTS = Object.freeze({
+    role: Object.freeze({ baseClass: "profile-role-chip", icons: false, badgeKind: "role" }),
+    heroRole: Object.freeze({ baseClass: "profile-hero-role-chip", icons: false, badgeKind: "role" }),
+    tier: Object.freeze({ baseClass: "profile-badge-chip", icons: true, badgeKind: "tier" }),
+    badge: Object.freeze({ baseClass: "profile-badge-chip", icons: true, badgeKind: "badge" })
+  });
+  const PROFILE_ROLE_CHIP_META = Object.freeze({
+    admin: Object.freeze({ key: "admin", label: "ADMIN", palette: "admin" }),
+    creator: Object.freeze({ key: "creator", label: "CREATOR", palette: "creator" }),
+    developer: Object.freeze({ key: "developer", label: "DEVELOPER", palette: "developer" }),
+    viewer: Object.freeze({ key: "viewer", label: "VIEWER", palette: "viewer" })
+  });
+  const PROFILE_TIER_CHIP_META = Object.freeze({
+    core: Object.freeze({ key: "core", label: "CORE", palette: "core", icon: BADGE_ICON_MAP.core }),
+    gold: Object.freeze({ key: "gold", label: "GOLD", palette: "gold", icon: BADGE_ICON_MAP.gold }),
+    pro: Object.freeze({ key: "pro", label: "PRO", palette: "pro", icon: BADGE_ICON_MAP.pro }),
+    developer: Object.freeze({ key: "developer", label: "DEVELOPER", palette: "developer", icon: BADGE_ICON_MAP.developer })
+  });
+  const PROFILE_BADGE_CHIP_META = Object.freeze({
+    admin: Object.freeze({ key: "admin", label: "ADMIN", palette: "admin", icon: BADGE_ICON_MAP.admin }),
+    founder: Object.freeze({ key: "founder", label: "FOUNDER", palette: "founder", icon: BADGE_ICON_MAP.founder }),
+    moderator: Object.freeze({ key: "moderator", label: "MODERATOR", palette: "moderator", icon: BADGE_ICON_MAP.moderator }),
+    developer: Object.freeze({ key: "developer", label: "DEVELOPER", palette: "developer", icon: BADGE_ICON_MAP.developer }),
+    viewer: Object.freeze({ key: "viewer", label: "VIEWER", palette: "viewer" })
+  });
   const PROFILE_PUBLIC_BADGE_COPY = Object.freeze({
     core: {
       title: "Core Tier",
@@ -75,6 +100,10 @@
     pro: {
       title: "Pro Tier",
       description: "Advanced StreamSuites entitlement visible on this public profile."
+    },
+    developer_tier: {
+      title: "Developer Tier",
+      description: "Developer-role account entitlement equivalent to Pro, surfaced with its dedicated public tier label."
     },
     admin: {
       title: "Admin",
@@ -922,8 +951,8 @@
 
   function normalizeTierForUi(value) {
     const tier = String(value || "").trim().toLowerCase();
-    if (tier === "gold" || tier === "pro") return tier;
-    if (tier === "admin" || tier === "developer") return "pro";
+    if (tier === "gold" || tier === "pro" || tier === "developer") return tier;
+    if (tier === "admin") return "pro";
     return "core";
   }
 
@@ -956,10 +985,7 @@
   }
 
   function roleLabel(role) {
-    if (role === "admin") return "ADMIN";
-    if (role === "developer") return "DEVELOPER";
-    if (role === "creator") return "CREATOR";
-    return "VIEWER";
+    return PROFILE_ROLE_CHIP_META[role]?.label || PROFILE_ROLE_CHIP_META.viewer.label;
   }
 
   function accountTypeToRole(accountType) {
@@ -1005,7 +1031,10 @@
   function resolveProfileTier(value, accountType) {
     const rawTier = String(value || "").trim();
     const normalizedAccountType = normalizeAccountType(accountType);
-    if (!rawTier && (normalizedAccountType === "ADMIN" || normalizedAccountType === "DEVELOPER")) {
+    if (normalizedAccountType === "DEVELOPER") {
+      return "developer";
+    }
+    if (!rawTier && normalizedAccountType === "ADMIN") {
       return "pro";
     }
     return normalizeTierForUi(rawTier);
@@ -1016,9 +1045,11 @@
     const normalized = normalizeBadgeKey(value);
     icon.src = BADGE_ICON_MAP[normalized];
     if (!icon.src) return null;
+    const normalizedKind = String(type || "").trim().toLowerCase();
+    const isTierBadge = normalizedKind === "tier" || (normalizedKind === "entitlement" && Boolean(PROFILE_TIER_CHIP_META[normalized]));
     icon.alt = `${normalized || "badge"} badge`;
-    icon.classList.add(PROFILE_TIER_BADGE_KEYS.includes(normalized) ? "badge-icon-tier" : "badge-icon-role");
-    icon.classList.add(PROFILE_TIER_BADGE_KEYS.includes(normalized) ? "ss-tier-badge" : "ss-role-badge");
+    icon.classList.add(isTierBadge ? "badge-icon-tier" : "badge-icon-role");
+    icon.classList.add(isTierBadge ? "ss-tier-badge" : "ss-role-badge");
     icon.setAttribute("data-ss-role-badge", normalized || "badge");
     return getPublicBadgeUi()?.wrapTooltipTarget?.(
       icon,
@@ -6249,7 +6280,7 @@
   function buildStandaloneRoleChips(profile) {
     const row = create("div", "profile-hero-role-chips");
     const typeChip = resolveProfileTypeDescriptor(profile);
-    row.appendChild(create("span", `profile-hero-role-chip profile-hero-role-chip--${typeChip.key}`, typeChip.label));
+    row.appendChild(buildProfileContextChip("heroRole", typeChip.key, { label: typeChip.label, kind: "role" }));
     row.hidden = row.childElementCount === 0;
     return row;
   }
@@ -6407,40 +6438,69 @@
     }, { total: 0 });
   }
 
-  function buildProfileBadgeChip(key, options = {}) {
-    const normalized = String(key || "").trim().toLowerCase() || "core";
-    const label = String(options.label || toTitle(normalized) || "Badge").trim() || "Badge";
+  function resolveProfileChipMeta(contextName, key, options = {}) {
+    const normalized = String(key || "").trim().toLowerCase();
+    if (contextName === "role" || contextName === "heroRole") {
+      return PROFILE_ROLE_CHIP_META[normalized] || PROFILE_ROLE_CHIP_META.viewer;
+    }
+    if (contextName === "tier") {
+      const tierKey = normalizeTierForUi(normalized);
+      return PROFILE_TIER_CHIP_META[tierKey] || PROFILE_TIER_CHIP_META.core;
+    }
+    if (String(options.kind || "").trim().toLowerCase() === "tier" && PROFILE_TIER_CHIP_META[normalized]) {
+      return PROFILE_TIER_CHIP_META[normalized];
+    }
+    return PROFILE_BADGE_CHIP_META[normalized] || PROFILE_TIER_CHIP_META[normalizeTierForUi(normalized)] || PROFILE_BADGE_CHIP_META.viewer;
+  }
+
+  function buildProfileContextChip(contextName, key, options = {}) {
+    const context = PROFILE_CHIP_CONTEXTS[contextName] || PROFILE_CHIP_CONTEXTS.badge;
+    const meta = resolveProfileChipMeta(contextName, key, options);
+    const label = String(options.label || meta.label || toTitle(meta.key) || "Badge").trim() || "Badge";
     const extraClass = String(options.className || "").trim();
-    const chip = create("span", `profile-badge-chip profile-badge-chip--${normalized}${extraClass ? ` ${extraClass}` : ""}`, label.toUpperCase());
-    const isTierBadge = PROFILE_TIER_BADGE_KEYS.includes(normalized);
-    chip.setAttribute("data-ss-badge-kind", isTierBadge ? "tier" : "role");
-    if (isTierBadge) chip.dataset.tier = normalized.toUpperCase();
-    const iconPath = String(options.icon || BADGE_ICON_MAP[normalized] || "").trim();
+    const palette = meta.palette || meta.key || "viewer";
+    const chip = create(
+      "span",
+      `${context.baseClass} ${context.baseClass}--${palette}${extraClass ? ` ${extraClass}` : ""}`,
+      label.toUpperCase()
+    );
+    const badgeKind = String(options.kind || context.badgeKind || "badge").trim().toLowerCase();
+    chip.setAttribute("data-ss-badge-kind", badgeKind);
+    if (badgeKind === "tier") chip.dataset.tier = meta.label;
+    const iconPath = context.icons ? String(options.icon || meta.icon || "").trim() : "";
     if (iconPath) {
       const icon = create("img", "profile-badge-chip-icon");
       icon.src = iconPath;
       icon.alt = "";
       icon.setAttribute("aria-hidden", "true");
-      icon.setAttribute("data-ss-role-badge", normalized);
-      icon.classList.add(isTierBadge ? "ss-tier-badge" : "ss-role-badge");
+      icon.setAttribute("data-ss-role-badge", meta.key);
+      icon.classList.add(badgeKind === "tier" ? "ss-tier-badge" : "ss-role-badge");
       chip.prepend(icon);
     }
     return getPublicBadgeUi()?.registerTarget?.(chip, label) || chip;
   }
 
+  function buildProfileBadgeChip(key, options = {}) {
+    return buildProfileContextChip("badge", key, options);
+  }
+
   function buildProfileTierChip(tier) {
     const normalized = normalizeTierForUi(tier);
-    return buildProfileBadgeChip(normalized, {
-      label: toTitle(normalized),
-      className: `profile-tier-chip profile-tier-chip--${normalized}`
+    return buildProfileContextChip("tier", normalized, {
+      className: `profile-tier-chip profile-tier-chip--${normalized}`,
+      kind: "tier"
     });
   }
 
   function buildProfileTypeChip(profile) {
     const typeChip = resolveProfileTypeDescriptor(profile);
     const key = PROFILE_MAIN_ROLE_KEYS.includes(typeChip.key) ? typeChip.key : "viewer";
-    const chip = create("span", `profile-role-chip profile-role-chip--${key}`, typeChip.label);
-    return getPublicBadgeUi()?.registerTarget?.(chip, typeChip.label) || chip;
+    return buildProfileContextChip("role", key, { label: typeChip.label, kind: "role" });
+  }
+
+  function getProfilePublicBadgeCopy(key, kind) {
+    if (kind === "tier" && key === "developer") return PROFILE_PUBLIC_BADGE_COPY.developer_tier;
+    return PROFILE_PUBLIC_BADGE_COPY[key] || {};
   }
 
   function getProfilePublicBadges(profile) {
@@ -6448,9 +6508,12 @@
     const publicBadges = [];
     const pushBadge = (badge) => {
       const key = normalizeBadgeKey(badge?.key || badge?.icon_key || badge?.iconKey || badge?.value);
-      if (!key || !PROFILE_PUBLIC_BADGE_KEYS.includes(key) || seen.has(key)) return;
-      seen.add(key);
-      publicBadges.push({ ...badge, key, value: key });
+      const kind = String(badge?.kind || (PROFILE_TIER_CHIP_META[key] ? "tier" : "badge")).trim().toLowerCase();
+      const contextKind = kind === "tier" || kind === "entitlement" ? "tier" : kind === "role" ? "role" : "badge";
+      const identity = `${contextKind}:${key}`;
+      if (!key || !PROFILE_PUBLIC_BADGE_KEYS.includes(key) || seen.has(identity)) return;
+      seen.add(identity);
+      publicBadges.push({ ...badge, key, value: key, kind: contextKind });
     };
 
     normalizeAuthoritativeBadges(
@@ -6463,7 +6526,7 @@
     )
       .forEach(pushBadge);
 
-    const tierKey = normalizeTierForUi(profile?.tier || "core");
+    const tierKey = resolveProfileTier(profile?.tier || "core", profile?.accountType || profile?.account_type);
     pushBadge({ key: tierKey, kind: "tier", value: tierKey, label: tierKey.toUpperCase() });
 
     const typeChip = resolveProfileTypeDescriptor(profile);
@@ -6474,14 +6537,18 @@
     return publicBadges
       .map((badge) => {
         const key = badge.key;
-        const copy = PROFILE_PUBLIC_BADGE_COPY[key] || {};
+        const kind = String(badge.kind || "").trim().toLowerCase();
+        const copy = getProfilePublicBadgeCopy(key, kind);
+        const meta = resolveProfileChipMeta(kind === "tier" ? "tier" : "badge", key, { kind });
         return {
           ...badge,
           key,
+          kind,
           label: String(badge?.label || copy.title || toTitle(key)).trim(),
           title: String(badge?.title || copy.title || badge?.label || toTitle(key)).trim(),
           description: String(badge?.description || badge?.public_description || badge?.publicDescription || copy.description || "").trim(),
-          icon: BADGE_ICON_MAP[key]
+          icon: meta.icon || BADGE_ICON_MAP[key],
+          palette: meta.palette || key
         };
       })
       .filter(Boolean);
@@ -6504,7 +6571,7 @@
 
     const gallery = create("div", "profile-badge-gallery-grid");
     badges.forEach((badge) => {
-      const card = create("article", `profile-badge-gallery-card profile-badge-gallery-card--${badge.key}`);
+      const card = create("article", `profile-badge-gallery-card profile-badge-gallery-card--${badge.palette || badge.key} profile-badge-gallery-card--${badge.kind || "badge"}`);
       const iconWrap = create("span", "profile-badge-gallery-icon-wrap");
       const icon = create("img", "profile-badge-gallery-icon");
       icon.src = badge.icon;
