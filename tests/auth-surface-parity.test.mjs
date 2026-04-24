@@ -238,6 +238,10 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /body\[data-public-page="public-profile-standalone"\] \.public-standalone-root/);
   assert.match(css, /\.profile-cinematic-hero/);
   assert.match(css, /\.profile-overlay-header/);
+  assert.match(css, /@media \(max-width: 820px\)[\s\S]*\.profile-overlay-header\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\) auto/);
+  assert.match(css, /@media \(max-width: 820px\)[\s\S]*\.profile-overlay-actions\s*\{[\s\S]*flex-wrap:\s*nowrap/);
+  assert.match(css, /@media \(max-width: 560px\)[\s\S]*\.profile-header-account \.account-text,[\s\S]*\.profile-header-account \.account-name/);
+  assert.match(css, /@media \(max-width: 560px\)[\s\S]*\.profile-header-account \.account-pill\s*\{[\s\S]*justify-content:\s*center/);
   assert.match(css, /\.profile-overlay-brand-logo/);
   assert.match(css, /\.profile-overlay-brand-text\s*\{[\s\S]*letter-spacing:\s*0\.12em/);
   assert.match(css, /\.profile-overlay-brand-text\s*\{[\s\S]*text-transform:\s*none/);

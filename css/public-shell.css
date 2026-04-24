@@ -2802,7 +2802,7 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   position: relative;
   z-index: 2;
   width: min(760px, calc(100% - 32px));
-  margin: clamp(54px, 7vh, 92px) auto 0;
+  margin: clamp(42px, 5.8vh, 76px) auto 0;
   display: grid;
   justify-items: center;
   gap: 26px;
@@ -4197,22 +4197,29 @@ body[data-public-page="public-profile-standalone"] .edit-affordance:focus-visibl
   }
 
   .profile-overlay-header {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
     padding: 14px 14px 0;
   }
 
   .profile-overlay-brand {
     min-height: 30px;
+    min-width: 0;
   }
 
   .profile-overlay-actions {
-    width: 100%;
+    width: auto;
     justify-content: flex-end;
+    flex-wrap: nowrap;
+  }
+
+  .profile-header-social-wrap,
+  .profile-header-social-rail {
+    flex-wrap: nowrap;
   }
 
   .profile-hero-content {
-    margin-top: clamp(42px, 7vh, 66px);
+    margin-top: clamp(32px, 5vh, 52px);
   }
 
   .profile-utility-grid {
@@ -4246,6 +4253,7 @@ body[data-public-page="public-profile-standalone"] .edit-affordance:focus-visibl
   }
 
   .profile-overlay-brand-text,
+  .profile-header-account .account-text,
   .profile-header-account .account-name,
   .profile-header-account .account-badges {
     display: none;
@@ -4258,7 +4266,10 @@ body[data-public-page="public-profile-standalone"] .edit-affordance:focus-visibl
 
   .profile-header-account .account-pill {
     width: 36px;
+    min-width: 36px;
     padding: 0;
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
   }
 
