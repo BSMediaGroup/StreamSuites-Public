@@ -2802,7 +2802,7 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   position: relative;
   z-index: 2;
   width: min(760px, calc(100% - 32px));
-  margin: clamp(42px, 5.8vh, 76px) auto 0;
+  margin: clamp(10px, 0.8vh, 76px) auto 0;
   display: grid;
   justify-items: center;
   gap: 26px;
