@@ -247,6 +247,9 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /\.profile-overlay-brand:hover \.profile-overlay-brand-text-hover/);
   assert.match(css, /\.profile-header-social-panel/);
   assert.match(css, /\.profile-header-account \.account-avatar\s*\{[\s\S]*border-radius:\s*7px/);
+  assert.match(css, /\.account-avatar\s*\{[\s\S]*color:\s*#9099AE/);
+  assert.match(css, /\.account-avatar\s*\{[\s\S]*background:\s*transparent/);
+  assert.match(css, /\.account-avatar-icon\s*\{[\s\S]*background-color:\s*currentColor/);
   assert.match(css, /\.profile-hero-trim/);
   assert.match(css, /\.profile-hero-bio\s*\{[\s\S]*-webkit-line-clamp:\s*4/);
   assert.match(css, /\.profile-utility-panel\s*\{[\s\S]*backdrop-filter:\s*blur\(18px\) saturate\(122%\)/);
