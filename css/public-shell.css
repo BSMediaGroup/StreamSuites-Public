@@ -7203,3 +7203,189 @@ body[data-public-page="public-profile-standalone"] .edit-affordance:focus-visibl
     font-size: 7px;
   }
 }
+
+/* Public shell polish aligned to the standalone /u/* profile visual language.
+   Scoped away from body[data-public-page="public-profile-standalone"]. */
+body.public-shell-page {
+  --ps-bg-0: #050608;
+  --ps-bg-1: #080d15;
+  --ps-bg-2: #0b121e;
+  --ps-panel: linear-gradient(180deg, rgba(19, 25, 36, 0.78), rgba(8, 11, 17, 0.9));
+  --ps-panel-soft: linear-gradient(180deg, rgba(24, 32, 48, 0.68), rgba(10, 14, 22, 0.78));
+  --ps-panel-border: rgba(212, 224, 244, 0.17);
+  --ps-chip: rgba(18, 26, 40, 0.72);
+  --ps-chip-active: rgba(154, 209, 255, 0.15);
+  --ps-chip-border: rgba(188, 207, 237, 0.22);
+  --ps-glass-bg: rgba(9, 12, 18, 0.82);
+  --ps-glass-border: rgba(214, 225, 242, 0.18);
+  --ps-muted: rgba(190, 204, 224, 0.82);
+  --ps-shadow: 0 24px 60px rgba(0, 0, 0, 0.36);
+}
+
+body.public-shell-page .public-shell-bg {
+  background:
+    radial-gradient(820px 460px at 50% -10%, rgba(110, 135, 170, 0.16), transparent 64%),
+    radial-gradient(720px 380px at 88% 8%, rgba(84, 139, 190, 0.1), transparent 62%),
+    linear-gradient(180deg, var(--ps-bg-0) 0%, var(--ps-bg-1) 48%, var(--ps-bg-2) 100%);
+}
+
+body.public-shell-page .public-shell-bg::before {
+  opacity: 0.075;
+  background-size: 56px 56px;
+}
+
+body.public-shell-page .public-sidebar,
+body.public-shell-page .public-topbar,
+body.public-shell-page .footer-bar {
+  border-color: rgba(214, 225, 242, 0.14);
+  background:
+    linear-gradient(180deg, rgba(15, 20, 31, 0.9), rgba(6, 9, 14, 0.92)),
+    rgba(8, 11, 16, 0.82);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+body.public-shell-page .sidebar-top,
+body.public-shell-page .filter-dock,
+body.public-shell-page .footer-bar {
+  border-color: rgba(188, 207, 237, 0.14);
+}
+
+body.public-shell-page .sidebar-brand,
+body.public-shell-page .sidebar-link,
+body.public-shell-page .topbar-menu-btn,
+body.public-shell-page .topbar-hide-btn,
+body.public-shell-page .filter-toggle,
+body.public-shell-page .account-pill {
+  border-color: rgba(225, 232, 244, 0.16);
+  background: linear-gradient(180deg, rgba(28, 33, 43, 0.58), rgba(8, 10, 14, 0.64));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 22px rgba(0, 0, 0, 0.2);
+}
+
+body.public-shell-page .sidebar-link:hover,
+body.public-shell-page .sidebar-link:focus-visible,
+body.public-shell-page .sidebar-link.active,
+body.public-shell-page .sidebar-brand:hover,
+body.public-shell-page .sidebar-brand:focus-visible,
+body.public-shell-page .topbar-menu-btn:hover,
+body.public-shell-page .topbar-hide-btn:hover,
+body.public-shell-page .topbar-menu-btn:focus-visible,
+body.public-shell-page .topbar-hide-btn:focus-visible,
+body.public-shell-page .filter-toggle:hover,
+body.public-shell-page .filter-toggle:focus-visible,
+body.public-shell-page .account-pill:hover,
+body.public-shell-page .account-pill:focus-visible,
+body.public-shell-page .account-pill.is-open {
+  border-color: rgba(232, 238, 248, 0.42);
+  background: linear-gradient(180deg, rgba(45, 53, 68, 0.72), rgba(13, 16, 22, 0.74));
+  color: #f5f8ff;
+}
+
+body.public-shell-page .public-content {
+  gap: 14px;
+  padding: 16px 18px calc(18px + var(--ps-content-bottom-gap));
+}
+
+body.public-shell-page .page-heading {
+  gap: 6px;
+  padding: 4px 2px 2px;
+}
+
+body.public-shell-page .page-heading h1,
+body.public-shell-page .dashboard-hero-title,
+body.public-shell-page .section-heading h2,
+body.public-shell-page .dashboard-card-title {
+  letter-spacing: 0;
+  color: rgba(245, 247, 250, 0.98);
+  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.42);
+}
+
+body.public-shell-page .dashboard-hero,
+body.public-shell-page .dashboard-card,
+body.public-shell-page .dashboard-stat-card,
+body.public-shell-page .account-menu,
+body.public-shell-page .notice-card,
+body.public-shell-page .empty-state {
+  border-color: var(--ps-panel-border);
+  background:
+    linear-gradient(180deg, rgba(19, 25, 36, 0.76), rgba(8, 11, 17, 0.88)),
+    rgba(9, 12, 18, 0.84);
+  box-shadow:
+    var(--ps-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(14px) saturate(116%);
+}
+
+body.public-shell-page .dashboard-hero {
+  border-radius: 18px;
+  padding: 18px;
+}
+
+body.public-shell-page .dashboard-card {
+  border-radius: 14px;
+  padding: 15px;
+}
+
+body.public-shell-page .dashboard-stat-card {
+  border-radius: 12px;
+}
+
+body.public-shell-page .dashboard-card[data-state="planned"],
+body.public-shell-page .dashboard-hero[data-tone="planned"] {
+  background:
+    linear-gradient(180deg, rgba(22, 25, 34, 0.72), rgba(8, 10, 15, 0.88)),
+    rgba(9, 12, 18, 0.82);
+}
+
+body.public-shell-page .dashboard-card[data-state="active"] {
+  border-color: rgba(154, 209, 255, 0.28);
+  box-shadow:
+    var(--ps-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 20px rgba(125, 162, 216, 0.08);
+}
+
+body.public-shell-page .dashboard-chip,
+body.public-shell-page .dashboard-meta-pill,
+body.public-shell-page .dashboard-state-badge,
+body.public-shell-page .filter-chip {
+  min-height: 24px;
+  border-color: rgba(188, 207, 237, 0.22);
+  background: linear-gradient(135deg, rgba(94, 114, 146, 0.2), rgba(18, 26, 40, 0.68));
+  color: rgba(237, 244, 255, 0.9);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+body.public-shell-page .dashboard-action,
+body.public-shell-page .dashboard-card-link {
+  min-height: 31px;
+  border-color: rgba(174, 194, 225, 0.24);
+  background: linear-gradient(180deg, rgba(28, 38, 56, 0.76), rgba(10, 15, 24, 0.84));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+body.public-shell-page .dashboard-action:hover,
+body.public-shell-page .dashboard-action:focus-visible,
+body.public-shell-page .dashboard-card-link:hover,
+body.public-shell-page .dashboard-card-link:focus-visible {
+  border-color: rgba(154, 209, 255, 0.46);
+  background: linear-gradient(180deg, rgba(36, 50, 73, 0.84), rgba(12, 18, 29, 0.9));
+  box-shadow: 0 0 0 1px rgba(120, 171, 255, 0.14), 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+body.public-standalone-page:not([data-public-page="public-profile-standalone"]) {
+  background:
+    radial-gradient(820px 460px at 50% -10%, rgba(110, 135, 170, 0.14), transparent 64%),
+    linear-gradient(180deg, #050608 0%, #080d15 52%, #0b121e 100%);
+  color: var(--ps-text);
+}
+
+body.public-standalone-page:not([data-public-page="public-profile-standalone"]) .profile-card-standalone {
+  border-color: rgba(212, 224, 244, 0.16);
+  background:
+    linear-gradient(180deg, rgba(19, 25, 36, 0.78), rgba(8, 11, 17, 0.9)),
+    rgba(9, 12, 18, 0.86);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(14px) saturate(116%);
+}
