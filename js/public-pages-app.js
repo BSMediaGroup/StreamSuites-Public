@@ -38,6 +38,8 @@
   const AUTH_PUBLIC_PROFILE_RESOLVE_URL = `${AUTH_API_BASE}/api/public/profile/resolve`;
   const AUTH_PUBLIC_AUTHORITY_REQUESTS_URL = `${AUTH_API_BASE}/api/public/authority/requests`;
   const AUTH_PUBLIC_AUTHORITY_REQUESTS_MINE_URL = `${AUTH_API_BASE}/api/public/authority/requests/mine`;
+  const AUTH_PUBLIC_PROGRESSION_ME_URL = `${AUTH_API_BASE}/api/public/progression/me`;
+  const AUTH_PUBLIC_PROGRESSION_LEADERBOARD_URL = `${AUTH_API_BASE}/api/public/progression/leaderboard`;
   const AUTH_PUBLIC_ARTIFACTS_URL = `${AUTH_API_BASE}/api/public/artifacts`;
   const PUBLIC_WHEEL_EVENTS_URL = `${AUTH_API_BASE}/api/public/wheels/events`;
   const AUTH_LOGOUT_URL = `${AUTH_API_BASE}/auth/logout`;
@@ -258,7 +260,7 @@
       filterMode: "none",
       filtersCollapsed: true,
       defaultFilters: [],
-      render: renderLeaderboardsPlaceholder
+      render: renderLeaderboards
     },
     "media-leaderboards": {
       path: "/leaderboards.html",
@@ -270,7 +272,7 @@
       filterMode: "none",
       filtersCollapsed: true,
       defaultFilters: [],
-      render: renderLeaderboardsPlaceholder
+      render: renderLeaderboards
     },
     "media-wheels": {
       path: "/wheels.html",
@@ -1707,6 +1709,40 @@
     return Array.isArray(body?.requests) ? body.requests : [];
   }
 
+  async function fetchMyPublicProgression() {
+    const response = await fetch(AUTH_PUBLIC_PROGRESSION_ME_URL, {
+      method: "GET",
+      cache: "no-store",
+      credentials: "include",
+      headers: { Accept: "application/json" }
+    });
+    const body = await parseJsonResponse(response);
+    if (!response.ok || body?.success === false) {
+      const error = new Error(resolveAuthorityErrorMessage(body, response.status));
+      error.status = response.status;
+      error.payload = body;
+      throw error;
+    }
+    return body;
+  }
+
+  async function fetchPublicProgressionLeaderboard() {
+    const response = await fetch(AUTH_PUBLIC_PROGRESSION_LEADERBOARD_URL, {
+      method: "GET",
+      cache: "no-store",
+      credentials: "include",
+      headers: { Accept: "application/json" }
+    });
+    const body = await parseJsonResponse(response);
+    if (!response.ok || body?.success === false) {
+      const error = new Error(resolveAuthorityErrorMessage(body, response.status));
+      error.status = response.status;
+      error.payload = body;
+      throw error;
+    }
+    return body;
+  }
+
   function getMemberDisplayName(profile) {
     return String(profile?.displayName || profile?.username || profile?.userCode || profile?.id || "Public User").trim() || "Public User";
   }
@@ -2240,11 +2276,11 @@
         [
           buildDashboardCard({
             title: "Leaderboards",
-            kicker: "Planned artifact surface",
-            badge: "Scaffold",
-            state: "planned",
-            body: "Leaderboards is now the truthful public scaffold destination for future standalone scoring artifacts, while legacy /scoreboards remains only as a compatibility alias and wheel list view stays inside each wheel.",
-            meta: ["Legacy /scoreboards alias preserved", "No XP/rank backend yet", "Wheel list view stays internal"],
+            kicker: "Progression surface",
+            badge: "Live",
+            state: "active",
+            body: "Leaderboards now reads the authoritative public XP/rank API for global progression while legacy /scoreboards remains only as a compatibility alias and wheel list view stays inside each wheel.",
+            meta: ["Legacy /scoreboards alias preserved", "Runtime-owned XP/rank", "Wheel list view stays internal"],
             actions: [{ label: "Open leaderboards", href: "/leaderboards" }]
           }),
           buildDashboardCard({
@@ -2259,10 +2295,10 @@
           buildDashboardCard({
             title: "My Data",
             kicker: "Account workspace",
-            badge: "Preview",
-            state: "preview",
-            body: "A dedicated member/data workspace now exists as a truthful placeholder for exports, history, and preferences that have not been activated yet.",
-            meta: ["Account-facing destination added", "No data export backend wired in this milestone"],
+            badge: "Live",
+            state: "active",
+            body: "The member data workspace now loads signed-in public XP/rank progression and authority request history from the runtime-owned public APIs.",
+            meta: ["XP and rank live", "Request history live", "No data export job exposed yet"],
             actions: [{ label: "Open my data", href: "/community/my-data.html" }]
           }),
           buildActionScaffoldCard({
@@ -2446,29 +2482,90 @@
     };
   }
 
-  function renderLeaderboardsPlaceholder(ctx) {
+  function buildProgressionMeter(summary) {
+    const rank = summary?.rank || {};
+    const ratio = Math.max(0, Math.min(1, Number(rank.progress_ratio ?? 0)));
+    const wrap = create("div", "progression-meter");
+    const bar = create("span", "progression-meter-fill");
+    bar.style.width = `${Math.round(ratio * 100)}%`;
+    wrap.appendChild(bar);
+    return wrap;
+  }
+
+  function progressionDisplayName(identity) {
+    return String(
+      identity?.display_name ||
+      identity?.source_display_name ||
+      identity?.account_user_code ||
+      identity?.identity_code ||
+      "Public identity"
+    ).trim();
+  }
+
+  function buildXpEventRow(event) {
+    const row = create("div", "progression-event-row");
+    const title = create("strong", "", `+${formatNumber(event?.xp_delta || 0)} XP`);
+    const meta = create(
+      "span",
+      "",
+      [
+        String(event?.reason || "xp_award").replace(/_/g, " "),
+        event?.source_type ? `via ${String(event.source_type).replace(/_/g, " ")}` : "",
+        event?.rank_label_after ? `Rank ${event.rank_label_after}` : ""
+      ].filter(Boolean).join(" • ")
+    );
+    row.append(title, meta);
+    return row;
+  }
+
+  function buildLeaderboardRow(entry) {
+    const row = create("div", "progression-leaderboard-row");
+    row.appendChild(create("strong", "progression-rank-position", `#${formatNumber(entry?.position || 0)}`));
+    const identity = create("div", "progression-leaderboard-identity");
+    identity.append(
+      create("strong", "", progressionDisplayName(entry?.identity)),
+      create("span", "", entry?.identity?.identity_code || "public identity")
+    );
+    row.appendChild(identity);
+    row.appendChild(create("span", "progression-leaderboard-xp", `${formatNumber(entry?.total_xp || 0)} XP`));
+    row.appendChild(create("span", "dashboard-state-badge", entry?.rank_label || "Rookie"));
+    return row;
+  }
+
+  function renderLeaderboards(ctx) {
     const { host } = ctx;
     clear(host);
     applyDocumentTitle("Leaderboards");
     host.appendChild(
       buildPageHeading(
         "Leaderboards",
-        "Successor surface reserved for the future standalone leaderboard artifact type."
+        "Global public progression ranked from authoritative XP totals."
       )
     );
-    host.appendChild(
-      buildDashboardGrid([
-        buildDashboardCard({
-          title: "Scaffold only",
-          kicker: "Truthful placeholder",
-          badge: "Pending",
-          state: "planned",
-          body: "This route exists so leaderboards can become a first-class public artifact later without reusing the old standalone list-view route forever.",
-          meta: ["Legacy /scoreboards resolves here", "No rank backend", "No winner persistence implied"],
-          actions: [{ label: "Open wheels", href: "/wheels" }, { label: "Open scoreboards alias", href: "/scoreboards", muted: true }]
-        })
-      ])
-    );
+    const shell = create("section", "dashboard-card progression-board");
+    const status = create("p", "muted", "Loading leaderboard...");
+    const list = create("div", "progression-leaderboard-list");
+    shell.append(status, list);
+    host.appendChild(shell);
+
+    (async () => {
+      try {
+        const payload = await fetchPublicProgressionLeaderboard();
+        const rows = Array.isArray(payload?.leaderboard) ? payload.leaderboard : [];
+        clear(list);
+        if (!rows.length) {
+          status.textContent = "No public XP has been awarded yet.";
+          list.appendChild(create("div", "empty-state", "Progression starts when real trigger or game events award XP."));
+          return;
+        }
+        status.textContent = `${formatNumber(rows.length)} ranked public identit${rows.length === 1 ? "y" : "ies"} loaded.`;
+        rows.forEach((entry) => list.appendChild(buildLeaderboardRow(entry)));
+      } catch (error) {
+        status.textContent = error instanceof Error ? error.message : "Unable to load leaderboard right now.";
+        clear(list);
+        list.appendChild(create("div", "empty-state", "Leaderboard data is unavailable right now."));
+      }
+    })();
   }
 
   function getArtifactRouteMatch(pathname) {
@@ -5219,9 +5316,9 @@
           title: "Member settings + data",
           kicker: "Account area",
           badge: "Expanded",
-          state: "preview",
-          body: "The community side now includes direct account destinations for My Data and Settings, even where later export/history features are still intentionally inactive.",
-          meta: ["My Data placeholder added", "Settings kept truthful"],
+          state: "active",
+          body: "The community side includes direct account destinations for My Data and Settings, with My Data now backed by the runtime XP/rank and authority-request APIs.",
+          meta: ["XP/rank live", "Request history live", "Settings kept truthful"],
           actions: [{ label: "Open my data", href: "/community/my-data.html" }, { label: "Open settings", href: "/community/settings.html", muted: true }]
         }),
         buildActionScaffoldCard({
@@ -5518,8 +5615,8 @@
         eyebrow: "Account workspace",
         title: "My Data",
         body: authReady
-          ? "Review your real public authority submissions here. Request status remains backend-owned, and pending requests are not treated as completed outcomes."
-          : "Sign in to view your real public authority submission history. This page does not fabricate account history for guest sessions.",
+          ? "Review your authoritative public progression and public authority submissions here. XP, rank, and request status remain backend-owned."
+          : "Sign in to view your real public progression and authority submission history. This page does not fabricate account history for guest sessions.",
         tone: authReady ? "active" : "preview",
         actions: authReady
           ? [
@@ -5531,9 +5628,9 @@
               { label: "Browse community", href: "/community" }
             ],
         stats: [
-          { label: "Access", value: authReady ? "Signed in" : "Guest", note: authReady ? authState.displayName : "Login required for request history" },
-          { label: "Authority history", value: authReady ? "Live" : "Locked", note: authReady ? "Backed by /requests/mine" : "Unavailable without session" },
-          { label: "Exports", value: "Planned", note: "No export job exposed yet" }
+          { label: "Access", value: authReady ? "Signed in" : "Guest", note: authReady ? authState.displayName : "Login required for account data" },
+          { label: "Progression", value: authReady ? "Live" : "Locked", note: authReady ? "Backed by /progression/me" : "Unavailable without session" },
+          { label: "Authority history", value: authReady ? "Live" : "Locked", note: authReady ? "Backed by /requests/mine" : "Unavailable without session" }
         ]
       })
     );
@@ -5547,6 +5644,58 @@
       host.append(empty, cta);
       return;
     }
+
+    const progressionSection = buildSection("Public progression").section;
+    const progressionStatus = create("p", "muted progression-status", "Loading your XP and rank...");
+    const progressionGrid = create("div", "dashboard-card-grid dashboard-card-grid--three progression-summary-grid");
+    progressionSection.append(progressionStatus, progressionGrid);
+    host.appendChild(progressionSection);
+
+    (async () => {
+      try {
+        const payload = await fetchMyPublicProgression();
+        const summary = payload?.summary || {};
+        const rank = summary.rank || {};
+        const identity = payload?.identity || {};
+        progressionStatus.textContent = `${progressionDisplayName(identity)} • ${identity.identity_code || "public identity"}`;
+        clear(progressionGrid);
+        const xpCard = buildDashboardCard({
+          title: "Current XP",
+          kicker: "Authoritative total",
+          badge: "Live",
+          state: "active",
+          body: `${formatNumber(summary.total_xp || 0)} XP`,
+          meta: [`Rank ${summary.rank_label || rank.rank_label || "Rookie"}`, identity.identity_kind === "assigned" ? "Assigned account identity" : "Unassigned public identity"]
+        });
+        const progressCard = buildDashboardCard({
+          title: "Rank progress",
+          kicker: rank.next_rank_label ? `Toward ${rank.next_rank_label}` : "Top configured rank",
+          badge: summary.rank_label || "Rookie",
+          state: "preview",
+          body: rank.next_rank_label
+            ? `${formatNumber(rank.xp_to_next || 0)} XP to next rank`
+            : "No higher configured rank is currently available.",
+          meta: rank.next_rank_label
+            ? [`${formatNumber(rank.progress_xp || 0)} / ${formatNumber(rank.progress_needed_xp || 0)} XP in this rank`]
+            : ["Threshold model is runtime-owned"]
+        });
+        progressCard.appendChild(buildProgressionMeter(summary));
+        const eventsCard = buildDashboardCard({
+          title: "Recent XP events",
+          kicker: "Ledger",
+          badge: "History",
+          state: "active",
+          body: payload?.events?.length ? "Recent authoritative awards are listed below." : "No XP events have been recorded yet.",
+          meta: ["Source and reason metadata are backend-owned"]
+        });
+        (payload?.events || []).slice(0, 4).forEach((event) => eventsCard.appendChild(buildXpEventRow(event)));
+        progressionGrid.append(xpCard, progressCard, eventsCard);
+      } catch (error) {
+        progressionStatus.textContent = error instanceof Error ? error.message : "Unable to load progression right now.";
+        clear(progressionGrid);
+        progressionGrid.appendChild(create("div", "empty-state", "XP and rank data are unavailable right now."));
+      }
+    })();
 
     host.appendChild(
       buildDashboardGrid([

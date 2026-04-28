@@ -38,8 +38,8 @@ test("public wheels route preserves the shell and provides clean list/detail art
   assert.match(app, /scoreboards: "\/leaderboards"/);
   assert.match(app, /aliases: \["\/wheels", "\/wheels\/"\]/);
   assert.match(app, /path: "\/leaderboards\.html"/);
-  assert.match(app, /render: renderLeaderboardsPlaceholder/);
-  assert.match(app, /"media-scoreboards": \{[\s\S]*activeHref: "\/leaderboards"[\s\S]*topbarLabel: "Leaderboards"[\s\S]*render: renderLeaderboardsPlaceholder/);
+  assert.match(app, /render: renderLeaderboards/);
+  assert.match(app, /"media-scoreboards": \{[\s\S]*activeHref: "\/leaderboards"[\s\S]*topbarLabel: "Leaderboards"[\s\S]*render: renderLeaderboards/);
   assert.match(app, /detailType: "wheels"/);
   assert.match(app, /prefix: "\/wheels\/", pageId: "detail-wheel", detailType: "wheels"/);
   assert.doesNotMatch(app, /config\.filtersCollapsed = false/);
