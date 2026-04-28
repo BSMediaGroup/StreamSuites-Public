@@ -2504,13 +2504,14 @@
 
   function buildXpEventRow(event) {
     const row = create("div", "progression-event-row");
-    const title = create("strong", "", `+${formatNumber(event?.xp_delta || 0)} XP`);
+    const delta = Number(event?.xp_delta || 0);
+    const title = create("strong", "", `${delta >= 0 ? "+" : ""}${formatNumber(delta)} XP`);
     const meta = create(
       "span",
       "",
       [
-        String(event?.reason || "xp_award").replace(/_/g, " "),
-        event?.source_type ? `via ${String(event.source_type).replace(/_/g, " ")}` : "",
+        String(event?.reason_text || event?.reason || "xp_award").replace(/_/g, " "),
+        event?.source_domain ? `via ${String(event.source_domain).replace(/_/g, " ")}` : "",
         event?.rank_label_after ? `Rank ${event.rank_label_after}` : ""
       ].filter(Boolean).join(" • ")
     );
@@ -2527,8 +2528,8 @@
       create("span", "", entry?.identity?.identity_code || "public identity")
     );
     row.appendChild(identity);
-    row.appendChild(create("span", "progression-leaderboard-xp", `${formatNumber(entry?.total_xp || 0)} XP`));
-    row.appendChild(create("span", "dashboard-state-badge", entry?.rank_label || "Rookie"));
+    row.appendChild(create("span", "progression-leaderboard-xp", `${formatNumber(entry?.xp_total ?? entry?.total_xp ?? 0)} XP`));
+    row.appendChild(create("span", "dashboard-state-badge", entry?.rank_label || "Bronze"));
     return row;
   }
 
@@ -5664,13 +5665,13 @@
           kicker: "Authoritative total",
           badge: "Live",
           state: "active",
-          body: `${formatNumber(summary.total_xp || 0)} XP`,
-          meta: [`Rank ${summary.rank_label || rank.rank_label || "Rookie"}`, identity.identity_kind === "assigned" ? "Assigned account identity" : "Unassigned public identity"]
+          body: `${formatNumber(summary.xp_total ?? summary.total_xp ?? 0)} XP`,
+          meta: [`Rank ${summary.rank_label || rank.rank_label || "Bronze"}`, identity.identity_kind === "assigned" ? "Assigned account identity" : "Unassigned public identity"]
         });
         const progressCard = buildDashboardCard({
           title: "Rank progress",
           kicker: rank.next_rank_label ? `Toward ${rank.next_rank_label}` : "Top configured rank",
-          badge: summary.rank_label || "Rookie",
+          badge: summary.rank_label || "Bronze",
           state: "preview",
           body: rank.next_rank_label
             ? `${formatNumber(rank.xp_to_next || 0)} XP to next rank`
@@ -5919,6 +5920,15 @@
     ).trim();
     const liveStatus = fallbackProfile?.liveStatus || null;
     const latestStream = normalizeLatestStreamPayload(payload?.latest_stream || payload?.latestStream || fallbackProfile?.latestStream);
+    const progression = (
+      payload?.progression && typeof payload.progression === "object"
+        ? payload.progression
+        : payload?.public_progression && typeof payload.public_progression === "object"
+          ? payload.public_progression
+          : fallbackProfile?.progression && typeof fallbackProfile.progression === "object"
+            ? fallbackProfile.progression
+            : null
+    );
     return {
       id: fallbackProfile?.id || userCode,
       userCode,
@@ -5962,6 +5972,7 @@
       findmehereStatusReason,
       liveStatus,
       latestStream,
+      progression,
       authorityIdentity: payload?.authorityIdentity || payload?.authority_identity || fallbackProfile?.authorityIdentity || null
     };
   }
@@ -6966,7 +6977,9 @@
     return details;
   }
 
-  function buildProfileGameCompetitionSection() {
+  function buildProfileGameCompetitionSection(profile = null) {
+    const progression = profile?.progression && typeof profile.progression === "object" ? profile.progression : null;
+    const rank = progression?.rank && typeof progression.rank === "object" ? progression.rank : {};
     const details = create("details", "profile-authority-collapsible profile-game-collapsible");
     details.open = true;
     const summary = create("summary", "profile-authority-summary profile-game-summary");
@@ -6976,7 +6989,7 @@
       create("span", "", "GAME & COMPETITION")
     );
     const meta = create("span", "profile-authority-summary-meta");
-    ["Preview only", "Future-facing"].forEach((entry) => meta.appendChild(create("span", "", entry)));
+    [progression ? "XP/rank live" : "XP/rank empty", "Economy deferred"].forEach((entry) => meta.appendChild(create("span", "", entry)));
     const stateIcon = createIcon("/assets/icons/ui/visible.svg", "profile-authority-summary-icon");
     const syncStateIcon = () => {
       stateIcon.style.setProperty(
@@ -6991,9 +7004,17 @@
     const panel = create("div", "profile-game-panel");
     const grid = create("div", "profile-game-grid");
     [
-      { label: "Economy balance", value: "Future system", note: "No live wallet data" },
+      {
+        label: "Current XP",
+        value: progression ? `${formatNumber(progression.xp_total ?? progression.total_xp ?? 0)} XP` : "0 XP",
+        note: progression ? "Runtime progression summary" : "No XP recorded yet"
+      },
+      {
+        label: "Rank",
+        value: progression?.rank_label || rank.rank_label || "Bronze",
+        note: rank.next_rank_label ? `${formatNumber(rank.xp_to_next || 0)} XP to ${rank.next_rank_label}` : "Top configured rank or no XP events"
+      },
       { label: "Resource inventory", value: "Reserved", note: "Items not issued yet" },
-      { label: "Competition points", value: "Pending launch", note: "No season is active" },
       { label: "Season standing", value: "Not seeded", note: "Ladders arrive later" }
     ].forEach((item) => {
       const card = create("article", "profile-game-preview-card");
@@ -7006,7 +7027,9 @@
     });
     panel.append(
       grid,
-      create("p", "profile-game-disclaimer", "Preview-only fields. They are not hydrated from economy, inventory, or competition services yet.")
+      create("p", "profile-game-disclaimer", progression
+        ? "XP and rank hydrate from the runtime public progression authority. Economy, inventory, and seasonal standings remain deferred."
+        : "No authoritative XP events have been recorded for this public identity yet. Economy, inventory, and seasonal standings remain deferred.")
     );
     details.append(summary, panel);
     return details;
@@ -7130,7 +7153,7 @@
     );
     profileCard.appendChild(primaryGrid);
     profileCard.appendChild(buildProfileBadgeGallerySection(profile));
-    profileCard.appendChild(buildProfileGameCompetitionSection());
+    profileCard.appendChild(buildProfileGameCompetitionSection(profile));
 
     const grid = create("div", "profile-utility-grid profile-utility-grid--slim");
     const socialGallery = buildProfileSocialGallerySection(profile);

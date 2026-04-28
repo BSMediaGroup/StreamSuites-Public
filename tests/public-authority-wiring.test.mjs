@@ -25,6 +25,8 @@ test("public app wires authority request submission and my-data history to the r
   assert.match(source, /submitPublicAuthorityRequest/);
   assert.match(source, /fetchMyPublicAuthorityRequests/);
   assert.match(source, /fetchMyPublicProgression/);
+  assert.match(source, /summary\.xp_total \?\? summary\.total_xp/);
+  assert.match(source, /event\?\.source_domain/);
   assert.match(source, /buildAuthorityRequestPanel/);
   assert.match(source, /resolveProfileAuthorityContext/);
   assert.match(source, /renderCommunityMyData/);
@@ -42,5 +44,17 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   assert.match(app, /renderLeaderboards/);
   assert.doesNotMatch(app, /renderLeaderboardsPlaceholder/);
   assert.match(app, /Global public progression ranked from authoritative XP totals/);
+  assert.match(app, /entry\?\.xp_total \?\? entry\?\.total_xp/);
   assert.match(css, /\.progression-leaderboard-row/);
+});
+
+test("public profile game section renders runtime progression without inventing economy data", () => {
+  const app = read("js/public-pages-app.js");
+  const profileSection = app.match(/function buildProfileGameCompetitionSection\(profile = null\) \{[\s\S]*?return details;\n  \}/)?.[0] || "";
+  assert.ok(profileSection, "profile progression section should exist");
+  assert.match(app, /payload\?\.progression && typeof payload\.progression === "object"/);
+  assert.match(profileSection, /progression\.xp_total \?\? progression\.total_xp/);
+  assert.match(profileSection, /XP and rank hydrate from the runtime public progression authority/);
+  assert.match(profileSection, /Economy, inventory, and seasonal standings remain deferred/);
+  assert.match(app, /buildProfileGameCompetitionSection\(profile\)/);
 });

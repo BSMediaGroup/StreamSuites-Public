@@ -2,6 +2,8 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+- Updated the public progression consumers in `js/public-pages-app.js` to read the approved runtime XP/rank field names while retaining compatibility with the prior aliases: My Data and Leaderboards now prefer `xp_total`, ledger rows prefer `reason_text` and `source_domain`, and `/u/*` Game & Competition now shows the same runtime-owned XP/rank summary as the rest of the public surface. Economy, inventory, and season standing copy remains explicitly deferred. Tests now pin API-first progression hydration, global leaderboard rendering, and profile XP/rank rendering. No files were created or removed.
+
 - Replaced the remaining public XP/rank placeholders with first-pass live authority consumers in `js/public-pages-app.js`: `/community/my-data.html` now loads `/api/public/progression/me` for current XP, rank, progress-to-next-rank, identity context, and recent XP events, while `/leaderboards` loads `/api/public/progression/leaderboard` for the global public progression leaderboard. Styling in `css/public-shell.css` keeps the new progression panels compact and dark, and README/BUMP notes now describe the real runtime API contract. No files were created or removed.
 
 - Follow-up corrected the Public polish pass in `css/public-shell.css` by removing the sidebar-specific selectors from the added theme-alignment block. This restores the previous Public sidebar/nav item treatment and keeps the polish scoped to non-sidebar shell/page surfaces. No files were created or removed; this is a small CSS removal and is expected to make the touched CSS shorter than the prior polish pass. Behavior is unchanged, and individual `/u/{user}` profile pages remain preserved and not intentionally redesigned.

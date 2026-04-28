@@ -162,10 +162,10 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(standaloneUtilityBlock, /profileCard\.appendChild\(buildLatestStreamSection\(profile, options\.helpers \|\| null\)\)/);
   assert.match(standaloneUtilityBlock, /buildProfileOverviewPanel\(profile, profileArtifacts/);
   assert.match(standaloneUtilityBlock, /buildProfileMiniArtifactGallery\(profileArtifacts, canEdit/);
-  assert.match(standaloneUtilityBlock, /profileCard\.appendChild\(buildProfileBadgeGallerySection\(profile\)\)[\s\S]*profileCard\.appendChild\(buildProfileGameCompetitionSection\(\)\)/);
+  assert.match(standaloneUtilityBlock, /profileCard\.appendChild\(buildProfileBadgeGallerySection\(profile\)\)[\s\S]*profileCard\.appendChild\(buildProfileGameCompetitionSection\(profile\)\)/);
   assert.match(standaloneUtilityBlock, /const socialGallery = buildProfileSocialGallerySection\(profile\)/);
   assert.match(standaloneUtilityBlock, /if \(socialGallery\) grid\.appendChild\(socialGallery\)/);
-  assert.match(standaloneUtilityBlock, /buildProfileGameCompetitionSection\(\)/);
+  assert.match(standaloneUtilityBlock, /buildProfileGameCompetitionSection\(profile\)/);
   assert.match(standaloneUtilityBlock, /buildProfileShareSection\(profile, \{ compact: true \}\)/);
   assert.match(standaloneUtilityBlock, /buildCollapsedAuthorityRequestPanel\(resolveProfileAuthorityContext\(profile\)/);
   assert.match(app, /function buildLatestStreamSection\(profile, helpers\)/);
@@ -208,11 +208,12 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /function buildProfileSocialGallerySection\(profile\)/);
   assert.match(app, /profile-social-gallery-card/);
   assert.match(app, /profile-social-gallery-body/);
-  assert.match(app, /function buildProfileGameCompetitionSection\(\)/);
+  assert.match(app, /function buildProfileGameCompetitionSection\(profile = null\)/);
   assert.match(app, /details\.open = true/);
   assert.match(app, /GAME & COMPETITION/);
   assert.match(app, /gamecontroller\.svg/);
-  assert.match(app, /Preview-only fields\. They are not hydrated from economy, inventory, or competition services yet\./);
+  assert.match(app, /XP and rank hydrate from the runtime public progression authority/);
+  assert.match(app, /Economy, inventory, and seasonal standings remain deferred/);
   assert.doesNotMatch(app, /addRow\("StreamSuites"/);
   assert.doesNotMatch(app, /addRow\("FindMeHere"/);
   assert.match(app, /function buildProfileContextChip\(contextName, key, options = \{\}\)/);
