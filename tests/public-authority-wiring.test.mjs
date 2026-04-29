@@ -14,6 +14,8 @@ test("public data hub consumes runtime public authority exports", () => {
   assert.match(source, /publicAuthorityIdentities:\s*\["\/shared\/state\/public_identities\.json", "\/runtime\/exports\/public_identities\.json"\]/);
   assert.match(source, /publicAuthorityArtifacts:\s*\["\/shared\/state\/public_artifacts\.json", "\/runtime\/exports\/public_artifacts\.json"\]/);
   assert.match(source, /buildPublicAuthorityIdentityMap/);
+  assert.match(source, /accountUserCode:\s*normalizeAuthorityKey\(raw\.user_code \|\| raw\.canonical_user_code \|\| raw\.account_user_code\)/);
+  assert.match(source, /publicIdentityCode:/);
   assert.match(source, /authority:\s*\{/);
 });
 
@@ -45,6 +47,8 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   assert.doesNotMatch(app, /renderLeaderboardsPlaceholder/);
   assert.match(app, /Global public progression ranked from authoritative XP totals/);
   assert.match(app, /entry\?\.xp_total \?\? entry\?\.total_xp/);
+  assert.match(app, /payload\?\.canonical_user_code/);
+  assert.match(app, /authorityIdentity\?\.account_user_code/);
   assert.match(css, /\.progression-leaderboard-row/);
 });
 

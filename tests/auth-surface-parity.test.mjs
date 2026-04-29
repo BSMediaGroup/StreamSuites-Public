@@ -314,7 +314,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
 
 test("standalone /u profile hydration keeps runtime profile media ahead of local fallback data", () => {
   const app = read("js/public-pages-app.js");
-  const normalizeProfilePayloadBlock = app.match(/function normalizeProfilePayload\(payload, fallbackProfile, fallbackCode\) \{[\s\S]*?authorityIdentity:[\s\S]*?\n    \};\n  \}/)?.[0] || "";
+  const normalizeProfilePayloadBlock = app.match(/function normalizeProfilePayload\(payload, fallbackProfile, fallbackCode\) \{[\s\S]*?\n  \}\n\n  async function fetchPublicProfileByIdentifier/)?.[0] || "";
   const roleChipBlock = app.match(/function buildStandaloneRoleChips\(profile\) \{[\s\S]*?\n  \}/)?.[0] || "";
   const profileTypeBlock = app.match(/function buildProfileTypeChip\(profile\) \{[\s\S]*?\n  \}/)?.[0] || "";
   const profileTierBlock = app.match(/function buildProfileTierChip\(tier\) \{[\s\S]*?\n  \}/)?.[0] || "";
@@ -327,6 +327,9 @@ test("standalone /u profile hydration keeps runtime profile media ahead of local
   assert.match(normalizeProfilePayloadBlock, /payload\?\.avatar_url \|\| payload\?\.avatarUrl \|\| fallbackProfile\?\.avatar/);
   assert.match(normalizeProfilePayloadBlock, /payload\?\.cover_image_url \|\| payload\?\.coverImageUrl \|\| fallbackProfile\?\.coverImageUrl/);
   assert.match(normalizeProfilePayloadBlock, /payload\?\.banner_image_url \|\| payload\?\.bannerImageUrl \|\| payload\?\.cover_image_url/);
+  assert.match(normalizeProfilePayloadBlock, /payload\?\.canonical_user_code/);
+  assert.match(normalizeProfilePayloadBlock, /payload\?\.account_user_code/);
+  assert.match(normalizeProfilePayloadBlock, /authorityIdentity\?\.account_user_code/);
   assert.match(normalizeProfilePayloadBlock, /const tier = resolveProfileTier\(payload\?\.tier \|\| fallbackProfile\?\.tier \|\| "", accountType\)/);
   assert.match(normalizeProfilePayloadBlock, /accountType,/);
   assert.match(roleChipBlock, /resolveProfileTypeDescriptor\(profile\)/);

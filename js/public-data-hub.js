@@ -316,9 +316,11 @@
     if (!identityCode) return null;
     return {
       identityCode,
+      publicIdentityCode: String(raw.public_identity_code || raw.fallback_public_identity_code || identityCode || "").trim(),
       identityKind: String(raw.identity_kind || "").trim().toLowerCase(),
-      accountUserCode: normalizeAuthorityKey(raw.account_user_code),
+      accountUserCode: normalizeAuthorityKey(raw.user_code || raw.canonical_user_code || raw.account_user_code),
       displayName: String(raw.display_name || raw.source_display_name || "").trim(),
+      avatarUrl: String(raw.avatar_url || raw.avatarUrl || "").trim(),
       listingState: String(raw.listing_state || "").trim().toLowerCase(),
       sourcePlatform: String(raw.source_platform || "").trim().toLowerCase(),
       sourceDisplayName: String(raw.source_display_name || "").trim(),
@@ -994,16 +996,24 @@
 
     const authorityIdentity =
       authorityIdentityMap?.get(normalizeAuthorityKey(raw?.user_code || raw?.userCode || raw?.username || id)) || null;
+    const canonicalAccountUserCode = String(
+      raw?.canonical_user_code ||
+        raw?.canonicalUserCode ||
+        raw?.account_user_code ||
+        raw?.accountUserCode ||
+        authorityIdentity?.accountUserCode ||
+        userCode
+    ).trim();
 
     return {
-      id: userCode || String(id),
-      userCode,
+      id: canonicalAccountUserCode || userCode || String(id),
+      userCode: canonicalAccountUserCode || userCode,
       publicSlug,
       slug: publicSlug,
       slugAliases,
       username: String(raw.username || raw.handle || id),
       displayName: raw.display_name || raw.displayName || raw.name || String(id),
-      avatar: raw.avatar || raw.avatar_url || FALLBACK_AVATAR,
+      avatar: raw.avatar || raw.avatar_url || authorityIdentity?.avatarUrl || FALLBACK_AVATAR,
       platform,
       platformKey: normalizePlatformKey(platform),
       platformIcon: platformIconFor(platform),

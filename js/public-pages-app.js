@@ -5847,8 +5847,23 @@
       payload?.public_slug || payload?.publicSlug || payload?.slug || fallbackProfile?.publicSlug || fallbackProfile?.slug || "",
       ""
     );
+    const authorityIdentity = payload?.authorityIdentity || payload?.authority_identity || fallbackProfile?.authorityIdentity || null;
     const userCode = normalizeUserCode(
-      payload?.user_code || payload?.userCode || fallbackProfile?.userCode || fallbackCode || "public-user"
+      payload?.canonical_user_code ||
+        payload?.canonicalUserCode ||
+        payload?.account_user_code ||
+        payload?.accountUserCode ||
+        payload?.user_code ||
+        payload?.userCode ||
+        authorityIdentity?.canonical_user_code ||
+        authorityIdentity?.canonicalUserCode ||
+        authorityIdentity?.user_code ||
+        authorityIdentity?.userCode ||
+        authorityIdentity?.account_user_code ||
+        authorityIdentity?.accountUserCode ||
+        fallbackProfile?.userCode ||
+        fallbackCode ||
+        "public-user"
     );
     const canonicalPublicUrl = publicSlug ? `https://streamsuites.app/u/${encodeURIComponent(publicSlug)}` : "";
     const displayName = String(payload?.display_name || payload?.displayName || fallbackProfile?.displayName || "Public User").trim() || "Public User";
@@ -5973,7 +5988,7 @@
       liveStatus,
       latestStream,
       progression,
-      authorityIdentity: payload?.authorityIdentity || payload?.authority_identity || fallbackProfile?.authorityIdentity || null
+      authorityIdentity
     };
   }
 
@@ -8090,10 +8105,18 @@
     ).trim().toLowerCase() || "core";
     const displayTier = resolveDisplayTier(payload) || tier;
     const userCode = normalizeUserCode(
+      payload?.canonical_user_code ||
+      payload?.canonicalUserCode ||
+      payload?.account_user_code ||
+      payload?.accountUserCode ||
       payload?.user_code ||
       payload?.data?.user_code ||
+      payload?.user?.canonical_user_code ||
+      payload?.user?.account_user_code ||
       payload?.user?.user_code ||
       payload?.creator?.user_code ||
+      payload?.identity?.user_code ||
+      payload?.identity?.account_user_code ||
       payload?.username ||
       payload?.user?.username
     );
