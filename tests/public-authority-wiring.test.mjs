@@ -58,3 +58,16 @@ test("public profile game section renders runtime progression without inventing 
   assert.match(profileSection, /Economy, inventory, and seasonal standings remain deferred/);
   assert.match(app, /buildProfileGameCompetitionSection\(profile\)/);
 });
+
+test("public profile overview table uses the same runtime progression summary as games", () => {
+  const app = read("js/public-pages-app.js");
+  const overviewSection = app.match(/function buildProfileOverviewPanel\(profile, artifacts, helpers\) \{[\s\S]*?return section;\n  \}/)?.[0] || "";
+  assert.ok(overviewSection, "profile overview section should exist");
+  assert.match(overviewSection, /const progression = profile\?\.progression && typeof profile\.progression === "object" \? profile\.progression : null/);
+  assert.match(overviewSection, /progression\.xp_total \?\? progression\.total_xp \?\? 0/);
+  assert.match(overviewSection, /progression\.rank_label \|\| rank\.rank_label \|\| progression\.current_rank_code/);
+  assert.match(overviewSection, /addRow\("XP", overviewXpValue, !progression\)/);
+  assert.match(overviewSection, /addRow\("Rank", overviewRankValue, !progression\)/);
+  assert.doesNotMatch(overviewSection, /addRow\("XP", "Pending", true\)/);
+  assert.doesNotMatch(overviewSection, /addRow\("Rank", "Pending", true\)/);
+});

@@ -6802,6 +6802,14 @@
 
   function buildProfileOverviewPanel(profile, artifacts, helpers) {
     const counts = countProfileArtifactsByType(artifacts);
+    const progression = profile?.progression && typeof profile.progression === "object" ? profile.progression : null;
+    const rank = progression?.rank && typeof progression.rank === "object" ? progression.rank : {};
+    const overviewXpValue = progression
+      ? `${formatNumber(progression.xp_total ?? progression.total_xp ?? 0)} XP`
+      : "Pending";
+    const overviewRankValue = progression
+      ? (progression.rank_label || rank.rank_label || progression.current_rank_code || rank.rank_code || "Bronze")
+      : "Pending";
     const section = create("section", "profile-utility-section profile-overview-panel");
     const header = create("div", "profile-inline-header");
     header.appendChild(create("h3", "", "Public overview"));
@@ -6834,8 +6842,8 @@
 
     addRow("Joined", formatProfileDate(profile?.joinedAt || profile?.createdAt, helpers) || "Pending public data", !profile?.joinedAt && !profile?.createdAt);
     addRow("Profile type", buildProfileTypeChip(profile));
-    addRow("XP", "Pending", true);
-    addRow("Rank", "Pending", true);
+    addRow("XP", overviewXpValue, !progression);
+    addRow("Rank", overviewRankValue, !progression);
 
     section.append(header, statGrid, details);
     return section;

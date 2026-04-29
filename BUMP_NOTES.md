@@ -2,6 +2,8 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+- Fixed the standalone `/u/*` Public Overview table in `js/public-pages-app.js` so its XP and Rank rows now read the same `profile.progression` runtime summary already used by the Game & Competition section. The rows still show `Pending` only when no authoritative progression payload exists. Added source coverage in `tests/public-authority-wiring.test.mjs`. No files were created or removed.
+
 - Updated the public progression consumers in `js/public-pages-app.js` to read the approved runtime XP/rank field names while retaining compatibility with the prior aliases: My Data and Leaderboards now prefer `xp_total`, ledger rows prefer `reason_text` and `source_domain`, and `/u/*` Game & Competition now shows the same runtime-owned XP/rank summary as the rest of the public surface. Economy, inventory, and season standing copy remains explicitly deferred. Tests now pin API-first progression hydration, global leaderboard rendering, and profile XP/rank rendering. No files were created or removed.
 
 - Replaced the remaining public XP/rank placeholders with first-pass live authority consumers in `js/public-pages-app.js`: `/community/my-data.html` now loads `/api/public/progression/me` for current XP, rank, progress-to-next-rank, identity context, and recent XP events, while `/leaderboards` loads `/api/public/progression/leaderboard` for the global public progression leaderboard. Styling in `css/public-shell.css` keeps the new progression panels compact and dark, and README/BUMP notes now describe the real runtime API contract. No files were created or removed.
