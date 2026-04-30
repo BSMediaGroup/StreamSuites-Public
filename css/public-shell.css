@@ -7387,6 +7387,77 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   box-shadow: 0 0 18px rgba(112, 184, 255, 0.22);
 }
 
+.progression-xp-value,
+.progression-rank-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.progression-xp-value {
+  color: rgba(245, 248, 255, 0.94);
+  font-weight: 800;
+}
+
+.progression-xp-value--compact,
+.progression-rank-chip--compact {
+  gap: 6px;
+  font-size: 12px;
+}
+
+.progression-xp-icon,
+.progression-rank-chip-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  object-fit: contain;
+}
+
+.progression-xp-value--compact .progression-xp-icon,
+.progression-rank-chip--compact .progression-rank-chip-icon {
+  width: 16px;
+  height: 16px;
+  flex-basis: 16px;
+}
+
+.progression-rank-chip {
+  --progression-rank-color: #8F4700;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 28px;
+  padding: 4px 10px 4px 6px;
+  border: 1px solid color-mix(in srgb, var(--progression-rank-color) 72%, white 16%);
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--progression-rank-color) 30%, rgba(7, 12, 24, 0.88)), rgba(7, 12, 24, 0.72)),
+    rgba(7, 12, 24, 0.82);
+  color: #f7fbff;
+  font-weight: 850;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.72);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 0 14px color-mix(in srgb, var(--progression-rank-color) 28%, transparent);
+}
+
+.progression-rank-chip::after {
+  content: "";
+  position: absolute;
+  inset: 1px 4px auto 26px;
+  height: 45%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0));
+  pointer-events: none;
+  z-index: -1;
+}
+
+.dashboard-state-badge .progression-rank-chip {
+  margin: -3px -6px;
+}
+
 .progression-event-row,
 .progression-leaderboard-row {
   display: grid;

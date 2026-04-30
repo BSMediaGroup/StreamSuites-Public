@@ -42,6 +42,7 @@
   const AUTH_PUBLIC_PROGRESSION_LEADERBOARD_URL = `${AUTH_API_BASE}/api/public/progression/leaderboard`;
   const AUTH_PUBLIC_ARTIFACTS_URL = `${AUTH_API_BASE}/api/public/artifacts`;
   const PUBLIC_WHEEL_EVENTS_URL = `${AUTH_API_BASE}/api/public/wheels/events`;
+  const PUBLIC_XP_ICON_PATH = "/assets/games/xpstar.webp";
   const AUTH_LOGOUT_URL = `${AUTH_API_BASE}/auth/logout`;
   const CREATOR_DASHBOARD_URL = "https://creator.streamsuites.app/";
   const CREATOR_LOGIN_URL = (() => {
@@ -1480,12 +1481,17 @@
     head.appendChild(titleWrap);
 
     if (options.badge) {
-      const badge = create("span", "dashboard-state-badge", options.badge);
+      const badge = create("span", "dashboard-state-badge");
+      if (options.badge instanceof Node) badge.appendChild(options.badge);
+      else badge.textContent = String(options.badge);
       if (options.state) badge.dataset.state = String(options.state).trim().toLowerCase();
       head.appendChild(badge);
     }
 
-    card.append(head, create("p", "dashboard-card-body", options.body || ""));
+    const body = create("p", "dashboard-card-body");
+    if (options.body instanceof Node) body.appendChild(options.body);
+    else body.textContent = String(options.body || "");
+    card.append(head, body);
 
     if (Array.isArray(options.meta) && options.meta.length) {
       const list = create("div", "dashboard-meta-list");
@@ -2492,6 +2498,53 @@
     return wrap;
   }
 
+  function normalizeProgressionAssetPath(path) {
+    const clean = String(path || "").trim().replace(/\\/g, "/");
+    if (!clean) return "";
+    if (/^https?:\/\//i.test(clean) || clean.startsWith("/")) return clean;
+    return `/${clean.replace(/^\/+/, "")}`;
+  }
+
+  function normalizeProgressionColor(value) {
+    const color = String(value || "").trim();
+    return /^#[0-9a-f]{6}$/i.test(color) ? color : "#8F4700";
+  }
+
+  function progressionRankPresentation(summary = {}) {
+    const rank = summary?.rank && typeof summary.rank === "object" ? summary.rank : {};
+    return {
+      rankCode: String(summary.current_rank_code || rank.rank_code || rank.rank_key || "RANK0"),
+      label: String(summary.rank_label || rank.rank_label || rank.label || summary.current_rank_code || rank.rank_code || "Bronze"),
+      color: normalizeProgressionColor(rank.color_hex || summary.color_hex),
+      icon: normalizeProgressionAssetPath(rank.icon_path || summary.icon_path || "assets/games/rank0-bronze.webp")
+    };
+  }
+
+  function buildProgressionRankChip(summary = {}, options = {}) {
+    const presentation = progressionRankPresentation(summary);
+    const chip = create("span", `progression-rank-chip${options.compact ? " progression-rank-chip--compact" : ""}`);
+    chip.style.setProperty("--progression-rank-color", presentation.color);
+    chip.title = `${presentation.label} (${presentation.rankCode})`;
+    const icon = create("img", "progression-rank-chip-icon");
+    icon.src = presentation.icon;
+    icon.alt = "";
+    icon.loading = "lazy";
+    icon.decoding = "async";
+    chip.append(icon, create("span", "", presentation.label));
+    return chip;
+  }
+
+  function buildProgressionXpValue(value, options = {}) {
+    const wrap = create("span", `progression-xp-value${options.compact ? " progression-xp-value--compact" : ""}`);
+    const icon = create("img", "progression-xp-icon");
+    icon.src = PUBLIC_XP_ICON_PATH;
+    icon.alt = "";
+    icon.loading = "lazy";
+    icon.decoding = "async";
+    wrap.append(icon, create("span", "", `${formatNumber(value)} XP`));
+    return wrap;
+  }
+
   function progressionDisplayName(identity) {
     return String(
       identity?.display_name ||
@@ -2528,8 +2581,10 @@
       create("span", "", entry?.identity?.identity_code || "public identity")
     );
     row.appendChild(identity);
-    row.appendChild(create("span", "progression-leaderboard-xp", `${formatNumber(entry?.xp_total ?? entry?.total_xp ?? 0)} XP`));
-    row.appendChild(create("span", "dashboard-state-badge", entry?.rank_label || "Bronze"));
+    const xp = create("span", "progression-leaderboard-xp");
+    xp.appendChild(buildProgressionXpValue(entry?.xp_total ?? entry?.total_xp ?? 0, { compact: true }));
+    row.appendChild(xp);
+    row.appendChild(buildProgressionRankChip(entry, { compact: true }));
     return row;
   }
 
@@ -5665,13 +5720,13 @@
           kicker: "Authoritative total",
           badge: "Live",
           state: "active",
-          body: `${formatNumber(summary.xp_total ?? summary.total_xp ?? 0)} XP`,
+          body: buildProgressionXpValue(summary.xp_total ?? summary.total_xp ?? 0),
           meta: [`Rank ${summary.rank_label || rank.rank_label || "Bronze"}`, identity.identity_kind === "assigned" ? "Assigned account identity" : "Unassigned public identity"]
         });
         const progressCard = buildDashboardCard({
           title: "Rank progress",
           kicker: rank.next_rank_label ? `Toward ${rank.next_rank_label}` : "Top configured rank",
-          badge: summary.rank_label || "Bronze",
+          badge: buildProgressionRankChip(summary, { compact: true }),
           state: "preview",
           body: rank.next_rank_label
             ? `${formatNumber(rank.xp_to_next || 0)} XP to next rank`
@@ -6820,10 +6875,10 @@
     const progression = profile?.progression && typeof profile.progression === "object" ? profile.progression : null;
     const rank = progression?.rank && typeof progression.rank === "object" ? progression.rank : {};
     const overviewXpValue = progression
-      ? `${formatNumber(progression.xp_total ?? progression.total_xp ?? 0)} XP`
+      ? buildProgressionXpValue(progression.xp_total ?? progression.total_xp ?? 0, { compact: true })
       : "Pending";
     const overviewRankValue = progression
-      ? (progression.rank_label || rank.rank_label || progression.current_rank_code || rank.rank_code || "Bronze")
+      ? buildProgressionRankChip(progression, { compact: true })
       : "Pending";
     const section = create("section", "profile-utility-section profile-overview-panel");
     const header = create("div", "profile-inline-header");
@@ -7029,12 +7084,12 @@
     [
       {
         label: "Current XP",
-        value: progression ? `${formatNumber(progression.xp_total ?? progression.total_xp ?? 0)} XP` : "0 XP",
+        value: progression ? buildProgressionXpValue(progression.xp_total ?? progression.total_xp ?? 0, { compact: true }) : buildProgressionXpValue(0, { compact: true }),
         note: progression ? "Runtime progression summary" : "No XP recorded yet"
       },
       {
         label: "Rank",
-        value: progression?.rank_label || rank.rank_label || "Bronze",
+        value: progression ? buildProgressionRankChip(progression, { compact: true }) : "Bronze",
         note: rank.next_rank_label ? `${formatNumber(rank.xp_to_next || 0)} XP to ${rank.next_rank_label}` : "Top configured rank or no XP events"
       },
       { label: "Resource inventory", value: "Reserved", note: "Items not issued yet" },
@@ -7043,7 +7098,11 @@
       const card = create("article", "profile-game-preview-card");
       card.append(
         create("span", "profile-game-preview-label", item.label),
-        create("strong", "", item.value),
+        item.value instanceof Node ? (() => {
+          const valueWrap = create("strong", "");
+          valueWrap.appendChild(item.value);
+          return valueWrap;
+        })() : create("strong", "", item.value),
         create("span", "profile-game-preview-note", item.note)
       );
       grid.appendChild(card);

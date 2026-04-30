@@ -28,6 +28,8 @@ test("public app wires authority request submission and my-data history to the r
   assert.match(source, /fetchMyPublicAuthorityRequests/);
   assert.match(source, /fetchMyPublicProgression/);
   assert.match(source, /summary\.xp_total \?\? summary\.total_xp/);
+  assert.match(source, /PUBLIC_XP_ICON_PATH = "\/assets\/games\/xpstar\.webp"/);
+  assert.match(source, /function buildProgressionRankChip/);
   assert.match(source, /event\?\.source_domain/);
   assert.match(source, /buildAuthorityRequestPanel/);
   assert.match(source, /resolveProfileAuthorityContext/);
@@ -47,9 +49,13 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   assert.doesNotMatch(app, /renderLeaderboardsPlaceholder/);
   assert.match(app, /Global public progression ranked from authoritative XP totals/);
   assert.match(app, /entry\?\.xp_total \?\? entry\?\.total_xp/);
+  assert.match(app, /buildProgressionXpValue\(entry\?\.xp_total \?\? entry\?\.total_xp \?\? 0/);
+  assert.match(app, /buildProgressionRankChip\(entry, \{ compact: true \}\)/);
   assert.match(app, /payload\?\.canonical_user_code/);
   assert.match(app, /authorityIdentity\?\.account_user_code/);
   assert.match(css, /\.progression-leaderboard-row/);
+  assert.match(css, /\.progression-rank-chip/);
+  assert.match(css, /\.progression-xp-icon/);
 });
 
 test("public profile game section renders runtime progression without inventing economy data", () => {
@@ -69,7 +75,7 @@ test("public profile overview table uses the same runtime progression summary as
   assert.ok(overviewSection, "profile overview section should exist");
   assert.match(overviewSection, /const progression = profile\?\.progression && typeof profile\.progression === "object" \? profile\.progression : null/);
   assert.match(overviewSection, /progression\.xp_total \?\? progression\.total_xp \?\? 0/);
-  assert.match(overviewSection, /progression\.rank_label \|\| rank\.rank_label \|\| progression\.current_rank_code/);
+  assert.match(overviewSection, /buildProgressionRankChip\(progression, \{ compact: true \}\)/);
   assert.match(overviewSection, /addRow\("XP", overviewXpValue, !progression\)/);
   assert.match(overviewSection, /addRow\("Rank", overviewRankValue, !progression\)/);
   assert.doesNotMatch(overviewSection, /addRow\("XP", "Pending", true\)/);
