@@ -3844,7 +3844,7 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 
 .profile-game-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 9px;
 }
 
@@ -3872,6 +3872,7 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 
 .profile-game-preview-card {
   min-width: 0;
+  grid-column: span 2;
   display: grid;
   gap: 7px;
   min-height: 112px;
@@ -3882,6 +3883,19 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   background:
     linear-gradient(180deg, rgba(20, 30, 46, 0.72), rgba(8, 12, 20, 0.82)),
     rgba(9, 13, 20, 0.72);
+}
+
+.profile-game-preview-card--featured {
+  grid-column: span 3;
+  min-height: 132px;
+  align-content: center;
+  gap: 10px;
+  padding: 14px;
+  border-color: rgba(224, 234, 249, 0.2);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(255, 214, 113, 0.12), transparent 36%),
+    linear-gradient(180deg, rgba(24, 36, 56, 0.84), rgba(9, 13, 22, 0.88)),
+    rgba(9, 13, 20, 0.78);
 }
 
 .profile-game-preview-label,
@@ -3896,6 +3910,28 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   color: rgba(243, 248, 255, 0.94);
   font-size: 0.9rem;
   line-height: 1.2;
+}
+
+.profile-game-preview-card--featured strong {
+  font-size: 1rem;
+}
+
+.profile-game-progress-meter {
+  display: block;
+  width: 100%;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  border: 1px solid rgba(216, 226, 244, 0.12);
+  background: rgba(6, 10, 18, 0.72);
+}
+
+.profile-game-progress-meter-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(112, 184, 255, 0.86), rgba(226, 198, 109, 0.9));
+  box-shadow: 0 0 16px rgba(112, 184, 255, 0.2);
 }
 
 .profile-game-disclaimer {
@@ -4180,6 +4216,15 @@ body[data-public-page="public-profile-standalone"] .edit-affordance:focus-visibl
   }
 }
 
+@keyframes progression-rank-chip-sheen {
+  0% {
+    transform: translateX(-130%);
+  }
+  100% {
+    transform: translateX(130%);
+  }
+}
+
 @keyframes profile-hero-rise {
   from {
     opacity: 0;
@@ -4236,6 +4281,11 @@ body[data-public-page="public-profile-standalone"] .edit-affordance:focus-visibl
 
   .profile-game-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .profile-game-preview-card,
+  .profile-game-preview-card--featured {
+    grid-column: span 1;
   }
 
   .profile-shell-footer {
@@ -4352,7 +4402,10 @@ body[data-public-page="public-profile-standalone"] .edit-affordance:focus-visibl
 
   .profile-hero-role-chip::after,
   .profile-hero-role-chip:hover::after,
-  .profile-hero-role-chip:focus-visible::after {
+  .profile-hero-role-chip:focus-visible::after,
+  .progression-rank-chip::before,
+  .progression-rank-chip:hover::before,
+  .progression-rank-chip:focus-visible::before {
     animation: none !important;
   }
 }
@@ -7407,6 +7460,12 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   font-size: 12px;
 }
 
+.progression-xp-value--prominent,
+.progression-rank-chip--prominent {
+  gap: 9px;
+  font-size: 0.98rem;
+}
+
 .progression-xp-icon,
 .progression-rank-chip-icon {
   width: 18px;
@@ -7420,6 +7479,13 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   width: 16px;
   height: 16px;
   flex-basis: 16px;
+}
+
+.progression-xp-value--prominent .progression-xp-icon,
+.progression-rank-chip--prominent .progression-rank-chip-icon {
+  width: 30px;
+  height: 30px;
+  flex-basis: 30px;
 }
 
 .progression-rank-chip {
@@ -7443,6 +7509,15 @@ body.public-shell-page .dashboard-card-link:focus-visible {
     0 0 14px color-mix(in srgb, var(--progression-rank-color) 28%, transparent);
 }
 
+.progression-rank-chip--prominent {
+  min-height: 40px;
+  padding: 5px 14px 5px 7px;
+  border-color: color-mix(in srgb, var(--progression-rank-color) 64%, white 22%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 0 18px color-mix(in srgb, var(--progression-rank-color) 28%, transparent);
+}
+
 .progression-rank-chip::after {
   content: "";
   position: absolute;
@@ -7452,6 +7527,36 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0));
   pointer-events: none;
   z-index: -1;
+}
+
+.progression-rank-chip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    transparent 34%,
+    rgba(255, 255, 255, 0.2) 48%,
+    transparent 62%,
+    transparent 100%
+  );
+  opacity: 0;
+  transform: translateX(-130%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.progression-rank-chip:hover::before,
+.progression-rank-chip:focus-visible::before {
+  opacity: 0.3;
+  animation: progression-rank-chip-sheen 3.2s cubic-bezier(0.2, 0.8, 0.3, 1) infinite;
+}
+
+.progression-rank-chip > * {
+  position: relative;
+  z-index: 1;
 }
 
 .dashboard-state-badge .progression-rank-chip {

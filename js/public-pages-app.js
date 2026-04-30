@@ -2522,7 +2522,10 @@
 
   function buildProgressionRankChip(summary = {}, options = {}) {
     const presentation = progressionRankPresentation(summary);
-    const chip = create("span", `progression-rank-chip${options.compact ? " progression-rank-chip--compact" : ""}`);
+    const chip = create(
+      "span",
+      `progression-rank-chip${options.compact ? " progression-rank-chip--compact" : ""}${options.prominent ? " progression-rank-chip--prominent" : ""}`
+    );
     chip.style.setProperty("--progression-rank-color", presentation.color);
     chip.title = `${presentation.label} (${presentation.rankCode})`;
     const icon = create("img", "progression-rank-chip-icon");
@@ -2535,7 +2538,10 @@
   }
 
   function buildProgressionXpValue(value, options = {}) {
-    const wrap = create("span", `progression-xp-value${options.compact ? " progression-xp-value--compact" : ""}`);
+    const wrap = create(
+      "span",
+      `progression-xp-value${options.compact ? " progression-xp-value--compact" : ""}${options.prominent ? " progression-xp-value--prominent" : ""}`
+    );
     const icon = create("img", "progression-xp-icon");
     icon.src = PUBLIC_XP_ICON_PATH;
     icon.alt = "";
@@ -7058,6 +7064,14 @@
   function buildProfileGameCompetitionSection(profile = null) {
     const progression = profile?.progression && typeof profile.progression === "object" ? profile.progression : null;
     const rank = progression?.rank && typeof progression.rank === "object" ? progression.rank : {};
+    const xpTotal = progression ? progression.xp_total ?? progression.total_xp ?? 0 : 0;
+    const rankLabel = progression ? String(progression.rank_label || rank.rank_label || rank.label || progression.current_rank_code || rank.rank_code || "Rank").trim() : "";
+    const nextRankLabel = progression ? String(rank.next_rank_label || "").trim() : "";
+    const xpToNext = Number(rank.xp_to_next);
+    const progressXp = Number(rank.progress_xp);
+    const progressNeededXp = Number(rank.progress_needed_xp);
+    const hasProgressMeter = progression && nextRankLabel && Number.isFinite(progressXp) && Number.isFinite(progressNeededXp) && progressNeededXp > 0;
+    const progressPercent = hasProgressMeter ? Math.max(0, Math.min(100, (progressXp / progressNeededXp) * 100)) : 0;
     const details = create("details", "profile-authority-collapsible profile-game-collapsible");
     details.open = true;
     const summary = create("summary", "profile-authority-summary profile-game-summary");
@@ -7083,19 +7097,43 @@
     const grid = create("div", "profile-game-grid");
     [
       {
+        className: "profile-game-preview-card--featured",
         label: "Current XP",
-        value: progression ? buildProgressionXpValue(progression.xp_total ?? progression.total_xp ?? 0, { compact: true }) : buildProgressionXpValue(0, { compact: true }),
-        note: progression ? "Runtime progression summary" : "No XP recorded yet"
+        value: buildProgressionXpValue(xpTotal, { prominent: true }),
+        note: progression
+          ? `${formatNumber(xpTotal)} public XP from the runtime progression summary`
+          : "No authoritative XP events have been recorded yet."
       },
       {
-        label: "Rank",
-        value: progression ? buildProgressionRankChip(progression, { compact: true }) : "Bronze",
-        note: rank.next_rank_label ? `${formatNumber(rank.xp_to_next || 0)} XP to ${rank.next_rank_label}` : "Top configured rank or no XP events"
+        className: "profile-game-preview-card--featured",
+        label: "Current rank",
+        value: progression ? buildProgressionRankChip(progression, { prominent: true }) : "No rank yet",
+        note: progression
+          ? nextRankLabel && Number.isFinite(xpToNext)
+            ? `${rankLabel || "Current rank"} - ${formatNumber(xpToNext)} XP to ${nextRankLabel}`
+            : `${rankLabel || "Current rank"} is the current runtime rank.`
+          : "Rank appears after the runtime returns progression data."
+      },
+      {
+        label: "Next rank progress",
+        value: hasProgressMeter ? `${formatNumber(progressXp)} / ${formatNumber(progressNeededXp)} XP` : "Not available",
+        note: nextRankLabel
+          ? `Progress toward ${nextRankLabel}`
+          : progression
+            ? "No higher configured rank is exposed in this payload."
+            : "Progress appears with runtime progression data.",
+        extra: hasProgressMeter ? (() => {
+          const meter = create("span", "profile-game-progress-meter");
+          const fill = create("span", "profile-game-progress-meter-fill");
+          fill.style.width = `${progressPercent}%`;
+          meter.appendChild(fill);
+          return meter;
+        })() : null
       },
       { label: "Resource inventory", value: "Reserved", note: "Items not issued yet" },
       { label: "Season standing", value: "Not seeded", note: "Ladders arrive later" }
     ].forEach((item) => {
-      const card = create("article", "profile-game-preview-card");
+      const card = create("article", `profile-game-preview-card${item.className ? ` ${item.className}` : ""}`);
       card.append(
         create("span", "profile-game-preview-label", item.label),
         item.value instanceof Node ? (() => {
@@ -7105,6 +7143,7 @@
         })() : create("strong", "", item.value),
         create("span", "profile-game-preview-note", item.note)
       );
+      if (item.extra instanceof Node) card.appendChild(item.extra);
       grid.appendChild(card);
     });
     panel.append(

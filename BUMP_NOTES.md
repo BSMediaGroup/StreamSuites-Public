@@ -2,6 +2,8 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+- Refined the approved public XP/rank presentation without changing the runtime progression contract. `/u/*` Public Overview keeps the compact XP/rank chips, while the Game & Competition section in `js/public-pages-app.js` now opts into larger XP/rank visuals, richer runtime-backed current XP/current rank/progress-to-next copy when those fields are present, and no longer falls back to a hardcoded Bronze label when progression data is absent. `css/public-shell.css` adds restrained prominent sizing only for that section plus a subtle hover sheen for shared public rank chips. No files were created or removed.
+
 - Added the first real public XP/rank presentation layer to the existing runtime-backed consumers. `js/public-pages-app.js` now renders rank chips from authoritative rank `color_hex`/`icon_path` metadata and uses the shared XP star on `/u/*` profile overview/game sections, public My Data, and Leaderboards; `css/public-shell.css` adds compact dark-theme chip/icon styling with readable light-rank treatment. Added source coverage for the shared rank/XP render seam. No files were created or removed; the required `.webp` assets were already present in the worktree.
 
 - Corrected Public profile/account hydration so `/u/*` profile normalization and the public account dropdown prefer canonical account `user_code`/`account_user_code` fields from the runtime profile/auth/authority payload before falling back to public identity codes. `public-data-hub.js` now preserves the separate `publicIdentityCode` diagnostic key while mapping claimed identities by real account user code and carrying authority avatar URLs. No files were created or removed.
