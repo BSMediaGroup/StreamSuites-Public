@@ -47,7 +47,7 @@ flowchart TD
 - Legacy `user_code` compatibility is still preserved during profile resolution and migration-safe routing.
 - Clean public artifact routes are supported for clips, polls, and scores via `/clips/<id-or-slug>`, `/polls/<id-or-slug>`, and `/scores/<id-or-slug>`, while legacy detail entry points remain available.
 - `/community/settings.html` is the viewer/public account profile settings surface and loads or saves supported authoritative fields through the public profile API.
-- `/community/my-data.html` now reads the signed-in user’s real public XP/rank progression from `/api/public/progression/me` plus public-authority request history from the authoritative `/api/public/authority/requests/mine` contract.
+- `/community/my-data.html` now reads the signed-in user’s real public XP/rank progression from `/api/public/progression/me`, wallet/inventory state from `/api/public/economy/me`, and public-authority request history from the authoritative `/api/public/authority/requests/mine` contract.
 - `/wheels` is now the primary public consumer route for authoritative wheel artifacts published by `StreamSuites`, `/scoreboards` is preserved as the legacy list-view lens over that same wheel artifact data, and `/leaderboards` reads the first public progression leaderboard from the authoritative XP/rank API.
 - Public wheel gallery/detail hydration is now API-first against `/api/public/wheels`, with the shared-state/runtime-export copies retained only as fallback mirrors and a narrow runtime SSE stream keeping already-open wheel pages in sync.
 - Standalone and in-shell public profile surfaces now consume the runtime-published public authority identity summaries so profile claim, assignment, issue, and removal requests submit against real `identity_code` targets instead of placeholder payloads.
@@ -63,7 +63,7 @@ flowchart TD
 - Same-origin auth and API proxy paths forward browser requests to the authoritative Auth API without moving backend ownership into this repo.
 - Public auth entry points now consume `/auth/access-state` and the short-lived `/auth/debug/unlock` bypass flow so public pages remain browseable while new auth starts can be gated by runtime mode.
 - Route handlers under `functions/clips`, `functions/leaderboards`, `functions/polls`, `functions/scoreboards`, `functions/scores`, `functions/tallies`, `functions/wheels`, and `functions/u` preserve gallery deep links plus clean artifact and profile routes.
-- Public shell/profile code in `js/public-pages-app.js` and `js/public-data-hub.js` consumes the authoritative slug, visibility, FindMeHere eligibility, media, live-status fields, and the runtime-owned community member directory API.
+- Public shell/profile code in `js/public-pages-app.js` and `js/public-data-hub.js` consumes the authoritative slug, visibility, FindMeHere eligibility, media, live-status fields, economy/inventory summaries, and the runtime-owned community member directory API.
 
 ## Cross-Repo Orientation
 

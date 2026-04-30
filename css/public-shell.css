@@ -7441,7 +7441,8 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .progression-xp-value,
-.progression-rank-chip {
+.progression-rank-chip,
+.economy-balance-value {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -7454,35 +7455,57 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   font-weight: 800;
 }
 
+.economy-balance-value {
+  color: rgba(245, 248, 255, 0.94);
+  font-weight: 850;
+}
+
 .progression-xp-value--compact,
-.progression-rank-chip--compact {
+.progression-rank-chip--compact,
+.economy-balance-value--compact {
   gap: 6px;
   font-size: 12px;
 }
 
 .progression-xp-value--prominent,
-.progression-rank-chip--prominent {
+.progression-rank-chip--prominent,
+.economy-balance-value--prominent {
   gap: 9px;
   font-size: 0.98rem;
 }
 
 .progression-xp-icon,
-.progression-rank-chip-icon {
+.progression-rank-chip-icon,
+.economy-balance-icon {
   width: 18px;
   height: 18px;
   flex: 0 0 18px;
   object-fit: contain;
 }
 
+.economy-balance-icon {
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(226, 198, 109, 0.48);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(226, 198, 109, 0.32), rgba(92, 176, 188, 0.18));
+  color: rgba(255, 246, 208, 0.96);
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1;
+}
+
 .progression-xp-value--compact .progression-xp-icon,
-.progression-rank-chip--compact .progression-rank-chip-icon {
+.progression-rank-chip--compact .progression-rank-chip-icon,
+.economy-balance-value--compact .economy-balance-icon {
   width: 16px;
   height: 16px;
   flex-basis: 16px;
 }
 
 .progression-xp-value--prominent .progression-xp-icon,
-.progression-rank-chip--prominent .progression-rank-chip-icon {
+.progression-rank-chip--prominent .progression-rank-chip-icon,
+.economy-balance-value--prominent .economy-balance-icon {
   width: 30px;
   height: 30px;
   flex-basis: 30px;
@@ -7564,6 +7587,8 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .progression-event-row,
+.economy-event-row,
+.inventory-summary-row,
 .progression-leaderboard-row {
   display: grid;
   gap: 4px;
@@ -7574,9 +7599,30 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .progression-event-row span,
+.economy-event-row span,
+.inventory-summary-row span span,
 .progression-leaderboard-identity span {
   color: var(--ps-muted, rgba(190, 204, 224, 0.82));
   font-size: 12px;
+}
+
+.inventory-summary-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.inventory-summary-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  border-top: 1px solid rgba(188, 207, 237, 0.12);
+  padding-top: 8px;
+}
+
+.inventory-summary-row > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
 }
 
 .progression-leaderboard-list {

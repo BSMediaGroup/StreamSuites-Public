@@ -24,9 +24,11 @@ test("public app wires authority request submission and my-data history to the r
   assert.match(source, /AUTH_PUBLIC_AUTHORITY_REQUESTS_URL = `\$\{AUTH_API_BASE\}\/api\/public\/authority\/requests`/);
   assert.match(source, /AUTH_PUBLIC_AUTHORITY_REQUESTS_MINE_URL = `\$\{AUTH_API_BASE\}\/api\/public\/authority\/requests\/mine`/);
   assert.match(source, /AUTH_PUBLIC_PROGRESSION_ME_URL = `\$\{AUTH_API_BASE\}\/api\/public\/progression\/me`/);
+  assert.match(source, /AUTH_PUBLIC_ECONOMY_ME_URL = `\$\{AUTH_API_BASE\}\/api\/public\/economy\/me`/);
   assert.match(source, /submitPublicAuthorityRequest/);
   assert.match(source, /fetchMyPublicAuthorityRequests/);
   assert.match(source, /fetchMyPublicProgression/);
+  assert.match(source, /fetchMyPublicEconomy/);
   assert.match(source, /summary\.xp_total \?\? summary\.total_xp/);
   assert.match(source, /PUBLIC_XP_ICON_PATH = "\/assets\/games\/xpstar\.webp"/);
   assert.match(source, /function buildProgressionRankChip/);
@@ -36,6 +38,8 @@ test("public app wires authority request submission and my-data history to the r
   assert.match(source, /renderCommunityMyData/);
   assert.match(source, /Public progression/);
   assert.match(source, /Recent XP events/);
+  assert.match(source, /Public economy and inventory/);
+  assert.match(source, /Recent economy history/);
   assert.match(source, /Pending review/);
   assert.match(source, /openAuthModal:\s*ctx\.openAuthModal/);
 });
@@ -58,22 +62,25 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   assert.match(css, /\.progression-xp-icon/);
 });
 
-test("public profile game section renders runtime progression without inventing economy data", () => {
+test("public profile game section renders runtime progression and economy authority summaries", () => {
   const app = read("js/public-pages-app.js");
   const css = read("css/public-shell.css");
   const profileSection = app.match(/function buildProfileGameCompetitionSection\(profile = null\) \{[\s\S]*?return details;\n  \}/)?.[0] || "";
   assert.ok(profileSection, "profile progression section should exist");
   assert.match(app, /payload\?\.progression && typeof payload\.progression === "object"/);
+  assert.match(app, /payload\?\.economy && typeof payload\.economy === "object"/);
+  assert.match(app, /Array\.isArray\(payload\?\.inventory\)/);
   assert.match(profileSection, /progression\.xp_total \?\? progression\.total_xp/);
+  assert.match(profileSection, /buildEconomyBalanceValue\(economy\?\.balance_current \|\| 0, \{ prominent: true \}\)/);
   assert.match(profileSection, /buildProgressionXpValue\(xpTotal, \{ prominent: true \}\)/);
   assert.match(profileSection, /buildProgressionRankChip\(progression, \{ prominent: true \}\)/);
   assert.match(profileSection, /profile-game-preview-card--featured/);
   assert.match(profileSection, /profile-game-progress-meter/);
   assert.match(profileSection, /No rank yet/);
   assert.doesNotMatch(profileSection, /value: progression \? buildProgressionRankChip\(progression, \{ compact: true \}\) : "Bronze"/);
-  assert.match(profileSection, /XP and rank hydrate from the runtime public progression authority/);
-  assert.match(profileSection, /Economy, inventory, and seasonal standings remain deferred/);
+  assert.match(profileSection, /XP, rank, wallet balance, and inventory hydrate from runtime public authority/);
   assert.match(css, /\.progression-xp-value--prominent/);
+  assert.match(css, /\.economy-balance-value--prominent/);
   assert.match(css, /\.progression-rank-chip--prominent/);
   assert.match(css, /\.profile-game-preview-card--featured/);
   assert.match(app, /buildProfileGameCompetitionSection\(profile\)/);
@@ -84,11 +91,14 @@ test("public profile overview table uses the same runtime progression summary as
   const overviewSection = app.match(/function buildProfileOverviewPanel\(profile, artifacts, helpers\) \{[\s\S]*?return section;\n  \}/)?.[0] || "";
   assert.ok(overviewSection, "profile overview section should exist");
   assert.match(overviewSection, /const progression = profile\?\.progression && typeof profile\.progression === "object" \? profile\.progression : null/);
+  assert.match(overviewSection, /const economy = profile\?\.economy && typeof profile\.economy === "object" \? profile\.economy : null/);
   assert.match(overviewSection, /progression\.xp_total \?\? progression\.total_xp \?\? 0/);
   assert.match(overviewSection, /buildProgressionXpValue\(progression\.xp_total \?\? progression\.total_xp \?\? 0, \{ compact: true \}\)/);
   assert.match(overviewSection, /buildProgressionRankChip\(progression, \{ compact: true \}\)/);
   assert.match(overviewSection, /addRow\("XP", overviewXpValue, !progression\)/);
   assert.match(overviewSection, /addRow\("Rank", overviewRankValue, !progression\)/);
+  assert.match(overviewSection, /addRow\("Balance", economy \? buildEconomyBalanceValue\(economy\.balance_current \|\| 0, \{ compact: true \}\) : "Starting", false\)/);
+  assert.match(overviewSection, /addRow\("Inventory", inventory\.length \? `\$\{formatNumber\(inventory\.length\)\} item type/);
   assert.doesNotMatch(overviewSection, /addRow\("XP", "Pending", true\)/);
   assert.doesNotMatch(overviewSection, /addRow\("Rank", "Pending", true\)/);
 });
@@ -100,6 +110,6 @@ test("public rank chips include restrained hover sheen without changing compact 
   assert.match(css, /\.progression-rank-chip:hover::before,[\s\S]*\.progression-rank-chip:focus-visible::before\s*\{[\s\S]*animation:\s*progression-rank-chip-sheen 3\.2s/);
   assert.match(css, /@keyframes progression-rank-chip-sheen/);
   assert.match(css, /prefers-reduced-motion:\s*reduce[\s\S]*\.progression-rank-chip::before/);
-  assert.match(css, /\.progression-rank-chip--compact\s*\{[\s\S]*font-size:\s*12px/);
-  assert.match(css, /\.progression-rank-chip--compact \.progression-rank-chip-icon\s*\{[\s\S]*width:\s*16px/);
+  assert.match(css, /\.progression-rank-chip--compact,[\s\S]*\.economy-balance-value--compact\s*\{[\s\S]*font-size:\s*12px/);
+  assert.match(css, /\.progression-rank-chip--compact \.progression-rank-chip-icon,[\s\S]*\.economy-balance-value--compact \.economy-balance-icon\s*\{[\s\S]*width:\s*16px/);
 });

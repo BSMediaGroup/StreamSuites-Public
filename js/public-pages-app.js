@@ -40,6 +40,7 @@
   const AUTH_PUBLIC_AUTHORITY_REQUESTS_MINE_URL = `${AUTH_API_BASE}/api/public/authority/requests/mine`;
   const AUTH_PUBLIC_PROGRESSION_ME_URL = `${AUTH_API_BASE}/api/public/progression/me`;
   const AUTH_PUBLIC_PROGRESSION_LEADERBOARD_URL = `${AUTH_API_BASE}/api/public/progression/leaderboard`;
+  const AUTH_PUBLIC_ECONOMY_ME_URL = `${AUTH_API_BASE}/api/public/economy/me`;
   const AUTH_PUBLIC_ARTIFACTS_URL = `${AUTH_API_BASE}/api/public/artifacts`;
   const PUBLIC_WHEEL_EVENTS_URL = `${AUTH_API_BASE}/api/public/wheels/events`;
   const PUBLIC_XP_ICON_PATH = "/assets/games/xpstar.webp";
@@ -1732,6 +1733,23 @@
     return body;
   }
 
+  async function fetchMyPublicEconomy() {
+    const response = await fetch(AUTH_PUBLIC_ECONOMY_ME_URL, {
+      method: "GET",
+      cache: "no-store",
+      credentials: "include",
+      headers: { Accept: "application/json" }
+    });
+    const body = await parseJsonResponse(response);
+    if (!response.ok || body?.success === false) {
+      const error = new Error(resolveAuthorityErrorMessage(body, response.status));
+      error.status = response.status;
+      error.payload = body;
+      throw error;
+    }
+    return body;
+  }
+
   async function fetchPublicProgressionLeaderboard() {
     const response = await fetch(AUTH_PUBLIC_PROGRESSION_LEADERBOARD_URL, {
       method: "GET",
@@ -2576,6 +2594,64 @@
     );
     row.append(title, meta);
     return row;
+  }
+
+  function buildEconomyBalanceValue(value, options = {}) {
+    const wrap = create(
+      "span",
+      `economy-balance-value${options.compact ? " economy-balance-value--compact" : ""}${options.prominent ? " economy-balance-value--prominent" : ""}`
+    );
+    wrap.append(create("span", "economy-balance-icon", "SS"), create("span", "", `${formatNumber(value)} coins`));
+    return wrap;
+  }
+
+  function buildEconomyEventRow(event) {
+    const row = create("div", "economy-event-row");
+    const delta = Number(event?.amount_delta || 0);
+    row.append(
+      create("strong", "", `${delta >= 0 ? "+" : ""}${formatNumber(delta)} coins`),
+      create("span", "", [
+        String(event?.reason_text || "economy event").replace(/_/g, " "),
+        event?.source_domain ? `via ${String(event.source_domain).replace(/_/g, " ")}` : "",
+        event?.balance_after != null ? `${formatNumber(event.balance_after)} balance` : ""
+      ].filter(Boolean).join(" • "))
+    );
+    return row;
+  }
+
+  function buildInventoryEventRow(event) {
+    const row = create("div", "economy-event-row");
+    const delta = Number(event?.quantity_delta || 0);
+    row.append(
+      create("strong", "", `${delta >= 0 ? "+" : ""}${formatNumber(delta)} ${String(event?.item_code || "item")}`),
+      create("span", "", [
+        String(event?.reason_text || "inventory event").replace(/_/g, " "),
+        event?.source_domain ? `via ${String(event.source_domain).replace(/_/g, " ")}` : "",
+        event?.quantity_after != null ? `${formatNumber(event.quantity_after)} held` : ""
+      ].filter(Boolean).join(" • "))
+    );
+    return row;
+  }
+
+  function buildInventorySummaryList(items) {
+    const list = create("div", "inventory-summary-list");
+    const rows = Array.isArray(items) ? items.filter((item) => Number(item?.quantity || 0) > 0) : [];
+    if (!rows.length) {
+      list.appendChild(create("div", "empty-state", "No inventory items have been recorded yet."));
+      return list;
+    }
+    rows.slice(0, 6).forEach((item) => {
+      const definition = item?.definition || {};
+      const row = create("div", "inventory-summary-row");
+      const body = create("span", "");
+      body.append(
+        create("strong", "", definition.label || item.item_code || "Item"),
+        create("span", "", [definition.category, definition.rarity].filter(Boolean).join(" • ") || item.item_code || "")
+      );
+      row.append(body, create("strong", "", `x${formatNumber(item.quantity || 0)}`));
+      list.appendChild(row);
+    });
+    return list;
   }
 
   function buildLeaderboardRow(entry) {
@@ -5677,8 +5753,8 @@
         eyebrow: "Account workspace",
         title: "My Data",
         body: authReady
-          ? "Review your authoritative public progression and public authority submissions here. XP, rank, and request status remain backend-owned."
-          : "Sign in to view your real public progression and authority submission history. This page does not fabricate account history for guest sessions.",
+          ? "Review your authoritative public progression, economy, inventory, and public authority submissions here. XP, rank, balances, items, and request status remain backend-owned."
+          : "Sign in to view your real public progression, economy, inventory, and authority submission history. This page does not fabricate account history for guest sessions.",
         tone: authReady ? "active" : "preview",
         actions: authReady
           ? [
@@ -5692,6 +5768,7 @@
         stats: [
           { label: "Access", value: authReady ? "Signed in" : "Guest", note: authReady ? authState.displayName : "Login required for account data" },
           { label: "Progression", value: authReady ? "Live" : "Locked", note: authReady ? "Backed by /progression/me" : "Unavailable without session" },
+          { label: "Economy", value: authReady ? "Live" : "Locked", note: authReady ? "Backed by /economy/me" : "Unavailable without session" },
           { label: "Authority history", value: authReady ? "Live" : "Locked", note: authReady ? "Backed by /requests/mine" : "Unavailable without session" }
         ]
       })
@@ -5756,6 +5833,62 @@
         progressionStatus.textContent = error instanceof Error ? error.message : "Unable to load progression right now.";
         clear(progressionGrid);
         progressionGrid.appendChild(create("div", "empty-state", "XP and rank data are unavailable right now."));
+      }
+    })();
+
+    const economySection = buildSection("Public economy and inventory").section;
+    const economyStatus = create("p", "muted progression-status", "Loading your wallet and inventory...");
+    const economyGrid = create("div", "dashboard-card-grid dashboard-card-grid--three progression-summary-grid");
+    economySection.append(economyStatus, economyGrid);
+    host.appendChild(economySection);
+
+    (async () => {
+      try {
+        const payload = await fetchMyPublicEconomy();
+        const wallet = payload?.wallet || {};
+        const inventory = Array.isArray(payload?.inventory) ? payload.inventory : [];
+        const economyEvents = Array.isArray(payload?.economy_events) ? payload.economy_events : [];
+        const inventoryEvents = Array.isArray(payload?.inventory_events) ? payload.inventory_events : [];
+        economyStatus.textContent = `${progressionDisplayName(payload?.identity)} • ${payload?.identity?.identity_code || "public identity"}`;
+        clear(economyGrid);
+        const walletCard = buildDashboardCard({
+          title: "Current balance",
+          kicker: "Authoritative wallet",
+          badge: "Live",
+          state: "active",
+          body: buildEconomyBalanceValue(wallet.balance_current || 0, { prominent: true }),
+          meta: [
+            `${formatNumber(wallet.earned_lifetime || 0)} earned lifetime`,
+            `${formatNumber(wallet.spent_lifetime || 0)} spent lifetime`,
+            `${formatNumber(wallet.adjusted_total || 0)} adjusted total`
+          ]
+        });
+        const inventoryCard = buildDashboardCard({
+          title: "Inventory",
+          kicker: "Current item state",
+          badge: inventory.length ? `${formatNumber(inventory.length)} item types` : "Empty",
+          state: inventory.length ? "active" : "preview",
+          body: inventory.length ? "Current quantities are listed below." : "No inventory items have been recorded yet.",
+          meta: ["Inventory state is runtime-owned"]
+        });
+        inventoryCard.appendChild(buildInventorySummaryList(inventory));
+        const historyCard = buildDashboardCard({
+          title: "Recent economy history",
+          kicker: "Append-only ledger",
+          badge: "History",
+          state: "active",
+          body: economyEvents.length || inventoryEvents.length
+            ? "Recent authoritative wallet and inventory events are listed below."
+            : "No economy or inventory events have been recorded yet.",
+          meta: ["No storefront, transfer, or consumption controls are exposed here"]
+        });
+        economyEvents.slice(0, 3).forEach((event) => historyCard.appendChild(buildEconomyEventRow(event)));
+        inventoryEvents.slice(0, 3).forEach((event) => historyCard.appendChild(buildInventoryEventRow(event)));
+        economyGrid.append(walletCard, inventoryCard, historyCard);
+      } catch (error) {
+        economyStatus.textContent = error instanceof Error ? error.message : "Unable to load economy right now.";
+        clear(economyGrid);
+        economyGrid.appendChild(create("div", "empty-state", "Wallet and inventory data are unavailable right now."));
       }
     })();
 
@@ -6005,6 +6138,22 @@
             ? fallbackProfile.progression
             : null
     );
+    const economy = (
+      payload?.economy && typeof payload.economy === "object"
+        ? payload.economy
+        : payload?.public_economy && typeof payload.public_economy === "object"
+          ? payload.public_economy
+          : fallbackProfile?.economy && typeof fallbackProfile.economy === "object"
+            ? fallbackProfile.economy
+            : null
+    );
+    const inventory = Array.isArray(payload?.inventory)
+      ? payload.inventory
+      : Array.isArray(payload?.public_inventory)
+        ? payload.public_inventory
+        : Array.isArray(fallbackProfile?.inventory)
+          ? fallbackProfile.inventory
+          : [];
     return {
       id: fallbackProfile?.id || userCode,
       userCode,
@@ -6049,6 +6198,8 @@
       liveStatus,
       latestStream,
       progression,
+      economy,
+      inventory,
       authorityIdentity
     };
   }
@@ -6879,6 +7030,8 @@
   function buildProfileOverviewPanel(profile, artifacts, helpers) {
     const counts = countProfileArtifactsByType(artifacts);
     const progression = profile?.progression && typeof profile.progression === "object" ? profile.progression : null;
+    const economy = profile?.economy && typeof profile.economy === "object" ? profile.economy : null;
+    const inventory = Array.isArray(profile?.inventory) ? profile.inventory : [];
     const rank = progression?.rank && typeof progression.rank === "object" ? progression.rank : {};
     const overviewXpValue = progression
       ? buildProgressionXpValue(progression.xp_total ?? progression.total_xp ?? 0, { compact: true })
@@ -6920,6 +7073,8 @@
     addRow("Profile type", buildProfileTypeChip(profile));
     addRow("XP", overviewXpValue, !progression);
     addRow("Rank", overviewRankValue, !progression);
+    addRow("Balance", economy ? buildEconomyBalanceValue(economy.balance_current || 0, { compact: true }) : "Starting", false);
+    addRow("Inventory", inventory.length ? `${formatNumber(inventory.length)} item type${inventory.length === 1 ? "" : "s"}` : "Empty", false);
 
     section.append(header, statGrid, details);
     return section;
@@ -7063,6 +7218,8 @@
 
   function buildProfileGameCompetitionSection(profile = null) {
     const progression = profile?.progression && typeof profile.progression === "object" ? profile.progression : null;
+    const economy = profile?.economy && typeof profile.economy === "object" ? profile.economy : null;
+    const inventory = Array.isArray(profile?.inventory) ? profile.inventory : [];
     const rank = progression?.rank && typeof progression.rank === "object" ? progression.rank : {};
     const xpTotal = progression ? progression.xp_total ?? progression.total_xp ?? 0 : 0;
     const rankLabel = progression ? String(progression.rank_label || rank.rank_label || rank.label || progression.current_rank_code || rank.rank_code || "Rank").trim() : "";
@@ -7081,7 +7238,11 @@
       create("span", "", "GAME & COMPETITION")
     );
     const meta = create("span", "profile-authority-summary-meta");
-    [progression ? "XP/rank live" : "XP/rank empty", "Economy deferred"].forEach((entry) => meta.appendChild(create("span", "", entry)));
+    [
+      progression ? "XP/rank live" : "XP/rank empty",
+      economy ? "Economy live" : "Economy starting",
+      inventory.length ? "Inventory live" : "Inventory empty"
+    ].forEach((entry) => meta.appendChild(create("span", "", entry)));
     const stateIcon = createIcon("/assets/icons/ui/visible.svg", "profile-authority-summary-icon");
     const syncStateIcon = () => {
       stateIcon.style.setProperty(
@@ -7115,6 +7276,21 @@
           : "Rank appears after the runtime returns progression data."
       },
       {
+        className: "profile-game-preview-card--featured",
+        label: "Current balance",
+        value: buildEconomyBalanceValue(economy?.balance_current || 0, { prominent: true }),
+        note: economy
+          ? `${formatNumber(economy.earned_lifetime || 0)} earned lifetime from the runtime economy wallet`
+          : "No economy events have been recorded yet."
+      },
+      {
+        label: "Inventory",
+        value: inventory.length ? `${formatNumber(inventory.length)} item type${inventory.length === 1 ? "" : "s"}` : "Empty",
+        note: inventory.length
+          ? "Current quantities hydrate from runtime inventory state."
+          : "No authority-owned items have been issued yet."
+      },
+      {
         label: "Next rank progress",
         value: hasProgressMeter ? `${formatNumber(progressXp)} / ${formatNumber(progressNeededXp)} XP` : "Not available",
         note: nextRankLabel
@@ -7130,7 +7306,6 @@
           return meter;
         })() : null
       },
-      { label: "Resource inventory", value: "Reserved", note: "Items not issued yet" },
       { label: "Season standing", value: "Not seeded", note: "Ladders arrive later" }
     ].forEach((item) => {
       const card = create("article", `profile-game-preview-card${item.className ? ` ${item.className}` : ""}`);
@@ -7149,8 +7324,8 @@
     panel.append(
       grid,
       create("p", "profile-game-disclaimer", progression
-        ? "XP and rank hydrate from the runtime public progression authority. Economy, inventory, and seasonal standings remain deferred."
-        : "No authoritative XP events have been recorded for this public identity yet. Economy, inventory, and seasonal standings remain deferred.")
+        ? "XP, rank, wallet balance, and inventory hydrate from runtime public authority. Seasonal standings remain deferred."
+        : "No authoritative XP events have been recorded for this public identity yet. Wallet and inventory can still show real starting state when returned by runtime authority.")
     );
     details.append(summary, panel);
     return details;
