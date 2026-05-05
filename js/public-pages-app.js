@@ -2551,13 +2551,13 @@
     );
     chip.style.setProperty("--progression-level-color", presentation.color);
     chip.style.setProperty("--progression-rank-color", presentation.color);
-    chip.title = `Level ${presentation.label} (${presentation.levelCode})`;
+    chip.title = `${presentation.label} (${presentation.levelCode})`;
     const icon = create("img", "progression-level-chip-icon progression-rank-chip-icon");
     icon.src = presentation.icon;
     icon.alt = "";
     icon.loading = "lazy";
     icon.decoding = "async";
-    chip.append(icon, create("span", "", `Level ${presentation.label}`));
+    chip.append(icon, create("span", "", presentation.label));
     return chip;
   }
 

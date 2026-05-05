@@ -2,6 +2,8 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+- Removed the redundant visible `Level` text prefix from Public XP level chips in `js/public-pages-app.js`; chips now render the actual level material label only, such as `Emerald`, while surrounding rows/sections still provide the level context. Source tests now pin that the chip builder does not reintroduce the prefix. No files were created or removed.
+
 - Updated the Public progression consumers from XP/rank tier wording to XP/level wording while preserving leaderboard rank for ordered placement only. `js/public-pages-app.js` now prefers canonical `level_*`, `next_level`, `xp_to_next_level`, and `progress_to_next_level` fields with legacy rank aliases as fallback, renders level chips with the approved level icon paths, labels Public Overview and Game & Competition as Level, and shows Leaderboards placement separately from each user's level chip. `css/public-shell.css` adds canonical level-chip selectors while retaining rank-chip compatibility classes during migration. `README.md` and source tests now describe the XP/level API contract. No files were created, removed, or renamed.
 
 - Replaced the public economy balance makeshift `SS` text circle with the canonical `/assets/games/sscoin.webp` asset in `js/public-pages-app.js` and `css/public-shell.css`. The change is presentation-only for existing runtime-backed economy consumers and does not alter wallet, ledger, inventory, profile, or My Data authority behavior. No files were created or removed; the CSS is slightly shorter because the old text-badge styling was removed.

@@ -32,6 +32,8 @@ test("public app wires authority request submission and my-data history to the r
   assert.match(source, /summary\.xp_total \?\? summary\.total_xp/);
   assert.match(source, /PUBLIC_XP_ICON_PATH = "\/assets\/games\/xpstar\.webp"/);
   assert.match(source, /function buildProgressionLevelChip/);
+  assert.match(source, /chip\.append\(icon, create\("span", "", presentation\.label\)\)/);
+  assert.doesNotMatch(source, /`Level \$\{presentation\.label\}`/);
   assert.match(source, /event\?\.source_domain/);
   assert.match(source, /buildAuthorityRequestPanel/);
   assert.match(source, /resolveProfileAuthorityContext/);
