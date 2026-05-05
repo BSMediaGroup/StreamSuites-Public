@@ -7678,23 +7678,184 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   min-width: 0;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.progression-board--premium {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: rgba(203, 219, 246, 0.18);
+  background:
+    radial-gradient(720px 260px at 15% 0%, rgba(168, 85, 247, 0.14), transparent 64%),
+    radial-gradient(580px 280px at 86% 8%, rgba(251, 146, 60, 0.12), transparent 66%),
+    radial-gradient(620px 340px at 50% 100%, rgba(103, 232, 249, 0.08), transparent 70%),
+    linear-gradient(180deg, rgba(16, 22, 34, 0.9), rgba(6, 9, 15, 0.92));
+  box-shadow:
+    0 26px 72px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.progression-board--premium::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.8) 1px, transparent 0);
+  background-size: 24px 24px;
+  z-index: -1;
+}
+
+.progression-leaderboard-controls {
+  display: grid;
+  grid-template-columns: minmax(220px, 380px) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.progression-leaderboard-search input {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid rgba(203, 219, 246, 0.18);
+  border-radius: 12px;
+  padding: 0 14px;
+  background: rgba(6, 10, 18, 0.68);
+  color: rgba(246, 249, 255, 0.96);
+  outline: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.progression-leaderboard-search input:focus {
+  border-color: rgba(103, 232, 249, 0.42);
+  box-shadow:
+    0 0 0 3px rgba(103, 232, 249, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.progression-leaderboard-future-tabs {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.progression-leaderboard-future-tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 5px 9px;
+  border: 1px solid rgba(203, 219, 246, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(199, 211, 231, 0.66);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.progression-leaderboard-status {
+  margin: 0 0 14px;
+}
+
+.progression-leaderboard-podium {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
 .progression-leaderboard-list {
   display: grid;
-  gap: 8px;
+  gap: 10px;
 }
 
 .progression-leaderboard-row {
-  grid-template-columns: minmax(42px, auto) minmax(0, 1fr) minmax(88px, auto) minmax(76px, auto);
+  position: relative;
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(188, 207, 237, 0.14);
+  border-radius: 16px;
+  padding: 12px;
+  background:
+    linear-gradient(180deg, rgba(18, 25, 39, 0.78), rgba(7, 10, 16, 0.86)),
+    rgba(9, 13, 22, 0.82);
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.055);
+}
+
+.progression-leaderboard-row--top {
+  border-color: rgba(255, 255, 255, 0.22);
+  background:
+    radial-gradient(320px 150px at 50% 0%, rgba(255, 255, 255, 0.1), transparent 66%),
+    linear-gradient(180deg, rgba(25, 32, 50, 0.88), rgba(8, 10, 18, 0.92));
+}
+
+.progression-leaderboard-row--top-1 {
+  box-shadow:
+    0 22px 52px rgba(251, 146, 60, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.progression-leaderboard-row--top-2 {
+  box-shadow:
+    0 20px 48px rgba(103, 232, 249, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.progression-leaderboard-row--top-3 {
+  box-shadow:
+    0 20px 48px rgba(168, 85, 247, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.progression-leaderboard-row-main {
+  display: grid;
+  grid-template-columns: minmax(54px, auto) auto minmax(0, 1fr) minmax(110px, auto) minmax(92px, auto) minmax(90px, auto) minmax(88px, auto);
   align-items: center;
-  border: 1px solid rgba(188, 207, 237, 0.13);
-  border-radius: 12px;
-  padding: 10px 12px;
-  background: linear-gradient(180deg, rgba(18, 25, 37, 0.68), rgba(7, 10, 16, 0.76));
+  gap: 12px;
+  min-width: 0;
 }
 
 .progression-rank-position,
 .progression-leaderboard-xp {
   white-space: nowrap;
+}
+
+.progression-rank-position {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: rgba(246, 249, 255, 0.95);
+  font-weight: 900;
+}
+
+.progression-rank-position-asset {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.34));
+}
+
+.progression-leaderboard-avatar.creator-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22);
 }
 
 .progression-leaderboard-identity {
@@ -7710,14 +7871,159 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   white-space: nowrap;
 }
 
-@media (max-width: 640px) {
-  .progression-leaderboard-row {
-    grid-template-columns: minmax(36px, auto) minmax(0, 1fr);
+.progression-leaderboard-name {
+  color: rgba(248, 251, 255, 0.96);
+}
+
+.progression-leaderboard-handle {
+  color: rgba(190, 204, 224, 0.78);
+}
+
+.progression-leaderboard-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.progression-leaderboard-badges .profile-role-chip,
+.progression-leaderboard-badges .profile-badge-chip {
+  min-height: 26px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  font-size: 10px;
+}
+
+.progression-leaderboard-expand {
+  min-height: 32px;
+  border: 1px solid rgba(203, 219, 246, 0.16);
+  border-radius: 999px;
+  padding: 5px 12px;
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(240, 246, 255, 0.9);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.progression-leaderboard-expand:hover,
+.progression-leaderboard-expand:focus-visible {
+  border-color: rgba(103, 232, 249, 0.36);
+  background: rgba(103, 232, 249, 0.1);
+}
+
+.progression-leaderboard-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(220px, 0.75fr);
+  gap: 14px;
+  border-top: 1px solid rgba(203, 219, 246, 0.13);
+  padding-top: 12px;
+}
+
+.progression-leaderboard-detail-summary {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.progression-leaderboard-detail-summary p {
+  margin: 0;
+  color: rgba(210, 221, 238, 0.84);
+  line-height: 1.55;
+}
+
+.progression-leaderboard-profile-link.is-disabled {
+  opacity: 0.56;
+  pointer-events: none;
+}
+
+.progression-leaderboard-detail-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.progression-leaderboard-detail-stat {
+  display: grid;
+  gap: 3px;
+  border: 1px solid rgba(203, 219, 246, 0.12);
+  border-radius: 12px;
+  padding: 9px 10px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.progression-leaderboard-detail-stat dt {
+  color: rgba(190, 204, 224, 0.72);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.progression-leaderboard-detail-stat dd {
+  margin: 0;
+  color: rgba(248, 251, 255, 0.95);
+  font-weight: 850;
+}
+
+.progression-leaderboard-wallet {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  grid-column: 1 / -1;
+  border: 1px solid rgba(203, 219, 246, 0.12);
+  border-radius: 12px;
+  padding: 9px 10px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+@media (max-width: 1100px) {
+  .progression-leaderboard-podium {
+    grid-template-columns: 1fr;
+  }
+
+  .progression-leaderboard-row-main {
+    grid-template-columns: minmax(48px, auto) auto minmax(0, 1fr) minmax(90px, auto);
   }
 
   .progression-leaderboard-xp,
-  .progression-leaderboard-row .dashboard-state-badge {
+  .progression-leaderboard-row .progression-level-chip,
+  .progression-leaderboard-badges,
+  .progression-leaderboard-expand {
+    grid-column: 3 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .progression-leaderboard-controls,
+  .progression-leaderboard-detail {
+    grid-template-columns: 1fr;
+  }
+
+  .progression-leaderboard-future-tabs {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .progression-leaderboard-row-main {
+    grid-template-columns: minmax(44px, auto) minmax(0, 1fr);
+  }
+
+  .progression-leaderboard-avatar.creator-avatar {
+    grid-row: 2;
+  }
+
+  .progression-leaderboard-identity,
+  .progression-leaderboard-xp,
+  .progression-leaderboard-row .progression-level-chip,
+  .progression-leaderboard-badges,
+  .progression-leaderboard-expand {
     grid-column: 2;
+  }
+
+  .progression-leaderboard-detail-stats {
+    grid-template-columns: 1fr;
   }
 }
 
