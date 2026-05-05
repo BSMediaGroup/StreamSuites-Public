@@ -212,8 +212,8 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /details\.open = true/);
   assert.match(app, /GAME & COMPETITION/);
   assert.match(app, /gamecontroller\.svg/);
-  assert.match(app, /XP and rank hydrate from the runtime public progression authority/);
-  assert.match(app, /Economy, inventory, and seasonal standings remain deferred/);
+  assert.match(app, /XP, level, wallet balance, and inventory hydrate from runtime public authority/);
+  assert.match(app, /Seasonal standings remain deferred/);
   assert.doesNotMatch(app, /addRow\("StreamSuites"/);
   assert.doesNotMatch(app, /addRow\("FindMeHere"/);
   assert.match(app, /function buildProfileContextChip\(contextName, key, options = \{\}\)/);

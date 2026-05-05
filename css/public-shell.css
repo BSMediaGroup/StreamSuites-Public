@@ -4403,6 +4403,9 @@ body[data-public-page="public-profile-standalone"] .edit-affordance:focus-visibl
   .profile-hero-role-chip::after,
   .profile-hero-role-chip:hover::after,
   .profile-hero-role-chip:focus-visible::after,
+  .progression-level-chip::before,
+  .progression-level-chip:hover::before,
+  .progression-level-chip:focus-visible::before,
   .progression-rank-chip::before,
   .progression-rank-chip:hover::before,
   .progression-rank-chip:focus-visible::before {
@@ -7441,6 +7444,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .progression-xp-value,
+.progression-level-chip,
 .progression-rank-chip,
 .economy-balance-value {
   display: inline-flex;
@@ -7461,6 +7465,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .progression-xp-value--compact,
+.progression-level-chip--compact,
 .progression-rank-chip--compact,
 .economy-balance-value--compact {
   gap: 6px;
@@ -7468,6 +7473,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .progression-xp-value--prominent,
+.progression-level-chip--prominent,
 .progression-rank-chip--prominent,
 .economy-balance-value--prominent {
   gap: 9px;
@@ -7475,6 +7481,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .progression-xp-icon,
+.progression-level-chip-icon,
 .progression-rank-chip-icon,
 .economy-balance-icon {
   width: 18px;
@@ -7490,6 +7497,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .progression-xp-value--compact .progression-xp-icon,
+.progression-level-chip--compact .progression-level-chip-icon,
 .progression-rank-chip--compact .progression-rank-chip-icon,
 .economy-balance-value--compact .economy-balance-icon {
   width: 16px;
@@ -7498,6 +7506,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .progression-xp-value--prominent .progression-xp-icon,
+.progression-level-chip--prominent .progression-level-chip-icon,
 .progression-rank-chip--prominent .progression-rank-chip-icon,
 .economy-balance-value--prominent .economy-balance-icon {
   width: 30px;
@@ -7505,8 +7514,10 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   flex-basis: 30px;
 }
 
+.progression-level-chip,
 .progression-rank-chip {
   --progression-rank-color: #8F4700;
+  --progression-level-color: var(--progression-rank-color);
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -7526,6 +7537,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
     0 0 14px color-mix(in srgb, var(--progression-rank-color) 28%, transparent);
 }
 
+.progression-level-chip--prominent,
 .progression-rank-chip--prominent {
   min-height: 40px;
   padding: 5px 14px 5px 7px;
@@ -7535,6 +7547,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
     0 0 18px color-mix(in srgb, var(--progression-rank-color) 28%, transparent);
 }
 
+.progression-level-chip::after,
 .progression-rank-chip::after {
   content: "";
   position: absolute;
@@ -7546,6 +7559,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   z-index: -1;
 }
 
+.progression-level-chip::before,
 .progression-rank-chip::before {
   content: "";
   position: absolute;
@@ -7565,12 +7579,15 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   z-index: 0;
 }
 
+.progression-level-chip:hover::before,
+.progression-level-chip:focus-visible::before,
 .progression-rank-chip:hover::before,
 .progression-rank-chip:focus-visible::before {
   opacity: 0.3;
   animation: progression-rank-chip-sheen 3.2s cubic-bezier(0.2, 0.8, 0.3, 1) infinite;
 }
 
+.progression-level-chip > *,
 .progression-rank-chip > * {
   position: relative;
   z-index: 1;

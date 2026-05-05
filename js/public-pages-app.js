@@ -2304,8 +2304,8 @@
             kicker: "Progression surface",
             badge: "Live",
             state: "active",
-            body: "Leaderboards now reads the authoritative public XP/rank API for global progression while legacy /scoreboards remains only as a compatibility alias and wheel list view stays inside each wheel.",
-            meta: ["Legacy /scoreboards alias preserved", "Runtime-owned XP/rank", "Wheel list view stays internal"],
+            body: "Leaderboards now reads the authoritative public XP/level API for global progression while legacy /scoreboards remains only as a compatibility alias and wheel list view stays inside each wheel.",
+            meta: ["Legacy /scoreboards alias preserved", "Runtime-owned XP/level", "Wheel list view stays internal"],
             actions: [{ label: "Open leaderboards", href: "/leaderboards" }]
           }),
           buildDashboardCard({
@@ -2322,8 +2322,8 @@
             kicker: "Account workspace",
             badge: "Live",
             state: "active",
-            body: "The member data workspace now loads signed-in public XP/rank progression and authority request history from the runtime-owned public APIs.",
-            meta: ["XP and rank live", "Request history live", "No data export job exposed yet"],
+            body: "The member data workspace now loads signed-in public XP/level progression and authority request history from the runtime-owned public APIs.",
+            meta: ["XP and level live", "Request history live", "No data export job exposed yet"],
             actions: [{ label: "Open my data", href: "/community/my-data.html" }]
           }),
           buildActionScaffoldCard({
@@ -2509,7 +2509,7 @@
 
   function buildProgressionMeter(summary) {
     const rank = summary?.rank || {};
-    const ratio = Math.max(0, Math.min(1, Number(rank.progress_ratio ?? 0)));
+    const ratio = Math.max(0, Math.min(1, Number(summary?.progress_to_next_level ?? rank.progress_to_next_level ?? rank.progress_ratio ?? 0)));
     const wrap = create("div", "progression-meter");
     const bar = create("span", "progression-meter-fill");
     bar.style.width = `${Math.round(ratio * 100)}%`;
@@ -2529,32 +2529,39 @@
     return /^#[0-9a-f]{6}$/i.test(color) ? color : "#8F4700";
   }
 
-  function progressionRankPresentation(summary = {}) {
+  function progressionLevelPresentation(summary = {}) {
     const rank = summary?.rank && typeof summary.rank === "object" ? summary.rank : {};
+    const nextLevel = summary?.next_level && typeof summary.next_level === "object" ? summary.next_level : {};
     return {
-      rankCode: String(summary.current_rank_code || rank.rank_code || rank.rank_key || "RANK0"),
-      label: String(summary.rank_label || rank.rank_label || rank.label || summary.current_rank_code || rank.rank_code || "Bronze"),
-      color: normalizeProgressionColor(rank.color_hex || summary.color_hex),
-      icon: normalizeProgressionAssetPath(rank.icon_path || summary.icon_path || "assets/games/rank0-bronze.webp")
+      levelCode: String(summary.current_level_code || summary.level_code || rank.level_code || summary.current_rank_code || rank.rank_code || "LEVEL0"),
+      label: String(summary.current_level_label || summary.level_label || rank.level_label || summary.rank_label || rank.rank_label || rank.label || "Stone"),
+      color: normalizeProgressionColor(summary.level_color_hex || rank.level_color_hex || rank.color_hex || summary.color_hex || "#38382E"),
+      icon: normalizeProgressionAssetPath(summary.level_icon_path || rank.level_icon_path || rank.icon_path || summary.icon_path || "assets/games/00-stone.webp"),
+      visibility: String(summary.level_visibility || rank.level_visibility || "public").toLowerCase(),
+      isSecret: Boolean(summary.level_is_secret || rank.level_is_secret),
+      nextLevel,
     };
   }
 
-  function buildProgressionRankChip(summary = {}, options = {}) {
-    const presentation = progressionRankPresentation(summary);
+  function buildProgressionLevelChip(summary = {}, options = {}) {
+    const presentation = progressionLevelPresentation(summary);
     const chip = create(
       "span",
-      `progression-rank-chip${options.compact ? " progression-rank-chip--compact" : ""}${options.prominent ? " progression-rank-chip--prominent" : ""}`
+      `progression-level-chip progression-rank-chip${options.compact ? " progression-level-chip--compact progression-rank-chip--compact" : ""}${options.prominent ? " progression-level-chip--prominent progression-rank-chip--prominent" : ""}${presentation.isSecret ? " is-secret-level" : ""}`
     );
+    chip.style.setProperty("--progression-level-color", presentation.color);
     chip.style.setProperty("--progression-rank-color", presentation.color);
-    chip.title = `${presentation.label} (${presentation.rankCode})`;
-    const icon = create("img", "progression-rank-chip-icon");
+    chip.title = `Level ${presentation.label} (${presentation.levelCode})`;
+    const icon = create("img", "progression-level-chip-icon progression-rank-chip-icon");
     icon.src = presentation.icon;
     icon.alt = "";
     icon.loading = "lazy";
     icon.decoding = "async";
-    chip.append(icon, create("span", "", presentation.label));
+    chip.append(icon, create("span", "", `Level ${presentation.label}`));
     return chip;
   }
+
+  const buildProgressionRankChip = buildProgressionLevelChip;
 
   function buildProgressionXpValue(value, options = {}) {
     const wrap = create(
@@ -2590,7 +2597,7 @@
       [
         String(event?.reason_text || event?.reason || "xp_award").replace(/_/g, " "),
         event?.source_domain ? `via ${String(event.source_domain).replace(/_/g, " ")}` : "",
-        event?.rank_label_after ? `Rank ${event.rank_label_after}` : ""
+        event?.level_label_after ? `Level ${event.level_label_after}` : event?.rank_label_after ? `Level ${event.rank_label_after}` : ""
       ].filter(Boolean).join(" • ")
     );
     row.append(title, meta);
@@ -2662,7 +2669,7 @@
 
   function buildLeaderboardRow(entry) {
     const row = create("div", "progression-leaderboard-row");
-    row.appendChild(create("strong", "progression-rank-position", `#${formatNumber(entry?.position || 0)}`));
+    row.appendChild(create("strong", "progression-rank-position", `#${formatNumber(entry?.placement_rank || entry?.rank || entry?.position || 0)}`));
     const identity = create("div", "progression-leaderboard-identity");
     identity.append(
       create("strong", "", progressionDisplayName(entry?.identity)),
@@ -2672,7 +2679,7 @@
     const xp = create("span", "progression-leaderboard-xp");
     xp.appendChild(buildProgressionXpValue(entry?.xp_total ?? entry?.total_xp ?? 0, { compact: true }));
     row.appendChild(xp);
-    row.appendChild(buildProgressionRankChip(entry, { compact: true }));
+    row.appendChild(buildProgressionLevelChip(entry, { compact: true }));
     return row;
   }
 
@@ -4400,7 +4407,7 @@
       detailStats.hidden = !hasStats;
       if (hasStats) {
         const xp = create("div", "wheel-entry-detail-row");
-        xp.append(create("span", "", "XP / Rank"), create("strong", "", `${stats.xp_label || stats.xp_total || "XP"} · ${stats.rank_label || stats.rank_value || "Rank"}`));
+        xp.append(create("span", "", "XP / Level"), create("strong", "", `${stats.xp_label || stats.xp_total || "XP"} · ${stats.level_label || stats.rank_label || stats.rank_value || "Level"}`));
         detailStats.appendChild(xp);
       }
     }
@@ -5461,8 +5468,8 @@
           kicker: "Account area",
           badge: "Expanded",
           state: "active",
-          body: "The community side includes direct account destinations for My Data and Settings, with My Data now backed by the runtime XP/rank and authority-request APIs.",
-          meta: ["XP/rank live", "Request history live", "Settings kept truthful"],
+          body: "The community side includes direct account destinations for My Data and Settings, with My Data now backed by the runtime XP/level and authority-request APIs.",
+          meta: ["XP/level live", "Request history live", "Settings kept truthful"],
           actions: [{ label: "Open my data", href: "/community/my-data.html" }, { label: "Open settings", href: "/community/settings.html", muted: true }]
         }),
         buildActionScaffoldCard({
@@ -5759,7 +5766,7 @@
         eyebrow: "Account workspace",
         title: "My Data",
         body: authReady
-          ? "Review your authoritative public progression, economy, inventory, and public authority submissions here. XP, rank, balances, items, and request status remain backend-owned."
+          ? "Review your authoritative public progression, economy, inventory, and public authority submissions here. XP, levels, balances, items, and request status remain backend-owned."
           : "Sign in to view your real public progression, economy, inventory, and authority submission history. This page does not fabricate account history for guest sessions.",
         tone: authReady ? "active" : "preview",
         actions: authReady
@@ -5791,7 +5798,7 @@
     }
 
     const progressionSection = buildSection("Public progression").section;
-    const progressionStatus = create("p", "muted progression-status", "Loading your XP and rank...");
+    const progressionStatus = create("p", "muted progression-status", "Loading your XP and level...");
     const progressionGrid = create("div", "dashboard-card-grid dashboard-card-grid--three progression-summary-grid");
     progressionSection.append(progressionStatus, progressionGrid);
     host.appendChild(progressionSection);
@@ -5801,6 +5808,7 @@
         const payload = await fetchMyPublicProgression();
         const summary = payload?.summary || {};
         const rank = summary.rank || {};
+        const nextLevel = summary.next_level || {};
         const identity = payload?.identity || {};
         progressionStatus.textContent = `${progressionDisplayName(identity)} • ${identity.identity_code || "public identity"}`;
         clear(progressionGrid);
@@ -5810,18 +5818,18 @@
           badge: "Live",
           state: "active",
           body: buildProgressionXpValue(summary.xp_total ?? summary.total_xp ?? 0),
-          meta: [`Rank ${summary.rank_label || rank.rank_label || "Bronze"}`, identity.identity_kind === "assigned" ? "Assigned account identity" : "Unassigned public identity"]
+          meta: [`Level ${summary.level_label || summary.current_level_label || rank.level_label || summary.rank_label || "Stone"}`, identity.identity_kind === "assigned" ? "Assigned account identity" : "Unassigned public identity"]
         });
         const progressCard = buildDashboardCard({
-          title: "Rank progress",
-          kicker: rank.next_rank_label ? `Toward ${rank.next_rank_label}` : "Top configured rank",
-          badge: buildProgressionRankChip(summary, { compact: true }),
+          title: "Level progress",
+          kicker: (summary.next_level_label || rank.next_level_label || nextLevel.level_label) ? `Toward ${summary.next_level_label || rank.next_level_label || nextLevel.level_label}` : "Top configured level",
+          badge: buildProgressionLevelChip(summary, { compact: true }),
           state: "preview",
-          body: rank.next_rank_label
-            ? `${formatNumber(rank.xp_to_next || 0)} XP to next rank`
-            : "No higher configured rank is currently available.",
-          meta: rank.next_rank_label
-            ? [`${formatNumber(rank.progress_xp || 0)} / ${formatNumber(rank.progress_needed_xp || 0)} XP in this rank`]
+          body: (summary.next_level_label || rank.next_level_label || nextLevel.level_label)
+            ? `${formatNumber(summary.xp_to_next_level ?? rank.xp_to_next_level ?? rank.xp_to_next ?? 0)} XP to next level`
+            : "No higher configured level is currently available.",
+          meta: (summary.next_level_label || rank.next_level_label || nextLevel.level_label)
+            ? [`${formatNumber(summary.xp_into_current_level ?? rank.xp_into_current_level ?? rank.progress_xp ?? 0)} / ${formatNumber(rank.progress_needed_xp || 0)} XP in this level`]
             : ["Threshold model is runtime-owned"]
         });
         progressCard.appendChild(buildProgressionMeter(summary));
@@ -5838,7 +5846,7 @@
       } catch (error) {
         progressionStatus.textContent = error instanceof Error ? error.message : "Unable to load progression right now.";
         clear(progressionGrid);
-        progressionGrid.appendChild(create("div", "empty-state", "XP and rank data are unavailable right now."));
+        progressionGrid.appendChild(create("div", "empty-state", "XP and level data are unavailable right now."));
       }
     })();
 
@@ -7038,12 +7046,11 @@
     const progression = profile?.progression && typeof profile.progression === "object" ? profile.progression : null;
     const economy = profile?.economy && typeof profile.economy === "object" ? profile.economy : null;
     const inventory = Array.isArray(profile?.inventory) ? profile.inventory : [];
-    const rank = progression?.rank && typeof progression.rank === "object" ? progression.rank : {};
     const overviewXpValue = progression
       ? buildProgressionXpValue(progression.xp_total ?? progression.total_xp ?? 0, { compact: true })
       : "Pending";
-    const overviewRankValue = progression
-      ? buildProgressionRankChip(progression, { compact: true })
+    const overviewLevelValue = progression
+      ? buildProgressionLevelChip(progression, { compact: true })
       : "Pending";
     const section = create("section", "profile-utility-section profile-overview-panel");
     const header = create("div", "profile-inline-header");
@@ -7078,7 +7085,7 @@
     addRow("Joined", formatProfileDate(profile?.joinedAt || profile?.createdAt, helpers) || "Pending public data", !profile?.joinedAt && !profile?.createdAt);
     addRow("Profile type", buildProfileTypeChip(profile));
     addRow("XP", overviewXpValue, !progression);
-    addRow("Rank", overviewRankValue, !progression);
+    addRow("Level", overviewLevelValue, !progression);
     addRow("Balance", economy ? buildEconomyBalanceValue(economy.balance_current || 0, { compact: true }) : "Starting", false);
     addRow("Inventory", inventory.length ? `${formatNumber(inventory.length)} item type${inventory.length === 1 ? "" : "s"}` : "Empty", false);
 
@@ -7228,12 +7235,13 @@
     const inventory = Array.isArray(profile?.inventory) ? profile.inventory : [];
     const rank = progression?.rank && typeof progression.rank === "object" ? progression.rank : {};
     const xpTotal = progression ? progression.xp_total ?? progression.total_xp ?? 0 : 0;
-    const rankLabel = progression ? String(progression.rank_label || rank.rank_label || rank.label || progression.current_rank_code || rank.rank_code || "Rank").trim() : "";
-    const nextRankLabel = progression ? String(rank.next_rank_label || "").trim() : "";
-    const xpToNext = Number(rank.xp_to_next);
-    const progressXp = Number(rank.progress_xp);
+    const levelLabel = progression ? String(progression.current_level_label || progression.level_label || rank.level_label || progression.rank_label || rank.rank_label || rank.label || "Level").trim() : "";
+    const nextLevel = progression?.next_level && typeof progression.next_level === "object" ? progression.next_level : {};
+    const nextLevelLabel = progression ? String(progression.next_level_label || rank.next_level_label || nextLevel.level_label || "").trim() : "";
+    const xpToNext = Number(progression?.xp_to_next_level ?? rank.xp_to_next_level ?? rank.xp_to_next);
+    const progressXp = Number(progression?.xp_into_current_level ?? rank.xp_into_current_level ?? rank.progress_xp);
     const progressNeededXp = Number(rank.progress_needed_xp);
-    const hasProgressMeter = progression && nextRankLabel && Number.isFinite(progressXp) && Number.isFinite(progressNeededXp) && progressNeededXp > 0;
+    const hasProgressMeter = progression && nextLevelLabel && Number.isFinite(progressXp) && Number.isFinite(progressNeededXp) && progressNeededXp > 0;
     const progressPercent = hasProgressMeter ? Math.max(0, Math.min(100, (progressXp / progressNeededXp) * 100)) : 0;
     const details = create("details", "profile-authority-collapsible profile-game-collapsible");
     details.open = true;
@@ -7245,7 +7253,7 @@
     );
     const meta = create("span", "profile-authority-summary-meta");
     [
-      progression ? "XP/rank live" : "XP/rank empty",
+      progression ? "XP/level live" : "XP/level empty",
       economy ? "Economy live" : "Economy starting",
       inventory.length ? "Inventory live" : "Inventory empty"
     ].forEach((entry) => meta.appendChild(create("span", "", entry)));
@@ -7273,13 +7281,13 @@
       },
       {
         className: "profile-game-preview-card--featured",
-        label: "Current rank",
-        value: progression ? buildProgressionRankChip(progression, { prominent: true }) : "No rank yet",
+        label: "Current level",
+        value: progression ? buildProgressionLevelChip(progression, { prominent: true }) : "No level yet",
         note: progression
-          ? nextRankLabel && Number.isFinite(xpToNext)
-            ? `${rankLabel || "Current rank"} - ${formatNumber(xpToNext)} XP to ${nextRankLabel}`
-            : `${rankLabel || "Current rank"} is the current runtime rank.`
-          : "Rank appears after the runtime returns progression data."
+          ? nextLevelLabel && Number.isFinite(xpToNext)
+            ? `${levelLabel || "Current level"} - ${formatNumber(xpToNext)} XP to ${nextLevelLabel}`
+            : `${levelLabel || "Current level"} is the current runtime level.`
+          : "Level appears after the runtime returns progression data."
       },
       {
         className: "profile-game-preview-card--featured",
@@ -7297,12 +7305,12 @@
           : "No authority-owned items have been issued yet."
       },
       {
-        label: "Next rank progress",
+        label: "Next level progress",
         value: hasProgressMeter ? `${formatNumber(progressXp)} / ${formatNumber(progressNeededXp)} XP` : "Not available",
-        note: nextRankLabel
-          ? `Progress toward ${nextRankLabel}`
+        note: nextLevelLabel
+          ? `Progress toward ${nextLevelLabel}`
           : progression
-            ? "No higher configured rank is exposed in this payload."
+            ? "No higher configured level is exposed in this payload."
             : "Progress appears with runtime progression data.",
         extra: hasProgressMeter ? (() => {
           const meter = create("span", "profile-game-progress-meter");
@@ -7330,7 +7338,7 @@
     panel.append(
       grid,
       create("p", "profile-game-disclaimer", progression
-        ? "XP, rank, wallet balance, and inventory hydrate from runtime public authority. Seasonal standings remain deferred."
+        ? "XP, level, wallet balance, and inventory hydrate from runtime public authority. Leaderboard rank means placement only. Seasonal standings remain deferred."
         : "No authoritative XP events have been recorded for this public identity yet. Wallet and inventory can still show real starting state when returned by runtime authority.")
     );
     details.append(summary, panel);

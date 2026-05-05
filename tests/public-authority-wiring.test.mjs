@@ -31,7 +31,7 @@ test("public app wires authority request submission and my-data history to the r
   assert.match(source, /fetchMyPublicEconomy/);
   assert.match(source, /summary\.xp_total \?\? summary\.total_xp/);
   assert.match(source, /PUBLIC_XP_ICON_PATH = "\/assets\/games\/xpstar\.webp"/);
-  assert.match(source, /function buildProgressionRankChip/);
+  assert.match(source, /function buildProgressionLevelChip/);
   assert.match(source, /event\?\.source_domain/);
   assert.match(source, /buildAuthorityRequestPanel/);
   assert.match(source, /resolveProfileAuthorityContext/);
@@ -54,11 +54,12 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   assert.match(app, /Global public progression ranked from authoritative XP totals/);
   assert.match(app, /entry\?\.xp_total \?\? entry\?\.total_xp/);
   assert.match(app, /buildProgressionXpValue\(entry\?\.xp_total \?\? entry\?\.total_xp \?\? 0/);
-  assert.match(app, /buildProgressionRankChip\(entry, \{ compact: true \}\)/);
+  assert.match(app, /placement_rank \|\| entry\?\.rank \|\| entry\?\.position/);
+  assert.match(app, /buildProgressionLevelChip\(entry, \{ compact: true \}\)/);
   assert.match(app, /payload\?\.canonical_user_code/);
   assert.match(app, /authorityIdentity\?\.account_user_code/);
   assert.match(css, /\.progression-leaderboard-row/);
-  assert.match(css, /\.progression-rank-chip/);
+  assert.match(css, /\.progression-level-chip/);
   assert.match(css, /\.progression-xp-icon/);
 });
 
@@ -75,15 +76,15 @@ test("public profile game section renders runtime progression and economy author
   assert.match(profileSection, /progression\.xp_total \?\? progression\.total_xp/);
   assert.match(profileSection, /buildEconomyBalanceValue\(economy\?\.balance_current \|\| 0, \{ prominent: true \}\)/);
   assert.match(profileSection, /buildProgressionXpValue\(xpTotal, \{ prominent: true \}\)/);
-  assert.match(profileSection, /buildProgressionRankChip\(progression, \{ prominent: true \}\)/);
+  assert.match(profileSection, /buildProgressionLevelChip\(progression, \{ prominent: true \}\)/);
   assert.match(profileSection, /profile-game-preview-card--featured/);
   assert.match(profileSection, /profile-game-progress-meter/);
-  assert.match(profileSection, /No rank yet/);
+  assert.match(profileSection, /No level yet/);
   assert.doesNotMatch(profileSection, /value: progression \? buildProgressionRankChip\(progression, \{ compact: true \}\) : "Bronze"/);
-  assert.match(profileSection, /XP, rank, wallet balance, and inventory hydrate from runtime public authority/);
+  assert.match(profileSection, /XP, level, wallet balance, and inventory hydrate from runtime public authority/);
   assert.match(css, /\.progression-xp-value--prominent/);
   assert.match(css, /\.economy-balance-value--prominent/);
-  assert.match(css, /\.progression-rank-chip--prominent/);
+  assert.match(css, /\.progression-level-chip--prominent/);
   assert.match(css, /\.profile-game-preview-card--featured/);
   assert.match(app, /buildProfileGameCompetitionSection\(profile\)/);
 });
@@ -96,23 +97,23 @@ test("public profile overview table uses the same runtime progression summary as
   assert.match(overviewSection, /const economy = profile\?\.economy && typeof profile\.economy === "object" \? profile\.economy : null/);
   assert.match(overviewSection, /progression\.xp_total \?\? progression\.total_xp \?\? 0/);
   assert.match(overviewSection, /buildProgressionXpValue\(progression\.xp_total \?\? progression\.total_xp \?\? 0, \{ compact: true \}\)/);
-  assert.match(overviewSection, /buildProgressionRankChip\(progression, \{ compact: true \}\)/);
+  assert.match(overviewSection, /buildProgressionLevelChip\(progression, \{ compact: true \}\)/);
   assert.match(overviewSection, /addRow\("XP", overviewXpValue, !progression\)/);
-  assert.match(overviewSection, /addRow\("Rank", overviewRankValue, !progression\)/);
+  assert.match(overviewSection, /addRow\("Level", overviewLevelValue, !progression\)/);
   assert.match(overviewSection, /addRow\("Balance", economy \? buildEconomyBalanceValue\(economy\.balance_current \|\| 0, \{ compact: true \}\) : "Starting", false\)/);
   assert.match(overviewSection, /addRow\("Inventory", inventory\.length \? `\$\{formatNumber\(inventory\.length\)\} item type/);
   assert.doesNotMatch(overviewSection, /addRow\("XP", "Pending", true\)/);
   assert.doesNotMatch(overviewSection, /addRow\("Rank", "Pending", true\)/);
 });
 
-test("public rank chips include restrained hover sheen without changing compact consumers", () => {
+test("public level chips include restrained hover sheen without changing compact consumers", () => {
   const css = read("css/public-shell.css");
 
-  assert.match(css, /\.progression-rank-chip::before\s*\{/);
-  assert.match(css, /\.progression-rank-chip:hover::before,[\s\S]*\.progression-rank-chip:focus-visible::before\s*\{[\s\S]*animation:\s*progression-rank-chip-sheen 3\.2s/);
+  assert.match(css, /\.progression-level-chip::before,[\s\S]*\.progression-rank-chip::before\s*\{/);
+  assert.match(css, /\.progression-level-chip:hover::before,[\s\S]*\.progression-rank-chip:focus-visible::before\s*\{[\s\S]*animation:\s*progression-rank-chip-sheen 3\.2s/);
   assert.match(css, /@keyframes progression-rank-chip-sheen/);
   assert.match(css, /prefers-reduced-motion:\s*reduce[\s\S]*\.progression-rank-chip::before/);
-  assert.match(css, /\.progression-rank-chip--compact,[\s\S]*\.economy-balance-value--compact\s*\{[\s\S]*font-size:\s*12px/);
-  assert.match(css, /\.progression-rank-chip--compact \.progression-rank-chip-icon,[\s\S]*\.economy-balance-value--compact \.economy-balance-icon\s*\{[\s\S]*width:\s*16px/);
+  assert.match(css, /\.progression-level-chip--compact,[\s\S]*\.economy-balance-value--compact\s*\{[\s\S]*font-size:\s*12px/);
+  assert.match(css, /\.progression-level-chip--compact \.progression-level-chip-icon,[\s\S]*\.economy-balance-value--compact \.economy-balance-icon\s*\{[\s\S]*width:\s*16px/);
   assert.match(css, /\.economy-balance-icon\s*\{[\s\S]*object-fit:\s*contain/);
 });
