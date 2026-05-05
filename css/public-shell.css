@@ -7444,6 +7444,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .progression-xp-value,
+.progression-global-rank-value,
 .progression-level-chip,
 .progression-rank-chip,
 .economy-balance-value {
@@ -7459,12 +7460,24 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   font-weight: 800;
 }
 
+.progression-global-rank-value {
+  color: rgba(245, 248, 255, 0.94);
+  font-weight: 850;
+}
+
+.progression-global-rank-context {
+  color: rgba(197, 207, 224, 0.76);
+  font-size: 0.86em;
+  font-weight: 750;
+}
+
 .economy-balance-value {
   color: rgba(245, 248, 255, 0.94);
   font-weight: 850;
 }
 
 .progression-xp-value--compact,
+.progression-global-rank-value--compact,
 .progression-level-chip--compact,
 .progression-rank-chip--compact,
 .economy-balance-value--compact {
@@ -7473,6 +7486,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .progression-xp-value--prominent,
+.progression-global-rank-value--prominent,
 .progression-level-chip--prominent,
 .progression-rank-chip--prominent,
 .economy-balance-value--prominent {

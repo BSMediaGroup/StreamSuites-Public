@@ -647,6 +647,31 @@
     return parsed.toLocaleString();
   }
 
+  function formatOrdinal(value) {
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed <= 0) return "";
+    const mod100 = parsed % 100;
+    const suffix = mod100 >= 11 && mod100 <= 13
+      ? "th"
+      : ({ 1: "st", 2: "nd", 3: "rd" }[parsed % 10] || "th");
+    return `${formatNumber(parsed)}${suffix}`;
+  }
+
+  function progressionGlobalPlacementRank(summary = {}) {
+    const raw = summary?.global_placement_rank ?? summary?.global_rank ?? summary?.placement_rank;
+    const parsed = Number(raw);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  }
+
+  function buildProgressionGlobalRankValue(summary = {}, options = {}) {
+    const placementRank = progressionGlobalPlacementRank(summary);
+    const label = placementRank ? formatOrdinal(placementRank) : "";
+    if (!label) return options.emptyLabel || "Unranked";
+    const wrap = create("span", `progression-global-rank-value${options.compact ? " progression-global-rank-value--compact" : ""}${options.prominent ? " progression-global-rank-value--prominent" : ""}`);
+    wrap.append(create("span", "", label), create("span", "progression-global-rank-context", " globally"));
+    return wrap;
+  }
+
   function getLiveStatus(profile) {
     return profile?.liveStatus && profile.liveStatus.isLive ? profile.liveStatus : null;
   }
@@ -7106,6 +7131,9 @@
     const overviewLevelValue = progression
       ? buildProgressionLevelChip(progression, { compact: true })
       : "Pending";
+    const overviewGlobalRankValue = progression
+      ? buildProgressionGlobalRankValue(progression, { compact: true, emptyLabel: "Unranked" })
+      : "Pending";
     const section = create("section", "profile-utility-section profile-overview-panel");
     const header = create("div", "profile-inline-header");
     header.appendChild(create("h3", "", "Public overview"));
@@ -7140,6 +7168,7 @@
     addRow("Profile type", buildProfileTypeChip(profile));
     addRow("XP", overviewXpValue, !progression);
     addRow("Level", overviewLevelValue, !progression);
+    addRow("Global Rank", overviewGlobalRankValue, !progression);
     addRow("Balance", economy ? buildEconomyBalanceValue(economy, { compact: true }) : "Starting", false);
     addRow("Inventory", displayInventory.length ? `${formatNumber(displayInventory.length)} item type${displayInventory.length === 1 ? "" : "s"}` : "Empty", false);
 
@@ -7298,6 +7327,7 @@
     const progressNeededXp = Number(rank.progress_needed_xp);
     const hasProgressMeter = progression && nextLevelLabel && Number.isFinite(progressXp) && Number.isFinite(progressNeededXp) && progressNeededXp > 0;
     const progressPercent = hasProgressMeter ? Math.max(0, Math.min(100, (progressXp / progressNeededXp) * 100)) : 0;
+    const placementRank = progression ? progressionGlobalPlacementRank(progression) : null;
     const details = create("details", "profile-authority-collapsible profile-game-collapsible");
     details.open = true;
     const summary = create("summary", "profile-authority-summary profile-game-summary");
@@ -7343,6 +7373,14 @@
             ? `${levelLabel || "Current level"} - ${formatNumber(xpToNext)} XP to ${nextLevelLabel}`
             : `${levelLabel || "Current level"} is the current runtime level.`
           : "Level appears after the runtime returns progression data."
+      },
+      {
+        className: "profile-game-preview-card--featured",
+        label: "Global rank",
+        value: progression ? buildProgressionGlobalRankValue(progression, { prominent: true, emptyLabel: "Unranked" }) : "Unranked",
+        note: placementRank
+          ? `Global XP leaderboard placement, separate from ${levelLabel || "current level"}.`
+          : "No global leaderboard placement has been returned for this identity yet."
       },
       {
         className: "profile-game-preview-card--featured",

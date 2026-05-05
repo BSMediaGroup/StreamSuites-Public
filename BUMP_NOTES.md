@@ -2,6 +2,8 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+- Added global XP leaderboard placement display to individual `/u/*` public profiles without changing the Leaderboards page presentation. `js/public-pages-app.js` now reads runtime `global_placement_rank`/`global_rank` from the existing profile progression payload, formats positive placements as ordinals such as `1st globally`, keeps missing placements as `Unranked`, and renders Global Rank separately from Level in the Public Overview and Game & Competition sections. `css/public-shell.css` adds compact/prominent text styling for the new value, and source tests pin ordinal logic, level-vs-rank separation, and null-rank empty state. No files were created, removed, or renamed.
+
 - Upgraded Public economy rendering to consume the runtime wallet as `balance_total_credits` plus configurable `currency_unit_label`, `currency_unit_plural_label`, `currency_symbol_path`, and derived `denomination_breakdown`. Public profile and My Data balance displays now render the `currencyunit.svg` symbol as a current-color mask, show coin/banknote denomination chips by default, show gem/diamond chips only when returned with nonzero derived counts, and keep wallet denominations distinct from inventory rows so normal coin/banknote balances are not double-counted as collectibles. No files were created, removed, or renamed.
 
 - Removed the redundant visible `Level` text prefix from Public XP level chips in `js/public-pages-app.js`; chips now render the actual level material label only, such as `Emerald`, while surrounding rows/sections still provide the level context. Source tests now pin that the chip builder does not reintroduce the prefix. No files were created or removed.
