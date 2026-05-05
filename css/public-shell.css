@@ -7492,8 +7492,9 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .economy-balance-icon {
   display: block;
-  object-fit: contain;
-  filter: drop-shadow(0 2px 7px rgba(226, 198, 109, 0.28));
+  background: currentColor;
+  -webkit-mask: var(--economy-currency-symbol) center / contain no-repeat;
+  mask: var(--economy-currency-symbol) center / contain no-repeat;
 }
 
 .progression-xp-value--compact .progression-xp-icon,
@@ -7621,6 +7622,33 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   display: grid;
   gap: 8px;
   margin-top: 10px;
+}
+
+.economy-denomination-breakdown {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.economy-denomination-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 4px 9px;
+  border: 1px solid rgba(188, 207, 237, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(245, 248, 255, 0.94);
+  font-size: 12px;
+}
+
+.economy-denomination-chip img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
 }
 
 .inventory-summary-row {

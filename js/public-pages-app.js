@@ -41,7 +41,7 @@
   const AUTH_PUBLIC_PROGRESSION_ME_URL = `${AUTH_API_BASE}/api/public/progression/me`;
   const AUTH_PUBLIC_PROGRESSION_LEADERBOARD_URL = `${AUTH_API_BASE}/api/public/progression/leaderboard`;
   const AUTH_PUBLIC_ECONOMY_ME_URL = `${AUTH_API_BASE}/api/public/economy/me`;
-  const ECONOMY_COIN_ICON_PATH = "/assets/games/sscoin.webp";
+  const ECONOMY_CURRENCY_SYMBOL_PATH = "/assets/games/currencyunit.svg";
   const AUTH_PUBLIC_ARTIFACTS_URL = `${AUTH_API_BASE}/api/public/artifacts`;
   const PUBLIC_WHEEL_EVENTS_URL = `${AUTH_API_BASE}/api/public/wheels/events`;
   const PUBLIC_XP_ICON_PATH = "/assets/games/xpstar.webp";
@@ -2604,25 +2604,72 @@
     return row;
   }
 
-  function buildEconomyBalanceValue(value, options = {}) {
+  function economyAssetPath(path) {
+    const value = String(path || "").trim();
+    if (!value) return "";
+    return value.startsWith("/") || /^https?:\/\//i.test(value) ? value : `/${value.replace(/^\/+/, "")}`;
+  }
+
+  function economyCurrencyLabel(wallet = {}, value = 0) {
+    const singular = String(wallet?.currency_unit_label || "Credit").trim() || "Credit";
+    const plural = String(wallet?.currency_unit_plural_label || `${singular}s`).trim() || `${singular}s`;
+    return Math.abs(Number(value || 0)) === 1 ? singular : plural;
+  }
+
+  function buildEconomyBalanceValue(walletOrValue, options = {}) {
+    const wallet = walletOrValue && typeof walletOrValue === "object" ? walletOrValue : {};
+    const value = walletOrValue && typeof walletOrValue === "object"
+      ? Number(walletOrValue.balance_total_credits ?? walletOrValue.balance_current ?? 0)
+      : Number(walletOrValue || 0);
     const wrap = create(
       "span",
       `economy-balance-value${options.compact ? " economy-balance-value--compact" : ""}${options.prominent ? " economy-balance-value--prominent" : ""}`
     );
-    const icon = create("img", "economy-balance-icon");
-    icon.src = ECONOMY_COIN_ICON_PATH;
-    icon.alt = "";
-    icon.loading = "lazy";
-    icon.decoding = "async";
-    wrap.append(icon, create("span", "", `${formatNumber(value)} coins`));
+    const icon = create("span", "economy-balance-icon");
+    icon.style.setProperty("--economy-currency-symbol", `url("${economyAssetPath(wallet.currency_symbol_path || ECONOMY_CURRENCY_SYMBOL_PATH)}")`);
+    icon.setAttribute("aria-hidden", "true");
+    wrap.append(icon, create("span", "", `${formatNumber(value)} ${economyCurrencyLabel(wallet, value)}`));
     return wrap;
+  }
+
+  function buildEconomyDenominationBreakdown(wallet = {}) {
+    const wrap = create("div", "economy-denomination-breakdown");
+    const rows = Array.isArray(wallet?.denomination_breakdown)
+      ? wallet.denomination_breakdown.filter((item) => item?.should_display || item?.always_show_in_balance || Number(item?.count || 0) > 0)
+      : [];
+    if (!rows.length) {
+      wrap.appendChild(create("div", "empty-state", "No denomination breakdown is available yet."));
+      return wrap;
+    }
+    rows.forEach((item) => {
+      const chip = create("span", "economy-denomination-chip");
+      const icon = create("img", "");
+      icon.src = economyAssetPath(item.icon_path);
+      icon.alt = "";
+      icon.loading = "lazy";
+      icon.decoding = "async";
+      chip.append(
+        icon,
+        create("strong", "", formatNumber(item.count || 0)),
+        create("span", "", Number(item.count || 0) === 1 ? item.label || "unit" : item.plural_label || item.label || "units")
+      );
+      wrap.appendChild(chip);
+    });
+    return wrap;
+  }
+
+  function isWalletDenominationInventoryItem(item = {}) {
+    const definition = item?.definition || {};
+    const metadata = definition.metadata || item?.metadata || {};
+    const itemCode = String(item?.item_code || "").trim();
+    return Boolean(metadata.wallet_balance_unit || metadata.system_asset_type === "economy_denomination" || ["currency.coin", "currency.bank_token"].includes(itemCode));
   }
 
   function buildEconomyEventRow(event) {
     const row = create("div", "economy-event-row");
     const delta = Number(event?.amount_delta || 0);
     row.append(
-      create("strong", "", `${delta >= 0 ? "+" : ""}${formatNumber(delta)} coins`),
+      create("strong", "", `${delta >= 0 ? "+" : ""}${formatNumber(delta)} credits`),
       create("span", "", [
         String(event?.reason_text || "economy event").replace(/_/g, " "),
         event?.source_domain ? `via ${String(event.source_domain).replace(/_/g, " ")}` : "",
@@ -2648,7 +2695,11 @@
 
   function buildInventorySummaryList(items) {
     const list = create("div", "inventory-summary-list");
-    const rows = Array.isArray(items) ? items.filter((item) => Number(item?.quantity || 0) > 0) : [];
+    const rows = Array.isArray(items)
+      ? items.filter((item) => {
+          return Number(item?.quantity || 0) > 0 && !isWalletDenominationInventoryItem(item);
+        })
+      : [];
     if (!rows.length) {
       list.appendChild(create("div", "empty-state", "No inventory items have been recorded yet."));
       return list;
@@ -5861,6 +5912,7 @@
         const payload = await fetchMyPublicEconomy();
         const wallet = payload?.wallet || {};
         const inventory = Array.isArray(payload?.inventory) ? payload.inventory : [];
+        const displayInventory = inventory.filter((item) => !isWalletDenominationInventoryItem(item));
         const economyEvents = Array.isArray(payload?.economy_events) ? payload.economy_events : [];
         const inventoryEvents = Array.isArray(payload?.inventory_events) ? payload.inventory_events : [];
         economyStatus.textContent = `${progressionDisplayName(payload?.identity)} • ${payload?.identity?.identity_code || "public identity"}`;
@@ -5870,22 +5922,23 @@
           kicker: "Authoritative wallet",
           badge: "Live",
           state: "active",
-          body: buildEconomyBalanceValue(wallet.balance_current || 0, { prominent: true }),
+          body: buildEconomyBalanceValue(wallet, { prominent: true }),
           meta: [
             `${formatNumber(wallet.earned_lifetime || 0)} earned lifetime`,
             `${formatNumber(wallet.spent_lifetime || 0)} spent lifetime`,
             `${formatNumber(wallet.adjusted_total || 0)} adjusted total`
           ]
         });
+        walletCard.appendChild(buildEconomyDenominationBreakdown(wallet));
         const inventoryCard = buildDashboardCard({
           title: "Inventory",
           kicker: "Current item state",
-          badge: inventory.length ? `${formatNumber(inventory.length)} item types` : "Empty",
-          state: inventory.length ? "active" : "preview",
-          body: inventory.length ? "Current quantities are listed below." : "No inventory items have been recorded yet.",
+          badge: displayInventory.length ? `${formatNumber(displayInventory.length)} item types` : "Empty",
+          state: displayInventory.length ? "active" : "preview",
+          body: displayInventory.length ? "Current quantities are listed below." : "No inventory items have been recorded yet.",
           meta: ["Inventory state is runtime-owned"]
         });
-        inventoryCard.appendChild(buildInventorySummaryList(inventory));
+        inventoryCard.appendChild(buildInventorySummaryList(displayInventory));
         const historyCard = buildDashboardCard({
           title: "Recent economy history",
           kicker: "Append-only ledger",
@@ -7046,6 +7099,7 @@
     const progression = profile?.progression && typeof profile.progression === "object" ? profile.progression : null;
     const economy = profile?.economy && typeof profile.economy === "object" ? profile.economy : null;
     const inventory = Array.isArray(profile?.inventory) ? profile.inventory : [];
+    const displayInventory = inventory.filter((item) => !isWalletDenominationInventoryItem(item));
     const overviewXpValue = progression
       ? buildProgressionXpValue(progression.xp_total ?? progression.total_xp ?? 0, { compact: true })
       : "Pending";
@@ -7086,8 +7140,8 @@
     addRow("Profile type", buildProfileTypeChip(profile));
     addRow("XP", overviewXpValue, !progression);
     addRow("Level", overviewLevelValue, !progression);
-    addRow("Balance", economy ? buildEconomyBalanceValue(economy.balance_current || 0, { compact: true }) : "Starting", false);
-    addRow("Inventory", inventory.length ? `${formatNumber(inventory.length)} item type${inventory.length === 1 ? "" : "s"}` : "Empty", false);
+    addRow("Balance", economy ? buildEconomyBalanceValue(economy, { compact: true }) : "Starting", false);
+    addRow("Inventory", displayInventory.length ? `${formatNumber(displayInventory.length)} item type${displayInventory.length === 1 ? "" : "s"}` : "Empty", false);
 
     section.append(header, statGrid, details);
     return section;
@@ -7233,6 +7287,7 @@
     const progression = profile?.progression && typeof profile.progression === "object" ? profile.progression : null;
     const economy = profile?.economy && typeof profile.economy === "object" ? profile.economy : null;
     const inventory = Array.isArray(profile?.inventory) ? profile.inventory : [];
+    const displayInventory = inventory.filter((item) => !isWalletDenominationInventoryItem(item));
     const rank = progression?.rank && typeof progression.rank === "object" ? progression.rank : {};
     const xpTotal = progression ? progression.xp_total ?? progression.total_xp ?? 0 : 0;
     const levelLabel = progression ? String(progression.current_level_label || progression.level_label || rank.level_label || progression.rank_label || rank.rank_label || rank.label || "Level").trim() : "";
@@ -7255,7 +7310,7 @@
     [
       progression ? "XP/level live" : "XP/level empty",
       economy ? "Economy live" : "Economy starting",
-      inventory.length ? "Inventory live" : "Inventory empty"
+      displayInventory.length ? "Inventory live" : "Inventory empty"
     ].forEach((entry) => meta.appendChild(create("span", "", entry)));
     const stateIcon = createIcon("/assets/icons/ui/visible.svg", "profile-authority-summary-icon");
     const syncStateIcon = () => {
@@ -7292,15 +7347,16 @@
       {
         className: "profile-game-preview-card--featured",
         label: "Current balance",
-        value: buildEconomyBalanceValue(economy?.balance_current || 0, { prominent: true }),
+        value: buildEconomyBalanceValue(economy || {}, { prominent: true }),
         note: economy
           ? `${formatNumber(economy.earned_lifetime || 0)} earned lifetime from the runtime economy wallet`
-          : "No economy events have been recorded yet."
+          : "No economy events have been recorded yet.",
+        extra: buildEconomyDenominationBreakdown(economy || {})
       },
       {
         label: "Inventory",
-        value: inventory.length ? `${formatNumber(inventory.length)} item type${inventory.length === 1 ? "" : "s"}` : "Empty",
-        note: inventory.length
+        value: displayInventory.length ? `${formatNumber(displayInventory.length)} item type${displayInventory.length === 1 ? "" : "s"}` : "Empty",
+        note: displayInventory.length
           ? "Current quantities hydrate from runtime inventory state."
           : "No authority-owned items have been issued yet."
       },

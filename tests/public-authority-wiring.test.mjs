@@ -73,10 +73,14 @@ test("public profile game section renders runtime progression and economy author
   assert.match(app, /payload\?\.progression && typeof payload\.progression === "object"/);
   assert.match(app, /payload\?\.economy && typeof payload\.economy === "object"/);
   assert.match(app, /Array\.isArray\(payload\?\.inventory\)/);
-  assert.match(app, /ECONOMY_COIN_ICON_PATH = "\/assets\/games\/sscoin\.webp"/);
-  assert.match(app, /icon\.src = ECONOMY_COIN_ICON_PATH/);
+  assert.match(app, /ECONOMY_CURRENCY_SYMBOL_PATH = "\/assets\/games\/currencyunit\.svg"/);
+  assert.match(app, /function buildEconomyDenominationBreakdown\(wallet = \{\}\)/);
+  assert.match(app, /wallet\.denomination_breakdown\.filter/);
+  assert.match(app, /item\?\.should_display \|\| item\?\.always_show_in_balance \|\| Number\(item\?\.count \|\| 0\) > 0/);
+  assert.match(app, /icon\.style\.setProperty\("--economy-currency-symbol"/);
   assert.match(profileSection, /progression\.xp_total \?\? progression\.total_xp/);
-  assert.match(profileSection, /buildEconomyBalanceValue\(economy\?\.balance_current \|\| 0, \{ prominent: true \}\)/);
+  assert.match(profileSection, /buildEconomyBalanceValue\(economy \|\| \{\}, \{ prominent: true \}\)/);
+  assert.match(profileSection, /buildEconomyDenominationBreakdown\(economy \|\| \{\}\)/);
   assert.match(profileSection, /buildProgressionXpValue\(xpTotal, \{ prominent: true \}\)/);
   assert.match(profileSection, /buildProgressionLevelChip\(progression, \{ prominent: true \}\)/);
   assert.match(profileSection, /profile-game-preview-card--featured/);
@@ -102,8 +106,8 @@ test("public profile overview table uses the same runtime progression summary as
   assert.match(overviewSection, /buildProgressionLevelChip\(progression, \{ compact: true \}\)/);
   assert.match(overviewSection, /addRow\("XP", overviewXpValue, !progression\)/);
   assert.match(overviewSection, /addRow\("Level", overviewLevelValue, !progression\)/);
-  assert.match(overviewSection, /addRow\("Balance", economy \? buildEconomyBalanceValue\(economy\.balance_current \|\| 0, \{ compact: true \}\) : "Starting", false\)/);
-  assert.match(overviewSection, /addRow\("Inventory", inventory\.length \? `\$\{formatNumber\(inventory\.length\)\} item type/);
+  assert.match(overviewSection, /addRow\("Balance", economy \? buildEconomyBalanceValue\(economy, \{ compact: true \}\) : "Starting", false\)/);
+  assert.match(overviewSection, /addRow\("Inventory", displayInventory\.length \? `\$\{formatNumber\(displayInventory\.length\)\} item type/);
   assert.doesNotMatch(overviewSection, /addRow\("XP", "Pending", true\)/);
   assert.doesNotMatch(overviewSection, /addRow\("Rank", "Pending", true\)/);
 });
@@ -117,5 +121,20 @@ test("public level chips include restrained hover sheen without changing compact
   assert.match(css, /prefers-reduced-motion:\s*reduce[\s\S]*\.progression-rank-chip::before/);
   assert.match(css, /\.progression-level-chip--compact,[\s\S]*\.economy-balance-value--compact\s*\{[\s\S]*font-size:\s*12px/);
   assert.match(css, /\.progression-level-chip--compact \.progression-level-chip-icon,[\s\S]*\.economy-balance-value--compact \.economy-balance-icon\s*\{[\s\S]*width:\s*16px/);
-  assert.match(css, /\.economy-balance-icon\s*\{[\s\S]*object-fit:\s*contain/);
+  assert.match(css, /\.economy-balance-icon\s*\{[\s\S]*mask:\s*var\(--economy-currency-symbol\) center \/ contain no-repeat/);
+  assert.match(css, /\.economy-denomination-breakdown\s*\{/);
+  assert.match(css, /\.economy-denomination-chip img\s*\{[\s\S]*object-fit:\s*contain/);
+});
+
+test("public economy rendering keeps denominations separate from inventory rows", () => {
+  const app = read("js/public-pages-app.js");
+
+  assert.match(app, /currency_unit_label \|\| "Credit"/);
+  assert.match(app, /currency_unit_plural_label \|\| `\$\{singular\}s`/);
+  assert.match(app, /walletOrValue\.balance_total_credits \?\? walletOrValue\.balance_current/);
+  assert.match(app, /walletCard\.appendChild\(buildEconomyDenominationBreakdown\(wallet\)\)/);
+  assert.match(app, /function isWalletDenominationInventoryItem\(item = \{\}\)/);
+  assert.match(app, /\["currency\.coin", "currency\.bank_token"\]\.includes\(itemCode\)/);
+  assert.match(app, /return Number\(item\?\.quantity \|\| 0\) > 0 && !isWalletDenominationInventoryItem\(item\)/);
+  assert.match(app, /const displayInventory = inventory\.filter\(\(item\) => !isWalletDenominationInventoryItem\(item\)\)/);
 });
