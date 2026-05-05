@@ -70,6 +70,8 @@ test("public profile game section renders runtime progression and economy author
   assert.match(app, /payload\?\.progression && typeof payload\.progression === "object"/);
   assert.match(app, /payload\?\.economy && typeof payload\.economy === "object"/);
   assert.match(app, /Array\.isArray\(payload\?\.inventory\)/);
+  assert.match(app, /ECONOMY_COIN_ICON_PATH = "\/assets\/games\/sscoin\.webp"/);
+  assert.match(app, /icon\.src = ECONOMY_COIN_ICON_PATH/);
   assert.match(profileSection, /progression\.xp_total \?\? progression\.total_xp/);
   assert.match(profileSection, /buildEconomyBalanceValue\(economy\?\.balance_current \|\| 0, \{ prominent: true \}\)/);
   assert.match(profileSection, /buildProgressionXpValue\(xpTotal, \{ prominent: true \}\)/);
@@ -112,4 +114,5 @@ test("public rank chips include restrained hover sheen without changing compact 
   assert.match(css, /prefers-reduced-motion:\s*reduce[\s\S]*\.progression-rank-chip::before/);
   assert.match(css, /\.progression-rank-chip--compact,[\s\S]*\.economy-balance-value--compact\s*\{[\s\S]*font-size:\s*12px/);
   assert.match(css, /\.progression-rank-chip--compact \.progression-rank-chip-icon,[\s\S]*\.economy-balance-value--compact \.economy-balance-icon\s*\{[\s\S]*width:\s*16px/);
+  assert.match(css, /\.economy-balance-icon\s*\{[\s\S]*object-fit:\s*contain/);
 });

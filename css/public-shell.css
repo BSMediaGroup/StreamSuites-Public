@@ -7484,15 +7484,9 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .economy-balance-icon {
-  display: inline-grid;
-  place-items: center;
-  border: 1px solid rgba(226, 198, 109, 0.48);
-  border-radius: 999px;
-  background: linear-gradient(135deg, rgba(226, 198, 109, 0.32), rgba(92, 176, 188, 0.18));
-  color: rgba(255, 246, 208, 0.96);
-  font-size: 9px;
-  font-weight: 900;
-  line-height: 1;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 7px rgba(226, 198, 109, 0.28));
 }
 
 .progression-xp-value--compact .progression-xp-icon,

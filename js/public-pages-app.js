@@ -41,6 +41,7 @@
   const AUTH_PUBLIC_PROGRESSION_ME_URL = `${AUTH_API_BASE}/api/public/progression/me`;
   const AUTH_PUBLIC_PROGRESSION_LEADERBOARD_URL = `${AUTH_API_BASE}/api/public/progression/leaderboard`;
   const AUTH_PUBLIC_ECONOMY_ME_URL = `${AUTH_API_BASE}/api/public/economy/me`;
+  const ECONOMY_COIN_ICON_PATH = "/assets/games/sscoin.webp";
   const AUTH_PUBLIC_ARTIFACTS_URL = `${AUTH_API_BASE}/api/public/artifacts`;
   const PUBLIC_WHEEL_EVENTS_URL = `${AUTH_API_BASE}/api/public/wheels/events`;
   const PUBLIC_XP_ICON_PATH = "/assets/games/xpstar.webp";
@@ -2601,7 +2602,12 @@
       "span",
       `economy-balance-value${options.compact ? " economy-balance-value--compact" : ""}${options.prominent ? " economy-balance-value--prominent" : ""}`
     );
-    wrap.append(create("span", "economy-balance-icon", "SS"), create("span", "", `${formatNumber(value)} coins`));
+    const icon = create("img", "economy-balance-icon");
+    icon.src = ECONOMY_COIN_ICON_PATH;
+    icon.alt = "";
+    icon.loading = "lazy";
+    icon.decoding = "async";
+    wrap.append(icon, create("span", "", `${formatNumber(value)} coins`));
     return wrap;
   }
 
