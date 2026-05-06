@@ -120,7 +120,8 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   assert.match(app, /candidate\.held_value_credits/);
   assert.match(app, /candidate\.currency_unit_plural_label/);
   assert.match(app, /value:\s*`\$\{formatCompactNumber\(stats\.lifetimeXp\)\} XP`/);
-  assert.match(app, /buildEconomyBalanceValue\(\{ balance_total_credits: stats\.walletTotal \}, \{ compact: true, compactNumber: true \}\)/);
+  assert.match(app, /const walletCurrency = wallets\[0\] \|\| \{\}/);
+  assert.match(app, /buildEconomyBalanceValue\(\{ \.\.\.stats\.walletCurrency, balance_total_credits: stats\.walletTotal \}, \{ compact: true, compactNumber: true \}\)/);
   assert.doesNotMatch(app, /addStat\("Rank", level\.label/);
   assert.match(app, /LEADERBOARD_PLACEMENT_ASSETS = Object\.freeze/);
   assert.match(app, /1: "\/assets\/games\/lb-first\.webp"/);
@@ -141,6 +142,7 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   const standingBlock = app.match(/function renderSignedInStanding\(host, entry = null, progressionPayload = \{\}, economyPayload = \{\}, authState = \{\}\) \{[\s\S]*?host\.appendChild\(card\);\n  \}/)?.[0] || "";
   assert.match(standingBlock, /const authSlug = getCanonicalProfileSlug\(authState, ""\)/);
   assert.doesNotMatch(standingBlock, /buildProfileHref\(authState\)/);
+  assert.match(standingBlock, /buildEconomyBalanceValue\(wallet, \{ compact: true, compactNumber: true, standing: true \}\)/);
   assert.match(app, /renderLeaderboardGallery\(gallery\)/);
   assert.match(app, /Coming soon/);
   assert.match(css, /\.progression-leaderboard-row/);
@@ -150,6 +152,7 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   assert.match(css, /\.progression-leaderboard-podium/);
   assert.match(css, /\.progression-leaderboard-podium-card--1/);
   assert.match(css, /\.progression-leaderboard-standing-card/);
+  assert.match(css, /\.progression-leaderboard-standing-stats \.economy-balance-value--standing\s*\{[\s\S]*font-size:\s*inherit/);
   assert.match(css, /\.progression-leaderboard-table-header/);
   assert.match(css, /--progression-leaderboard-row-grid/);
   assert.match(css, /\.progression-leaderboard-header-profile\s*\{[\s\S]*grid-column:\s*2 \/ 4/);

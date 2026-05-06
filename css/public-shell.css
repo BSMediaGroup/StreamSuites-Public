@@ -8280,6 +8280,11 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   font-weight: 850;
 }
 
+.progression-leaderboard-standing-stats .economy-balance-value--standing {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
 .progression-leaderboard-wallet {
   display: flex;
   align-items: center;

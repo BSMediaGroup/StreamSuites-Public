@@ -2757,7 +2757,7 @@
       : Number(walletOrValue || 0);
     const wrap = create(
       "span",
-      `economy-balance-value${options.compact ? " economy-balance-value--compact" : ""}${options.prominent ? " economy-balance-value--prominent" : ""}`
+      `economy-balance-value${options.compact ? " economy-balance-value--compact" : ""}${options.prominent ? " economy-balance-value--prominent" : ""}${options.standing ? " economy-balance-value--standing" : ""}`
     );
     const icon = options.fullColorIcon
       ? create("img", "economy-balance-icon economy-balance-icon--full-color")
@@ -3246,15 +3246,21 @@
 
   function computeLeaderboardStats(rows = []) {
     const lifetimeXp = rows.reduce((total, entry) => total + leaderboardXpTotal(entry), 0);
-    const walletValues = rows
-      .map((entry) => leaderboardWalletTotal(entry))
+    const wallets = rows.map((entry) => leaderboardWallet(entry)).filter(Boolean);
+    const walletValues = wallets
+      .map((wallet) => {
+        const parsed = Number(wallet.balance_total_credits ?? wallet.balance_current ?? wallet.total_value ?? wallet.total_visible_value ?? wallet.wallet_total ?? 0);
+        return Number.isFinite(parsed) ? parsed : null;
+      })
       .filter((value) => value !== null);
     const walletTotal = walletValues.reduce((total, value) => total + value, 0);
+    const walletCurrency = wallets[0] || {};
     return {
       entries: rows.length,
       lifetimeXp,
       walletTotal,
-      walletCount: walletValues.length
+      walletCount: walletValues.length,
+      walletCurrency
     };
   }
 
@@ -3288,7 +3294,7 @@
       buildLeaderboardStatCard({
         label: "Wallet Index",
         value: stats.walletCount
-          ? buildEconomyBalanceValue({ balance_total_credits: stats.walletTotal }, { compact: true, compactNumber: true })
+          ? buildEconomyBalanceValue({ ...stats.walletCurrency, balance_total_credits: stats.walletTotal }, { compact: true, compactNumber: true })
           : "Not public",
         note: stats.walletCount ? `${formatNumber(stats.walletCount)} visible wallet summar${stats.walletCount === 1 ? "y" : "ies"}` : "Shown only when wallet totals are returned",
         state: stats.walletCount ? "live" : "scaffold"
@@ -3641,7 +3647,7 @@
     addStat("XP", `${formatCompactNumber(entry ? leaderboardXpTotal(entry) : (summary.xp_total ?? summary.total_xp ?? 0))} XP`);
     addStat("Level", buildProgressionLevelChip(profileEntry, { compact: true }));
     const wallet = economyPayload?.wallet && typeof economyPayload.wallet === "object" ? economyPayload.wallet : leaderboardWallet(entry || {});
-    addStat("Wallet", wallet ? buildEconomyBalanceValue(wallet, { compact: true, compactNumber: true }) : "Not public");
+    addStat("Wallet", wallet ? buildEconomyBalanceValue(wallet, { compact: true, compactNumber: true, standing: true }) : "Not public");
     card.appendChild(stats);
     const authSlug = getCanonicalProfileSlug(authState, "");
     const href = leaderboardProfileHref(profileEntry) || (authSlug ? `${CANONICAL_PROFILE_PREFIX}${encodeURIComponent(authSlug)}` : "");

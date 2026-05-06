@@ -752,12 +752,14 @@ Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into t
 - Refined only the existing `/leaderboards` implementation in `js/public-pages-app.js` and `css/public-shell.css`: drawer cards now order Rank, XP, Wallet, Level; the old explanatory fallback copy is removed; the profile CTA and handle occupy the compact left drawer area; and expanded rows now include a full-width, horizontal inventory overview sourced from the leaderboard/profile identity payload when present.
 - Replaced the text/chevron expand affordance with the existing `plus.svg` / `minus.svg` icon-mask treatment, removed the leaderboard container dotted pattern, muted the cyan leaderboard-specific accents, and added explicit pagination button typography hooks.
 - Replaced the first-place sparkle dots with a scoped premium shimmer/glow treatment that respects reduced-motion preferences, and updated overview cards so Lifetime XP includes the `XP` suffix while Wallet Index uses the same currency-symbol balance component as other economy surfaces.
+- Follow-up: fixed the Wallet Index aggregate so it preserves the real leaderboard wallet currency label/symbol metadata instead of rebuilding the total as a generic Credits wallet, and made the Your Standing wallet value inherit the same stat text size as the XP value.
 - Extended `tests/public-authority-wiring.test.mjs` to cover the drawer text removal, inventory overview hook, Wallet-before-Level order, plus/minus expand icon path, overview stat formatting, and pagination class hook.
 
 ### Human-Readable Notes
 
 - The public leaderboard drawer is denser and more useful: profile action/handle are compact, wallet precedes level, and inventory appears without turning the row into a tall list.
 - Leaderboard accents now better match the muted public shell language, the expand button is quieter, the dotted table texture is gone, and the first-place podium effect is less gimmicky.
+- Wallet labels now stay consistent between the top Wallet Index card, leaderboard rows, and Your Standing.
 
 ### Files / Areas Touched
 
