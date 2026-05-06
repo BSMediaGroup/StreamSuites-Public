@@ -2513,6 +2513,10 @@
     return new URL(buildArtifactDetailHref(item), window.location.origin).toString();
   }
 
+  function formatProfileLinkLabel(url) {
+    return String(url || "").trim().replace(/^https?:\/\//i, "");
+  }
+
   function buildArtifactGalleryLink(type) {
     return TYPE_TO_PAGE[type] || "/media.html";
   }
@@ -3242,7 +3246,7 @@
     }
     linkPill.appendChild(create("span", "share-link-brand", label));
 
-    const text = create("code", "share-link-text", url);
+    const text = create("code", "share-link-text", options.displayUrl || url);
     text.setAttribute("title", url);
     linkPill.appendChild(text);
 
@@ -3435,7 +3439,7 @@
     const createShareOption = (label, iconPath, url, tone = "") => {
       const card = create("div", `profile-share-option${tone ? ` ${tone}` : ""}`);
       if (renderOptions.compact === true) {
-        card.appendChild(buildShareBox(url, { label, iconPath, compact: true }));
+        card.appendChild(buildShareBox(url, { label, iconPath, compact: true, displayUrl: formatProfileLinkLabel(url) }));
       } else {
         const title = create("div", "profile-share-option-title");
         title.append(createIcon(iconPath, "profile-share-option-icon"), create("span", "", label.toUpperCase()));
@@ -7389,7 +7393,7 @@
       const body = create("span", "profile-social-gallery-body");
       body.append(
         create("strong", "", entry.label || socialLabel(entry.network)),
-        create("span", "", entry.url)
+        create("span", "", formatProfileLinkLabel(entry.url))
       );
       card.append(iconWrap, body);
       gallery.appendChild(card);

@@ -206,8 +206,11 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /Joined before the founding member cutoff of July 31, 2026\./);
   assert.match(app, /Can moderate creator account spaces where this account has an active assignment\./);
   assert.match(app, /function buildProfileSocialGallerySection\(profile\)/);
+  assert.match(app, /function formatProfileLinkLabel\(url\)/);
+  assert.match(app, /replace\(\/\^https\?:\\\/\\\/\//);
   assert.match(app, /profile-social-gallery-card/);
   assert.match(app, /profile-social-gallery-body/);
+  assert.match(app, /create\("span", "", formatProfileLinkLabel\(entry\.url\)\)/);
   assert.match(app, /function buildProfileGameCompetitionSection\(profile = null\)/);
   assert.match(app, /details\.open = true/);
   assert.match(app, /GAME & COMPETITION/);
@@ -235,6 +238,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /PUBLIC AUTHORITY/);
   assert.doesNotMatch(standaloneUtilityBlock, /shareTitle\.prepend/);
   assert.match(app, /function buildNativeShareButton\(url, label\)/);
+  assert.match(app, /buildShareBox\(url, \{ label, iconPath, compact: true, displayUrl: formatProfileLinkLabel\(url\) \}\)/);
 
   assert.match(css, /body\[data-public-page="public-profile-standalone"\] \.public-standalone-root/);
   assert.match(css, /\.profile-cinematic-hero/);
