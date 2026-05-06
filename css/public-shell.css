@@ -7981,14 +7981,6 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   margin: 0 0 14px;
 }
 
-.progression-leaderboard-podium {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
-  max-width: 980px;
-  margin: 0 auto 16px;
-}
-
 .progression-leaderboard-list {
   display: grid;
   gap: 10px;
@@ -8159,8 +8151,9 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .progression-leaderboard-detail {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(220px, 0.75fr);
+  grid-template-columns: minmax(170px, 230px) repeat(3, minmax(0, 1fr));
   gap: 14px;
+  align-items: stretch;
   border-top: 1px solid rgba(203, 219, 246, 0.13);
   padding-top: 12px;
 }
@@ -8183,6 +8176,12 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   pointer-events: none;
 }
 
+.progression-leaderboard-profile-link {
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+}
+
 .progression-leaderboard-detail-handle {
   width: fit-content;
   border: 1px solid rgba(203, 219, 246, 0.13);
@@ -8194,15 +8193,14 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .progression-leaderboard-detail-stats {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  display: contents;
   margin: 0;
 }
 
 .progression-leaderboard-detail-stat {
   display: grid;
   gap: 3px;
+  min-width: 0;
   border: 1px solid rgba(203, 219, 246, 0.12);
   border-radius: 12px;
   padding: 9px 10px;
@@ -8212,6 +8210,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 .progression-leaderboard-level-card {
   min-height: 78px;
   align-content: start;
+  overflow: hidden;
 }
 
 .progression-leaderboard-level-card .progression-level-chip {
@@ -8244,10 +8243,6 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 @media (max-width: 1100px) {
-  .progression-leaderboard-podium {
-    grid-template-columns: 1fr;
-  }
-
   .progression-leaderboard-row-main {
     grid-template-columns: minmax(48px, auto) auto minmax(0, 1fr) minmax(90px, auto);
   }
@@ -8261,13 +8256,24 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 @media (max-width: 760px) {
-  .progression-leaderboard-controls,
-  .progression-leaderboard-detail {
+  .progression-leaderboard-controls {
     grid-template-columns: 1fr;
   }
 
   .progression-leaderboard-future-tabs {
     justify-content: flex-start;
+  }
+}
+
+@media (max-width: 900px) {
+  .progression-leaderboard-detail {
+    grid-template-columns: 1fr;
+  }
+
+  .progression-leaderboard-detail-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
   }
 }
 

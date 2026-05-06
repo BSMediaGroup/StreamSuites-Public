@@ -2982,8 +2982,11 @@
     return {
       ...identity,
       display_name: identity.display_name || entry.display_name || entry.source_display_name,
-      public_slug: identity.public_slug || identity.publicSlug || entry.public_slug || entry.publicSlug || entry.profile_slug || entry.profileSlug,
-      profile_slug: identity.profile_slug || identity.profileSlug || entry.profile_slug || entry.profileSlug || identity.public_slug || identity.publicSlug || entry.public_slug || entry.publicSlug,
+      public_slug: identity.public_slug || identity.publicSlug || entry.public_slug || entry.publicSlug || entry.profile_slug || entry.profileSlug || identity.profile_slug || identity.profileSlug || identity.slug || entry.slug || identity.handle || entry.handle || identity.canonical_slug || identity.canonicalSlug || entry.canonical_slug || entry.canonicalSlug,
+      profile_slug: identity.profile_slug || identity.profileSlug || entry.profile_slug || entry.profileSlug || identity.public_slug || identity.publicSlug || entry.public_slug || entry.publicSlug || identity.slug || entry.slug || identity.handle || entry.handle || identity.canonical_slug || identity.canonicalSlug || entry.canonical_slug || entry.canonicalSlug,
+      slug: identity.slug || entry.slug,
+      handle: identity.handle || entry.handle,
+      canonical_slug: identity.canonical_slug || identity.canonicalSlug || entry.canonical_slug || entry.canonicalSlug,
       profile_url: identity.profile_url || identity.profileUrl || entry.profile_url || entry.profileUrl,
       avatar_url: identity.avatar_url || entry.avatar_url || entry.avatarUrl,
       account_user_code: identity.account_user_code || entry.account_user_code,
@@ -3002,6 +3005,9 @@
         identity.profile_slug ||
         identity.profileSlug ||
         identity.slug ||
+        identity.handle ||
+        identity.canonical_slug ||
+        identity.canonicalSlug ||
         profileUrlSlug ||
         "",
       ""
@@ -3026,7 +3032,7 @@
   function leaderboardProfileModel(entry = {}) {
     const identity = leaderboardIdentity(entry);
     const profileUrlSlug = getCanonicalSlugFromUrl(identity.profile_url || identity.profileUrl || "");
-    const publicSlug = normalizePublicHandle(identity.public_slug || identity.publicSlug || identity.profile_slug || identity.profileSlug || identity.slug || "", "") || profileUrlSlug;
+    const publicSlug = normalizePublicHandle(identity.public_slug || identity.publicSlug || identity.profile_slug || identity.profileSlug || identity.slug || identity.handle || identity.canonical_slug || identity.canonicalSlug || "", "") || profileUrlSlug;
     const userCode = normalizePublicHandle(identity.canonical_user_code || identity.account_user_code || identity.user_code || "", "");
     const legacyCode = String(identity.public_identity_code || identity.fallback_public_identity_code || identity.identity_code || "").trim();
     const displayName = progressionDisplayName(identity);
@@ -3051,7 +3057,7 @@
     const identity = leaderboardIdentity(entry);
     const explicit = String(identity.profile_url || identity.profileUrl || "").trim();
     const slugFromUrl = getCanonicalSlugFromUrl(explicit);
-    const slug = normalizePublicHandle(identity.public_slug || identity.publicSlug || identity.profile_slug || identity.profileSlug || identity.slug || "", "") ||
+    const slug = normalizePublicHandle(identity.public_slug || identity.publicSlug || identity.profile_slug || identity.profileSlug || identity.slug || identity.handle || identity.canonical_slug || identity.canonicalSlug || "", "") ||
       slugFromUrl;
     if (slug) return `${CANONICAL_PROFILE_PREFIX}${encodeURIComponent(slug)}`;
     return "";
@@ -3178,8 +3184,8 @@
       stats.appendChild(item);
     };
     addStat("Rank", `#${formatNumber(entry?.placement_rank || entry?.rank || entry?.position || 0)}`);
-    stats.appendChild(buildLeaderboardLevelCard(entry));
     addStat("XP", `${formatNumber(leaderboardXpTotal(entry))} XP`);
+    stats.appendChild(buildLeaderboardLevelCard(entry));
     if (entry?.global_rank_label || entry?.global_placement_rank || entry?.global_rank) {
       addStat("Global rank", entry.global_rank_label || `#${formatNumber(entry.global_placement_rank || entry.global_rank)}`);
     }
@@ -3286,9 +3292,8 @@
     });
     controls.append(searchLabel, tabs);
     const status = create("p", "muted progression-leaderboard-status", "Loading leaderboard...");
-    const podium = create("div", "progression-leaderboard-podium");
     const list = create("div", "progression-leaderboard-list");
-    shell.append(controls, status, podium, list);
+    shell.append(controls, status, list);
     host.appendChild(shell);
 
     (async () => {
@@ -3300,7 +3305,6 @@
           query: "",
           render() {
             const filteredRows = filterLeaderboardRows(rows, state.query);
-            clear(podium);
             clear(list);
             if (!filteredRows.length) {
               status.textContent = state.query ? "No ranked profiles match this search." : "No public XP has been awarded yet.";
@@ -3308,17 +3312,11 @@
               return;
             }
             status.textContent = `${formatNumber(filteredRows.length)} ranked public identit${filteredRows.length === 1 ? "y" : "ies"} shown from ${formatNumber(rows.length)} loaded.`;
-            const topRows = filteredRows.filter((entry) => Number(entry.tie_placement_rank || 0) >= 1 && Number(entry.tie_placement_rank || 0) <= 3);
-            const topIdentityCodes = new Set(topRows.map((entry) => leaderboardEntryId(entry)));
-            topRows.forEach((entry) => podium.appendChild(buildLeaderboardRow(entry, state)));
-            filteredRows
-              .filter((entry) => !topIdentityCodes.has(leaderboardEntryId(entry)))
-              .forEach((entry) => list.appendChild(buildLeaderboardRow(entry, state)));
+            filteredRows.forEach((entry) => list.appendChild(buildLeaderboardRow(entry, state)));
           }
         };
         if (!rows.length) {
           status.textContent = "No public XP has been awarded yet.";
-          clear(podium);
           clear(list);
           list.appendChild(create("div", "empty-state", "Progression starts when real trigger or game events award XP."));
           return;
@@ -3331,7 +3329,6 @@
         state.render();
       } catch (error) {
         status.textContent = error instanceof Error ? error.message : "Unable to load leaderboard right now.";
-        clear(podium);
         clear(list);
         list.appendChild(create("div", "empty-state", "Leaderboard data is unavailable right now."));
       }
