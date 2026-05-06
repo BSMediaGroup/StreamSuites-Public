@@ -2702,29 +2702,22 @@
   }
 
   function buildEconomyDenominationBreakdown(wallet = {}) {
-    const wrap = create("div", "economy-denomination-breakdown");
     const rows = Array.isArray(wallet?.denomination_breakdown)
       ? wallet.denomination_breakdown.filter((item) => item?.should_display || item?.always_show_in_balance || Number(item?.count || 0) > 0)
       : [];
-    if (!rows.length) {
-      wrap.appendChild(create("div", "empty-state", "No denomination breakdown is available yet."));
-      return wrap;
-    }
-    rows.forEach((item) => {
-      const chip = create("span", "economy-denomination-chip");
-      const icon = create("img", "");
-      icon.src = economyAssetPath(item.icon_path);
-      icon.alt = "";
-      icon.loading = "lazy";
-      icon.decoding = "async";
-      chip.append(
-        icon,
-        create("strong", "", formatNumber(item.count || 0)),
-        create("span", "", Number(item.count || 0) === 1 ? item.label || "unit" : item.plural_label || item.label || "units")
-      );
-      wrap.appendChild(chip);
-    });
-    return wrap;
+    return buildEconomyBreakdownList(
+      rows.map((item) => ({
+        className: "economy-denomination-chip",
+        iconPath: item.icon_path,
+        label: Number(item.count || 0) === 1 ? item.label || "unit" : item.plural_label || item.label || "units",
+        quantity: item.count || 0,
+        meta: item.value_total_credits != null
+          ? `${formatNumber(item.value_total_credits)} ${economyCurrencyLabel(wallet, item.value_total_credits)}`
+          : ""
+      })),
+      "No denomination breakdown is available yet.",
+      "economy-denomination-breakdown"
+    );
   }
 
   function isWalletDenominationInventoryItem(item = {}) {
@@ -2763,36 +2756,59 @@
   }
 
   function buildInventorySummaryList(items) {
-    const list = create("div", "inventory-summary-list");
     const rows = Array.isArray(items)
       ? items.filter((item) => {
           return Number(item?.quantity || 0) > 0 && !isWalletDenominationInventoryItem(item);
         })
       : [];
-    if (!rows.length) {
-      list.appendChild(create("div", "empty-state", "No inventory items have been recorded yet."));
+    return buildEconomyBreakdownList(
+      rows.slice(0, 6).map((item) => {
+        const definition = item?.definition || {};
+        return {
+          className: "inventory-summary-row",
+          iconClassName: "inventory-summary-icon",
+          fallbackClassName: "inventory-summary-icon--fallback",
+          iconPath: definition.icon_path || item.icon_path || "",
+          fallbackText: String(definition.label || item.item_code || "?").slice(0, 1).toUpperCase(),
+          label: definition.label || item.item_code || "Item",
+          quantity: item.quantity || 0,
+          quantityPrefix: "x",
+          meta: [definition.category, definition.rarity].filter(Boolean).join(" • ") || item.item_code || ""
+        };
+      }),
+      "No inventory items have been recorded yet.",
+      "inventory-summary-list"
+    );
+  }
+
+  function buildEconomyBreakdownList(rows = [], emptyText = "No entries available yet.", className = "") {
+    const list = create("div", `economy-breakdown-list${className ? ` ${className}` : ""}`);
+    const entries = Array.isArray(rows) ? rows : [];
+    if (!entries.length) {
+      list.appendChild(create("div", "empty-state", emptyText));
       return list;
     }
-    rows.slice(0, 6).forEach((item) => {
-      const definition = item?.definition || {};
-      const row = create("div", "inventory-summary-row");
-      const iconPath = definition.icon_path || item.icon_path || "";
-      const icon = iconPath ? create("img", "inventory-summary-icon") : create("span", "inventory-summary-icon inventory-summary-icon--fallback");
+    entries.forEach((entry) => {
+      const row = create("div", `economy-breakdown-row${entry.className ? ` ${entry.className}` : ""}`);
+      const iconPath = String(entry.iconPath || "").trim();
+      const icon = iconPath
+        ? create("img", `economy-breakdown-icon${entry.iconClassName ? ` ${entry.iconClassName}` : ""}`)
+        : create("span", `economy-breakdown-icon economy-breakdown-icon--fallback${entry.iconClassName ? ` ${entry.iconClassName}` : ""}${entry.fallbackClassName ? ` ${entry.fallbackClassName}` : ""}`);
       if (iconPath) {
         icon.src = economyAssetPath(iconPath);
         icon.alt = "";
         icon.loading = "lazy";
         icon.decoding = "async";
       } else {
-        icon.textContent = String(definition.label || item.item_code || "?").slice(0, 1).toUpperCase();
+        icon.textContent = String(entry.fallbackText || entry.label || "?").slice(0, 1).toUpperCase();
         icon.setAttribute("aria-hidden", "true");
       }
-      const body = create("span", "");
+      const body = create("span", "economy-breakdown-body");
       body.append(
-        create("strong", "", definition.label || item.item_code || "Item"),
-        create("span", "", [definition.category, definition.rarity].filter(Boolean).join(" • ") || item.item_code || "")
+        create("strong", "", entry.label || "Item"),
+        create("span", "", entry.meta || "")
       );
-      row.append(icon, body, create("strong", "", `x${formatNumber(item.quantity || 0)}`));
+      row.append(icon, body, create("strong", "economy-breakdown-quantity", `${entry.quantityPrefix || ""}${formatNumber(entry.quantity || 0)}`));
       list.appendChild(row);
     });
     return list;
@@ -7812,7 +7828,7 @@
           : "Level appears after the runtime returns progression data."
       },
       {
-        className: "profile-game-preview-card--featured",
+        className: "profile-game-preview-card--breakdown profile-game-preview-card--balance",
         label: "Current balance",
         value: buildEconomyBalanceValue(economy || {}, { prominent: true, fullColorIcon: true }),
         note: economy
@@ -7821,6 +7837,7 @@
         extra: buildEconomyDenominationBreakdown(economy || {})
       },
       {
+        className: "profile-game-preview-card--breakdown profile-game-preview-card--inventory",
         label: "Inventory",
         value: displayInventory.length ? "Itemized" : "Empty",
         note: displayInventory.length
@@ -7837,6 +7854,7 @@
         })()
       },
       {
+        className: "profile-game-preview-card--progress",
         label: "Next level progress",
         value: hasProgressMeter ? `${formatNumber(progressXp)} / ${formatNumber(progressNeededXp)} XP` : "Not available",
         note: nextLevelLabel
@@ -7845,8 +7863,8 @@
             ? "No higher configured level is exposed in this payload."
             : "Progress appears with runtime progression data.",
         extra: hasProgressMeter ? (() => {
-          const meter = create("span", "profile-game-progress-meter");
-          const fill = create("span", "profile-game-progress-meter-fill");
+          const meter = create("span", "profile-game-progress-meter profile-game-progress-meter--animated");
+          const fill = create("span", "profile-game-progress-meter-fill profile-game-progress-meter-fill--electric");
           fill.style.setProperty("--profile-progress-target", `${progressPercent}%`);
           meter.appendChild(fill);
           return meter;

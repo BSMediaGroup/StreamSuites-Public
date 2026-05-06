@@ -162,10 +162,10 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(standaloneUtilityBlock, /profileCard\.appendChild\(buildLatestStreamSection\(profile, options\.helpers \|\| null\)\)/);
   assert.match(standaloneUtilityBlock, /buildProfileOverviewPanel\(profile, profileArtifacts/);
   assert.match(standaloneUtilityBlock, /buildProfileMiniArtifactGallery\(profileArtifacts, canEdit/);
-  assert.match(standaloneUtilityBlock, /profileCard\.appendChild\(buildProfileBadgeGallerySection\(profile\)\)[\s\S]*profileCard\.appendChild\(buildProfileGameCompetitionSection\(profile\)\)/);
+  assert.match(standaloneUtilityBlock, /profileCard\.appendChild\(buildProfileBadgeGallerySection\(profile\)\)[\s\S]*profileCard\.appendChild\(buildProfileGameCompetitionSection\(profile, \{ canEdit \}\)\)/);
   assert.match(standaloneUtilityBlock, /const socialGallery = buildProfileSocialGallerySection\(profile\)/);
   assert.match(standaloneUtilityBlock, /if \(socialGallery\) grid\.appendChild\(socialGallery\)/);
-  assert.match(standaloneUtilityBlock, /buildProfileGameCompetitionSection\(profile\)/);
+  assert.match(standaloneUtilityBlock, /buildProfileGameCompetitionSection\(profile, \{ canEdit \}\)/);
   assert.match(standaloneUtilityBlock, /buildProfileShareSection\(profile, \{ compact: true \}\)/);
   assert.match(standaloneUtilityBlock, /buildCollapsedAuthorityRequestPanel\(resolveProfileAuthorityContext\(profile\)/);
   assert.match(app, /function buildLatestStreamSection\(profile, helpers\)/);
@@ -211,7 +211,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /profile-social-gallery-card/);
   assert.match(app, /profile-social-gallery-body/);
   assert.match(app, /create\("span", "", formatProfileLinkLabel\(entry\.url\)\)/);
-  assert.match(app, /function buildProfileGameCompetitionSection\(profile = null\)/);
+  assert.match(app, /function buildProfileGameCompetitionSection\(profile = null, options = \{\}\)/);
   assert.match(app, /details\.open = true/);
   assert.match(app, /GAME & COMPETITION/);
   assert.match(app, /gamecontroller\.svg/);

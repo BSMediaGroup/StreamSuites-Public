@@ -108,6 +108,7 @@ test("public profile game section renders runtime progression and economy author
   assert.match(app, /Array\.isArray\(payload\?\.inventory\)/);
   assert.match(app, /ECONOMY_CURRENCY_SYMBOL_PATH = "\/assets\/games\/currencyunit\.svg"/);
   assert.match(app, /function buildEconomyDenominationBreakdown\(wallet = \{\}\)/);
+  assert.match(app, /function buildEconomyBreakdownList\(rows = \[\], emptyText = "No entries available yet\.", className = ""\)/);
   assert.match(app, /wallet\.denomination_breakdown\.filter/);
   assert.match(app, /item\?\.should_display \|\| item\?\.always_show_in_balance \|\| Number\(item\?\.count \|\| 0\) > 0/);
   assert.match(app, /icon\.style\.setProperty\("--economy-currency-symbol"/);
@@ -143,6 +144,9 @@ test("public profile game section renders runtime progression and economy author
   assert.match(app, /3: "\/assets\/games\/lb-third\.webp"/);
   assert.match(css, /\.progression-level-chip--prominent/);
   assert.match(css, /\.profile-game-preview-card--featured/);
+  assert.match(css, /\.profile-game-preview-card--breakdown,[\s\S]*\.profile-game-preview-card--progress\s*\{[\s\S]*grid-column:\s*span 3/);
+  assert.match(profileSection, /profile-game-preview-card--breakdown profile-game-preview-card--balance/);
+  assert.match(profileSection, /profile-game-preview-card--breakdown profile-game-preview-card--inventory/);
   assert.match(css, /\.profile-game-inventory-stack/);
   assert.match(app, /buildProfileGameCompetitionSection\(profile, \{ canEdit \}\)/);
 });
@@ -177,7 +181,7 @@ test("public level chips include restrained hover sheen without changing compact
   assert.match(css, /\.progression-level-chip--compact \.progression-level-chip-icon,[\s\S]*\.economy-balance-value--compact \.economy-balance-icon\s*\{[\s\S]*width:\s*16px/);
   assert.match(css, /\.economy-balance-icon\s*\{[\s\S]*mask:\s*var\(--economy-currency-symbol\) center \/ contain no-repeat/);
   assert.match(css, /\.economy-denomination-breakdown\s*\{/);
-  assert.match(css, /\.economy-denomination-chip img\s*\{[\s\S]*object-fit:\s*contain/);
+  assert.match(css, /\.economy-breakdown-icon,[\s\S]*\.economy-denomination-chip img,[\s\S]*\.inventory-summary-icon\s*\{[\s\S]*object-fit:\s*contain/);
 });
 
 test("public economy rendering keeps denominations separate from inventory rows", () => {
@@ -198,12 +202,14 @@ test("public economy rendering keeps denominations separate from inventory rows"
   assert.match(app, /"currency\.gem\.red"/);
   assert.match(app, /"currency\.gem\.blue"/);
   assert.match(app, /"currency\.diamond"/);
-  assert.match(app, /row\.append\(icon, body, create\("strong", "", `x\$\{formatNumber\(item\.quantity \|\| 0\)\}`\)\)/);
+  assert.match(app, /className: "inventory-summary-row"/);
+  assert.match(app, /quantityPrefix: "x"/);
+  assert.match(app, /row\.append\(icon, body, create\("strong", "economy-breakdown-quantity", `\$\{entry\.quantityPrefix \|\| ""\}\$\{formatNumber\(entry\.quantity \|\| 0\)\}`\)\)/);
   assert.match(app, /const exchangePanel = buildPublicValueItemExchangePanel\(exchangeableItems\)/);
   assert.match(app, /Gems and diamonds cannot be purchased directly/);
   assert.match(app, /body: JSON\.stringify\(\{[\s\S]*item_code: itemCode,[\s\S]*quantity,[\s\S]*reason_text: reasonText/);
-  assert.match(css, /\.economy-denomination-chip img\s*\{[\s\S]*width:\s*22px/);
-  assert.match(css, /\.inventory-summary-icon\s*\{[\s\S]*width:\s*22px/);
+  assert.match(css, /\.economy-breakdown-row,[\s\S]*\.economy-denomination-chip,[\s\S]*\.inventory-summary-row\s*\{[\s\S]*grid-template-columns:\s*24px minmax\(0, 1fr\) auto/);
+  assert.match(css, /\.economy-breakdown-icon,[\s\S]*\.economy-denomination-chip img,[\s\S]*\.inventory-summary-icon\s*\{[\s\S]*width:\s*24px/);
 });
 
 test("public profile progress meter uses animated electric blue fill", () => {
@@ -211,9 +217,12 @@ test("public profile progress meter uses animated electric blue fill", () => {
   const css = read("css/public-shell.css");
 
   assert.match(app, /fill\.style\.setProperty\("--profile-progress-target", `\$\{progressPercent\}%`\)/);
+  assert.match(app, /profile-game-progress-meter profile-game-progress-meter--animated/);
+  assert.match(app, /profile-game-progress-meter-fill profile-game-progress-meter-fill--electric/);
   assert.match(css, /\.profile-game-progress-meter-fill\s*\{[\s\S]*linear-gradient\(90deg, #0487ff 0%, #18c3ff 52%, #78ecff 100%\)/);
   assert.match(css, /animation:\s*profile-game-progress-fill 820ms/);
-  assert.match(css, /\.profile-game-progress-meter:hover \.profile-game-progress-meter-fill\s*\{[\s\S]*animation:\s*profile-game-progress-fill 620ms/);
+  assert.match(css, /\.profile-game-preview-card--progress:hover \.profile-game-progress-meter-fill\s*\{[\s\S]*animation:\s*profile-game-progress-refill 620ms/);
   assert.match(css, /@keyframes profile-game-progress-fill/);
+  assert.match(css, /@keyframes profile-game-progress-refill/);
   assert.match(css, /prefers-reduced-motion:\s*reduce[\s\S]*profile-game-progress-meter-fill/);
 });
