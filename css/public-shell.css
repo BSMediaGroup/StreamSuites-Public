@@ -8299,6 +8299,526 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   }
 }
 
+.progression-leaderboard-page {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+}
+
+.progression-leaderboard-hero,
+.progression-leaderboard-showcase,
+.progression-leaderboard-standing-card,
+.progression-leaderboard-gallery-section {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  border: 1px solid rgba(203, 219, 246, 0.16);
+  border-radius: 22px;
+  background:
+    radial-gradient(720px 280px at 8% 0%, rgba(168, 85, 247, 0.16), transparent 68%),
+    radial-gradient(560px 260px at 92% 10%, rgba(251, 146, 60, 0.13), transparent 68%),
+    radial-gradient(520px 260px at 56% 100%, rgba(103, 232, 249, 0.09), transparent 72%),
+    linear-gradient(180deg, rgba(17, 23, 36, 0.9), rgba(7, 10, 17, 0.92));
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.progression-leaderboard-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 340px);
+  gap: 22px;
+  align-items: stretch;
+  padding: clamp(22px, 4vw, 38px);
+}
+
+.progression-leaderboard-hero-copy {
+  display: grid;
+  gap: 14px;
+  align-content: center;
+  min-width: 0;
+}
+
+.progression-leaderboard-section-kicker {
+  color: rgba(103, 232, 249, 0.78);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.progression-leaderboard-hero h1,
+.progression-leaderboard-section-head h2,
+.progression-leaderboard-standing-card h2,
+.progression-leaderboard-gallery-card h3 {
+  margin: 0;
+  color: rgba(249, 252, 255, 0.98);
+  letter-spacing: 0;
+}
+
+.progression-leaderboard-hero h1 {
+  max-width: 760px;
+  font-size: clamp(2.1rem, 5vw, 4.4rem);
+  line-height: 0.94;
+}
+
+.progression-leaderboard-hero p,
+.progression-leaderboard-section-head p,
+.progression-leaderboard-standing-card p,
+.progression-leaderboard-gallery-card p {
+  margin: 0;
+  color: rgba(208, 220, 238, 0.72);
+  line-height: 1.6;
+}
+
+.progression-leaderboard-hero p {
+  max-width: 720px;
+  font-size: 1rem;
+}
+
+.progression-leaderboard-chip-row,
+.progression-leaderboard-future-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.progression-leaderboard-board-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  border: 1px solid rgba(203, 219, 246, 0.14);
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(238, 246, 255, 0.84);
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.progression-leaderboard-board-chip.is-live {
+  border-color: rgba(103, 232, 249, 0.32);
+  background: rgba(103, 232, 249, 0.1);
+  color: rgba(215, 249, 255, 0.94);
+}
+
+.progression-leaderboard-board-chip.is-disabled,
+.progression-leaderboard-future-tab {
+  opacity: 0.68;
+}
+
+.progression-leaderboard-current-board {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  padding: 18px;
+  background:
+    radial-gradient(240px 170px at 90% 0%, rgba(251, 146, 60, 0.14), transparent 70%),
+    rgba(255, 255, 255, 0.055);
+}
+
+.progression-leaderboard-current-board strong {
+  color: rgba(255, 255, 255, 0.96);
+  font-size: 1.35rem;
+}
+
+.progression-leaderboard-current-board-source {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border: 1px solid rgba(203, 219, 246, 0.12);
+  border-radius: 10px;
+  padding: 7px 8px;
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(190, 204, 224, 0.78);
+  font-size: 0.75rem;
+}
+
+.progression-leaderboard-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.progression-leaderboard-stat-card {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  border: 1px solid rgba(203, 219, 246, 0.14);
+  border-radius: 14px;
+  padding: 13px;
+  background:
+    radial-gradient(180px 100px at 100% 0%, rgba(103, 232, 249, 0.08), transparent 68%),
+    rgba(255, 255, 255, 0.045);
+}
+
+.progression-leaderboard-stat-card--scaffold {
+  background:
+    radial-gradient(180px 100px at 100% 0%, rgba(251, 146, 60, 0.08), transparent 68%),
+    rgba(255, 255, 255, 0.032);
+}
+
+.progression-leaderboard-stat-label,
+.progression-leaderboard-stat-note {
+  color: rgba(190, 204, 224, 0.72);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.progression-leaderboard-stat-label {
+  text-transform: uppercase;
+}
+
+.progression-leaderboard-stat-value {
+  overflow-wrap: anywhere;
+  color: rgba(249, 252, 255, 0.98);
+  font-size: 1.18rem;
+  line-height: 1.1;
+}
+
+.progression-leaderboard-showcase,
+.progression-leaderboard-gallery-section {
+  display: grid;
+  gap: 18px;
+  padding: clamp(18px, 3vw, 26px);
+}
+
+.progression-leaderboard-section-head {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.progression-leaderboard-section-head--inline {
+  margin-bottom: 16px;
+}
+
+.progression-leaderboard-podium {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  align-items: stretch;
+}
+
+.progression-leaderboard-podium-card {
+  --leaderboard-placement-color: rgba(255, 255, 255, 0.66);
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 9px;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--leaderboard-placement-color) 36%, rgba(255, 255, 255, 0.13));
+  border-radius: 20px;
+  padding: 18px 14px 14px;
+  background:
+    radial-gradient(220px 140px at 50% 0%, color-mix(in srgb, var(--leaderboard-placement-color) 20%, transparent), transparent 72%),
+    linear-gradient(180deg, color-mix(in srgb, var(--leaderboard-placement-color) 8%, rgba(18, 24, 38, 0.9)), rgba(6, 9, 15, 0.92));
+  box-shadow:
+    0 24px 54px color-mix(in srgb, var(--leaderboard-placement-color) 12%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.progression-leaderboard-podium-card--1 {
+  --leaderboard-placement-color: #f6c85f;
+  transform: translateY(-10px);
+}
+
+.progression-leaderboard-podium-card--2 {
+  --leaderboard-placement-color: #c6d0dd;
+}
+
+.progression-leaderboard-podium-card--3 {
+  --leaderboard-placement-color: #c98250;
+}
+
+.progression-leaderboard-podium-rank {
+  display: inline-flex;
+  border: 1px solid color-mix(in srgb, var(--leaderboard-placement-color) 40%, rgba(255, 255, 255, 0.12));
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: color-mix(in srgb, var(--leaderboard-placement-color) 11%, rgba(0, 0, 0, 0.24));
+  color: color-mix(in srgb, var(--leaderboard-placement-color) 82%, #ffffff);
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
+.progression-leaderboard-podium-medal {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  filter: drop-shadow(0 16px 24px rgba(0, 0, 0, 0.38));
+}
+
+.progression-leaderboard-podium-avatar.creator-avatar {
+  width: 70px;
+  height: 70px;
+  border-radius: 20px;
+  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.32);
+}
+
+.progression-leaderboard-podium-name,
+.progression-leaderboard-podium-handle {
+  max-width: 100%;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.progression-leaderboard-podium-name {
+  color: rgba(250, 252, 255, 0.98);
+  font-size: 1rem;
+}
+
+.progression-leaderboard-podium-handle {
+  color: rgba(190, 204, 224, 0.76);
+  font-size: 0.78rem;
+}
+
+.progression-leaderboard-podium-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+.progression-leaderboard-podium-metric {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.progression-leaderboard-podium-metric > span {
+  color: rgba(190, 204, 224, 0.68);
+  font-size: 0.66rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.progression-leaderboard-podium-metric strong {
+  color: rgba(249, 252, 255, 0.95);
+}
+
+.progression-leaderboard-podium-link.is-disabled,
+.progression-leaderboard-profile-link.is-disabled {
+  opacity: 0.56;
+  pointer-events: none;
+}
+
+.progression-leaderboard-standing {
+  min-width: 0;
+}
+
+.progression-leaderboard-standing-card {
+  display: grid;
+  gap: 13px;
+  padding: clamp(18px, 3vw, 24px);
+}
+
+.progression-leaderboard-standing-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.progression-leaderboard-standing-profile {
+  width: fit-content;
+}
+
+.progression-board--premium.dashboard-card {
+  border-radius: 20px;
+  padding: clamp(16px, 3vw, 22px);
+}
+
+.progression-leaderboard-controls {
+  grid-template-columns: minmax(220px, 420px) minmax(0, 1fr);
+  margin-bottom: 12px;
+}
+
+.progression-leaderboard-table-header {
+  display: grid;
+  grid-template-columns: 54px minmax(180px, 1fr) minmax(92px, auto) minmax(110px, auto) minmax(110px, auto) minmax(88px, auto) minmax(82px, auto);
+  gap: 12px;
+  align-items: center;
+  margin: 0 0 8px;
+  border: 1px solid rgba(203, 219, 246, 0.1);
+  border-radius: 12px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.028);
+  color: rgba(190, 204, 224, 0.6);
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.progression-leaderboard-row-main {
+  grid-template-columns: 54px auto minmax(170px, 1fr) minmax(92px, auto) minmax(110px, auto) minmax(110px, auto) minmax(88px, auto) minmax(82px, auto) minmax(88px, auto) minmax(86px, auto);
+}
+
+.progression-leaderboard-wallet-cell,
+.progression-leaderboard-active-cell,
+.progression-leaderboard-muted-value {
+  min-width: 0;
+  color: rgba(190, 204, 224, 0.74);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.progression-leaderboard-detail {
+  grid-template-columns: minmax(190px, 260px) repeat(4, minmax(0, 1fr));
+}
+
+.progression-leaderboard-pagination-host {
+  margin-top: 14px;
+}
+
+.progression-leaderboard-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.progression-leaderboard-pagination button {
+  min-height: 32px;
+  border: 1px solid rgba(203, 219, 246, 0.14);
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(235, 243, 255, 0.88);
+  font-weight: 850;
+}
+
+.progression-leaderboard-pagination button:disabled {
+  opacity: 0.45;
+}
+
+.progression-leaderboard-pagination button.is-current {
+  border-color: rgba(103, 232, 249, 0.35);
+  background: rgba(103, 232, 249, 0.12);
+  color: rgba(220, 250, 255, 0.96);
+}
+
+.progression-leaderboard-pagination-gap,
+.progression-leaderboard-pagination-status {
+  color: rgba(190, 204, 224, 0.62);
+  font-size: 0.78rem;
+}
+
+.progression-leaderboard-gallery {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.progression-leaderboard-gallery-card {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  border: 1px solid rgba(203, 219, 246, 0.13);
+  border-radius: 16px;
+  padding: 14px;
+  background:
+    radial-gradient(220px 120px at 100% 0%, rgba(251, 146, 60, 0.09), transparent 68%),
+    rgba(255, 255, 255, 0.04);
+}
+
+.progression-leaderboard-gallery-type,
+.progression-leaderboard-gallery-badge {
+  color: rgba(103, 232, 249, 0.78);
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.progression-leaderboard-gallery-badge {
+  width: fit-content;
+  border: 1px solid rgba(251, 146, 60, 0.22);
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: rgba(254, 215, 170, 0.9);
+}
+
+@media (max-width: 1180px) {
+  .progression-leaderboard-stat-grid,
+  .progression-leaderboard-gallery {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .progression-leaderboard-table-header {
+    display: none;
+  }
+
+  .progression-leaderboard-row-main {
+    grid-template-columns: 54px auto minmax(0, 1fr) minmax(110px, auto);
+  }
+
+  .progression-leaderboard-wallet-cell,
+  .progression-leaderboard-active-cell,
+  .progression-leaderboard-row .progression-level-chip,
+  .progression-leaderboard-xp,
+  .progression-leaderboard-badges,
+  .progression-leaderboard-expand {
+    grid-column: 3 / -1;
+  }
+}
+
+@media (max-width: 900px) {
+  .progression-leaderboard-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .progression-leaderboard-podium,
+  .progression-leaderboard-standing-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .progression-leaderboard-podium-card--1 {
+    transform: none;
+  }
+
+  .progression-leaderboard-detail {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .progression-leaderboard-stat-grid,
+  .progression-leaderboard-gallery {
+    grid-template-columns: 1fr;
+  }
+
+  .progression-leaderboard-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .progression-leaderboard-row-main {
+    grid-template-columns: minmax(44px, auto) minmax(0, 1fr);
+  }
+
+  .progression-leaderboard-avatar.creator-avatar {
+    grid-row: 2;
+  }
+
+  .progression-leaderboard-identity,
+  .progression-leaderboard-wallet-cell,
+  .progression-leaderboard-active-cell,
+  .progression-leaderboard-row .progression-level-chip,
+  .progression-leaderboard-xp,
+  .progression-leaderboard-badges,
+  .progression-leaderboard-expand {
+    grid-column: 2;
+  }
+}
+
 body.public-standalone-page:not([data-public-page="public-profile-standalone"]) {
   background:
     radial-gradient(820px 460px at 50% -10%, rgba(110, 135, 170, 0.14), transparent 64%),

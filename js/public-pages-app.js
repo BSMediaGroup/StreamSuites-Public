@@ -51,6 +51,7 @@
     2: "/assets/games/lb-second.webp",
     3: "/assets/games/lb-third.webp"
   });
+  const LEADERBOARD_PAGE_SIZE = 20;
   const AUTH_LOGOUT_URL = `${AUTH_API_BASE}/auth/logout`;
   const CREATOR_DASHBOARD_URL = "https://creator.streamsuites.app/";
   const CREATOR_LOGIN_URL = (() => {
@@ -3087,15 +3088,106 @@
     return rows.filter((entry) => leaderboardSearchText(entry).includes(q));
   }
 
+  function leaderboardPlacement(entry = {}) {
+    return Number(entry.tie_placement_rank || entry.placement_rank || entry.rank || entry.position || 0);
+  }
+
+  function leaderboardDisplayPlacement(entry = {}) {
+    return Number(entry?.placement_rank || entry?.rank || entry?.position || leaderboardPlacement(entry) || 0);
+  }
+
+  function leaderboardWallet(entry = {}) {
+    return entry?.wallet && typeof entry.wallet === "object" ? entry.wallet : null;
+  }
+
+  function leaderboardWalletTotal(entry = {}) {
+    const wallet = leaderboardWallet(entry);
+    if (!wallet) return null;
+    const parsed = Number(wallet.balance_total_credits ?? wallet.balance_current ?? wallet.total_value ?? wallet.total_visible_value ?? wallet.wallet_total ?? 0);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  function leaderboardWalletSummary(entry = {}, options = {}) {
+    const wallet = leaderboardWallet(entry);
+    const total = leaderboardWalletTotal(entry);
+    if (!wallet || total === null) return create("span", options.className || "progression-leaderboard-muted-value", "Not public");
+    return buildEconomyBalanceValue(wallet, { compact: true });
+  }
+
+  function computeLeaderboardStats(rows = []) {
+    const lifetimeXp = rows.reduce((total, entry) => total + leaderboardXpTotal(entry), 0);
+    const walletValues = rows
+      .map((entry) => leaderboardWalletTotal(entry))
+      .filter((value) => value !== null);
+    const walletTotal = walletValues.reduce((total, value) => total + value, 0);
+    return {
+      entries: rows.length,
+      lifetimeXp,
+      walletTotal,
+      walletCount: walletValues.length
+    };
+  }
+
+  function buildLeaderboardStatCard({ label, value, note, state = "live" } = {}) {
+    const card = create("article", `progression-leaderboard-stat-card progression-leaderboard-stat-card--${state}`);
+    card.append(
+      create("span", "progression-leaderboard-stat-label", label || ""),
+      create("strong", "progression-leaderboard-stat-value", value || "0")
+    );
+    if (note) card.appendChild(create("span", "progression-leaderboard-stat-note", note));
+    return card;
+  }
+
+  function renderLeaderboardStats(host, rows = []) {
+    clear(host);
+    const stats = computeLeaderboardStats(rows);
+    host.append(
+      buildLeaderboardStatCard({
+        label: "Ranked identities",
+        value: formatNumber(stats.entries),
+        note: "Loaded from runtime public progression"
+      }),
+      buildLeaderboardStatCard({
+        label: "Lifetime XP",
+        value: formatNumber(stats.lifetimeXp),
+        note: "Computed from loaded leaderboard entries"
+      }),
+      buildLeaderboardStatCard({
+        label: "Wallet Index",
+        value: stats.walletCount ? formatNumber(stats.walletTotal) : "Not public",
+        note: stats.walletCount ? `${formatNumber(stats.walletCount)} visible wallet summar${stats.walletCount === 1 ? "y" : "ies"}` : "Shown only when wallet totals are returned",
+        state: stats.walletCount ? "live" : "scaffold"
+      }),
+      buildLeaderboardStatCard({
+        label: "Creator Boards",
+        value: "Soon",
+        note: "Scaffold only; not wired to authority yet",
+        state: "scaffold"
+      }),
+      buildLeaderboardStatCard({
+        label: "Season Pool",
+        value: "Soon",
+        note: "No live season pool contract yet",
+        state: "scaffold"
+      }),
+      buildLeaderboardStatCard({
+        label: "Boards count",
+        value: "Preview",
+        note: "Gallery below is placeholder-only",
+        state: "scaffold"
+      })
+    );
+  }
+
   function buildLeaderboardPlacementBadge(entry = {}) {
-    const placement = Number(entry.tie_placement_rank || entry.placement_rank || entry.rank || entry.position || 0);
+    const placement = leaderboardPlacement(entry);
     const badge = create("span", `progression-rank-position${placement >= 1 && placement <= 3 ? ` progression-rank-position--top progression-rank-position--${placement}` : ""}`);
-    badge.appendChild(create("span", "", `#${formatNumber(entry?.placement_rank || entry?.rank || entry?.position || placement || 0)}`));
+    badge.appendChild(create("span", "", `#${formatNumber(leaderboardDisplayPlacement(entry))}`));
     return badge;
   }
 
   function buildLeaderboardPlacementMedallion(entry = {}) {
-    const placement = Number(entry.tie_placement_rank || entry.placement_rank || entry.rank || entry.position || 0);
+    const placement = leaderboardPlacement(entry);
     const asset = LEADERBOARD_PLACEMENT_ASSETS[placement] || "";
     if (!asset) return null;
     const medal = create("img", `progression-leaderboard-medallion progression-leaderboard-medallion--${placement}`);
@@ -3183,18 +3275,16 @@
       item.append(create("dt", "", label), create("dd", "", value));
       stats.appendChild(item);
     };
-    addStat("Rank", `#${formatNumber(entry?.placement_rank || entry?.rank || entry?.position || 0)}`);
+    addStat("Rank", `#${formatNumber(leaderboardDisplayPlacement(entry))}`);
     addStat("XP", `${formatNumber(leaderboardXpTotal(entry))} XP`);
     stats.appendChild(buildLeaderboardLevelCard(entry));
-    if (entry?.global_rank_label || entry?.global_placement_rank || entry?.global_rank) {
-      addStat("Global rank", entry.global_rank_label || `#${formatNumber(entry.global_placement_rank || entry.global_rank)}`);
-    }
+    const walletStat = create("div", "progression-leaderboard-detail-stat");
+    walletStat.append(create("dt", "", "Wallet"));
+    const walletValue = create("dd", "");
+    walletValue.appendChild(leaderboardWalletSummary(entry));
+    walletStat.appendChild(walletValue);
+    stats.appendChild(walletStat);
     detail.append(summary, stats);
-    if (entry?.wallet && typeof entry.wallet === "object") {
-      const wallet = create("div", "progression-leaderboard-wallet");
-      wallet.append(create("span", "", "Wallet"), buildEconomyBalanceValue(entry.wallet, { compact: true }));
-      detail.appendChild(wallet);
-    }
     return detail;
   }
 
@@ -3218,7 +3308,7 @@
   }
 
   function buildLeaderboardRow(entry, state = {}) {
-    const placement = Number(entry.tie_placement_rank || entry.placement_rank || entry.rank || entry.position || 0);
+    const placement = leaderboardPlacement(entry);
     const topClass = placement >= 1 && placement <= 3 ? ` progression-leaderboard-row--top progression-leaderboard-row--top-${placement}` : "";
     const rowId = leaderboardEntryId(entry);
     const isExpanded = state.expandedId === rowId;
@@ -3247,35 +3337,298 @@
       event.preventDefault();
       toggleLeaderboardRow(entry, state, isExpanded);
     });
-    main.append(xp, buildProgressionLevelChip(entry, { compact: true }), buildLeaderboardBadges(entry), toggle);
+    const wallet = create("span", "progression-leaderboard-wallet-cell");
+    wallet.appendChild(leaderboardWalletSummary(entry));
+    const active = create("span", "progression-leaderboard-active-cell", entry?.active_label || entry?.last_active_label || entry?.status_label || "Not public");
+    main.append(buildProgressionLevelChip(entry, { compact: true }), xp, wallet, active, buildLeaderboardBadges(entry), toggle);
     row.appendChild(main);
     if (isExpanded) row.appendChild(buildLeaderboardDetail(entry));
     return row;
   }
 
+  function buildLeaderboardPodiumCard(entry = {}) {
+    const placement = leaderboardPlacement(entry);
+    const identity = leaderboardIdentity(entry);
+    const profile = leaderboardProfileModel(entry);
+    const card = create("article", `progression-leaderboard-podium-card progression-leaderboard-podium-card--${placement}`);
+    const asset = LEADERBOARD_PLACEMENT_ASSETS[placement] || "";
+    if (asset) {
+      const medal = create("img", "progression-leaderboard-podium-medal");
+      medal.src = asset;
+      medal.alt = "";
+      medal.loading = "lazy";
+      medal.decoding = "async";
+      card.appendChild(medal);
+    }
+    const avatar = buildLeaderboardAvatar(entry);
+    avatar.classList.add("progression-leaderboard-podium-avatar");
+    const name = create("strong", "progression-leaderboard-podium-name", progressionDisplayName(identity));
+    applyProfileHoverAttrs(name, profile);
+    const handle = leaderboardHandle(identity);
+    const href = leaderboardProfileHref(entry);
+    card.append(
+      create("span", "progression-leaderboard-podium-rank", `#${formatNumber(leaderboardDisplayPlacement(entry))}`),
+      avatar,
+      name
+    );
+    if (handle) card.appendChild(create("span", "progression-leaderboard-podium-handle", handle));
+    const metrics = create("div", "progression-leaderboard-podium-metrics");
+    const addMetric = (label, valueNode) => {
+      const metric = create("span", "progression-leaderboard-podium-metric");
+      metric.appendChild(create("span", "", label));
+      if (valueNode instanceof Node) metric.appendChild(valueNode);
+      else metric.appendChild(create("strong", "", valueNode));
+      metrics.appendChild(metric);
+    };
+    addMetric("XP", `${formatNumber(leaderboardXpTotal(entry))}`);
+    addMetric("Level", buildProgressionLevelChip(entry, { compact: true }));
+    card.appendChild(metrics);
+    if (href) {
+      const link = create("a", "dashboard-action progression-leaderboard-podium-link", "View profile");
+      link.href = href;
+      card.appendChild(link);
+    } else {
+      const disabled = create("span", "dashboard-action progression-leaderboard-podium-link is-disabled", "Profile unavailable");
+      disabled.setAttribute("aria-disabled", "true");
+      card.appendChild(disabled);
+    }
+    return card;
+  }
+
+  function renderLeaderboardPodium(host, rows = []) {
+    clear(host);
+    const topRows = rows.filter((entry) => {
+      const placement = leaderboardPlacement(entry);
+      return placement >= 1 && placement <= 3;
+    });
+    if (!topRows.length) {
+      host.appendChild(create("div", "empty-state", "Top placements appear when runtime leaderboard entries are available."));
+      return;
+    }
+    topRows
+      .slice()
+      .sort((a, b) => {
+        const order = { 1: 2, 2: 1, 3: 3 };
+        return (order[leaderboardPlacement(a)] || leaderboardPlacement(a)) - (order[leaderboardPlacement(b)] || leaderboardPlacement(b));
+      })
+      .forEach((entry) => host.appendChild(buildLeaderboardPodiumCard(entry)));
+  }
+
+  function findLeaderboardStanding(rows = [], summary = {}, identity = {}, authState = {}) {
+    const candidates = [
+      identity.public_slug,
+      identity.profile_slug,
+      identity.slug,
+      identity.handle,
+      identity.canonical_slug,
+      identity.account_user_code,
+      identity.canonical_user_code,
+      identity.user_code,
+      identity.public_identity_code,
+      identity.identity_code,
+      authState.publicSlug,
+      authState.profileSlug,
+      authState.slug,
+      authState.userCode,
+      authState.accountUserCode,
+      authState.accountId
+    ].map((value) => String(value || "").trim().toLowerCase()).filter(Boolean);
+    return rows.find((entry) => {
+      const rowIdentity = leaderboardIdentity(entry);
+      return [
+        rowIdentity.public_slug,
+        rowIdentity.profile_slug,
+        rowIdentity.slug,
+        rowIdentity.handle,
+        rowIdentity.canonical_slug,
+        rowIdentity.account_user_code,
+        rowIdentity.canonical_user_code,
+        rowIdentity.user_code,
+        rowIdentity.public_identity_code,
+        rowIdentity.fallback_public_identity_code,
+        entry.identity_code
+      ].some((value) => candidates.includes(String(value || "").trim().toLowerCase()));
+    }) || (summary?.global_placement_rank || summary?.global_rank ? {
+      ...summary,
+      placement_rank: summary.global_placement_rank || summary.global_rank,
+      identity
+    } : null);
+  }
+
+  function renderSignedOutStanding(host, openAuthModal) {
+    clear(host);
+    const card = create("article", "progression-leaderboard-standing-card progression-leaderboard-standing-card--signed-out");
+    card.append(
+      create("span", "progression-leaderboard-section-kicker", "Your Standing"),
+      create("h2", "", "Sign in to reveal your rank"),
+      create("p", "", "Your global placement, public XP, current level, and wallet summary stay hidden until the existing public auth session confirms your identity.")
+    );
+    const actions = create("div", "dashboard-action-row");
+    const login = create("button", "dashboard-action is-strong", "Sign in");
+    login.type = "button";
+    login.addEventListener("click", () => openAuthModal?.("login"));
+    const browse = create("a", "dashboard-action", "Browse profiles");
+    browse.href = "/community";
+    actions.append(login, browse);
+    card.appendChild(actions);
+    host.appendChild(card);
+  }
+
+  function renderSignedInStanding(host, entry = null, progressionPayload = {}, economyPayload = {}, authState = {}) {
+    clear(host);
+    const summary = progressionPayload?.summary || {};
+    const identity = entry ? leaderboardIdentity(entry) : (progressionPayload?.identity || {});
+    const profileEntry = entry || { ...summary, identity };
+    const card = create("article", "progression-leaderboard-standing-card");
+    card.append(
+      create("span", "progression-leaderboard-section-kicker", "Your Standing"),
+      create("h2", "", entry ? `#${formatNumber(leaderboardDisplayPlacement(entry))} globally` : "Standing unavailable"),
+      create("p", "", entry ? "This card reflects your runtime-backed public progression placement." : "You are signed in, but the current public progression payload did not return a global placement yet.")
+    );
+    const stats = create("dl", "progression-leaderboard-standing-stats");
+    const addStat = (label, valueNode) => {
+      const item = create("div", "progression-leaderboard-detail-stat");
+      item.appendChild(create("dt", "", label));
+      const value = create("dd", "");
+      if (valueNode instanceof Node) value.appendChild(valueNode);
+      else value.textContent = valueNode;
+      item.appendChild(value);
+      stats.appendChild(item);
+    };
+    addStat("XP", `${formatNumber(entry ? leaderboardXpTotal(entry) : (summary.xp_total ?? summary.total_xp ?? 0))} XP`);
+    addStat("Level", buildProgressionLevelChip(profileEntry, { compact: true }));
+    const wallet = economyPayload?.wallet && typeof economyPayload.wallet === "object" ? economyPayload.wallet : leaderboardWallet(entry || {});
+    addStat("Wallet", wallet ? buildEconomyBalanceValue(wallet, { compact: true }) : "Not public");
+    card.appendChild(stats);
+    const authSlug = getCanonicalProfileSlug(authState, "");
+    const href = leaderboardProfileHref(profileEntry) || (authSlug ? `${CANONICAL_PROFILE_PREFIX}${encodeURIComponent(authSlug)}` : "");
+    if (href) {
+      const profile = create("a", "dashboard-action progression-leaderboard-standing-profile", "Open public profile");
+      profile.href = href;
+      card.appendChild(profile);
+    }
+    host.appendChild(card);
+  }
+
+  function renderLeaderboardTableHeader(host) {
+    clear(host);
+    ["Rank", "Profile", "Level", "XP", "Wallet", "Active", "Actions"].forEach((label) => {
+      host.appendChild(create("span", "", label));
+    });
+  }
+
+  function buildLeaderboardPagination(state = {}, totalPages = 1) {
+    const nav = create("nav", "progression-leaderboard-pagination");
+    nav.setAttribute("aria-label", "Leaderboard pagination");
+    const addButton = (label, page, disabled = false, current = false) => {
+      const button = create("button", current ? "is-current" : "", label);
+      button.type = "button";
+      button.disabled = disabled;
+      if (current) button.setAttribute("aria-current", "page");
+      button.addEventListener("click", () => {
+        if (disabled || current) return;
+        state.page = page;
+        state.expandedId = "";
+        state.render();
+      });
+      nav.appendChild(button);
+    };
+    addButton("Previous", Math.max(1, state.page - 1), state.page <= 1);
+    const pages = [];
+    for (let page = 1; page <= totalPages; page += 1) {
+      if (page === 1 || page === totalPages || Math.abs(page - state.page) <= 1) pages.push(page);
+    }
+    let last = 0;
+    pages.forEach((page) => {
+      if (last && page - last > 1) nav.appendChild(create("span", "progression-leaderboard-pagination-gap", "..."));
+      addButton(String(page), page, false, page === state.page);
+      last = page;
+    });
+    addButton("Next", Math.min(totalPages, state.page + 1), state.page >= totalPages);
+    nav.appendChild(create("span", "progression-leaderboard-pagination-status", `Page ${formatNumber(state.page)} of ${formatNumber(totalPages)}`));
+    return nav;
+  }
+
+  function renderLeaderboardGallery(host) {
+    clear(host);
+    [
+      ["Creator Board", "Community rankings", "Creator-defined boards will appear here after runtime authority exists."],
+      ["Event Board", "Public events", "Preview scaffold for future event-specific placement surfaces."],
+      ["Economy Board", "Wallet standings", "Requires a live economy leaderboard contract before values go public."],
+      ["Game Board", "Mini-game scores", "Reserved for real game scoring authority, not local placeholder scores."],
+      ["Season Board", "Season pool", "Season standings remain coming soon until runtime exposes them."]
+    ].forEach(([title, type, body]) => {
+      const card = create("article", "progression-leaderboard-gallery-card");
+      card.append(
+        create("span", "progression-leaderboard-gallery-type", type),
+        create("h3", "", title),
+        create("p", "", body),
+        create("span", "progression-leaderboard-gallery-badge", "Coming soon")
+      );
+      host.appendChild(card);
+    });
+  }
+
   function renderLeaderboards(ctx) {
-    const { host } = ctx;
+    const { host, authState, openAuthModal } = ctx;
     clear(host);
     applyDocumentTitle("Leaderboards");
-    host.appendChild(
-      buildDashboardHero({
-        eyebrow: "Global public leaderboard",
-        title: "Leaderboards",
-        body: "Global public progression ranked from authoritative XP totals.",
-        tone: "active",
-        actions: [
-          { label: "Browse community", href: "/community" },
-          { label: "Future boards", disabled: true, note: "Economy, games, weekly, creator boards, and events remain future scope." }
-        ],
-        stats: [
-          { label: "Scope", value: "Global XP", note: "Runtime-owned public progression" },
-          { label: "Source", value: "Live API", note: "/api/public/progression/leaderboard" },
-          { label: "Placement", value: "Rank", note: "Level remains separate from placement" }
-        ]
-      })
+
+    const page = create("div", "progression-leaderboard-page");
+    const hero = create("section", "progression-leaderboard-hero");
+    const heroCopy = create("div", "progression-leaderboard-hero-copy");
+    heroCopy.append(
+      create("span", "progression-leaderboard-section-kicker", "StreamSuites public leaderboards hub"),
+      create("h1", "", "Global XP Leaderboards"),
+      create("p", "", "Track public lifetime XP placement, current levels, visible economy summaries, and the scaffold for future creator-defined boards from one runtime-backed public surface.")
     );
+    const chips = create("div", "progression-leaderboard-chip-row");
+    [
+      ["Global XP", "is-live"],
+      ["Economy", "is-disabled"],
+      ["Creator boards", "is-disabled"],
+      ["Game boards", "is-disabled"],
+      ["Seasons", "is-disabled"]
+    ].forEach(([label, className]) => {
+      const chip = create("span", `progression-leaderboard-board-chip ${className}`, className === "is-live" ? label : `${label} soon`);
+      if (className === "is-disabled") chip.setAttribute("aria-disabled", "true");
+      chips.appendChild(chip);
+    });
+    heroCopy.appendChild(chips);
+    const boardCard = create("aside", "progression-leaderboard-current-board");
+    boardCard.append(
+      create("span", "progression-leaderboard-stat-label", "Current Board"),
+      create("strong", "", "Global lifetime XP"),
+      create("p", "", "Rank is leaderboard placement only. Level is the XP progression tier returned by the runtime progression contract."),
+      create("span", "progression-leaderboard-current-board-source", "/api/public/progression/leaderboard")
+    );
+    hero.append(heroCopy, boardCard);
+    page.appendChild(hero);
+
+    const statsGrid = create("section", "progression-leaderboard-stat-grid");
+    page.appendChild(statsGrid);
+
+    const showcase = create("section", "progression-leaderboard-showcase");
+    const showcaseHead = create("div", "progression-leaderboard-section-head");
+    showcaseHead.append(
+      create("span", "progression-leaderboard-section-kicker", "Hall of Fame"),
+      create("h2", "", "Top 3 Overall"),
+      create("p", "", "Featured placement cards use the same runtime leaderboard rows as the table below, with tie-aware gold, silver, and bronze styling.")
+    );
+    const podium = create("div", "progression-leaderboard-podium");
+    showcase.append(showcaseHead, podium);
+    page.appendChild(showcase);
+
+    const standingHost = create("section", "progression-leaderboard-standing");
+    page.appendChild(standingHost);
 
     const shell = create("section", "dashboard-card progression-board progression-board--premium");
+    const listHead = create("div", "progression-leaderboard-section-head progression-leaderboard-section-head--inline");
+    listHead.append(
+      create("span", "progression-leaderboard-section-kicker", "Global table"),
+      create("h2", "", "All ranked profiles"),
+      create("p", "", "Ranked by lifetime public XP. Top-three users also remain in this full-width list.")
+    );
     const controls = create("div", "progression-leaderboard-controls");
     const searchLabel = create("label", "progression-leaderboard-search");
     const searchText = create("span", "sr-only", "Search ranked profiles");
@@ -3292,30 +3645,70 @@
     });
     controls.append(searchLabel, tabs);
     const status = create("p", "muted progression-leaderboard-status", "Loading leaderboard...");
+    const tableHeader = create("div", "progression-leaderboard-table-header");
     const list = create("div", "progression-leaderboard-list");
-    shell.append(controls, status, list);
-    host.appendChild(shell);
+    const paginationHost = create("div", "progression-leaderboard-pagination-host");
+    renderLeaderboardTableHeader(tableHeader);
+    shell.append(listHead, controls, status, tableHeader, list, paginationHost);
+    page.appendChild(shell);
+
+    const gallerySection = create("section", "progression-leaderboard-gallery-section");
+    const galleryHead = create("div", "progression-leaderboard-section-head");
+    galleryHead.append(
+      create("span", "progression-leaderboard-section-kicker", "Featured Leaderboards"),
+      create("h2", "", "Creator-defined boards preview"),
+      create("p", "", "These cards are visual scaffolds only. They do not contribute fake data to the global XP leaderboard.")
+    );
+    const gallery = create("div", "progression-leaderboard-gallery");
+    renderLeaderboardGallery(gallery);
+    gallerySection.append(galleryHead, gallery);
+    page.appendChild(gallerySection);
+    host.appendChild(page);
 
     (async () => {
       try {
         const payload = await fetchPublicProgressionLeaderboard();
         const rows = computeLeaderboardTiePlacements(Array.isArray(payload?.leaderboard) ? payload.leaderboard : []);
+        renderLeaderboardStats(statsGrid, rows);
+        renderLeaderboardPodium(podium, rows);
+        if (!authState?.authenticated) {
+          renderSignedOutStanding(standingHost, openAuthModal);
+        } else {
+          try {
+            const [progressionPayload, economyPayload] = await Promise.all([
+              fetchMyPublicProgression(),
+              fetchMyPublicEconomy().catch(() => ({}))
+            ]);
+            const standingEntry = findLeaderboardStanding(rows, progressionPayload?.summary || {}, progressionPayload?.identity || {}, authState || {});
+            renderSignedInStanding(standingHost, standingEntry, progressionPayload, economyPayload, authState || {});
+          } catch (standingError) {
+            renderSignedInStanding(standingHost, null, {}, {}, authState || {});
+          }
+        }
         const state = {
           expandedId: "",
           query: "",
+          page: 1,
           render() {
             const filteredRows = filterLeaderboardRows(rows, state.query);
+            const totalPages = Math.max(1, Math.ceil(filteredRows.length / LEADERBOARD_PAGE_SIZE));
+            if (state.page > totalPages) state.page = totalPages;
+            const pageStart = (state.page - 1) * LEADERBOARD_PAGE_SIZE;
+            const pageRows = filteredRows.slice(pageStart, pageStart + LEADERBOARD_PAGE_SIZE);
             clear(list);
+            clear(paginationHost);
             if (!filteredRows.length) {
               status.textContent = state.query ? "No ranked profiles match this search." : "No public XP has been awarded yet.";
               list.appendChild(create("div", "empty-state", state.query ? "Try a display name, @handle, level label, or safe badge term." : "Progression starts when real trigger or game events award XP."));
               return;
             }
-            status.textContent = `${formatNumber(filteredRows.length)} ranked public identit${filteredRows.length === 1 ? "y" : "ies"} shown from ${formatNumber(rows.length)} loaded.`;
-            filteredRows.forEach((entry) => list.appendChild(buildLeaderboardRow(entry, state)));
+            status.textContent = `${formatNumber(filteredRows.length)} ranked public identit${filteredRows.length === 1 ? "y" : "ies"} shown from ${formatNumber(rows.length)} loaded. Showing ${formatNumber(pageRows.length)} on this page.`;
+            pageRows.forEach((entry) => list.appendChild(buildLeaderboardRow(entry, state)));
+            paginationHost.appendChild(buildLeaderboardPagination(state, totalPages));
           }
         };
         if (!rows.length) {
+          if (!authState?.authenticated) renderSignedOutStanding(standingHost, openAuthModal);
           status.textContent = "No public XP has been awarded yet.";
           clear(list);
           list.appendChild(create("div", "empty-state", "Progression starts when real trigger or game events award XP."));
@@ -3324,6 +3717,7 @@
         search.addEventListener("input", () => {
           state.query = search.value || "";
           state.expandedId = "";
+          state.page = 1;
           state.render();
         });
         state.render();
