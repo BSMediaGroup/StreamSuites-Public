@@ -110,7 +110,12 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   assert.match(app, /function leaderboardInventoryItems\(entry = \{\}\)/);
   assert.match(app, /function buildLeaderboardInventoryOverview\(entry = \{\}\)/);
   assert.match(app, /detail\.append\(summary, stats, buildLeaderboardInventoryOverview\(entry\)\)/);
+  assert.match(app, /entry\?\.economy_summary\?\.inventory/);
+  assert.match(app, /entry\?\.inventory_summary/);
+  assert.match(app, /progression-leaderboard-inventory-meta/);
+  assert.match(app, /\[definition\.category, definition\.rarity\]\.filter\(Boolean\)\.join\(" • "\)/);
   assert.match(app, /progression-leaderboard-inventory-overflow/);
+  assert.match(app, /return buildEconomyBalanceValue\(wallet, \{ compactNumber: true \}\)/);
   assert.doesNotMatch(app, /This public identity is ranked from authoritative StreamSuites XP only/);
   assert.match(app, /function normalizeLeaderboardWalletFields\(source = \{\}\)/);
   assert.match(app, /entry\?\.wallet_summary/);
@@ -154,6 +159,7 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   assert.match(css, /\.progression-leaderboard-podium-card--1/);
   assert.match(css, /\.progression-leaderboard-standing-card/);
   assert.match(css, /\.progression-leaderboard-standing-stats \.economy-balance-value--standing\s*\{[\s\S]*font-size:\s*inherit/);
+  assert.match(css, /\.progression-leaderboard-detail-stat \.economy-balance-value\s*\{[\s\S]*font-size:\s*inherit/);
   assert.match(css, /\.progression-leaderboard-table-header/);
   assert.match(css, /--progression-leaderboard-row-grid/);
   assert.match(css, /\.progression-leaderboard-header-profile\s*\{[\s\S]*grid-column:\s*2 \/ 4/);
@@ -172,6 +178,8 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   assert.match(css, /\.progression-leaderboard-detail-actions/);
   assert.match(css, /\.progression-leaderboard-inventory-overview/);
   assert.match(css, /\.progression-leaderboard-inventory-rail/);
+  assert.match(css, /\.progression-leaderboard-inventory-body/);
+  assert.match(css, /\.progression-leaderboard-inventory-meta/);
   assert.match(css, /\.progression-board\.dashboard-card/);
   assert.match(css, /\.progression-leaderboard-detail/);
   assert.match(css, /\.progression-leaderboard-search input/);

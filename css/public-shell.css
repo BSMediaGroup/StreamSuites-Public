@@ -8292,6 +8292,10 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   font-weight: 850;
 }
 
+.progression-leaderboard-detail-stat .economy-balance-value {
+  font-size: inherit;
+}
+
 .progression-leaderboard-standing-stats .economy-balance-value--standing {
   font-size: inherit;
   font-weight: inherit;
@@ -8383,9 +8387,22 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   font-weight: 900;
 }
 
-.progression-leaderboard-inventory-name {
+.progression-leaderboard-inventory-body {
+  display: grid;
+  min-width: 0;
+  line-height: 1.05;
+}
+
+.progression-leaderboard-inventory-name,
+.progression-leaderboard-inventory-meta {
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.progression-leaderboard-inventory-meta {
+  color: rgba(190, 204, 224, 0.72);
+  font-size: 0.68rem;
+  font-weight: 750;
 }
 
 .progression-leaderboard-inventory-quantity {

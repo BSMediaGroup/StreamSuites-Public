@@ -3173,7 +3173,7 @@
     const wallet = leaderboardWallet(entry);
     const total = leaderboardWalletTotal(entry);
     if (!wallet || total === null) return create("span", options.className || "progression-leaderboard-muted-value", "Not public");
-    return buildEconomyBalanceValue(wallet, { compact: true, compactNumber: true });
+    return buildEconomyBalanceValue(wallet, { compactNumber: true });
   }
 
   function leaderboardInventoryItems(entry = {}) {
@@ -3181,6 +3181,8 @@
       entry?.inventory,
       entry?.inventory_summary,
       entry?.inventorySummary,
+      entry?.economy_summary?.inventory,
+      entry?.economySummary?.inventory,
       entry?.public_inventory,
       entry?.publicInventory,
       entry?.identity?.inventory,
@@ -3222,9 +3224,15 @@
         icon.textContent = String(definition.label || item.item_code || "?").slice(0, 1).toUpperCase();
         icon.setAttribute("aria-hidden", "true");
       }
+      const subtitle = [definition.category, definition.rarity].filter(Boolean).join(" • ") || item.item_code || "";
+      const body = create("span", "progression-leaderboard-inventory-body");
+      body.append(
+        create("span", "progression-leaderboard-inventory-name", definition.label || item.item_code || "Item"),
+        create("span", "progression-leaderboard-inventory-meta", subtitle)
+      );
       chip.append(
         icon,
-        create("span", "progression-leaderboard-inventory-name", definition.label || item.item_code || "Item"),
+        body,
         create("strong", "progression-leaderboard-inventory-quantity", `x${formatNumber(item.quantity || 0)}`)
       );
       rail.appendChild(chip);
