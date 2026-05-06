@@ -148,7 +148,9 @@
     community: "/assets/icons/ui/community.svg",
     social: "/assets/icons/ui/integrations.svg",
     streamsuites: "/assets/icons/ui/streamsuitesicon.svg",
-    findmehere: "/assets/icons/ui/findmehereicon.svg"
+    findmehere: "/assets/icons/ui/findmehereicon.svg",
+    plus: "/assets/icons/ui/plus.svg",
+    minus: "/assets/icons/ui/minus.svg"
   });
   const STREAM_PLATFORM_LABELS = Object.freeze({
     rumble: "Rumble",
@@ -3174,6 +3176,74 @@
     return buildEconomyBalanceValue(wallet, { compact: true, compactNumber: true });
   }
 
+  function leaderboardInventoryItems(entry = {}) {
+    const candidates = [
+      entry?.inventory,
+      entry?.inventory_summary,
+      entry?.inventorySummary,
+      entry?.public_inventory,
+      entry?.publicInventory,
+      entry?.identity?.inventory,
+      entry?.identity?.public_inventory
+    ];
+    for (const candidate of candidates) {
+      if (Array.isArray(candidate)) {
+        return candidate.filter((item) => Number(item?.quantity || 0) > 0 && !isWalletDenominationInventoryItem(item));
+      }
+    }
+    return [];
+  }
+
+  function buildLeaderboardInventoryOverview(entry = {}) {
+    const inventory = leaderboardInventoryItems(entry);
+    const href = leaderboardProfileHref(entry);
+    const row = create("div", "progression-leaderboard-inventory-overview");
+    row.appendChild(create("span", "progression-leaderboard-inventory-label", "Inventory"));
+    const rail = create("div", "progression-leaderboard-inventory-rail");
+    if (!inventory.length) {
+      rail.appendChild(create("span", "progression-leaderboard-inventory-empty", "No public inventory items"));
+      row.appendChild(rail);
+      return row;
+    }
+    const visibleLimit = 6;
+    inventory.slice(0, visibleLimit).forEach((item) => {
+      const definition = item?.definition || {};
+      const chip = create("span", "progression-leaderboard-inventory-chip");
+      const iconPath = String(definition.icon_path || item.icon_path || "").trim();
+      const icon = iconPath
+        ? create("img", "progression-leaderboard-inventory-icon")
+        : create("span", "progression-leaderboard-inventory-icon progression-leaderboard-inventory-icon--fallback");
+      if (iconPath) {
+        icon.src = economyAssetPath(iconPath);
+        icon.alt = "";
+        icon.loading = "lazy";
+        icon.decoding = "async";
+      } else {
+        icon.textContent = String(definition.label || item.item_code || "?").slice(0, 1).toUpperCase();
+        icon.setAttribute("aria-hidden", "true");
+      }
+      chip.append(
+        icon,
+        create("span", "progression-leaderboard-inventory-name", definition.label || item.item_code || "Item"),
+        create("strong", "progression-leaderboard-inventory-quantity", `x${formatNumber(item.quantity || 0)}`)
+      );
+      rail.appendChild(chip);
+    });
+    const hiddenCount = Math.max(0, inventory.length - visibleLimit);
+    if (hiddenCount) {
+      const overflow = create(href ? "a" : "span", "progression-leaderboard-inventory-overflow", `+${formatNumber(hiddenCount)}`);
+      if (href) {
+        overflow.href = href;
+        overflow.setAttribute("aria-label", `Open profile to view ${formatNumber(hiddenCount)} more inventory item${hiddenCount === 1 ? "" : "s"}`);
+      } else {
+        overflow.setAttribute("aria-disabled", "true");
+      }
+      rail.appendChild(overflow);
+    }
+    row.appendChild(rail);
+    return row;
+  }
+
   function computeLeaderboardStats(rows = []) {
     const lifetimeXp = rows.reduce((total, entry) => total + leaderboardXpTotal(entry), 0);
     const walletValues = rows
@@ -3190,9 +3260,12 @@
 
   function buildLeaderboardStatCard({ label, value, note, state = "live" } = {}) {
     const card = create("article", `progression-leaderboard-stat-card progression-leaderboard-stat-card--${state}`);
+    const valueNode = create("strong", "progression-leaderboard-stat-value");
+    if (value instanceof Node) valueNode.appendChild(value);
+    else valueNode.textContent = value || "0";
     card.append(
       create("span", "progression-leaderboard-stat-label", label || ""),
-      create("strong", "progression-leaderboard-stat-value", value || "0")
+      valueNode
     );
     if (note) card.appendChild(create("span", "progression-leaderboard-stat-note", note));
     return card;
@@ -3209,12 +3282,14 @@
       }),
       buildLeaderboardStatCard({
         label: "Lifetime XP",
-        value: formatCompactNumber(stats.lifetimeXp),
+        value: `${formatCompactNumber(stats.lifetimeXp)} XP`,
         note: "Computed from loaded leaderboard entries"
       }),
       buildLeaderboardStatCard({
         label: "Wallet Index",
-        value: stats.walletCount ? formatCompactNumber(stats.walletTotal) : "Not public",
+        value: stats.walletCount
+          ? buildEconomyBalanceValue({ balance_total_credits: stats.walletTotal }, { compact: true, compactNumber: true })
+          : "Not public",
         note: stats.walletCount ? `${formatNumber(stats.walletCount)} visible wallet summar${stats.walletCount === 1 ? "y" : "ies"}` : "Shown only when wallet totals are returned",
         state: stats.walletCount ? "live" : "scaffold"
       }),
@@ -3325,12 +3400,11 @@
     const detail = create("div", "progression-leaderboard-detail");
     const summary = create("div", "progression-leaderboard-detail-summary");
     const identity = leaderboardIdentity(entry);
-    summary.append(
-      create("p", "", identity.bio || "This public identity is ranked from authoritative StreamSuites XP only."),
-      buildLeaderboardProfileCta(entry)
-    );
     const handleMeta = buildLeaderboardHandleMeta(identity);
-    if (handleMeta) summary.appendChild(handleMeta);
+    const actionGroup = create("div", "progression-leaderboard-detail-actions");
+    actionGroup.appendChild(buildLeaderboardProfileCta(entry));
+    if (handleMeta) actionGroup.appendChild(handleMeta);
+    summary.appendChild(actionGroup);
     const stats = create("dl", "progression-leaderboard-detail-stats");
     const addStat = (label, value) => {
       const item = create("div", "progression-leaderboard-detail-stat");
@@ -3339,14 +3413,14 @@
     };
     addStat("Rank", `#${formatNumber(leaderboardDisplayPlacement(entry))}`);
     addStat("XP", `${formatCompactNumber(leaderboardXpTotal(entry))} XP`);
-    stats.appendChild(buildLeaderboardLevelCard(entry));
     const walletStat = create("div", "progression-leaderboard-detail-stat");
     walletStat.append(create("dt", "", "Wallet"));
     const walletValue = create("dd", "");
     walletValue.appendChild(leaderboardWalletSummary(entry));
     walletStat.appendChild(walletValue);
     stats.appendChild(walletStat);
-    detail.append(summary, stats);
+    stats.appendChild(buildLeaderboardLevelCard(entry));
+    detail.append(summary, stats, buildLeaderboardInventoryOverview(entry));
     return detail;
   }
 
@@ -3395,8 +3469,15 @@
     const wallet = create("span", "progression-leaderboard-wallet-cell");
     wallet.appendChild(leaderboardWalletSummary(entry));
     const active = create("span", "progression-leaderboard-active-cell", entry?.active_label || entry?.last_active_label || entry?.status_label || "Not public");
-    const chevron = create("span", "progression-leaderboard-chevron", isExpanded ? "Hide" : "Show");
-    chevron.setAttribute("aria-hidden", "true");
+    const chevron = create("button", "progression-leaderboard-chevron");
+    chevron.type = "button";
+    chevron.setAttribute("aria-label", `${isExpanded ? "Collapse" : "Expand"} leaderboard details for ${progressionDisplayName(leaderboardIdentity(entry))}`);
+    chevron.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+    chevron.addEventListener("click", (event) => {
+      event.stopPropagation();
+      toggleLeaderboardRow(entry, state, isExpanded);
+    });
+    chevron.appendChild(createIcon(isExpanded ? UI_ICON_MAP.minus : UI_ICON_MAP.plus, "progression-leaderboard-chevron-icon"));
     main.append(buildProgressionLevelChip(entry, { compact: true }), xp, wallet, active);
     row.append(main, chevron);
     if (isExpanded) row.appendChild(buildLeaderboardDetail(entry));
@@ -3409,9 +3490,9 @@
     const profile = leaderboardProfileModel(entry);
     const card = create("article", `progression-leaderboard-podium-card progression-leaderboard-podium-card--${placement}${placement === 1 ? " ss-lb-podium-card--first" : ""}`);
     if (placement === 1) {
-      const sparkle = create("span", "ss-lb-sparkle");
-      sparkle.setAttribute("aria-hidden", "true");
-      card.appendChild(sparkle);
+      const shimmer = create("span", "ss-lb-premium-shimmer");
+      shimmer.setAttribute("aria-hidden", "true");
+      card.appendChild(shimmer);
     }
     const asset = LEADERBOARD_PLACEMENT_ASSETS[placement] || "";
     if (asset) {
@@ -3589,8 +3670,8 @@
   function buildLeaderboardPagination(state = {}, totalPages = 1) {
     const nav = create("nav", "progression-leaderboard-pagination");
     nav.setAttribute("aria-label", "Leaderboard pagination");
-    const addButton = (label, page, disabled = false, current = false) => {
-      const button = create("button", current ? "is-current" : "", label);
+    const addButton = (label, page, disabled = false, current = false, kind = "page") => {
+      const button = create("button", `progression-leaderboard-page-button progression-leaderboard-page-button--${kind}${current ? " is-current" : ""}`, label);
       button.type = "button";
       button.disabled = disabled;
       if (current) button.setAttribute("aria-current", "page");
@@ -3602,7 +3683,7 @@
       });
       nav.appendChild(button);
     };
-    addButton("Previous", Math.max(1, state.page - 1), state.page <= 1);
+    addButton("Previous", Math.max(1, state.page - 1), state.page <= 1, false, "prev");
     const pages = [];
     for (let page = 1; page <= totalPages; page += 1) {
       if (page === 1 || page === totalPages || Math.abs(page - state.page) <= 1) pages.push(page);
@@ -3610,10 +3691,10 @@
     let last = 0;
     pages.forEach((page) => {
       if (last && page - last > 1) nav.appendChild(create("span", "progression-leaderboard-pagination-gap", "..."));
-      addButton(String(page), page, false, page === state.page);
+      addButton(String(page), page, false, page === state.page, "page");
       last = page;
     });
-    addButton("Next", Math.min(totalPages, state.page + 1), state.page >= totalPages);
+    addButton("Next", Math.min(totalPages, state.page + 1), state.page >= totalPages, false, "next");
     nav.appendChild(create("span", "progression-leaderboard-pagination-status", `Page ${formatNumber(state.page)} of ${formatNumber(totalPages)}`));
     return nav;
   }

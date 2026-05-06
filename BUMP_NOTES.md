@@ -744,3 +744,28 @@ Open bucket for future work only. Do not add new `0.4.8-alpha` prep notes into t
 - The shared modal now depends on the helper being loaded on every shell entrypoint. Future route additions that use `public-shell.js` need to keep that helper script include or the modal will regress again.
 - Restored the standalone `/u/*` profile header brand label to the original text crossfade path with the header title font stack explicitly reapplied on the shared brand-text wrapper, while keeping CSS case transforms disabled and using literal strings `StreamSuites™` and `COMMUNITY HOME`. This removes the fallback-font regression without reintroducing the broken SVG text workaround. No files were created or removed.
 - Increased only the default standalone `/u/*` profile header `StreamSuites™` label by about 15% via the default-state span, leaving the `COMMUNITY HOME` hover label size unchanged. No files were created or removed.
+
+## Task 3AA - Public Leaderboards Focused Polish Pass - 2026-05-07
+
+### Technical Notes
+
+- Refined only the existing `/leaderboards` implementation in `js/public-pages-app.js` and `css/public-shell.css`: drawer cards now order Rank, XP, Wallet, Level; the old explanatory fallback copy is removed; the profile CTA and handle occupy the compact left drawer area; and expanded rows now include a full-width, horizontal inventory overview sourced from the leaderboard/profile identity payload when present.
+- Replaced the text/chevron expand affordance with the existing `plus.svg` / `minus.svg` icon-mask treatment, removed the leaderboard container dotted pattern, muted the cyan leaderboard-specific accents, and added explicit pagination button typography hooks.
+- Replaced the first-place sparkle dots with a scoped premium shimmer/glow treatment that respects reduced-motion preferences, and updated overview cards so Lifetime XP includes the `XP` suffix while Wallet Index uses the same currency-symbol balance component as other economy surfaces.
+- Extended `tests/public-authority-wiring.test.mjs` to cover the drawer text removal, inventory overview hook, Wallet-before-Level order, plus/minus expand icon path, overview stat formatting, and pagination class hook.
+
+### Human-Readable Notes
+
+- The public leaderboard drawer is denser and more useful: profile action/handle are compact, wallet precedes level, and inventory appears without turning the row into a tall list.
+- Leaderboard accents now better match the muted public shell language, the expand button is quieter, the dotted table texture is gone, and the first-place podium effect is less gimmicky.
+
+### Files / Areas Touched
+
+- `js/public-pages-app.js`
+- `css/public-shell.css`
+- `tests/public-authority-wiring.test.mjs`
+- `BUMP_NOTES.md`
+
+### Risks / Follow-Ups
+
+- The inventory drawer row depends on inventory arrays being present in the leaderboard row or nested identity payload; if runtime does not include inventory on leaderboard entries, the row truthfully shows an empty public inventory state instead of inventing profile data.
