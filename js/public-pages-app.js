@@ -654,6 +654,21 @@
     return parsed.toLocaleString();
   }
 
+  function formatCompactNumber(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return "0";
+    const abs = Math.abs(parsed);
+    const suffixes = [
+      { value: 1_000_000_000_000, suffix: "T" },
+      { value: 1_000_000_000, suffix: "B" },
+      { value: 1_000_000, suffix: "M" }
+    ];
+    const unit = suffixes.find((item) => abs >= item.value);
+    if (!unit) return formatNumber(parsed);
+    const scaled = parsed / unit.value;
+    return `${Number(scaled.toFixed(scaled >= 10 ? 1 : 2)).toLocaleString()}${unit.suffix}`;
+  }
+
   function formatOrdinal(value) {
     const parsed = Number(value);
     if (!Number.isInteger(parsed) || parsed <= 0) return "";
@@ -2690,7 +2705,7 @@
     icon.alt = "";
     icon.loading = "lazy";
     icon.decoding = "async";
-    wrap.append(icon, create("span", "", `${formatNumber(value)} XP`));
+    wrap.append(icon, create("span", "", `${options.compactNumber ? formatCompactNumber(value) : formatNumber(value)} XP`));
     return wrap;
   }
 
@@ -2754,7 +2769,8 @@
       icon.style.setProperty("--economy-currency-symbol", `url("${economyAssetPath(wallet.currency_symbol_path || ECONOMY_CURRENCY_SYMBOL_PATH)}")`);
     }
     icon.setAttribute("aria-hidden", "true");
-    wrap.append(icon, create("span", "", `${formatNumber(value)} ${economyCurrencyLabel(wallet, value)}`));
+    const formattedValue = options.compactNumber ? formatCompactNumber(value) : formatNumber(value);
+    wrap.append(icon, create("span", "", `${formattedValue} ${economyCurrencyLabel(wallet, value)}`));
     return wrap;
   }
 
@@ -3096,8 +3112,52 @@
     return Number(entry?.placement_rank || entry?.rank || entry?.position || leaderboardPlacement(entry) || 0);
   }
 
+  function normalizeLeaderboardWalletFields(source = {}) {
+    if (!source || typeof source !== "object") return null;
+    const nested = source.wallet && typeof source.wallet === "object" ? source.wallet : null;
+    const candidate = nested || source;
+    const rawTotal = candidate.balance_total_credits ??
+      candidate.cash_balance_credits ??
+      candidate.balance_current ??
+      candidate.held_value_credits ??
+      candidate.total_value ??
+      candidate.total_visible_value ??
+      candidate.wallet_total;
+    if (rawTotal == null) return null;
+    const parsedTotal = Number(rawTotal);
+    if (!Number.isFinite(parsedTotal)) return null;
+    const cash = Number(candidate.cash_balance_credits ?? candidate.balance_current ?? parsedTotal);
+    const held = Number(candidate.held_value_credits ?? Math.max(0, parsedTotal - (Number.isFinite(cash) ? cash : parsedTotal)));
+    return {
+      ...source,
+      ...candidate,
+      balance_total_credits: parsedTotal,
+      cash_balance_credits: Number.isFinite(cash) ? cash : parsedTotal,
+      held_value_credits: Number.isFinite(held) ? held : 0,
+      balance_current: Number(candidate.balance_current ?? (Number.isFinite(cash) ? cash : parsedTotal)),
+      currency_unit_label: candidate.currency_unit_label || source.currency_unit_label || source.currencyUnitLabel || "Credit",
+      currency_unit_plural_label: candidate.currency_unit_plural_label || source.currency_unit_plural_label || source.currencyUnitPluralLabel || "Credits",
+      currency_symbol_path: candidate.currency_symbol_path || source.currency_symbol_path || source.currencySymbolPath || ECONOMY_CURRENCY_SYMBOL_PATH
+    };
+  }
+
   function leaderboardWallet(entry = {}) {
-    return entry?.wallet && typeof entry.wallet === "object" ? entry.wallet : null;
+    const candidates = [
+      entry?.wallet,
+      entry?.wallet_summary,
+      entry?.walletSummary,
+      entry?.economy,
+      entry?.economy_summary,
+      entry?.economySummary,
+      entry?.public_economy,
+      entry?.publicEconomy,
+      entry
+    ];
+    for (const candidate of candidates) {
+      const wallet = normalizeLeaderboardWalletFields(candidate);
+      if (wallet) return wallet;
+    }
+    return null;
   }
 
   function leaderboardWalletTotal(entry = {}) {
@@ -3111,7 +3171,7 @@
     const wallet = leaderboardWallet(entry);
     const total = leaderboardWalletTotal(entry);
     if (!wallet || total === null) return create("span", options.className || "progression-leaderboard-muted-value", "Not public");
-    return buildEconomyBalanceValue(wallet, { compact: true });
+    return buildEconomyBalanceValue(wallet, { compact: true, compactNumber: true });
   }
 
   function computeLeaderboardStats(rows = []) {
@@ -3149,12 +3209,12 @@
       }),
       buildLeaderboardStatCard({
         label: "Lifetime XP",
-        value: formatNumber(stats.lifetimeXp),
+        value: formatCompactNumber(stats.lifetimeXp),
         note: "Computed from loaded leaderboard entries"
       }),
       buildLeaderboardStatCard({
         label: "Wallet Index",
-        value: stats.walletCount ? formatNumber(stats.walletTotal) : "Not public",
+        value: stats.walletCount ? formatCompactNumber(stats.walletTotal) : "Not public",
         note: stats.walletCount ? `${formatNumber(stats.walletCount)} visible wallet summar${stats.walletCount === 1 ? "y" : "ies"}` : "Shown only when wallet totals are returned",
         state: stats.walletCount ? "live" : "scaffold"
       }),
@@ -3248,6 +3308,8 @@
     wrap.appendChild(nameLine);
     const handle = leaderboardHandle(identity);
     if (handle) wrap.appendChild(create("span", "progression-leaderboard-handle", handle));
+    const badges = buildLeaderboardBadges(entry);
+    if (badges.childElementCount) wrap.appendChild(badges);
     return wrap;
   }
 
@@ -3276,7 +3338,7 @@
       stats.appendChild(item);
     };
     addStat("Rank", `#${formatNumber(leaderboardDisplayPlacement(entry))}`);
-    addStat("XP", `${formatNumber(leaderboardXpTotal(entry))} XP`);
+    addStat("XP", `${formatCompactNumber(leaderboardXpTotal(entry))} XP`);
     stats.appendChild(buildLeaderboardLevelCard(entry));
     const walletStat = create("div", "progression-leaderboard-detail-stat");
     walletStat.append(create("dt", "", "Wallet"));
@@ -3319,14 +3381,7 @@
     const main = create("div", "progression-leaderboard-row-main");
     main.append(buildLeaderboardPlacementBadge(entry), buildLeaderboardAvatar(entry), buildLeaderboardIdentityBlock(entry));
     const xp = create("span", "progression-leaderboard-xp");
-    xp.appendChild(buildProgressionXpValue(leaderboardXpTotal(entry), { compact: true }));
-    const toggle = create("button", "progression-leaderboard-expand", isExpanded ? "Hide details" : "Details");
-    toggle.type = "button";
-    toggle.setAttribute("aria-expanded", isExpanded ? "true" : "false");
-    toggle.addEventListener("click", (event) => {
-      event.stopPropagation();
-      toggleLeaderboardRow(entry, state, isExpanded);
-    });
+    xp.appendChild(buildProgressionXpValue(leaderboardXpTotal(entry), { compact: true, compactNumber: true }));
     row.addEventListener("click", (event) => {
       if (isInteractiveLeaderboardTarget(event.target)) return;
       toggleLeaderboardRow(entry, state, isExpanded);
@@ -3340,8 +3395,10 @@
     const wallet = create("span", "progression-leaderboard-wallet-cell");
     wallet.appendChild(leaderboardWalletSummary(entry));
     const active = create("span", "progression-leaderboard-active-cell", entry?.active_label || entry?.last_active_label || entry?.status_label || "Not public");
-    main.append(buildProgressionLevelChip(entry, { compact: true }), xp, wallet, active, buildLeaderboardBadges(entry), toggle);
-    row.appendChild(main);
+    const chevron = create("span", "progression-leaderboard-chevron", isExpanded ? "Hide" : "Show");
+    chevron.setAttribute("aria-hidden", "true");
+    main.append(buildProgressionLevelChip(entry, { compact: true }), xp, wallet, active);
+    row.append(main, chevron);
     if (isExpanded) row.appendChild(buildLeaderboardDetail(entry));
     return row;
   }
@@ -3350,7 +3407,12 @@
     const placement = leaderboardPlacement(entry);
     const identity = leaderboardIdentity(entry);
     const profile = leaderboardProfileModel(entry);
-    const card = create("article", `progression-leaderboard-podium-card progression-leaderboard-podium-card--${placement}`);
+    const card = create("article", `progression-leaderboard-podium-card progression-leaderboard-podium-card--${placement}${placement === 1 ? " ss-lb-podium-card--first" : ""}`);
+    if (placement === 1) {
+      const sparkle = create("span", "ss-lb-sparkle");
+      sparkle.setAttribute("aria-hidden", "true");
+      card.appendChild(sparkle);
+    }
     const asset = LEADERBOARD_PLACEMENT_ASSETS[placement] || "";
     if (asset) {
       const medal = create("img", "progression-leaderboard-podium-medal");
@@ -3380,7 +3442,7 @@
       else metric.appendChild(create("strong", "", valueNode));
       metrics.appendChild(metric);
     };
-    addMetric("XP", `${formatNumber(leaderboardXpTotal(entry))}`);
+    addMetric("XP", `${formatCompactNumber(leaderboardXpTotal(entry))}`);
     addMetric("Level", buildProgressionLevelChip(entry, { compact: true }));
     card.appendChild(metrics);
     if (href) {
@@ -3495,10 +3557,10 @@
       item.appendChild(value);
       stats.appendChild(item);
     };
-    addStat("XP", `${formatNumber(entry ? leaderboardXpTotal(entry) : (summary.xp_total ?? summary.total_xp ?? 0))} XP`);
+    addStat("XP", `${formatCompactNumber(entry ? leaderboardXpTotal(entry) : (summary.xp_total ?? summary.total_xp ?? 0))} XP`);
     addStat("Level", buildProgressionLevelChip(profileEntry, { compact: true }));
     const wallet = economyPayload?.wallet && typeof economyPayload.wallet === "object" ? economyPayload.wallet : leaderboardWallet(entry || {});
-    addStat("Wallet", wallet ? buildEconomyBalanceValue(wallet, { compact: true }) : "Not public");
+    addStat("Wallet", wallet ? buildEconomyBalanceValue(wallet, { compact: true, compactNumber: true }) : "Not public");
     card.appendChild(stats);
     const authSlug = getCanonicalProfileSlug(authState, "");
     const href = leaderboardProfileHref(profileEntry) || (authSlug ? `${CANONICAL_PROFILE_PREFIX}${encodeURIComponent(authSlug)}` : "");
@@ -3512,8 +3574,15 @@
 
   function renderLeaderboardTableHeader(host) {
     clear(host);
-    ["Rank", "Profile", "Level", "XP", "Wallet", "Active", "Actions"].forEach((label) => {
-      host.appendChild(create("span", "", label));
+    [
+      ["Rank", "progression-leaderboard-header-rank"],
+      ["Profile", "progression-leaderboard-header-profile"],
+      ["Level", "progression-leaderboard-header-level"],
+      ["XP", "progression-leaderboard-header-xp"],
+      ["Wallet", "progression-leaderboard-header-wallet"],
+      ["Active", "progression-leaderboard-header-active"]
+    ].forEach(([label, className]) => {
+      host.appendChild(create("span", className, label));
     });
   }
 
@@ -3634,6 +3703,7 @@
     const searchText = create("span", "sr-only", "Search ranked profiles");
     const search = create("input");
     search.type = "search";
+    search.className = "progression-leaderboard-search-input";
     search.placeholder = "Search by name, @handle, level, or badge";
     search.autocomplete = "off";
     searchLabel.append(searchText, search);

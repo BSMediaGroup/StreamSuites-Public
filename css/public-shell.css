@@ -7943,8 +7943,17 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   padding: 0 14px;
   background: rgba(6, 10, 18, 0.68);
   color: rgba(246, 249, 255, 0.96);
+  font: inherit;
+  font-weight: 800;
+  letter-spacing: 0;
   outline: none;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.progression-leaderboard-search input::placeholder {
+  color: rgba(190, 204, 224, 0.72);
+  font: inherit;
+  font-weight: 800;
 }
 
 .progression-leaderboard-search input:focus {
@@ -8002,6 +8011,15 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   box-shadow:
     0 16px 34px rgba(0, 0, 0, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.055);
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.progression-leaderboard-row:hover {
+  transform: translateY(-1px);
+  border-color: rgba(103, 232, 249, 0.24);
+  background:
+    linear-gradient(180deg, rgba(22, 31, 48, 0.82), rgba(8, 12, 20, 0.9)),
+    rgba(9, 13, 22, 0.86);
 }
 
 .progression-leaderboard-row:focus-visible {
@@ -8041,7 +8059,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .progression-leaderboard-row-main {
   display: grid;
-  grid-template-columns: 54px auto minmax(0, 1fr) minmax(110px, auto) minmax(92px, auto) minmax(90px, auto) minmax(88px, auto);
+  grid-template-columns: var(--progression-leaderboard-row-grid, 54px 48px minmax(0, 1fr) minmax(112px, auto) minmax(116px, auto) minmax(128px, auto) minmax(90px, auto));
   align-items: center;
   gap: 12px;
   min-width: 0;
@@ -8114,6 +8132,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   align-items: center;
   gap: 6px;
   min-width: 0;
+  margin-top: 3px;
 }
 
 .progression-leaderboard-badges .profile-role-chip,
@@ -8124,36 +8143,43 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   font-size: 10px;
 }
 
-.progression-leaderboard-expand {
-  opacity: 0;
-  min-height: 32px;
-  border: 1px solid rgba(203, 219, 246, 0.16);
-  border-radius: 999px;
-  padding: 5px 12px;
-  background: rgba(255, 255, 255, 0.045);
-  color: rgba(240, 246, 255, 0.9);
-  font-size: 12px;
-  font-weight: 850;
-  transition: opacity 140ms ease, border-color 140ms ease, background 140ms ease;
+.progression-leaderboard-chevron {
+  position: absolute;
+  right: 14px;
+  top: 16px;
+  width: 16px;
+  height: 16px;
+  overflow: hidden;
+  color: transparent;
+  font-size: 0;
+  pointer-events: none;
 }
 
-.progression-leaderboard-row:hover .progression-leaderboard-expand,
-.progression-leaderboard-row:focus-within .progression-leaderboard-expand,
-.progression-leaderboard-row.is-expanded .progression-leaderboard-expand {
-  opacity: 1;
+.progression-leaderboard-chevron::before {
+  content: "";
+  position: absolute;
+  inset: 4px 3px;
+  border-right: 2px solid rgba(203, 219, 246, 0.6);
+  border-bottom: 2px solid rgba(203, 219, 246, 0.6);
+  transform: rotate(45deg);
+  transition: transform 160ms ease, border-color 160ms ease;
 }
 
-.progression-leaderboard-expand:hover,
-.progression-leaderboard-expand:focus-visible {
-  border-color: rgba(103, 232, 249, 0.36);
-  background: rgba(103, 232, 249, 0.1);
+.progression-leaderboard-row:hover .progression-leaderboard-chevron::before,
+.progression-leaderboard-row:focus-visible .progression-leaderboard-chevron::before,
+.progression-leaderboard-row.is-expanded .progression-leaderboard-chevron::before {
+  border-color: rgba(103, 232, 249, 0.88);
+}
+
+.progression-leaderboard-row.is-expanded .progression-leaderboard-chevron::before {
+  transform: translateY(3px) rotate(225deg);
 }
 
 .progression-leaderboard-detail {
   display: grid;
-  grid-template-columns: minmax(170px, 230px) repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  align-items: stretch;
+  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
   border-top: 1px solid rgba(203, 219, 246, 0.13);
   padding-top: 12px;
 }
@@ -8168,7 +8194,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 .progression-leaderboard-detail-summary p {
   margin: 0;
   color: rgba(210, 221, 238, 0.84);
-  line-height: 1.55;
+  line-height: 1.38;
 }
 
 .progression-leaderboard-profile-link.is-disabled {
@@ -8178,7 +8204,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .progression-leaderboard-profile-link {
   justify-content: center;
-  width: 100%;
+  width: min(100%, 190px);
   min-width: 0;
 }
 
@@ -8193,24 +8219,36 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .progression-leaderboard-detail-stats {
-  display: contents;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
   margin: 0;
+  min-width: 0;
 }
 
 .progression-leaderboard-detail-stat {
   display: grid;
-  gap: 3px;
+  gap: 2px;
+  align-content: center;
   min-width: 0;
+  min-height: 74px;
   border: 1px solid rgba(203, 219, 246, 0.12);
   border-radius: 12px;
-  padding: 9px 10px;
+  padding: 8px 10px;
   background: rgba(255, 255, 255, 0.035);
 }
 
 .progression-leaderboard-level-card {
-  min-height: 78px;
-  align-content: start;
+  min-height: 74px;
+  align-content: center;
   overflow: hidden;
+}
+
+.progression-leaderboard-level-card dd {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 0;
 }
 
 .progression-leaderboard-level-card .progression-level-chip {
@@ -8248,9 +8286,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   }
 
   .progression-leaderboard-xp,
-  .progression-leaderboard-row .progression-level-chip,
-  .progression-leaderboard-badges,
-  .progression-leaderboard-expand {
+  .progression-leaderboard-row .progression-level-chip {
     grid-column: 3 / -1;
   }
 }
@@ -8288,9 +8324,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
   .progression-leaderboard-identity,
   .progression-leaderboard-xp,
-  .progression-leaderboard-row .progression-level-chip,
-  .progression-leaderboard-badges,
-  .progression-leaderboard-expand {
+  .progression-leaderboard-row .progression-level-chip {
     grid-column: 2;
   }
 
@@ -8303,6 +8337,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   display: grid;
   gap: 22px;
   min-width: 0;
+  --progression-leaderboard-row-grid: 54px 48px minmax(210px, 1.35fr) minmax(124px, 0.75fr) minmax(122px, 0.74fr) minmax(140px, 0.82fr) minmax(92px, 0.58fr);
 }
 
 .progression-leaderboard-hero,
@@ -8509,6 +8544,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   display: grid;
   justify-items: center;
   gap: 9px;
+  min-height: 286px;
   min-width: 0;
   border: 1px solid color-mix(in srgb, var(--leaderboard-placement-color) 36%, rgba(255, 255, 255, 0.13));
   border-radius: 20px;
@@ -8519,11 +8555,30 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   box-shadow:
     0 24px 54px color-mix(in srgb, var(--leaderboard-placement-color) 12%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  isolation: isolate;
+  overflow: hidden;
+  transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
+}
+
+.progression-leaderboard-podium-card:hover {
+  transform: translateY(-4px) scale(1.012);
+  border-color: color-mix(in srgb, var(--leaderboard-placement-color) 56%, rgba(255, 255, 255, 0.18));
+  background:
+    radial-gradient(260px 160px at 50% 0%, color-mix(in srgb, var(--leaderboard-placement-color) 28%, transparent), transparent 72%),
+    linear-gradient(180deg, color-mix(in srgb, var(--leaderboard-placement-color) 12%, rgba(20, 27, 42, 0.93)), rgba(7, 10, 16, 0.94));
+  box-shadow:
+    0 28px 64px color-mix(in srgb, var(--leaderboard-placement-color) 20%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .progression-leaderboard-podium-card--1 {
   --leaderboard-placement-color: #f6c85f;
   transform: translateY(-10px);
+  min-height: 326px;
+}
+
+.progression-leaderboard-podium-card--1:hover {
+  transform: translateY(-15px) scale(1.018);
 }
 
 .progression-leaderboard-podium-card--2 {
@@ -8532,6 +8587,54 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .progression-leaderboard-podium-card--3 {
   --leaderboard-placement-color: #c98250;
+}
+
+.ss-lb-sparkle {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.72;
+  z-index: 0;
+}
+
+.ss-lb-sparkle::before,
+.ss-lb-sparkle::after {
+  content: "";
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 245, 190, 0.86);
+  box-shadow:
+    42px 24px 0 rgba(255, 255, 255, 0.5),
+    156px 38px 0 rgba(253, 230, 138, 0.48),
+    72px 162px 0 rgba(255, 255, 255, 0.34),
+    236px 124px 0 rgba(253, 230, 138, 0.38);
+  animation: ss-lb-sparkle-drift 5.8s ease-in-out infinite;
+}
+
+.ss-lb-sparkle::before {
+  left: 12%;
+  top: 12%;
+}
+
+.ss-lb-sparkle::after {
+  right: 18%;
+  bottom: 18%;
+  transform: scale(0.72);
+  animation-delay: -2.4s;
+}
+
+@keyframes ss-lb-sparkle-drift {
+  0%,
+  100% {
+    opacity: 0.18;
+    transform: translate3d(0, 0, 0) scale(0.8);
+  }
+  45% {
+    opacity: 0.82;
+    transform: translate3d(8px, -8px, 0) scale(1);
+  }
 }
 
 .progression-leaderboard-podium-rank {
@@ -8645,7 +8748,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .progression-leaderboard-table-header {
   display: grid;
-  grid-template-columns: 54px minmax(180px, 1fr) minmax(92px, auto) minmax(110px, auto) minmax(110px, auto) minmax(88px, auto) minmax(82px, auto);
+  grid-template-columns: var(--progression-leaderboard-row-grid);
   gap: 12px;
   align-items: center;
   margin: 0 0 8px;
@@ -8659,8 +8762,28 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   text-transform: uppercase;
 }
 
+.progression-leaderboard-header-profile {
+  grid-column: 2 / 4;
+}
+
+.progression-leaderboard-header-level {
+  grid-column: 4;
+}
+
+.progression-leaderboard-header-xp {
+  grid-column: 5;
+}
+
+.progression-leaderboard-header-wallet {
+  grid-column: 6;
+}
+
+.progression-leaderboard-header-active {
+  grid-column: 7;
+}
+
 .progression-leaderboard-row-main {
-  grid-template-columns: 54px auto minmax(170px, 1fr) minmax(92px, auto) minmax(110px, auto) minmax(110px, auto) minmax(88px, auto) minmax(82px, auto) minmax(88px, auto) minmax(86px, auto);
+  grid-template-columns: var(--progression-leaderboard-row-grid);
 }
 
 .progression-leaderboard-wallet-cell,
@@ -8673,7 +8796,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .progression-leaderboard-detail {
-  grid-template-columns: minmax(190px, 260px) repeat(4, minmax(0, 1fr));
+  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
 }
 
 .progression-leaderboard-pagination-host {
@@ -8764,9 +8887,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   .progression-leaderboard-wallet-cell,
   .progression-leaderboard-active-cell,
   .progression-leaderboard-row .progression-level-chip,
-  .progression-leaderboard-xp,
-  .progression-leaderboard-badges,
-  .progression-leaderboard-expand {
+  .progression-leaderboard-xp {
     grid-column: 3 / -1;
   }
 }
@@ -8785,8 +8906,16 @@ body.public-shell-page .dashboard-card-link:focus-visible {
     transform: none;
   }
 
+  .progression-leaderboard-podium-card--1:hover {
+    transform: translateY(-4px) scale(1.012);
+  }
+
   .progression-leaderboard-detail {
     grid-template-columns: 1fr;
+  }
+
+  .progression-leaderboard-detail-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -8812,10 +8941,31 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   .progression-leaderboard-wallet-cell,
   .progression-leaderboard-active-cell,
   .progression-leaderboard-row .progression-level-chip,
-  .progression-leaderboard-xp,
-  .progression-leaderboard-badges,
-  .progression-leaderboard-expand {
+  .progression-leaderboard-xp {
     grid-column: 2;
+  }
+
+  .progression-leaderboard-detail-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progression-leaderboard-podium-card,
+  .progression-leaderboard-row {
+    transition: none;
+  }
+
+  .progression-leaderboard-podium-card:hover,
+  .progression-leaderboard-podium-card--1,
+  .progression-leaderboard-podium-card--1:hover,
+  .progression-leaderboard-row:hover {
+    transform: none;
+  }
+
+  .ss-lb-sparkle::before,
+  .ss-lb-sparkle::after {
+    animation: none;
   }
 }
 
