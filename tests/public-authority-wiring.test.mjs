@@ -121,6 +121,11 @@ test("public profile game section renders runtime progression and economy author
   assert.match(profileSection, /options\.canEdit/);
   assert.match(profileSection, /buildProgressionXpValue\(xpTotal, \{ prominent: true \}\)/);
   assert.match(profileSection, /buildProgressionLevelChip\(progression, \{ prominent: true \}\)/);
+  assert.match(app, /function publicLevelBannerImagePath\(presentation = \{\}\)/);
+  assert.match(app, /PUBLIC_LEVEL_BANNER_ASSET_SLUGS = new Set/);
+  assert.match(app, /\/assets\/backgrounds\/lvlbanner-\$\{slug\}\.webp/);
+  assert.match(profileSection, /profile-game-preview-card--featured profile-game-preview-card--current-level/);
+  assert.match(profileSection, /applyProfileCurrentLevelCardTheme\(card, progression\)/);
   assert.match(profileSection, /label: "Current XP \/ Global rank"/);
   assert.match(profileSection, /buildProgressionGlobalRankValue\(progression, \{ prominent: true, emptyLabel: "Unranked" \}\)/);
   assert.match(profileSection, /LEADERBOARD_PLACEMENT_ASSETS\[placementRank\]/);
@@ -144,6 +149,10 @@ test("public profile game section renders runtime progression and economy author
   assert.match(app, /3: "\/assets\/games\/lb-third\.webp"/);
   assert.match(css, /\.progression-level-chip--prominent/);
   assert.match(css, /\.profile-game-preview-card--featured/);
+  assert.match(css, /\.profile-game-preview-card--current-level/);
+  assert.match(css, /--profile-current-level-color/);
+  assert.match(css, /--profile-current-level-banner-image/);
+  assert.match(css, /\.profile-game-preview-card--current-level\.has-level-banner::before/);
   assert.match(css, /\.profile-game-preview-card--breakdown,[\s\S]*\.profile-game-preview-card--progress\s*\{[\s\S]*grid-column:\s*span 3/);
   assert.match(profileSection, /profile-game-preview-card--breakdown profile-game-preview-card--balance/);
   assert.match(profileSection, /profile-game-preview-card--breakdown profile-game-preview-card--inventory/);

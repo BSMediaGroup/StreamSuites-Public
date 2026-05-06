@@ -3898,6 +3898,54 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
     rgba(9, 13, 20, 0.78);
 }
 
+.profile-game-preview-card--current-level {
+  --profile-current-level-color: #8F4700;
+  --profile-current-level-banner-image: none;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--profile-current-level-color) 34%, rgba(224, 234, 249, 0.2));
+  background:
+    radial-gradient(circle at 88% 18%, color-mix(in srgb, var(--profile-current-level-color) 30%, transparent), transparent 38%),
+    linear-gradient(145deg, color-mix(in srgb, var(--profile-current-level-color) 15%, rgba(24, 36, 56, 0.9)), rgba(9, 13, 22, 0.9) 58%),
+    rgba(9, 13, 20, 0.78);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 24px color-mix(in srgb, var(--profile-current-level-color) 15%, transparent);
+}
+
+.profile-game-preview-card--current-level::before,
+.profile-game-preview-card--current-level::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.profile-game-preview-card--current-level::before {
+  left: 28%;
+  background:
+    linear-gradient(90deg, rgba(8, 12, 20, 0.98) 0%, rgba(8, 12, 20, 0.72) 28%, rgba(8, 12, 20, 0.16) 58%, rgba(8, 12, 20, 0) 100%),
+    var(--profile-current-level-banner-image) right center / auto 112% no-repeat;
+  opacity: 0;
+}
+
+.profile-game-preview-card--current-level.has-level-banner::before {
+  opacity: 0.38;
+}
+
+.profile-game-preview-card--current-level::after {
+  background:
+    linear-gradient(90deg, rgba(8, 12, 20, 0.72) 0%, rgba(8, 12, 20, 0.34) 48%, rgba(8, 12, 20, 0.08) 100%),
+    radial-gradient(circle at 92% 44%, color-mix(in srgb, var(--profile-current-level-color) 28%, transparent), transparent 42%);
+}
+
+.profile-game-preview-card--current-level > * {
+  position: relative;
+  z-index: 1;
+}
+
 .profile-game-preview-card--breakdown,
 .profile-game-preview-card--progress {
   grid-column: span 3;

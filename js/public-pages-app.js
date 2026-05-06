@@ -2589,6 +2589,51 @@
     return /^#[0-9a-f]{6}$/i.test(color) ? color : "#8F4700";
   }
 
+  const PUBLIC_LEVEL_BANNER_ASSET_SLUGS = new Set([
+    "amethyst",
+    "blackopal",
+    "bluediamond",
+    "bronze",
+    "copper",
+    "diamond",
+    "emerald",
+    "gold",
+    "iron",
+    "musgravite",
+    "obsidian",
+    "opal",
+    "pearl",
+    "pinkstar",
+    "platinum",
+    "reddiamond",
+    "ruby",
+    "sapphire",
+    "silver",
+    "steel",
+    "stone",
+    "tanzanite",
+    "titanium",
+    "topaz",
+    "zircon",
+  ]);
+
+  function normalizePublicLevelBannerSlug(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/&/g, "and")
+      .replace(/[^a-z0-9]+/g, "");
+  }
+
+  function publicLevelBannerImagePath(presentation = {}) {
+    const slugs = [
+      normalizePublicLevelBannerSlug(presentation.label),
+      normalizePublicLevelBannerSlug(presentation.levelCode).replace(/^level\d*/, ""),
+    ].filter(Boolean);
+    const slug = slugs.find((entry) => PUBLIC_LEVEL_BANNER_ASSET_SLUGS.has(entry));
+    return slug ? `/assets/backgrounds/lvlbanner-${slug}.webp` : "";
+  }
+
   function progressionLevelPresentation(summary = {}) {
     const rank = summary?.rank && typeof summary.rank === "object" ? summary.rank : {};
     const nextLevel = summary?.next_level && typeof summary.next_level === "object" ? summary.next_level : {};
@@ -2601,6 +2646,17 @@
       isSecret: Boolean(summary.level_is_secret || rank.level_is_secret),
       nextLevel,
     };
+  }
+
+  function applyProfileCurrentLevelCardTheme(card, progression) {
+    if (!(card instanceof HTMLElement) || !progression) return;
+    const presentation = progressionLevelPresentation(progression);
+    const bannerImagePath = publicLevelBannerImagePath(presentation);
+    card.style.setProperty("--profile-current-level-color", presentation.color);
+    if (bannerImagePath) {
+      card.style.setProperty("--profile-current-level-banner-image", `url("${bannerImagePath}")`);
+      card.classList.add("has-level-banner");
+    }
   }
 
   function buildProgressionLevelChip(summary = {}, options = {}) {
@@ -7818,7 +7874,7 @@
           : "No global leaderboard placement has been returned for this identity yet."
       },
       {
-        className: "profile-game-preview-card--featured",
+        className: "profile-game-preview-card--featured profile-game-preview-card--current-level",
         label: "Current level",
         value: progression ? buildProgressionLevelChip(progression, { prominent: true }) : "No level yet",
         note: progression
@@ -7873,6 +7929,9 @@
       { label: "Season standing", value: "Not seeded", note: "Ladders arrive later" }
     ].forEach((item) => {
       const card = create("article", `profile-game-preview-card${item.className ? ` ${item.className}` : ""}`);
+      if (item.className?.includes("profile-game-preview-card--current-level")) {
+        applyProfileCurrentLevelCardTheme(card, progression);
+      }
       card.append(
         create("span", "profile-game-preview-label", item.label),
         item.value instanceof Node ? (() => {
