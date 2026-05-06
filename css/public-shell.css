@@ -3925,7 +3925,7 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 
 .profile-game-preview-card--current-level::before {
   background:
-    var(--profile-current-level-banner-image) right center / auto 118% no-repeat;
+    var(--profile-current-level-banner-image) right center / cover no-repeat;
   filter: saturate(1.08) contrast(1.06);
   -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.04) 18%, rgba(0, 0, 0, 0.26) 38%, rgba(0, 0, 0, 0.76) 66%, #000 100%);
   mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.04) 18%, rgba(0, 0, 0, 0.26) 38%, rgba(0, 0, 0, 0.76) 66%, #000 100%);

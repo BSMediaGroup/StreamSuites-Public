@@ -159,6 +159,7 @@ test("public profile game section renders runtime progression and economy author
   assert.match(css, /\.profile-game-preview-card--current-level/);
   assert.match(css, /--profile-current-level-color/);
   assert.match(css, /--profile-current-level-banner-image/);
+  assert.match(css, /var\(--profile-current-level-banner-image\) right center \/ cover no-repeat/);
   assert.match(css, /\.profile-game-preview-card--current-level::before\s*\{[\s\S]*mask-image:\s*linear-gradient/);
   assert.match(css, /\.profile-game-preview-card--current-level\.has-level-banner::before\s*\{[\s\S]*opacity:\s*0\.62/);
   assert.match(css, /\.profile-game-preview-card--breakdown,[\s\S]*\.profile-game-preview-card--progress\s*\{[\s\S]*grid-column:\s*span 3/);
