@@ -181,8 +181,10 @@ test("public economy rendering keeps denominations separate from inventory rows"
   assert.match(app, /currency_unit_plural_label \|\| `\$\{singular\}s`/);
   assert.match(app, /walletOrValue\.balance_total_credits \?\? walletOrValue\.balance_current/);
   assert.match(app, /walletCard\.appendChild\(buildEconomyDenominationBreakdown\(wallet\)\)/);
+  assert.match(app, /icon\.src = economyAssetPath\("\/assets\/games\/sscurrency\.webp"\)/);
   assert.match(app, /function isWalletDenominationInventoryItem\(item = \{\}\)/);
   assert.match(app, /\["currency\.coin", "currency\.bank_token"\]\.includes\(itemCode\)/);
+  assert.doesNotMatch(app, /metadata\.system_asset_type === "economy_denomination"/);
   assert.match(app, /return Number\(item\?\.quantity \|\| 0\) > 0 && !isWalletDenominationInventoryItem\(item\)/);
   assert.match(app, /const displayInventory = inventory\.filter\(\(item\) => !isWalletDenominationInventoryItem\(item\)\)/);
 });

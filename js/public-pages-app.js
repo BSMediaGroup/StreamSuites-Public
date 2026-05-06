@@ -2705,7 +2705,7 @@
     const definition = item?.definition || {};
     const metadata = definition.metadata || item?.metadata || {};
     const itemCode = String(item?.item_code || "").trim();
-    return Boolean(metadata.wallet_balance_unit || metadata.system_asset_type === "economy_denomination" || ["currency.coin", "currency.bank_token"].includes(itemCode));
+    return Boolean(metadata.wallet_balance_unit || ["currency.coin", "currency.bank_token"].includes(itemCode));
   }
 
   function buildEconomyEventRow(event) {

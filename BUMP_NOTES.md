@@ -2,6 +2,8 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+- Corrected `/u/*` and My Data economy inventory filtering for the cash-plus-held-value wallet model. Public now continues to display `balance_total_credits` with the full-color `/assets/games/sscurrency.webp` icon only on the profile Current Balance card, keeps coin/banknote wallet denominations out of ordinary inventory rows, and no longer hides held green gems, red gems, blue gems, or diamonds solely because their item definitions are economy denomination assets. Source tests pin the `sscurrency.webp` profile balance icon and the narrower inventory filter. No files or assets were created, removed, or renamed.
+
 - Tweaked standalone `/u/*` profile social/share link labels so visible button subtext suppresses the leading `https://` while preserving the underlying href and copy/share target URLs unchanged. This is display-only for the profile Social links gallery and compact Share Links rows; no files were created, removed, or renamed.
 
 - Paused the public Leaderboards upgrade and corrected the `/u/*` Game & Competition profile foundation in place. `js/public-pages-app.js` now combines Current XP and Global Rank into one profile card, keeps Current Level as a separate card, uses leaderboard placement assets for first/second/third ranks, preserves non-top-three and unranked rendering, and uses the full-color `/assets/games/sscurrency.webp` icon only for the profile Current Balance card while leaving overview-table currency symbols on `/assets/games/currencyunit.svg`. `css/public-shell.css` adds only scoped profile-card icon/combo styling. No files or assets were created, removed, or renamed.
