@@ -8029,6 +8029,18 @@ body.public-shell-page .dashboard-card-link:focus-visible {
     linear-gradient(180deg, color-mix(in srgb, var(--leaderboard-placement-color) 8%, rgba(25, 32, 50, 0.9)), rgba(8, 10, 18, 0.92));
 }
 
+.progression-leaderboard-row--top:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--leaderboard-placement-color) 56%, rgba(255, 255, 255, 0.2));
+  background:
+    radial-gradient(540px 200px at 12% 0%, color-mix(in srgb, var(--leaderboard-placement-color) 28%, transparent), transparent 70%),
+    radial-gradient(440px 190px at 96% 18%, color-mix(in srgb, var(--leaderboard-placement-color) 20%, transparent), transparent 72%),
+    linear-gradient(180deg, color-mix(in srgb, var(--leaderboard-placement-color) 13%, rgba(28, 36, 54, 0.92)), rgba(9, 12, 20, 0.94));
+  box-shadow:
+    0 24px 58px color-mix(in srgb, var(--leaderboard-placement-color) 22%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
 .progression-leaderboard-row--top-1 {
   --leaderboard-placement-color: #f6c85f;
   box-shadow:

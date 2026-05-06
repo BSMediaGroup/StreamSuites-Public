@@ -147,6 +147,7 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   assert.match(app, /Coming soon/);
   assert.match(css, /\.progression-leaderboard-row/);
   assert.match(css, /\.progression-leaderboard-row--top-1/);
+  assert.match(css, /\.progression-leaderboard-row--top:hover\s*\{[\s\S]*--leaderboard-placement-color/);
   assert.match(css, /\.progression-leaderboard-hero/);
   assert.match(css, /\.progression-leaderboard-stat-grid/);
   assert.match(css, /\.progression-leaderboard-podium/);
