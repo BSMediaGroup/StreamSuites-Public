@@ -2655,8 +2655,17 @@
       "span",
       `economy-balance-value${options.compact ? " economy-balance-value--compact" : ""}${options.prominent ? " economy-balance-value--prominent" : ""}`
     );
-    const icon = create("span", "economy-balance-icon");
-    icon.style.setProperty("--economy-currency-symbol", `url("${economyAssetPath(wallet.currency_symbol_path || ECONOMY_CURRENCY_SYMBOL_PATH)}")`);
+    const icon = options.fullColorIcon
+      ? create("img", "economy-balance-icon economy-balance-icon--full-color")
+      : create("span", "economy-balance-icon");
+    if (options.fullColorIcon) {
+      icon.src = economyAssetPath("/assets/games/sscurrency.webp");
+      icon.alt = "";
+      icon.loading = "lazy";
+      icon.decoding = "async";
+    } else {
+      icon.style.setProperty("--economy-currency-symbol", `url("${economyAssetPath(wallet.currency_symbol_path || ECONOMY_CURRENCY_SYMBOL_PATH)}")`);
+    }
     icon.setAttribute("aria-hidden", "true");
     wrap.append(icon, create("span", "", `${formatNumber(value)} ${economyCurrencyLabel(wallet, value)}`));
     return wrap;
@@ -7628,11 +7637,27 @@
     [
       {
         className: "profile-game-preview-card--featured",
-        label: "Current XP",
-        value: buildProgressionXpValue(xpTotal, { prominent: true }),
-        note: progression
-          ? `${formatNumber(xpTotal)} public XP from the runtime progression summary`
-          : "No authoritative XP events have been recorded yet."
+        label: "Current XP / Global rank",
+        value: (() => {
+          const wrap = create("span", `profile-game-xp-rank-combo${placementRank >= 1 && placementRank <= 3 ? ` profile-game-xp-rank-combo--top-${placementRank}` : ""}`);
+          wrap.appendChild(buildProgressionXpValue(xpTotal, { prominent: true }));
+          const rankWrap = create("span", "profile-game-xp-rank-placement");
+          const rankAsset = LEADERBOARD_PLACEMENT_ASSETS[placementRank];
+          if (rankAsset) {
+            const img = create("img", "profile-game-xp-rank-placement-icon");
+            img.src = rankAsset;
+            img.alt = "";
+            img.loading = "lazy";
+            img.decoding = "async";
+            rankWrap.appendChild(img);
+          }
+          rankWrap.appendChild(progression ? buildProgressionGlobalRankValue(progression, { prominent: true, emptyLabel: "Unranked" }) : create("span", "progression-global-rank-value progression-global-rank-value--prominent", "Unranked"));
+          wrap.appendChild(rankWrap);
+          return wrap;
+        })(),
+        note: placementRank
+          ? `Leaderboard placement is separate from ${levelLabel || "current level"}.`
+          : "No global leaderboard placement has been returned for this identity yet."
       },
       {
         className: "profile-game-preview-card--featured",
@@ -7646,16 +7671,8 @@
       },
       {
         className: "profile-game-preview-card--featured",
-        label: "Global rank",
-        value: progression ? buildProgressionGlobalRankValue(progression, { prominent: true, emptyLabel: "Unranked" }) : "Unranked",
-        note: placementRank
-          ? `Global XP leaderboard placement, separate from ${levelLabel || "current level"}.`
-          : "No global leaderboard placement has been returned for this identity yet."
-      },
-      {
-        className: "profile-game-preview-card--featured",
         label: "Current balance",
-        value: buildEconomyBalanceValue(economy || {}, { prominent: true }),
+        value: buildEconomyBalanceValue(economy || {}, { prominent: true, fullColorIcon: true }),
         note: economy
           ? `${formatNumber(economy.earned_lifetime || 0)} earned lifetime from the runtime economy wallet`
           : "No economy events have been recorded yet.",

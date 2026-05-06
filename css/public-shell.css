@@ -7511,6 +7511,39 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   mask: var(--economy-currency-symbol) center / contain no-repeat;
 }
 
+.economy-balance-icon--full-color {
+  display: inline-block;
+  background: transparent;
+  -webkit-mask: none;
+  mask: none;
+}
+
+.profile-game-xp-rank-combo {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-game-xp-rank-combo--top-1,
+.profile-game-xp-rank-combo--top-2,
+.profile-game-xp-rank-combo--top-3 {
+  color: #f8fbff;
+}
+
+.profile-game-xp-rank-placement {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-game-xp-rank-placement-icon {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  object-fit: contain;
+}
+
 .progression-xp-value--compact .progression-xp-icon,
 .progression-level-chip--compact .progression-level-chip-icon,
 .progression-rank-chip--compact .progression-rank-chip-icon,
