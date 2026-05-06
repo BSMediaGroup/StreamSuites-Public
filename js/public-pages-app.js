@@ -2983,6 +2983,7 @@
       ...identity,
       display_name: identity.display_name || entry.display_name || entry.source_display_name,
       public_slug: identity.public_slug || identity.publicSlug || entry.public_slug || entry.publicSlug || entry.profile_slug || entry.profileSlug,
+      profile_slug: identity.profile_slug || identity.profileSlug || entry.profile_slug || entry.profileSlug || identity.public_slug || identity.publicSlug || entry.public_slug || entry.publicSlug,
       profile_url: identity.profile_url || identity.profileUrl || entry.profile_url || entry.profileUrl,
       avatar_url: identity.avatar_url || entry.avatar_url || entry.avatarUrl,
       account_user_code: identity.account_user_code || entry.account_user_code,
@@ -2994,32 +2995,45 @@
   }
 
   function leaderboardHandle(identity = {}) {
+    const profileUrlSlug = getCanonicalSlugFromUrl(identity.profile_url || identity.profileUrl || "");
     const handle = normalizePublicHandle(
       identity.public_slug ||
         identity.publicSlug ||
+        identity.profile_slug ||
+        identity.profileSlug ||
         identity.slug ||
-        identity.canonical_user_code ||
-        identity.account_user_code ||
-        identity.user_code ||
+        profileUrlSlug ||
         "",
       ""
     );
     if (handle) return `@${handle}`;
-    const fallback = String(identity.public_identity_code || identity.fallback_public_identity_code || identity.identity_code || "").trim();
-    return fallback || "public identity";
+    return "";
+  }
+
+  function leaderboardEntryId(entry = {}) {
+    const identity = entry?.identity && typeof entry.identity === "object" ? entry.identity : {};
+    return String(
+      entry.identity_code ||
+        identity.identity_code ||
+        identity.public_identity_code ||
+        identity.fallback_public_identity_code ||
+        entry.position ||
+        entry.placement_rank ||
+        ""
+    );
   }
 
   function leaderboardProfileModel(entry = {}) {
     const identity = leaderboardIdentity(entry);
     const profileUrlSlug = getCanonicalSlugFromUrl(identity.profile_url || identity.profileUrl || "");
-    const publicSlug = normalizePublicHandle(identity.public_slug || identity.publicSlug || identity.slug || "", "") || profileUrlSlug;
+    const publicSlug = normalizePublicHandle(identity.public_slug || identity.publicSlug || identity.profile_slug || identity.profileSlug || identity.slug || "", "") || profileUrlSlug;
     const userCode = normalizePublicHandle(identity.canonical_user_code || identity.account_user_code || identity.user_code || "", "");
     const legacyCode = String(identity.public_identity_code || identity.fallback_public_identity_code || identity.identity_code || "").trim();
     const displayName = progressionDisplayName(identity);
     return {
       id: publicSlug || userCode || legacyCode || "public-user",
       userCode: publicSlug || userCode || legacyCode || "public-user",
-      publicSlug: publicSlug || userCode || "",
+      publicSlug: publicSlug || "",
       username: publicSlug || userCode || legacyCode || "",
       displayName,
       avatar: identity.avatar_url || "",
@@ -3037,9 +3051,8 @@
     const identity = leaderboardIdentity(entry);
     const explicit = String(identity.profile_url || identity.profileUrl || "").trim();
     const slugFromUrl = getCanonicalSlugFromUrl(explicit);
-    const slug = normalizePublicHandle(identity.public_slug || identity.publicSlug || identity.slug || "", "") ||
-      slugFromUrl ||
-      normalizePublicHandle(identity.canonical_user_code || identity.account_user_code || identity.user_code || "", "");
+    const slug = normalizePublicHandle(identity.public_slug || identity.publicSlug || identity.profile_slug || identity.profileSlug || identity.slug || "", "") ||
+      slugFromUrl;
     if (slug) return `${CANONICAL_PROFILE_PREFIX}${encodeURIComponent(slug)}`;
     return "";
   }
@@ -3070,18 +3083,46 @@
 
   function buildLeaderboardPlacementBadge(entry = {}) {
     const placement = Number(entry.tie_placement_rank || entry.placement_rank || entry.rank || entry.position || 0);
-    const asset = LEADERBOARD_PLACEMENT_ASSETS[placement] || "";
-    const badge = create("span", `progression-rank-position${asset ? ` progression-rank-position--top progression-rank-position--${placement}` : ""}`);
-    if (asset) {
-      const img = create("img", "progression-rank-position-asset");
-      img.src = asset;
-      img.alt = "";
-      img.loading = "lazy";
-      img.decoding = "async";
-      badge.append(img);
-    }
+    const badge = create("span", `progression-rank-position${placement >= 1 && placement <= 3 ? ` progression-rank-position--top progression-rank-position--${placement}` : ""}`);
     badge.appendChild(create("span", "", `#${formatNumber(entry?.placement_rank || entry?.rank || entry?.position || placement || 0)}`));
     return badge;
+  }
+
+  function buildLeaderboardPlacementMedallion(entry = {}) {
+    const placement = Number(entry.tie_placement_rank || entry.placement_rank || entry.rank || entry.position || 0);
+    const asset = LEADERBOARD_PLACEMENT_ASSETS[placement] || "";
+    if (!asset) return null;
+    const medal = create("img", `progression-leaderboard-medallion progression-leaderboard-medallion--${placement}`);
+    medal.src = asset;
+    medal.alt = "";
+    medal.loading = "lazy";
+    medal.decoding = "async";
+    return medal;
+  }
+
+  function buildLeaderboardLevelCard(entry = {}) {
+    const item = create("div", "progression-leaderboard-detail-stat progression-leaderboard-level-card profile-game-preview-card--current-level");
+    const value = create("dd", "");
+    value.appendChild(buildProgressionLevelChip(entry, { compact: true }));
+    item.append(create("dt", "", "Level"), value);
+    applyProfileCurrentLevelCardTheme(item, entry);
+    return item;
+  }
+
+  function buildLeaderboardHandleMeta(identity = {}) {
+    const handle = leaderboardHandle(identity);
+    if (!handle) return null;
+    const meta = create("span", "progression-leaderboard-detail-handle", handle);
+    return meta;
+  }
+
+  function toggleLeaderboardRow(entry = {}, state = {}, isExpanded = false) {
+    state.expandedId = isExpanded ? "" : leaderboardEntryId(entry);
+    state.render();
+  }
+
+  function isInteractiveLeaderboardTarget(target) {
+    return Boolean(target?.closest?.("button, a, input, select, textarea, [data-no-row-toggle]"));
   }
 
   function buildLeaderboardProfileCta(entry = {}) {
@@ -3100,9 +3141,15 @@
     const identity = leaderboardIdentity(entry);
     const profile = leaderboardProfileModel(entry);
     const wrap = create("div", "progression-leaderboard-identity");
+    const nameLine = create("span", "progression-leaderboard-name-line");
     const name = create("strong", "progression-leaderboard-name", progressionDisplayName(identity));
+    const medal = buildLeaderboardPlacementMedallion(entry);
     applyProfileHoverAttrs(name, profile);
-    wrap.append(name, create("span", "progression-leaderboard-handle", leaderboardHandle(identity)));
+    nameLine.appendChild(name);
+    if (medal) nameLine.appendChild(medal);
+    wrap.appendChild(nameLine);
+    const handle = leaderboardHandle(identity);
+    if (handle) wrap.appendChild(create("span", "progression-leaderboard-handle", handle));
     return wrap;
   }
 
@@ -3118,11 +3165,12 @@
     const detail = create("div", "progression-leaderboard-detail");
     const summary = create("div", "progression-leaderboard-detail-summary");
     const identity = leaderboardIdentity(entry);
-    const level = progressionLevelPresentation(entry);
     summary.append(
       create("p", "", identity.bio || "This public identity is ranked from authoritative StreamSuites XP only."),
       buildLeaderboardProfileCta(entry)
     );
+    const handleMeta = buildLeaderboardHandleMeta(identity);
+    if (handleMeta) summary.appendChild(handleMeta);
     const stats = create("dl", "progression-leaderboard-detail-stats");
     const addStat = (label, value) => {
       const item = create("div", "progression-leaderboard-detail-stat");
@@ -3130,7 +3178,7 @@
       stats.appendChild(item);
     };
     addStat("Rank", `#${formatNumber(entry?.placement_rank || entry?.rank || entry?.position || 0)}`);
-    addStat("Level", level.label || "Level unavailable");
+    stats.appendChild(buildLeaderboardLevelCard(entry));
     addStat("XP", `${formatNumber(leaderboardXpTotal(entry))} XP`);
     if (entry?.global_rank_label || entry?.global_placement_rank || entry?.global_rank) {
       addStat("Global rank", entry.global_rank_label || `#${formatNumber(entry.global_placement_rank || entry.global_rank)}`);
@@ -3166,8 +3214,12 @@
   function buildLeaderboardRow(entry, state = {}) {
     const placement = Number(entry.tie_placement_rank || entry.placement_rank || entry.rank || entry.position || 0);
     const topClass = placement >= 1 && placement <= 3 ? ` progression-leaderboard-row--top progression-leaderboard-row--top-${placement}` : "";
-    const isExpanded = state.expandedId === String(entry.identity_code || entry?.identity?.identity_code || entry.position || "");
+    const rowId = leaderboardEntryId(entry);
+    const isExpanded = state.expandedId === rowId;
     const row = create("article", `progression-leaderboard-row${topClass}${isExpanded ? " is-expanded" : ""}`);
+    row.tabIndex = 0;
+    row.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+    row.setAttribute("aria-label", `${isExpanded ? "Collapse" : "Expand"} leaderboard details for ${progressionDisplayName(leaderboardIdentity(entry))}`);
     const main = create("div", "progression-leaderboard-row-main");
     main.append(buildLeaderboardPlacementBadge(entry), buildLeaderboardAvatar(entry), buildLeaderboardIdentityBlock(entry));
     const xp = create("span", "progression-leaderboard-xp");
@@ -3175,9 +3227,19 @@
     const toggle = create("button", "progression-leaderboard-expand", isExpanded ? "Hide details" : "Details");
     toggle.type = "button";
     toggle.setAttribute("aria-expanded", isExpanded ? "true" : "false");
-    toggle.addEventListener("click", () => {
-      state.expandedId = isExpanded ? "" : String(entry.identity_code || entry?.identity?.identity_code || entry.position || "");
-      state.render();
+    toggle.addEventListener("click", (event) => {
+      event.stopPropagation();
+      toggleLeaderboardRow(entry, state, isExpanded);
+    });
+    row.addEventListener("click", (event) => {
+      if (isInteractiveLeaderboardTarget(event.target)) return;
+      toggleLeaderboardRow(entry, state, isExpanded);
+    });
+    row.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      if (isInteractiveLeaderboardTarget(event.target)) return;
+      event.preventDefault();
+      toggleLeaderboardRow(entry, state, isExpanded);
     });
     main.append(xp, buildProgressionLevelChip(entry, { compact: true }), buildLeaderboardBadges(entry), toggle);
     row.appendChild(main);
@@ -3247,10 +3309,10 @@
             }
             status.textContent = `${formatNumber(filteredRows.length)} ranked public identit${filteredRows.length === 1 ? "y" : "ies"} shown from ${formatNumber(rows.length)} loaded.`;
             const topRows = filteredRows.filter((entry) => Number(entry.tie_placement_rank || 0) >= 1 && Number(entry.tie_placement_rank || 0) <= 3);
-            const topIdentityCodes = new Set(topRows.map((entry) => String(entry.identity_code || entry?.identity?.identity_code || "")));
+            const topIdentityCodes = new Set(topRows.map((entry) => leaderboardEntryId(entry)));
             topRows.forEach((entry) => podium.appendChild(buildLeaderboardRow(entry, state)));
             filteredRows
-              .filter((entry) => !topIdentityCodes.has(String(entry.identity_code || entry?.identity?.identity_code || "")))
+              .filter((entry) => !topIdentityCodes.has(leaderboardEntryId(entry)))
               .forEach((entry) => list.appendChild(buildLeaderboardRow(entry, state)));
           }
         };
