@@ -2,6 +2,8 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+- Added compact public self-service exchange presentation for held green gems, red gems, blue gems, and diamonds. `js/public-pages-app.js` now posts owner/signed-in exchanges to the runtime-owned `/api/public/economy/me/exchange` endpoint, shows exchange controls only when exchangeable held value items are returned, itemizes inventory rows with icons/labels/quantities instead of count-only text, and keeps the profile Current Balance card on the full-color `/assets/games/sscurrency.webp` icon. `css/public-shell.css` aligns inventory icon sizing with balance denomination chips and changes the profile next-level meter to an electric blue CSS animation. No files or assets were created, removed, or renamed.
+
 - Corrected `/u/*` and My Data economy inventory filtering for the cash-plus-held-value wallet model. Public now continues to display `balance_total_credits` with the full-color `/assets/games/sscurrency.webp` icon only on the profile Current Balance card, keeps coin/banknote wallet denominations out of ordinary inventory rows, and no longer hides held green gems, red gems, blue gems, or diamonds solely because their item definitions are economy denomination assets. Source tests pin the `sscurrency.webp` profile balance icon and the narrower inventory filter. No files or assets were created, removed, or renamed.
 
 - Tweaked standalone `/u/*` profile social/share link labels so visible button subtext suppresses the leading `https://` while preserving the underlying href and copy/share target URLs unchanged. This is display-only for the profile Social links gallery and compact Share Links rows; no files were created, removed, or renamed.

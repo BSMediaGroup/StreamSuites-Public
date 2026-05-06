@@ -25,10 +25,12 @@ test("public app wires authority request submission and my-data history to the r
   assert.match(source, /AUTH_PUBLIC_AUTHORITY_REQUESTS_MINE_URL = `\$\{AUTH_API_BASE\}\/api\/public\/authority\/requests\/mine`/);
   assert.match(source, /AUTH_PUBLIC_PROGRESSION_ME_URL = `\$\{AUTH_API_BASE\}\/api\/public\/progression\/me`/);
   assert.match(source, /AUTH_PUBLIC_ECONOMY_ME_URL = `\$\{AUTH_API_BASE\}\/api\/public\/economy\/me`/);
+  assert.match(source, /AUTH_PUBLIC_ECONOMY_EXCHANGE_URL = `\$\{AUTH_API_BASE\}\/api\/public\/economy\/me\/exchange`/);
   assert.match(source, /submitPublicAuthorityRequest/);
   assert.match(source, /fetchMyPublicAuthorityRequests/);
   assert.match(source, /fetchMyPublicProgression/);
   assert.match(source, /fetchMyPublicEconomy/);
+  assert.match(source, /exchangeMyPublicValueItem/);
   assert.match(source, /summary\.xp_total \?\? summary\.total_xp/);
   assert.match(source, /PUBLIC_XP_ICON_PATH = "\/assets\/games\/xpstar\.webp"/);
   assert.match(source, /function buildProgressionLevelChip/);
@@ -99,7 +101,7 @@ test("public leaderboards route hydrates from authoritative progression API", ()
 test("public profile game section renders runtime progression and economy authority summaries", () => {
   const app = read("js/public-pages-app.js");
   const css = read("css/public-shell.css");
-  const profileSection = app.match(/function buildProfileGameCompetitionSection\(profile = null\) \{[\s\S]*?return details;\n  \}/)?.[0] || "";
+  const profileSection = app.match(/function buildProfileGameCompetitionSection\(profile = null, options = \{\}\) \{[\s\S]*?return details;\n  \}/)?.[0] || "";
   assert.ok(profileSection, "profile progression section should exist");
   assert.match(app, /payload\?\.progression && typeof payload\.progression === "object"/);
   assert.match(app, /payload\?\.economy && typeof payload\.economy === "object"/);
@@ -113,6 +115,9 @@ test("public profile game section renders runtime progression and economy author
   assert.match(profileSection, /progression\.xp_total \?\? progression\.total_xp/);
   assert.match(profileSection, /buildEconomyBalanceValue\(economy \|\| \{\}, \{ prominent: true, fullColorIcon: true \}\)/);
   assert.match(profileSection, /buildEconomyDenominationBreakdown\(economy \|\| \{\}\)/);
+  assert.match(profileSection, /buildInventorySummaryList\(displayInventory\)/);
+  assert.match(profileSection, /buildPublicValueItemExchangePanel\(exchangeableItems\)/);
+  assert.match(profileSection, /options\.canEdit/);
   assert.match(profileSection, /buildProgressionXpValue\(xpTotal, \{ prominent: true \}\)/);
   assert.match(profileSection, /buildProgressionLevelChip\(progression, \{ prominent: true \}\)/);
   assert.match(profileSection, /label: "Current XP \/ Global rank"/);
@@ -138,7 +143,8 @@ test("public profile game section renders runtime progression and economy author
   assert.match(app, /3: "\/assets\/games\/lb-third\.webp"/);
   assert.match(css, /\.progression-level-chip--prominent/);
   assert.match(css, /\.profile-game-preview-card--featured/);
-  assert.match(app, /buildProfileGameCompetitionSection\(profile\)/);
+  assert.match(css, /\.profile-game-inventory-stack/);
+  assert.match(app, /buildProfileGameCompetitionSection\(profile, \{ canEdit \}\)/);
 });
 
 test("public profile overview table uses the same runtime progression summary as games", () => {
@@ -176,6 +182,7 @@ test("public level chips include restrained hover sheen without changing compact
 
 test("public economy rendering keeps denominations separate from inventory rows", () => {
   const app = read("js/public-pages-app.js");
+  const css = read("css/public-shell.css");
 
   assert.match(app, /currency_unit_label \|\| "Credit"/);
   assert.match(app, /currency_unit_plural_label \|\| `\$\{singular\}s`/);
@@ -187,4 +194,26 @@ test("public economy rendering keeps denominations separate from inventory rows"
   assert.doesNotMatch(app, /metadata\.system_asset_type === "economy_denomination"/);
   assert.match(app, /return Number\(item\?\.quantity \|\| 0\) > 0 && !isWalletDenominationInventoryItem\(item\)/);
   assert.match(app, /const displayInventory = inventory\.filter\(\(item\) => !isWalletDenominationInventoryItem\(item\)\)/);
+  assert.match(app, /"currency\.gem\.green"/);
+  assert.match(app, /"currency\.gem\.red"/);
+  assert.match(app, /"currency\.gem\.blue"/);
+  assert.match(app, /"currency\.diamond"/);
+  assert.match(app, /row\.append\(icon, body, create\("strong", "", `x\$\{formatNumber\(item\.quantity \|\| 0\)\}`\)\)/);
+  assert.match(app, /const exchangePanel = buildPublicValueItemExchangePanel\(exchangeableItems\)/);
+  assert.match(app, /Gems and diamonds cannot be purchased directly/);
+  assert.match(app, /body: JSON\.stringify\(\{[\s\S]*item_code: itemCode,[\s\S]*quantity,[\s\S]*reason_text: reasonText/);
+  assert.match(css, /\.economy-denomination-chip img\s*\{[\s\S]*width:\s*22px/);
+  assert.match(css, /\.inventory-summary-icon\s*\{[\s\S]*width:\s*22px/);
+});
+
+test("public profile progress meter uses animated electric blue fill", () => {
+  const app = read("js/public-pages-app.js");
+  const css = read("css/public-shell.css");
+
+  assert.match(app, /fill\.style\.setProperty\("--profile-progress-target", `\$\{progressPercent\}%`\)/);
+  assert.match(css, /\.profile-game-progress-meter-fill\s*\{[\s\S]*linear-gradient\(90deg, #0487ff 0%, #18c3ff 52%, #78ecff 100%\)/);
+  assert.match(css, /animation:\s*profile-game-progress-fill 820ms/);
+  assert.match(css, /\.profile-game-progress-meter:hover \.profile-game-progress-meter-fill\s*\{[\s\S]*animation:\s*profile-game-progress-fill 620ms/);
+  assert.match(css, /@keyframes profile-game-progress-fill/);
+  assert.match(css, /prefers-reduced-motion:\s*reduce[\s\S]*profile-game-progress-meter-fill/);
 });

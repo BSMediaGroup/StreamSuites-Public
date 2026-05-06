@@ -41,6 +41,7 @@
   const AUTH_PUBLIC_PROGRESSION_ME_URL = `${AUTH_API_BASE}/api/public/progression/me`;
   const AUTH_PUBLIC_PROGRESSION_LEADERBOARD_URL = `${AUTH_API_BASE}/api/public/progression/leaderboard`;
   const AUTH_PUBLIC_ECONOMY_ME_URL = `${AUTH_API_BASE}/api/public/economy/me`;
+  const AUTH_PUBLIC_ECONOMY_EXCHANGE_URL = `${AUTH_API_BASE}/api/public/economy/me/exchange`;
   const ECONOMY_CURRENCY_SYMBOL_PATH = "/assets/games/currencyunit.svg";
   const AUTH_PUBLIC_ARTIFACTS_URL = `${AUTH_API_BASE}/api/public/artifacts`;
   const PUBLIC_WHEEL_EVENTS_URL = `${AUTH_API_BASE}/api/public/wheels/events`;
@@ -1781,6 +1782,31 @@
     return body;
   }
 
+  async function exchangeMyPublicValueItem({ itemCode, quantity, reasonText = "" } = {}) {
+    const response = await fetch(AUTH_PUBLIC_ECONOMY_EXCHANGE_URL, {
+      method: "POST",
+      cache: "no-store",
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        item_code: itemCode,
+        quantity,
+        reason_text: reasonText
+      })
+    });
+    const body = await parseJsonResponse(response);
+    if (!response.ok || body?.success === false) {
+      const error = new Error(resolveAuthorityErrorMessage(body, response.status));
+      error.status = response.status;
+      error.payload = body;
+      throw error;
+    }
+    return body;
+  }
+
   async function fetchPublicProgressionLeaderboard() {
     const response = await fetch(AUTH_PUBLIC_PROGRESSION_LEADERBOARD_URL, {
       method: "GET",
@@ -2750,15 +2776,115 @@
     rows.slice(0, 6).forEach((item) => {
       const definition = item?.definition || {};
       const row = create("div", "inventory-summary-row");
+      const iconPath = definition.icon_path || item.icon_path || "";
+      const icon = iconPath ? create("img", "inventory-summary-icon") : create("span", "inventory-summary-icon inventory-summary-icon--fallback");
+      if (iconPath) {
+        icon.src = economyAssetPath(iconPath);
+        icon.alt = "";
+        icon.loading = "lazy";
+        icon.decoding = "async";
+      } else {
+        icon.textContent = String(definition.label || item.item_code || "?").slice(0, 1).toUpperCase();
+        icon.setAttribute("aria-hidden", "true");
+      }
       const body = create("span", "");
       body.append(
         create("strong", "", definition.label || item.item_code || "Item"),
         create("span", "", [definition.category, definition.rarity].filter(Boolean).join(" • ") || item.item_code || "")
       );
-      row.append(body, create("strong", "", `x${formatNumber(item.quantity || 0)}`));
+      row.append(icon, body, create("strong", "", `x${formatNumber(item.quantity || 0)}`));
       list.appendChild(row);
     });
     return list;
+  }
+
+  function normalizeExchangeableItems(source = null, inventory = []) {
+    const direct = Array.isArray(source?.exchangeable_items) ? source.exchangeable_items : [];
+    if (direct.length) return direct.filter((item) => Number(item?.quantity || 0) > 0);
+    const inventoryRows = Array.isArray(inventory) ? inventory : [];
+    return inventoryRows
+      .filter((item) => {
+        const code = String(item?.item_code || "").trim();
+        return Number(item?.quantity || 0) > 0 && [
+          "currency.gem.green",
+          "currency.gem.red",
+          "currency.gem.blue",
+          "currency.diamond"
+        ].includes(code);
+      })
+      .map((item) => {
+        const definition = item.definition || {};
+        return {
+          item_code: item.item_code,
+          label: definition.label || item.item_code,
+          plural_label: definition.label || item.item_code,
+          quantity: Number(item.quantity || 0),
+          value_in_credits: Number(item.value_in_credits || 0),
+          icon_path: definition.icon_path || item.icon_path
+        };
+      });
+  }
+
+  function buildPublicValueItemExchangePanel(exchangeableItems = [], options = {}) {
+    const items = Array.isArray(exchangeableItems)
+      ? exchangeableItems.filter((item) => Number(item?.quantity || 0) > 0)
+      : [];
+    if (!items.length) return null;
+    const panel = create("div", "public-economy-exchange-panel");
+    const status = create("span", "public-economy-exchange-status muted", "");
+    const form = create("div", "public-economy-exchange-form");
+    const select = create("select", "public-economy-exchange-item");
+    items.forEach((item) => {
+      const option = document.createElement("option");
+      option.value = String(item.item_code || "");
+      option.textContent = `${item.label || item.item_code} (${formatNumber(item.quantity || 0)} held)`;
+      option.dataset.valueCredits = String(item.value_in_credits || 0);
+      option.dataset.quantity = String(item.quantity || 0);
+      select.appendChild(option);
+    });
+    const quantity = create("input", "public-economy-exchange-quantity");
+    quantity.type = "number";
+    quantity.min = "1";
+    quantity.step = "1";
+    quantity.value = "1";
+    const preview = create("strong", "public-economy-exchange-preview", "");
+    const note = create("p", "public-economy-exchange-note", "Gems and diamonds cannot be purchased directly. Once held, they can be exchanged into cash credits.");
+    const button = create("button", "dashboard-action public-economy-exchange-submit", "Exchange");
+    button.type = "button";
+    const selectedItem = () => items.find((item) => String(item.item_code || "") === String(select.value || "")) || items[0] || {};
+    const syncPreview = () => {
+      const item = selectedItem();
+      const max = Math.max(1, Number(item.quantity || 1));
+      quantity.max = String(max);
+      const parsedQuantity = Math.max(1, Math.min(max, Number(quantity.value || 1)));
+      if (String(parsedQuantity) !== String(quantity.value)) quantity.value = String(parsedQuantity);
+      preview.textContent = `${formatNumber(parsedQuantity * Number(item.value_in_credits || 0))} credits`;
+    };
+    select.addEventListener("change", syncPreview);
+    quantity.addEventListener("input", syncPreview);
+    button.addEventListener("click", async () => {
+      const item = selectedItem();
+      const requested = Math.max(1, Number(quantity.value || 1));
+      button.disabled = true;
+      status.textContent = "Exchanging...";
+      try {
+        const result = await exchangeMyPublicValueItem({
+          itemCode: item.item_code,
+          quantity: requested,
+          reasonText: "Self-service public gem/diamond exchange"
+        });
+        status.textContent = `Exchanged for ${formatNumber(result?.credits_granted || 0)} credits.`;
+        if (typeof options.onExchange === "function") options.onExchange(result);
+      } catch (error) {
+        status.textContent = error instanceof Error ? error.message : "Exchange failed.";
+      } finally {
+        button.disabled = false;
+      }
+    });
+    form.append(select, quantity, preview, button);
+    panel.append(note, form, status);
+    syncPreview();
+    return panel;
   }
 
   function leaderboardXpTotal(entry = {}) {
@@ -6221,6 +6347,7 @@
         const wallet = payload?.wallet || {};
         const inventory = Array.isArray(payload?.inventory) ? payload.inventory : [];
         const displayInventory = inventory.filter((item) => !isWalletDenominationInventoryItem(item));
+        const exchangeableItems = normalizeExchangeableItems(payload, inventory);
         const economyEvents = Array.isArray(payload?.economy_events) ? payload.economy_events : [];
         const inventoryEvents = Array.isArray(payload?.inventory_events) ? payload.inventory_events : [];
         economyStatus.textContent = `${progressionDisplayName(payload?.identity)} • ${payload?.identity?.identity_code || "public identity"}`;
@@ -6247,6 +6374,8 @@
           meta: ["Inventory state is runtime-owned"]
         });
         inventoryCard.appendChild(buildInventorySummaryList(displayInventory));
+        const exchangePanel = buildPublicValueItemExchangePanel(exchangeableItems);
+        if (exchangePanel) inventoryCard.appendChild(exchangePanel);
         const historyCard = buildDashboardCard({
           title: "Recent economy history",
           kicker: "Append-only ledger",
@@ -6529,6 +6658,13 @@
         : Array.isArray(fallbackProfile?.inventory)
           ? fallbackProfile.inventory
           : [];
+    const exchangeableItems = Array.isArray(payload?.exchangeable_items)
+      ? payload.exchangeable_items
+      : Array.isArray(payload?.public_exchangeable_items)
+        ? payload.public_exchangeable_items
+        : Array.isArray(fallbackProfile?.exchangeableItems)
+          ? fallbackProfile.exchangeableItems
+          : [];
     return {
       id: fallbackProfile?.id || userCode,
       userCode,
@@ -6575,6 +6711,7 @@
       progression,
       economy,
       inventory,
+      exchangeableItems,
       authorityIdentity
     };
   }
@@ -7595,11 +7732,12 @@
     return details;
   }
 
-  function buildProfileGameCompetitionSection(profile = null) {
+  function buildProfileGameCompetitionSection(profile = null, options = {}) {
     const progression = profile?.progression && typeof profile.progression === "object" ? profile.progression : null;
     const economy = profile?.economy && typeof profile.economy === "object" ? profile.economy : null;
     const inventory = Array.isArray(profile?.inventory) ? profile.inventory : [];
     const displayInventory = inventory.filter((item) => !isWalletDenominationInventoryItem(item));
+    const exchangeableItems = normalizeExchangeableItems({ exchangeable_items: profile?.exchangeableItems }, inventory);
     const rank = progression?.rank && typeof progression.rank === "object" ? progression.rank : {};
     const xpTotal = progression ? progression.xp_total ?? progression.total_xp ?? 0 : 0;
     const levelLabel = progression ? String(progression.current_level_label || progression.level_label || rank.level_label || progression.rank_label || rank.rank_label || rank.label || "Level").trim() : "";
@@ -7684,10 +7822,19 @@
       },
       {
         label: "Inventory",
-        value: displayInventory.length ? `${formatNumber(displayInventory.length)} item type${displayInventory.length === 1 ? "" : "s"}` : "Empty",
+        value: displayInventory.length ? "Itemized" : "Empty",
         note: displayInventory.length
           ? "Current quantities hydrate from runtime inventory state."
-          : "No authority-owned items have been issued yet."
+          : "No authority-owned items have been issued yet.",
+        extra: (() => {
+          const wrap = create("div", "profile-game-inventory-stack");
+          wrap.appendChild(buildInventorySummaryList(displayInventory));
+          if (options.canEdit) {
+            const panel = buildPublicValueItemExchangePanel(exchangeableItems);
+            if (panel) wrap.appendChild(panel);
+          }
+          return wrap;
+        })()
       },
       {
         label: "Next level progress",
@@ -7700,7 +7847,7 @@
         extra: hasProgressMeter ? (() => {
           const meter = create("span", "profile-game-progress-meter");
           const fill = create("span", "profile-game-progress-meter-fill");
-          fill.style.width = `${progressPercent}%`;
+          fill.style.setProperty("--profile-progress-target", `${progressPercent}%`);
           meter.appendChild(fill);
           return meter;
         })() : null
@@ -7848,7 +7995,7 @@
     );
     profileCard.appendChild(primaryGrid);
     profileCard.appendChild(buildProfileBadgeGallerySection(profile));
-    profileCard.appendChild(buildProfileGameCompetitionSection(profile));
+    profileCard.appendChild(buildProfileGameCompetitionSection(profile, { canEdit }));
 
     const grid = create("div", "profile-utility-grid profile-utility-grid--slim");
     const socialGallery = buildProfileSocialGallerySection(profile);

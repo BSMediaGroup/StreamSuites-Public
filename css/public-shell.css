@@ -3928,10 +3928,26 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 
 .profile-game-progress-meter-fill {
   display: block;
+  width: var(--profile-progress-target, 0%);
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, rgba(112, 184, 255, 0.86), rgba(226, 198, 109, 0.9));
-  box-shadow: 0 0 16px rgba(112, 184, 255, 0.2);
+  transform-origin: left center;
+  background: linear-gradient(90deg, #0487ff 0%, #18c3ff 52%, #78ecff 100%);
+  box-shadow: 0 0 16px rgba(24, 195, 255, 0.32);
+  animation: profile-game-progress-fill 820ms cubic-bezier(0.2, 0.8, 0.22, 1) both;
+}
+
+.profile-game-progress-meter:hover .profile-game-progress-meter-fill {
+  animation: profile-game-progress-fill 620ms cubic-bezier(0.2, 0.8, 0.22, 1) both;
+}
+
+@keyframes profile-game-progress-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }
 
 .profile-game-disclaimer {
@@ -7693,22 +7709,97 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .economy-denomination-chip img {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   object-fit: contain;
 }
 
 .inventory-summary-row {
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
   align-items: center;
   border-top: 1px solid rgba(188, 207, 237, 0.12);
   padding-top: 8px;
+}
+
+.inventory-summary-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.inventory-summary-icon--fallback {
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(125, 184, 255, 0.13);
+  color: rgba(230, 240, 255, 0.86);
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .inventory-summary-row > span {
   display: grid;
   gap: 2px;
   min-width: 0;
+}
+
+.profile-game-inventory-stack,
+.public-economy-exchange-panel {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.public-economy-exchange-note {
+  margin: 0;
+  color: rgba(201, 216, 237, 0.68);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.public-economy-exchange-form {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) 72px minmax(90px, auto) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.public-economy-exchange-form select,
+.public-economy-exchange-form input {
+  min-width: 0;
+  border: 1px solid rgba(188, 207, 237, 0.18);
+  border-radius: 8px;
+  background: rgba(7, 12, 22, 0.72);
+  color: rgba(244, 248, 255, 0.94);
+  padding: 7px 8px;
+  font: inherit;
+}
+
+.public-economy-exchange-preview {
+  color: rgba(231, 244, 255, 0.94);
+  font-size: 0.78rem;
+}
+
+.public-economy-exchange-status {
+  font-size: 0.74rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-game-progress-meter-fill,
+  .profile-game-progress-meter:hover .profile-game-progress-meter-fill {
+    animation: none;
+  }
+}
+
+@media (max-width: 680px) {
+  .public-economy-exchange-form {
+    grid-template-columns: 1fr 70px;
+  }
+
+  .public-economy-exchange-preview,
+  .public-economy-exchange-submit {
+    grid-column: 1 / -1;
+  }
 }
 
 .sr-only {
