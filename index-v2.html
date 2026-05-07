@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- ===================================================================== -->
-<!-- StreamSuites™ Public Lander — Graphite Hero                           -->
+<!-- StreamSuites™ Public Lander — Aurora Hero                             -->
 <!-- Version: v0.4.2-alpha                                                 -->
 <!-- Copyright: © 2026 Brainstream Media Group                             -->
 <!-- ===================================================================== -->
@@ -12,7 +12,7 @@
   <meta name="description" content="StreamSuites public landing page with live runtime galleries for clips, polls, scoreboards, and tallies." />
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="/css/status-widget.css" />
-  <link rel="stylesheet" href="/css/aurora-landing.css" />
+  <link rel="stylesheet" href="/css/aurora-landing-v2.css" />
   <style>
     .auth-modal {
       max-height: 88vh;
@@ -59,7 +59,7 @@
     </section>
     <main class="hero" aria-label="StreamSuites hero">
       <div class="wordmark">
-        <img src="/assets/logos/sswordmarktm.webp" alt="StreamSuites™" />
+        <img src="./assets/logos/wordmarkchromefull.webp" alt="StreamSuites™" />
       </div>
 
       <p class="hero-about">
@@ -67,11 +67,38 @@
         reliability, control, and scale. <a href="#more" data-about-toggle>See more</a>
       </p>
 
+      <div class="platform-stack" aria-label="Supported platforms">
+        <div class="platform-label" aria-hidden="true">SUPPORTED PLATFORMS</div>
+        <div class="platform-strip">
+          <div class="platform-mask">
+            <div class="platform-marquee">
+              <div class="platform-group">
+                <div class="platform"><img src="/assets/icons/rumble-silver.svg" alt="">Rumble</div>
+                <div class="platform"><img src="/assets/icons/youtube-silver.svg" alt="">YouTube</div>
+                <div class="platform"><img src="/assets/icons/twitch-silver.svg" alt="">Twitch</div>
+                <div class="platform"><img src="/assets/icons/kick-silver.svg" alt="">Kick</div>
+                <div class="platform"><img src="/assets/icons/discord-silver.svg" alt="">Discord</div>
+                <div class="platform"><img src="/assets/icons/obs-silver.svg" alt="">OBS</div>
+              </div>
+
+              <div class="platform-group" aria-hidden="true">
+                <div class="platform"><img src="/assets/icons/rumble-silver.svg" alt="">Rumble</div>
+                <div class="platform"><img src="/assets/icons/youtube-silver.svg" alt="">YouTube</div>
+                <div class="platform"><img src="/assets/icons/twitch-silver.svg" alt="">Twitch</div>
+                <div class="platform"><img src="/assets/icons/kick-silver.svg" alt="">Kick</div>
+                <div class="platform"><img src="/assets/icons/discord-silver.svg" alt="">Discord</div>
+                <div class="platform"><img src="/assets/icons/obs-silver.svg" alt="">OBS</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="cta-block">
         <div class="cta-primary-wrap" aria-hidden="true">
           <button class="cta-primary" type="button" data-auth-trigger="login" data-creator-cta>Creator Login</button>
         </div>
-        <a class="public-dashboard-link" href="/media.html">Public Dashboard</a>
+        <p class="cta-signup">No account? <button type="button" data-auth-trigger="signup">sign up</button> in seconds!</p>
       </div>
     </main>
 
@@ -151,7 +178,7 @@
     <img class="grid-shot grid-shot-3" src="/assets/illustrations/f3.webp" alt="" aria-hidden="true" data-about-image-slide="2" />
     <img class="grid-shot grid-shot-4" src="/assets/illustrations/f4.webp" alt="" aria-hidden="true" data-about-image-slide="3" />
 
-    <div class="aurora" aria-hidden="true">
+    <div class="aurora">
       <div class="blob purple"></div>
       <div class="blob magenta"></div>
       <div class="blob blue"></div>
@@ -161,46 +188,27 @@
 
     <div class="fade"></div>
 
-    <div class="footer-shell">
-      <div class="platform-stack" aria-label="Supported platforms" tabindex="0">
-        <div class="platform-label" aria-hidden="true">SUPPORTED PLATFORMS</div>
-        <div class="platform-strip">
-          <div class="platform-mask">
-            <div class="platform-marquee">
-              <div class="platform-group">
-                <div class="platform"><img src="/assets/icons/rumble-silver.svg" alt="">Rumble</div>
-                <div class="platform"><img src="/assets/icons/youtube-silver.svg" alt="">YouTube</div>
-                <div class="platform"><img src="/assets/icons/twitch-silver.svg" alt="">Twitch</div>
-                <div class="platform"><img src="/assets/icons/kick-silver.svg" alt="">Kick</div>
-                <div class="platform"><img src="/assets/icons/discord-silver.svg" alt="">Discord</div>
-                <div class="platform"><img src="/assets/icons/obs-silver.svg" alt="">OBS</div>
-              </div>
+    <div class="secondary-pills" aria-label="Public Galleries">
+      <a href="/clips.html">Clips</a>
+      <a href="/polls.html">Polls</a>
+      <a href="/media.html">More</a>      
+    </div>
 
-              <div class="platform-group" aria-hidden="true">
-                <div class="platform"><img src="/assets/icons/rumble-silver.svg" alt="">Rumble</div>
-                <div class="platform"><img src="/assets/icons/youtube-silver.svg" alt="">YouTube</div>
-                <div class="platform"><img src="/assets/icons/twitch-silver.svg" alt="">Twitch</div>
-                <div class="platform"><img src="/assets/icons/kick-silver.svg" alt="">Kick</div>
-                <div class="platform"><img src="/assets/icons/discord-silver.svg" alt="">Discord</div>
-                <div class="platform"><img src="/assets/icons/obs-silver.svg" alt="">OBS</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="footer-shell">
+      <div class="footer-status" data-status-slot></div>
+
       <div class="footer-bar">
         <div class="footer-links">
           <a href="/support.html">/support</a>
+          <a href="/donate.html">/donate</a>
           <a href="/privacy.html">/privacy</a>
           <a href="/about.html">/about</a>
         </div>
 
-        <a class="footer-copyright" href="https://brainstream.media" target="_blank" rel="noopener noreferrer">
-          © 2026 Brainstream Media Group
-        </a>
-
         <div class="footer-meta">
-          <div class="footer-status" data-status-slot></div>
+          <a class="footer-copyright" href="https://brainstream.media" target="_blank" rel="noopener noreferrer">
+            © 2026 Brainstream Media Group
+          </a>
           <span class="footer-version-tooltip-container">
             <a class="footer-version" href="/changelog" aria-describedby="footer-version-tooltip">Loading version…</a>
             <div class="footer-version-tooltip" id="footer-version-tooltip" role="tooltip">

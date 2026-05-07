@@ -84,6 +84,7 @@ StreamSuites-Public/
 ├── changelog.html
 ├── economy.html
 ├── index.html
+├── index-v2.html
 ├── public-login.html
 ├── README.md
 ├── requests-login.html
@@ -179,6 +180,7 @@ StreamSuites-Public/
 │       └── versioning.js
 ├── css/
 │   ├── aurora-landing.css
+│   ├── aurora-landing-v2.css
 │   ├── public-login.css
 │   ├── public-pages-v2.css
 │   ├── public-shell.css
