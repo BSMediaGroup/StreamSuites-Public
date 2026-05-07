@@ -70,10 +70,10 @@ textarea {
 .stage::before {
   z-index: 0;
   background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.18) 45%, rgba(0, 0, 0, 0.58)),
-    radial-gradient(circle at 50% 46%, rgba(91, 101, 114, 0.2), rgba(0, 0, 0, 0) 38%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.04) 45%, rgba(0, 0, 0, 0.3)),
+    radial-gradient(circle at 50% 46%, rgba(91, 101, 114, 0.14), rgba(0, 0, 0, 0) 42%),
     url("/assets/backgrounds/bghdblack1.webp") center center / cover no-repeat;
-  filter: saturate(0.82) contrast(1.06) brightness(0.7);
+  filter: saturate(0.95) contrast(1.1) brightness(0.98);
 }
 
 .stage::after {
@@ -161,13 +161,13 @@ textarea {
   right: var(--footer-padding-x);
   bottom: calc(var(--footer-bar-height) + 8px);
   display: flex;
-  flex-direction: row;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-end;
   justify-content: flex-end;
-  gap: 14px;
+  gap: 4px;
   width: min(780px, 54vw);
-  max-height: 56px;
-  overflow: hidden;
+  max-height: 64px;
+  overflow: visible;
   z-index: 19;
   outline: none;
   pointer-events: auto;
@@ -186,7 +186,7 @@ textarea {
   color: rgba(230,232,235,0.42);
   margin: 0;
   opacity: 0;
-  transform: translateX(8px);
+  transform: translateY(5px);
   transition: opacity 0.28s ease, transform 0.28s ease;
 }
 
@@ -198,13 +198,15 @@ textarea {
 .platform-stack:hover .platform-label,
 .platform-stack:focus-within .platform-label {
   opacity: 1;
-  transform: translateX(0);
+  transform: translateY(0);
 }
 
 .platform-mask {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  opacity: 0.5;
+  transition: opacity 0.28s ease;
 
   mask-image: linear-gradient(
     to right,
@@ -237,6 +239,11 @@ textarea {
   animation: platform-scroll 34s linear infinite;
 }
 
+.platform-stack:hover .platform-mask,
+.platform-stack:focus-within .platform-mask {
+  opacity: 1;
+}
+
 .platform-group {
   display: flex;
   align-items: center;
@@ -260,7 +267,7 @@ textarea {
 .platform img {
   height: 18px;
   width: auto;
-  opacity: 0.65;
+  opacity: 1;
   filter: grayscale(1) brightness(1.15);
 }
 
@@ -478,8 +485,8 @@ textarea {
   z-index: 2;
   pointer-events: none;
   background:
-    radial-gradient(circle at 50% 45%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.22) 48%, rgba(0,0,0,0.72) 100%),
-    linear-gradient(90deg, rgba(0,0,0,0.72), rgba(0,0,0,0.14) 48%, rgba(0,0,0,0.62));
+    radial-gradient(circle at 50% 45%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.1) 48%, rgba(0,0,0,0.48) 100%),
+    linear-gradient(90deg, rgba(0,0,0,0.54), rgba(0,0,0,0.06) 48%, rgba(0,0,0,0.44));
 }
 
 /* ======================================================
@@ -761,7 +768,7 @@ body.about-open .about-progress-connector[data-state="active"]::after {
 ====================================================== */
 body.about-open .hero {
   top: auto;
-  left: clamp(20px, 3vw, 44px);
+  left: var(--about-shell-left);
   bottom: calc(var(--footer-bar-height) + 12px);
   transform: none;
   width: auto;
@@ -787,6 +794,7 @@ body.about-open .wordmark {
 }
 
 body.about-open .wordmark img {
+  transform-origin: left bottom;
   transform: scale(0.54);
 }
 
