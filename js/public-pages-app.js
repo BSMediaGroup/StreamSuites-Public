@@ -7562,7 +7562,9 @@
       headers: { Accept: "application/json" }
     });
     if (!response.ok) {
-      throw new Error(`public profile me request failed (${response.status})`);
+      const error = new Error(`public profile me request failed (${response.status})`);
+      error.status = response.status;
+      throw error;
     }
     const payload = await response.json();
     return payload?.profile && typeof payload.profile === "object" ? payload.profile : payload;
@@ -7586,6 +7588,266 @@
     return responsePayload?.profile && typeof responsePayload.profile === "object"
       ? responsePayload.profile
       : responsePayload;
+  }
+
+  function getProfileEditorPlatformKeys() {
+    const api = getSocialDataApi();
+    const registry = Array.isArray(api?.SOCIAL_PLATFORM_REGISTRY) ? api.SOCIAL_PLATFORM_REGISTRY : [];
+    const firstClass = registry.filter((entry) => entry?.tier === "first-class").map((entry) => entry.key).filter(Boolean);
+    const current = ["website", "x", "instagram", "youtube", "twitch", "rumble", "kick", "discord", "pickax", "onlyfans"];
+    return Array.from(new Set([...current, ...firstClass])).filter((key) => key !== "custom");
+  }
+
+  function buildPublicProfileEditorSocialRow(key, value) {
+    const row = create("label", "profile-edit-social-row");
+    const label = create("span", "profile-edit-social-label");
+    const icon = create("img", "profile-edit-social-icon");
+    icon.src = typeof getSocialDataApi()?.socialIconPath === "function" ? getSocialDataApi().socialIconPath(key) : "/assets/icons/link.svg";
+    icon.alt = "";
+    icon.setAttribute("aria-hidden", "true");
+    label.append(icon, create("span", "", socialLabel(key)));
+    const input = create("input", "profile-edit-input");
+    input.type = "url";
+    input.inputMode = "url";
+    input.autocomplete = "url";
+    input.spellcheck = false;
+    input.value = String(value || "").trim();
+    input.placeholder =
+      key === "pickax"
+        ? "https://pickax.com/yourhandle"
+        : key === "onlyfans"
+          ? "https://onlyfans.com/yourhandle"
+          : "https://example.com/yourhandle";
+    input.dataset.profileEditSocial = key;
+    row.append(label, input);
+    return row;
+  }
+
+  function collectPublicProfileEditorSocialLinks(form, originalLinks) {
+    const normalizedOriginal = normalizeSocialLinks(originalLinks);
+    const known = new Set(getProfileEditorPlatformKeys());
+    const next = {};
+    Object.entries(normalizedOriginal).forEach(([key, value]) => {
+      if (!known.has(key) && String(value || "").trim()) next[key] = String(value || "").trim();
+    });
+    form.querySelectorAll("[data-profile-edit-social]").forEach((input) => {
+      if (!(input instanceof HTMLInputElement)) return;
+      const key = String(input.dataset.profileEditSocial || "").trim();
+      const value = String(input.value || "").trim();
+      if (key && value) next[key] = value;
+    });
+    return next;
+  }
+
+  function validatePublicProfileEditorSocialUrl(key, value) {
+    const normalizedKey = String(key || "").trim().toLowerCase();
+    const text = String(value || "").trim();
+    if (!text || (normalizedKey !== "pickax" && normalizedKey !== "onlyfans")) return "";
+    let parsed = null;
+    try {
+      parsed = new URL(text);
+    } catch (_err) {
+      return `${socialLabel(normalizedKey)} must be a valid https URL.`;
+    }
+    const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+    const expectedHost = normalizedKey === "pickax" ? "pickax.com" : "onlyfans.com";
+    if (parsed.protocol !== "https:" || host !== expectedHost || !parsed.pathname.replace(/^\/+|\/+$/g, "")) {
+      return `${socialLabel(normalizedKey)} links must use https://${expectedHost}/yourhandle.`;
+    }
+    return "";
+  }
+
+  function validatePublicProfileEditorSocialLinks(links) {
+    for (const [key, value] of Object.entries(links || {})) {
+      const error = validatePublicProfileEditorSocialUrl(key, value);
+      if (error) return error;
+    }
+    return "";
+  }
+
+  async function readPublicProfileEditorImageInput(input) {
+    if (!(input instanceof HTMLInputElement) || !input.files || !input.files[0]) return "";
+    return readFileAsDataUrl(input.files[0]);
+  }
+
+  function closePublicProfileEditModal(backdrop, restoreFocusTo = null) {
+    if (backdrop?.parentElement) backdrop.remove();
+    document.body.classList.remove("modal-open");
+    if (restoreFocusTo instanceof HTMLElement) restoreFocusTo.focus();
+  }
+
+  function openPublicProfileEditModal(profile, options = {}) {
+    const restoreFocusTo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const backdrop = create("div", "profile-edit-modal-backdrop is-open");
+    const modal = create("section", "profile-edit-modal");
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+    modal.setAttribute("aria-labelledby", "profile-edit-modal-title");
+
+    const closeButton = create("button", "profile-edit-modal-close");
+    closeButton.type = "button";
+    closeButton.setAttribute("aria-label", "Close profile editor");
+    closeButton.appendChild(createIcon("/assets/icons/ui/close.svg", "profile-edit-close-icon"));
+
+    const header = create("div", "profile-edit-modal-header");
+    header.append(
+      create("p", "profile-edit-eyebrow", "Public profile"),
+      create("h2", "profile-edit-title", "Edit profile")
+    );
+    header.querySelector(".profile-edit-title").id = "profile-edit-modal-title";
+    const subtitle = create("p", "profile-edit-subtitle", "Updates save through the existing Runtime/Auth profile endpoint.");
+    header.appendChild(subtitle);
+
+    const form = create("form", "profile-edit-form");
+    const media = create("section", "profile-edit-media");
+    const cover = create("label", "profile-edit-cover");
+    const coverImg = create("img");
+    coverImg.src = profile.coverImageUrl || profile.bannerImageUrl || DEFAULT_PROFILE_COVER;
+    coverImg.alt = "";
+    const coverCopy = create("span", "profile-edit-media-copy");
+    coverCopy.append(create("strong", "", "Cover image"), create("span", "", "Upload a new banner image"));
+    const coverInput = create("input");
+    coverInput.type = "file";
+    coverInput.accept = "image/png,image/jpeg,image/webp,image/gif";
+    coverInput.dataset.profileEditCoverFile = "true";
+    cover.append(coverImg, coverCopy, coverInput);
+
+    const avatar = create("label", "profile-edit-avatar");
+    const avatarImg = create("img");
+    avatarImg.src = profile.avatar || "/assets/icons/ui/profile.svg";
+    avatarImg.alt = "";
+    const avatarCopy = create("span", "profile-edit-media-copy");
+    avatarCopy.append(create("strong", "", "Avatar"), create("span", "", "Upload a profile image"));
+    const avatarInput = create("input");
+    avatarInput.type = "file";
+    avatarInput.accept = "image/png,image/jpeg,image/webp,image/gif";
+    avatarInput.dataset.profileEditAvatarFile = "true";
+    avatar.append(avatarImg, avatarCopy, avatarInput);
+    media.append(cover, avatar);
+
+    const identity = create("section", "profile-edit-section");
+    identity.appendChild(create("h3", "", "Identity"));
+    const displayNameLabel = create("label", "profile-edit-field");
+    displayNameLabel.appendChild(create("span", "", "Display name"));
+    const displayNameInput = create("input", "profile-edit-input");
+    displayNameInput.type = "text";
+    displayNameInput.maxLength = 120;
+    displayNameInput.value = profile.displayName || "";
+    displayNameInput.dataset.profileEditDisplayName = "true";
+    displayNameLabel.appendChild(displayNameInput);
+    const handleLabel = create("label", "profile-edit-field");
+    handleLabel.appendChild(create("span", "", "Public handle"));
+    const handleInput = create("input", "profile-edit-input");
+    handleInput.type = "text";
+    handleInput.value = getCanonicalProfileSlug(profile, "");
+    handleInput.disabled = true;
+    handleLabel.append(handleInput, create("small", "", "Handle changes are not exposed by the current public self-edit API."));
+    identity.append(displayNameLabel, handleLabel);
+
+    const bioSection = create("section", "profile-edit-section");
+    bioSection.appendChild(create("h3", "", "About"));
+    const bioLabel = create("label", "profile-edit-field");
+    bioLabel.appendChild(create("span", "", "Bio"));
+    const bioInput = create("textarea", "profile-edit-input profile-edit-textarea");
+    bioInput.rows = 5;
+    bioInput.maxLength = 1200;
+    bioInput.value = profile.bio || "";
+    bioInput.dataset.profileEditBio = "true";
+    bioLabel.appendChild(bioInput);
+    bioSection.appendChild(bioLabel);
+    const visibilityLabel = create("label", "profile-edit-check-row");
+    const visibilityInput = create("input");
+    visibilityInput.type = "checkbox";
+    visibilityInput.checked = profile.isAnonymous === true;
+    visibilityInput.dataset.profileEditAnonymous = "true";
+    visibilityLabel.append(
+      visibilityInput,
+      create("span", "", "Anonymous / private profile")
+    );
+    bioSection.appendChild(visibilityLabel);
+
+    const socialSection = create("section", "profile-edit-section");
+    socialSection.appendChild(create("h3", "", "Social links"));
+    const socialGrid = create("div", "profile-edit-social-grid");
+    const currentLinks = normalizeSocialLinks(profile.socialLinks);
+    getProfileEditorPlatformKeys().forEach((key) => {
+      socialGrid.appendChild(buildPublicProfileEditorSocialRow(key, currentLinks[key]));
+    });
+    socialSection.appendChild(socialGrid);
+
+    const status = create("p", "profile-edit-status");
+    status.setAttribute("role", "status");
+    status.setAttribute("aria-live", "polite");
+    const actions = create("div", "profile-edit-actions");
+    const cancel = create("button", "profile-edit-button profile-edit-button-secondary", "Cancel");
+    cancel.type = "button";
+    const save = create("button", "profile-edit-button profile-edit-button-primary", "Save changes");
+    save.type = "submit";
+    actions.append(cancel, save);
+
+    form.append(media, identity, bioSection, socialSection, status, actions);
+    modal.append(closeButton, header, form);
+    backdrop.appendChild(modal);
+    document.body.appendChild(backdrop);
+    document.body.classList.add("modal-open");
+
+    const syncPreview = async (input, img) => {
+      const dataUrl = await readPublicProfileEditorImageInput(input).catch(() => "");
+      if (dataUrl) img.src = dataUrl;
+    };
+    coverInput.addEventListener("change", () => syncPreview(coverInput, coverImg));
+    avatarInput.addEventListener("change", () => syncPreview(avatarInput, avatarImg));
+    const handleEscape = (event) => {
+      if (event.key !== "Escape" || !backdrop.parentElement) return;
+      close();
+    };
+    const close = () => {
+      document.removeEventListener("keydown", handleEscape);
+      closePublicProfileEditModal(backdrop, restoreFocusTo);
+    };
+    closeButton.addEventListener("click", close);
+    cancel.addEventListener("click", close);
+    backdrop.addEventListener("click", (event) => {
+      if (event.target === backdrop) close();
+    });
+    document.addEventListener("keydown", handleEscape);
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      status.textContent = "Saving...";
+      delete status.dataset.tone;
+      save.disabled = true;
+      cancel.disabled = true;
+      try {
+        const payload = {
+          display_name: displayNameInput.value.trim(),
+          bio: bioInput.value.trim(),
+          anonymous: visibilityInput.checked,
+          social_links: collectPublicProfileEditorSocialLinks(form, profile.socialLinks)
+        };
+        const socialValidationError = validatePublicProfileEditorSocialLinks(payload.social_links);
+        if (socialValidationError) {
+          throw new Error(socialValidationError);
+        }
+        const avatarData = await readPublicProfileEditorImageInput(avatarInput);
+        const coverData = await readPublicProfileEditorImageInput(coverInput);
+        if (avatarData) payload.avatar_url = avatarData;
+        if (coverData) payload.cover_image_url = coverData;
+        const updated = await saveMyPublicProfile(payload);
+        status.textContent = "Saved";
+        status.dataset.tone = "success";
+        close();
+        if (typeof options.onSaved === "function") options.onSaved(updated);
+      } catch (error) {
+        status.textContent = error instanceof Error ? error.message : "Save failed";
+        status.dataset.tone = "error";
+      } finally {
+        save.disabled = false;
+        cancel.disabled = false;
+      }
+    });
+
+    window.requestAnimationFrame(() => displayNameInput.focus());
   }
 
   function collectProfileArtifacts(data, ...profileKeys) {
@@ -7934,6 +8196,13 @@
     );
 
     const right = create("div", "profile-overlay-actions");
+    if (options.canEditProfile && typeof options.openProfileEditor === "function") {
+      const editButton = create("button", "profile-edit-open-button", "Edit profile");
+      editButton.type = "button";
+      editButton.prepend(createIcon(UI_ICON_MAP.edit, "profile-edit-open-icon"));
+      editButton.addEventListener("click", () => options.openProfileEditor(profile));
+      right.appendChild(editButton);
+    }
     const socialRail = buildProfileHeaderSocialRail(profile?.socialLinks);
     if (socialRail) right.appendChild(socialRail);
     right.appendChild(
@@ -8006,84 +8275,22 @@
     return hero;
   }
 
-  function buildStandaloneProfileOwnerTools(profile, canEdit) {
+  function buildStandaloneProfileOwnerTools(profile, canEdit, options = {}) {
     if (!canEdit) return null;
     const tools = create("section", "profile-utility-section profile-owner-tools");
     const header = create("div", "profile-inline-header");
     header.appendChild(create("h3", "", "Owner controls"));
-    const settings = create("a", "edit-affordance", "Edit links");
-    settings.href = "/community/settings.html";
-    header.appendChild(settings);
-
-    const bioHeader = create("div", "profile-inline-header");
-    bioHeader.appendChild(create("h3", "", "Bio editor"));
-    const editBioBtn = create("button", "edit-affordance edit-button-inline", "Edit");
-    editBioBtn.type = "button";
-    editBioBtn.prepend(createIcon(UI_ICON_MAP.edit, "inline-icon-mask"));
-    bioHeader.appendChild(editBioBtn);
-
-    const bioEditor = create("div", "profile-bio-editor");
-    bioEditor.hidden = true;
-    const bioInput = create("textarea");
-    bioInput.value = profile.bio || "";
-    bioInput.rows = 4;
-    const bioSave = create("button", "filter-chip active", "Save");
-    bioSave.type = "button";
-    const bioCancel = create("button", "filter-chip", "Cancel");
-    bioCancel.type = "button";
-    const bioStatus = create("span", "muted");
-    const bioActions = create("div", "profile-bio-actions");
-    bioActions.append(bioSave, bioCancel, bioStatus);
-    bioEditor.append(bioInput, bioActions);
-
-    editBioBtn.addEventListener("click", () => {
-      bioEditor.hidden = false;
-      bioInput.focus();
-      bioInput.select();
+    const editButton = create("button", "profile-edit-open-button profile-edit-open-button--panel", "Edit profile");
+    editButton.type = "button";
+    editButton.prepend(createIcon(UI_ICON_MAP.edit, "profile-edit-open-icon"));
+    editButton.addEventListener("click", () => {
+      if (typeof options.openProfileEditor === "function") options.openProfileEditor(profile);
     });
-    bioCancel.addEventListener("click", () => {
-      bioEditor.hidden = true;
-      bioInput.value = profile.bio || "";
-      bioStatus.textContent = "";
-    });
-    bioSave.addEventListener("click", async () => {
-      bioStatus.textContent = "Saving...";
-      bioSave.disabled = true;
-      try {
-        const updated = await saveMyPublicProfile({ bio: bioInput.value.trim() });
-        profile.bio = String(updated?.bio || bioInput.value || "").trim();
-        bioStatus.textContent = "Saved";
-      } catch (error) {
-        bioStatus.textContent = error instanceof Error ? error.message : "Save failed";
-      } finally {
-        bioSave.disabled = false;
-      }
-    });
-
-    const privacyWrap = create("label", "profile-visibility-toggle");
-    const toggle = create("input");
-    toggle.type = "checkbox";
-    toggle.checked = profile.isAnonymous === true;
-    const text = create("span", "", "Anonymous / Private profile");
-    const status = create("span", "muted");
-    privacyWrap.append(toggle, text, status);
-    toggle.addEventListener("change", async () => {
-      status.textContent = "Saving...";
-      toggle.disabled = true;
-      try {
-        const updated = await saveMyPublicProfile({ anonymous: toggle.checked });
-        profile.isAnonymous = updated?.is_anonymous === true || updated?.anonymous === true;
-        toggle.checked = profile.isAnonymous;
-        status.textContent = profile.isAnonymous ? "Anonymous enabled" : "Public profile enabled";
-      } catch (error) {
-        toggle.checked = !toggle.checked;
-        status.textContent = error instanceof Error ? error.message : "Save failed";
-      } finally {
-        toggle.disabled = false;
-      }
-    });
-
-    tools.append(header, bioHeader, bioEditor, privacyWrap);
+    header.appendChild(editButton);
+    tools.append(
+      header,
+      create("p", "profile-owner-tools-copy", "Edit display name, bio, media, visibility, and social links in one compact profile editor.")
+    );
     return tools;
   }
 
@@ -8792,7 +8999,7 @@
       })
     );
 
-    const ownerTools = buildStandaloneProfileOwnerTools(profile, canEdit);
+    const ownerTools = buildStandaloneProfileOwnerTools(profile, canEdit, options);
     if (ownerTools) profileCard.appendChild(ownerTools);
   }
 
@@ -8830,7 +9037,7 @@
     cleanupStandaloneProfileInteractions();
     clear(host);
     const shell = create("div", "standalone-profile-shell");
-    shell.appendChild(buildStandaloneProfileHero(profile, options.authState || null, options));
+    shell.appendChild(buildStandaloneProfileHero(profile, options.authState || null, { ...options, canEditProfile: canEdit }));
     shell.appendChild(create("div", "profile-hero-trim"));
 
     const body = create("section", "public-standalone-main profile-standalone-body");
@@ -9182,6 +9389,9 @@
         profile = normalizeProfilePayload(payload, fallbackProfile, profileCode);
         canEdit = canEditResolvedProfile(authState, profile, profileCode);
       } catch (error) {
+        if (canEdit && (error?.status === 401 || error?.status === 403)) {
+          canEdit = false;
+        }
         if (!profile) {
           renderProfileNotFound(host, profileCode, {
             authState,
@@ -9239,13 +9449,22 @@
         fallbackProfile?.id,
         fallbackProfile?.userCode
       );
-      renderStandaloneProfilePage(host, profile, canEdit, {
-        authState,
-        openAuthModal: ctx.openAuthModal,
-        onMenuAction: ctx.handleAccountMenuAction,
-        profileArtifacts,
-        helpers: data.helpers
-      });
+      const renderResolvedProfile = (resolvedProfile) => {
+        renderStandaloneProfilePage(host, resolvedProfile, canEdit, {
+          authState,
+          openAuthModal: ctx.openAuthModal,
+          onMenuAction: ctx.handleAccountMenuAction,
+          profileArtifacts,
+          helpers: data.helpers,
+          openProfileEditor: (editableProfile) => openPublicProfileEditModal(editableProfile, {
+            onSaved: (updatedPayload) => {
+              profile = normalizeProfilePayload(updatedPayload, profile, profileCode);
+              renderResolvedProfile(profile);
+            }
+          })
+        });
+      };
+      renderResolvedProfile(profile);
     })();
   }
 

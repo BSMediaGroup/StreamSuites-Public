@@ -49,6 +49,8 @@
       tier: "first-class"
     },
     { key: "patreon", label: "Patreon", icon: "/assets/icons/patreon.svg", aliases: ["patreon"], tier: "first-class" },
+    { key: "pickax", label: "Pickax", icon: "/assets/icons/pickax.svg", aliases: ["pickax"], tier: "first-class" },
+    { key: "onlyfans", label: "OnlyFans", icon: "/assets/icons/onlyfans.svg", aliases: ["onlyfans", "only_fans", "of"], tier: "first-class" },
     { key: "substack", label: "Substack", icon: "/assets/icons/substack.svg", aliases: ["substack"], tier: "first-class" },
     { key: "soundcloud", label: "SoundCloud", icon: "/assets/icons/soundcloud.svg", aliases: ["soundcloud", "sound_cloud"], tier: "first-class" },
     {

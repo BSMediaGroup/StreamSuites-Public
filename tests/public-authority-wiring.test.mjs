@@ -53,6 +53,26 @@ test("public app wires authority request submission and my-data history to the r
   assert.match(source, /openAuthModal:\s*ctx\.openAuthModal/);
 });
 
+test("public profile owner editor stays runtime-backed and uses canonical social assets", () => {
+  const app = read("js/public-pages-app.js");
+  const hub = read("js/public-data-hub.js");
+  const css = read("css/public-shell.css");
+
+  assert.match(hub, /key: "pickax"[\s\S]*label: "Pickax"[\s\S]*icon: "\/assets\/icons\/pickax\.svg"/);
+  assert.match(hub, /key: "onlyfans"[\s\S]*label: "OnlyFans"[\s\S]*icon: "\/assets\/icons\/onlyfans\.svg"/);
+  assert.match(app, /function openPublicProfileEditModal/);
+  assert.match(app, /saveMyPublicProfile\(payload\)/);
+  assert.match(app, /function validatePublicProfileEditorSocialUrl/);
+  assert.match(app, /https:\/\/\$\{expectedHost\}\/yourhandle/);
+  assert.match(app, /data-profile-edit-social/);
+  assert.match(app, /profile-edit-open-button/);
+  assert.match(app, /canEditProfile: canEdit/);
+  assert.match(app, /if \(canEdit && \(error\?\.status === 401 \|\| error\?\.status === 403\)\)/);
+  assert.match(css, /\.profile-edit-modal-backdrop/);
+  assert.match(css, /\.profile-edit-media/);
+  assert.match(css, /\.profile-edit-social-grid/);
+});
+
 test("public leaderboards route hydrates from authoritative progression API", () => {
   const app = read("js/public-pages-app.js");
   const css = read("css/public-shell.css");
