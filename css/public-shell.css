@@ -3439,6 +3439,35 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   text-align: center;
 }
 
+.profile-message-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.profile-not-found-attempt {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(154, 209, 255, 0.2);
+  border-radius: 10px;
+  background: rgba(9, 14, 22, 0.54);
+  color: rgba(220, 235, 255, 0.86);
+  font-family: var(--system-mono-font, "SUSE Mono", monospace);
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.profile-message-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.profile-message-link {
+  width: auto;
+}
+
 .profile-stream-collapsible {
   border-color: rgba(145, 203, 255, 0.24);
   background:

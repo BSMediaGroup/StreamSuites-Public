@@ -7524,13 +7524,15 @@
 
   function renderProfileNotFound(host, requestedCode, options = {}) {
     const normalizedCode = String(requestedCode || "").trim();
-    const title = normalizedCode ? `@${normalizedCode}` : "Profile";
+    const title = "No such profile was found";
     const subtitle = normalizedCode
-      ? "This public profile could not be found."
+      ? `We could not find a StreamSuites public profile for @${normalizedCode}.`
       : "A public profile slug is required for this route.";
     renderStandaloneProfileMessage(host, {
       title,
       subtitle,
+      attemptedHandle: normalizedCode,
+      action: { label: "Browse members", href: "/members" },
       authState: options.authState || null,
       openAuthModal: options.openAuthModal || null,
       onMenuAction: options.onMenuAction || null
@@ -8847,6 +8849,8 @@
   function renderStandaloneProfileMessage(host, options = {}) {
     const title = String(options.title || "Profile").trim();
     const subtitle = String(options.subtitle || "").trim();
+    const attemptedHandle = String(options.attemptedHandle || "").trim();
+    const action = options.action && typeof options.action === "object" ? options.action : null;
     const profile = {
       displayName: title,
       publicSlug: "",
@@ -8869,6 +8873,17 @@
       create("div", "empty-state", title),
       create("p", "profile-unavailable-copy", subtitle)
     );
+    if (attemptedHandle) {
+      const attempted = create("p", "profile-not-found-attempt", `Attempted handle: @${attemptedHandle}`);
+      card.appendChild(attempted);
+    }
+    if (action?.href && action?.label) {
+      const actionRow = create("div", "profile-message-actions");
+      const link = create("a", "dashboard-card-link profile-message-link", String(action.label));
+      link.href = String(action.href);
+      actionRow.appendChild(link);
+      card.appendChild(actionRow);
+    }
     body.appendChild(card);
     shell.appendChild(body);
     host.appendChild(shell);

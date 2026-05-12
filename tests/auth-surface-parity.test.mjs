@@ -367,6 +367,9 @@ test("standalone /u profile hydration keeps runtime profile media ahead of local
   assert.match(app, /const PROFILE_CACHE_TTL_MS = 60 \* 1000/);
   assert.match(app, /const publicProfileRequestCache = new Map\(\)/);
   assert.match(app, /async function fetchPublicProfileByIdentifier\(identifier, options = \{\}\)[\s\S]*cache:\s*"no-store"/);
+  assert.match(app, /No such profile was found/);
+  assert.match(app, /Attempted handle: @/);
+  assert.match(app, /action:\s*\{\s*label:\s*"Browse members",\s*href:\s*"\/members"\s*\}/);
   assert.match(app, /function readStandaloneProfileBootstrap\(\)/);
   assert.match(app, /function buildBootstrapDataContext\(profileCode, bootstrap\)/);
   assert.match(app, /let loadedDataIsBootstrap = false/);
