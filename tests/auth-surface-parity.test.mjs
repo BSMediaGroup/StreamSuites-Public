@@ -141,7 +141,8 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   const css = read("css/public-shell.css");
   const statusCss = read("css/status-widget.css");
   const profileHtml = read("u/index.html");
-  const standaloneUtilityBlock = app.match(/function renderStandaloneProfileUtilityBody\(profileCard, profile, canEdit, options = \{\}\) \{[\s\S]*?\n  \}\n\n  function renderStandaloneProfilePage/)?.[0] || "";
+  const standaloneUtilityBlock = app.match(/function renderStandaloneProfileUtilityBody\(profileCard, profile, canEdit, options = \{\}\) \{[\s\S]*?\n  \}\n\n  function buildProfileLoadingSection/)?.[0] || "";
+  const standaloneLoadingBlock = app.match(/function renderStandaloneProfileLoadingUtilityBody\(profileCard\) \{[\s\S]*?\n  \}\n\n  function renderStandaloneProfilePage/)?.[0] || "";
 
   assert.match(app, /function renderStandaloneProfilePage\(host, profile, canEdit, options = \{\}\)/);
   assert.match(app, /buildStandaloneProfileHero\(profile, options\.authState \|\| null, options\)/);
@@ -159,6 +160,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /COMMUNITY HOME/);
   assert.doesNotMatch(app, /buildStandaloneProfileReturnFooter/);
   assert.ok(standaloneUtilityBlock, "standalone profile utility body should exist");
+  assert.ok(standaloneLoadingBlock, "standalone profile loading utility body should exist");
   assert.match(standaloneUtilityBlock, /profileCard\.appendChild\(buildLatestStreamSection\(profile, options\.helpers \|\| null\)\)/);
   assert.match(standaloneUtilityBlock, /buildProfileOverviewPanel\(profile, profileArtifacts/);
   assert.match(standaloneUtilityBlock, /buildProfileMiniArtifactGallery\(profileArtifacts, canEdit/);
@@ -168,6 +170,11 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(standaloneUtilityBlock, /buildProfileGameCompetitionSection\(profile, \{ canEdit \}\)/);
   assert.match(standaloneUtilityBlock, /buildProfileShareSection\(profile, \{ compact: true \}\)/);
   assert.match(standaloneUtilityBlock, /buildCollapsedAuthorityRequestPanel\(resolveProfileAuthorityContext\(profile\)/);
+  assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("Profile overview", 4\)/);
+  assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("Artifact showcase", 3\)/);
+  assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("Public badges", 3\)/);
+  assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("Game & Competition", 4\)/);
+  assert.match(app, /if \(options\.loadingSections === true\) \{/);
   assert.match(app, /function buildLatestStreamSection\(profile, helpers\)/);
   assert.match(app, /alternate_sources|alternateSources/);
   assert.match(app, /const STREAM_SOURCE_PRIORITY = Object\.freeze\(\["rumble", "youtube", "twitch", "kick"\]\)/);
@@ -297,6 +304,10 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /\.profile-badge-chip-icon/);
   assert.match(css, /\.profile-overview-panel/);
   assert.match(css, /\.profile-mini-artifacts/);
+  assert.match(css, /\.profile-loading-section/);
+  assert.match(css, /\.profile-skeleton-line/);
+  assert.match(css, /@keyframes profile-skeleton-sheen/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.profile-skeleton-line/);
   assert.match(css, /\.profile-share-section--compact \.share-box\s*\{[\s\S]*background:\s*transparent/);
   assert.match(css, /\.profile-authority-collapsible/);
   assert.match(css, /\.profile-authority-summary-action-icon/);
@@ -318,6 +329,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
 
 test("standalone /u profile hydration keeps runtime profile media ahead of local fallback data", () => {
   const app = read("js/public-pages-app.js");
+  const profileFunction = read("functions/u/[[slug]].js");
   const normalizeProfilePayloadBlock = app.match(/function normalizeProfilePayload\(payload, fallbackProfile, fallbackCode\) \{[\s\S]*?\n  \}\n\n  async function fetchPublicProfileByIdentifier/)?.[0] || "";
   const roleChipBlock = app.match(/function buildStandaloneRoleChips\(profile\) \{[\s\S]*?\n  \}/)?.[0] || "";
   const profileTypeBlock = app.match(/function buildProfileTypeChip\(profile\) \{[\s\S]*?\n  \}/)?.[0] || "";
@@ -347,9 +359,28 @@ test("standalone /u profile hydration keeps runtime profile media ahead of local
   assert.match(app, /if \(normalizedAccountType === "DEVELOPER"\) \{[\s\S]*return "developer";/);
 
   assert.ok(standaloneProfileBlock, "renderStandaloneProfile should exist");
+  assert.match(standaloneProfileBlock, /readStandaloneProfileBootstrap\(\)/);
+  assert.match(standaloneProfileBlock, /bootstrapMatchesProfileCode\(bootstrap, profileCode\)/);
+  assert.match(standaloneProfileBlock, /loadingSections: true/);
   assert.match(standaloneProfileBlock, /await fetchPublicProfileByIdentifier\(profileCode\)/);
   assert.match(standaloneProfileBlock, /profile = normalizeProfilePayload\(payload, fallbackProfile, profileCode\)/);
-  assert.match(app, /async function fetchPublicProfileByIdentifier\(identifier\)[\s\S]*cache:\s*"no-store"/);
+  assert.match(app, /const PROFILE_CACHE_TTL_MS = 60 \* 1000/);
+  assert.match(app, /const publicProfileRequestCache = new Map\(\)/);
+  assert.match(app, /async function fetchPublicProfileByIdentifier\(identifier, options = \{\}\)[\s\S]*cache:\s*"no-store"/);
+  assert.match(app, /function readStandaloneProfileBootstrap\(\)/);
+  assert.match(app, /function buildBootstrapDataContext\(profileCode, bootstrap\)/);
+  assert.match(app, /let loadedDataIsBootstrap = false/);
+  assert.match(app, /if \(currentConfig\.standalone\)[\s\S]*loadedData = buildBootstrapDataContext\(profileCode, bootstrap\)/);
+  assert.match(app, /if \(loadedData && !loadedDataIsBootstrap\) return loadedData/);
+  assert.match(profileFunction, /PROFILE_LOOKUP_TIMEOUT_MS = 2500/);
+  assert.match(profileFunction, /STREAMSUITES_API_ORIGIN/);
+  assert.match(profileFunction, /\/api\/public\/profile/);
+  assert.match(profileFunction, /<meta property="og:title"/);
+  assert.match(profileFunction, /<meta property="og:image"/);
+  assert.match(profileFunction, /<meta name="twitter:card"/);
+  assert.match(profileFunction, /streamsuites-profile-bootstrap/);
+  assert.match(profileFunction, /escapeJsonForScript/);
+  assert.match(profileFunction, /Cache-Control/);
 });
 
 test("public clip normalization does not request missing local SEO placeholder thumbnails", () => {

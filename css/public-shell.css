@@ -3182,6 +3182,54 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   overflow: hidden;
 }
 
+.profile-loading-section {
+  min-height: 132px;
+}
+
+.profile-section-count--loading {
+  color: rgba(185, 202, 230, 0.76);
+}
+
+.profile-skeleton-stack {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.profile-skeleton-line {
+  display: block;
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, rgba(148, 163, 184, 0.12), rgba(221, 235, 255, 0.24), rgba(148, 163, 184, 0.12)),
+    rgba(15, 23, 42, 0.52);
+  background-size: 220% 100%;
+  animation: profile-skeleton-sheen 1.25s ease-in-out infinite;
+}
+
+.profile-skeleton-line--1 {
+  width: 74%;
+}
+
+.profile-skeleton-line--2 {
+  width: 92%;
+}
+
+.profile-skeleton-line--3 {
+  width: 58%;
+}
+
+@keyframes profile-skeleton-sheen {
+  from {
+    background-position: 120% 0;
+  }
+
+  to {
+    background-position: -120% 0;
+  }
+}
+
 .profile-overview-panel,
 .profile-mini-artifacts {
   min-height: 100%;
@@ -4499,7 +4547,8 @@ body[data-public-page="public-profile-standalone"] .edit-affordance:focus-visibl
   .progression-level-chip:focus-visible::before,
   .progression-rank-chip::before,
   .progression-rank-chip:hover::before,
-  .progression-rank-chip:focus-visible::before {
+  .progression-rank-chip:focus-visible::before,
+  .profile-skeleton-line {
     animation: none !important;
   }
 }

@@ -36,6 +36,7 @@
   const AUTH_PUBLIC_PROFILE_URL = `${AUTH_API_BASE}/api/public/profile`;
   const AUTH_PUBLIC_PROFILE_ME_URL = `${AUTH_API_BASE}/api/public/profile/me`;
   const AUTH_PUBLIC_PROFILE_RESOLVE_URL = `${AUTH_API_BASE}/api/public/profile/resolve`;
+  const PROFILE_CACHE_TTL_MS = 60 * 1000;
   const AUTH_PUBLIC_AUTHORITY_REQUESTS_URL = `${AUTH_API_BASE}/api/public/authority/requests`;
   const AUTH_PUBLIC_AUTHORITY_REQUESTS_MINE_URL = `${AUTH_API_BASE}/api/public/authority/requests/mine`;
   const AUTH_PUBLIC_PROGRESSION_ME_URL = `${AUTH_API_BASE}/api/public/progression/me`;
@@ -63,6 +64,7 @@
   const ADMIN_DASHBOARD_URL = "https://admin.streamsuites.app";
   const PUBLIC_AUTH_COMPLETE_MESSAGE_TYPE = "ss_public_auth_complete";
   const CANONICAL_PROFILE_PREFIX = "/u/";
+  const publicProfileRequestCache = new Map();
   const BADGE_ICON_MAP = Object.freeze({
     admin: "/assets/icons/tierbadge-admin.svg",
     core: "/assets/icons/tierbadge-core.svg",
@@ -7204,6 +7206,60 @@
     return normalizeUserCode(slug, "");
   }
 
+  function readStandaloneProfileBootstrap() {
+    const node = document.getElementById("streamsuites-profile-bootstrap");
+    if (!node) return null;
+    try {
+      const payload = JSON.parse(node.textContent || "{}");
+      return payload && typeof payload === "object" ? payload : null;
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function bootstrapMatchesProfileCode(bootstrap, profileCode) {
+    const requested = normalizeUserCode(profileCode, "");
+    const profile = bootstrap?.profile && typeof bootstrap.profile === "object" ? bootstrap.profile : null;
+    if (!requested || !profile) return false;
+    return collectProfileIdentifiers(profile).includes(requested);
+  }
+
+  function buildBootstrapDataContext(profileCode, bootstrap) {
+    const profile = bootstrap?.profile && typeof bootstrap.profile === "object" ? bootstrap.profile : null;
+    const normalizedProfile = normalizeProfilePayload(profile || {}, profile || {}, profileCode || "public-user");
+    const profileKeys = collectProfileIdentifiers(normalizedProfile);
+    const bySlug = {};
+    const byCode = {};
+    profileKeys.forEach((key) => {
+      bySlug[key] = normalizedProfile;
+      byCode[key] = normalizedProfile;
+    });
+    return {
+      clips: [],
+      polls: [],
+      wheels: [],
+      scoreboards: [],
+      tallies: [],
+      notices: [],
+      profiles: [normalizedProfile],
+      profilesById: { [normalizedProfile.id]: normalizedProfile },
+      profilesBySlug: bySlug,
+      profilesByCode: byCode,
+      artifactsByProfile: {},
+      meta: null,
+      liveStatus: null,
+      rumbleDiscovery: null,
+      authority: { identities: null, artifacts: null, identityByUserCode: new Map(), artifactByCode: new Map() },
+      sourceStatus: { bootstrap: true },
+      helpers: {
+        toTimestamp: window.StreamSuitesPublicData?.toTimestamp,
+        toTitle: window.StreamSuitesPublicData?.toTitle,
+        platformIconFor: window.StreamSuitesPublicData?.platformIconFor,
+        normalizePlatformKey: window.StreamSuitesPublicData?.normalizePlatformKey
+      }
+    };
+  }
+
   function socialIconPath(network) {
     const api = getSocialDataApi();
     if (typeof api?.socialIconPath === "function") return api.socialIconPath(network);
@@ -7406,22 +7462,45 @@
     };
   }
 
-  async function fetchPublicProfileByIdentifier(identifier) {
+  async function fetchPublicProfileByIdentifier(identifier, options = {}) {
+    const normalizedIdentifier = normalizeUserCode(identifier, "");
+    const cacheKey = normalizedIdentifier || normalizeUserCode(identifier);
+    const now = Date.now();
+    const cached = publicProfileRequestCache.get(cacheKey);
+    if (!options.force && cached) {
+      if (cached.promise) return cached.promise;
+      if (cached.payload && now - cached.timestamp < PROFILE_CACHE_TTL_MS) {
+        return cached.payload;
+      }
+    }
+
     const endpoint = new URL(AUTH_PUBLIC_PROFILE_URL);
-    endpoint.searchParams.set("slug", normalizeUserCode(identifier));
-    const response = await fetch(endpoint.toString(), {
+    endpoint.searchParams.set("slug", cacheKey);
+    const promise = fetch(endpoint.toString(), {
       method: "GET",
       cache: "no-store",
       credentials: "include",
       headers: { Accept: "application/json" }
-    });
-    if (!response.ok) {
-      const error = new Error(`public profile request failed (${response.status})`);
-      error.status = response.status;
-      throw error;
-    }
-    const payload = await response.json();
-    return payload?.profile && typeof payload.profile === "object" ? payload.profile : payload;
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          const error = new Error(`public profile request failed (${response.status})`);
+          error.status = response.status;
+          throw error;
+        }
+        const payload = await response.json();
+        return payload?.profile && typeof payload.profile === "object" ? payload.profile : payload;
+      })
+      .then((payload) => {
+        publicProfileRequestCache.set(cacheKey, { payload, timestamp: Date.now() });
+        return payload;
+      })
+      .catch((error) => {
+        publicProfileRequestCache.delete(cacheKey);
+        throw error;
+      });
+    publicProfileRequestCache.set(cacheKey, { promise, timestamp: now });
+    return promise;
   }
 
   function syncStandaloneProfileCanonicalUrl(profile, requestedIdentifier) {
@@ -8715,6 +8794,36 @@
     if (ownerTools) profileCard.appendChild(ownerTools);
   }
 
+  function buildProfileLoadingSection(title, rows = 3) {
+    const section = create("section", "profile-utility-section profile-loading-section");
+    const header = create("div", "profile-inline-header");
+    header.append(
+      create("h3", "", title),
+      create("span", "profile-section-count profile-section-count--loading", "Loading")
+    );
+    const stack = create("div", "profile-skeleton-stack");
+    for (let index = 0; index < rows; index += 1) {
+      stack.appendChild(create("span", `profile-skeleton-line profile-skeleton-line--${(index % 3) + 1}`));
+    }
+    section.append(header, stack);
+    return section;
+  }
+
+  function renderStandaloneProfileLoadingUtilityBody(profileCard) {
+    clear(profileCard);
+    const primaryGrid = create("div", "profile-body-grid");
+    primaryGrid.append(
+      buildProfileLoadingSection("Profile overview", 4),
+      buildProfileLoadingSection("Artifact showcase", 3)
+    );
+    profileCard.appendChild(primaryGrid);
+    profileCard.appendChild(buildProfileLoadingSection("Public badges", 3));
+    profileCard.appendChild(buildProfileLoadingSection("Game & Competition", 4));
+    const grid = create("div", "profile-utility-grid profile-utility-grid--slim");
+    grid.append(buildProfileLoadingSection("Social links", 3), buildProfileLoadingSection("Share Links", 2));
+    profileCard.appendChild(grid);
+  }
+
   function renderStandaloneProfilePage(host, profile, canEdit, options = {}) {
     cleanupStandaloneProfileInteractions();
     clear(host);
@@ -8728,7 +8837,11 @@
     shell.appendChild(body);
     host.appendChild(shell);
 
-    renderStandaloneProfileUtilityBody(profileCard, profile, canEdit, options);
+    if (options.loadingSections === true) {
+      renderStandaloneProfileLoadingUtilityBody(profileCard);
+    } else {
+      renderStandaloneProfileUtilityBody(profileCard, profile, canEdit, options);
+    }
   }
 
   function renderStandaloneProfileMessage(host, options = {}) {
@@ -9008,17 +9121,34 @@
   function renderStandaloneProfile(ctx) {
     const { host, data, authState } = ctx;
     clear(host);
-    renderStandaloneProfileMessage(host, {
-      title: "Profile",
-      subtitle: "Loading public profile...",
-      authState,
-      openAuthModal: ctx.openAuthModal,
-      onMenuAction: ctx.handleAccountMenuAction
-    });
 
     const profileCode = resolveStandaloneProfileCode();
+    const bootstrap = readStandaloneProfileBootstrap();
     const localProfile = findLocalProfile(data, profileCode);
     const fallbackProfile = localProfile || resolveLocalProfile(data, profileCode);
+    const bootstrapProfile = bootstrapMatchesProfileCode(bootstrap, profileCode)
+      ? normalizeProfilePayload(bootstrap.profile, fallbackProfile, profileCode)
+      : null;
+
+    if (bootstrapProfile) {
+      document.title = `${bootstrapProfile.displayName} | StreamSuites Public Profile`;
+      renderStandaloneProfilePage(host, bootstrapProfile, false, {
+        authState,
+        openAuthModal: ctx.openAuthModal,
+        onMenuAction: ctx.handleAccountMenuAction,
+        profileArtifacts: [],
+        helpers: data.helpers,
+        loadingSections: true
+      });
+    } else {
+      renderStandaloneProfileMessage(host, {
+        title: "Profile",
+        subtitle: "Loading public profile...",
+        authState,
+        openAuthModal: ctx.openAuthModal,
+        onMenuAction: ctx.handleAccountMenuAction
+      });
+    }
 
     (async () => {
       if (!profileCode) {
@@ -9030,7 +9160,7 @@
         return;
       }
 
-      let profile = localProfile ? normalizeProfilePayload(localProfile, localProfile, profileCode) : null;
+      let profile = bootstrapProfile || (localProfile ? normalizeProfilePayload(localProfile, localProfile, profileCode) : null);
       let canEdit = canEditResolvedProfile(authState, profile, profileCode);
       try {
         const payload = canEdit ? await fetchMyPublicProfile() : await fetchPublicProfileByIdentifier(profileCode);
@@ -9867,6 +9997,7 @@
     let currentPageId = initialPageId;
     let currentConfig = PAGE_CONFIG[currentPageId];
     let loadedData = null;
+    let loadedDataIsBootstrap = false;
     let navigationToken = 0;
     let pendingLegacyProfileUuid = "";
     let wheelEventSource = null;
@@ -9988,6 +10119,16 @@
       );
     };
 
+    if (currentConfig.standalone) {
+      const bootstrap = readStandaloneProfileBootstrap();
+      const profileCode = resolveStandaloneProfileCode();
+      if (bootstrapMatchesProfileCode(bootstrap, profileCode)) {
+        loadedData = buildBootstrapDataContext(profileCode, bootstrap);
+        loadedDataIsBootstrap = true;
+        rerender();
+      }
+    }
+
     function shouldUseWheelLiveSync(config) {
       return Boolean(
         config?.listType === "wheels" ||
@@ -10102,8 +10243,9 @@
     }
 
     async function ensureData() {
-      if (loadedData) return loadedData;
+      if (loadedData && !loadedDataIsBootstrap) return loadedData;
       loadedData = await window.StreamSuitesPublicData.loadAll();
+      loadedDataIsBootstrap = false;
       return loadedData;
     }
 
