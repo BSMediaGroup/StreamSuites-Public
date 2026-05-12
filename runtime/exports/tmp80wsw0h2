@@ -1,7 +1,7 @@
 {
   "schema_version": "v1",
-  "generated_at": "2026-05-12T17:05:32.086685Z",
-  "server_generated_at": "2026-05-12T17:05:32.086685Z",
+  "generated_at": "2026-05-12T17:05:32.378568Z",
+  "server_generated_at": "2026-05-12T17:05:32.378568Z",
   "count": 34,
   "bots": [
     {
@@ -99,7 +99,7 @@
       "runner_kind": "managed_transport",
       "runner_state": "stopped",
       "last_heartbeat_at": null,
-      "last_evaluated_at": "2026-05-12T17:05:08.095887Z",
+      "last_evaluated_at": "2026-05-12T17:05:28.106555Z",
       "last_transition_at": "2026-05-12T16:20:33.740307Z",
       "resolved_target": {
         "watch_url": null,
@@ -1136,7 +1136,7 @@
       "last_log": {
         "timestamp": "2026-05-12T16:20:33.740307Z",
         "severity": "warning",
-        "message": "[7XaVoy7] Managed session state updated to disabled."
+        "message": "[4TiOlvS] Managed session state updated to blocked."
       }
     },
     {
