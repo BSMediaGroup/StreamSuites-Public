@@ -41,6 +41,8 @@
   const AUTH_PUBLIC_AUTHORITY_REQUESTS_MINE_URL = `${AUTH_API_BASE}/api/public/authority/requests/mine`;
   const AUTH_PUBLIC_PROGRESSION_ME_URL = `${AUTH_API_BASE}/api/public/progression/me`;
   const AUTH_PUBLIC_PROGRESSION_LEADERBOARD_URL = `${AUTH_API_BASE}/api/public/progression/leaderboard`;
+  const AUTH_PUBLIC_PROGRESSION_SCOPES_URL = `${AUTH_API_BASE}/api/public/progression/scopes`;
+  const AUTH_PUBLIC_PROGRESSION_PROFILE_URL = `${AUTH_API_BASE}/api/public/progression/profile`;
   const AUTH_PUBLIC_ECONOMY_ME_URL = `${AUTH_API_BASE}/api/public/economy/me`;
   const AUTH_PUBLIC_ECONOMY_EXCHANGE_URL = `${AUTH_API_BASE}/api/public/economy/me/exchange`;
   const ECONOMY_CURRENCY_SYMBOL_PATH = "/assets/games/currencyunit.svg";
@@ -1827,8 +1829,53 @@
     return body;
   }
 
-  async function fetchPublicProgressionLeaderboard() {
-    const response = await fetch(AUTH_PUBLIC_PROGRESSION_LEADERBOARD_URL, {
+  async function fetchPublicProgressionLeaderboard(options = {}) {
+    const scopeKey = String(options.scopeKey || "").trim();
+    const endpoint = new URL(AUTH_PUBLIC_PROGRESSION_LEADERBOARD_URL);
+    if (scopeKey && scopeKey.toLowerCase() !== "global") endpoint.searchParams.set("scope_key", scopeKey);
+    const response = await fetch(endpoint.toString(), {
+      method: "GET",
+      cache: "no-store",
+      credentials: "include",
+      headers: { Accept: "application/json" }
+    });
+    const body = await parseJsonResponse(response);
+    if (!response.ok || body?.success === false) {
+      const error = new Error(resolveAuthorityErrorMessage(body, response.status));
+      error.status = response.status;
+      error.payload = body;
+      throw error;
+    }
+    return body;
+  }
+
+  async function fetchPublicProgressionScopes(options = {}) {
+    const endpoint = new URL(AUTH_PUBLIC_PROGRESSION_SCOPES_URL);
+    const scopeKey = String(options.scopeKey || "").trim();
+    if (scopeKey) endpoint.searchParams.set("scope_key", scopeKey);
+    const response = await fetch(endpoint.toString(), {
+      method: "GET",
+      cache: "no-store",
+      credentials: "include",
+      headers: { Accept: "application/json" }
+    });
+    const body = await parseJsonResponse(response);
+    if (!response.ok || body?.success === false) {
+      const error = new Error(resolveAuthorityErrorMessage(body, response.status));
+      error.status = response.status;
+      error.payload = body;
+      throw error;
+    }
+    return body;
+  }
+
+  async function fetchPublicProfileProgressionScopes(identifier, options = {}) {
+    const cleanIdentifier = String(identifier || "").trim();
+    if (!cleanIdentifier) return { scopes: [] };
+    const endpoint = new URL(`${AUTH_PUBLIC_PROGRESSION_PROFILE_URL}/${encodeURIComponent(cleanIdentifier)}/scopes`);
+    const limit = Number(options.limit || 50);
+    if (Number.isFinite(limit) && limit > 0) endpoint.searchParams.set("limit", String(Math.min(100, Math.floor(limit))));
+    const response = await fetch(endpoint.toString(), {
       method: "GET",
       cache: "no-store",
       credentials: "include",
@@ -2985,6 +3032,84 @@
     return Number.isFinite(parsed) ? parsed : 0;
   }
 
+  function scopedProgressionScopeKey(row = {}) {
+    return String(row?.scope_key || row?.scopeKey || "").trim();
+  }
+
+  function scopedProgressionPlatformLabel(row = {}) {
+    const raw = String(row?.platform_label || row?.platformLabel || row?.platform || "").trim();
+    if (!raw) return "Channel";
+    return STREAM_PLATFORM_LABELS[raw.toLowerCase()] || toTitle(raw);
+  }
+
+  function scopedProgressionChannelLabel(row = {}) {
+    const direct = String(row?.channel_label || row?.channelLabel || row?.channel_name || row?.channelName || row?.creator_label || row?.creatorLabel || "").trim();
+    if (direct) return direct;
+    const scopeKey = scopedProgressionScopeKey(row);
+    if (scopeKey.includes(":channel:")) return scopeKey.split(":channel:").pop() || "Channel";
+    return scopeKey || "Channel";
+  }
+
+  function scopedProgressionScopeLabel(row = {}) {
+    const platform = scopedProgressionPlatformLabel(row);
+    const channel = scopedProgressionChannelLabel(row);
+    return `${platform} · ${channel}`;
+  }
+
+  function normalizeScopedProgressionRow(row = {}) {
+    if (!row || typeof row !== "object") return null;
+    const scopeKey = scopedProgressionScopeKey(row);
+    if (!scopeKey) return null;
+    const xpTotal = Number(row.xp_total ?? row.total_xp ?? row.xp ?? 0);
+    const messageCount = Number(row.message_count ?? row.messages ?? row.messageCount ?? 0);
+    const normalized = {
+      ...row,
+      scope_key: scopeKey,
+      platform_label: scopedProgressionPlatformLabel(row),
+      channel_label: scopedProgressionChannelLabel(row),
+      xp_total: Number.isFinite(xpTotal) ? xpTotal : 0,
+      message_count: Number.isFinite(messageCount) ? messageCount : 0,
+      active_label: row.active_label || row.last_active_label || (Number.isFinite(messageCount) && messageCount > 0 ? `${formatCompactNumber(messageCount)} messages` : formatScopedProgressionUpdatedAt(row.updated_at || row.updatedAt))
+    };
+    normalized.scope_label = scopedProgressionScopeLabel(normalized);
+    return normalized;
+  }
+
+  function normalizeScopedProgressionRows(rows = []) {
+    return (Array.isArray(rows) ? rows : [])
+      .map((row) => normalizeScopedProgressionRow(row))
+      .filter(Boolean);
+  }
+
+  function formatScopedProgressionUpdatedAt(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "Not public";
+    const numeric = Number(raw);
+    const date = Number.isFinite(numeric)
+      ? new Date(numeric > 1_000_000_000_000 ? numeric : numeric * 1000)
+      : new Date(raw);
+    if (Number.isNaN(date.getTime())) return raw;
+    return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  }
+
+  function scopedProgressionRowsFromPayload(payload = {}) {
+    return normalizeScopedProgressionRows(
+      payload?.scopes ||
+        payload?.scoped_progression ||
+        payload?.scopedProgression ||
+        payload?.profile_scopes ||
+        payload?.profileScopes ||
+        []
+    );
+  }
+
+  function scopedLeaderboardHref(scopeKey) {
+    const cleanScope = String(scopeKey || "").trim();
+    const url = new URL("/leaderboards", window.location.origin);
+    if (cleanScope) url.searchParams.set("scope_key", cleanScope);
+    return `${url.pathname}${url.search}`;
+  }
+
   function computeLeaderboardTiePlacements(rows = []) {
     let lastXp = null;
     let currentPlacement = 0;
@@ -3287,45 +3412,54 @@
     return card;
   }
 
-  function renderLeaderboardStats(host, rows = []) {
+  function renderLeaderboardStats(host, rows = [], options = {}) {
     clear(host);
     const stats = computeLeaderboardStats(rows);
+    const scopeMeta = options.scopeMeta || null;
+    const scoped = Boolean(scopeMeta?.scope_key || scopeMeta?.scopeKey);
+    const scopeKey = String(scopeMeta?.scope_key || scopeMeta?.scopeKey || "").trim();
     host.append(
       buildLeaderboardStatCard({
-        label: "Ranked identities",
+        label: scoped ? "Scoped identities" : "Ranked identities",
         value: formatNumber(stats.entries),
-        note: "Loaded from runtime public progression"
+        note: scoped ? scopedProgressionScopeLabel(scopeMeta) : "Loaded from runtime public progression"
       }),
       buildLeaderboardStatCard({
-        label: "Lifetime XP",
+        label: scoped ? "Scoped XP" : "Lifetime XP",
         value: `${formatCompactNumber(stats.lifetimeXp)} XP`,
-        note: "Computed from loaded leaderboard entries"
+        note: scoped ? "Computed from this creator/channel scope only" : "Computed from loaded leaderboard entries"
       }),
       buildLeaderboardStatCard({
-        label: "Wallet Index",
+        label: scoped ? "Messages" : "Wallet Index",
         value: stats.walletCount
           ? buildEconomyBalanceValue({ ...stats.walletCurrency, balance_total_credits: stats.walletTotal }, { compact: true, compactNumber: true })
-          : "Not public",
-        note: stats.walletCount ? `${formatNumber(stats.walletCount)} visible wallet summar${stats.walletCount === 1 ? "y" : "ies"}` : "Shown only when wallet totals are returned",
-        state: stats.walletCount ? "live" : "scaffold"
+          : scoped
+            ? formatNumber(rows.reduce((total, entry) => total + Number(entry?.message_count || 0), 0))
+            : "Not public",
+        note: stats.walletCount
+          ? `${formatNumber(stats.walletCount)} visible wallet summar${stats.walletCount === 1 ? "y" : "ies"}`
+          : scoped
+            ? "Message count returned by the scoped contract"
+            : "Shown only when wallet totals are returned",
+        state: stats.walletCount || scoped ? "live" : "scaffold"
       }),
       buildLeaderboardStatCard({
-        label: "Creator Boards",
-        value: "Soon",
-        note: "Scaffold only; not wired to authority yet",
-        state: "scaffold"
+        label: scoped ? "Platform" : "Creator Boards",
+        value: scoped ? scopedProgressionPlatformLabel(scopeMeta) : "Soon",
+        note: scoped ? "Runtime/Auth scoped progression contract" : "Scaffold only; not wired to authority yet",
+        state: scoped ? "live" : "scaffold"
       }),
       buildLeaderboardStatCard({
-        label: "Season Pool",
-        value: "Soon",
-        note: "No live season pool contract yet",
-        state: "scaffold"
+        label: scoped ? "Channel" : "Season Pool",
+        value: scoped ? scopedProgressionChannelLabel(scopeMeta) : "Soon",
+        note: scoped ? "Selected scope label from Runtime/Auth" : "No live season pool contract yet",
+        state: scoped ? "live" : "scaffold"
       }),
       buildLeaderboardStatCard({
-        label: "Boards count",
-        value: "Preview",
-        note: "Gallery below is placeholder-only",
-        state: "scaffold"
+        label: scoped ? "Scope key" : "Boards count",
+        value: scoped ? "Live" : "Preview",
+        note: scoped ? scopeKey : "Gallery below is placeholder-only",
+        state: scoped ? "live" : "scaffold"
       })
     );
   }
@@ -3735,6 +3869,65 @@
     });
   }
 
+  function uniqueProgressionScopes(rows = []) {
+    const byKey = new Map();
+    normalizeScopedProgressionRows(rows).forEach((row) => {
+      if (!byKey.has(row.scope_key)) byKey.set(row.scope_key, row);
+    });
+    return Array.from(byKey.values()).sort((a, b) => scopedProgressionScopeLabel(a).localeCompare(scopedProgressionScopeLabel(b)));
+  }
+
+  function readLeaderboardScopeFromUrl() {
+    try {
+      const params = new URLSearchParams(window.location.search || "");
+      const raw = String(params.get("scope_key") || params.get("scope") || "").trim();
+      return raw && raw.toLowerCase() !== "global" ? raw : "";
+    } catch (_err) {
+      return "";
+    }
+  }
+
+  function writeLeaderboardScopeToUrl(scopeKey) {
+    try {
+      const url = new URL(window.location.href);
+      const cleanScope = String(scopeKey || "").trim();
+      url.searchParams.delete("scope");
+      if (cleanScope) url.searchParams.set("scope_key", cleanScope);
+      else url.searchParams.delete("scope_key");
+      window.history.replaceState(window.history.state, "", url.toString());
+    } catch (_err) {
+      // URL state is progressive enhancement only.
+    }
+  }
+
+  function renderLeaderboardScopeOptions(select, scopes = [], filter = "", selectedScope = "") {
+    const q = norm(filter).trim();
+    const current = String(selectedScope || select.value || "").trim();
+    clear(select);
+    select.appendChild(new Option("Global · lifetime XP", ""));
+    scopes
+      .filter((scope) => {
+        if (!q) return true;
+        return [
+          scopedProgressionScopeLabel(scope),
+          scopedProgressionPlatformLabel(scope),
+          scopedProgressionChannelLabel(scope),
+          scopedProgressionScopeKey(scope)
+        ].join(" ").toLowerCase().includes(q);
+      })
+      .forEach((scope) => {
+        const option = new Option(scopedProgressionScopeLabel(scope), scope.scope_key);
+        option.dataset.scopeKey = scope.scope_key;
+        select.appendChild(option);
+      });
+    if (current && !Array.from(select.options).some((option) => option.value === current)) {
+      const fallback = new Option(`Selected scope · ${current}`, current);
+      fallback.dataset.scopeKey = current;
+      select.appendChild(fallback);
+    }
+    select.value = current;
+  }
+
   function renderLeaderboards(ctx) {
     const { host, authState, openAuthModal } = ctx;
     clear(host);
@@ -3804,13 +3997,27 @@
     search.placeholder = "Search by name, @handle, level, or badge";
     search.autocomplete = "off";
     searchLabel.append(searchText, search);
+    const scopeControl = create("div", "progression-leaderboard-scope-control");
+    const scopeSearchLabel = create("label", "progression-leaderboard-scope-search");
+    scopeSearchLabel.appendChild(create("span", "sr-only", "Search creator or channel scopes"));
+    const scopeSearch = create("input");
+    scopeSearch.type = "search";
+    scopeSearch.placeholder = "Filter scopes";
+    scopeSearch.autocomplete = "off";
+    scopeSearchLabel.appendChild(scopeSearch);
+    const scopeSelectLabel = create("label", "progression-leaderboard-scope-select");
+    scopeSelectLabel.appendChild(create("span", "sr-only", "Select leaderboard scope"));
+    const scopeSelect = create("select");
+    scopeSelect.appendChild(new Option("Global · lifetime XP", ""));
+    scopeSelectLabel.appendChild(scopeSelect);
+    scopeControl.append(scopeSearchLabel, scopeSelectLabel);
     const tabs = create("div", "progression-leaderboard-future-tabs");
     ["Economy", "Games", "Weekly", "Creator Boards", "Events"].forEach((label) => {
       const tab = create("span", "progression-leaderboard-future-tab", `${label} soon`);
       tab.setAttribute("aria-disabled", "true");
       tabs.appendChild(tab);
     });
-    controls.append(searchLabel, tabs);
+    controls.append(searchLabel, scopeControl, tabs);
     const status = create("p", "muted progression-leaderboard-status", "Loading leaderboard...");
     const tableHeader = create("div", "progression-leaderboard-table-header");
     const list = create("div", "progression-leaderboard-list");
@@ -3833,61 +4040,136 @@
     host.appendChild(page);
 
     (async () => {
-      try {
-        const payload = await fetchPublicProgressionLeaderboard();
-        const rows = computeLeaderboardTiePlacements(Array.isArray(payload?.leaderboard) ? payload.leaderboard : []);
-        renderLeaderboardStats(statsGrid, rows);
-        renderLeaderboardPodium(podium, rows);
+      let availableScopes = [];
+      const state = {
+        rows: [],
+        scopeKey: readLeaderboardScopeFromUrl(),
+        scopeMeta: null,
+        expandedId: "",
+        query: "",
+        page: 1,
+        render() {
+          const filteredRows = filterLeaderboardRows(state.rows, state.query);
+          const totalPages = Math.max(1, Math.ceil(filteredRows.length / LEADERBOARD_PAGE_SIZE));
+          if (state.page > totalPages) state.page = totalPages;
+          const pageStart = (state.page - 1) * LEADERBOARD_PAGE_SIZE;
+          const pageRows = filteredRows.slice(pageStart, pageStart + LEADERBOARD_PAGE_SIZE);
+          clear(list);
+          clear(paginationHost);
+          const scoped = Boolean(state.scopeKey);
+          renderLeaderboardStats(statsGrid, state.rows, { scopeMeta: state.scopeMeta });
+          renderLeaderboardPodium(podium, state.rows);
+          boardCard.querySelector("strong").textContent = scoped ? scopedProgressionScopeLabel(state.scopeMeta || { scope_key: state.scopeKey }) : "Global lifetime XP";
+          boardCard.querySelector("p").textContent = scoped
+            ? "This view is limited to creator/channel-scoped XP returned by the Runtime/Auth progression contract."
+            : "Rank is leaderboard placement only. Level is the XP progression tier returned by the runtime progression contract.";
+          boardCard.querySelector(".progression-leaderboard-current-board-source").textContent = scoped
+            ? `/api/public/progression/leaderboard?scope_key=${state.scopeKey}`
+            : "/api/public/progression/leaderboard";
+          listHead.querySelector(".progression-leaderboard-section-kicker").textContent = scoped ? "Scoped table" : "Global table";
+          listHead.querySelector("h2").textContent = scoped ? "Creator scoped leaderboard" : "All ranked profiles";
+          listHead.querySelector("p").textContent = scoped
+            ? "Ranked by XP inside the selected creator/channel scope only."
+            : "Ranked by lifetime public XP. Top-three users also remain in this full-width list.";
+          if (!filteredRows.length) {
+            status.textContent = state.query
+              ? "No ranked profiles match this search."
+              : scoped
+                ? "No scoped XP rows were returned for this creator/channel yet."
+                : "No public XP has been awarded yet.";
+            list.appendChild(create("div", "empty-state", state.query ? "Try a display name, @handle, level label, platform, or channel term." : scoped ? "Scoped rows appear after real livechat progression exists for the selected channel." : "Progression starts when real trigger or game events award XP."));
+            return;
+          }
+          status.textContent = scoped
+            ? `${formatNumber(filteredRows.length)} scoped identit${filteredRows.length === 1 ? "y" : "ies"} shown from ${formatNumber(state.rows.length)} loaded for ${scopedProgressionScopeLabel(state.scopeMeta || {})}.`
+            : `${formatNumber(filteredRows.length)} ranked public identit${filteredRows.length === 1 ? "y" : "ies"} shown from ${formatNumber(state.rows.length)} loaded. Showing ${formatNumber(pageRows.length)} on this page.`;
+          pageRows.forEach((entry) => list.appendChild(buildLeaderboardRow(entry, state)));
+          paginationHost.appendChild(buildLeaderboardPagination(state, totalPages));
+        }
+      };
+
+      const syncStanding = async () => {
         if (!authState?.authenticated) {
           renderSignedOutStanding(standingHost, openAuthModal);
-        } else {
-          try {
-            const [progressionPayload, economyPayload] = await Promise.all([
-              fetchMyPublicProgression(),
-              fetchMyPublicEconomy().catch(() => ({}))
-            ]);
-            const standingEntry = findLeaderboardStanding(rows, progressionPayload?.summary || {}, progressionPayload?.identity || {}, authState || {});
-            renderSignedInStanding(standingHost, standingEntry, progressionPayload, economyPayload, authState || {});
-          } catch (standingError) {
-            renderSignedInStanding(standingHost, null, {}, {}, authState || {});
-          }
-        }
-        const state = {
-          expandedId: "",
-          query: "",
-          page: 1,
-          render() {
-            const filteredRows = filterLeaderboardRows(rows, state.query);
-            const totalPages = Math.max(1, Math.ceil(filteredRows.length / LEADERBOARD_PAGE_SIZE));
-            if (state.page > totalPages) state.page = totalPages;
-            const pageStart = (state.page - 1) * LEADERBOARD_PAGE_SIZE;
-            const pageRows = filteredRows.slice(pageStart, pageStart + LEADERBOARD_PAGE_SIZE);
-            clear(list);
-            clear(paginationHost);
-            if (!filteredRows.length) {
-              status.textContent = state.query ? "No ranked profiles match this search." : "No public XP has been awarded yet.";
-              list.appendChild(create("div", "empty-state", state.query ? "Try a display name, @handle, level label, or safe badge term." : "Progression starts when real trigger or game events award XP."));
-              return;
-            }
-            status.textContent = `${formatNumber(filteredRows.length)} ranked public identit${filteredRows.length === 1 ? "y" : "ies"} shown from ${formatNumber(rows.length)} loaded. Showing ${formatNumber(pageRows.length)} on this page.`;
-            pageRows.forEach((entry) => list.appendChild(buildLeaderboardRow(entry, state)));
-            paginationHost.appendChild(buildLeaderboardPagination(state, totalPages));
-          }
-        };
-        if (!rows.length) {
-          if (!authState?.authenticated) renderSignedOutStanding(standingHost, openAuthModal);
-          status.textContent = "No public XP has been awarded yet.";
-          clear(list);
-          list.appendChild(create("div", "empty-state", "Progression starts when real trigger or game events award XP."));
           return;
         }
-        search.addEventListener("input", () => {
-          state.query = search.value || "";
+        try {
+          const [progressionPayload, economyPayload] = await Promise.all([
+            fetchMyPublicProgression(),
+            fetchMyPublicEconomy().catch(() => ({}))
+          ]);
+          const standingEntry = state.scopeKey ? null : findLeaderboardStanding(state.rows, progressionPayload?.summary || {}, progressionPayload?.identity || {}, authState || {});
+          renderSignedInStanding(standingHost, standingEntry, progressionPayload, economyPayload, authState || {});
+        } catch (standingError) {
+          renderSignedInStanding(standingHost, null, {}, {}, authState || {});
+        }
+      };
+
+      const loadLeaderboard = async (scopeKey = "") => {
+        const cleanScope = String(scopeKey || "").trim();
+        status.textContent = cleanScope ? "Loading scoped leaderboard..." : "Loading leaderboard...";
+        try {
+          const payload = await fetchPublicProgressionLeaderboard({ scopeKey: cleanScope });
+          const rawRows = Array.isArray(payload?.leaderboard) ? payload.leaderboard : [];
+          const rows = cleanScope ? normalizeScopedProgressionRows(rawRows) : rawRows;
+          state.rows = computeLeaderboardTiePlacements(rows);
+          state.scopeKey = cleanScope;
+          state.scopeMeta = cleanScope
+            ? availableScopes.find((scope) => scope.scope_key === cleanScope) || normalizeScopedProgressionRow({ scope_key: cleanScope, ...(rows[0] || {}) })
+            : null;
           state.expandedId = "";
           state.page = 1;
+          renderLeaderboardScopeOptions(scopeSelect, availableScopes, scopeSearch.value || "", cleanScope);
+          writeLeaderboardScopeToUrl(cleanScope);
+          await syncStanding();
           state.render();
-        });
+        } catch (error) {
+          if (cleanScope && state.rows.length) {
+            status.textContent = error instanceof Error ? error.message : "Unable to load that scoped leaderboard right now.";
+            return;
+          }
+          if (cleanScope && !state.rows.length) {
+            status.textContent = error instanceof Error ? error.message : "Unable to load that scoped leaderboard right now.";
+            await loadLeaderboard("");
+            return;
+          }
+          throw error;
+        }
+      };
+
+      search.addEventListener("input", () => {
+        state.query = search.value || "";
+        state.expandedId = "";
+        state.page = 1;
         state.render();
+      });
+      scopeSearch.addEventListener("input", () => {
+        renderLeaderboardScopeOptions(scopeSelect, availableScopes, scopeSearch.value || "", state.scopeKey);
+      });
+      scopeSelect.addEventListener("change", () => {
+        loadLeaderboard(scopeSelect.value || "").catch((error) => {
+          status.textContent = error instanceof Error ? error.message : "Unable to load leaderboard right now.";
+          if (!state.rows.length) {
+            clear(list);
+            list.appendChild(create("div", "empty-state", "Leaderboard data is unavailable right now."));
+          }
+        });
+      });
+
+      try {
+        await loadLeaderboard(state.scopeKey);
+        fetchPublicProgressionScopes()
+          .then((payload) => {
+            availableScopes = uniqueProgressionScopes(payload?.scopes || []);
+            renderLeaderboardScopeOptions(scopeSelect, availableScopes, scopeSearch.value || "", state.scopeKey);
+            if (state.scopeKey && !state.scopeMeta) {
+              state.scopeMeta = availableScopes.find((scope) => scope.scope_key === state.scopeKey) || state.scopeMeta;
+              state.render();
+            }
+          })
+          .catch(() => {
+            renderLeaderboardScopeOptions(scopeSelect, availableScopes, scopeSearch.value || "", state.scopeKey);
+          });
       } catch (error) {
         status.textContent = error instanceof Error ? error.message : "Unable to load leaderboard right now.";
         clear(list);
@@ -7411,6 +7693,9 @@
         : Array.isArray(fallbackProfile?.exchangeableItems)
           ? fallbackProfile.exchangeableItems
           : [];
+    const scopedProgression = scopedProgressionRowsFromPayload(payload).length
+      ? scopedProgressionRowsFromPayload(payload)
+      : scopedProgressionRowsFromPayload(fallbackProfile);
     return {
       id: fallbackProfile?.id || userCode,
       userCode,
@@ -7458,6 +7743,7 @@
       economy,
       inventory,
       exchangeableItems,
+      scopedProgression,
       authorityIdentity
     };
   }
@@ -7501,6 +7787,18 @@
       });
     publicProfileRequestCache.set(cacheKey, { promise, timestamp: now });
     return promise;
+  }
+
+  async function hydrateProfileScopedProgression(profile, fallbackIdentifier = "") {
+    const identifier = getCanonicalProfileSlug(profile, "") || profile?.publicSlug || profile?.userCode || fallbackIdentifier;
+    if (!identifier) return profile;
+    try {
+      const payload = await fetchPublicProfileProgressionScopes(identifier);
+      const rows = scopedProgressionRowsFromPayload(payload);
+      return rows.length ? { ...profile, scopedProgression: rows } : { ...profile, scopedProgression: [] };
+    } catch (_err) {
+      return profile;
+    }
   }
 
   function syncStandaloneProfileCanonicalUrl(profile, requestedIdentifier) {
@@ -8966,6 +9264,73 @@
     return details;
   }
 
+  function buildProfileScopedProgressionCard(row = {}) {
+    const card = create("article", "profile-scoped-progression-card");
+    const head = create("div", "profile-scoped-progression-head");
+    const title = create("div", "profile-scoped-progression-title");
+    title.append(
+      create("span", "profile-scoped-progression-platform", scopedProgressionPlatformLabel(row)),
+      create("h4", "", scopedProgressionChannelLabel(row))
+    );
+    const link = create("a", "dashboard-action profile-scoped-progression-link", "View scoped leaderboard");
+    link.href = scopedLeaderboardHref(row.scope_key);
+    head.append(title, link);
+    const stats = create("dl", "profile-scoped-progression-stats");
+    const addStat = (label, valueNode) => {
+      const item = create("div", "profile-scoped-progression-stat");
+      item.appendChild(create("dt", "", label));
+      const value = create("dd", "");
+      if (valueNode instanceof Node) value.appendChild(valueNode);
+      else value.textContent = valueNode;
+      item.appendChild(value);
+      stats.appendChild(item);
+    };
+    addStat("Rank", row.placement_rank || row.rank || row.position ? `#${formatNumber(row.placement_rank || row.rank || row.position)}` : "Unranked");
+    addStat("XP", buildProgressionXpValue(row.xp_total ?? row.xp ?? 0, { compact: true, compactNumber: true }));
+    addStat("Level", buildProgressionLevelChip(row, { compact: true }));
+    addStat("Messages", formatNumber(row.message_count || 0));
+    const updated = formatScopedProgressionUpdatedAt(row.updated_at || row.updatedAt);
+    if (updated && updated !== "Not public") addStat("Updated", updated);
+    card.append(head, stats);
+    const wallet = leaderboardWallet(row);
+    const inventory = leaderboardInventoryItems(row);
+    if (wallet || inventory.length) {
+      const extras = create("div", "profile-scoped-progression-extras");
+      if (wallet) {
+        const walletRow = create("div", "profile-scoped-progression-extra");
+        walletRow.append(create("span", "", "Scoped wallet"), buildEconomyBalanceValue(wallet, { compact: true, compactNumber: true }));
+        extras.appendChild(walletRow);
+      }
+      if (inventory.length) {
+        const inventoryWrap = create("div", "profile-scoped-progression-inventory");
+        inventoryWrap.appendChild(create("span", "", "Scoped inventory"));
+        inventoryWrap.appendChild(buildInventorySummaryList(inventory));
+        extras.appendChild(inventoryWrap);
+      }
+      card.appendChild(extras);
+    }
+    return card;
+  }
+
+  function buildProfileScopedProgressionSection(profile = null) {
+    const rows = normalizeScopedProgressionRows(profile?.scopedProgression || profile?.scoped_progression || []);
+    if (!rows.length) return null;
+    const details = create("details", "profile-utility-section profile-scoped-progression-section");
+    details.open = rows.length <= 3;
+    const summary = create("summary", "profile-scoped-progression-summary");
+    const action = create("span", "profile-scoped-progression-summary-action");
+    action.append(
+      createIcon("/assets/icons/ui/tablechart.svg", "profile-scoped-progression-summary-icon"),
+      create("span", "", "Channel stats")
+    );
+    const meta = create("span", "profile-scoped-progression-summary-meta", `${formatNumber(rows.length)} scoped creator/channel row${rows.length === 1 ? "" : "s"}`);
+    summary.append(action, meta);
+    const grid = create("div", "profile-scoped-progression-grid");
+    rows.forEach((row) => grid.appendChild(buildProfileScopedProgressionCard(row)));
+    details.append(summary, grid);
+    return details;
+  }
+
   function renderStandaloneProfileUtilityBody(profileCard, profile, canEdit, options = {}) {
     clear(profileCard);
     const profileArtifacts = Array.isArray(options.profileArtifacts) ? options.profileArtifacts : [];
@@ -8979,6 +9344,8 @@
     profileCard.appendChild(primaryGrid);
     profileCard.appendChild(buildProfileBadgeGallerySection(profile));
     profileCard.appendChild(buildProfileGameCompetitionSection(profile, { canEdit }));
+    const scopedProgressionSection = buildProfileScopedProgressionSection(profile);
+    if (scopedProgressionSection) profileCard.appendChild(scopedProgressionSection);
 
     const grid = create("div", "profile-utility-grid profile-utility-grid--slim");
     const socialGallery = buildProfileSocialGallerySection(profile);
@@ -9304,6 +9671,7 @@
         const payload = canEdit ? await fetchMyPublicProfile() : await fetchPublicProfileByIdentifier(profileCode);
         profile = normalizeProfilePayload(payload, fallbackProfile, profileCode);
         canEdit = canEditResolvedProfile(authState, profile, profileCode);
+        profile = await hydrateProfileScopedProgression(profile, profileCode);
         artifactItems = collectProfileArtifacts(
           data,
           profile.publicSlug,
@@ -9388,6 +9756,7 @@
         const payload = canEdit ? await fetchMyPublicProfile() : await fetchPublicProfileByIdentifier(profileCode);
         profile = normalizeProfilePayload(payload, fallbackProfile, profileCode);
         canEdit = canEditResolvedProfile(authState, profile, profileCode);
+        profile = await hydrateProfileScopedProgression(profile, profileCode);
       } catch (error) {
         if (canEdit && (error?.status === 401 || error?.status === 403)) {
           canEdit = false;

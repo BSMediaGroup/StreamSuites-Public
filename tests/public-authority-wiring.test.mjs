@@ -77,7 +77,12 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   const app = read("js/public-pages-app.js");
   const css = read("css/public-shell.css");
   assert.match(app, /AUTH_PUBLIC_PROGRESSION_LEADERBOARD_URL = `\$\{AUTH_API_BASE\}\/api\/public\/progression\/leaderboard`/);
+  assert.match(app, /AUTH_PUBLIC_PROGRESSION_SCOPES_URL = `\$\{AUTH_API_BASE\}\/api\/public\/progression\/scopes`/);
+  assert.match(app, /AUTH_PUBLIC_PROGRESSION_PROFILE_URL = `\$\{AUTH_API_BASE\}\/api\/public\/progression\/profile`/);
   assert.match(app, /fetchPublicProgressionLeaderboard/);
+  assert.match(app, /fetchPublicProgressionScopes/);
+  assert.match(app, /fetchPublicProfileProgressionScopes/);
+  assert.match(app, /endpoint\.searchParams\.set\("scope_key", scopeKey\)/);
   assert.match(app, /renderLeaderboards/);
   assert.doesNotMatch(app, /renderLeaderboardsPlaceholder/);
   assert.match(app, /StreamSuites public leaderboards hub/);
@@ -114,6 +119,13 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   assert.match(app, /function filterLeaderboardRows\(rows = \[\], query = ""\)/);
   assert.match(app, /Search by name, @handle, level, or badge/);
   assert.match(app, /search\.className = "progression-leaderboard-search-input"/);
+  assert.match(app, /progression-leaderboard-scope-control/);
+  assert.match(app, /Global · lifetime XP/);
+  assert.match(app, /renderLeaderboardScopeOptions\(scopeSelect, availableScopes/);
+  assert.match(app, /readLeaderboardScopeFromUrl/);
+  assert.match(app, /writeLeaderboardScopeToUrl\(cleanScope\)/);
+  assert.match(app, /normalizeScopedProgressionRows\(rawRows\)/);
+  assert.match(app, /No scoped XP rows were returned for this creator\/channel yet/);
   assert.match(app, /state\.page = 1/);
   assert.match(app, /const LEADERBOARD_PAGE_SIZE = 20/);
   assert.match(app, /const pageRows = filteredRows\.slice\(pageStart, pageStart \+ LEADERBOARD_PAGE_SIZE\)/);
@@ -158,7 +170,7 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   assert.match(app, /function renderLeaderboardPodium\(host, rows = \[\]\)/);
   assert.match(app, /const topRows = rows\.filter/);
   assert.match(app, /placement >= 1 && placement <= 3/);
-  assert.match(app, /renderLeaderboardPodium\(podium, rows\)/);
+  assert.match(app, /renderLeaderboardPodium\(podium, state\.rows\)/);
   assert.match(app, /ss-lb-podium-card--first/);
   assert.match(app, /create\("span", "ss-lb-premium-shimmer"\)/);
   assert.match(app, /pageRows\.forEach\(\(entry\) => list\.appendChild\(buildLeaderboardRow\(entry, state\)\)\)/);
@@ -204,6 +216,9 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   assert.match(css, /\.progression-leaderboard-detail/);
   assert.match(css, /\.progression-leaderboard-search input/);
   assert.match(css, /\.progression-leaderboard-search input::placeholder/);
+  assert.match(css, /\.progression-leaderboard-scope-control/);
+  assert.match(css, /\.progression-leaderboard-scope-search input/);
+  assert.match(css, /\.progression-leaderboard-scope-select select/);
   assert.match(css, /\.ss-lb-premium-shimmer/);
   assert.match(css, /@keyframes ss-lb-premium-shimmer/);
   assert.match(css, /prefers-reduced-motion:\s*reduce[\s\S]*\.ss-lb-premium-shimmer::before/);
@@ -273,6 +288,16 @@ test("public profile game section renders runtime progression and economy author
   assert.match(profileSection, /profile-game-preview-card--breakdown profile-game-preview-card--inventory/);
   assert.match(css, /\.profile-game-inventory-stack/);
   assert.match(app, /buildProfileGameCompetitionSection\(profile, \{ canEdit \}\)/);
+  assert.match(app, /function buildProfileScopedProgressionSection\(profile = null\)/);
+  assert.match(app, /profile\?\.scopedProgression \|\| profile\?\.scoped_progression/);
+  assert.match(app, /if \(!rows\.length\) return null/);
+  assert.match(app, /hydrateProfileScopedProgression\(profile, profileCode\)/);
+  assert.match(app, /View scoped leaderboard/);
+  assert.match(app, /scopedLeaderboardHref\(row\.scope_key\)/);
+  assert.match(app, /buildInventorySummaryList\(inventory\)/);
+  assert.match(css, /\.profile-scoped-progression-section/);
+  assert.match(css, /\.profile-scoped-progression-card/);
+  assert.match(css, /\.profile-scoped-progression-stats/);
 });
 
 test("public profile overview table uses the same runtime progression summary as games", () => {
