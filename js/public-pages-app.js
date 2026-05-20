@@ -280,7 +280,7 @@
     },
     "media-leaderboards": {
       path: "/leaderboards.html",
-      aliases: ["/leaderboards", "/leaderboards/"],
+      aliases: ["/leaderboards", "/leaderboards/", "/community/leaderboard", "/community/leaderboard/"],
       shellKind: "media",
       activeHref: "/leaderboards",
       topbarLabel: "Leaderboards",
@@ -3904,7 +3904,7 @@
     const q = norm(filter).trim();
     const current = String(selectedScope || select.value || "").trim();
     clear(select);
-    select.appendChild(new Option("Global · lifetime XP", ""));
+    select.appendChild(new Option("Global", ""));
     scopes
       .filter((scope) => {
         if (!q) return true;
@@ -3920,6 +3920,12 @@
         option.dataset.scopeKey = scope.scope_key;
         select.appendChild(option);
       });
+    if (!scopes.length && !current) {
+      const empty = new Option("No channel scoped leaderboards found yet.", "");
+      empty.disabled = true;
+      empty.dataset.emptyScope = "true";
+      select.appendChild(empty);
+    }
     if (current && !Array.from(select.options).some((option) => option.value === current)) {
       const fallback = new Option(`Selected scope · ${current}`, current);
       fallback.dataset.scopeKey = current;
@@ -3998,19 +4004,39 @@
     search.autocomplete = "off";
     searchLabel.append(searchText, search);
     const scopeControl = create("div", "progression-leaderboard-scope-control");
+    scopeControl.dataset.scopeControl = "leaderboard";
+    scopeControl.dataset.scopeMode = "global";
+    const scopeHeader = create("div", "progression-leaderboard-scope-header");
+    scopeHeader.append(
+      create("span", "progression-leaderboard-scope-label", "Leaderboard scope"),
+      create("span", "progression-leaderboard-scope-chip", "Global leaderboard")
+    );
+    const scopeModes = create("div", "progression-leaderboard-scope-modes");
+    const globalMode = create("button", "progression-leaderboard-scope-mode is-active", "Global");
+    globalMode.type = "button";
+    globalMode.dataset.scopeModeButton = "global";
+    const scopedMode = create("button", "progression-leaderboard-scope-mode", "Channel scoped");
+    scopedMode.type = "button";
+    scopedMode.dataset.scopeModeButton = "scoped";
+    scopeModes.append(globalMode, scopedMode);
     const scopeSearchLabel = create("label", "progression-leaderboard-scope-search");
-    scopeSearchLabel.appendChild(create("span", "sr-only", "Search creator or channel scopes"));
+    scopeSearchLabel.appendChild(create("span", "progression-leaderboard-scope-field-label", "Search channel scopes"));
     const scopeSearch = create("input");
     scopeSearch.type = "search";
-    scopeSearch.placeholder = "Filter scopes";
+    scopeSearch.placeholder = "Search/select a channel scope";
     scopeSearch.autocomplete = "off";
     scopeSearchLabel.appendChild(scopeSearch);
     const scopeSelectLabel = create("label", "progression-leaderboard-scope-select");
-    scopeSelectLabel.appendChild(create("span", "sr-only", "Select leaderboard scope"));
+    scopeSelectLabel.appendChild(create("span", "progression-leaderboard-scope-field-label", "Scope picker"));
     const scopeSelect = create("select");
-    scopeSelect.appendChild(new Option("Global · lifetime XP", ""));
+    scopeSelect.appendChild(new Option("Global", ""));
     scopeSelectLabel.appendChild(scopeSelect);
-    scopeControl.append(scopeSearchLabel, scopeSelectLabel);
+    const scopeFeedback = create("div", "progression-leaderboard-scope-feedback", "No channel scoped leaderboards found yet.");
+    const scopeRetry = create("button", "progression-leaderboard-scope-retry", "Retry");
+    scopeRetry.type = "button";
+    scopeRetry.hidden = true;
+    const scopeNote = create("p", "progression-leaderboard-scope-note", "Global remains the default. Channel scoped views show XP/rank earned inside a creator/channel context.");
+    scopeControl.append(scopeHeader, scopeModes, scopeSearchLabel, scopeSelectLabel, scopeFeedback, scopeRetry, scopeNote);
     const tabs = create("div", "progression-leaderboard-future-tabs");
     ["Economy", "Games", "Weekly", "Creator Boards", "Events"].forEach((label) => {
       const tab = create("span", "progression-leaderboard-future-tab", `${label} soon`);
@@ -4048,6 +4074,7 @@
         expandedId: "",
         query: "",
         page: 1,
+        scopeEndpointError: false,
         render() {
           const filteredRows = filterLeaderboardRows(state.rows, state.query);
           const totalPages = Math.max(1, Math.ceil(filteredRows.length / LEADERBOARD_PAGE_SIZE));
@@ -4057,6 +4084,18 @@
           clear(list);
           clear(paginationHost);
           const scoped = Boolean(state.scopeKey);
+          const scopeMode = scoped ? "scoped" : state.scopeEndpointError ? "error" : availableScopes.length ? "global" : "empty";
+          scopeControl.dataset.scopeMode = scopeMode;
+          scopeControl.querySelector(".progression-leaderboard-scope-chip").textContent = scoped ? "Channel scoped leaderboard" : "Global leaderboard";
+          globalMode.classList.toggle("is-active", !scoped);
+          scopedMode.classList.toggle("is-active", scoped);
+          scopedMode.disabled = !availableScopes.length && !state.scopeKey;
+          scopeFeedback.textContent = state.scopeEndpointError
+            ? "Channel scoped leaderboards could not be loaded."
+            : availableScopes.length
+              ? `${formatNumber(availableScopes.length)} channel scoped leaderboard${availableScopes.length === 1 ? "" : "s"} available.`
+              : "No channel scoped leaderboards found yet.";
+          scopeRetry.hidden = !state.scopeEndpointError;
           renderLeaderboardStats(statsGrid, state.rows, { scopeMeta: state.scopeMeta });
           renderLeaderboardPodium(podium, state.rows);
           boardCard.querySelector("strong").textContent = scoped ? scopedProgressionScopeLabel(state.scopeMeta || { scope_key: state.scopeKey }) : "Global lifetime XP";
@@ -4146,6 +4185,43 @@
       scopeSearch.addEventListener("input", () => {
         renderLeaderboardScopeOptions(scopeSelect, availableScopes, scopeSearch.value || "", state.scopeKey);
       });
+      globalMode.addEventListener("click", () => {
+        loadLeaderboard("").catch((error) => {
+          status.textContent = error instanceof Error ? error.message : "Unable to load leaderboard right now.";
+        });
+      });
+      scopedMode.addEventListener("click", () => {
+        if (!availableScopes.length) {
+          scopeFeedback.textContent = state.scopeEndpointError
+            ? "Channel scoped leaderboards could not be loaded."
+            : "No channel scoped leaderboards found yet.";
+          state.render();
+          return;
+        }
+        const nextScope = state.scopeKey || availableScopes[0]?.scope_key || "";
+        if (nextScope) scopeSelect.value = nextScope;
+        loadLeaderboard(nextScope).catch((error) => {
+          status.textContent = error instanceof Error ? error.message : "Unable to load that scoped leaderboard right now.";
+        });
+      });
+      scopeRetry.addEventListener("click", () => {
+        scopeRetry.disabled = true;
+        scopeFeedback.textContent = "Loading channel scoped leaderboards...";
+        fetchPublicProgressionScopes()
+          .then((payload) => {
+            state.scopeEndpointError = false;
+            availableScopes = uniqueProgressionScopes(payload?.scopes || []);
+            renderLeaderboardScopeOptions(scopeSelect, availableScopes, scopeSearch.value || "", state.scopeKey);
+            state.render();
+          })
+          .catch(() => {
+            state.scopeEndpointError = true;
+            state.render();
+          })
+          .finally(() => {
+            scopeRetry.disabled = false;
+          });
+      });
       scopeSelect.addEventListener("change", () => {
         loadLeaderboard(scopeSelect.value || "").catch((error) => {
           status.textContent = error instanceof Error ? error.message : "Unable to load leaderboard right now.";
@@ -4160,15 +4236,18 @@
         await loadLeaderboard(state.scopeKey);
         fetchPublicProgressionScopes()
           .then((payload) => {
+            state.scopeEndpointError = false;
             availableScopes = uniqueProgressionScopes(payload?.scopes || []);
             renderLeaderboardScopeOptions(scopeSelect, availableScopes, scopeSearch.value || "", state.scopeKey);
             if (state.scopeKey && !state.scopeMeta) {
               state.scopeMeta = availableScopes.find((scope) => scope.scope_key === state.scopeKey) || state.scopeMeta;
-              state.render();
             }
+            state.render();
           })
           .catch(() => {
+            state.scopeEndpointError = true;
             renderLeaderboardScopeOptions(scopeSelect, availableScopes, scopeSearch.value || "", state.scopeKey);
+            state.render();
           });
       } catch (error) {
         status.textContent = error instanceof Error ? error.message : "Unable to load leaderboard right now.";
@@ -7795,9 +7874,11 @@
     try {
       const payload = await fetchPublicProfileProgressionScopes(identifier);
       const rows = scopedProgressionRowsFromPayload(payload);
-      return rows.length ? { ...profile, scopedProgression: rows } : { ...profile, scopedProgression: [] };
-    } catch (_err) {
-      return profile;
+      return rows.length
+        ? { ...profile, scopedProgression: rows, scopedProgressionStatus: "scoped" }
+        : { ...profile, scopedProgression: [], scopedProgressionStatus: "empty" };
+    } catch (err) {
+      return { ...profile, scopedProgression: [], scopedProgressionStatus: "error" };
     }
   }
 
@@ -9314,21 +9395,71 @@
 
   function buildProfileScopedProgressionSection(profile = null) {
     const rows = normalizeScopedProgressionRows(profile?.scopedProgression || profile?.scoped_progression || []);
-    if (!rows.length) return null;
-    const details = create("details", "profile-utility-section profile-scoped-progression-section");
-    details.open = rows.length <= 3;
-    const summary = create("summary", "profile-scoped-progression-summary");
-    const action = create("span", "profile-scoped-progression-summary-action");
-    action.append(
-      createIcon("/assets/icons/ui/tablechart.svg", "profile-scoped-progression-summary-icon"),
-      create("span", "", "Channel stats")
+    const mode = String(profile?.scopedProgressionStatus || profile?.scoped_progression_status || (rows.length ? "scoped" : "empty")).toLowerCase();
+    const section = create("section", "profile-utility-section profile-scoped-progression-section");
+    section.dataset.profileChannelStats = "present";
+    section.dataset.scopeMode = mode === "error" ? "error" : rows.length ? "scoped" : "empty";
+    const header = create("div", "profile-inline-header profile-scoped-progression-header");
+    const title = create("h3", "", "Progression Scope");
+    const meta = create("span", "profile-scoped-progression-summary-meta", rows.length
+      ? `${formatNumber(rows.length)} scoped creator/channel row${rows.length === 1 ? "" : "s"}`
+      : mode === "error"
+        ? "Channel scoped progression unavailable"
+        : "No channel scoped rows yet");
+    header.append(title, meta);
+    const tabs = create("div", "profile-scoped-progression-tabs");
+    const globalTab = create("button", "profile-scoped-progression-tab is-active", "Global Stats");
+    globalTab.type = "button";
+    const channelTab = create("button", "profile-scoped-progression-tab", "Channel Stats");
+    channelTab.type = "button";
+    tabs.append(globalTab, channelTab);
+    const panels = create("div", "profile-scoped-progression-panels");
+    const globalPanel = create("div", "profile-scoped-progression-panel is-active");
+    globalPanel.dataset.profileScopePanel = "global";
+    const channelPanel = create("div", "profile-scoped-progression-panel");
+    channelPanel.dataset.profileScopePanel = "channel";
+
+    const progression = profile?.progression && typeof profile.progression === "object" ? profile.progression : {};
+    const globalStats = create("dl", "profile-scoped-progression-stats profile-scoped-progression-stats--global");
+    const addGlobalStat = (label, valueNode) => {
+      const item = create("div", "profile-scoped-progression-stat");
+      item.appendChild(create("dt", "", label));
+      const value = create("dd", "");
+      if (valueNode instanceof Node) value.appendChild(valueNode);
+      else value.textContent = valueNode;
+      item.appendChild(value);
+      globalStats.appendChild(item);
+    };
+    addGlobalStat("Global Rank", progression.global_placement_rank || progression.global_rank ? `#${formatNumber(progression.global_placement_rank || progression.global_rank)}` : "Unranked");
+    addGlobalStat("Global XP", buildProgressionXpValue(progression.xp_total ?? progression.total_xp ?? progression.xp ?? 0, { compact: true, compactNumber: true }));
+    addGlobalStat("Global Level", buildProgressionLevelChip(progression, { compact: true }));
+    globalPanel.append(
+      create("p", "profile-scoped-progression-panel-note", "Global remains the default StreamSuites progression view for this profile."),
+      globalStats
     );
-    const meta = create("span", "profile-scoped-progression-summary-meta", `${formatNumber(rows.length)} scoped creator/channel row${rows.length === 1 ? "" : "s"}`);
-    summary.append(action, meta);
-    const grid = create("div", "profile-scoped-progression-grid");
-    rows.forEach((row) => grid.appendChild(buildProfileScopedProgressionCard(row)));
-    details.append(summary, grid);
-    return details;
+
+    if (mode === "error") {
+      channelPanel.appendChild(create("div", "profile-scoped-progression-empty is-error", "Channel scoped progression could not be loaded."));
+    } else if (!rows.length) {
+      channelPanel.appendChild(create("div", "profile-scoped-progression-empty", "No channel-scoped XP has been recorded for this profile yet."));
+    } else {
+      const grid = create("div", "profile-scoped-progression-grid");
+      rows.forEach((row) => grid.appendChild(buildProfileScopedProgressionCard(row)));
+      channelPanel.appendChild(grid);
+    }
+
+    const activate = (target) => {
+      const showChannel = target === "channel";
+      globalTab.classList.toggle("is-active", !showChannel);
+      channelTab.classList.toggle("is-active", showChannel);
+      globalPanel.classList.toggle("is-active", !showChannel);
+      channelPanel.classList.toggle("is-active", showChannel);
+    };
+    globalTab.addEventListener("click", () => activate("global"));
+    channelTab.addEventListener("click", () => activate("channel"));
+    panels.append(globalPanel, channelPanel);
+    section.append(header, tabs, panels);
+    return section;
   }
 
   function renderStandaloneProfileUtilityBody(profileCard, profile, canEdit, options = {}) {
@@ -9344,8 +9475,7 @@
     profileCard.appendChild(primaryGrid);
     profileCard.appendChild(buildProfileBadgeGallerySection(profile));
     profileCard.appendChild(buildProfileGameCompetitionSection(profile, { canEdit }));
-    const scopedProgressionSection = buildProfileScopedProgressionSection(profile);
-    if (scopedProgressionSection) profileCard.appendChild(scopedProgressionSection);
+    profileCard.appendChild(buildProfileScopedProgressionSection(profile));
 
     const grid = create("div", "profile-utility-grid profile-utility-grid--slim");
     const socialGallery = buildProfileSocialGallerySection(profile);

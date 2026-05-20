@@ -36,6 +36,27 @@ test("every public-shell route loads the shared turnstile helper", () => {
   assert.deepEqual(missing, []);
 });
 
+test("leaderboard and standalone profile shells load active scoped progression assets before the router mounts", () => {
+  const leaderboardHtml = read("leaderboards.html");
+  const profileHtml = read("u/index.html");
+  const redirects = read("_redirects");
+  for (const [label, html] of [["leaderboards.html", leaderboardHtml], ["u/index.html", profileHtml]]) {
+    assert.match(html, /\/css\/public-shell\.css/, `${label} should load scoped progression styles`);
+    assert.match(html, /\/js\/public-data-hub\.js/, `${label} should load the public data hub`);
+    assert.match(html, /\/js\/public-pages-app\.js/, `${label} should load the public router`);
+    assert.ok(
+      html.indexOf("/css/public-shell.css") < html.indexOf("/js/public-pages-app.js"),
+      `${label} should load CSS before the router`
+    );
+    assert.ok(
+      html.indexOf("/js/public-data-hub.js") < html.indexOf("/js/public-pages-app.js"),
+      `${label} should load data helpers before the router`
+    );
+  }
+  assert.match(redirects, /\/community\/leaderboard \/leaderboards\.html 200/);
+  assert.match(redirects, /\/community\/leaderboard\/ \/leaderboards\.html 200/);
+});
+
 test("public login surfaces expose alternate surface links", () => {
   const lander = read("index.html");
   const publicLogin = read("public-login.html");
