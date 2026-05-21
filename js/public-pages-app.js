@@ -4088,7 +4088,7 @@
         select.appendChild(option);
       });
     if (!scopes.length && !current) {
-      const empty = new Option("No channel scoped leaderboards found yet.", "");
+      const empty = new Option("No channel scopes", "");
       empty.disabled = true;
       empty.dataset.emptyScope = "true";
       select.appendChild(empty);
@@ -4161,7 +4161,8 @@
       create("h2", "", "All ranked profiles"),
       create("p", "", "Ranked by lifetime public XP. Top-three users also remain in this full-width list.")
     );
-    const controls = create("div", "progression-leaderboard-controls");
+    const controls = create("div", "leaderboard-scope-toolbar progression-leaderboard-controls");
+    controls.dataset.scopeToolbar = "leaderboard";
     const searchLabel = create("label", "progression-leaderboard-search");
     const searchText = create("span", "sr-only", "Search ranked profiles");
     const search = create("input");
@@ -4170,18 +4171,13 @@
     search.placeholder = "Search by name, @handle, level, or badge";
     search.autocomplete = "off";
     searchLabel.append(searchText, search);
-    const scopeControl = create("div", "progression-leaderboard-scope-control");
+    const scopeControl = create("div", "leaderboard-scope-toolbar-controls");
     scopeControl.dataset.scopeControl = "leaderboard";
-    scopeControl.dataset.scopeToolbar = "leaderboard";
     scopeControl.dataset.scopeMode = "global";
-    const scopeHeader = create("div", "progression-leaderboard-scope-header");
     const activeScopeChip = create("span", "progression-leaderboard-scope-chip");
     activeScopeChip.append(createScopedPlatformIcon("global", "progression-leaderboard-scope-chip-icon"), create("span", "", "Global leaderboard"));
-    scopeHeader.append(
-      create("span", "progression-leaderboard-scope-label", "Leaderboard scope"),
-      activeScopeChip
-    );
     const scopeModes = create("div", "progression-leaderboard-scope-modes");
+    scopeModes.setAttribute("aria-label", "Scope mode");
     const globalMode = create("button", "progression-leaderboard-scope-mode is-active", "Global");
     globalMode.type = "button";
     globalMode.dataset.scopeModeButton = "global";
@@ -4189,24 +4185,23 @@
     scopedMode.type = "button";
     scopedMode.dataset.scopeModeButton = "scoped";
     scopeModes.append(globalMode, scopedMode);
-    const scopeSearchLabel = create("label", "progression-leaderboard-scope-search");
-    scopeSearchLabel.appendChild(create("span", "progression-leaderboard-scope-field-label", "Search channel scopes"));
     const scopeSearch = create("input");
     scopeSearch.type = "search";
-    scopeSearch.placeholder = "Search/select a channel scope";
+    scopeSearch.className = "sr-only";
+    scopeSearch.tabIndex = -1;
+    scopeSearch.setAttribute("aria-hidden", "true");
     scopeSearch.autocomplete = "off";
-    scopeSearchLabel.appendChild(scopeSearch);
     const scopeSelectLabel = create("label", "progression-leaderboard-scope-select");
-    scopeSelectLabel.appendChild(create("span", "progression-leaderboard-scope-field-label", "Scope picker"));
+    scopeSelectLabel.appendChild(create("span", "sr-only", "Scope picker"));
     const scopeSelect = create("select");
+    scopeSelect.setAttribute("aria-label", "Scope picker");
     scopeSelect.appendChild(new Option("Global", ""));
     scopeSelectLabel.appendChild(scopeSelect);
     const scopeFeedback = create("div", "progression-leaderboard-scope-feedback", "No channel scoped leaderboards found yet.");
     const scopeRetry = create("button", "progression-leaderboard-scope-retry", "Retry");
     scopeRetry.type = "button";
     scopeRetry.hidden = true;
-    const scopeNote = create("p", "progression-leaderboard-scope-note", "Global remains the default. Channel scoped views show XP/rank earned inside a creator/channel context.");
-    scopeControl.append(scopeHeader, scopeModes, scopeSearchLabel, scopeSelectLabel, scopeFeedback, scopeRetry, scopeNote);
+    scopeControl.append(scopeModes, scopeSelectLabel, scopeFeedback, scopeRetry, activeScopeChip);
     controls.append(searchLabel, scopeControl);
     const status = create("p", "muted progression-leaderboard-status", "Loading leaderboard...");
     const tableHeader = create("div", "progression-leaderboard-table-header");
@@ -4257,7 +4252,7 @@
           );
           globalMode.classList.toggle("is-active", !scoped);
           scopedMode.classList.toggle("is-active", scoped);
-          scopedMode.disabled = !availableScopes.length && !state.scopeKey;
+          scopeSelect.disabled = !scoped || (!availableScopes.length && !state.scopeKey);
           scopeFeedback.textContent = state.scopeEndpointError
             ? "Channel scoped leaderboards could not be loaded."
             : availableScopes.length
