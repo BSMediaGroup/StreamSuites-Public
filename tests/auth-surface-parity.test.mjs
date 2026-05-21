@@ -267,8 +267,8 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /if \(role\.includes\("developer"\)\) return "developer";/);
   assert.match(app, /if \(normalized === "PUBLIC" \|\| normalized === "USER" \|\| normalized === "MEMBER"\) return "VIEWER";/);
   assert.match(app, /\/assets\/icons\/ui\/shieldtick\.svg/);
-  assert.match(app, /function createCssChevronIcon\(className = "profile-collapsible-toggle-icon"\)/);
-  assert.match(app, /icon\.dataset\.iconState = details\.open \? "expanded" : "collapsed"/);
+  assert.match(app, /icon\.src = details\.open \? "\/assets\/icons\/ui\/visible\.svg" : "\/assets\/icons\/ui\/hidden\.svg"/);
+  assert.match(app, /icon\.setAttribute\("aria-hidden", "true"\)/);
   assert.doesNotMatch(app, /details\.open \? 'url\("\/assets\/icons\/ui\/visible\.svg"\)' : 'url\("\/assets\/icons\/ui\/hidden\.svg"\)'/);
   assert.match(app, /details\.addEventListener\("toggle", sync\)/);
   assert.match(app, /PUBLIC AUTHORITY/);

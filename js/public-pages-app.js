@@ -559,12 +559,6 @@
     return icon;
   }
 
-  function createCssChevronIcon(className = "profile-collapsible-toggle-icon") {
-    const icon = create("span", className);
-    icon.setAttribute("aria-hidden", "true");
-    return icon;
-  }
-
   function replaceImageWithIconFallback(image, path, className) {
     const fallback = createIcon(path || UI_ICON_MAP.profile, className || image.className || "inline-icon-mask");
     image.replaceWith(fallback);
@@ -1062,10 +1056,14 @@
     const button = create("button", className);
     button.type = "button";
     const label = create("span", `${className}-label`);
-    const icon = createCssChevronIcon(`${className}-icon`);
+    const icon = create("img", `${className}-icon`);
+    icon.alt = "";
+    icon.loading = "lazy";
+    icon.decoding = "async";
+    icon.setAttribute("aria-hidden", "true");
     const sync = () => {
       label.textContent = details.open ? "Collapse" : "Expand";
-      icon.dataset.iconState = details.open ? "expanded" : "collapsed";
+      icon.src = details.open ? "/assets/icons/ui/visible.svg" : "/assets/icons/ui/hidden.svg";
       button.setAttribute("aria-label", `${details.open ? "Collapse" : "Expand"} section`);
       button.setAttribute("aria-expanded", details.open ? "true" : "false");
     };
