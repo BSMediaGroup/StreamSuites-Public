@@ -4080,6 +4080,10 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   background: linear-gradient(180deg, rgba(31, 43, 63, 0.72), rgba(12, 17, 27, 0.86));
 }
 
+.profile-game-summary {
+  grid-template-columns: auto minmax(0, 1fr) 18px;
+}
+
 .profile-game-panel {
   display: grid;
   gap: 14px;
@@ -4089,9 +4093,10 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 .profile-game-scope-compact {
   display: inline-flex;
   align-items: center;
+  justify-self: end;
   gap: 7px;
   min-width: 0;
-  margin-left: auto;
+  max-width: 100%;
 }
 
 .profile-game-scope-chip,
@@ -4128,7 +4133,7 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 }
 
 .profile-game-scope-select-input {
-  width: min(34vw, 220px);
+  width: min(30vw, 220px);
   min-width: 128px;
   min-height: 32px;
   border: 1px solid rgba(203, 219, 246, 0.16);

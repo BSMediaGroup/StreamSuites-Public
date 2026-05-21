@@ -9253,9 +9253,6 @@
       createIcon("/assets/icons/ui/gamecontroller.svg", "profile-authority-summary-action-icon"),
       create("span", "", "GAME & COMPETITION")
     );
-    const meta = create("span", "profile-authority-summary-meta");
-    meta.appendChild(create("span", "", progression ? "Global default" : "XP/level empty"));
-    if (scopedRows.length) meta.appendChild(create("span", "", `${formatNumber(scopedRows.length)} channel scope${scopedRows.length === 1 ? "" : "s"}`));
     const scopeWrap = create("span", "profile-game-scope-compact");
     scopeWrap.dataset.profileScopeSelector = "compact";
     const scopeChip = create("span", "profile-game-scope-chip");
@@ -9278,7 +9275,7 @@
     };
     details.addEventListener("toggle", syncStateIcon);
     syncStateIcon();
-    summary.append(action, meta, scopeWrap, stateIcon);
+    summary.append(action, scopeWrap, stateIcon);
 
     const panel = create("div", "profile-game-panel");
     panel.dataset.profileProgressionMode = "global";
