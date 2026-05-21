@@ -752,7 +752,7 @@
     if (!Object.prototype.hasOwnProperty.call(STREAM_PLATFORM_LABELS, platform)) return null;
     const sourceUrl = String(value.source_url || value.sourceUrl || "").trim();
     const url = String(value.url || value.live_url || value.liveUrl || sourceUrl || "").trim();
-    const channelHandle = String(value.channel_handle || value.channelHandle || "").trim();
+    const channelHandle = String(value.channel_handle || value.channelHandle || value.channel_slug || value.channelSlug || "").trim();
     const configured = value.configured === true || Boolean(sourceUrl || url || channelHandle);
     if (!configured) return null;
     const viewerCount = value.viewer_count ?? value.viewerCount;
@@ -761,6 +761,7 @@
       platformLabel: String(value.platform_label || value.platformLabel || STREAM_PLATFORM_LABELS[platform]).trim() || STREAM_PLATFORM_LABELS[platform],
       platformIcon: getStreamPlatformIconPath(platform),
       sourceUrl,
+      channelSlug: String(value.channel_slug || value.channelSlug || channelHandle).trim(),
       channelHandle,
       configured,
       isLive: value.is_live === true || value.isLive === true,
@@ -817,6 +818,8 @@
       platformIcon: selectedStream.platformIcon || baseStream?.platformIcon,
       sourceUrl: selectedStream.sourceUrl || selectedStream.url || baseStream?.sourceUrl,
       url: selectedStream.url || selectedStream.sourceUrl || baseStream?.url,
+      channelSlug: selectedStream.channelSlug || selectedStream.channelHandle || baseStream?.channelSlug,
+      channelHandle: selectedStream.channelHandle || selectedStream.channelSlug || baseStream?.channelHandle,
       recentStreams: baseStream?.recentStreams || []
     };
   }
@@ -971,15 +974,16 @@
     const provided = parseUrl(stream?.embedUrl || "");
     if (provided) {
       const host = provided.hostname.replace(/^www\./i, "").toLowerCase();
-      if (stream.platform === "kick" && host === "player.kick.com") return provided.href;
+      const path = provided.pathname || "";
+      if (stream.platform === "kick" && host === "player.kick.com" && /^\/[a-z0-9_-]+\/?$/i.test(path)) return provided.href;
       if (stream.platform === "youtube" && ["youtube-nocookie.com", "www.youtube-nocookie.com"].includes(host)) return provided.href;
       if (stream.platform === "twitch" && host === "player.twitch.tv") return provided.href;
-      if (stream.platform === "rumble" && ["rumble.com", "www.rumble.com"].includes(host)) return provided.href;
+      if (stream.platform === "rumble" && ["rumble.com", "www.rumble.com"].includes(host) && /^\/embed\/v[a-z0-9]+\/?$/i.test(path)) return provided.href;
     }
     if (stream.platform === "kick") {
       const url = parseUrl(stream.url || stream.sourceUrl || "");
       const parts = (url?.pathname || "").split("/").filter(Boolean);
-      const slug = String(stream.channelHandle || parts[0] || "").trim().replace(/^@+/, "").replace(/[^a-zA-Z0-9_-]/g, "").toLowerCase();
+      const slug = String(stream.channelSlug || stream.channelHandle || parts[0] || "").trim().replace(/^@+/, "").replace(/[^a-zA-Z0-9_-]/g, "").toLowerCase();
       return slug ? `https://player.kick.com/${encodeURIComponent(slug)}` : "";
     }
     if (stream.platform === "youtube") return resolveYouTubeEmbedUrl(stream.url || stream.sourceUrl);
@@ -3045,9 +3049,10 @@
         icon.setAttribute("aria-hidden", "true");
       }
       const body = create("span", "economy-breakdown-body");
+      const meta = String(entry.meta || "").trim();
       body.append(
         create("strong", "", entry.label || "Item"),
-        create("span", "", entry.meta || "")
+        create("span", "economy-breakdown-meta", meta ? `[${meta}]` : "")
       );
       row.append(icon, body, create("strong", "economy-breakdown-quantity", `${entry.quantityPrefix || ""}${formatNumber(entry.quantity || 0)}`));
       list.appendChild(row);
@@ -3966,21 +3971,27 @@
     return nav;
   }
 
-  function renderLeaderboardGallery(host) {
+  function renderLeaderboardGallery(host, scopes = [], onSelect = null) {
     clear(host);
-    [
-      ["Creator Board", "Community rankings", "Creator-defined boards will appear here after runtime authority exists."],
-      ["Event Board", "Public events", "Preview scaffold for future event-specific placement surfaces."],
-      ["Economy Board", "Wallet standings", "Requires a live economy leaderboard contract before values go public."],
-      ["Game Board", "Mini-game scores", "Reserved for real game scoring authority, not local placeholder scores."],
-      ["Season Board", "Season pool", "Season standings remain coming soon until runtime exposes them."]
-    ].forEach(([title, type, body]) => {
+    const rows = uniqueProgressionScopes(scopes);
+    if (!rows.length) {
+      host.appendChild(create("div", "empty-state progression-leaderboard-gallery-empty", "Creator/channel scoped leaderboards appear here when Runtime/Auth exposes real scope rows."));
+      return;
+    }
+    rows.slice(0, 12).forEach((scope) => {
       const card = create("article", "progression-leaderboard-gallery-card");
+      const action = create("button", "dashboard-action progression-leaderboard-gallery-action", "View board");
+      action.type = "button";
+      action.addEventListener("click", () => onSelect?.(scope.scope_key));
       card.append(
-        create("span", "progression-leaderboard-gallery-type", type),
-        create("h3", "", title),
-        create("p", "", body),
-        create("span", "progression-leaderboard-gallery-badge", "Coming soon")
+        create("span", "progression-leaderboard-gallery-type", scopedProgressionPlatformLabel(scope)),
+        create("h3", "", scopedProgressionChannelLabel(scope)),
+        create("p", "", scopedProgressionScopeLabel(scope)),
+        create("span", "progression-leaderboard-gallery-badge", [
+          scope.participant_count != null ? `${formatNumber(scope.participant_count)} participants` : "",
+          formatScopedProgressionUpdatedAt(scope.updated_at || scope.updatedAt)
+        ].filter((item) => item && item !== "Not public").join(" | ") || "Runtime scoped board"),
+        action
       );
       host.appendChild(card);
     });
@@ -4154,13 +4165,7 @@
     scopeRetry.hidden = true;
     const scopeNote = create("p", "progression-leaderboard-scope-note", "Global remains the default. Channel scoped views show XP/rank earned inside a creator/channel context.");
     scopeControl.append(scopeHeader, scopeModes, scopeSearchLabel, scopeSelectLabel, scopeFeedback, scopeRetry, scopeNote);
-    const tabs = create("div", "progression-leaderboard-future-tabs");
-    ["Economy", "Games", "Weekly", "Creator Boards", "Events"].forEach((label) => {
-      const tab = create("span", "progression-leaderboard-future-tab", `${label} soon`);
-      tab.setAttribute("aria-disabled", "true");
-      tabs.appendChild(tab);
-    });
-    controls.append(searchLabel, scopeControl, tabs);
+    controls.append(searchLabel, scopeControl);
     const status = create("p", "muted progression-leaderboard-status", "Loading leaderboard...");
     const tableHeader = create("div", "progression-leaderboard-table-header");
     const list = create("div", "progression-leaderboard-list");
@@ -4172,12 +4177,12 @@
     const gallerySection = create("section", "progression-leaderboard-gallery-section");
     const galleryHead = create("div", "progression-leaderboard-section-head");
     galleryHead.append(
-      create("span", "progression-leaderboard-section-kicker", "Featured Leaderboards"),
-      create("h2", "", "Creator-defined boards preview"),
-      create("p", "", "These cards are visual scaffolds only. They do not contribute fake data to the global XP leaderboard.")
+      create("span", "progression-leaderboard-section-kicker", "Scoped Leaderboards"),
+      create("h2", "", "Creator and channel boards"),
+      create("p", "", "Available boards come from the Runtime/Auth scoped progression contract and switch the leaderboard view without inventing local channels.")
     );
     const gallery = create("div", "progression-leaderboard-gallery");
-    renderLeaderboardGallery(gallery);
+    renderLeaderboardGallery(gallery, []);
     gallerySection.append(galleryHead, gallery);
     page.appendChild(gallerySection);
     host.appendChild(page);
@@ -4213,6 +4218,12 @@
               ? `${formatNumber(availableScopes.length)} channel scoped leaderboard${availableScopes.length === 1 ? "" : "s"} available.`
               : "No channel scoped leaderboards found yet.";
           scopeRetry.hidden = !state.scopeEndpointError;
+          renderLeaderboardGallery(gallery, availableScopes, (scopeKey) => {
+            scopeSelect.value = scopeKey || "";
+            loadLeaderboard(scopeKey || "").catch((error) => {
+              status.textContent = error instanceof Error ? error.message : "Unable to load that scoped leaderboard right now.";
+            });
+          });
           renderLeaderboardStats(statsGrid, state.rows, { scopeMeta: state.scopeMeta });
           renderLeaderboardPodium(podium, state.rows);
           boardCard.querySelector("strong").textContent = scoped ? scopedProgressionScopeLabel(state.scopeMeta || { scope_key: state.scopeKey }) : "Global lifetime XP";
@@ -9183,6 +9194,7 @@
     const progression = profile?.progression && typeof profile.progression === "object" ? profile.progression : null;
     const economy = profile?.economy && typeof profile.economy === "object" ? profile.economy : null;
     const inventory = Array.isArray(profile?.inventory) ? profile.inventory : [];
+    const scopedRows = normalizeScopedProgressionRows(profile?.scopedProgression || profile?.scoped_progression || []);
     const displayInventory = inventory.filter((item) => !isWalletDenominationInventoryItem(item));
     const exchangeableItems = normalizeExchangeableItems({ exchangeable_items: profile?.exchangeableItems }, inventory);
     const rank = progression?.rank && typeof progression.rank === "object" ? progression.rank : {};
@@ -9205,11 +9217,8 @@
       create("span", "", "GAME & COMPETITION")
     );
     const meta = create("span", "profile-authority-summary-meta");
-    [
-      progression ? "XP/level live" : "XP/level empty",
-      economy ? "Economy live" : "Economy starting",
-      displayInventory.length ? "Inventory live" : "Inventory empty"
-    ].forEach((entry) => meta.appendChild(create("span", "", entry)));
+    meta.appendChild(create("span", "", progression ? "Global default" : "XP/level empty"));
+    if (scopedRows.length) meta.appendChild(create("span", "", `${formatNumber(scopedRows.length)} channel scope${scopedRows.length === 1 ? "" : "s"}`));
     const stateIcon = createIcon("/assets/icons/ui/visible.svg", "profile-authority-summary-icon");
     const syncStateIcon = () => {
       stateIcon.style.setProperty(
@@ -9222,6 +9231,44 @@
     summary.append(action, meta, stateIcon);
 
     const panel = create("div", "profile-game-panel");
+    const scopeBar = create("div", "profile-game-scope-bar");
+    const scopeLabel = create("label", "profile-game-scope-select");
+    scopeLabel.appendChild(create("span", "sr-only", "Game and competition scope"));
+    const scopeSelect = create("select");
+    scopeSelect.appendChild(new Option("Global", ""));
+    scopedRows.forEach((row) => {
+      scopeSelect.appendChild(new Option(scopedProgressionScopeLabel(row), row.scope_key));
+    });
+    scopeLabel.appendChild(scopeSelect);
+    const scopeStats = create("dl", "profile-game-scope-stats");
+    const renderScopeStats = (row = null) => {
+      clear(scopeStats);
+      const add = (label, valueNode) => {
+        const item = create("div", "profile-game-scope-stat");
+        item.appendChild(create("dt", "", label));
+        const value = create("dd", "");
+        if (valueNode instanceof Node) value.appendChild(valueNode);
+        else value.textContent = valueNode;
+        item.appendChild(value);
+        scopeStats.appendChild(item);
+      };
+      if (row) {
+        add("Scoped Rank", row.placement_rank || row.rank || row.position ? `#${formatNumber(row.placement_rank || row.rank || row.position)}` : "Unranked");
+        add("Scoped XP", buildProgressionXpValue(row.xp_total ?? row.xp ?? 0, { compact: true, compactNumber: true }));
+        add("Scoped Level", buildProgressionLevelChip(row, { compact: true }));
+        add("Messages", formatNumber(row.message_count || 0));
+        return;
+      }
+      add("Global Rank", progression ? buildProgressionGlobalRankValue(progression, { compact: true, emptyLabel: "Unranked" }) : "Unranked");
+      add("Global XP", buildProgressionXpValue(xpTotal, { compact: true, compactNumber: true }));
+      add("Global Level", progression ? buildProgressionLevelChip(progression, { compact: true }) : "No level yet");
+    };
+    renderScopeStats(null);
+    scopeSelect.addEventListener("change", () => {
+      const selected = scopedRows.find((row) => row.scope_key === scopeSelect.value) || null;
+      renderScopeStats(selected);
+    });
+    scopeBar.append(scopeLabel, scopeStats);
     const grid = create("div", "profile-game-grid");
     [
       {
@@ -9320,6 +9367,7 @@
       grid.appendChild(card);
     });
     panel.append(
+      ...(scopedRows.length ? [scopeBar] : []),
       grid,
       create("p", "profile-game-disclaimer", progression
         ? "XP, level, wallet balance, and inventory hydrate from runtime public authority. Leaderboard rank means placement only. Seasonal standings remain deferred."

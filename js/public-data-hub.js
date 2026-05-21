@@ -624,13 +624,14 @@
     if (!PUBLIC_PROFILE_STREAM_PLATFORMS.has(platform)) return null;
     const sourceUrl = String(value.source_url || value.sourceUrl || "").trim();
     const url = String(value.url || value.live_url || value.liveUrl || sourceUrl || "").trim();
-    const channelHandle = String(value.channel_handle || value.channelHandle || "").trim();
+    const channelHandle = String(value.channel_handle || value.channelHandle || value.channel_slug || value.channelSlug || "").trim();
     if (value.configured !== true && !sourceUrl && !url && !channelHandle) return null;
     const viewerCount = value.viewer_count ?? value.viewerCount;
     return {
       platform,
       platformLabel: String(value.platform_label || value.platformLabel || toTitle(platform)).trim() || toTitle(platform),
       sourceUrl,
+      channelSlug: String(value.channel_slug || value.channelSlug || channelHandle).trim(),
       channelHandle,
       configured: true,
       isLive: value.is_live === true || value.isLive === true,

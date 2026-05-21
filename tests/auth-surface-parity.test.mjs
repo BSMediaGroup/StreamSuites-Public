@@ -211,6 +211,10 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /Expand for details/);
   assert.match(app, /resolveLatestStreamEmbedUrl\(stream\)/);
   assert.match(app, /https:\/\/player\.kick\.com/);
+  assert.match(app, /host === "player\.kick\.com"[\s\S]*\^\\\/\[a-z0-9_-\]\+\\\/\?\$/);
+  assert.match(app, /stream\.channelSlug \|\| stream\.channelHandle \|\| parts\[0\]/);
+  assert.match(app, /rumble[\s\S]*\^\\\/embed\\\/v\[a-z0-9\]\+\\\/\?\$/);
+  assert.doesNotMatch(app, /embedJS\/u3/);
   assert.match(app, /function buildLatestStreamThumbnailRow\(baseStream, media, body, helpers\)/);
   assert.match(app, /profile-latest-stream-thumbnails/);
   assert.match(app, /profile-latest-stream-source-button\$\{disabled \? " is-disabled" : ""\}/);
