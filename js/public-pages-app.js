@@ -173,6 +173,7 @@
     global: "/assets/icons/ui/globe.svg",
     unknown: "/assets/icons/ui/cast.svg"
   });
+  const SCOPED_LEADERBOARD_GALLERY_LIMIT = 12;
   const STREAM_SOURCE_PRIORITY = Object.freeze(["kick", "rumble", "youtube", "twitch"]);
   const WHEEL_DEFAULT_AVATAR = "/assets/icons/ui/wheeluser.svg";
   const WHEEL_CENTER_DEFAULT = "/assets/placeholders/wheelcenterdefault.webp";
@@ -198,6 +199,9 @@
   ]);
   const DEFAULT_PROFILE_COVER = "/assets/placeholders/defaultprofilecover.webp";
   let standaloneProfileCleanupFns = [];
+  let leaderboardGalleryRenderSeq = 0;
+  const scopedLeaderboardTopPreviewCache = new Map();
+  const scopedLeaderboardTopPreviewPending = new Map();
 
   function registerStandaloneProfileCleanup(fn) {
     if (typeof fn === "function") standaloneProfileCleanupFns.push(fn);
@@ -555,6 +559,18 @@
     return icon;
   }
 
+  function createCssChevronIcon(className = "profile-collapsible-toggle-icon") {
+    const icon = create("span", className);
+    icon.setAttribute("aria-hidden", "true");
+    return icon;
+  }
+
+  function replaceImageWithIconFallback(image, path, className) {
+    const fallback = createIcon(path || UI_ICON_MAP.profile, className || image.className || "inline-icon-mask");
+    image.replaceWith(fallback);
+    return fallback;
+  }
+
   function clear(node) {
     while (node.firstChild) node.removeChild(node.firstChild);
   }
@@ -879,10 +895,14 @@
   function buildLatestStreamThumbnailRow(baseStream, media, body, helpers) {
     const recent = Array.isArray(baseStream?.recentStreams) ? baseStream.recentStreams : [];
     const realRows = recent.filter((entry) => entry && (entry.title || entry.thumbnailUrl || entry.posterUrl || entry.url || entry.sourceUrl)).slice(0, 6);
-    if (!realRows.length) return null;
     const row = create("div", "profile-latest-stream-thumbnails");
     row.dataset.previousStreamsTray = "true";
     row.setAttribute("aria-label", "Previous streams");
+    if (!realRows.length) {
+      row.dataset.previousStreamsState = "empty";
+      row.appendChild(create("p", "profile-latest-stream-thumbnails-empty", "No past streams to show yet."));
+      return row;
+    }
     realRows.forEach((entry, index) => {
       const button = create("button", `profile-latest-stream-thumb${index === 0 ? " is-active" : ""}`);
       button.type = "button";
@@ -911,7 +931,7 @@
       button.addEventListener("click", () => {
         row.querySelectorAll(".profile-latest-stream-thumb").forEach((item) => item.classList.remove("is-active"));
         button.classList.add("is-active");
-        const selected = cloneLatestStreamSelection(baseStream, entry);
+        const selected = cloneLatestStreamSelection(baseStream || {}, entry);
         renderLatestStreamMedia(media, selected, true);
         const heading = body.querySelector("[data-latest-stream-title]");
         if (heading) heading.textContent = selected.title || `${selected.platformLabel || "Stream"} stream`;
@@ -1042,13 +1062,10 @@
     const button = create("button", className);
     button.type = "button";
     const label = create("span", `${className}-label`);
-    const icon = createIcon(details.open ? "/assets/icons/ui/visible.svg" : "/assets/icons/ui/hidden.svg", `${className}-icon`);
+    const icon = createCssChevronIcon(`${className}-icon`);
     const sync = () => {
       label.textContent = details.open ? "Collapse" : "Expand";
-      icon.style.setProperty(
-        "--icon-mask",
-        details.open ? 'url("/assets/icons/ui/visible.svg")' : 'url("/assets/icons/ui/hidden.svg")'
-      );
+      icon.dataset.iconState = details.open ? "expanded" : "collapsed";
       button.setAttribute("aria-label", `${details.open ? "Collapse" : "Expand"} section`);
       button.setAttribute("aria-expanded", details.open ? "true" : "false");
     };
@@ -1336,6 +1353,11 @@
     const icon = create("img", "chip-icon");
     icon.src = iconPath || window.StreamSuitesPublicData?.platformIconFor?.(platform) || "/assets/icons/pilled.svg";
     icon.alt = `${platform || "Platform"} icon`;
+    icon.loading = "lazy";
+    icon.decoding = "async";
+    icon.addEventListener("error", () => {
+      replaceImageWithIconFallback(icon, "/assets/icons/ui/globe.svg", "chip-icon");
+    }, { once: true });
     chip.append(icon, create("span", "", platform || "Platform"));
     return chip;
   }
@@ -1359,6 +1381,9 @@
     icon.setAttribute("aria-hidden", "true");
     icon.loading = "lazy";
     icon.decoding = "async";
+    icon.addEventListener("error", () => {
+      replaceImageWithIconFallback(icon, "/assets/icons/ui/globe.svg", className);
+    }, { once: true });
     return icon;
   }
 
@@ -4125,6 +4150,117 @@
     return nav;
   }
 
+  function scopedLeaderboardTopPreviewRows(scope = {}) {
+    const candidates = [
+      scope?.top_three,
+      scope?.topThree,
+      scope?.top3,
+      scope?.leaderboard,
+      scope?.rankings,
+      scope?.rows
+    ];
+    for (const candidate of candidates) {
+      if (Array.isArray(candidate)) return computeLeaderboardTiePlacements(normalizeScopedProgressionRows(candidate)).slice(0, 3);
+    }
+    return null;
+  }
+
+  function renderScopedLeaderboardTopPreview(host, state = {}) {
+    clear(host);
+    if (state.loading) {
+      host.appendChild(create("span", "progression-leaderboard-gallery-top-state", "Loading top 3..."));
+      return;
+    }
+    if (state.unavailable) {
+      host.appendChild(create("span", "progression-leaderboard-gallery-top-state", "Top 3 unavailable"));
+      return;
+    }
+    const rows = Array.isArray(state.rows) ? state.rows.slice(0, 3) : [];
+    if (!rows.length) {
+      host.appendChild(create("span", "progression-leaderboard-gallery-top-state", "No rankings yet"));
+      return;
+    }
+    rows.forEach((entry, index) => {
+      const identity = leaderboardIdentity(entry);
+      const row = create("div", "progression-leaderboard-gallery-top-row");
+      const placement = leaderboardDisplayPlacement(entry) || index + 1;
+      const name = progressionDisplayName(identity);
+      const handle = leaderboardHandle(identity);
+      const xp = entry.xp_total ?? entry.xp ?? entry.total_xp ?? entry.totalXp;
+      const level = progressionLevelPresentation(entry);
+      row.append(
+        create("span", "progression-leaderboard-gallery-top-rank", `#${formatNumber(placement)}`),
+        create("span", "progression-leaderboard-gallery-top-name", handle || name),
+        create("span", "progression-leaderboard-gallery-top-meta", xp != null ? `${formatCompactNumber(xp)} XP` : level.label || "")
+      );
+      host.appendChild(row);
+    });
+  }
+
+  function hydrateScopedLeaderboardTopPreview(scope = {}, host, renderId) {
+    const scopeKey = String(scope?.scope_key || "").trim();
+    if (!scopeKey || !host?.isConnected || String(host.dataset.galleryRenderId || "") !== String(renderId)) return;
+    const embeddedRows = scopedLeaderboardTopPreviewRows(scope);
+    if (embeddedRows) {
+      renderScopedLeaderboardTopPreview(host, { rows: embeddedRows });
+      return;
+    }
+    if (scopedLeaderboardTopPreviewCache.has(scopeKey)) {
+      renderScopedLeaderboardTopPreview(host, scopedLeaderboardTopPreviewCache.get(scopeKey));
+      return;
+    }
+    const loadingState = { loading: true };
+    renderScopedLeaderboardTopPreview(host, loadingState);
+    const pending = scopedLeaderboardTopPreviewPending.get(scopeKey) || fetchPublicProgressionLeaderboard({ scopeKey })
+      .then((payload) => {
+        const rows = computeLeaderboardTiePlacements(normalizeScopedProgressionRows(Array.isArray(payload?.leaderboard) ? payload.leaderboard : [])).slice(0, 3);
+        return { rows };
+      })
+      .catch(() => {
+        return { unavailable: true };
+      });
+    if (!scopedLeaderboardTopPreviewPending.has(scopeKey)) {
+      scopedLeaderboardTopPreviewPending.set(scopeKey, pending);
+      pending.then((state) => {
+        scopedLeaderboardTopPreviewCache.set(scopeKey, state);
+        scopedLeaderboardTopPreviewPending.delete(scopeKey);
+        return state;
+      });
+    }
+    pending.then((state) => {
+      if (host.isConnected && String(host.dataset.galleryRenderId || "") === String(renderId)) {
+        renderScopedLeaderboardTopPreview(host, state);
+      }
+    });
+  }
+
+  function buildLeaderboardGalleryCard(scope = {}, onSelect = null, renderId = "") {
+    const card = create("article", "progression-leaderboard-gallery-card");
+    const header = create("div", "progression-leaderboard-gallery-card-head");
+    const avatarWrap = create("span", "progression-leaderboard-gallery-avatar-wrap");
+    avatarWrap.appendChild(createScopedProgressionAvatar(scope));
+    const title = create("div", "progression-leaderboard-gallery-title");
+    title.append(
+      createScopedPlatformChip(scope, scopedProgressionPlatformLabel(scope)),
+      create("h3", "", scopedProgressionChannelLabel(scope)),
+      create("p", "", scopedProgressionScopeLabel(scope))
+    );
+    header.append(avatarWrap, title);
+    const meta = create("div", "progression-leaderboard-gallery-meta");
+    const updated = scopedProgressionUpdatedLabel(scope);
+    if (updated) meta.appendChild(create("span", "progression-leaderboard-gallery-badge", updated));
+    if (scope.participant_count != null) meta.appendChild(create("span", "progression-leaderboard-gallery-badge", `${formatNumber(scope.participant_count)} participants`));
+    if (!meta.childElementCount) meta.appendChild(create("span", "progression-leaderboard-gallery-badge", "Runtime scoped board"));
+    const topPreview = create("div", "progression-leaderboard-gallery-top");
+    topPreview.dataset.galleryRenderId = String(renderId);
+    const action = create("button", "dashboard-action progression-leaderboard-gallery-action", "VIEW");
+    action.type = "button";
+    action.addEventListener("click", () => onSelect?.(scope.scope_key));
+    card.append(header, meta, topPreview, action);
+    hydrateScopedLeaderboardTopPreview(scope, topPreview, renderId);
+    return card;
+  }
+
   function renderLeaderboardGallery(host, scopes = [], onSelect = null) {
     clear(host);
     const rows = uniqueProgressionScopes(scopes);
@@ -4132,22 +4268,9 @@
       host.appendChild(create("div", "empty-state progression-leaderboard-gallery-empty", "Creator/channel scoped leaderboards appear here when Runtime/Auth exposes real scope rows."));
       return;
     }
-    rows.slice(0, 12).forEach((scope) => {
-      const card = create("article", "progression-leaderboard-gallery-card");
-      const action = create("button", "dashboard-action progression-leaderboard-gallery-action", "View board");
-      action.type = "button";
-      action.addEventListener("click", () => onSelect?.(scope.scope_key));
-      card.append(
-        create("span", "progression-leaderboard-gallery-type", scopedProgressionPlatformLabel(scope)),
-        create("h3", "", scopedProgressionChannelLabel(scope)),
-        create("p", "", scopedProgressionScopeLabel(scope)),
-        create("span", "progression-leaderboard-gallery-badge", [
-          scope.participant_count != null ? `${formatNumber(scope.participant_count)} participants` : "",
-          formatScopedProgressionUpdatedAt(scope.updated_at || scope.updatedAt)
-        ].filter((item) => item && item !== "Not public").join(" | ") || "Runtime scoped board"),
-        action
-      );
-      host.appendChild(card);
+    const renderId = String(++leaderboardGalleryRenderSeq);
+    rows.slice(0, SCOPED_LEADERBOARD_GALLERY_LIMIT).forEach((scope) => {
+      host.appendChild(buildLeaderboardGalleryCard(scope, onSelect, renderId));
     });
   }
 
@@ -4362,7 +4485,7 @@
           scopeControl.dataset.scopeMode = scopeMode;
           clear(activeScopeChip);
           activeScopeChip.append(
-            createScopedPlatformIcon(scoped ? state.scopeMeta : "global", "progression-leaderboard-scope-chip-icon"),
+            createScopedPlatformBrandIcon(scoped ? state.scopeMeta : "global", "progression-leaderboard-scope-chip-icon"),
             create("span", "", scoped ? scopedProgressionScopeLabel(state.scopeMeta || { scope_key: state.scopeKey }) : "Global leaderboard")
           );
           globalMode.classList.toggle("is-active", !scoped);
@@ -9326,7 +9449,7 @@
     }
     card.append(media, body);
     panel.appendChild(card);
-    const thumbnailRow = hasUsableStream ? buildLatestStreamThumbnailRow(stream, media, body, helpers) : null;
+    const thumbnailRow = buildLatestStreamThumbnailRow(stream, media, body, helpers);
     if (thumbnailRow) panel.appendChild(thumbnailRow);
     details.append(summary, panel);
     return details;
@@ -9649,6 +9772,11 @@
     return avatar;
   }
 
+  function scopedProgressionUpdatedLabel(row = {}) {
+    const value = formatScopedProgressionUpdatedAt(row.updated_at || row.updatedAt);
+    return value && value !== "Not public" ? value : "";
+  }
+
   function buildProfileScopedProgressionRow(row = {}) {
     const card = create("article", "profile-scoped-progression-row");
     const scopeCell = create("div", "profile-scoped-progression-cell profile-scoped-progression-cell--scope");
@@ -9668,7 +9796,7 @@
     levelCell.appendChild(buildProgressionLevelChip(row, { compact: true }));
     const messagesCell = create("div", "profile-scoped-progression-cell profile-scoped-progression-cell--messages", formatNumber(row.message_count || 0));
     const updatedCell = create("div", "profile-scoped-progression-cell profile-scoped-progression-cell--updated", formatScopedProgressionUpdatedAt(row.updated_at || row.updatedAt));
-    const link = create("a", "dashboard-action profile-scoped-progression-link", "VIEW BOARD");
+    const link = create("a", "dashboard-action profile-scoped-progression-link", "VIEW");
     link.href = scopedLeaderboardHref(row.scope_key);
     card.append(scopeCell, channelCell, rankCell, xpCell, levelCell, messagesCell, updatedCell, link);
     return card;

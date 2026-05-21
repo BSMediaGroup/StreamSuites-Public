@@ -3800,6 +3800,18 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   padding: 2px;
 }
 
+.profile-latest-stream-thumbnails[data-previous-streams-state="empty"] {
+  grid-template-columns: 1fr;
+}
+
+.profile-latest-stream-thumbnails-empty {
+  margin: 0;
+  padding: 5px 2px;
+  color: rgba(190, 204, 224, 0.62);
+  font-size: 0.72rem;
+  line-height: 1.3;
+}
+
 .profile-latest-stream-thumb {
   display: grid;
   grid-template-columns: minmax(44px, 58px) minmax(0, 1fr);
@@ -4155,7 +4167,8 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 }
 
 img.profile-game-scope-chip-icon,
-img.scoped-platform-chip-icon {
+img.scoped-platform-chip-icon,
+img.progression-leaderboard-scope-chip-icon {
   display: block;
   background: transparent;
   -webkit-mask: none;
@@ -4488,11 +4501,18 @@ img.scoped-platform-chip-icon {
 }
 
 .profile-collapsible-toggle-icon {
-  width: 12px;
-  height: 12px;
-  flex: 0 0 12px;
-  background-color: currentColor;
-  opacity: 0.7;
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  opacity: 0.72;
+  transform: rotate(45deg) translateY(-1px);
+  transition: transform 160ms ease, opacity 160ms ease;
+}
+
+.profile-collapsible-toggle-icon[data-icon-state="expanded"] {
+  transform: rotate(225deg) translate(-1px, -1px);
 }
 
 .profile-authority-expanded-panel {
@@ -10000,20 +10020,86 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .progression-leaderboard-gallery {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .progression-leaderboard-gallery-card {
   display: grid;
-  gap: 8px;
+  gap: 10px;
+  align-content: start;
   min-width: 0;
   border: 1px solid rgba(203, 219, 246, 0.13);
-  border-radius: 16px;
-  padding: 14px;
+  border-radius: 12px;
+  padding: 12px;
   background:
     radial-gradient(220px 120px at 100% 0%, rgba(251, 146, 60, 0.09), transparent 68%),
     rgba(255, 255, 255, 0.04);
+}
+
+.progression-leaderboard-gallery-card-head {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+.progression-leaderboard-gallery-avatar-wrap {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(203, 219, 246, 0.14);
+  border-radius: 10px;
+  background: rgba(7, 11, 18, 0.72);
+}
+
+.progression-leaderboard-gallery-avatar-wrap .profile-scoped-progression-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+
+.progression-leaderboard-gallery-avatar-wrap .profile-scoped-progression-avatar--icon {
+  padding: 8px;
+}
+
+.progression-leaderboard-gallery-title {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.progression-leaderboard-gallery-title h3,
+.progression-leaderboard-gallery-title p {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.progression-leaderboard-gallery-title h3 {
+  font-size: 0.96rem;
+  line-height: 1.15;
+}
+
+.progression-leaderboard-gallery-title p {
+  font-size: 0.72rem;
+  line-height: 1.25;
+}
+
+.progression-leaderboard-gallery-title .scoped-platform-chip {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.progression-leaderboard-gallery-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
 }
 
 .progression-leaderboard-gallery-empty {
@@ -10040,6 +10126,47 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   width: fit-content;
   min-height: 30px;
   padding: 0 10px;
+}
+
+.progression-leaderboard-gallery-top {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid rgba(203, 219, 246, 0.1);
+  border-radius: 10px;
+  background: rgba(7, 11, 18, 0.36);
+}
+
+.progression-leaderboard-gallery-top-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 7px;
+  align-items: center;
+  min-width: 0;
+  color: rgba(235, 243, 255, 0.88);
+  font-size: 0.72rem;
+  line-height: 1.2;
+}
+
+.progression-leaderboard-gallery-top-rank {
+  color: rgba(254, 215, 170, 0.92);
+  font-weight: 950;
+}
+
+.progression-leaderboard-gallery-top-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 850;
+}
+
+.progression-leaderboard-gallery-top-meta,
+.progression-leaderboard-gallery-top-state {
+  color: rgba(190, 204, 224, 0.68);
+  font-size: 0.68rem;
+  font-weight: 800;
 }
 
 @media (max-width: 1180px) {

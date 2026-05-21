@@ -133,7 +133,7 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   assert.match(app, /scopeControl\.dataset\.scopeMode = "global"/);
   assert.match(app, /Global leaderboard/);
   assert.match(app, /scopedProgressionScopeLabel\(state\.scopeMeta/);
-  assert.match(app, /createScopedPlatformIcon\(scoped \? state\.scopeMeta : "global", "progression-leaderboard-scope-chip-icon"\)/);
+  assert.match(app, /createScopedPlatformBrandIcon\(scoped \? state\.scopeMeta : "global", "progression-leaderboard-scope-chip-icon"\)/);
   assert.match(app, /Channel/);
   assert.match(app, /scopeSelect\.disabled = !scoped \|\| \(!availableScopes\.length && !state\.scopeKey\)/);
   assert.match(app, /No channel scopes/);
@@ -266,7 +266,7 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   assert.match(css, /\.progression-leaderboard-scope-select select/);
   assert.match(css, /\.progression-leaderboard-scope-select select:disabled/);
   assert.match(css, /\.progression-leaderboard-scope-chip-icon/);
-  assert.match(css, /\.progression-leaderboard-scope-chip-icon\s*\{[\s\S]*width:\s*14px[\s\S]*background-color:\s*currentColor[\s\S]*mask-image:\s*var\(--icon-mask\)/);
+  assert.match(css, /img\.profile-game-scope-chip-icon,[\s\S]*img\.scoped-platform-chip-icon,[\s\S]*img\.progression-leaderboard-scope-chip-icon\s*\{[\s\S]*-webkit-mask:\s*none/);
   assert.doesNotMatch(css, /\.progression-leaderboard-scope-control/);
   assert.doesNotMatch(css, /\.progression-leaderboard-scope-label/);
   assert.doesNotMatch(css, /\.progression-leaderboard-scope-field-label/);
@@ -361,7 +361,8 @@ test("public profile game section renders runtime progression and economy author
   assert.match(app, /profile\?\.scopedProgression \|\| profile\?\.scoped_progression/);
   assert.doesNotMatch(app, /if \(!rows\.length\) return null/);
   assert.match(app, /hydrateProfileScopedProgression\(profile, profileCode\)/);
-  assert.match(app, /"VIEW BOARD"/);
+  assert.match(app, /"VIEW"/);
+  assert.doesNotMatch(scopedProfileSection, /"VIEW BOARD"/);
   assert.match(app, /scopedLeaderboardHref\(row\.scope_key\)/);
   assert.match(profileSection, /buildInventorySummaryList\(scopedInventory\)/);
   assert.match(profileSection, /leaderboardHasInventoryPayload\(selectedRow\)/);
@@ -375,7 +376,7 @@ test("public profile game section renders runtime progression and economy author
   assert.match(scopedProfileSection, /section\.dataset\.scopedBoardsList = "profile"/);
   assert.match(scopedProfileSection, /profile-scoped-progression-list/);
   assert.match(scopedProfileSection, /profile-scoped-progression-table-head/);
-  assert.match(app, /"VIEW BOARD"/);
+  assert.match(app, /"VIEW"/);
   assert.match(css, /\.profile-scoped-progression-row/);
   assert.match(css, /\.profile-scoped-progression-table-head/);
   assert.match(css, /\.profile-scoped-progression-empty/);
@@ -393,21 +394,39 @@ test("public scoped platform icons and stable latest stream layout are pinned", 
   assert.match(app, /function createScopedPlatformBrandIcon/);
   assert.match(app, /function createScopedPlatformChip/);
   assert.match(app, /createScopedPlatformBrandIcon\(source, "scoped-platform-chip-icon"\)/);
-  assert.match(css, /img\.profile-game-scope-chip-icon,[\s\S]*img\.scoped-platform-chip-icon\s*\{[\s\S]*-webkit-mask:\s*none/);
+  assert.match(css, /img\.profile-game-scope-chip-icon,[\s\S]*img\.scoped-platform-chip-icon,[\s\S]*img\.progression-leaderboard-scope-chip-icon\s*\{[\s\S]*-webkit-mask:\s*none/);
   assert.match(app, /function buildProfileCollapsibleToggle\(details, className = "profile-collapsible-toggle"\)/);
+  assert.match(app, /createCssChevronIcon\(`\$\{className\}-icon`\)/);
   assert.match(app, /label\.textContent = details\.open \? "Collapse" : "Expand"/);
+  assert.match(app, /icon\.dataset\.iconState = details\.open \? "expanded" : "collapsed"/);
   assert.match(app, /summary\.append\(action, meta, buildProfileCollapsibleToggle\(details\)\)/);
   assert.match(app, /summary\.append\(action, scopeWrap, buildProfileCollapsibleToggle\(details\)\)/);
   assert.doesNotMatch(app, /hasUsableStream \? stream\?\.platformLabel : "No data available"/);
   assert.doesNotMatch(app, /hasUsableStream \? \(stream\?\.isLive \? "Current live" : "Featured source"\) : "Expand for details"/);
   assert.match(css, /\.profile-collapsible-toggle\s*\{[\s\S]*border-radius:\s*999px/);
+  assert.match(css, /\.profile-collapsible-toggle-icon\s*\{[\s\S]*border-right:\s*2px solid currentColor[\s\S]*border-bottom:\s*2px solid currentColor/);
+  assert.doesNotMatch(app, /createIcon\(details\.open \? "\/assets\/icons\/ui\/visible\.svg" : "\/assets\/icons\/ui\/hidden\.svg"/);
   assert.match(app, /card\.dataset\.latestStreamLayout = "stable"/);
   assert.match(app, /row\.dataset\.previousStreamsTray = "true"/);
+  assert.match(app, /row\.dataset\.previousStreamsState = "empty"/);
+  assert.match(app, /No past streams to show yet\./);
   assert.match(app, /realRows = recent\.filter[\s\S]*\.slice\(0, 6\)/);
   assert.match(css, /\.profile-latest-stream-card\s*\{[\s\S]*grid-template-columns:\s*minmax\(320px, 1\.18fr\) minmax\(0, 0\.82fr\)/);
   assert.match(css, /\.profile-latest-stream-thumbnails\s*\{[\s\S]*grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/);
+  assert.match(css, /\.profile-latest-stream-thumbnails-empty/);
   assert.match(css, /\.profile-latest-stream-body\s*\{[\s\S]*align-content:\s*start/);
   assert.match(css, /\.profile-latest-stream-body h3\s*\{[\s\S]*overflow-wrap:\s*anywhere/);
+  assert.match(app, /function renderScopedLeaderboardTopPreview\(host, state = \{\}\)/);
+  assert.match(app, /fetchPublicProgressionLeaderboard\(\{ scopeKey \}\)/);
+  assert.match(app, /SCOPED_LEADERBOARD_GALLERY_LIMIT/);
+  assert.match(app, /Top 3 unavailable/);
+  assert.match(app, /No rankings yet/);
+  assert.match(app, /progression-leaderboard-gallery-top-row/);
+  assert.match(app, /createScopedProgressionAvatar\(scope\)/);
+  assert.match(app, /createScopedPlatformChip\(scope, scopedProgressionPlatformLabel\(scope\)\)/);
+  assert.match(app, /"dashboard-action progression-leaderboard-gallery-action", "VIEW"/);
+  assert.match(css, /\.progression-leaderboard-gallery-avatar-wrap/);
+  assert.match(css, /\.progression-leaderboard-gallery-top-row/);
 });
 
 test("public profile overview table uses the same runtime progression summary as games", () => {
