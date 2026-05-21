@@ -2,6 +2,9 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+- Updated `/u/*` Latest Stream handling for Runtime/Auth recent stream history. Live Kick streams still render the allowlisted `https://player.kick.com/{slug}` iframe, while ended Kick `recent_streams` records render as an ended/recent poster-card fallback with source metadata and an `Open on Kick` link instead of a fake live iframe. The previous-stream tray now renders only when real recent rows exist.
+- Human note: a Kick stream that was seen live can remain visible as recent evidence after it ends, but Public no longer labels it Live Now or embeds the live-only Kick player. Profile badges, scoped progression, wallet, inventory, leaderboards, and Rumble iframe allowlisting remain unchanged.
+
 - Follow-up corrected the required `visible.svg` / `hidden.svg` expand-collapse image assets so their black artwork is filtered into the light profile-control color, and added a real grid gap between the main Latest Stream card and the past-streams tray so the tray no longer sits hard against the player container. No Runtime/Auth files were changed.
 
 - Corrected the `/u/*` and `/@*` expand/collapse follow-up so the labelled controls again use the required image assets: `/assets/icons/ui/visible.svg` for expanded `Collapse` state and `/assets/icons/ui/hidden.svg` for collapsed `Expand` state. Also upgraded the Latest Stream past-streams tray empty state from plain text to a compact styled tray with a dashed empty card and muted placeholder-thumbnail marks. No Runtime/Auth files were changed.

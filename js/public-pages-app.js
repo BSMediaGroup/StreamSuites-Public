@@ -892,11 +892,7 @@
     const row = create("div", "profile-latest-stream-thumbnails");
     row.dataset.previousStreamsTray = "true";
     row.setAttribute("aria-label", "Previous streams");
-    if (!realRows.length) {
-      row.dataset.previousStreamsState = "empty";
-      row.appendChild(create("p", "profile-latest-stream-thumbnails-empty", "No past streams to show yet."));
-      return row;
-    }
+    if (!realRows.length) return null;
     realRows.forEach((entry, index) => {
       const button = create("button", `profile-latest-stream-thumb${index === 0 ? " is-active" : ""}`);
       button.type = "button";
@@ -929,6 +925,11 @@
         renderLatestStreamMedia(media, selected, true);
         const heading = body.querySelector("[data-latest-stream-title]");
         if (heading) heading.textContent = selected.title || `${selected.platformLabel || "Stream"} stream`;
+        const state = body.querySelector("[data-latest-stream-state]");
+        if (state) {
+          state.className = selected.isLive ? "profile-stream-state is-live" : "profile-stream-state";
+          state.textContent = selected.isLive ? "Live now" : (selected.status === "ended" ? "Ended" : "Recent stream");
+        }
       });
       row.appendChild(button);
     });
@@ -1006,12 +1007,13 @@
     if (provided) {
       const host = provided.hostname.replace(/^www\./i, "").toLowerCase();
       const path = provided.pathname || "";
-      if (stream.platform === "kick" && host === "player.kick.com" && /^\/[a-z0-9_-]+\/?$/i.test(path)) return provided.href;
+      if (stream.platform === "kick" && stream.isLive && host === "player.kick.com" && /^\/[a-z0-9_-]+\/?$/i.test(path)) return provided.href;
       if (stream.platform === "youtube" && ["youtube-nocookie.com", "www.youtube-nocookie.com"].includes(host)) return provided.href;
       if (stream.platform === "twitch" && host === "player.twitch.tv") return provided.href;
       if (stream.platform === "rumble" && ["rumble.com", "www.rumble.com"].includes(host) && /^\/embed\/v[a-z0-9]+\/?$/i.test(path)) return provided.href;
     }
     if (stream.platform === "kick") {
+      if (!stream.isLive) return "";
       const url = parseUrl(stream.url || stream.sourceUrl || "");
       const parts = (url?.pathname || "").split("/").filter(Boolean);
       const slug = String(stream.channelSlug || stream.channelHandle || parts[0] || "").trim().replace(/^@+/, "").replace(/[^a-zA-Z0-9_-]/g, "").toLowerCase();
@@ -9392,7 +9394,7 @@
     if (hasUsableStream) {
       eyebrow.append(
         buildStreamPlatformPill(stream, stream.platformLabel),
-        create("span", stream.isLive ? "profile-stream-state is-live" : "profile-stream-state", stream.isLive ? "Live now" : "Featured source")
+        create("span", stream.isLive ? "profile-stream-state is-live" : "profile-stream-state", stream.isLive ? "Live now" : (stream.status === "recent_stream" || stream.status === "ended" ? "Ended" : "Featured source"))
       );
     } else {
       eyebrow.append(
@@ -9409,22 +9411,26 @@
         hasUsableStream
           ? stream.isLive
             ? "This source is selected from the creator's configured platform priority."
-            : "This featured stream source was selected from the supported platform priority for this public profile."
+            : stream.status === "recent_stream" || stream.status === "ended"
+              ? "This recent stream was retained from Runtime/Auth history after the live scan moved offline."
+              : "This featured stream source was selected from the supported platform priority for this public profile."
           : profile?.creatorCapable
             ? "No supported public livestream data is currently available for this creator profile. Expand this section any time to check again later."
           : "No supported public livestream data is currently available for this public profile."
       )
     );
     body.querySelector("h3")?.setAttribute("data-latest-stream-title", "true");
+    body.querySelector(".profile-stream-state")?.setAttribute("data-latest-stream-state", "true");
     const facts = create("div", "profile-latest-stream-facts");
     if (hasUsableStream && stream?.viewerCount != null) facts.appendChild(create("span", "", `${formatNumber(stream.viewerCount)} watching`));
     if (hasUsableStream && stream?.gameName) facts.appendChild(create("span", "", stream.gameName));
     if (hasUsableStream && stream?.startedAt) facts.appendChild(create("span", "", `Started ${formatProfileDate(stream.startedAt, helpers) || stream.startedAt}`));
+    if (hasUsableStream && !stream?.isLive && stream?.endedAt) facts.appendChild(create("span", "", `Ended ${formatProfileDate(stream.endedAt, helpers) || stream.endedAt}`));
     if (stream?.lastCheckedAt) facts.appendChild(create("span", "", `Checked ${formatProfileDate(stream.lastCheckedAt, helpers) || stream.lastCheckedAt}`));
     if (facts.childElementCount) body.appendChild(facts);
     const streamUrl = hasUsableStream ? (stream.url || stream.sourceUrl) : "";
     if (streamUrl) {
-      const link = create("a", "profile-latest-stream-link", stream.isLive ? "Watch on platform" : "Open source");
+      const link = create("a", "profile-latest-stream-link", stream.isLive ? "Watch on platform" : (stream.platform === "kick" ? "Open on Kick" : "Open source"));
       link.href = streamUrl;
       link.target = "_blank";
       link.rel = "noopener noreferrer";

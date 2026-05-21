@@ -408,9 +408,13 @@ test("public scoped platform icons and stable latest stream layout are pinned", 
   assert.doesNotMatch(app, /createIcon\(details\.open \? "\/assets\/icons\/ui\/visible\.svg" : "\/assets\/icons\/ui\/hidden\.svg"/);
   assert.match(app, /card\.dataset\.latestStreamLayout = "stable"/);
   assert.match(app, /row\.dataset\.previousStreamsTray = "true"/);
-  assert.match(app, /row\.dataset\.previousStreamsState = "empty"/);
-  assert.match(app, /No past streams to show yet\./);
+  assert.match(app, /if \(!realRows\.length\) return null/);
+  assert.doesNotMatch(app, /No past streams to show yet\./);
   assert.match(app, /realRows = recent\.filter[\s\S]*\.slice\(0, 6\)/);
+  assert.match(app, /stream\.platform === "kick" && stream\.isLive && host === "player\.kick\.com"/);
+  assert.match(app, /if \(!stream\.isLive\) return ""/);
+  assert.match(app, /"Open on Kick"/);
+  assert.match(app, /data-latest-stream-state/);
   assert.match(css, /\.profile-latest-stream-card\s*\{[\s\S]*grid-template-columns:\s*minmax\(320px, 1\.18fr\) minmax\(0, 0\.82fr\)/);
   assert.match(css, /\.profile-stream-panel\s*\{[\s\S]*display:\s*grid[\s\S]*gap:\s*10px/);
   assert.match(css, /\.profile-latest-stream-thumbnails\s*\{[\s\S]*grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/);
