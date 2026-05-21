@@ -404,7 +404,7 @@ test("public scoped platform icons and stable latest stream layout are pinned", 
   assert.doesNotMatch(app, /hasUsableStream \? stream\?\.platformLabel : "No data available"/);
   assert.doesNotMatch(app, /hasUsableStream \? \(stream\?\.isLive \? "Current live" : "Featured source"\) : "Expand for details"/);
   assert.match(css, /\.profile-collapsible-toggle\s*\{[\s\S]*border-radius:\s*999px/);
-  assert.match(css, /\.profile-collapsible-toggle-icon\s*\{[\s\S]*object-fit:\s*contain/);
+  assert.match(css, /\.profile-collapsible-toggle-icon\s*\{[\s\S]*object-fit:\s*contain[\s\S]*filter:\s*brightness\(0\) saturate\(100%\) invert/);
   assert.doesNotMatch(app, /createIcon\(details\.open \? "\/assets\/icons\/ui\/visible\.svg" : "\/assets\/icons\/ui\/hidden\.svg"/);
   assert.match(app, /card\.dataset\.latestStreamLayout = "stable"/);
   assert.match(app, /row\.dataset\.previousStreamsTray = "true"/);
@@ -412,6 +412,7 @@ test("public scoped platform icons and stable latest stream layout are pinned", 
   assert.match(app, /No past streams to show yet\./);
   assert.match(app, /realRows = recent\.filter[\s\S]*\.slice\(0, 6\)/);
   assert.match(css, /\.profile-latest-stream-card\s*\{[\s\S]*grid-template-columns:\s*minmax\(320px, 1\.18fr\) minmax\(0, 0\.82fr\)/);
+  assert.match(css, /\.profile-stream-panel\s*\{[\s\S]*display:\s*grid[\s\S]*gap:\s*10px/);
   assert.match(css, /\.profile-latest-stream-thumbnails\s*\{[\s\S]*grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/);
   assert.match(css, /\.profile-latest-stream-thumbnails\s*\{[\s\S]*border:\s*1px solid rgba\(203, 219, 246, 0\.13\)/);
   assert.match(css, /\.profile-latest-stream-thumbnails-empty\s*\{[\s\S]*border:\s*1px dashed rgba\(203, 219, 246, 0\.16\)/);

@@ -2,6 +2,8 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+- Follow-up corrected the required `visible.svg` / `hidden.svg` expand-collapse image assets so their black artwork is filtered into the light profile-control color, and added a real grid gap between the main Latest Stream card and the past-streams tray so the tray no longer sits hard against the player container. No Runtime/Auth files were changed.
+
 - Corrected the `/u/*` and `/@*` expand/collapse follow-up so the labelled controls again use the required image assets: `/assets/icons/ui/visible.svg` for expanded `Collapse` state and `/assets/icons/ui/hidden.svg` for collapsed `Expand` state. Also upgraded the Latest Stream past-streams tray empty state from plain text to a compact styled tray with a dashed empty card and muted placeholder-thumbnail marks. No Runtime/Auth files were changed.
 
 - Follow-up fixed the remaining `/u/*`, `/@*`, `/leaderboards`, and `/community/leaderboard` Public polish without changing Runtime/Auth. Scoped boards actions now read `VIEW`, Latest Stream always renders a discreet past-streams tray with a small empty state when no real entries exist, scoped leaderboard gallery cards now include full-color platform chips, owner avatar/fallbacks, and a bounded top-3 preview/unavailable state, and leaderboard scoped platform chips now use original full-color branded SVG image mode while generic fallback icons remain masked. The expand/collapse icon detail from this note is superseded by the required `visible.svg` / `hidden.svg` correction above.
