@@ -3541,9 +3541,9 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 
 .profile-latest-stream-card {
   display: grid;
-  grid-template-columns: minmax(0, 1.18fr) minmax(260px, 0.82fr);
+  grid-template-columns: minmax(320px, 1.18fr) minmax(0, 0.82fr);
   gap: clamp(10px, 1.8vw, 16px);
-  align-items: stretch;
+  align-items: start;
   padding: clamp(8px, 1.5vw, 12px);
   border: 1px solid rgba(202, 222, 249, 0.16);
   border-radius: 13px;
@@ -3560,10 +3560,12 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 }
 
 .profile-latest-stream-card.is-empty {
-  grid-template-columns: minmax(220px, 0.82fr) minmax(260px, 1fr);
+  grid-template-columns: minmax(320px, 1.18fr) minmax(0, 0.82fr);
 }
 
 .profile-latest-stream-media {
+  min-width: 0;
+  width: 100%;
   min-height: 210px;
   max-height: 430px;
   aspect-ratio: 16 / 9;
@@ -3638,7 +3640,8 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 .profile-latest-stream-body {
   min-width: 0;
   display: grid;
-  align-content: center;
+  align-content: start;
+  justify-items: start;
   gap: 9px;
 }
 
@@ -3690,18 +3693,23 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 }
 
 .profile-latest-stream-body h3 {
+  min-width: 0;
+  max-width: 100%;
   margin: 0;
   color: rgba(245, 249, 255, 0.96);
   font-size: clamp(1.05rem, 1.55vw, 1.42rem);
   line-height: 1.16;
+  overflow-wrap: anywhere;
 }
 
 .profile-latest-stream-body p {
+  min-width: 0;
   margin: 0;
   max-width: 46rem;
   color: rgba(205, 219, 239, 0.72);
   font-size: 0.78rem;
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .profile-latest-stream-link {
@@ -4078,60 +4086,69 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   padding: 0 clamp(10px, 1.8vw, 16px) clamp(12px, 2vw, 16px);
 }
 
-.profile-game-scope-bar {
-  display: grid;
-  grid-template-columns: minmax(160px, 220px) minmax(0, 1fr);
-  gap: 10px;
-  align-items: stretch;
-  border: 1px solid rgba(203, 219, 246, 0.11);
-  border-radius: 8px;
-  padding: 8px;
-  background: rgba(6, 10, 18, 0.42);
+.profile-game-scope-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  margin-left: auto;
 }
 
-.profile-game-scope-select select {
-  width: 100%;
-  min-height: 34px;
+.profile-game-scope-chip,
+.scoped-platform-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  border: 1px solid rgba(91, 201, 179, 0.24);
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: rgba(33, 137, 119, 0.13);
+  color: rgba(226, 255, 249, 0.94);
+  font-size: 0.66rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.profile-game-scope-chip-icon,
+.scoped-platform-chip-icon,
+.progression-leaderboard-scope-chip-icon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--icon-mask);
+  mask-image: var(--icon-mask);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+.profile-game-scope-select-input {
+  width: min(34vw, 220px);
+  min-width: 128px;
+  min-height: 32px;
   border: 1px solid rgba(203, 219, 246, 0.16);
-  border-radius: 7px;
+  border-radius: 8px;
   background: rgba(8, 12, 20, 0.82);
   color: rgba(242, 247, 255, 0.94);
   font: inherit;
   font-size: 12px;
   font-weight: 800;
-  padding: 0 10px;
+  padding: 0 9px;
 }
 
-.profile-game-scope-stats {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
-  margin: 0;
-}
-
-.profile-game-scope-stat {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-  border: 1px solid rgba(203, 219, 246, 0.09);
-  border-radius: 7px;
-  padding: 7px 8px;
-  background: rgba(255, 255, 255, 0.035);
-}
-
-.profile-game-scope-stat dt {
-  color: rgba(180, 196, 220, 0.68);
-  font-size: 0.58rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.profile-game-scope-stat dd {
-  margin: 0;
-  color: rgba(246, 250, 255, 0.95);
-  font-size: 0.8rem;
-  font-weight: 900;
+.profile-game-scoped-unavailable {
+  border: 1px dashed rgba(203, 219, 246, 0.18);
+  border-radius: 8px;
+  padding: 9px;
+  color: rgba(201, 216, 237, 0.72);
+  font-size: 0.74rem;
+  line-height: 1.35;
+  background: rgba(255, 255, 255, 0.025);
 }
 
 .profile-game-preview-card {
@@ -4634,11 +4651,6 @@ body[data-public-page="public-profile-standalone"] .edit-affordance:focus-visibl
     grid-template-columns: 1fr;
   }
 
-  .profile-game-scope-bar,
-  .profile-game-scope-stats {
-    grid-template-columns: 1fr 1fr;
-  }
-
   .profile-game-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -4672,11 +4684,6 @@ body[data-public-page="public-profile-standalone"] .edit-affordance:focus-visibl
   .profile-overlay-brand-logo {
     width: 28px;
     height: 28px;
-  }
-
-  .profile-game-scope-bar,
-  .profile-game-scope-stats {
-    grid-template-columns: 1fr;
   }
 
   .profile-header-account .account-pill {
@@ -8431,53 +8438,15 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .profile-scoped-progression-header {
-  align-items: flex-start;
+  align-items: center;
 }
 
-.profile-scoped-progression-tabs {
-  display: inline-flex;
-  gap: 6px;
-  width: fit-content;
-  max-width: 100%;
-  margin-top: 10px;
-  border: 1px solid rgba(188, 207, 237, 0.14);
-  border-radius: 8px;
-  padding: 4px;
-  background: rgba(6, 10, 18, 0.46);
-}
-
-.profile-scoped-progression-tab {
-  border: 0;
-  border-radius: 6px;
-  padding: 7px 11px;
-  background: transparent;
-  color: rgba(190, 204, 224, 0.78);
-  font: inherit;
-  font-size: 0.75rem;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.profile-scoped-progression-tab.is-active {
-  background: linear-gradient(135deg, rgba(58, 134, 255, 0.24), rgba(76, 211, 194, 0.16));
-  color: rgba(248, 251, 255, 0.96);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-}
-
-.profile-scoped-progression-panels {
-  margin-top: 12px;
-}
-
-.profile-scoped-progression-panel {
+.profile-scoped-progression-list {
   display: grid;
-  gap: 10px;
+  gap: 8px;
+  margin-top: 10px;
 }
 
-.profile-scoped-progression-panel.is-active {
-  border-color: rgba(91, 201, 179, 0.2);
-}
-
-.profile-scoped-progression-panel-note,
 .profile-scoped-progression-empty {
   margin: 0;
   color: rgba(201, 216, 237, 0.72);
@@ -8498,46 +8467,11 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   background: rgba(95, 25, 33, 0.18);
 }
 
-.profile-scoped-progression-summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  cursor: pointer;
-  list-style: none;
-}
-
-.profile-scoped-progression-summary::-webkit-details-marker {
-  display: none;
-}
-
-.profile-scoped-progression-summary-action,
 .profile-scoped-progression-summary-meta {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   min-width: 0;
-}
-
-.profile-scoped-progression-summary-action {
-  color: rgba(246, 249, 255, 0.96);
-  font-size: 0.9rem;
-  font-weight: 900;
-}
-
-.profile-scoped-progression-summary-icon {
-  width: 16px;
-  height: 16px;
-  flex: 0 0 16px;
-  background-color: currentColor;
-  -webkit-mask-image: var(--icon-mask);
-  mask-image: var(--icon-mask);
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-  -webkit-mask-size: contain;
-  mask-size: contain;
 }
 
 .profile-scoped-progression-summary-meta {
@@ -8546,118 +8480,118 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   font-weight: 800;
 }
 
-.profile-scoped-progression-grid {
+.profile-scoped-progression-table-head,
+.profile-scoped-progression-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 10px;
-  margin-top: 12px;
+  grid-template-columns: minmax(96px, 0.72fr) minmax(160px, 1.3fr) minmax(66px, 0.44fr) minmax(78px, 0.52fr) minmax(86px, 0.58fr) minmax(78px, 0.54fr) minmax(96px, 0.7fr) minmax(136px, auto);
+  gap: 8px;
+  align-items: center;
 }
 
-.profile-scoped-progression-card {
-  display: grid;
-  gap: 12px;
-  min-width: 0;
-  border: 1px solid rgba(188, 207, 237, 0.14);
-  border-radius: 14px;
-  padding: 12px;
-  background:
-    linear-gradient(180deg, rgba(18, 25, 39, 0.76), rgba(7, 10, 16, 0.84)),
-    rgba(9, 13, 22, 0.8);
-  box-shadow:
-    0 14px 30px rgba(0, 0, 0, 0.17),
-    inset 0 1px 0 rgba(255, 255, 255, 0.055);
-}
-
-.profile-scoped-progression-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-  min-width: 0;
-}
-
-.profile-scoped-progression-title {
-  display: grid;
-  gap: 3px;
-  min-width: 0;
-}
-
-.profile-scoped-progression-platform {
-  color: rgba(154, 209, 255, 0.82);
-  font-size: 0.68rem;
+.profile-scoped-progression-table-head {
+  padding: 0 10px 3px;
+  color: rgba(190, 204, 224, 0.62);
+  font-size: 0.56rem;
   font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.profile-scoped-progression-title h4 {
-  margin: 0;
+.profile-scoped-progression-rows {
+  display: grid;
+  gap: 6px;
+}
+
+.profile-scoped-progression-row {
+  min-width: 0;
+  border: 1px solid rgba(188, 207, 237, 0.14);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background:
+    linear-gradient(180deg, rgba(18, 25, 39, 0.66), rgba(7, 10, 16, 0.78)),
+    rgba(9, 13, 22, 0.8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+.profile-scoped-progression-cell {
+  min-width: 0;
+  color: rgba(236, 244, 255, 0.9);
+  font-size: 0.74rem;
+  font-weight: 850;
+}
+
+.profile-scoped-progression-cell--channel {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-scoped-progression-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  object-fit: cover;
+  background-color: currentColor;
+}
+
+.profile-scoped-progression-avatar--icon {
+  padding: 6px;
+  border: 1px solid rgba(188, 207, 237, 0.13);
+  background-color: rgba(226, 238, 255, 0.82);
+  background-clip: content-box;
+}
+
+.profile-scoped-progression-channel-copy {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.profile-scoped-progression-channel-copy strong,
+.profile-scoped-progression-channel-copy span {
   overflow: hidden;
-  color: rgba(248, 251, 255, 0.96);
-  font-size: 0.96rem;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.profile-scoped-progression-channel-copy span {
+  color: rgba(190, 204, 224, 0.66);
+  font-size: 0.66rem;
 }
 
 .profile-scoped-progression-link {
-  flex: 0 0 auto;
+  justify-self: end;
   font-size: 0.72rem;
 }
 
-.profile-scoped-progression-stats {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 8px;
-  margin: 0;
-}
-
-.profile-scoped-progression-stats--global {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.profile-scoped-progression-stat {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-  min-height: 58px;
-  border: 1px solid rgba(188, 207, 237, 0.13);
-  border-radius: 10px;
-  padding: 8px;
-  background: rgba(255, 255, 255, 0.035);
-}
-
-.profile-scoped-progression-stat dt {
-  color: rgba(190, 204, 224, 0.74);
-  font-size: 0.66rem;
-  font-weight: 900;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-}
-
-.profile-scoped-progression-stat dd {
+.profile-scoped-progression-pagination {
   display: flex;
   align-items: center;
-  min-width: 0;
-  margin: 0;
-  overflow: hidden;
-  color: rgba(246, 249, 255, 0.94);
-  font-size: 0.8rem;
-  font-weight: 850;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.profile-scoped-progression-extras {
-  display: grid;
+  justify-content: flex-end;
   gap: 8px;
 }
 
-.profile-scoped-progression-extra,
-.profile-scoped-progression-inventory {
-  display: grid;
-  gap: 6px;
-  color: rgba(190, 204, 224, 0.74);
-  font-size: 0.74rem;
+.profile-scoped-progression-page-button {
+  min-height: 28px;
+  border: 1px solid rgba(188, 207, 237, 0.16);
+  border-radius: 8px;
+  padding: 0 10px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(244, 248, 255, 0.9);
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.profile-scoped-progression-page-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.profile-scoped-progression-page-status {
+  color: rgba(190, 204, 224, 0.72);
+  font-size: 0.68rem;
   font-weight: 800;
 }
 
@@ -8745,10 +8679,10 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .progression-leaderboard-controls {
   display: grid;
-  grid-template-columns: minmax(220px, 340px) minmax(240px, 420px) minmax(0, 1fr);
+  grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
   align-items: center;
-  gap: 14px;
-  margin-bottom: 18px;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .progression-leaderboard-search input {
@@ -8781,13 +8715,13 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .progression-leaderboard-scope-control {
   display: grid;
-  grid-template-columns: minmax(130px, 0.7fr) minmax(120px, 0.55fr) minmax(140px, 0.8fr) minmax(160px, 1fr);
+  grid-template-columns: minmax(144px, 0.9fr) auto minmax(132px, 0.78fr) minmax(170px, 1fr) minmax(150px, 1fr);
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
   border: 1px solid rgba(139, 194, 255, 0.18);
-  border-radius: 8px;
-  padding: 8px;
+  border-radius: 10px;
+  padding: 7px 8px;
   background:
     linear-gradient(135deg, rgba(58, 134, 255, 0.12), rgba(76, 211, 194, 0.07)),
     rgba(6, 10, 18, 0.42);
@@ -8796,7 +8730,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .progression-leaderboard-scope-header {
   display: grid;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
 }
 
@@ -8812,6 +8746,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 .progression-leaderboard-scope-chip {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   width: fit-content;
   max-width: 100%;
   border: 1px solid rgba(91, 201, 179, 0.28);
@@ -8821,6 +8756,9 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   background: rgba(33, 137, 119, 0.15);
   font-size: 0.66rem;
   font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .progression-leaderboard-scope-modes {
@@ -8859,16 +8797,16 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 .progression-leaderboard-scope-note {
   margin: 0;
   color: rgba(201, 216, 237, 0.74);
-  font-size: 0.66rem;
+  font-size: 0.63rem;
   line-height: 1.3;
 }
 
 .progression-leaderboard-scope-feedback {
-  grid-column: 1 / span 2;
+  grid-column: auto;
 }
 
 .progression-leaderboard-scope-note {
-  grid-column: 3 / span 2;
+  grid-column: auto;
 }
 
 .progression-leaderboard-scope-retry {
@@ -8888,7 +8826,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 .progression-leaderboard-scope-select select {
   width: 100%;
   min-width: 0;
-  min-height: 34px;
+  min-height: 32px;
   border: 1px solid rgba(203, 219, 246, 0.18);
   border-radius: 8px;
   background: rgba(6, 10, 18, 0.68);
@@ -8902,7 +8840,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .progression-leaderboard-scope-search input {
-  padding: 0 10px;
+  padding: 0 9px;
 }
 
 .progression-leaderboard-scope-select select {
@@ -10074,7 +10012,8 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   }
 
   .progression-leaderboard-scope-control,
-  .profile-scoped-progression-stats {
+  .profile-scoped-progression-table-head,
+  .profile-scoped-progression-row {
     grid-template-columns: 1fr;
   }
 

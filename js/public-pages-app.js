@@ -160,7 +160,17 @@
     rumble: "Rumble",
     youtube: "YouTube",
     twitch: "Twitch",
-    kick: "Kick"
+    kick: "Kick",
+    pilled: "Pilled"
+  });
+  const SCOPED_PLATFORM_ICON_MAP = Object.freeze({
+    kick: "/assets/icons/kick.svg",
+    youtube: "/assets/icons/youtube.svg",
+    rumble: "/assets/icons/rumble.svg",
+    twitch: "/assets/icons/twitch.svg",
+    pilled: "/assets/icons/pilled.svg",
+    global: "/assets/icons/ui/globe.svg",
+    unknown: "/assets/icons/ui/cast.svg"
   });
   const STREAM_SOURCE_PRIORITY = Object.freeze(["kick", "rumble", "youtube", "twitch"]);
   const WHEEL_DEFAULT_AVATAR = "/assets/icons/ui/wheeluser.svg";
@@ -1317,6 +1327,35 @@
     icon.loading = "lazy";
     icon.decoding = "async";
     return icon;
+  }
+
+  function scopedPlatformKey(source = "") {
+    const raw = typeof source === "object"
+      ? source?.platform || source?.platform_key || source?.platformKey || source?.platform_label || source?.platformLabel || ""
+      : source;
+    const normalized = String(raw || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+    if (normalized.includes("youtube")) return "youtube";
+    if (normalized.includes("rumble")) return "rumble";
+    if (normalized.includes("twitch")) return "twitch";
+    if (normalized.includes("kick")) return "kick";
+    if (normalized.includes("pilled")) return "pilled";
+    if (normalized === "global" || normalized === "world") return "global";
+    return normalized && Object.prototype.hasOwnProperty.call(SCOPED_PLATFORM_ICON_MAP, normalized) ? normalized : "unknown";
+  }
+
+  function scopedPlatformIconPath(source = "") {
+    return SCOPED_PLATFORM_ICON_MAP[scopedPlatformKey(source)] || SCOPED_PLATFORM_ICON_MAP.unknown;
+  }
+
+  function createScopedPlatformIcon(source = "", className = "scoped-platform-icon") {
+    return createIcon(scopedPlatformIconPath(source), className);
+  }
+
+  function createScopedPlatformChip(source = "", label = "") {
+    const key = scopedPlatformKey(source);
+    const chip = create("span", `scoped-platform-chip scoped-platform-chip--${key}`);
+    chip.append(createScopedPlatformIcon(source, "scoped-platform-chip-icon"), create("span", "", label || STREAM_PLATFORM_LABELS[key] || toTitle(key)));
+    return chip;
   }
 
   function buildStatusChip(status) {
@@ -4133,17 +4172,20 @@
     searchLabel.append(searchText, search);
     const scopeControl = create("div", "progression-leaderboard-scope-control");
     scopeControl.dataset.scopeControl = "leaderboard";
+    scopeControl.dataset.scopeToolbar = "leaderboard";
     scopeControl.dataset.scopeMode = "global";
     const scopeHeader = create("div", "progression-leaderboard-scope-header");
+    const activeScopeChip = create("span", "progression-leaderboard-scope-chip");
+    activeScopeChip.append(createScopedPlatformIcon("global", "progression-leaderboard-scope-chip-icon"), create("span", "", "Global leaderboard"));
     scopeHeader.append(
       create("span", "progression-leaderboard-scope-label", "Leaderboard scope"),
-      create("span", "progression-leaderboard-scope-chip", "Global leaderboard")
+      activeScopeChip
     );
     const scopeModes = create("div", "progression-leaderboard-scope-modes");
     const globalMode = create("button", "progression-leaderboard-scope-mode is-active", "Global");
     globalMode.type = "button";
     globalMode.dataset.scopeModeButton = "global";
-    const scopedMode = create("button", "progression-leaderboard-scope-mode", "Channel scoped");
+    const scopedMode = create("button", "progression-leaderboard-scope-mode", "Channel");
     scopedMode.type = "button";
     scopedMode.dataset.scopeModeButton = "scoped";
     scopeModes.append(globalMode, scopedMode);
@@ -4208,7 +4250,11 @@
           const scoped = Boolean(state.scopeKey);
           const scopeMode = scoped ? "scoped" : state.scopeEndpointError ? "error" : availableScopes.length ? "global" : "empty";
           scopeControl.dataset.scopeMode = scopeMode;
-          scopeControl.querySelector(".progression-leaderboard-scope-chip").textContent = scoped ? "Channel scoped leaderboard" : "Global leaderboard";
+          clear(activeScopeChip);
+          activeScopeChip.append(
+            createScopedPlatformIcon(scoped ? state.scopeMeta : "global", "progression-leaderboard-scope-chip-icon"),
+            create("span", "", scoped ? scopedProgressionScopeLabel(state.scopeMeta || { scope_key: state.scopeKey }) : "Global leaderboard")
+          );
           globalMode.classList.toggle("is-active", !scoped);
           scopedMode.classList.toggle("is-active", scoped);
           scopedMode.disabled = !availableScopes.length && !state.scopeKey;
@@ -9121,6 +9167,7 @@
 
     const panel = create("div", "profile-stream-panel");
     const card = create("article", `profile-latest-stream-card${hasUsableStream && stream?.isLive ? " is-live" : ""}${hasUsableStream ? "" : " is-empty"}`);
+    card.dataset.latestStreamLayout = "stable";
     const media = create("div", "profile-latest-stream-media");
     renderLatestStreamMedia(media, stream, hasUsableStream);
 
@@ -9197,18 +9244,8 @@
     const scopedRows = normalizeScopedProgressionRows(profile?.scopedProgression || profile?.scoped_progression || []);
     const displayInventory = inventory.filter((item) => !isWalletDenominationInventoryItem(item));
     const exchangeableItems = normalizeExchangeableItems({ exchangeable_items: profile?.exchangeableItems }, inventory);
-    const rank = progression?.rank && typeof progression.rank === "object" ? progression.rank : {};
-    const xpTotal = progression ? progression.xp_total ?? progression.total_xp ?? 0 : 0;
-    const levelLabel = progression ? String(progression.current_level_label || progression.level_label || rank.level_label || progression.rank_label || rank.rank_label || rank.label || "Level").trim() : "";
-    const nextLevel = progression?.next_level && typeof progression.next_level === "object" ? progression.next_level : {};
-    const nextLevelLabel = progression ? String(progression.next_level_label || rank.next_level_label || nextLevel.level_label || "").trim() : "";
-    const xpToNext = Number(progression?.xp_to_next_level ?? rank.xp_to_next_level ?? rank.xp_to_next);
-    const progressXp = Number(progression?.xp_into_current_level ?? rank.xp_into_current_level ?? rank.progress_xp);
-    const progressNeededXp = Number(rank.progress_needed_xp);
-    const hasProgressMeter = progression && nextLevelLabel && Number.isFinite(progressXp) && Number.isFinite(progressNeededXp) && progressNeededXp > 0;
-    const progressPercent = hasProgressMeter ? Math.max(0, Math.min(100, (progressXp / progressNeededXp) * 100)) : 0;
-    const placementRank = progression ? progressionGlobalPlacementRank(progression) : null;
     const details = create("details", "profile-authority-collapsible profile-game-collapsible");
+    details.dataset.profileProgressionMode = "global";
     details.open = true;
     const summary = create("summary", "profile-authority-summary profile-game-summary");
     const action = create("span", "profile-authority-summary-action profile-game-summary-action");
@@ -9219,6 +9256,19 @@
     const meta = create("span", "profile-authority-summary-meta");
     meta.appendChild(create("span", "", progression ? "Global default" : "XP/level empty"));
     if (scopedRows.length) meta.appendChild(create("span", "", `${formatNumber(scopedRows.length)} channel scope${scopedRows.length === 1 ? "" : "s"}`));
+    const scopeWrap = create("span", "profile-game-scope-compact");
+    scopeWrap.dataset.profileScopeSelector = "compact";
+    const scopeChip = create("span", "profile-game-scope-chip");
+    scopeChip.append(createScopedPlatformIcon("global", "profile-game-scope-chip-icon"), create("span", "", "Global default"));
+    const scopeSelect = create("select", "profile-game-scope-select-input");
+    scopeSelect.setAttribute("aria-label", "Game and competition scope");
+    scopeSelect.appendChild(new Option("Global", ""));
+    scopedRows.forEach((row) => {
+      const option = new Option(scopedProgressionScopeLabel(row), row.scope_key);
+      option.dataset.scopeKey = row.scope_key;
+      scopeSelect.appendChild(option);
+    });
+    scopeWrap.append(scopeChip, scopeSelect);
     const stateIcon = createIcon("/assets/icons/ui/visible.svg", "profile-authority-summary-icon");
     const syncStateIcon = () => {
       stateIcon.style.setProperty(
@@ -9228,146 +9278,154 @@
     };
     details.addEventListener("toggle", syncStateIcon);
     syncStateIcon();
-    summary.append(action, meta, stateIcon);
+    summary.append(action, meta, scopeWrap, stateIcon);
 
     const panel = create("div", "profile-game-panel");
-    const scopeBar = create("div", "profile-game-scope-bar");
-    const scopeLabel = create("label", "profile-game-scope-select");
-    scopeLabel.appendChild(create("span", "sr-only", "Game and competition scope"));
-    const scopeSelect = create("select");
-    scopeSelect.appendChild(new Option("Global", ""));
-    scopedRows.forEach((row) => {
-      scopeSelect.appendChild(new Option(scopedProgressionScopeLabel(row), row.scope_key));
-    });
-    scopeLabel.appendChild(scopeSelect);
-    const scopeStats = create("dl", "profile-game-scope-stats");
-    const renderScopeStats = (row = null) => {
-      clear(scopeStats);
-      const add = (label, valueNode) => {
-        const item = create("div", "profile-game-scope-stat");
-        item.appendChild(create("dt", "", label));
-        const value = create("dd", "");
-        if (valueNode instanceof Node) value.appendChild(valueNode);
-        else value.textContent = valueNode;
-        item.appendChild(value);
-        scopeStats.appendChild(item);
-      };
-      if (row) {
-        add("Scoped Rank", row.placement_rank || row.rank || row.position ? `#${formatNumber(row.placement_rank || row.rank || row.position)}` : "Unranked");
-        add("Scoped XP", buildProgressionXpValue(row.xp_total ?? row.xp ?? 0, { compact: true, compactNumber: true }));
-        add("Scoped Level", buildProgressionLevelChip(row, { compact: true }));
-        add("Messages", formatNumber(row.message_count || 0));
-        return;
-      }
-      add("Global Rank", progression ? buildProgressionGlobalRankValue(progression, { compact: true, emptyLabel: "Unranked" }) : "Unranked");
-      add("Global XP", buildProgressionXpValue(xpTotal, { compact: true, compactNumber: true }));
-      add("Global Level", progression ? buildProgressionLevelChip(progression, { compact: true }) : "No level yet");
+    panel.dataset.profileProgressionMode = "global";
+    const grid = create("div", "profile-game-grid");
+
+    const buildUnavailable = (text) => create("div", "profile-game-scoped-unavailable", text);
+    const renderGameCards = (selectedRow = null) => {
+      clear(grid);
+      const scoped = Boolean(selectedRow);
+      const source = scoped ? selectedRow : progression;
+      const sourceRank = source?.rank && typeof source.rank === "object" ? source.rank : {};
+      const sourceXpTotal = scoped ? selectedRow.xp_total ?? selectedRow.xp ?? 0 : progression ? progression.xp_total ?? progression.total_xp ?? 0 : 0;
+      const sourcePlacementRank = scoped
+        ? Number(selectedRow.placement_rank || selectedRow.rank || selectedRow.position || 0) || null
+        : progression ? progressionGlobalPlacementRank(progression) : null;
+      const sourceLevelLabel = source ? String(source.current_level_label || source.level_label || sourceRank.level_label || source.rank_label || sourceRank.rank_label || sourceRank.label || "Level").trim() : "";
+      const sourceNextLevel = source?.next_level && typeof source.next_level === "object" ? source.next_level : {};
+      const sourceNextLevelLabel = source ? String(source.next_level_label || sourceRank.next_level_label || sourceNextLevel.level_label || "").trim() : "";
+      const sourceXpToNext = Number(source?.xp_to_next_level ?? sourceRank.xp_to_next_level ?? sourceRank.xp_to_next);
+      const sourceProgressXp = Number(source?.xp_into_current_level ?? sourceRank.xp_into_current_level ?? sourceRank.progress_xp);
+      const sourceProgressNeededXp = Number(sourceRank.progress_needed_xp);
+      const sourceHasProgressMeter = source && sourceNextLevelLabel && Number.isFinite(sourceProgressXp) && Number.isFinite(sourceProgressNeededXp) && sourceProgressNeededXp > 0;
+      const sourceProgressPercent = sourceHasProgressMeter ? Math.max(0, Math.min(100, (sourceProgressXp / sourceProgressNeededXp) * 100)) : 0;
+      const scopedWallet = scoped ? leaderboardWallet(selectedRow) : null;
+      const scopedInventory = scoped ? leaderboardInventoryItems(selectedRow) : [];
+      details.dataset.profileProgressionMode = scoped ? "scoped" : "global";
+      panel.dataset.profileProgressionMode = scoped ? "scoped" : "global";
+      clear(scopeChip);
+      scopeChip.append(
+        createScopedPlatformIcon(scoped ? selectedRow : "global", "profile-game-scope-chip-icon"),
+        create("span", "", scoped ? "Channel scope" : "Global default")
+      );
+      [
+        {
+          className: "profile-game-preview-card--featured",
+          label: scoped ? "Current XP / Scoped rank" : "Current XP / Global rank",
+          value: (() => {
+            const wrap = create("span", `profile-game-xp-rank-combo${sourcePlacementRank >= 1 && sourcePlacementRank <= 3 ? ` profile-game-xp-rank-combo--top-${sourcePlacementRank}` : ""}`);
+            wrap.appendChild(buildProgressionXpValue(sourceXpTotal, { prominent: true }));
+            const rankWrap = create("span", "profile-game-xp-rank-placement");
+            const rankAsset = LEADERBOARD_PLACEMENT_ASSETS[sourcePlacementRank];
+            if (rankAsset) {
+              const img = create("img", "profile-game-xp-rank-placement-icon");
+              img.src = rankAsset;
+              img.alt = "";
+              img.loading = "lazy";
+              img.decoding = "async";
+              rankWrap.appendChild(img);
+            }
+            rankWrap.appendChild(scoped
+              ? create("span", "progression-global-rank-value progression-global-rank-value--prominent", sourcePlacementRank ? `#${formatNumber(sourcePlacementRank)}` : "Unranked")
+              : progression ? buildProgressionGlobalRankValue(progression, { prominent: true, emptyLabel: "Unranked" }) : create("span", "progression-global-rank-value progression-global-rank-value--prominent", "Unranked"));
+            wrap.appendChild(rankWrap);
+            return wrap;
+          })(),
+          note: scoped
+            ? `Scoped to ${scopedProgressionScopeLabel(selectedRow)}.`
+            : sourcePlacementRank
+              ? `Leaderboard placement is separate from ${sourceLevelLabel || "current level"}.`
+              : "No global leaderboard placement has been returned for this identity yet."
+        },
+        {
+          className: "profile-game-preview-card--featured profile-game-preview-card--current-level",
+          label: scoped ? "Scoped level" : "Current level",
+          value: source ? buildProgressionLevelChip(source, { prominent: true }) : "No level yet",
+          note: source
+            ? sourceNextLevelLabel && Number.isFinite(sourceXpToNext)
+              ? `${sourceLevelLabel || "Current level"} - ${formatNumber(sourceXpToNext)} XP to ${sourceNextLevelLabel}`
+              : `${sourceLevelLabel || (scoped ? "Scoped level" : "Current level")} is the current runtime level.`
+            : "Level appears after the runtime returns progression data."
+        },
+        {
+          className: "profile-game-preview-card--breakdown profile-game-preview-card--balance",
+          label: scoped ? "Scoped balance" : "Current balance",
+          value: scoped
+            ? scopedWallet ? buildEconomyBalanceValue(scopedWallet, { prominent: true, fullColorIcon: true }) : "Unavailable"
+            : buildEconomyBalanceValue(economy || {}, { prominent: true, fullColorIcon: true }),
+          note: scoped
+            ? scopedWallet ? "Scoped wallet hydrates from the selected Runtime/Auth scope." : "No scoped wallet data yet"
+            : economy ? `${formatNumber(economy.earned_lifetime || 0)} earned lifetime from the runtime economy wallet` : "No economy events have been recorded yet.",
+          extra: scoped
+            ? scopedWallet ? buildEconomyDenominationBreakdown(scopedWallet || {}) : buildUnavailable("No scoped wallet data yet")
+            : buildEconomyDenominationBreakdown(economy || {})
+        },
+        {
+          className: "profile-game-preview-card--breakdown profile-game-preview-card--inventory",
+          label: scoped ? "Scoped inventory" : "Inventory",
+          value: scoped ? scopedInventory.length ? "Itemized" : "Unavailable" : displayInventory.length ? "Itemized" : "Empty",
+          note: scoped
+            ? scopedInventory.length ? "Scoped inventory hydrates from the selected Runtime/Auth scope." : "No scoped inventory data yet"
+            : displayInventory.length ? "Current quantities hydrate from runtime inventory state." : "No authority-owned items have been issued yet.",
+          extra: (() => {
+            const wrap = create("div", "profile-game-inventory-stack");
+            if (scoped) {
+              wrap.appendChild(scopedInventory.length ? buildInventorySummaryList(scopedInventory) : buildUnavailable("No scoped inventory data yet"));
+              return wrap;
+            }
+            wrap.appendChild(buildInventorySummaryList(displayInventory));
+            if (options.canEdit) {
+              const panel = buildPublicValueItemExchangePanel(exchangeableItems);
+              if (panel) wrap.appendChild(panel);
+            }
+            return wrap;
+          })()
+        },
+        {
+          className: "profile-game-preview-card--progress",
+          label: "Next level progress",
+          value: sourceHasProgressMeter ? `${formatNumber(sourceProgressXp)} / ${formatNumber(sourceProgressNeededXp)} XP` : "Not available",
+          note: sourceNextLevelLabel
+            ? `Progress toward ${sourceNextLevelLabel}`
+            : source
+              ? "No higher configured level is exposed in this payload."
+              : "Progress appears with runtime progression data.",
+          extra: sourceHasProgressMeter ? (() => {
+            const meter = create("span", "profile-game-progress-meter profile-game-progress-meter--animated");
+            const fill = create("span", "profile-game-progress-meter-fill profile-game-progress-meter-fill--electric");
+            fill.style.setProperty("--profile-progress-target", `${sourceProgressPercent}%`);
+            meter.appendChild(fill);
+            return meter;
+          })() : null
+        },
+        { label: scoped ? "Messages" : "Season standing", value: scoped ? formatNumber(selectedRow.message_count || 0) : "Not seeded", note: scoped ? "Scoped message count when returned by Runtime/Auth." : "Ladders arrive later" }
+      ].forEach((item) => {
+        const card = create("article", `profile-game-preview-card${item.className ? ` ${item.className}` : ""}`);
+        if (item.className?.includes("profile-game-preview-card--current-level")) {
+          applyProfileCurrentLevelCardTheme(card, source);
+        }
+        card.append(
+          create("span", "profile-game-preview-label", item.label),
+          item.value instanceof Node ? (() => {
+            const valueWrap = create("strong", "");
+            valueWrap.appendChild(item.value);
+            return valueWrap;
+          })() : create("strong", "", item.value),
+          create("span", "profile-game-preview-note", item.note)
+        );
+        if (item.extra instanceof Node) card.appendChild(item.extra);
+        grid.appendChild(card);
+      });
     };
-    renderScopeStats(null);
+    renderGameCards(null);
     scopeSelect.addEventListener("change", () => {
       const selected = scopedRows.find((row) => row.scope_key === scopeSelect.value) || null;
-      renderScopeStats(selected);
-    });
-    scopeBar.append(scopeLabel, scopeStats);
-    const grid = create("div", "profile-game-grid");
-    [
-      {
-        className: "profile-game-preview-card--featured",
-        label: "Current XP / Global rank",
-        value: (() => {
-          const wrap = create("span", `profile-game-xp-rank-combo${placementRank >= 1 && placementRank <= 3 ? ` profile-game-xp-rank-combo--top-${placementRank}` : ""}`);
-          wrap.appendChild(buildProgressionXpValue(xpTotal, { prominent: true }));
-          const rankWrap = create("span", "profile-game-xp-rank-placement");
-          const rankAsset = LEADERBOARD_PLACEMENT_ASSETS[placementRank];
-          if (rankAsset) {
-            const img = create("img", "profile-game-xp-rank-placement-icon");
-            img.src = rankAsset;
-            img.alt = "";
-            img.loading = "lazy";
-            img.decoding = "async";
-            rankWrap.appendChild(img);
-          }
-          rankWrap.appendChild(progression ? buildProgressionGlobalRankValue(progression, { prominent: true, emptyLabel: "Unranked" }) : create("span", "progression-global-rank-value progression-global-rank-value--prominent", "Unranked"));
-          wrap.appendChild(rankWrap);
-          return wrap;
-        })(),
-        note: placementRank
-          ? `Leaderboard placement is separate from ${levelLabel || "current level"}.`
-          : "No global leaderboard placement has been returned for this identity yet."
-      },
-      {
-        className: "profile-game-preview-card--featured profile-game-preview-card--current-level",
-        label: "Current level",
-        value: progression ? buildProgressionLevelChip(progression, { prominent: true }) : "No level yet",
-        note: progression
-          ? nextLevelLabel && Number.isFinite(xpToNext)
-            ? `${levelLabel || "Current level"} - ${formatNumber(xpToNext)} XP to ${nextLevelLabel}`
-            : `${levelLabel || "Current level"} is the current runtime level.`
-          : "Level appears after the runtime returns progression data."
-      },
-      {
-        className: "profile-game-preview-card--breakdown profile-game-preview-card--balance",
-        label: "Current balance",
-        value: buildEconomyBalanceValue(economy || {}, { prominent: true, fullColorIcon: true }),
-        note: economy
-          ? `${formatNumber(economy.earned_lifetime || 0)} earned lifetime from the runtime economy wallet`
-          : "No economy events have been recorded yet.",
-        extra: buildEconomyDenominationBreakdown(economy || {})
-      },
-      {
-        className: "profile-game-preview-card--breakdown profile-game-preview-card--inventory",
-        label: "Inventory",
-        value: displayInventory.length ? "Itemized" : "Empty",
-        note: displayInventory.length
-          ? "Current quantities hydrate from runtime inventory state."
-          : "No authority-owned items have been issued yet.",
-        extra: (() => {
-          const wrap = create("div", "profile-game-inventory-stack");
-          wrap.appendChild(buildInventorySummaryList(displayInventory));
-          if (options.canEdit) {
-            const panel = buildPublicValueItemExchangePanel(exchangeableItems);
-            if (panel) wrap.appendChild(panel);
-          }
-          return wrap;
-        })()
-      },
-      {
-        className: "profile-game-preview-card--progress",
-        label: "Next level progress",
-        value: hasProgressMeter ? `${formatNumber(progressXp)} / ${formatNumber(progressNeededXp)} XP` : "Not available",
-        note: nextLevelLabel
-          ? `Progress toward ${nextLevelLabel}`
-          : progression
-            ? "No higher configured level is exposed in this payload."
-            : "Progress appears with runtime progression data.",
-        extra: hasProgressMeter ? (() => {
-          const meter = create("span", "profile-game-progress-meter profile-game-progress-meter--animated");
-          const fill = create("span", "profile-game-progress-meter-fill profile-game-progress-meter-fill--electric");
-          fill.style.setProperty("--profile-progress-target", `${progressPercent}%`);
-          meter.appendChild(fill);
-          return meter;
-        })() : null
-      },
-      { label: "Season standing", value: "Not seeded", note: "Ladders arrive later" }
-    ].forEach((item) => {
-      const card = create("article", `profile-game-preview-card${item.className ? ` ${item.className}` : ""}`);
-      if (item.className?.includes("profile-game-preview-card--current-level")) {
-        applyProfileCurrentLevelCardTheme(card, progression);
-      }
-      card.append(
-        create("span", "profile-game-preview-label", item.label),
-        item.value instanceof Node ? (() => {
-          const valueWrap = create("strong", "");
-          valueWrap.appendChild(item.value);
-          return valueWrap;
-        })() : create("strong", "", item.value),
-        create("span", "profile-game-preview-note", item.note)
-      );
-      if (item.extra instanceof Node) card.appendChild(item.extra);
-      grid.appendChild(card);
+      renderGameCards(selected);
     });
     panel.append(
-      ...(scopedRows.length ? [scopeBar] : []),
       grid,
       create("p", "profile-game-disclaimer", progression
         ? "XP, level, wallet balance, and inventory hydrate from runtime public authority. Leaderboard rank means placement only. Seasonal standings remain deferred."
@@ -9483,51 +9541,49 @@
     return details;
   }
 
-  function buildProfileScopedProgressionCard(row = {}) {
-    const card = create("article", "profile-scoped-progression-card");
-    const head = create("div", "profile-scoped-progression-head");
-    const title = create("div", "profile-scoped-progression-title");
-    title.append(
-      create("span", "profile-scoped-progression-platform", scopedProgressionPlatformLabel(row)),
-      create("h4", "", scopedProgressionChannelLabel(row))
+  function scopedProgressionAvatar(row = {}) {
+    return String(
+      row?.avatar_url ||
+      row?.avatarUrl ||
+      row?.creator_avatar_url ||
+      row?.creatorAvatarUrl ||
+      row?.channel_avatar_url ||
+      row?.channelAvatarUrl ||
+      row?.profile_avatar_url ||
+      row?.profileAvatarUrl ||
+      ""
+    ).trim();
+  }
+
+  function buildProfileScopedProgressionRow(row = {}) {
+    const card = create("article", "profile-scoped-progression-row");
+    const scopeCell = create("div", "profile-scoped-progression-cell profile-scoped-progression-cell--scope");
+    scopeCell.appendChild(createScopedPlatformChip(row, scopedProgressionPlatformLabel(row)));
+    const channelCell = create("div", "profile-scoped-progression-cell profile-scoped-progression-cell--channel");
+    const avatarUrl = scopedProgressionAvatar(row);
+    const avatar = avatarUrl ? create("img", "profile-scoped-progression-avatar") : createScopedPlatformIcon("global", "profile-scoped-progression-avatar profile-scoped-progression-avatar--icon");
+    if (avatarUrl) {
+      avatar.src = avatarUrl;
+      avatar.alt = "";
+      avatar.loading = "lazy";
+      avatar.decoding = "async";
+    }
+    const channelCopy = create("span", "profile-scoped-progression-channel-copy");
+    channelCopy.append(
+      create("strong", "", scopedProgressionChannelLabel(row)),
+      create("span", "", row.scope_label || scopedProgressionScopeLabel(row))
     );
+    channelCell.append(avatar, channelCopy);
+    const rankCell = create("div", "profile-scoped-progression-cell profile-scoped-progression-cell--rank", row.placement_rank || row.rank || row.position ? `#${formatNumber(row.placement_rank || row.rank || row.position)}` : "Unranked");
+    const xpCell = create("div", "profile-scoped-progression-cell profile-scoped-progression-cell--xp");
+    xpCell.appendChild(buildProgressionXpValue(row.xp_total ?? row.xp ?? 0, { compact: true, compactNumber: true }));
+    const levelCell = create("div", "profile-scoped-progression-cell profile-scoped-progression-cell--level");
+    levelCell.appendChild(buildProgressionLevelChip(row, { compact: true }));
+    const messagesCell = create("div", "profile-scoped-progression-cell profile-scoped-progression-cell--messages", formatNumber(row.message_count || 0));
+    const updatedCell = create("div", "profile-scoped-progression-cell profile-scoped-progression-cell--updated", formatScopedProgressionUpdatedAt(row.updated_at || row.updatedAt));
     const link = create("a", "dashboard-action profile-scoped-progression-link", "View scoped leaderboard");
     link.href = scopedLeaderboardHref(row.scope_key);
-    head.append(title, link);
-    const stats = create("dl", "profile-scoped-progression-stats");
-    const addStat = (label, valueNode) => {
-      const item = create("div", "profile-scoped-progression-stat");
-      item.appendChild(create("dt", "", label));
-      const value = create("dd", "");
-      if (valueNode instanceof Node) value.appendChild(valueNode);
-      else value.textContent = valueNode;
-      item.appendChild(value);
-      stats.appendChild(item);
-    };
-    addStat("Rank", row.placement_rank || row.rank || row.position ? `#${formatNumber(row.placement_rank || row.rank || row.position)}` : "Unranked");
-    addStat("XP", buildProgressionXpValue(row.xp_total ?? row.xp ?? 0, { compact: true, compactNumber: true }));
-    addStat("Level", buildProgressionLevelChip(row, { compact: true }));
-    addStat("Messages", formatNumber(row.message_count || 0));
-    const updated = formatScopedProgressionUpdatedAt(row.updated_at || row.updatedAt);
-    if (updated && updated !== "Not public") addStat("Updated", updated);
-    card.append(head, stats);
-    const wallet = leaderboardWallet(row);
-    const inventory = leaderboardInventoryItems(row);
-    if (wallet || inventory.length) {
-      const extras = create("div", "profile-scoped-progression-extras");
-      if (wallet) {
-        const walletRow = create("div", "profile-scoped-progression-extra");
-        walletRow.append(create("span", "", "Scoped wallet"), buildEconomyBalanceValue(wallet, { compact: true, compactNumber: true }));
-        extras.appendChild(walletRow);
-      }
-      if (inventory.length) {
-        const inventoryWrap = create("div", "profile-scoped-progression-inventory");
-        inventoryWrap.appendChild(create("span", "", "Scoped inventory"));
-        inventoryWrap.appendChild(buildInventorySummaryList(inventory));
-        extras.appendChild(inventoryWrap);
-      }
-      card.appendChild(extras);
-    }
+    card.append(scopeCell, channelCell, rankCell, xpCell, levelCell, messagesCell, updatedCell, link);
     return card;
   }
 
@@ -9536,67 +9592,57 @@
     const mode = String(profile?.scopedProgressionStatus || profile?.scoped_progression_status || (rows.length ? "scoped" : "empty")).toLowerCase();
     const section = create("section", "profile-utility-section profile-scoped-progression-section");
     section.dataset.profileChannelStats = "present";
+    section.dataset.scopedBoardsList = "profile";
     section.dataset.scopeMode = mode === "error" ? "error" : rows.length ? "scoped" : "empty";
     const header = create("div", "profile-inline-header profile-scoped-progression-header");
-    const title = create("h3", "", "Progression Scope");
+    const title = create("h3", "", "Scoped boards");
     const meta = create("span", "profile-scoped-progression-summary-meta", rows.length
-      ? `${formatNumber(rows.length)} scoped creator/channel row${rows.length === 1 ? "" : "s"}`
+      ? `${formatNumber(rows.length)} scoped creator/channel board${rows.length === 1 ? "" : "s"}`
       : mode === "error"
         ? "Channel scoped progression unavailable"
         : "No channel scoped rows yet");
     header.append(title, meta);
-    const tabs = create("div", "profile-scoped-progression-tabs");
-    const globalTab = create("button", "profile-scoped-progression-tab is-active", "Global Stats");
-    globalTab.type = "button";
-    const channelTab = create("button", "profile-scoped-progression-tab", "Channel Stats");
-    channelTab.type = "button";
-    tabs.append(globalTab, channelTab);
-    const panels = create("div", "profile-scoped-progression-panels");
-    const globalPanel = create("div", "profile-scoped-progression-panel is-active");
-    globalPanel.dataset.profileScopePanel = "global";
-    const channelPanel = create("div", "profile-scoped-progression-panel");
-    channelPanel.dataset.profileScopePanel = "channel";
-
-    const progression = profile?.progression && typeof profile.progression === "object" ? profile.progression : {};
-    const globalStats = create("dl", "profile-scoped-progression-stats profile-scoped-progression-stats--global");
-    const addGlobalStat = (label, valueNode) => {
-      const item = create("div", "profile-scoped-progression-stat");
-      item.appendChild(create("dt", "", label));
-      const value = create("dd", "");
-      if (valueNode instanceof Node) value.appendChild(valueNode);
-      else value.textContent = valueNode;
-      item.appendChild(value);
-      globalStats.appendChild(item);
-    };
-    addGlobalStat("Global Rank", progression.global_placement_rank || progression.global_rank ? `#${formatNumber(progression.global_placement_rank || progression.global_rank)}` : "Unranked");
-    addGlobalStat("Global XP", buildProgressionXpValue(progression.xp_total ?? progression.total_xp ?? progression.xp ?? 0, { compact: true, compactNumber: true }));
-    addGlobalStat("Global Level", buildProgressionLevelChip(progression, { compact: true }));
-    globalPanel.append(
-      create("p", "profile-scoped-progression-panel-note", "Global remains the default StreamSuites progression view for this profile."),
-      globalStats
-    );
-
+    const body = create("div", "profile-scoped-progression-list");
     if (mode === "error") {
-      channelPanel.appendChild(create("div", "profile-scoped-progression-empty is-error", "Channel scoped progression could not be loaded."));
+      body.appendChild(create("div", "profile-scoped-progression-empty is-error", "Channel scoped progression could not be loaded."));
     } else if (!rows.length) {
-      channelPanel.appendChild(create("div", "profile-scoped-progression-empty", "No channel-scoped XP has been recorded for this profile yet."));
+      body.appendChild(create("div", "profile-scoped-progression-empty", "No channel-scoped XP has been recorded for this profile yet."));
     } else {
-      const grid = create("div", "profile-scoped-progression-grid");
-      rows.forEach((row) => grid.appendChild(buildProfileScopedProgressionCard(row)));
-      channelPanel.appendChild(grid);
+      const tableHead = create("div", "profile-scoped-progression-table-head");
+      ["Platform", "Channel", "Rank", "XP", "Level", "Messages", "Updated", "Action"].forEach((label) => {
+        tableHead.appendChild(create("span", "", label));
+      });
+      const rowsHost = create("div", "profile-scoped-progression-rows");
+      const pagination = create("div", "profile-scoped-progression-pagination");
+      const pageSize = 6;
+      let page = 1;
+      const renderRows = () => {
+        clear(rowsHost);
+        clear(pagination);
+        const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+        if (page > totalPages) page = totalPages;
+        rows.slice((page - 1) * pageSize, page * pageSize).forEach((row) => rowsHost.appendChild(buildProfileScopedProgressionRow(row)));
+        if (totalPages <= 1) return;
+        const previous = create("button", "profile-scoped-progression-page-button", "Previous");
+        previous.type = "button";
+        previous.disabled = page <= 1;
+        previous.addEventListener("click", () => {
+          page = Math.max(1, page - 1);
+          renderRows();
+        });
+        const next = create("button", "profile-scoped-progression-page-button", "Next");
+        next.type = "button";
+        next.disabled = page >= totalPages;
+        next.addEventListener("click", () => {
+          page = Math.min(totalPages, page + 1);
+          renderRows();
+        });
+        pagination.append(previous, create("span", "profile-scoped-progression-page-status", `Page ${formatNumber(page)} of ${formatNumber(totalPages)}`), next);
+      };
+      renderRows();
+      body.append(tableHead, rowsHost, pagination);
     }
-
-    const activate = (target) => {
-      const showChannel = target === "channel";
-      globalTab.classList.toggle("is-active", !showChannel);
-      channelTab.classList.toggle("is-active", showChannel);
-      globalPanel.classList.toggle("is-active", !showChannel);
-      channelPanel.classList.toggle("is-active", showChannel);
-    };
-    globalTab.addEventListener("click", () => activate("global"));
-    channelTab.addEventListener("click", () => activate("channel"));
-    panels.append(globalPanel, channelPanel);
-    section.append(header, tabs, panels);
+    section.append(header, body);
     return section;
   }
 

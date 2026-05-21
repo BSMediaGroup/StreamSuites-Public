@@ -122,11 +122,13 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   assert.match(app, /search\.className = "progression-leaderboard-search-input"/);
   assert.match(app, /progression-leaderboard-scope-control/);
   assert.match(app, /scopeControl\.dataset\.scopeControl = "leaderboard"/);
+  assert.match(app, /scopeControl\.dataset\.scopeToolbar = "leaderboard"/);
   assert.match(app, /scopeControl\.dataset\.scopeMode = "global"/);
   assert.match(app, /Leaderboard scope/);
   assert.match(app, /Global leaderboard/);
-  assert.match(app, /Channel scoped leaderboard/);
-  assert.match(app, /Channel scoped/);
+  assert.match(app, /scopedProgressionScopeLabel\(state\.scopeMeta/);
+  assert.match(app, /createScopedPlatformIcon\(scoped \? state\.scopeMeta : "global", "progression-leaderboard-scope-chip-icon"\)/);
+  assert.match(app, /Channel/);
   assert.match(app, /Search\/select a channel scope/);
   assert.match(app, /No channel scoped leaderboards found yet\./);
   assert.match(app, /Channel scoped leaderboards could not be loaded\./);
@@ -242,6 +244,7 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   assert.match(css, /\.progression-leaderboard-scope-note/);
   assert.match(css, /\.progression-leaderboard-scope-search input/);
   assert.match(css, /\.progression-leaderboard-scope-select select/);
+  assert.match(css, /\.progression-leaderboard-scope-chip-icon/);
   assert.match(css, /\.progression-leaderboard-gallery-action/);
   assert.match(css, /\.ss-lb-premium-shimmer/);
   assert.match(css, /@keyframes ss-lb-premium-shimmer/);
@@ -271,27 +274,30 @@ test("public profile game section renders runtime progression and economy author
   assert.match(app, /fullColorIcon/);
   assert.match(profileSection, /progression\.xp_total \?\? progression\.total_xp/);
   assert.match(profileSection, /const scopedRows = normalizeScopedProgressionRows/);
-  assert.match(profileSection, /profile-game-scope-bar/);
-  assert.match(profileSection, /profile-game-scope-select/);
-  assert.match(profileSection, /Scoped Rank/);
-  assert.match(profileSection, /Scoped XP/);
-  assert.match(profileSection, /Scoped Level/);
+  assert.match(profileSection, /scopeWrap\.dataset\.profileScopeSelector = "compact"/);
+  assert.match(profileSection, /profile-game-scope-select-input/);
+  assert.match(profileSection, /details\.dataset\.profileProgressionMode = scoped \? "scoped" : "global"/);
+  assert.match(profileSection, /panel\.dataset\.profileProgressionMode = scoped \? "scoped" : "global"/);
+  assert.match(profileSection, /Current XP \/ Scoped rank/);
+  assert.match(profileSection, /Scoped level/);
   assert.match(profileSection, /Messages/);
+  assert.match(profileSection, /No scoped wallet data yet/);
+  assert.match(profileSection, /No scoped inventory data yet/);
   assert.match(profileSection, /buildEconomyBalanceValue\(economy \|\| \{\}, \{ prominent: true, fullColorIcon: true \}\)/);
   assert.match(profileSection, /buildEconomyDenominationBreakdown\(economy \|\| \{\}\)/);
   assert.match(profileSection, /buildInventorySummaryList\(displayInventory\)/);
   assert.match(profileSection, /buildPublicValueItemExchangePanel\(exchangeableItems\)/);
   assert.match(profileSection, /options\.canEdit/);
-  assert.match(profileSection, /buildProgressionXpValue\(xpTotal, \{ prominent: true \}\)/);
-  assert.match(profileSection, /buildProgressionLevelChip\(progression, \{ prominent: true \}\)/);
+  assert.match(profileSection, /buildProgressionXpValue\(sourceXpTotal, \{ prominent: true \}\)/);
+  assert.match(profileSection, /buildProgressionLevelChip\(source, \{ prominent: true \}\)/);
   assert.match(app, /function publicLevelBannerImagePath\(presentation = \{\}\)/);
   assert.match(app, /PUBLIC_LEVEL_BANNER_ASSET_SLUGS = new Set/);
   assert.match(app, /\/assets\/backgrounds\/lvlbanner-\$\{slug\}\.webp/);
   assert.match(profileSection, /profile-game-preview-card--featured profile-game-preview-card--current-level/);
-  assert.match(profileSection, /applyProfileCurrentLevelCardTheme\(card, progression\)/);
-  assert.match(profileSection, /label: "Current XP \/ Global rank"/);
+  assert.match(profileSection, /applyProfileCurrentLevelCardTheme\(card, source\)/);
+  assert.match(profileSection, /scoped \? "Current XP \/ Scoped rank" : "Current XP \/ Global rank"/);
   assert.match(profileSection, /buildProgressionGlobalRankValue\(progression, \{ prominent: true, emptyLabel: "Unranked" \}\)/);
-  assert.match(profileSection, /LEADERBOARD_PLACEMENT_ASSETS\[placementRank\]/);
+  assert.match(profileSection, /LEADERBOARD_PLACEMENT_ASSETS\[sourcePlacementRank\]/);
   assert.match(profileSection, /Leaderboard placement is separate from/);
   assert.match(profileSection, /No global leaderboard placement has been returned for this identity yet/);
   assert.match(profileSection, /profile-game-preview-card--featured/);
@@ -307,8 +313,8 @@ test("public profile game section renders runtime progression and economy author
   assert.match(css, /\.profile-game-xp-rank-combo--top-2/);
   assert.match(css, /\.profile-game-xp-rank-combo--top-3/);
   assert.match(css, /\.profile-game-xp-rank-placement-icon/);
-  assert.match(css, /\.profile-game-scope-bar/);
-  assert.match(css, /\.profile-game-scope-stats/);
+  assert.match(css, /\.profile-game-scope-compact/);
+  assert.match(css, /\.profile-game-scope-select-input/);
   assert.match(app, /1: "\/assets\/games\/lb-first\.webp"/);
   assert.match(app, /2: "\/assets\/games\/lb-second\.webp"/);
   assert.match(app, /3: "\/assets\/games\/lb-third\.webp"/);
@@ -331,19 +337,36 @@ test("public profile game section renders runtime progression and economy author
   assert.match(app, /hydrateProfileScopedProgression\(profile, profileCode\)/);
   assert.match(app, /View scoped leaderboard/);
   assert.match(app, /scopedLeaderboardHref\(row\.scope_key\)/);
-  assert.match(app, /buildInventorySummaryList\(inventory\)/);
+  assert.match(profileSection, /buildInventorySummaryList\(scopedInventory\)/);
   assert.match(css, /\.profile-scoped-progression-section/);
   assert.match(scopedProfileSection, /section\.dataset\.profileChannelStats = "present"/);
-  assert.match(scopedProfileSection, /Global Stats/);
-  assert.match(scopedProfileSection, /Channel Stats/);
+  assert.doesNotMatch(scopedProfileSection, /Global Stats/);
+  assert.doesNotMatch(scopedProfileSection, /Channel Stats/);
   assert.match(scopedProfileSection, /No channel-scoped XP has been recorded for this profile yet\./);
   assert.match(scopedProfileSection, /Channel scoped progression could not be loaded\./);
-  assert.match(scopedProfileSection, /Global remains the default StreamSuites progression view for this profile\./);
+  assert.match(scopedProfileSection, /section\.dataset\.scopedBoardsList = "profile"/);
+  assert.match(scopedProfileSection, /profile-scoped-progression-list/);
+  assert.match(scopedProfileSection, /profile-scoped-progression-table-head/);
   assert.match(app, /View scoped leaderboard/);
-  assert.match(css, /\.profile-scoped-progression-card/);
-  assert.match(css, /\.profile-scoped-progression-tabs/);
+  assert.match(css, /\.profile-scoped-progression-row/);
+  assert.match(css, /\.profile-scoped-progression-table-head/);
   assert.match(css, /\.profile-scoped-progression-empty/);
-  assert.match(css, /\.profile-scoped-progression-stats/);
+  assert.doesNotMatch(app, /profile-scoped-progression-tabs/);
+});
+
+test("public scoped platform icons and stable latest stream layout are pinned", () => {
+  const app = read("js/public-pages-app.js");
+  const css = read("css/public-shell.css");
+  assert.match(app, /SCOPED_PLATFORM_ICON_MAP = Object\.freeze/);
+  ["kick", "youtube", "rumble", "twitch", "pilled", "global", "unknown"].forEach((key) => {
+    assert.match(app, new RegExp(`${key}:`));
+  });
+  assert.match(app, /function createScopedPlatformIcon/);
+  assert.match(app, /function createScopedPlatformChip/);
+  assert.match(app, /card\.dataset\.latestStreamLayout = "stable"/);
+  assert.match(css, /\.profile-latest-stream-card\s*\{[\s\S]*grid-template-columns:\s*minmax\(320px, 1\.18fr\) minmax\(0, 0\.82fr\)/);
+  assert.match(css, /\.profile-latest-stream-body\s*\{[\s\S]*align-content:\s*start/);
+  assert.match(css, /\.profile-latest-stream-body h3\s*\{[\s\S]*overflow-wrap:\s*anywhere/);
 });
 
 test("public profile overview table uses the same runtime progression summary as games", () => {
@@ -411,7 +434,7 @@ test("public profile progress meter uses animated electric blue fill", () => {
   const app = read("js/public-pages-app.js");
   const css = read("css/public-shell.css");
 
-  assert.match(app, /fill\.style\.setProperty\("--profile-progress-target", `\$\{progressPercent\}%`\)/);
+  assert.match(app, /fill\.style\.setProperty\("--profile-progress-target", `\$\{sourceProgressPercent\}%`\)/);
   assert.match(app, /profile-game-progress-meter profile-game-progress-meter--animated/);
   assert.match(app, /profile-game-progress-meter-fill profile-game-progress-meter-fill--electric/);
   assert.match(css, /\.profile-game-progress-meter-fill\s*\{[\s\S]*linear-gradient\(90deg, #0487ff 0%, #18c3ff 52%, #78ecff 100%\)/);
