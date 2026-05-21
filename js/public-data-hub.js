@@ -166,7 +166,7 @@
     counts: {},
     artifacts: []
   });
-  const AUTHORITATIVE_LIVE_PROVIDERS = new Set(["rumble"]);
+  const AUTHORITATIVE_LIVE_PROVIDERS = new Set(["kick", "rumble", "twitch", "youtube"]);
   const PUBLIC_PROFILE_STREAM_PLATFORMS = new Set(["rumble", "youtube", "twitch", "kick"]);
   const WHEELS_API_PATH = "/api/public/wheels";
   const CLIP_THUMBNAIL_FALLBACK = "/assets/backgrounds/seodash.jpg";
@@ -634,13 +634,22 @@
       channelHandle,
       configured: true,
       isLive: value.is_live === true || value.isLive === true,
+      liveStatus: String(value.live_status || value.liveStatus || value.state || "").trim(),
       title: String(value.title || value.live_title || value.liveTitle || "").trim(),
       url,
+      embedUrl: String(value.embed_url || value.embedUrl || "").trim(),
       thumbnailUrl: String(value.thumbnail_url || value.thumbnailUrl || "").trim(),
+      posterUrl: String(value.poster_url || value.posterUrl || value.thumbnail_url || value.thumbnailUrl || "").trim(),
       viewerCount: Number.isFinite(Number(viewerCount)) ? Number(viewerCount) : null,
       gameName: String(value.game_name || value.gameName || "").trim(),
       startedAt: String(value.started_at || value.startedAt || "").trim(),
+      scheduledAt: String(value.scheduled_at || value.scheduledAt || "").trim(),
+      endedAt: String(value.ended_at || value.endedAt || "").trim(),
       lastCheckedAt: String(value.last_checked_at || value.lastCheckedAt || "").trim(),
+      providerConfidence: String(value.provider_confidence || value.providerConfidence || value.source || "").trim(),
+      recentStreams: (Array.isArray(value.recent_streams) ? value.recent_streams : Array.isArray(value.recentStreams) ? value.recentStreams : [])
+        .map((entry) => normalizeLatestStreamSourcePayload({ ...entry, platform }))
+        .filter(Boolean),
       status: String(value.status || "").trim()
     };
   }

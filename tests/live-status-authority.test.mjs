@@ -135,20 +135,24 @@ test("public authoritative live adapter keeps stale aggregate entries offline", 
   assert.equal(resolved, null);
 });
 
-test("public authoritative live adapter suppresses non-rumble live providers for this phase", () => {
+test("public authoritative live adapter accepts normalized kick live providers", () => {
   const api = instantiatePublicData(async () => jsonResponse({ items: [] }));
   const resolved = api.normalizeLiveStatus({
     is_live: true,
     freshness: "fresh",
-    active_provider: "twitch",
+    active_provider: "kick",
     active_status: {
-      provider: "twitch",
+      provider: "kick",
       is_live: true,
+      live_title: "Kick Live",
+      live_url: "https://kick.com/danielclancy",
+      embed_url: "https://player.kick.com/danielclancy",
       freshness: "fresh",
       stale: false
     }
   });
-  assert.equal(resolved, null);
+  assert.equal(resolved?.provider, "kick");
+  assert.equal(resolved?.title, "Kick Live");
 });
 
 test("public authoritative live adapter ignores embedded live payloads when aggregate truth is absent", () => {

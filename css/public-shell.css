@@ -3589,6 +3589,10 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
   object-fit: cover;
 }
 
+.profile-latest-stream-media > iframe {
+  background: #05070b;
+}
+
 .profile-latest-stream-placeholder {
   width: 100%;
   height: 100%;
@@ -3778,6 +3782,81 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
 .profile-latest-stream-source-button.is-disabled .profile-latest-stream-source-button-icon {
   opacity: 0.64;
   filter: grayscale(1) brightness(1.08);
+}
+
+.profile-latest-stream-thumbnails {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(150px, 210px);
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 2px 8px;
+  scrollbar-width: thin;
+}
+
+.profile-latest-stream-thumb {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 58px;
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(9, 13, 22, 0.72);
+  color: rgba(255, 255, 255, 0.86);
+  cursor: pointer;
+  text-align: left;
+}
+
+.profile-latest-stream-thumb:hover,
+.profile-latest-stream-thumb:focus-visible,
+.profile-latest-stream-thumb.is-active {
+  border-color: rgba(74, 222, 128, 0.56);
+  background: rgba(13, 29, 22, 0.86);
+}
+
+.profile-latest-stream-thumb-media {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.profile-latest-stream-thumb-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-latest-stream-thumb-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.profile-latest-stream-thumb-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.profile-latest-stream-thumb-copy strong,
+.profile-latest-stream-thumb-copy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-latest-stream-thumb-copy strong {
+  font-size: 0.78rem;
+}
+
+.profile-latest-stream-thumb-copy span {
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.7rem;
 }
 
 .profile-badge-gallery-section {

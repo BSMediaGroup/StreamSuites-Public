@@ -162,7 +162,7 @@
     twitch: "Twitch",
     kick: "Kick"
   });
-  const STREAM_SOURCE_PRIORITY = Object.freeze(["rumble", "youtube", "twitch", "kick"]);
+  const STREAM_SOURCE_PRIORITY = Object.freeze(["kick", "rumble", "youtube", "twitch"]);
   const WHEEL_DEFAULT_AVATAR = "/assets/icons/ui/wheeluser.svg";
   const WHEEL_CENTER_DEFAULT = "/assets/placeholders/wheelcenterdefault.webp";
   const WHEEL_CENTER_ACCEPT = ".webp,.png,.jpg,.jpeg,.gif,.svg";
@@ -764,13 +764,22 @@
       channelHandle,
       configured,
       isLive: value.is_live === true || value.isLive === true,
+      liveStatus: String(value.live_status || value.liveStatus || value.state || "").trim(),
       title: String(value.title || value.live_title || value.liveTitle || "").trim(),
       url,
+      embedUrl: String(value.embed_url || value.embedUrl || "").trim(),
       thumbnailUrl: String(value.thumbnail_url || value.thumbnailUrl || "").trim(),
+      posterUrl: String(value.poster_url || value.posterUrl || value.thumbnail_url || value.thumbnailUrl || "").trim(),
       viewerCount: Number.isFinite(Number(viewerCount)) ? Number(viewerCount) : null,
       gameName: String(value.game_name || value.gameName || "").trim(),
       startedAt: String(value.started_at || value.startedAt || "").trim(),
+      scheduledAt: String(value.scheduled_at || value.scheduledAt || "").trim(),
+      endedAt: String(value.ended_at || value.endedAt || "").trim(),
       lastCheckedAt: String(value.last_checked_at || value.lastCheckedAt || "").trim(),
+      providerConfidence: String(value.provider_confidence || value.providerConfidence || value.source || "").trim(),
+      recentStreams: (Array.isArray(value.recent_streams) ? value.recent_streams : Array.isArray(value.recentStreams) ? value.recentStreams : [])
+        .map((entry) => normalizeLatestStreamSourcePayload({ ...entry, platform }))
+        .filter(Boolean),
       status: String(value.status || "").trim()
     };
   }
@@ -796,6 +805,100 @@
       ...primary,
       alternateSources
     };
+  }
+
+  function cloneLatestStreamSelection(baseStream, selectedStream) {
+    if (!selectedStream) return baseStream;
+    return {
+      ...baseStream,
+      ...selectedStream,
+      platform: selectedStream.platform || baseStream?.platform,
+      platformLabel: selectedStream.platformLabel || baseStream?.platformLabel,
+      platformIcon: selectedStream.platformIcon || baseStream?.platformIcon,
+      sourceUrl: selectedStream.sourceUrl || selectedStream.url || baseStream?.sourceUrl,
+      url: selectedStream.url || selectedStream.sourceUrl || baseStream?.url,
+      recentStreams: baseStream?.recentStreams || []
+    };
+  }
+
+  function renderLatestStreamMedia(media, stream, hasUsableStream) {
+    media.replaceChildren();
+    media.classList.remove("is-fallback-preview");
+    const embedUrl = hasUsableStream ? resolveLatestStreamEmbedUrl(stream) : "";
+    if (embedUrl) {
+      const iframe = create("iframe");
+      iframe.src = embedUrl;
+      iframe.title = `${stream.platformLabel} stream player`;
+      iframe.loading = "lazy";
+      iframe.referrerPolicy = "strict-origin-when-cross-origin";
+      iframe.sandbox = "allow-same-origin allow-scripts allow-presentation allow-popups";
+      iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture";
+      iframe.allowFullscreen = true;
+      media.appendChild(iframe);
+      return;
+    }
+    const poster = stream?.thumbnailUrl || stream?.posterUrl || "";
+    if (hasUsableStream && poster) {
+      const thumbnail = create("img");
+      thumbnail.src = poster;
+      thumbnail.alt = "";
+      thumbnail.loading = "lazy";
+      thumbnail.decoding = "async";
+      media.appendChild(thumbnail);
+      return;
+    }
+    media.classList.add("is-fallback-preview");
+    const placeholder = create("div", "profile-latest-stream-placeholder");
+    const placeholderCard = create("div", "profile-latest-stream-placeholder-card");
+    placeholderCard.append(
+      createStreamPlatformIcon(hasUsableStream ? stream?.platform : "", "profile-latest-stream-placeholder-icon-image"),
+      create(
+        "span",
+        "profile-latest-stream-placeholder-text",
+        hasUsableStream ? (stream?.isLive ? "Player unavailable" : "Source preview unavailable") : "No livestream data available"
+      )
+    );
+    placeholder.appendChild(placeholderCard);
+    media.appendChild(placeholder);
+  }
+
+  function buildLatestStreamThumbnailRow(baseStream, media, body, helpers) {
+    const recent = Array.isArray(baseStream?.recentStreams) ? baseStream.recentStreams : [];
+    const realRows = recent.filter((entry) => entry && (entry.title || entry.thumbnailUrl || entry.posterUrl || entry.url || entry.sourceUrl));
+    if (!realRows.length) return null;
+    const row = create("div", "profile-latest-stream-thumbnails");
+    realRows.forEach((entry, index) => {
+      const button = create("button", `profile-latest-stream-thumb${index === 0 ? " is-active" : ""}`);
+      button.type = "button";
+      const imgWrap = create("span", "profile-latest-stream-thumb-media");
+      const poster = entry.thumbnailUrl || entry.posterUrl || "";
+      if (poster) {
+        const image = create("img");
+        image.src = poster;
+        image.alt = "";
+        image.loading = "lazy";
+        image.decoding = "async";
+        imgWrap.appendChild(image);
+      } else {
+        imgWrap.appendChild(createStreamPlatformIcon(entry.platform, "profile-latest-stream-thumb-icon"));
+      }
+      const copy = create("span", "profile-latest-stream-thumb-copy");
+      copy.append(
+        create("strong", "", entry.title || `${entry.platformLabel || baseStream.platformLabel} stream`),
+        create("span", "", entry.isLive ? "Live now" : (formatProfileDate(entry.startedAt || entry.scheduledAt || entry.endedAt, helpers) || entry.platformLabel || "Recent"))
+      );
+      button.append(imgWrap, copy);
+      button.addEventListener("click", () => {
+        row.querySelectorAll(".profile-latest-stream-thumb").forEach((item) => item.classList.remove("is-active"));
+        button.classList.add("is-active");
+        const selected = cloneLatestStreamSelection(baseStream, entry);
+        renderLatestStreamMedia(media, selected, true);
+        const heading = body.querySelector("[data-latest-stream-title]");
+        if (heading) heading.textContent = selected.title || `${selected.platformLabel || "Stream"} stream`;
+      });
+      row.appendChild(button);
+    });
+    return row;
   }
 
   function buildLatestStreamSourceEntries(profile, stream, hasUsableStream) {
@@ -865,6 +968,20 @@
 
   function resolveLatestStreamEmbedUrl(stream) {
     if (!stream?.isLive && !stream?.title) return "";
+    const provided = parseUrl(stream?.embedUrl || "");
+    if (provided) {
+      const host = provided.hostname.replace(/^www\./i, "").toLowerCase();
+      if (stream.platform === "kick" && host === "player.kick.com") return provided.href;
+      if (stream.platform === "youtube" && ["youtube-nocookie.com", "www.youtube-nocookie.com"].includes(host)) return provided.href;
+      if (stream.platform === "twitch" && host === "player.twitch.tv") return provided.href;
+      if (stream.platform === "rumble" && ["rumble.com", "www.rumble.com"].includes(host)) return provided.href;
+    }
+    if (stream.platform === "kick") {
+      const url = parseUrl(stream.url || stream.sourceUrl || "");
+      const parts = (url?.pathname || "").split("/").filter(Boolean);
+      const slug = String(stream.channelHandle || parts[0] || "").trim().replace(/^@+/, "").replace(/[^a-zA-Z0-9_-]/g, "").toLowerCase();
+      return slug ? `https://player.kick.com/${encodeURIComponent(slug)}` : "";
+    }
     if (stream.platform === "youtube") return resolveYouTubeEmbedUrl(stream.url || stream.sourceUrl);
     if (stream.platform === "twitch") return resolveTwitchEmbedUrl(stream);
     return "";
@@ -8994,37 +9111,7 @@
     const panel = create("div", "profile-stream-panel");
     const card = create("article", `profile-latest-stream-card${hasUsableStream && stream?.isLive ? " is-live" : ""}${hasUsableStream ? "" : " is-empty"}`);
     const media = create("div", "profile-latest-stream-media");
-    const embedUrl = hasUsableStream ? resolveLatestStreamEmbedUrl(stream) : "";
-    if (embedUrl) {
-      const iframe = create("iframe");
-      iframe.src = embedUrl;
-      iframe.title = `${stream.platformLabel} stream player`;
-      iframe.loading = "lazy";
-      iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture";
-      iframe.allowFullscreen = true;
-      media.appendChild(iframe);
-    } else if (hasUsableStream && stream?.thumbnailUrl) {
-      const thumbnail = create("img");
-      thumbnail.src = stream.thumbnailUrl;
-      thumbnail.alt = "";
-      thumbnail.loading = "lazy";
-      thumbnail.decoding = "async";
-      media.appendChild(thumbnail);
-    } else {
-      media.classList.add("is-fallback-preview");
-      const placeholder = create("div", "profile-latest-stream-placeholder");
-      const placeholderCard = create("div", "profile-latest-stream-placeholder-card");
-      placeholderCard.append(
-        createStreamPlatformIcon(hasUsableStream ? stream?.platform : "", "profile-latest-stream-placeholder-icon-image"),
-        create(
-          "span",
-          "profile-latest-stream-placeholder-text",
-          hasUsableStream ? (stream?.isLive ? "Player unavailable" : "Source preview unavailable") : "No livestream data available"
-        )
-      );
-      placeholder.appendChild(placeholderCard);
-      media.appendChild(placeholder);
-    }
+    renderLatestStreamMedia(media, stream, hasUsableStream);
 
     const body = create("div", "profile-latest-stream-body");
     const eyebrow = create("div", "profile-latest-stream-eyebrow");
@@ -9051,9 +9138,10 @@
             : "This featured stream source was selected from the supported platform priority for this public profile."
           : profile?.creatorCapable
             ? "No supported public livestream data is currently available for this creator profile. Expand this section any time to check again later."
-            : "No supported public livestream data is currently available for this public profile."
+          : "No supported public livestream data is currently available for this public profile."
       )
     );
+    body.querySelector("h3")?.setAttribute("data-latest-stream-title", "true");
     const facts = create("div", "profile-latest-stream-facts");
     if (hasUsableStream && stream?.viewerCount != null) facts.appendChild(create("span", "", `${formatNumber(stream.viewerCount)} watching`));
     if (hasUsableStream && stream?.gameName) facts.appendChild(create("span", "", stream.gameName));
@@ -9085,6 +9173,8 @@
     }
     card.append(media, body);
     panel.appendChild(card);
+    const thumbnailRow = hasUsableStream ? buildLatestStreamThumbnailRow(stream, media, body, helpers) : null;
+    if (thumbnailRow) panel.appendChild(thumbnailRow);
     details.append(summary, panel);
     return details;
   }

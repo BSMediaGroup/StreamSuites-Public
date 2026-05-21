@@ -198,7 +198,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /if \(options\.loadingSections === true\) \{/);
   assert.match(app, /function buildLatestStreamSection\(profile, helpers\)/);
   assert.match(app, /alternate_sources|alternateSources/);
-  assert.match(app, /const STREAM_SOURCE_PRIORITY = Object\.freeze\(\["rumble", "youtube", "twitch", "kick"\]\)/);
+  assert.match(app, /const STREAM_SOURCE_PRIORITY = Object\.freeze\(\["kick", "rumble", "youtube", "twitch"\]\)/);
   assert.match(app, /function buildLatestStreamSourceEntries\(profile, stream, hasUsableStream\)/);
   assert.match(app, /function buildLatestStreamSourceButton\(stream, label\)/);
   assert.match(app, /function buildStreamPlatformPill\(stream, fallbackLabel = "Stream"\)/);
@@ -210,6 +210,9 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /No livestream data available/);
   assert.match(app, /Expand for details/);
   assert.match(app, /resolveLatestStreamEmbedUrl\(stream\)/);
+  assert.match(app, /https:\/\/player\.kick\.com/);
+  assert.match(app, /function buildLatestStreamThumbnailRow\(baseStream, media, body, helpers\)/);
+  assert.match(app, /profile-latest-stream-thumbnails/);
   assert.match(app, /profile-latest-stream-source-button\$\{disabled \? " is-disabled" : ""\}/);
   assert.match(app, /const shouldRenderFamily = profile\?\.creatorCapable \|\| hasUsableStream \|\| alternateSources\.length > 0/);
   assert.match(app, /if \(hasUsableStream\) remember\(stream\)/);
