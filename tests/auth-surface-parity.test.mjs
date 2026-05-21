@@ -208,7 +208,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /const hasUsableStream = Boolean/);
   assert.match(app, /details\.open = hasUsableStream/);
   assert.match(app, /No livestream data available/);
-  assert.match(app, /Expand for details/);
+  assert.match(app, /label\.textContent = details\.open \? "Collapse" : "Expand"/);
   assert.match(app, /resolveLatestStreamEmbedUrl\(stream\)/);
   assert.match(app, /https:\/\/player\.kick\.com/);
   assert.match(app, /host === "player\.kick\.com"[\s\S]*\^\\\/\[a-z0-9_-\]\+\\\/\?\$/);
@@ -269,7 +269,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /\/assets\/icons\/ui\/shieldtick\.svg/);
   assert.match(app, /\/assets\/icons\/ui\/hidden\.svg/);
   assert.match(app, /details\.open \? 'url\("\/assets\/icons\/ui\/visible\.svg"\)' : 'url\("\/assets\/icons\/ui\/hidden\.svg"\)'/);
-  assert.match(app, /details\.addEventListener\("toggle", syncStateIcon\)/);
+  assert.match(app, /details\.addEventListener\("toggle", sync\)/);
   assert.match(app, /PUBLIC AUTHORITY/);
   assert.doesNotMatch(standaloneUtilityBlock, /shareTitle\.prepend/);
   assert.match(app, /function buildNativeShareButton\(url, label\)/);

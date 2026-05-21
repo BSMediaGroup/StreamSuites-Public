@@ -104,6 +104,11 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   assert.match(app, /identity\.public_slug \|\| identity\.publicSlug \|\| identity\.profile_slug \|\| identity\.profileSlug \|\| identity\.slug \|\| identity\.handle \|\| identity\.canonical_slug/);
   assert.match(app, /const link = create\("a", "dashboard-action progression-leaderboard-profile-link", "View profile"\)/);
   assert.match(app, /if \(slug\) return `\$\{CANONICAL_PROFILE_PREFIX\}\$\{encodeURIComponent\(slug\)\}`/);
+  assert.match(app, /function safeLeaderboardProfileUrl\(value = ""\)/);
+  assert.match(app, /const explicitHref = safeLeaderboardProfileUrl\(explicit\)/);
+  assert.match(app, /if \(userCode\) return `\$\{CANONICAL_PROFILE_PREFIX\}\$\{encodeURIComponent\(userCode\)\}`/);
+  assert.match(app, /identityCode && identityCode\.startsWith\("public-user"\)/);
+  assert.match(app, /return `\$\{CANONICAL_PROFILE_PREFIX\}\$\{PROFILE_FALLBACK_SLUG\}`/);
   assert.match(app, /function buildLeaderboardDetail\(entry = \{\}\)/);
   assert.match(app, /row\.setAttribute\("aria-expanded", isExpanded \? "true" : "false"\)/);
   assert.match(app, /function toggleLeaderboardRow\(entry = \{\}, state = \{\}, isExpanded = false\)/);
@@ -304,7 +309,7 @@ test("public profile game section renders runtime progression and economy author
   assert.match(profileSection, /Messages/);
   assert.match(profileSection, /No scoped wallet data yet/);
   assert.match(profileSection, /No scoped inventory data yet/);
-  assert.match(profileSection, /buildEconomyBalanceValue\(economy \|\| \{\}, \{ prominent: true, fullColorIcon: true \}\)/);
+  assert.match(profileSection, /buildEconomyBalanceValue\(economy \|\| \{\}, \{ prominent: true, fullColorIcon: true, showCashComponent: true \}\)/);
   assert.match(profileSection, /buildEconomyDenominationBreakdown\(economy \|\| \{\}\)/);
   assert.match(profileSection, /buildInventorySummaryList\(displayInventory\)/);
   assert.match(profileSection, /buildPublicValueItemExchangePanel\(exchangeableItems\)/);
@@ -356,9 +361,11 @@ test("public profile game section renders runtime progression and economy author
   assert.match(app, /profile\?\.scopedProgression \|\| profile\?\.scoped_progression/);
   assert.doesNotMatch(app, /if \(!rows\.length\) return null/);
   assert.match(app, /hydrateProfileScopedProgression\(profile, profileCode\)/);
-  assert.match(app, /View scoped leaderboard/);
+  assert.match(app, /"VIEW BOARD"/);
   assert.match(app, /scopedLeaderboardHref\(row\.scope_key\)/);
   assert.match(profileSection, /buildInventorySummaryList\(scopedInventory\)/);
+  assert.match(profileSection, /leaderboardHasInventoryPayload\(selectedRow\)/);
+  assert.match(profileSection, /scopedInventoryAvailable \? "Empty" : "Unavailable"/);
   assert.match(css, /\.profile-scoped-progression-section/);
   assert.match(scopedProfileSection, /section\.dataset\.profileChannelStats = "present"/);
   assert.doesNotMatch(scopedProfileSection, /Global Stats/);
@@ -368,7 +375,7 @@ test("public profile game section renders runtime progression and economy author
   assert.match(scopedProfileSection, /section\.dataset\.scopedBoardsList = "profile"/);
   assert.match(scopedProfileSection, /profile-scoped-progression-list/);
   assert.match(scopedProfileSection, /profile-scoped-progression-table-head/);
-  assert.match(app, /View scoped leaderboard/);
+  assert.match(app, /"VIEW BOARD"/);
   assert.match(css, /\.profile-scoped-progression-row/);
   assert.match(css, /\.profile-scoped-progression-table-head/);
   assert.match(css, /\.profile-scoped-progression-empty/);
@@ -383,9 +390,22 @@ test("public scoped platform icons and stable latest stream layout are pinned", 
     assert.match(app, new RegExp(`${key}:`));
   });
   assert.match(app, /function createScopedPlatformIcon/);
+  assert.match(app, /function createScopedPlatformBrandIcon/);
   assert.match(app, /function createScopedPlatformChip/);
+  assert.match(app, /createScopedPlatformBrandIcon\(source, "scoped-platform-chip-icon"\)/);
+  assert.match(css, /img\.profile-game-scope-chip-icon,[\s\S]*img\.scoped-platform-chip-icon\s*\{[\s\S]*-webkit-mask:\s*none/);
+  assert.match(app, /function buildProfileCollapsibleToggle\(details, className = "profile-collapsible-toggle"\)/);
+  assert.match(app, /label\.textContent = details\.open \? "Collapse" : "Expand"/);
+  assert.match(app, /summary\.append\(action, meta, buildProfileCollapsibleToggle\(details\)\)/);
+  assert.match(app, /summary\.append\(action, scopeWrap, buildProfileCollapsibleToggle\(details\)\)/);
+  assert.doesNotMatch(app, /hasUsableStream \? stream\?\.platformLabel : "No data available"/);
+  assert.doesNotMatch(app, /hasUsableStream \? \(stream\?\.isLive \? "Current live" : "Featured source"\) : "Expand for details"/);
+  assert.match(css, /\.profile-collapsible-toggle\s*\{[\s\S]*border-radius:\s*999px/);
   assert.match(app, /card\.dataset\.latestStreamLayout = "stable"/);
+  assert.match(app, /row\.dataset\.previousStreamsTray = "true"/);
+  assert.match(app, /realRows = recent\.filter[\s\S]*\.slice\(0, 6\)/);
   assert.match(css, /\.profile-latest-stream-card\s*\{[\s\S]*grid-template-columns:\s*minmax\(320px, 1\.18fr\) minmax\(0, 0\.82fr\)/);
+  assert.match(css, /\.profile-latest-stream-thumbnails\s*\{[\s\S]*grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/);
   assert.match(css, /\.profile-latest-stream-body\s*\{[\s\S]*align-content:\s*start/);
   assert.match(css, /\.profile-latest-stream-body h3\s*\{[\s\S]*overflow-wrap:\s*anywhere/);
 });
@@ -430,6 +450,9 @@ test("public economy rendering keeps denominations separate from inventory rows"
   assert.match(app, /currency_unit_label \|\| "Credit"/);
   assert.match(app, /currency_unit_plural_label \|\| `\$\{singular\}s`/);
   assert.match(app, /walletOrValue\.balance_total_credits \?\? walletOrValue\.balance_current/);
+  assert.match(app, /function resolveEconomyCashComponent\(wallet = \{\}, totalValue = 0\)/);
+  assert.match(app, /options\.showCashComponent && cashValue !== null/);
+  assert.match(app, /economy-balance-cash-component/);
   assert.match(app, /walletCard\.appendChild\(buildEconomyDenominationBreakdown\(wallet\)\)/);
   assert.match(app, /icon\.src = economyAssetPath\("\/assets\/games\/sscurrency\.webp"\)/);
   assert.match(app, /function isWalletDenominationInventoryItem\(item = \{\}\)/);
@@ -449,6 +472,7 @@ test("public economy rendering keeps denominations separate from inventory rows"
   assert.match(app, /body: JSON\.stringify\(\{[\s\S]*item_code: itemCode,[\s\S]*quantity,[\s\S]*reason_text: reasonText/);
   assert.match(css, /\.economy-breakdown-row,[\s\S]*\.economy-denomination-chip,[\s\S]*\.inventory-summary-row\s*\{[\s\S]*grid-template-columns:\s*24px minmax\(0, 1fr\) auto/);
   assert.match(css, /\.economy-breakdown-icon,[\s\S]*\.economy-denomination-chip img,[\s\S]*\.inventory-summary-icon\s*\{[\s\S]*width:\s*24px/);
+  assert.match(css, /\.economy-balance-cash-component\s*\{/);
 });
 
 test("public profile progress meter uses animated electric blue fill", () => {

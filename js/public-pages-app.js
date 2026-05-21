@@ -156,6 +156,7 @@
     plus: "/assets/icons/ui/plus.svg",
     minus: "/assets/icons/ui/minus.svg"
   });
+  const PROFILE_FALLBACK_SLUG = "publicuser";
   const STREAM_PLATFORM_LABELS = Object.freeze({
     rumble: "Rumble",
     youtube: "YouTube",
@@ -877,9 +878,11 @@
 
   function buildLatestStreamThumbnailRow(baseStream, media, body, helpers) {
     const recent = Array.isArray(baseStream?.recentStreams) ? baseStream.recentStreams : [];
-    const realRows = recent.filter((entry) => entry && (entry.title || entry.thumbnailUrl || entry.posterUrl || entry.url || entry.sourceUrl));
+    const realRows = recent.filter((entry) => entry && (entry.title || entry.thumbnailUrl || entry.posterUrl || entry.url || entry.sourceUrl)).slice(0, 6);
     if (!realRows.length) return null;
     const row = create("div", "profile-latest-stream-thumbnails");
+    row.dataset.previousStreamsTray = "true";
+    row.setAttribute("aria-label", "Previous streams");
     realRows.forEach((entry, index) => {
       const button = create("button", `profile-latest-stream-thumb${index === 0 ? " is-active" : ""}`);
       button.type = "button";
@@ -891,6 +894,10 @@
         image.alt = "";
         image.loading = "lazy";
         image.decoding = "async";
+        image.addEventListener("error", () => {
+          clear(imgWrap);
+          imgWrap.appendChild(createStreamPlatformIcon(entry.platform, "profile-latest-stream-thumb-icon"));
+        }, { once: true });
         imgWrap.appendChild(image);
       } else {
         imgWrap.appendChild(createStreamPlatformIcon(entry.platform, "profile-latest-stream-thumb-icon"));
@@ -1028,6 +1035,32 @@
       createStreamPlatformIcon(platform, "profile-latest-stream-source-button-icon"),
       create("span", "", platformLabel)
     );
+    return button;
+  }
+
+  function buildProfileCollapsibleToggle(details, className = "profile-collapsible-toggle") {
+    const button = create("button", className);
+    button.type = "button";
+    const label = create("span", `${className}-label`);
+    const icon = createIcon(details.open ? "/assets/icons/ui/visible.svg" : "/assets/icons/ui/hidden.svg", `${className}-icon`);
+    const sync = () => {
+      label.textContent = details.open ? "Collapse" : "Expand";
+      icon.style.setProperty(
+        "--icon-mask",
+        details.open ? 'url("/assets/icons/ui/visible.svg")' : 'url("/assets/icons/ui/hidden.svg")'
+      );
+      button.setAttribute("aria-label", `${details.open ? "Collapse" : "Expand"} section`);
+      button.setAttribute("aria-expanded", details.open ? "true" : "false");
+    };
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      details.open = !details.open;
+      sync();
+    });
+    details.addEventListener("toggle", sync);
+    button.append(label, icon);
+    sync();
     return button;
   }
 
@@ -1351,10 +1384,28 @@
     return createIcon(scopedPlatformIconPath(source), className);
   }
 
+  function createScopedPlatformBrandIcon(source = "", className = "scoped-platform-icon") {
+    const key = scopedPlatformKey(source);
+    if (Object.prototype.hasOwnProperty.call(STREAM_PLATFORM_LABELS, key)) {
+      const icon = create("img", `${className} ${className}--brand`);
+      icon.src = scopedPlatformIconPath(key);
+      icon.alt = "";
+      icon.loading = "lazy";
+      icon.decoding = "async";
+      icon.setAttribute("aria-hidden", "true");
+      icon.addEventListener("error", () => {
+        const fallback = createScopedPlatformIcon("global", className);
+        icon.replaceWith(fallback);
+      }, { once: true });
+      return icon;
+    }
+    return createScopedPlatformIcon(key === "global" ? "global" : "unknown", className);
+  }
+
   function createScopedPlatformChip(source = "", label = "") {
     const key = scopedPlatformKey(source);
     const chip = create("span", `scoped-platform-chip scoped-platform-chip--${key}`);
-    chip.append(createScopedPlatformIcon(source, "scoped-platform-chip-icon"), create("span", "", label || STREAM_PLATFORM_LABELS[key] || toTitle(key)));
+    chip.append(createScopedPlatformBrandIcon(source, "scoped-platform-chip-icon"), create("span", "", label || STREAM_PLATFORM_LABELS[key] || toTitle(key)));
     return chip;
   }
 
@@ -2982,7 +3033,35 @@
     icon.setAttribute("aria-hidden", "true");
     const formattedValue = options.compactNumber ? formatCompactNumber(value) : formatNumber(value);
     wrap.append(icon, create("span", "", `${formattedValue} ${economyCurrencyLabel(wallet, value)}`));
+    const cashValue = resolveEconomyCashComponent(wallet, value);
+    if (options.showCashComponent && cashValue !== null) {
+      wrap.appendChild(create("span", "economy-balance-cash-component", `(${formatNumber(cashValue)} Cash)`));
+    }
     return wrap;
+  }
+
+  function resolveEconomyCashComponent(wallet = {}, totalValue = 0) {
+    if (!wallet || typeof wallet !== "object") return null;
+    const direct = wallet.cash_balance_credits ?? wallet.cashBalanceCredits ?? wallet.balance_current ?? wallet.balanceCurrent;
+    if (direct != null) {
+      const parsed = Number(direct);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+    const rows = Array.isArray(wallet.denomination_breakdown) ? wallet.denomination_breakdown : [];
+    const cashRow = rows.find((item) => {
+      const code = String(item?.item_code || item?.denomination_code || "").toLowerCase();
+      const label = String(item?.label || item?.plural_label || "").toLowerCase();
+      return code.includes("bank") || code.includes("cash") || label.includes("banknote") || label.includes("cash");
+    });
+    if (cashRow?.value_total_credits != null) {
+      const parsed = Number(cashRow.value_total_credits);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+    if (Number.isFinite(Number(totalValue)) && Number(wallet.held_value_credits) > 0) {
+      const parsed = Number(totalValue) - Number(wallet.held_value_credits);
+      return Number.isFinite(parsed) ? Math.max(0, parsed) : null;
+    }
+    return null;
   }
 
   function buildEconomyDenominationBreakdown(wallet = {}) {
@@ -3294,7 +3373,7 @@
       slug: identity.slug || entry.slug,
       handle: identity.handle || entry.handle,
       canonical_slug: identity.canonical_slug || identity.canonicalSlug || entry.canonical_slug || entry.canonicalSlug,
-      profile_url: identity.profile_url || identity.profileUrl || entry.profile_url || entry.profileUrl,
+      profile_url: identity.public_profile_url || identity.publicProfileUrl || identity.profile_url || identity.profileUrl || entry.public_profile_url || entry.publicProfileUrl || entry.profile_url || entry.profileUrl,
       avatar_url: identity.avatar_url || entry.avatar_url || entry.avatarUrl,
       account_user_code: identity.account_user_code || entry.account_user_code,
       canonical_user_code: identity.canonical_user_code || entry.canonical_user_code || entry.user_code,
@@ -3360,14 +3439,36 @@
     };
   }
 
+  function safeLeaderboardProfileUrl(value = "") {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    if (/^\/u\/[^/?#]+/i.test(raw)) return raw;
+    try {
+      const url = new URL(raw, window.location.origin);
+      const host = url.hostname.replace(/^www\./i, "").toLowerCase();
+      if (host === "streamsuites.app" && /^\/u\/[^/?#]+/i.test(url.pathname)) {
+        return `${url.pathname}${url.search}${url.hash}`;
+      }
+    } catch (_err) {
+      return "";
+    }
+    return "";
+  }
+
   function leaderboardProfileHref(entry = {}) {
     const identity = leaderboardIdentity(entry);
     const explicit = String(identity.profile_url || identity.profileUrl || "").trim();
+    const explicitHref = safeLeaderboardProfileUrl(explicit);
+    if (explicitHref) return explicitHref;
     const slugFromUrl = getCanonicalSlugFromUrl(explicit);
     const slug = normalizePublicHandle(identity.public_slug || identity.publicSlug || identity.profile_slug || identity.profileSlug || identity.slug || identity.handle || identity.canonical_slug || identity.canonicalSlug || "", "") ||
       slugFromUrl;
     if (slug) return `${CANONICAL_PROFILE_PREFIX}${encodeURIComponent(slug)}`;
-    return "";
+    const userCode = normalizePublicHandle(identity.canonical_user_code || identity.account_user_code || identity.user_code || "", "");
+    if (userCode) return `${CANONICAL_PROFILE_PREFIX}${encodeURIComponent(userCode)}`;
+    const identityCode = normalizePublicHandle(identity.public_identity_code || identity.fallback_public_identity_code || identity.identity_code || "", "");
+    if (identityCode && identityCode.startsWith("public-user")) return `${CANONICAL_PROFILE_PREFIX}${encodeURIComponent(identityCode)}`;
+    return `${CANONICAL_PROFILE_PREFIX}${PROFILE_FALLBACK_SLUG}`;
   }
 
   function leaderboardSearchText(entry = {}) {
@@ -3482,6 +3583,20 @@
       }
     }
     return [];
+  }
+
+  function leaderboardHasInventoryPayload(entry = {}) {
+    return [
+      entry?.inventory,
+      entry?.inventory_summary,
+      entry?.inventorySummary,
+      entry?.economy_summary?.inventory,
+      entry?.economySummary?.inventory,
+      entry?.public_inventory,
+      entry?.publicInventory,
+      entry?.identity?.inventory,
+      entry?.identity?.public_inventory
+    ].some((candidate) => Array.isArray(candidate));
   }
 
   function buildLeaderboardInventoryOverview(entry = {}) {
@@ -9143,22 +9258,7 @@
       create("span", "", "LATEST STREAM")
     );
     const meta = create("span", "profile-authority-summary-meta");
-    [
-      hasUsableStream ? stream?.platformLabel : "No data available",
-      hasUsableStream ? (stream?.isLive ? "Current live" : "Featured source") : "Expand for details"
-    ].forEach((entry) => {
-      if (entry) meta.appendChild(create("span", "", entry));
-    });
-    const stateIcon = createIcon(details.open ? "/assets/icons/ui/visible.svg" : "/assets/icons/ui/hidden.svg", "profile-authority-summary-icon");
-    const syncStateIcon = () => {
-      stateIcon.style.setProperty(
-        "--icon-mask",
-        details.open ? 'url("/assets/icons/ui/visible.svg")' : 'url("/assets/icons/ui/hidden.svg")'
-      );
-    };
-    details.addEventListener("toggle", syncStateIcon);
-    syncStateIcon();
-    summary.append(action, meta, stateIcon);
+    summary.append(action, meta, buildProfileCollapsibleToggle(details));
 
     const panel = create("div", "profile-stream-panel");
     const card = create("article", `profile-latest-stream-card${hasUsableStream && stream?.isLive ? " is-live" : ""}${hasUsableStream ? "" : " is-empty"}`);
@@ -9251,7 +9351,7 @@
     const scopeWrap = create("span", "profile-game-scope-compact");
     scopeWrap.dataset.profileScopeSelector = "compact";
     const scopeChip = create("span", "profile-game-scope-chip");
-    scopeChip.append(createScopedPlatformIcon("global", "profile-game-scope-chip-icon"), create("span", "", "Global default"));
+    scopeChip.append(createScopedPlatformBrandIcon("global", "profile-game-scope-chip-icon"), create("span", "", "Global default"));
     const scopeSelect = create("select", "profile-game-scope-select-input");
     scopeSelect.setAttribute("aria-label", "Game and competition scope");
     scopeSelect.appendChild(new Option("Global", ""));
@@ -9261,16 +9361,7 @@
       scopeSelect.appendChild(option);
     });
     scopeWrap.append(scopeChip, scopeSelect);
-    const stateIcon = createIcon("/assets/icons/ui/visible.svg", "profile-authority-summary-icon");
-    const syncStateIcon = () => {
-      stateIcon.style.setProperty(
-        "--icon-mask",
-        details.open ? 'url("/assets/icons/ui/visible.svg")' : 'url("/assets/icons/ui/hidden.svg")'
-      );
-    };
-    details.addEventListener("toggle", syncStateIcon);
-    syncStateIcon();
-    summary.append(action, scopeWrap, stateIcon);
+    summary.append(action, scopeWrap, buildProfileCollapsibleToggle(details));
 
     const panel = create("div", "profile-game-panel");
     panel.dataset.profileProgressionMode = "global";
@@ -9296,11 +9387,12 @@
       const sourceProgressPercent = sourceHasProgressMeter ? Math.max(0, Math.min(100, (sourceProgressXp / sourceProgressNeededXp) * 100)) : 0;
       const scopedWallet = scoped ? leaderboardWallet(selectedRow) : null;
       const scopedInventory = scoped ? leaderboardInventoryItems(selectedRow) : [];
+      const scopedInventoryAvailable = scoped ? leaderboardHasInventoryPayload(selectedRow) : false;
       details.dataset.profileProgressionMode = scoped ? "scoped" : "global";
       panel.dataset.profileProgressionMode = scoped ? "scoped" : "global";
       clear(scopeChip);
       scopeChip.append(
-        createScopedPlatformIcon(scoped ? selectedRow : "global", "profile-game-scope-chip-icon"),
+        createScopedPlatformBrandIcon(scoped ? selectedRow : "global", "profile-game-scope-chip-icon"),
         create("span", "", scoped ? "Channel scope" : "Global default")
       );
       [
@@ -9346,8 +9438,8 @@
           className: "profile-game-preview-card--breakdown profile-game-preview-card--balance",
           label: scoped ? "Scoped balance" : "Current balance",
           value: scoped
-            ? scopedWallet ? buildEconomyBalanceValue(scopedWallet, { prominent: true, fullColorIcon: true }) : "Unavailable"
-            : buildEconomyBalanceValue(economy || {}, { prominent: true, fullColorIcon: true }),
+            ? scopedWallet ? buildEconomyBalanceValue(scopedWallet, { prominent: true, fullColorIcon: true, showCashComponent: true }) : "Unavailable"
+            : buildEconomyBalanceValue(economy || {}, { prominent: true, fullColorIcon: true, showCashComponent: true }),
           note: scoped
             ? scopedWallet ? "Scoped wallet hydrates from the selected Runtime/Auth scope." : "No scoped wallet data yet"
             : economy ? `${formatNumber(economy.earned_lifetime || 0)} earned lifetime from the runtime economy wallet` : "No economy events have been recorded yet.",
@@ -9358,14 +9450,14 @@
         {
           className: "profile-game-preview-card--breakdown profile-game-preview-card--inventory",
           label: scoped ? "Scoped inventory" : "Inventory",
-          value: scoped ? scopedInventory.length ? "Itemized" : "Unavailable" : displayInventory.length ? "Itemized" : "Empty",
+          value: scoped ? scopedInventory.length ? "Itemized" : scopedInventoryAvailable ? "Empty" : "Unavailable" : displayInventory.length ? "Itemized" : "Empty",
           note: scoped
-            ? scopedInventory.length ? "Scoped inventory hydrates from the selected Runtime/Auth scope." : "No scoped inventory data yet"
+            ? scopedInventory.length ? "Scoped inventory hydrates from the selected Runtime/Auth scope." : scopedInventoryAvailable ? "Scoped inventory is empty for this scope." : "No scoped inventory data yet"
             : displayInventory.length ? "Current quantities hydrate from runtime inventory state." : "No authority-owned items have been issued yet.",
           extra: (() => {
             const wrap = create("div", "profile-game-inventory-stack");
             if (scoped) {
-              wrap.appendChild(scopedInventory.length ? buildInventorySummaryList(scopedInventory) : buildUnavailable("No scoped inventory data yet"));
+              wrap.appendChild(scopedInventoryAvailable ? buildInventorySummaryList(scopedInventory) : buildUnavailable("No scoped inventory data yet"));
               return wrap;
             }
             wrap.appendChild(buildInventorySummaryList(displayInventory));
@@ -9516,16 +9608,7 @@
       authorityContext?.targetIdentityCode ? "Identity target" : "Target pending",
       options.authState?.authenticated ? "Signed in" : "Sign in required"
     ].forEach((entry) => meta.appendChild(create("span", "", entry)));
-    const stateIcon = createIcon("/assets/icons/ui/hidden.svg", "profile-authority-summary-icon");
-    const syncStateIcon = () => {
-      stateIcon.style.setProperty(
-        "--icon-mask",
-        details.open ? 'url("/assets/icons/ui/visible.svg")' : 'url("/assets/icons/ui/hidden.svg")'
-      );
-    };
-    details.addEventListener("toggle", syncStateIcon);
-    syncStateIcon();
-    summary.append(action, meta, stateIcon);
+    summary.append(action, meta, buildProfileCollapsibleToggle(details));
 
     const panel = buildAuthorityRequestPanel(context, options);
     panel.classList.add("profile-authority-expanded-panel");
@@ -9537,6 +9620,10 @@
     return String(
       row?.avatar_url ||
       row?.avatarUrl ||
+      row?.channel_avatar ||
+      row?.channelAvatar ||
+      row?.creator_avatar ||
+      row?.creatorAvatar ||
       row?.creator_avatar_url ||
       row?.creatorAvatarUrl ||
       row?.channel_avatar_url ||
@@ -9547,19 +9634,27 @@
     ).trim();
   }
 
+  function createScopedProgressionAvatar(row = {}) {
+    const avatarUrl = scopedProgressionAvatar(row);
+    const fallback = () => createScopedPlatformIcon(scopedPlatformKey(row) === "global" ? "global" : "unknown", "profile-scoped-progression-avatar profile-scoped-progression-avatar--icon");
+    if (!avatarUrl) return fallback();
+    const avatar = create("img", "profile-scoped-progression-avatar profile-scoped-progression-avatar--image");
+    avatar.src = avatarUrl;
+    avatar.alt = "";
+    avatar.loading = "lazy";
+    avatar.decoding = "async";
+    avatar.addEventListener("error", () => {
+      avatar.replaceWith(fallback());
+    }, { once: true });
+    return avatar;
+  }
+
   function buildProfileScopedProgressionRow(row = {}) {
     const card = create("article", "profile-scoped-progression-row");
     const scopeCell = create("div", "profile-scoped-progression-cell profile-scoped-progression-cell--scope");
     scopeCell.appendChild(createScopedPlatformChip(row, scopedProgressionPlatformLabel(row)));
     const channelCell = create("div", "profile-scoped-progression-cell profile-scoped-progression-cell--channel");
-    const avatarUrl = scopedProgressionAvatar(row);
-    const avatar = avatarUrl ? create("img", "profile-scoped-progression-avatar") : createScopedPlatformIcon("global", "profile-scoped-progression-avatar profile-scoped-progression-avatar--icon");
-    if (avatarUrl) {
-      avatar.src = avatarUrl;
-      avatar.alt = "";
-      avatar.loading = "lazy";
-      avatar.decoding = "async";
-    }
+    const avatar = createScopedProgressionAvatar(row);
     const channelCopy = create("span", "profile-scoped-progression-channel-copy");
     channelCopy.append(
       create("strong", "", scopedProgressionChannelLabel(row)),
@@ -9573,7 +9668,7 @@
     levelCell.appendChild(buildProgressionLevelChip(row, { compact: true }));
     const messagesCell = create("div", "profile-scoped-progression-cell profile-scoped-progression-cell--messages", formatNumber(row.message_count || 0));
     const updatedCell = create("div", "profile-scoped-progression-cell profile-scoped-progression-cell--updated", formatScopedProgressionUpdatedAt(row.updated_at || row.updatedAt));
-    const link = create("a", "dashboard-action profile-scoped-progression-link", "View scoped leaderboard");
+    const link = create("a", "dashboard-action profile-scoped-progression-link", "VIEW BOARD");
     link.href = scopedLeaderboardHref(row.scope_key);
     card.append(scopeCell, channelCell, rankCell, xpCell, levelCell, messagesCell, updatedCell, link);
     return card;
