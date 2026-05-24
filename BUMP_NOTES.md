@@ -2,6 +2,8 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
+- Corrected `/leaderboards` and `/community/leaderboard` hub cards to use real loaded global/scoped counts. Ranked identities and Lifetime XP now compute from the active board rows, Wallet Index avoids scoped/global leakage when scoped wallet summaries are absent, Creator Boards reports actual scoped board availability from `/api/public/progression/scopes` instead of `Soon`, and Boards Count reports real global + scoped inventory instead of preview text. The leaderboard hero is now shorter/slimmer with a smaller title, and scoped board mode updates the hero title, avatar/fallback, platform/current-board status, and current-board endpoint from selected Runtime/Auth scope metadata.
+
 - Updated `/u/*` Latest Stream handling for Runtime/Auth recent stream history. Live Kick streams still render the allowlisted `https://player.kick.com/{slug}` iframe, while ended Kick `recent_streams` records render as an ended/recent poster-card fallback with source metadata and an `Open on Kick` link instead of a fake live iframe. The previous-stream tray now renders only when real recent rows exist.
 - Human note: a Kick stream that was seen live can remain visible as recent evidence after it ends, but Public no longer labels it Live Now or embeds the live-only Kick player. Profile badges, scoped progression, wallet, inventory, leaderboards, and Rumble iframe allowlisting remain unchanged.
 

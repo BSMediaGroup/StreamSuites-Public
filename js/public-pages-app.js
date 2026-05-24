@@ -3700,8 +3700,24 @@
     };
   }
 
-  function buildLeaderboardStatCard({ label, value, note, state = "live" } = {}) {
+  function computeLeaderboardBoardInventory(scopes = [], options = {}) {
+    const scopedCount = uniqueProgressionScopes(scopes).length;
+    const seasonCount = Number(options.seasonCount || 0);
+    const gameCount = Number(options.gameCount || 0);
+    const extraCount = (Number.isFinite(seasonCount) ? seasonCount : 0) + (Number.isFinite(gameCount) ? gameCount : 0);
+    return {
+      globalCount: 1,
+      scopedCount,
+      seasonCount: Number.isFinite(seasonCount) ? seasonCount : 0,
+      gameCount: Number.isFinite(gameCount) ? gameCount : 0,
+      totalCount: 1 + scopedCount + extraCount
+    };
+  }
+
+  function buildLeaderboardStatCard({ label, value, note, state = "live", dataKey = "" } = {}) {
     const card = create("article", `progression-leaderboard-stat-card progression-leaderboard-stat-card--${state}`);
+    if (dataKey === "creator") card.dataset.leaderboardCreatorBoardCount = "true";
+    if (dataKey === "boards") card.dataset.leaderboardBoardCount = "true";
     const valueNode = create("strong", "progression-leaderboard-stat-value");
     if (value instanceof Node) valueNode.appendChild(value);
     else valueNode.textContent = value || "0";
@@ -3718,49 +3734,65 @@
     const stats = computeLeaderboardStats(rows);
     const scopeMeta = options.scopeMeta || null;
     const scoped = Boolean(scopeMeta?.scope_key || scopeMeta?.scopeKey);
-    const scopeKey = String(scopeMeta?.scope_key || scopeMeta?.scopeKey || "").trim();
+    const scopesLoading = Boolean(options.scopesLoading);
+    const scopesError = Boolean(options.scopesError);
+    const boardInventory = computeLeaderboardBoardInventory(options.scopes || [], options);
+    const creatorBoardValue = scopesLoading ? "Loading" : scopesError ? "Unavailable" : `${formatNumber(boardInventory.scopedCount)} available`;
+    const creatorBoardNote = scopesLoading
+      ? "Loading runtime scoped boards"
+      : scopesError
+        ? "Could not load runtime scoped boards"
+        : "Runtime scoped creator/channel boards";
+    const boardCountValue = scopesLoading ? "Loading" : scopesError ? "Unavailable" : `${formatNumber(boardInventory.totalCount)} board${boardInventory.totalCount === 1 ? "" : "s"}`;
+    const boardCountNote = scopesLoading
+      ? "Counting global and scoped boards"
+      : scopesError
+        ? "Could not count scoped boards"
+        : `${formatNumber(boardInventory.globalCount)} global + ${formatNumber(boardInventory.scopedCount)} scoped`;
     host.append(
       buildLeaderboardStatCard({
-        label: scoped ? "Scoped identities" : "Ranked identities",
+        label: "Ranked identities",
         value: formatNumber(stats.entries),
-        note: scoped ? scopedProgressionScopeLabel(scopeMeta) : "Loaded from runtime public progression"
+        note: scoped ? "Loaded for selected scoped board" : "Loaded from global leaderboard rows"
       }),
       buildLeaderboardStatCard({
-        label: scoped ? "Scoped XP" : "Lifetime XP",
+        label: "Lifetime XP",
         value: `${formatCompactNumber(stats.lifetimeXp)} XP`,
-        note: scoped ? "Computed from this creator/channel scope only" : "Computed from loaded leaderboard entries"
+        note: scoped ? "Computed from selected scoped rows" : "Computed from loaded global rows"
       }),
       buildLeaderboardStatCard({
-        label: scoped ? "Messages" : "Wallet Index",
+        label: "Wallet Index",
         value: stats.walletCount
           ? buildEconomyBalanceValue({ ...stats.walletCurrency, balance_total_credits: stats.walletTotal }, { compact: true, compactNumber: true })
           : scoped
-            ? formatNumber(rows.reduce((total, entry) => total + Number(entry?.message_count || 0), 0))
+            ? "Unavailable for this board"
             : "Not public",
         note: stats.walletCount
           ? `${formatNumber(stats.walletCount)} visible wallet summar${stats.walletCount === 1 ? "y" : "ies"}`
           : scoped
-            ? "Message count returned by the scoped contract"
+            ? "Scoped rows do not expose wallet summaries"
             : "Shown only when wallet totals are returned",
-        state: stats.walletCount || scoped ? "live" : "scaffold"
+        state: stats.walletCount ? "live" : "scaffold"
       }),
       buildLeaderboardStatCard({
-        label: scoped ? "Platform" : "Creator Boards",
-        value: scoped ? scopedProgressionPlatformLabel(scopeMeta) : "Soon",
-        note: scoped ? "Runtime/Auth scoped progression contract" : "Scaffold only; not wired to authority yet",
-        state: scoped ? "live" : "scaffold"
+        label: "Creator Boards",
+        value: creatorBoardValue,
+        note: creatorBoardNote,
+        state: scopesLoading || scopesError ? "scaffold" : "live",
+        dataKey: "creator"
       }),
       buildLeaderboardStatCard({
-        label: scoped ? "Channel" : "Season Pool",
-        value: scoped ? scopedProgressionChannelLabel(scopeMeta) : "Soon",
-        note: scoped ? "Selected scope label from Runtime/Auth" : "No live season pool contract yet",
-        state: scoped ? "live" : "scaffold"
+        label: "Season Pool",
+        value: boardInventory.seasonCount ? `${formatNumber(boardInventory.seasonCount)} available` : "Soon",
+        note: boardInventory.seasonCount ? "Runtime season board data loaded" : "No live season board contract yet",
+        state: boardInventory.seasonCount ? "live" : "scaffold"
       }),
       buildLeaderboardStatCard({
-        label: scoped ? "Scope key" : "Boards count",
-        value: scoped ? "Live" : "Preview",
-        note: scoped ? scopeKey : "Gallery below is placeholder-only",
-        state: scoped ? "live" : "scaffold"
+        label: "Boards count",
+        value: boardCountValue,
+        note: boardCountNote,
+        state: scopesLoading || scopesError ? "scaffold" : "live",
+        dataKey: "boards"
       })
     );
   }
@@ -4234,8 +4266,11 @@
     });
   }
 
-  function buildLeaderboardGalleryCard(scope = {}, onSelect = null, renderId = "") {
-    const card = create("article", "progression-leaderboard-gallery-card");
+  function buildLeaderboardGalleryCard(scope = {}, onSelect = null, renderId = "", selectedScopeKey = "") {
+    const isSelected = String(scope?.scope_key || "") === String(selectedScopeKey || "");
+    const card = create("article", `progression-leaderboard-gallery-card${isSelected ? " is-selected" : ""}`);
+    card.dataset.leaderboardScopeKey = scope?.scope_key || "";
+    card.dataset.leaderboardScopeSelected = isSelected ? "true" : "false";
     const header = create("div", "progression-leaderboard-gallery-card-head");
     const avatarWrap = create("span", "progression-leaderboard-gallery-avatar-wrap");
     avatarWrap.appendChild(createScopedProgressionAvatar(scope));
@@ -4261,7 +4296,7 @@
     return card;
   }
 
-  function renderLeaderboardGallery(host, scopes = [], onSelect = null) {
+  function renderLeaderboardGallery(host, scopes = [], onSelect = null, selectedScopeKey = "") {
     clear(host);
     const rows = uniqueProgressionScopes(scopes);
     if (!rows.length) {
@@ -4270,7 +4305,7 @@
     }
     const renderId = String(++leaderboardGalleryRenderSeq);
     rows.slice(0, SCOPED_LEADERBOARD_GALLERY_LIMIT).forEach((scope) => {
-      host.appendChild(buildLeaderboardGalleryCard(scope, onSelect, renderId));
+      host.appendChild(buildLeaderboardGalleryCard(scope, onSelect, renderId, selectedScopeKey));
     });
   }
 
@@ -4345,30 +4380,47 @@
     applyDocumentTitle("Leaderboards");
 
     const page = create("div", "progression-leaderboard-page");
-    const hero = create("section", "progression-leaderboard-hero");
+    const hero = create("section", "progression-leaderboard-hero progression-leaderboard-hero--slim");
+    hero.dataset.leaderboardHero = "global";
     const heroCopy = create("div", "progression-leaderboard-hero-copy");
+    const heroIdentity = create("div", "progression-leaderboard-hero-identity");
+    const heroAvatar = create("span", "progression-leaderboard-hero-avatar");
+    const heroText = create("div", "progression-leaderboard-hero-text");
+    const heroKicker = create("span", "progression-leaderboard-section-kicker", "StreamSuites public leaderboards hub");
+    const heroTitle = create("h1", "", "Global XP Leaderboards");
+    const heroSubtitle = create("p", "", "Track public lifetime XP placement, current levels, visible economy summaries, and runtime-scoped creator/channel boards.");
+    heroText.append(heroKicker, heroTitle, heroSubtitle);
+    heroIdentity.append(heroAvatar, heroText);
     heroCopy.append(
-      create("span", "progression-leaderboard-section-kicker", "StreamSuites public leaderboards hub"),
-      create("h1", "", "Global XP Leaderboards"),
-      create("p", "", "Track public lifetime XP placement, current levels, visible economy summaries, and the scaffold for future creator-defined boards from one runtime-backed public surface.")
+      heroIdentity
     );
     const chips = create("div", "progression-leaderboard-chip-row");
     [
       ["Global XP", "is-live"],
       ["Economy", "is-disabled"],
-      ["Creator boards", "is-disabled"],
+      ["Creator boards", "is-disabled", "Creator boards"],
       ["Game boards", "is-disabled"],
       ["Seasons", "is-disabled"]
-    ].forEach(([label, className]) => {
-      const chip = create("span", `progression-leaderboard-board-chip ${className}`, className === "is-live" ? label : `${label} soon`);
+    ].forEach(([label, className, displayLabel]) => {
+      const chip = create("span", `progression-leaderboard-board-chip ${className}`, displayLabel || (className === "is-live" ? label : `${label} soon`));
       if (className === "is-disabled") chip.setAttribute("aria-disabled", "true");
       chips.appendChild(chip);
     });
     heroCopy.appendChild(chips);
     const boardCard = create("aside", "progression-leaderboard-current-board");
-    boardCard.append(
+    boardCard.dataset.leaderboardCurrentBoard = "global";
+    const boardCardHead = create("div", "progression-leaderboard-current-board-head");
+    const boardCardAvatar = create("span", "progression-leaderboard-current-board-avatar");
+    const boardCardTitle = create("div", "progression-leaderboard-current-board-title");
+    boardCardTitle.append(
       create("span", "progression-leaderboard-stat-label", "Current Board"),
-      create("strong", "", "Global lifetime XP"),
+      create("strong", "", "Global lifetime XP")
+    );
+    boardCardHead.append(boardCardAvatar, boardCardTitle);
+    const boardCardStatus = create("span", "progression-leaderboard-current-board-status", "Global board");
+    boardCard.append(
+      boardCardHead,
+      boardCardStatus,
       create("p", "", "Rank is leaderboard placement only. Level is the XP progression tier returned by the runtime progression contract."),
       create("span", "progression-leaderboard-current-board-source", "/api/public/progression/leaderboard")
     );
@@ -4471,6 +4523,7 @@
         expandedId: "",
         query: "",
         page: 1,
+        scopesLoading: true,
         scopeEndpointError: false,
         render() {
           const filteredRows = filterLeaderboardRows(state.rows, state.query);
@@ -4488,6 +4541,19 @@
             createScopedPlatformBrandIcon(scoped ? state.scopeMeta : "global", "progression-leaderboard-scope-chip-icon"),
             create("span", "", scoped ? scopedProgressionScopeLabel(state.scopeMeta || { scope_key: state.scopeKey }) : "Global leaderboard")
           );
+          const currentScopeMeta = state.scopeMeta || { scope_key: state.scopeKey };
+          const scopeLabel = scoped ? scopedProgressionScopeLabel(currentScopeMeta) : "Global XP";
+          hero.dataset.leaderboardHero = scoped ? "scoped" : "global";
+          clear(heroAvatar);
+          if (scoped) {
+            heroAvatar.appendChild(createScopedProgressionAvatar(currentScopeMeta));
+          } else {
+            heroAvatar.appendChild(createScopedPlatformBrandIcon("global", "progression-leaderboard-hero-avatar-icon"));
+          }
+          heroTitle.textContent = scoped ? `${scopeLabel} Leaderboard` : "Global XP Leaderboards";
+          heroSubtitle.textContent = scoped
+            ? `Scoped to ${scopedProgressionChannelLabel(currentScopeMeta)} for ${scopedProgressionPlatformLabel(currentScopeMeta)} XP returned by the Runtime/Auth progression contract.`
+            : "Track public lifetime XP placement, current levels, visible economy summaries, and runtime-scoped creator/channel boards.";
           globalMode.classList.toggle("is-active", !scoped);
           scopedMode.classList.toggle("is-active", scoped);
           scopeSelect.disabled = !scoped || (!availableScopes.length && !state.scopeKey);
@@ -4502,10 +4568,23 @@
             loadLeaderboard(scopeKey || "").catch((error) => {
               status.textContent = error instanceof Error ? error.message : "Unable to load that scoped leaderboard right now.";
             });
+          }, state.scopeKey);
+          renderLeaderboardStats(statsGrid, state.rows, {
+            scopeMeta: state.scopeMeta,
+            scopes: availableScopes,
+            scopesLoading: state.scopesLoading,
+            scopesError: state.scopeEndpointError
           });
-          renderLeaderboardStats(statsGrid, state.rows, { scopeMeta: state.scopeMeta });
           renderLeaderboardPodium(podium, state.rows);
+          boardCard.dataset.leaderboardCurrentBoard = scoped ? "scoped" : "global";
+          clear(boardCardAvatar);
+          if (scoped) {
+            boardCardAvatar.appendChild(createScopedProgressionAvatar(currentScopeMeta));
+          } else {
+            boardCardAvatar.appendChild(createScopedPlatformBrandIcon("global", "progression-leaderboard-current-board-icon"));
+          }
           boardCard.querySelector("strong").textContent = scoped ? scopedProgressionScopeLabel(state.scopeMeta || { scope_key: state.scopeKey }) : "Global lifetime XP";
+          boardCardStatus.textContent = scoped ? "Channel scoped" : "Global board";
           boardCard.querySelector("p").textContent = scoped
             ? "This view is limited to creator/channel-scoped XP returned by the Runtime/Auth progression contract."
             : "Rank is leaderboard placement only. Level is the XP progression tier returned by the runtime progression contract.";
@@ -4613,6 +4692,7 @@
       });
       scopeRetry.addEventListener("click", () => {
         scopeRetry.disabled = true;
+        state.scopesLoading = true;
         scopeFeedback.textContent = "Loading channel scoped leaderboards...";
         fetchPublicProgressionScopes()
           .then((payload) => {
@@ -4626,6 +4706,8 @@
             state.render();
           })
           .finally(() => {
+            state.scopesLoading = false;
+            state.render();
             scopeRetry.disabled = false;
           });
       });
@@ -4654,6 +4736,10 @@
           .catch(() => {
             state.scopeEndpointError = true;
             renderLeaderboardScopeOptions(scopeSelect, availableScopes, scopeSearch.value || "", state.scopeKey);
+            state.render();
+          })
+          .finally(() => {
+            state.scopesLoading = false;
             state.render();
           });
       } catch (error) {
@@ -9763,9 +9849,14 @@
 
   function createScopedProgressionAvatar(row = {}) {
     const avatarUrl = scopedProgressionAvatar(row);
-    const fallback = () => createScopedPlatformIcon(scopedPlatformKey(row) === "global" ? "global" : "unknown", "profile-scoped-progression-avatar profile-scoped-progression-avatar--icon");
+    const fallback = () => {
+      const icon = createScopedPlatformIcon(scopedPlatformKey(row) === "global" ? "global" : "unknown", "profile-scoped-progression-avatar profile-scoped-progression-avatar--icon");
+      icon.dataset.scopeOwnerAvatar = "fallback";
+      return icon;
+    };
     if (!avatarUrl) return fallback();
     const avatar = create("img", "profile-scoped-progression-avatar profile-scoped-progression-avatar--image");
+    avatar.dataset.scopeOwnerAvatar = "image";
     avatar.src = avatarUrl;
     avatar.alt = "";
     avatar.loading = "lazy";

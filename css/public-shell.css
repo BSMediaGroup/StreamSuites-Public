@@ -9569,15 +9569,55 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 .progression-leaderboard-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(240px, 340px);
-  gap: 22px;
-  align-items: stretch;
-  padding: clamp(22px, 4vw, 38px);
+  gap: 16px;
+  align-items: center;
+  padding: clamp(16px, 2.5vw, 24px);
+}
+
+.progression-leaderboard-hero--slim {
+  min-height: 0;
 }
 
 .progression-leaderboard-hero-copy {
   display: grid;
-  gap: 14px;
+  gap: 12px;
   align-content: center;
+  min-width: 0;
+}
+
+.progression-leaderboard-hero-identity {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  min-width: 0;
+}
+
+.progression-leaderboard-hero-avatar {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  overflow: hidden;
+  border: 1px solid rgba(203, 219, 246, 0.16);
+  border-radius: 14px;
+  background: rgba(7, 11, 18, 0.64);
+}
+
+.progression-leaderboard-hero-avatar .profile-scoped-progression-avatar,
+.progression-leaderboard-hero-avatar-icon {
+  width: 100%;
+  height: 100%;
+}
+
+.progression-leaderboard-hero-avatar .profile-scoped-progression-avatar--icon,
+.progression-leaderboard-hero-avatar-icon {
+  padding: 13px;
+}
+
+.progression-leaderboard-hero-text {
+  display: grid;
+  gap: 8px;
   min-width: 0;
 }
 
@@ -9600,8 +9640,10 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .progression-leaderboard-hero h1 {
   max-width: 760px;
-  font-size: clamp(2.1rem, 5vw, 4.4rem);
-  line-height: 0.94;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: clamp(1.65rem, 3.2vw, 3rem);
+  line-height: 1.02;
 }
 
 .progression-leaderboard-hero p,
@@ -9615,7 +9657,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .progression-leaderboard-hero p {
   max-width: 720px;
-  font-size: 1rem;
+  font-size: 0.92rem;
 }
 
 .progression-leaderboard-chip-row,
@@ -9628,10 +9670,10 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 .progression-leaderboard-board-chip {
   display: inline-flex;
   align-items: center;
-  min-height: 30px;
+  min-height: 28px;
   border: 1px solid rgba(203, 219, 246, 0.14);
   border-radius: 999px;
-  padding: 5px 10px;
+  padding: 4px 9px;
   background: rgba(255, 255, 255, 0.045);
   color: rgba(238, 246, 255, 0.84);
   font-size: 0.72rem;
@@ -9651,20 +9693,72 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .progression-leaderboard-current-board {
   display: grid;
-  gap: 12px;
+  gap: 9px;
   align-content: start;
   min-width: 0;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 18px;
-  padding: 18px;
+  border-radius: 16px;
+  padding: 14px;
   background:
     radial-gradient(240px 170px at 90% 0%, rgba(251, 146, 60, 0.14), transparent 70%),
     rgba(255, 255, 255, 0.055);
 }
 
+.progression-leaderboard-current-board-head {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+.progression-leaderboard-current-board-avatar {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  overflow: hidden;
+  border: 1px solid rgba(203, 219, 246, 0.14);
+  border-radius: 10px;
+  background: rgba(7, 11, 18, 0.62);
+}
+
+.progression-leaderboard-current-board-avatar .profile-scoped-progression-avatar,
+.progression-leaderboard-current-board-icon {
+  width: 100%;
+  height: 100%;
+}
+
+.progression-leaderboard-current-board-avatar .profile-scoped-progression-avatar--icon,
+.progression-leaderboard-current-board-icon {
+  padding: 9px;
+}
+
+.progression-leaderboard-current-board-title {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
 .progression-leaderboard-current-board strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: rgba(255, 255, 255, 0.96);
-  font-size: 1.35rem;
+  font-size: 1.05rem;
+}
+
+.progression-leaderboard-current-board-status {
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid rgba(203, 219, 246, 0.13);
+  border-radius: 999px;
+  padding: 4px 8px;
+  color: rgba(238, 246, 255, 0.84);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
 }
 
 .progression-leaderboard-current-board-source {
@@ -10079,6 +10173,13 @@ body.public-shell-page .dashboard-card-link:focus-visible {
     rgba(255, 255, 255, 0.04);
 }
 
+.progression-leaderboard-gallery-card.is-selected {
+  border-color: rgba(251, 146, 60, 0.42);
+  background:
+    radial-gradient(220px 120px at 100% 0%, rgba(251, 146, 60, 0.14), transparent 68%),
+    rgba(255, 255, 255, 0.055);
+}
+
 .progression-leaderboard-gallery-card-head {
   display: grid;
   grid-template-columns: 38px minmax(0, 1fr);
@@ -10271,9 +10372,24 @@ body.public-shell-page .dashboard-card-link:focus-visible {
     grid-template-columns: 1fr;
   }
 
+  .progression-leaderboard-hero {
+    padding: 16px;
+  }
+
+  .progression-leaderboard-hero-identity {
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .progression-leaderboard-hero-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
   .progression-leaderboard-hero h1 {
     max-width: 100%;
-    font-size: 2rem;
+    font-size: 1.65rem;
     line-height: 1;
     overflow-wrap: anywhere;
   }
