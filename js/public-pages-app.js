@@ -3040,6 +3040,122 @@
     ).trim();
   }
 
+  const ITEM_INFO_FALLBACK_DESCRIPTION = "No public item description has been added yet.";
+  const ECONOMY_LIST_PAGE_SIZE = 6;
+
+  function closePinnedItemInfo(root = document) {
+    root.querySelectorAll?.("[data-item-info-trigger].is-pinned").forEach((row) => {
+      row.classList.remove("is-pinned");
+      row.setAttribute("aria-expanded", "false");
+    });
+  }
+
+  function normalizeItemInfo(entry = {}) {
+    const definition = entry.definition && typeof entry.definition === "object" ? entry.definition : {};
+    const publicMetadata = definition.public_metadata || entry.public_metadata || {};
+    const label = String(
+      entry.displayName ||
+      entry.display_name ||
+      entry.label ||
+      definition.display_name ||
+      definition.label ||
+      entry.item_code ||
+      entry.asset_code ||
+      "Item"
+    ).trim();
+    const description = String(
+      entry.short_description ||
+      definition.short_description ||
+      publicMetadata.short_description ||
+      entry.tooltip_description ||
+      definition.tooltip_description ||
+      publicMetadata.tooltip_description ||
+      ""
+    ).trim();
+    return {
+      iconPath: economyDenominationIconPath(entry) || definition.icon_url || definition.icon_path || entry.iconPath || "",
+      fallbackText: String(entry.fallbackText || label || "?").slice(0, 1).toUpperCase(),
+      label,
+      description,
+      quantity: entry.quantity,
+      quantityPrefix: entry.quantityPrefix || "",
+      category: entry.category || definition.category || definition.type || entry.type || "",
+      rarity: entry.rarity || definition.rarity || definition.tier || entry.tier || "",
+      unitValue: entry.unit_value ?? definition.unit_value ?? entry.value_in_credits ?? entry.currency_value ?? definition.currency_value,
+      exchangeValue: entry.exchange_value ?? definition.exchange_value ?? entry.exchange_value_credits,
+      context: entry.context || entry.contextual_public_note || definition.contextual_public_note || publicMetadata.contextual_public_note || "",
+      itemCode: entry.item_code || entry.asset_code || definition.item_code || "",
+      enabled: entry.public_tooltip_enabled ?? definition.public_tooltip_enabled ?? publicMetadata.public_tooltip_enabled ?? true
+    };
+  }
+
+  function buildItemInfoPopover(info = {}) {
+    const popover = create("span", "item-info-popover");
+    popover.dataset.itemInfoPopover = "true";
+    const media = create("span", "item-info-popover-media");
+    const iconPath = String(info.iconPath || "").trim();
+    if (iconPath) {
+      const icon = create("img", "item-info-popover-icon");
+      icon.src = economyAssetPath(iconPath);
+      icon.alt = "";
+      icon.loading = "lazy";
+      icon.decoding = "async";
+      media.appendChild(icon);
+    } else {
+      media.appendChild(create("span", "item-info-popover-icon item-info-popover-icon--fallback", info.fallbackText || "?"));
+    }
+    const body = create("span", "item-info-popover-body");
+    body.append(
+      create("strong", "item-info-popover-title", info.label || "Item"),
+      create("span", "item-info-popover-description", info.description || ITEM_INFO_FALLBACK_DESCRIPTION)
+    );
+    const facts = [
+      info.quantity != null ? `Held: ${info.quantityPrefix || ""}${formatNumber(info.quantity || 0)}` : "",
+      info.category ? `Type: ${toTitle(info.category)}` : "",
+      info.rarity ? `Rarity: ${toTitle(info.rarity)}` : "",
+      info.unitValue != null ? `Unit value: ${formatNumber(info.unitValue)}` : "",
+      info.exchangeValue != null ? `Exchange: ${formatNumber(info.exchangeValue)}` : "",
+      info.context || ""
+    ].filter(Boolean);
+    if (facts.length) {
+      const factList = create("span", "item-info-popover-facts");
+      facts.forEach((fact) => factList.appendChild(create("span", "", fact)));
+      body.appendChild(factList);
+    }
+    popover.append(media, body);
+    return popover;
+  }
+
+  function wireItemInfoTrigger(row) {
+    row.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const pinned = row.classList.contains("is-pinned");
+      closePinnedItemInfo(document);
+      row.classList.toggle("is-pinned", !pinned);
+      row.setAttribute("aria-expanded", !pinned ? "true" : "false");
+    });
+    row.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        row.click();
+      }
+      if (event.key === "Escape") {
+        row.classList.remove("is-pinned");
+        row.setAttribute("aria-expanded", "false");
+      }
+    });
+  }
+
+  if (!window.__streamsuitesItemInfoDismissBound) {
+    window.__streamsuitesItemInfoDismissBound = true;
+    document.addEventListener("click", (event) => {
+      if (!event.target?.closest?.("[data-item-info-trigger]")) closePinnedItemInfo(document);
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closePinnedItemInfo(document);
+    });
+  }
+
   function economyCurrencyLabel(wallet = {}, value = 0) {
     const singular = String(wallet?.currency_unit_label || "Credit").trim() || "Credit";
     const plural = String(wallet?.currency_unit_plural_label || `${singular}s`).trim() || `${singular}s`;
@@ -3107,16 +3223,24 @@
     return buildEconomyBreakdownList(
       rows.map((item) => ({
         className: "economy-denomination-chip",
+        rowDataAttribute: "data-wallet-row",
         iconPath: economyDenominationIconPath(item),
         fallbackText: String(item.label || item.plural_label || "?").slice(0, 1).toUpperCase(),
         label: Number(item.count || 0) === 1 ? item.label || "unit" : item.plural_label || item.label || "units",
         quantity: item.count || 0,
         meta: item.value_total_credits != null
           ? `${formatNumber(item.value_total_credits)} ${economyCurrencyLabel(wallet, item.value_total_credits)}`
-          : ""
+          : "",
+        itemInfo: {
+          ...item,
+          label: Number(item.count || 0) === 1 ? item.label || "unit" : item.plural_label || item.label || "units",
+          quantity: item.count || 0,
+          context: "Wallet balance unit"
+        }
       })),
       "No denomination breakdown is available yet.",
-      "economy-denomination-breakdown"
+      "economy-denomination-breakdown",
+      { pageSize: ECONOMY_LIST_PAGE_SIZE, pagerAttribute: "data-wallet-pager", pagerLabel: "Wallet page" }
     );
   }
 
@@ -3155,41 +3279,65 @@
     return row;
   }
 
-  function buildInventorySummaryList(items) {
+  function buildInventorySummaryList(items, options = {}) {
     const rows = Array.isArray(items)
       ? items.filter((item) => {
           return Number(item?.quantity || 0) > 0 && !isWalletDenominationInventoryItem(item);
         })
       : [];
     return buildEconomyBreakdownList(
-      rows.slice(0, 6).map((item) => {
+      rows.map((item) => {
         const definition = item?.definition || {};
         return {
           className: "inventory-summary-row",
+          rowDataAttribute: "data-inventory-row",
           iconClassName: "inventory-summary-icon",
           fallbackClassName: "inventory-summary-icon--fallback",
-          iconPath: definition.icon_path || item.icon_path || "",
+          iconPath: definition.icon_url || definition.icon_path || item.icon_path || "",
           fallbackText: String(definition.label || item.item_code || "?").slice(0, 1).toUpperCase(),
           label: definition.label || item.item_code || "Item",
           quantity: item.quantity || 0,
           quantityPrefix: "x",
-          meta: [definition.category, definition.rarity].filter(Boolean).join(" • ") || item.item_code || ""
+          meta: [definition.category, definition.rarity].filter(Boolean).join(" • ") || item.item_code || "",
+          itemInfo: {
+            ...item,
+            definition,
+            label: definition.label || item.item_code || "Item",
+            quantity: item.quantity || 0,
+            quantityPrefix: "x",
+            context: options.context || ""
+          }
         };
       }),
       "No inventory items have been recorded yet.",
-      "inventory-summary-list"
+      "inventory-summary-list",
+      { pageSize: ECONOMY_LIST_PAGE_SIZE, pagerAttribute: "data-inventory-pager", pagerLabel: "Inventory page" }
     );
   }
 
-  function buildEconomyBreakdownList(rows = [], emptyText = "No entries available yet.", className = "") {
+  function buildEconomyBreakdownList(rows = [], emptyText = "No entries available yet.", className = "", options = {}) {
     const list = create("div", `economy-breakdown-list${className ? ` ${className}` : ""}`);
     const entries = Array.isArray(rows) ? rows : [];
     if (!entries.length) {
       list.appendChild(create("div", "empty-state", emptyText));
       return list;
     }
-    entries.forEach((entry) => {
+    let page = 1;
+    const pageSize = Math.max(1, Number(options.pageSize || entries.length) || entries.length);
+    const renderRows = () => {
+      clear(list);
+      const pageCount = Math.max(1, Math.ceil(entries.length / pageSize));
+      page = Math.max(1, Math.min(page, pageCount));
+      const visibleEntries = entries.slice((page - 1) * pageSize, page * pageSize);
+      visibleEntries.forEach((entry) => {
       const row = create("div", `economy-breakdown-row${entry.className ? ` ${entry.className}` : ""}`);
+      row.classList.add("economy-asset-row");
+      row.setAttribute("role", "button");
+      row.tabIndex = 0;
+      row.dataset.itemInfoTrigger = "true";
+      row.setAttribute("data-item-info-trigger", "true");
+      row.setAttribute("aria-expanded", "false");
+      if (entry.rowDataAttribute) row.setAttribute(entry.rowDataAttribute, "true");
       const iconPath = String(entry.iconPath || "").trim();
       const icon = iconPath
         ? create("img", `economy-breakdown-icon${entry.iconClassName ? ` ${entry.iconClassName}` : ""}`)
@@ -3216,8 +3364,37 @@
         create("span", "economy-breakdown-meta", meta ? `[${meta}]` : "")
       );
       row.append(icon, body, create("strong", "economy-breakdown-quantity", `${entry.quantityPrefix || ""}${formatNumber(entry.quantity || 0)}`));
+      const info = normalizeItemInfo(entry.itemInfo || entry);
+      if (info.enabled !== false) row.appendChild(buildItemInfoPopover(info));
+      wireItemInfoTrigger(row);
       list.appendChild(row);
     });
+      if (entries.length > pageSize) {
+        const pager = create("div", "economy-breakdown-pager");
+        if (options.pagerAttribute) pager.setAttribute(options.pagerAttribute, "true");
+        const previous = create("button", "economy-breakdown-pager-button", "Previous");
+        previous.type = "button";
+        previous.disabled = page <= 1;
+        previous.addEventListener("click", (event) => {
+          event.stopPropagation();
+          page -= 1;
+          renderRows();
+        });
+        const indicator = create("span", "economy-breakdown-pager-indicator", `${page} / ${pageCount}`);
+        indicator.setAttribute("aria-label", options.pagerLabel || "Item page");
+        const next = create("button", "economy-breakdown-pager-button", "Next");
+        next.type = "button";
+        next.disabled = page >= pageCount;
+        next.addEventListener("click", (event) => {
+          event.stopPropagation();
+          page += 1;
+          renderRows();
+        });
+        pager.append(previous, indicator, next);
+        list.appendChild(pager);
+      }
+    };
+    renderRows();
     return list;
   }
 
@@ -9688,10 +9865,10 @@
           extra: (() => {
             const wrap = create("div", "profile-game-inventory-stack");
             if (scoped) {
-              wrap.appendChild(scopedInventoryAvailable ? buildInventorySummaryList(scopedInventory) : buildUnavailable("No scoped inventory data yet"));
+              wrap.appendChild(scopedInventoryAvailable ? buildInventorySummaryList(scopedInventory, { context: scopedProgressionScopeLabel(selectedRow) }) : buildUnavailable("No scoped inventory data yet"));
               return wrap;
             }
-            wrap.appendChild(buildInventorySummaryList(displayInventory));
+            wrap.appendChild(buildInventorySummaryList(displayInventory, { context: "Global profile inventory" }));
             if (options.canEdit) {
               const panel = buildPublicValueItemExchangePanel(exchangeableItems);
               if (panel) wrap.appendChild(panel);

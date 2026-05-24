@@ -316,7 +316,7 @@ test("public profile game section renders runtime progression and economy author
   assert.match(app, /Array\.isArray\(payload\?\.inventory\)/);
   assert.match(app, /ECONOMY_CURRENCY_SYMBOL_PATH = "\/assets\/games\/currencyunit\.svg"/);
   assert.match(app, /function buildEconomyDenominationBreakdown\(wallet = \{\}\)/);
-  assert.match(app, /function buildEconomyBreakdownList\(rows = \[\], emptyText = "No entries available yet\.", className = ""\)/);
+  assert.match(app, /function buildEconomyBreakdownList\(rows = \[\], emptyText = "No entries available yet\.", className = "", options = \{\}\)/);
   assert.match(app, /economy-breakdown-meta/);
   assert.match(app, /meta \? `\[\$\{meta\}\]` : ""/);
   assert.match(app, /wallet\.denomination_breakdown\.filter/);
@@ -336,7 +336,7 @@ test("public profile game section renders runtime progression and economy author
   assert.match(profileSection, /No scoped inventory data yet/);
   assert.match(profileSection, /buildEconomyBalanceValue\(economy \|\| \{\}, \{ prominent: true, fullColorIcon: true, showCashComponent: true \}\)/);
   assert.match(profileSection, /buildEconomyDenominationBreakdown\(economy \|\| \{\}\)/);
-  assert.match(profileSection, /buildInventorySummaryList\(displayInventory\)/);
+  assert.match(profileSection, /buildInventorySummaryList\(displayInventory, \{ context: "Global profile inventory" \}\)/);
   assert.match(profileSection, /buildPublicValueItemExchangePanel\(exchangeableItems\)/);
   assert.match(profileSection, /options\.canEdit/);
   assert.match(profileSection, /buildProgressionXpValue\(sourceXpTotal, \{ prominent: true \}\)/);
@@ -389,7 +389,7 @@ test("public profile game section renders runtime progression and economy author
   assert.match(app, /"VIEW"/);
   assert.doesNotMatch(scopedProfileSection, /"VIEW BOARD"/);
   assert.match(app, /scopedLeaderboardHref\(row\.scope_key\)/);
-  assert.match(profileSection, /buildInventorySummaryList\(scopedInventory\)/);
+  assert.match(profileSection, /buildInventorySummaryList\(scopedInventory, \{ context: scopedProgressionScopeLabel\(selectedRow\) \}\)/);
   assert.match(profileSection, /leaderboardHasInventoryPayload\(selectedRow\)/);
   assert.match(profileSection, /scopedInventoryAvailable \? "Empty" : "Unavailable"/);
   assert.match(css, /\.profile-scoped-progression-section/);
@@ -524,13 +524,27 @@ test("public economy rendering keeps denominations separate from inventory rows"
   assert.match(app, /"currency\.gem\.blue"/);
   assert.match(app, /"currency\.diamond"/);
   assert.match(app, /className: "inventory-summary-row"/);
+  assert.match(app, /rowDataAttribute: "data-inventory-row"/);
+  assert.match(app, /rowDataAttribute: "data-wallet-row"/);
+  assert.match(app, /pagerAttribute: "data-inventory-pager"/);
+  assert.match(app, /pagerAttribute: "data-wallet-pager"/);
+  assert.match(app, /data-item-info-trigger/);
+  assert.match(app, /dataset\.itemInfoPopover/);
+  assert.match(app, /ITEM_INFO_FALLBACK_DESCRIPTION = "No public item description has been added yet\."/);
+  assert.match(app, /row\.classList\.add\("economy-asset-row"\)/);
   assert.match(app, /quantityPrefix: "x"/);
   assert.match(app, /row\.append\(icon, body, create\("strong", "economy-breakdown-quantity", `\$\{entry\.quantityPrefix \|\| ""\}\$\{formatNumber\(entry\.quantity \|\| 0\)\}`\)\)/);
+  assert.match(app, /entries\.slice\(\(page - 1\) \* pageSize, page \* pageSize\)/);
+  assert.doesNotMatch(app, /rows\.slice\(0, 6\)\.map/);
   assert.match(app, /const exchangePanel = buildPublicValueItemExchangePanel\(exchangeableItems\)/);
   assert.match(app, /Gems and diamonds cannot be purchased directly/);
   assert.match(app, /body: JSON\.stringify\(\{[\s\S]*item_code: itemCode,[\s\S]*quantity,[\s\S]*reason_text: reasonText/);
   assert.match(css, /\.economy-breakdown-row,[\s\S]*\.economy-denomination-chip,[\s\S]*\.inventory-summary-row\s*\{[\s\S]*grid-template-columns:\s*24px minmax\(0, 1fr\) auto/);
+  assert.match(css, /\.economy-breakdown-row,[\s\S]*\.economy-denomination-chip,[\s\S]*\.inventory-summary-row\s*\{[\s\S]*min-height:\s*40px/);
   assert.match(css, /\.economy-breakdown-icon,[\s\S]*\.economy-denomination-chip img,[\s\S]*\.inventory-summary-icon\s*\{[\s\S]*width:\s*24px/);
+  assert.match(css, /\.item-info-popover\s*\{/);
+  assert.match(css, /\.economy-asset-row:hover \.item-info-popover/);
+  assert.match(css, /\.economy-breakdown-pager\s*\{/);
   assert.match(css, /\.economy-balance-cash-component\s*\{/);
 });
 

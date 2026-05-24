@@ -2,6 +2,9 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.3-alpha
 
+- Fixed `/u/*` Game & Competition wallet/inventory item browsing and information display. Inventory and wallet denomination rows now share the same compact row height/sizing, expose hover/focus/click item info popovers with public-safe metadata and fallback copy, and paginate inside each card when more than six rows exist instead of silently discarding extra inventory rows.
+- Human note: larger inventories can now be browsed with Previous/Next controls, row alignment between Current Balance and Inventory is consistent, and scoped/global mode switches rebuild the compact pager from the selected Runtime/Auth payload without fabricating missing scoped descriptions or values.
+
 - Updated Public wallet denomination rendering to prefer Runtime/Auth-provided denomination image references (`icon_url`, `icon_path`, and `image_asset_key`) before falling back to the existing text fallback treatment. Inventory icon rendering remains on the existing item-definition path, and wallet image load failures now replace the broken image with a compact fallback mark instead of leaving a broken image in the row.
 - Human note: `/u/*` wallet/current-balance rows should now reflect Admin-selected Coin, Banknote, Gem, and Diamond icons after Runtime/Auth refresh, matching the inventory section when both surfaces share the same asset.
 
