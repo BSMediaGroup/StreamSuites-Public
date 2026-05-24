@@ -2,6 +2,8 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.3-alpha
 
+- Force-replaced the broken per-row `/u/*` and `/@*` wallet/inventory tooltip implementation with a single shared singleton popover controller. Wallet and inventory item info now use the same hover/focus/click/tap path, only one row can be active or pinned at a time, Escape/outside click dismisses it, and the old row-child popover display CSS was removed so inventory popovers cannot stack open all at once. Wallet and inventory popover icons are enlarged consistently, rows share the same height/rhythm/hover glow treatment, wallet pagination now exposes `data-wallet-pager` plus `data-wallet-page` when more than six wallet asset rows exist, and inventory pagination is preserved.
+
 - Fixed `/u/*` and `/@*` wallet/inventory item tooltip behavior. Public now uses one active item-info controller so hover/focus/tap/click can show or pin a single wallet or inventory popover at a time, Escape/outside click dismiss pinned popovers, and inventory rows no longer render every per-row popover visibly at once.
 - Added a subtle interactive hover/focus glow for wallet and inventory rows, enlarged tooltip popover icons by 50%, and normalized wallet/inventory row rhythm around the same shared row marker, icon sizing token, min-height, padding, metadata spacing, and right-aligned quantity treatment while preserving existing wallet/inventory pagination.
 - Human note: public profile Game & Competition wallet and inventory rows should now feel equally clickable, align visually in height, keep pagers working, and show only the hovered or pinned item tooltip instead of a stacked inventory tooltip pile.

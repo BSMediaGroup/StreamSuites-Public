@@ -3043,8 +3043,12 @@
   const ITEM_INFO_FALLBACK_DESCRIPTION = "No public item description has been added yet.";
   const ECONOMY_LIST_PAGE_SIZE = 6;
   const itemInfoController = {
+    activeItemId: "",
+    activeSource: "",
     activeRow: null,
-    activeMode: "closed"
+    activeMode: "closed",
+    pinned: false,
+    popover: null
   };
 
   function markItemInfoRow(row, mode = "closed") {
@@ -3052,9 +3056,80 @@
     const active = mode === "hover" || mode === "pinned";
     row.dataset.itemTooltipState = mode;
     row.dataset.itemTooltipActive = active ? "true" : "false";
+    row.dataset.itemTooltipPinned = mode === "pinned" ? "true" : "false";
+    row.setAttribute("data-item-tooltip-pinned", mode === "pinned" ? "true" : "false");
     row.classList.toggle("is-pinned", mode === "pinned");
     row.setAttribute("aria-expanded", active ? "true" : "false");
-    row.querySelector?.("[data-item-info-popover]")?.setAttribute("aria-hidden", active ? "false" : "true");
+  }
+
+  function getItemInfoPopover() {
+    if (itemInfoController.popover?.isConnected) return itemInfoController.popover;
+    let popover = document.querySelector?.('[data-item-info-popover="singleton"]') || null;
+    if (!popover) {
+      popover = create("aside", "item-info-popover");
+      popover.dataset.itemInfoPopover = "singleton";
+      popover.dataset.itemTooltipPinned = "false";
+      popover.setAttribute("role", "tooltip");
+      popover.setAttribute("aria-hidden", "true");
+      popover.hidden = true;
+      document.body?.appendChild(popover);
+    }
+    itemInfoController.popover = popover;
+    return popover;
+  }
+
+  function positionItemInfoPopover(row, popover) {
+    if (!row || !popover) return;
+    const rect = row.getBoundingClientRect();
+    const spacing = 10;
+    const width = Math.min(360, Math.max(240, window.innerWidth - 32));
+    popover.style.width = `${width}px`;
+    const measuredHeight = popover.offsetHeight || 150;
+    const topSpace = rect.top;
+    const belowTop = rect.bottom + spacing;
+    const aboveTop = rect.top - measuredHeight - spacing;
+    const top = topSpace > measuredHeight + spacing
+      ? Math.max(12, aboveTop)
+      : Math.min(Math.max(12, belowTop), Math.max(12, window.innerHeight - measuredHeight - 12));
+    const preferredLeft = rect.right - width;
+    const left = Math.min(Math.max(12, preferredLeft), Math.max(12, window.innerWidth - width - 12));
+    popover.style.left = `${left}px`;
+    popover.style.top = `${top}px`;
+  }
+
+  function renderItemInfoPopoverContent(popover, info = {}) {
+    clear(popover);
+    const media = create("span", "item-info-popover-media");
+    const iconPath = String(info.iconPath || "").trim();
+    if (iconPath) {
+      const icon = create("img", "item-info-popover-icon item-info-popover-icon--large");
+      icon.src = economyAssetPath(iconPath);
+      icon.alt = "";
+      icon.loading = "lazy";
+      icon.decoding = "async";
+      media.appendChild(icon);
+    } else {
+      media.appendChild(create("span", "item-info-popover-icon item-info-popover-icon--large item-info-popover-icon--fallback", info.fallbackText || "?"));
+    }
+    const body = create("span", "item-info-popover-body");
+    body.append(
+      create("strong", "item-info-popover-title", info.label || "Item"),
+      create("span", "item-info-popover-description", info.description || ITEM_INFO_FALLBACK_DESCRIPTION)
+    );
+    const facts = [
+      info.quantity != null ? `Held: ${info.quantityPrefix || ""}${formatNumber(info.quantity || 0)}` : "",
+      info.category ? `Type: ${toTitle(info.category)}` : "",
+      info.rarity ? `Rarity: ${toTitle(info.rarity)}` : "",
+      info.unitValue != null ? `Unit value: ${formatNumber(info.unitValue)}` : "",
+      info.exchangeValue != null ? `Exchange: ${formatNumber(info.exchangeValue)}` : "",
+      info.context || ""
+    ].filter(Boolean);
+    if (facts.length) {
+      const factList = create("span", "item-info-popover-facts");
+      facts.forEach((fact) => factList.appendChild(create("span", "", fact)));
+      body.appendChild(factList);
+    }
+    popover.append(media, body);
   }
 
   function closeActiveItemInfo(root = document) {
@@ -3063,9 +3138,18 @@
       itemInfoController.activeRow = null;
       itemInfoController.activeMode = "closed";
     }
+    itemInfoController.activeItemId = "";
+    itemInfoController.activeSource = "";
+    itemInfoController.pinned = false;
     root.querySelectorAll?.('[data-item-info-trigger][data-item-tooltip-active="true"], [data-item-info-trigger].is-pinned').forEach((row) => {
       markItemInfoRow(row, "closed");
     });
+    const popover = itemInfoController.popover || root.querySelector?.('[data-item-info-popover="singleton"]');
+    if (popover) {
+      popover.hidden = true;
+      popover.dataset.itemTooltipPinned = "false";
+      popover.setAttribute("aria-hidden", "true");
+    }
   }
 
   function closePinnedItemInfo(root = document) {
@@ -3076,6 +3160,15 @@
     if (itemInfoController.activeMode === "pinned") {
       itemInfoController.activeRow = null;
       itemInfoController.activeMode = "closed";
+      itemInfoController.activeItemId = "";
+      itemInfoController.activeSource = "";
+      itemInfoController.pinned = false;
+    }
+    const popover = itemInfoController.popover || root.querySelector?.('[data-item-info-popover="singleton"]');
+    if (popover) {
+      popover.hidden = true;
+      popover.dataset.itemTooltipPinned = "false";
+      popover.setAttribute("aria-hidden", "true");
     }
   }
 
@@ -3084,12 +3177,24 @@
     if (mode === "hover" && itemInfoController.activeMode === "pinned" && itemInfoController.activeRow !== row) {
       return;
     }
+    const info = row.__streamsuitesItemInfo;
+    if (!info) return;
     if (itemInfoController.activeRow && itemInfoController.activeRow !== row) {
       markItemInfoRow(itemInfoController.activeRow, "closed");
     }
+    const popover = getItemInfoPopover();
+    renderItemInfoPopoverContent(popover, info);
     itemInfoController.activeRow = row;
     itemInfoController.activeMode = mode;
+    itemInfoController.activeItemId = row.dataset.itemInfoId || "";
+    itemInfoController.activeSource = row.dataset.itemInfoKind || "";
+    itemInfoController.pinned = mode === "pinned";
     markItemInfoRow(row, mode);
+    popover.hidden = false;
+    popover.dataset.itemTooltipPinned = mode === "pinned" ? "true" : "false";
+    popover.dataset.itemInfoKind = itemInfoController.activeSource;
+    popover.setAttribute("aria-hidden", "false");
+    requestAnimationFrame(() => positionItemInfoPopover(row, popover));
   }
 
   function normalizeItemInfo(entry = {}) {
@@ -3131,44 +3236,6 @@
     };
   }
 
-  function buildItemInfoPopover(info = {}) {
-    const popover = create("span", "item-info-popover");
-    popover.dataset.itemInfoPopover = "true";
-    popover.setAttribute("aria-hidden", "true");
-    const media = create("span", "item-info-popover-media");
-    const iconPath = String(info.iconPath || "").trim();
-    if (iconPath) {
-      const icon = create("img", "item-info-popover-icon");
-      icon.src = economyAssetPath(iconPath);
-      icon.alt = "";
-      icon.loading = "lazy";
-      icon.decoding = "async";
-      media.appendChild(icon);
-    } else {
-      media.appendChild(create("span", "item-info-popover-icon item-info-popover-icon--fallback", info.fallbackText || "?"));
-    }
-    const body = create("span", "item-info-popover-body");
-    body.append(
-      create("strong", "item-info-popover-title", info.label || "Item"),
-      create("span", "item-info-popover-description", info.description || ITEM_INFO_FALLBACK_DESCRIPTION)
-    );
-    const facts = [
-      info.quantity != null ? `Held: ${info.quantityPrefix || ""}${formatNumber(info.quantity || 0)}` : "",
-      info.category ? `Type: ${toTitle(info.category)}` : "",
-      info.rarity ? `Rarity: ${toTitle(info.rarity)}` : "",
-      info.unitValue != null ? `Unit value: ${formatNumber(info.unitValue)}` : "",
-      info.exchangeValue != null ? `Exchange: ${formatNumber(info.exchangeValue)}` : "",
-      info.context || ""
-    ].filter(Boolean);
-    if (facts.length) {
-      const factList = create("span", "item-info-popover-facts");
-      facts.forEach((fact) => factList.appendChild(create("span", "", fact)));
-      body.appendChild(factList);
-    }
-    popover.append(media, body);
-    return popover;
-  }
-
   function wireItemInfoTrigger(row) {
     markItemInfoRow(row, "closed");
     row.addEventListener("mouseenter", () => activateItemInfo(row, "hover"));
@@ -3203,11 +3270,21 @@
   if (!window.__streamsuitesItemInfoDismissBound) {
     window.__streamsuitesItemInfoDismissBound = true;
     document.addEventListener("click", (event) => {
-      if (!event.target?.closest?.("[data-item-info-trigger]")) closePinnedItemInfo(document);
+      if (!event.target?.closest?.("[data-item-info-trigger]") && !event.target?.closest?.('[data-item-info-popover="singleton"]')) closePinnedItemInfo(document);
     });
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") closeActiveItemInfo(document);
     });
+    window.addEventListener("resize", () => {
+      if (itemInfoController.activeRow && itemInfoController.popover && !itemInfoController.popover.hidden) {
+        positionItemInfoPopover(itemInfoController.activeRow, itemInfoController.popover);
+      }
+    });
+    window.addEventListener("scroll", () => {
+      if (itemInfoController.activeRow && itemInfoController.popover && !itemInfoController.popover.hidden) {
+        positionItemInfoPopover(itemInfoController.activeRow, itemInfoController.popover);
+      }
+    }, true);
   }
 
   function economyCurrencyLabel(wallet = {}, value = 0) {
@@ -3278,6 +3355,7 @@
       rows.map((item) => ({
         className: "economy-denomination-chip",
         rowDataAttribute: "data-wallet-row",
+        itemInfoKind: "wallet",
         iconPath: economyDenominationIconPath(item),
         fallbackText: String(item.label || item.plural_label || "?").slice(0, 1).toUpperCase(),
         label: Number(item.count || 0) === 1 ? item.label || "unit" : item.plural_label || item.label || "units",
@@ -3294,7 +3372,7 @@
       })),
       "No denomination breakdown is available yet.",
       "economy-denomination-breakdown",
-      { pageSize: ECONOMY_LIST_PAGE_SIZE, pagerAttribute: "data-wallet-pager", pagerLabel: "Wallet page" }
+      { pageSize: ECONOMY_LIST_PAGE_SIZE, pagerAttribute: "data-wallet-pager", pageAttribute: "data-wallet-page", pagerLabel: "Wallet page" }
     );
   }
 
@@ -3345,6 +3423,7 @@
         return {
           className: "inventory-summary-row",
           rowDataAttribute: "data-inventory-row",
+          itemInfoKind: "inventory",
           iconClassName: "inventory-summary-icon",
           fallbackClassName: "inventory-summary-icon--fallback",
           iconPath: definition.icon_url || definition.icon_path || item.icon_path || "",
@@ -3365,7 +3444,7 @@
       }),
       "No inventory items have been recorded yet.",
       "inventory-summary-list",
-      { pageSize: ECONOMY_LIST_PAGE_SIZE, pagerAttribute: "data-inventory-pager", pagerLabel: "Inventory page" }
+      { pageSize: ECONOMY_LIST_PAGE_SIZE, pagerAttribute: "data-inventory-pager", pageAttribute: "data-inventory-page", pagerLabel: "Inventory page" }
     );
   }
 
@@ -3386,15 +3465,18 @@
       const visibleEntries = entries.slice((page - 1) * pageSize, page * pageSize);
       visibleEntries.forEach((entry) => {
       const row = create("div", `economy-breakdown-row${entry.className ? ` ${entry.className}` : ""}`);
-      row.classList.add("economy-asset-row", "economy-item-row");
+      row.classList.add("economy-asset-row", "economy-item-row", "profile-economy-item-row");
       row.setAttribute("role", "button");
       row.tabIndex = 0;
-      row.dataset.itemInfoTrigger = "true";
       row.dataset.itemTooltipState = "closed";
       row.dataset.itemTooltipActive = "false";
-      row.setAttribute("data-item-info-trigger", "true");
+      row.dataset.itemTooltipPinned = "false";
+      row.setAttribute("data-item-tooltip-pinned", "false");
+      row.dataset.profileEconomyRow = "true";
       row.setAttribute("aria-expanded", "false");
       if (entry.rowDataAttribute) row.setAttribute(entry.rowDataAttribute, "true");
+      row.dataset.itemInfoKind = entry.itemInfoKind || (entry.rowDataAttribute === "data-wallet-row" ? "wallet" : entry.rowDataAttribute === "data-inventory-row" ? "inventory" : "item");
+      row.dataset.itemInfoId = `${row.dataset.itemInfoKind}:${(page - 1) * pageSize + visibleEntries.indexOf(entry)}`;
       const iconPath = String(entry.iconPath || "").trim();
       const icon = iconPath
         ? create("img", `economy-breakdown-icon${entry.iconClassName ? ` ${entry.iconClassName}` : ""}`)
@@ -3422,13 +3504,18 @@
       );
       row.append(icon, body, create("strong", "economy-breakdown-quantity", `${entry.quantityPrefix || ""}${formatNumber(entry.quantity || 0)}`));
       const info = normalizeItemInfo(entry.itemInfo || entry);
-      if (info.enabled !== false) row.appendChild(buildItemInfoPopover(info));
-      wireItemInfoTrigger(row);
+      if (info.enabled !== false) {
+        row.__streamsuitesItemInfo = info;
+        row.dataset.itemInfoTrigger = "true";
+        row.setAttribute("data-item-info-trigger", "true");
+        wireItemInfoTrigger(row);
+      }
       list.appendChild(row);
     });
       if (entries.length > pageSize) {
         const pager = create("div", "economy-breakdown-pager");
         if (options.pagerAttribute) pager.setAttribute(options.pagerAttribute, "true");
+        if (options.pageAttribute) pager.setAttribute(options.pageAttribute, String(page));
         const previous = create("button", "economy-breakdown-pager-button", "Previous");
         previous.type = "button";
         previous.disabled = page <= 1;
