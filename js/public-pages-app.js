@@ -3026,7 +3026,18 @@
   function economyAssetPath(path) {
     const value = String(path || "").trim();
     if (!value) return "";
-    return value.startsWith("/") || /^https?:\/\//i.test(value) ? value : `/${value.replace(/^\/+/, "")}`;
+    return value.startsWith("/") || /^(https?:\/\/|data:image\/|blob:)/i.test(value) ? value : `/${value.replace(/^\/+/, "")}`;
+  }
+
+  function economyDenominationIconPath(item = {}) {
+    return String(
+      item.icon_url ||
+      item.icon_path ||
+      item.image_asset_key ||
+      item.image_asset_id ||
+      item.fallback_icon_url ||
+      ""
+    ).trim();
   }
 
   function economyCurrencyLabel(wallet = {}, value = 0) {
@@ -3096,7 +3107,8 @@
     return buildEconomyBreakdownList(
       rows.map((item) => ({
         className: "economy-denomination-chip",
-        iconPath: item.icon_path,
+        iconPath: economyDenominationIconPath(item),
+        fallbackText: String(item.label || item.plural_label || "?").slice(0, 1).toUpperCase(),
         label: Number(item.count || 0) === 1 ? item.label || "unit" : item.plural_label || item.label || "units",
         quantity: item.count || 0,
         meta: item.value_total_credits != null
@@ -3187,6 +3199,12 @@
         icon.alt = "";
         icon.loading = "lazy";
         icon.decoding = "async";
+        icon.addEventListener("error", () => {
+          const fallback = create("span", `economy-breakdown-icon economy-breakdown-icon--fallback${entry.fallbackClassName ? ` ${entry.fallbackClassName}` : ""}`);
+          fallback.textContent = String(entry.fallbackText || entry.label || "?").slice(0, 1).toUpperCase();
+          fallback.setAttribute("aria-hidden", "true");
+          icon.replaceWith(fallback);
+        }, { once: true });
       } else {
         icon.textContent = String(entry.fallbackText || entry.label || "?").slice(0, 1).toUpperCase();
         icon.setAttribute("aria-hidden", "true");

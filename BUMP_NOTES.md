@@ -1,5 +1,10 @@
 # Bump Notes
 
+## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.3-alpha
+
+- Updated Public wallet denomination rendering to prefer Runtime/Auth-provided denomination image references (`icon_url`, `icon_path`, and `image_asset_key`) before falling back to the existing text fallback treatment. Inventory icon rendering remains on the existing item-definition path, and wallet image load failures now replace the broken image with a compact fallback mark instead of leaving a broken image in the row.
+- Human note: `/u/*` wallet/current-balance rows should now reflect Admin-selected Coin, Banknote, Gem, and Diamond icons after Runtime/Auth refresh, matching the inventory section when both surfaces share the same asset.
+
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.8-alpha
 
 - Corrected `/leaderboards` and `/community/leaderboard` hub cards to use real loaded global/scoped counts. Ranked identities and Lifetime XP now compute from the active board rows, Wallet Index avoids scoped/global leakage when scoped wallet summaries are absent, Creator Boards reports actual scoped board availability from `/api/public/progression/scopes` instead of `Soon`, and Boards Count reports real global + scoped inventory instead of preview text. The leaderboard hero is now shorter/slimmer with a smaller title, and scoped board mode updates the hero title, avatar/fallback, platform/current-board status, and current-board endpoint from selected Runtime/Auth scope metadata.
