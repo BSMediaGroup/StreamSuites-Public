@@ -2,6 +2,10 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.3-alpha
 
+- Fixed `/u/*` and `/@*` wallet/inventory item tooltip behavior. Public now uses one active item-info controller so hover/focus/tap/click can show or pin a single wallet or inventory popover at a time, Escape/outside click dismiss pinned popovers, and inventory rows no longer render every per-row popover visibly at once.
+- Added a subtle interactive hover/focus glow for wallet and inventory rows, enlarged tooltip popover icons by 50%, and normalized wallet/inventory row rhythm around the same shared row marker, icon sizing token, min-height, padding, metadata spacing, and right-aligned quantity treatment while preserving existing wallet/inventory pagination.
+- Human note: public profile Game & Competition wallet and inventory rows should now feel equally clickable, align visually in height, keep pagers working, and show only the hovered or pinned item tooltip instead of a stacked inventory tooltip pile.
+
 - Fixed `/u/*` Game & Competition wallet/inventory item browsing and information display. Inventory and wallet denomination rows now share the same compact row height/sizing, expose hover/focus/click item info popovers with public-safe metadata and fallback copy, and paginate inside each card when more than six rows exist instead of silently discarding extra inventory rows.
 - Human note: larger inventories can now be browsed with Previous/Next controls, row alignment between Current Balance and Inventory is consistent, and scoped/global mode switches rebuild the compact pager from the selected Runtime/Auth payload without fabricating missing scoped descriptions or values.
 

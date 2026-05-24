@@ -529,9 +529,11 @@ test("public economy rendering keeps denominations separate from inventory rows"
   assert.match(app, /pagerAttribute: "data-inventory-pager"/);
   assert.match(app, /pagerAttribute: "data-wallet-pager"/);
   assert.match(app, /data-item-info-trigger/);
+  assert.match(app, /data-item-tooltip-state/);
+  assert.match(app, /data-item-tooltip-active/);
   assert.match(app, /dataset\.itemInfoPopover/);
   assert.match(app, /ITEM_INFO_FALLBACK_DESCRIPTION = "No public item description has been added yet\."/);
-  assert.match(app, /row\.classList\.add\("economy-asset-row"\)/);
+  assert.match(app, /row\.classList\.add\("economy-asset-row", "economy-item-row"\)/);
   assert.match(app, /quantityPrefix: "x"/);
   assert.match(app, /row\.append\(icon, body, create\("strong", "economy-breakdown-quantity", `\$\{entry\.quantityPrefix \|\| ""\}\$\{formatNumber\(entry\.quantity \|\| 0\)\}`\)\)/);
   assert.match(app, /entries\.slice\(\(page - 1\) \* pageSize, page \* pageSize\)/);
@@ -539,13 +541,36 @@ test("public economy rendering keeps denominations separate from inventory rows"
   assert.match(app, /const exchangePanel = buildPublicValueItemExchangePanel\(exchangeableItems\)/);
   assert.match(app, /Gems and diamonds cannot be purchased directly/);
   assert.match(app, /body: JSON\.stringify\(\{[\s\S]*item_code: itemCode,[\s\S]*quantity,[\s\S]*reason_text: reasonText/);
-  assert.match(css, /\.economy-breakdown-row,[\s\S]*\.economy-denomination-chip,[\s\S]*\.inventory-summary-row\s*\{[\s\S]*grid-template-columns:\s*24px minmax\(0, 1fr\) auto/);
-  assert.match(css, /\.economy-breakdown-row,[\s\S]*\.economy-denomination-chip,[\s\S]*\.inventory-summary-row\s*\{[\s\S]*min-height:\s*40px/);
-  assert.match(css, /\.economy-breakdown-icon,[\s\S]*\.economy-denomination-chip img,[\s\S]*\.inventory-summary-icon\s*\{[\s\S]*width:\s*24px/);
+  assert.match(css, /--profile-economy-row-min-height:\s*44px/);
+  assert.match(css, /\.economy-breakdown-row,[\s\S]*\.economy-denomination-chip,[\s\S]*\.inventory-summary-row\s*\{[\s\S]*grid-template-columns:\s*var\(--profile-economy-row-icon-size, 24px\) minmax\(0, 1fr\) auto/);
+  assert.match(css, /\.economy-breakdown-row,[\s\S]*\.economy-denomination-chip,[\s\S]*\.inventory-summary-row\s*\{[\s\S]*min-height:\s*var\(--profile-economy-row-min-height, 44px\)/);
+  assert.match(css, /\.economy-breakdown-icon,[\s\S]*\.economy-denomination-chip img,[\s\S]*\.inventory-summary-icon\s*\{[\s\S]*width:\s*var\(--profile-economy-row-icon-size, 24px\)/);
   assert.match(css, /\.item-info-popover\s*\{/);
-  assert.match(css, /\.economy-asset-row:hover \.item-info-popover/);
+  assert.match(css, /\.economy-asset-row\[data-item-tooltip-active="true"\] > \.item-info-popover/);
   assert.match(css, /\.economy-breakdown-pager\s*\{/);
   assert.match(css, /\.economy-balance-cash-component\s*\{/);
+});
+
+test("public economy item tooltip controller keeps one active popover and preserves fallback copy", () => {
+  const app = read("js/public-pages-app.js");
+  const css = read("css/public-shell.css");
+
+  assert.match(app, /const itemInfoController = \{[\s\S]*activeRow:\s*null,[\s\S]*activeMode:\s*"closed"/);
+  assert.match(app, /function activateItemInfo\(row, mode = "hover"\)/);
+  assert.match(app, /itemInfoController\.activeRow && itemInfoController\.activeRow !== row[\s\S]*markItemInfoRow\(itemInfoController\.activeRow, "closed"\)/);
+  assert.match(app, /mode === "hover" && itemInfoController\.activeMode === "pinned"/);
+  assert.match(app, /row\.addEventListener\("mouseenter", \(\) => activateItemInfo\(row, "hover"\)\)/);
+  assert.match(app, /row\.addEventListener\("mouseleave", \(\) => \{[\s\S]*closeActiveItemInfo\(document\)/);
+  assert.match(app, /row\.addEventListener\("focus", \(\) => activateItemInfo\(row, "hover"\)\)/);
+  assert.match(app, /if \(!pinned\) activateItemInfo\(row, "pinned"\)/);
+  assert.match(app, /event\.key === "Escape"[\s\S]*closeActiveItemInfo\(document\)/);
+  assert.match(app, /if \(!event\.target\?\.closest\?\.\("\[data-item-info-trigger\]"\)\) closePinnedItemInfo\(document\)/);
+  assert.match(app, /ITEM_INFO_FALLBACK_DESCRIPTION = "No public item description has been added yet\."/);
+  assert.match(css, /\.economy-asset-row:hover,[\s\S]*\.economy-asset-row:focus-visible,[\s\S]*\.economy-asset-row\[data-item-tooltip-active="true"\]\s*\{[\s\S]*box-shadow:/);
+  assert.match(css, /\.item-info-popover\s*\{[\s\S]*display:\s*none/);
+  assert.doesNotMatch(css, /\.economy-asset-row:hover \.item-info-popover/);
+  assert.match(css, /\.item-info-popover\s*\{[\s\S]*grid-template-columns:\s*60px minmax\(0, 1fr\)/);
+  assert.match(css, /\.item-info-popover-icon\s*\{[\s\S]*width:\s*51px/);
 });
 
 test("public profile progress meter uses animated electric blue fill", () => {

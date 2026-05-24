@@ -8499,6 +8499,8 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   display: grid;
   gap: 7px;
   margin-top: 10px;
+  --profile-economy-row-min-height: 44px;
+  --profile-economy-row-icon-size: 24px;
 }
 
 .economy-denomination-breakdown {
@@ -8510,31 +8512,36 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 .inventory-summary-row {
   position: relative;
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) auto;
+  grid-template-columns: var(--profile-economy-row-icon-size, 24px) minmax(0, 1fr) auto;
   align-items: center;
   gap: 9px;
   min-width: 0;
-  min-height: 40px;
-  padding: 6px 8px;
+  min-height: var(--profile-economy-row-min-height, 44px);
+  padding: 7px 9px;
   border: 1px solid rgba(188, 207, 237, 0.16);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.035);
   color: rgba(245, 248, 255, 0.94);
   font-size: 12px;
+  line-height: 1.25;
   cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
 .economy-breakdown-icon,
 .economy-denomination-chip img,
 .inventory-summary-icon {
-  width: 24px;
-  height: 24px;
+  width: var(--profile-economy-row-icon-size, 24px);
+  height: var(--profile-economy-row-icon-size, 24px);
   object-fit: contain;
 }
 
 .inventory-summary-row {
   border-top: 0;
-  padding-top: 6px;
 }
 
 .economy-breakdown-icon--fallback,
@@ -8567,7 +8574,16 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .economy-breakdown-quantity {
   justify-self: end;
+  align-self: center;
   white-space: nowrap;
+}
+
+.economy-asset-row:hover,
+.economy-asset-row:focus-visible,
+.economy-asset-row[data-item-tooltip-active="true"] {
+  border-color: rgba(139, 197, 255, 0.36);
+  background: rgba(120, 174, 255, 0.075);
+  box-shadow: 0 0 0 1px rgba(139, 197, 255, 0.12), 0 12px 28px rgba(15, 35, 70, 0.22);
 }
 
 .economy-asset-row:focus-visible {
@@ -8581,9 +8597,9 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   bottom: calc(100% + 8px);
   z-index: 30;
   display: none;
-  grid-template-columns: 44px minmax(0, 1fr);
-  gap: 10px;
-  width: min(320px, calc(100vw - 40px));
+  grid-template-columns: 60px minmax(0, 1fr);
+  gap: 12px;
+  width: min(360px, calc(100vw - 40px));
   padding: 12px;
   border: 1px solid rgba(183, 215, 255, 0.22);
   border-radius: 12px;
@@ -8595,24 +8611,22 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   backdrop-filter: blur(16px);
 }
 
-.economy-asset-row:hover .item-info-popover,
-.economy-asset-row:focus-visible .item-info-popover,
-.economy-asset-row.is-pinned .item-info-popover {
+.economy-asset-row[data-item-tooltip-active="true"] > .item-info-popover {
   display: grid;
 }
 
 .item-info-popover-media {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 60px;
+  height: 60px;
   border-radius: 10px;
   background: rgba(125, 184, 255, 0.12);
 }
 
 .item-info-popover-icon {
-  width: 34px;
-  height: 34px;
+  width: 51px;
+  height: 51px;
   object-fit: contain;
 }
 

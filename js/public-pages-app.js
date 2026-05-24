@@ -3042,12 +3042,54 @@
 
   const ITEM_INFO_FALLBACK_DESCRIPTION = "No public item description has been added yet.";
   const ECONOMY_LIST_PAGE_SIZE = 6;
+  const itemInfoController = {
+    activeRow: null,
+    activeMode: "closed"
+  };
+
+  function markItemInfoRow(row, mode = "closed") {
+    if (!row) return;
+    const active = mode === "hover" || mode === "pinned";
+    row.dataset.itemTooltipState = mode;
+    row.dataset.itemTooltipActive = active ? "true" : "false";
+    row.classList.toggle("is-pinned", mode === "pinned");
+    row.setAttribute("aria-expanded", active ? "true" : "false");
+    row.querySelector?.("[data-item-info-popover]")?.setAttribute("aria-hidden", active ? "false" : "true");
+  }
+
+  function closeActiveItemInfo(root = document) {
+    if (itemInfoController.activeRow) {
+      markItemInfoRow(itemInfoController.activeRow, "closed");
+      itemInfoController.activeRow = null;
+      itemInfoController.activeMode = "closed";
+    }
+    root.querySelectorAll?.('[data-item-info-trigger][data-item-tooltip-active="true"], [data-item-info-trigger].is-pinned').forEach((row) => {
+      markItemInfoRow(row, "closed");
+    });
+  }
 
   function closePinnedItemInfo(root = document) {
-    root.querySelectorAll?.("[data-item-info-trigger].is-pinned").forEach((row) => {
+    root.querySelectorAll?.('[data-item-info-trigger][data-item-tooltip-state="pinned"], [data-item-info-trigger].is-pinned').forEach((row) => {
       row.classList.remove("is-pinned");
-      row.setAttribute("aria-expanded", "false");
+      markItemInfoRow(row, "closed");
     });
+    if (itemInfoController.activeMode === "pinned") {
+      itemInfoController.activeRow = null;
+      itemInfoController.activeMode = "closed";
+    }
+  }
+
+  function activateItemInfo(row, mode = "hover") {
+    if (!row) return;
+    if (mode === "hover" && itemInfoController.activeMode === "pinned" && itemInfoController.activeRow !== row) {
+      return;
+    }
+    if (itemInfoController.activeRow && itemInfoController.activeRow !== row) {
+      markItemInfoRow(itemInfoController.activeRow, "closed");
+    }
+    itemInfoController.activeRow = row;
+    itemInfoController.activeMode = mode;
+    markItemInfoRow(row, mode);
   }
 
   function normalizeItemInfo(entry = {}) {
@@ -3092,6 +3134,7 @@
   function buildItemInfoPopover(info = {}) {
     const popover = create("span", "item-info-popover");
     popover.dataset.itemInfoPopover = "true";
+    popover.setAttribute("aria-hidden", "true");
     const media = create("span", "item-info-popover-media");
     const iconPath = String(info.iconPath || "").trim();
     if (iconPath) {
@@ -3127,12 +3170,24 @@
   }
 
   function wireItemInfoTrigger(row) {
+    markItemInfoRow(row, "closed");
+    row.addEventListener("mouseenter", () => activateItemInfo(row, "hover"));
+    row.addEventListener("mouseleave", () => {
+      if (itemInfoController.activeRow === row && itemInfoController.activeMode === "hover") {
+        closeActiveItemInfo(document);
+      }
+    });
+    row.addEventListener("focus", () => activateItemInfo(row, "hover"));
+    row.addEventListener("blur", () => {
+      if (itemInfoController.activeRow === row && itemInfoController.activeMode === "hover") {
+        closeActiveItemInfo(document);
+      }
+    });
     row.addEventListener("click", (event) => {
       event.stopPropagation();
-      const pinned = row.classList.contains("is-pinned");
-      closePinnedItemInfo(document);
-      row.classList.toggle("is-pinned", !pinned);
-      row.setAttribute("aria-expanded", !pinned ? "true" : "false");
+      const pinned = itemInfoController.activeRow === row && itemInfoController.activeMode === "pinned";
+      closeActiveItemInfo(document);
+      if (!pinned) activateItemInfo(row, "pinned");
     });
     row.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
@@ -3140,8 +3195,7 @@
         row.click();
       }
       if (event.key === "Escape") {
-        row.classList.remove("is-pinned");
-        row.setAttribute("aria-expanded", "false");
+        closeActiveItemInfo(document);
       }
     });
   }
@@ -3152,7 +3206,7 @@
       if (!event.target?.closest?.("[data-item-info-trigger]")) closePinnedItemInfo(document);
     });
     document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") closePinnedItemInfo(document);
+      if (event.key === "Escape") closeActiveItemInfo(document);
     });
   }
 
@@ -3325,16 +3379,19 @@
     let page = 1;
     const pageSize = Math.max(1, Number(options.pageSize || entries.length) || entries.length);
     const renderRows = () => {
+      closeActiveItemInfo(document);
       clear(list);
       const pageCount = Math.max(1, Math.ceil(entries.length / pageSize));
       page = Math.max(1, Math.min(page, pageCount));
       const visibleEntries = entries.slice((page - 1) * pageSize, page * pageSize);
       visibleEntries.forEach((entry) => {
       const row = create("div", `economy-breakdown-row${entry.className ? ` ${entry.className}` : ""}`);
-      row.classList.add("economy-asset-row");
+      row.classList.add("economy-asset-row", "economy-item-row");
       row.setAttribute("role", "button");
       row.tabIndex = 0;
       row.dataset.itemInfoTrigger = "true";
+      row.dataset.itemTooltipState = "closed";
+      row.dataset.itemTooltipActive = "false";
       row.setAttribute("data-item-info-trigger", "true");
       row.setAttribute("aria-expanded", "false");
       if (entry.rowDataAttribute) row.setAttribute(entry.rowDataAttribute, "true");
