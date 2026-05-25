@@ -40,8 +40,9 @@ test("leaderboard and standalone profile shells load active scoped progression a
   const leaderboardHtml = read("leaderboards.html");
   const profileHtml = read("u/index.html");
   const marketExchangeHtml = read("market-exchange.html");
+  const marketExchangeIndexHtml = read("market-exchange/index.html");
   const redirects = read("_redirects");
-  for (const [label, html] of [["leaderboards.html", leaderboardHtml], ["u/index.html", profileHtml], ["market-exchange.html", marketExchangeHtml]]) {
+  for (const [label, html] of [["leaderboards.html", leaderboardHtml], ["u/index.html", profileHtml], ["market-exchange.html", marketExchangeHtml], ["market-exchange/index.html", marketExchangeIndexHtml]]) {
     assert.match(html, /\/css\/public-shell\.css/, `${label} should load scoped progression styles`);
     assert.match(html, /\/js\/public-data-hub\.js/, `${label} should load the public data hub`);
     assert.match(html, /\/js\/public-pages-app\.js/, `${label} should load the public router`);
@@ -56,13 +57,14 @@ test("leaderboard and standalone profile shells load active scoped progression a
   }
   assert.match(redirects, /\/community\/leaderboard \/leaderboards\.html 200/);
   assert.match(redirects, /\/community\/leaderboard\/ \/leaderboards\.html 200/);
-  assert.match(redirects, /\/market-exchange \/market-exchange\.html 200/);
+  assert.doesNotMatch(redirects, /^\/market-exchange\b/m);
 });
 
 test("market exchange clean and html routes are served without redirect cycles", () => {
   const redirects = read("_redirects");
   const app = read("js/public-pages-app.js");
   const shell = read("js/public-shell.js");
+  const marketExchangeIndexHtml = read("market-exchange/index.html");
   const aliasCatchAllFunction = read("functions/[[path]].js");
 
   const lines = redirects.split(/\r?\n/).map((line) => line.trim()).filter((line) => line && !line.startsWith("#"));
@@ -71,9 +73,10 @@ test("market exchange clean and html routes are served without redirect cycles",
     .filter(([source]) => ["/market-exchange", "/market-exchange/", "/market-exchange.html"].includes(source));
   const redirectsOnly = marketRules.filter((parts) => parts[2] && parts[2] !== "200");
 
+  assert.deepEqual(marketRules, []);
   assert.deepEqual(redirectsOnly, []);
-  assert.match(redirects, /^\/market-exchange \/market-exchange\.html 200$/m);
-  assert.match(redirects, /^\/market-exchange\/ \/market-exchange\.html 200$/m);
+  assert.match(marketExchangeIndexHtml, /data-public-page="media-market-exchange"/);
+  assert.match(marketExchangeIndexHtml, /\/js\/public-pages-app\.js/);
   assert.doesNotMatch(aliasCatchAllFunction, /market-exchange/i);
   assert.doesNotMatch(aliasCatchAllFunction, /requestUrl\.pathname = "\/market-exchange\.html";/);
   assert.match(app, /aliases: \["\/market-exchange", "\/market-exchange\/"\]/);
