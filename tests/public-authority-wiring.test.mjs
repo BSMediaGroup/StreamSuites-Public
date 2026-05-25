@@ -560,6 +560,8 @@ test("public economy rendering keeps denominations separate from inventory rows"
   assert.match(app, /data-item-tooltip-state/);
   assert.match(app, /data-item-tooltip-active/);
   assert.match(app, /data-item-tooltip-pinned/);
+  assert.match(app, /chatAlias: entry\.chat_alias \|\| definition\.chat_alias \|\| publicMetadata\.chat_alias \|\| ""/);
+  assert.match(app, /Chat alias: \$\{info\.chatAlias\}/);
   assert.match(app, /dataset\.itemInfoPopover = "singleton"/);
   assert.match(app, /ITEM_INFO_FALLBACK_DESCRIPTION = "No public item description has been added yet\."/);
   assert.match(app, /row\.classList\.add\("economy-asset-row", "economy-item-row", "profile-economy-item-row"\)/);

@@ -3251,6 +3251,7 @@
       info.rarity ? `Rarity: ${toTitle(info.rarity)}` : "",
       info.unitValue != null ? `Unit value: ${formatNumber(info.unitValue)}` : "",
       info.exchangeValue != null ? `Exchange: ${formatNumber(info.exchangeValue)}` : "",
+      info.chatAlias ? `Chat alias: ${info.chatAlias}` : "",
       info.context || ""
     ].filter(Boolean);
     if (facts.length) {
@@ -3361,6 +3362,7 @@
       exchangeValue: entry.exchange_value ?? definition.exchange_value ?? entry.exchange_value_credits,
       context: entry.context || entry.contextual_public_note || definition.contextual_public_note || publicMetadata.contextual_public_note || "",
       itemCode: entry.item_code || entry.asset_code || definition.item_code || "",
+      chatAlias: entry.chat_alias || definition.chat_alias || publicMetadata.chat_alias || "",
       enabled: entry.public_tooltip_enabled ?? definition.public_tooltip_enabled ?? publicMetadata.public_tooltip_enabled ?? true
     };
   }

@@ -2,6 +2,9 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.3-alpha
 
+- Updated Public wallet/inventory tooltip rendering to display Runtime/Auth-provided `chat_alias` as optional public-safe item metadata. Scoped wallet/inventory hydration continues to use the scoped/global payload fields returned by Runtime/Auth, and Public still does not fabricate missing scoped values.
+- Human note: item popovers can now show `Chat alias: lumber` when the backend sends it, while aliases stay hidden for items without one.
+
 - Fixed the Market & Exchange route redirect loop by removing the clean-route `_redirects` dependency and adding a real static `market-exchange/index.html` route. `/market-exchange` and `/market-exchange/` now resolve as a normal static directory page, `/market-exchange.html` remains a direct static page, and the catch-all Function still does not handle Market & Exchange.
 - Confirmed the Market & Exchange page keeps its loading/error/offline catalog state and mounts even when the Runtime/Auth catalog fetch fails, instead of using client-side redirects as a fallback.
 - Added routing regression coverage for the clean, trailing-slash, and `.html` Market & Exchange URLs and pinned the sidebar/router route to the non-looping path.
