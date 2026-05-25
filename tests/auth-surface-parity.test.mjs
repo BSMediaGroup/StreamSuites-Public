@@ -74,9 +74,8 @@ test("market exchange clean and html routes are served without redirect cycles",
   assert.deepEqual(redirectsOnly, []);
   assert.match(redirects, /^\/market-exchange \/market-exchange\.html 200$/m);
   assert.match(redirects, /^\/market-exchange\/ \/market-exchange\.html 200$/m);
-  assert.match(aliasCatchAllFunction, /MARKET_EXCHANGE_PATHNAME_RE = \/\^\\\/market-exchange/);
-  assert.match(aliasCatchAllFunction, /requestUrl\.pathname = "\/market-exchange\.html";/);
-  assert.match(aliasCatchAllFunction, /return context\.env\.ASSETS\.fetch\(assetRequest\);/);
+  assert.doesNotMatch(aliasCatchAllFunction, /market-exchange/i);
+  assert.doesNotMatch(aliasCatchAllFunction, /requestUrl\.pathname = "\/market-exchange\.html";/);
   assert.match(app, /aliases: \["\/market-exchange", "\/market-exchange\/"\]/);
   assert.match(app, /Exchange catalog is unavailable right now\./);
   assert.match(app, /Market catalog is unavailable right now\./);

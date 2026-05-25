@@ -2,7 +2,7 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.3-alpha
 
-- Fixed the Market & Exchange route redirect loop by adding an explicit Public Pages catch-all branch that serves `market-exchange.html` for `/market-exchange`, `/market-exchange/`, and `/market-exchange.html` without redirect hops.
+- Fixed the Market & Exchange route redirect loop through the existing Cloudflare Pages static rewrite path and removed the attempted catch-all Function handling that caused production Worker 1101 exceptions. `/market-exchange` and `/market-exchange/` now rely on `_redirects` `200` rewrites to `market-exchange.html`, while `/market-exchange.html` remains a direct static page.
 - Confirmed the Market & Exchange page keeps its loading/error/offline catalog state and mounts even when the Runtime/Auth catalog fetch fails, instead of using client-side redirects as a fallback.
 - Added routing regression coverage for the clean, trailing-slash, and `.html` Market & Exchange URLs and pinned the sidebar/router route to the non-looping path.
 
