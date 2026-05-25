@@ -3082,7 +3082,7 @@
     if (!row || !popover) return;
     const rect = row.getBoundingClientRect();
     const spacing = 10;
-    const width = Math.min(360, Math.max(240, window.innerWidth - 32));
+    const width = Math.min(400, Math.max(280, window.innerWidth - 32));
     popover.style.width = `${width}px`;
     const measuredHeight = popover.offsetHeight || 150;
     const topSpace = rect.top;

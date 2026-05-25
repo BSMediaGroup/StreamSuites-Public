@@ -2,6 +2,9 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.3-alpha
 
+- Enforced one shared public profile wallet/inventory row sizing contract. Wallet denomination and inventory rows now share the same min-height, grid layout, icon token, padding token, border radius, title/subtitle line-height, quantity alignment, clickable affordance, and hover/focus glow, with the old inventory-only event-row spacing removed from the profile inventory row path. Tooltip media now uses the same singleton popover path for wallet and inventory with a larger shared 70px icon inside an 80px media box, and wallet/inventory pagination remains capped at six rows per page.
+- Human note: `/u/*` and `/@*` Game & Competition wallet and inventory rows should line up visually again, item popovers should show larger icons on both sides, and pagers should still sit cleanly below each list.
+
 - Force-replaced the broken per-row `/u/*` and `/@*` wallet/inventory tooltip implementation with a single shared singleton popover controller. Wallet and inventory item info now use the same hover/focus/click/tap path, only one row can be active or pinned at a time, Escape/outside click dismisses it, and the old row-child popover display CSS was removed so inventory popovers cannot stack open all at once. Wallet and inventory popover icons are enlarged consistently, rows share the same height/rhythm/hover glow treatment, wallet pagination now exposes `data-wallet-pager` plus `data-wallet-page` when more than six wallet asset rows exist, and inventory pagination is preserved.
 
 - Fixed `/u/*` and `/@*` wallet/inventory item tooltip behavior. Public now uses one active item-info controller so hover/focus/tap/click can show or pin a single wallet or inventory popover at a time, Escape/outside click dismiss pinned popovers, and inventory rows no longer render every per-row popover visibly at once.

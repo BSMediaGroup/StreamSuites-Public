@@ -8476,7 +8476,6 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .progression-event-row,
 .economy-event-row,
-.inventory-summary-row,
 .progression-leaderboard-row {
   display: grid;
   gap: 4px;
@@ -8488,7 +8487,6 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .progression-event-row span,
 .economy-event-row span,
-.inventory-summary-row span span,
 .progression-leaderboard-identity span {
   color: var(--ps-muted, rgba(190, 204, 224, 0.82));
   font-size: 12px;
@@ -8501,6 +8499,11 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   margin-top: 10px;
   --profile-economy-row-min-height: 44px;
   --profile-economy-row-icon-size: 24px;
+  --profile-economy-row-padding-y: 7px;
+  --profile-economy-row-padding-x: 9px;
+  --profile-economy-row-radius: 10px;
+  --profile-economy-row-title-line-height: 1.18;
+  --profile-economy-row-subtitle-line-height: 1.2;
 }
 
 .economy-denomination-breakdown {
@@ -8517,9 +8520,9 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   gap: 9px;
   min-width: 0;
   min-height: var(--profile-economy-row-min-height, 44px);
-  padding: 7px 9px;
+  padding: var(--profile-economy-row-padding-y, 7px) var(--profile-economy-row-padding-x, 9px);
   border: 1px solid rgba(188, 207, 237, 0.16);
-  border-radius: 10px;
+  border-radius: var(--profile-economy-row-radius, 10px);
   background: rgba(255, 255, 255, 0.035);
   color: rgba(245, 248, 255, 0.94);
   font-size: 12px;
@@ -8566,16 +8569,20 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: var(--profile-economy-row-title-line-height, 1.18);
 }
 
 .economy-breakdown-meta {
   color: rgba(170, 184, 208, 0.66);
+  font-size: 12px;
+  line-height: var(--profile-economy-row-subtitle-line-height, 1.2);
 }
 
 .economy-breakdown-quantity {
   justify-self: end;
   align-self: center;
   white-space: nowrap;
+  line-height: var(--profile-economy-row-title-line-height, 1.18);
 }
 
 .economy-asset-row:hover,
@@ -8597,9 +8604,9 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   top: 12px;
   z-index: 140;
   display: none;
-  grid-template-columns: 60px minmax(0, 1fr);
-  gap: 12px;
-  width: min(360px, calc(100vw - 40px));
+  grid-template-columns: 80px minmax(0, 1fr);
+  gap: 14px;
+  width: min(400px, calc(100vw - 40px));
   padding: 12px;
   border: 1px solid rgba(183, 215, 255, 0.22);
   border-radius: 12px;
@@ -8618,15 +8625,15 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 .item-info-popover-media {
   display: grid;
   place-items: center;
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
   border-radius: 10px;
   background: rgba(125, 184, 255, 0.12);
 }
 
 .item-info-popover-icon {
-  width: 51px;
-  height: 51px;
+  width: 70px;
+  height: 70px;
   object-fit: contain;
 }
 
