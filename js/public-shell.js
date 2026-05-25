@@ -15,6 +15,7 @@
     { href: "/leaderboards", label: "Leaderboards", icon: "/assets/icons/ui/tablechart.svg", group: "dashboard" },
     { href: "/tallies", label: "Tallies", icon: "/assets/icons/ui/bulletlist.svg", group: "dashboard" },
     { href: "/economy.html", label: "Games / Economy", icon: "/assets/icons/ui/joystick.svg", group: "dashboard" },
+    { href: "/market-exchange", label: "Market & Exchange", icon: "/assets/icons/ui/moneybag.svg", group: "dashboard" },
     { href: "/live", label: "Live", icon: "/assets/icons/ui/cast.svg", group: "community" },
     { href: "/community", label: "Community", icon: "/assets/icons/ui/community.svg", group: "community" },
     { href: "/community/members.html", label: "Members", icon: "/assets/icons/ui/profilecard.svg", group: "community" },

@@ -8999,6 +8999,140 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   font-size: 0.74rem;
 }
 
+.market-exchange-balance-slot {
+  margin-top: 16px;
+}
+
+.market-exchange-status,
+.market-exchange-result {
+  margin: 14px 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.58);
+}
+
+.market-exchange-result[data-state="success"] {
+  border-color: rgba(34, 197, 94, 0.42);
+  color: #bbf7d0;
+}
+
+.market-exchange-result[data-state="error"] {
+  border-color: rgba(248, 113, 113, 0.42);
+  color: #fecaca;
+}
+
+.market-exchange-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.market-exchange-section-heading {
+  margin: 0 0 12px;
+}
+
+.market-exchange-section-heading h2 {
+  margin: 4px 0 0;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.market-exchange-card-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.market-exchange-item-card {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(17, 24, 39, 0.78));
+  box-shadow: 0 18px 42px rgba(2, 6, 23, 0.28);
+}
+
+.market-exchange-item-media {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(30, 41, 59, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.market-exchange-item-media img,
+.market-exchange-item-media .inline-icon-mask {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+
+.market-exchange-item-body {
+  min-width: 0;
+}
+
+.market-exchange-item-body h3 {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+.market-exchange-item-body p {
+  margin: 6px 0 0;
+  color: rgba(226, 232, 240, 0.76);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.market-exchange-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.market-exchange-item-meta span,
+.market-exchange-item-value {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(51, 65, 85, 0.72);
+  color: rgba(226, 232, 240, 0.82);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.market-exchange-item-value {
+  margin-top: 10px;
+  color: #fef3c7;
+  background: rgba(146, 64, 14, 0.34);
+}
+
+.market-exchange-controls {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(72px, 100px) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.market-exchange-quantity {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.9);
+  color: #f8fafc;
+  padding: 0 10px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .profile-game-progress-meter-fill,
   .profile-game-progress-meter:hover .profile-game-progress-meter-fill {
@@ -9007,6 +9141,10 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 @media (max-width: 680px) {
+  .market-exchange-layout {
+    grid-template-columns: 1fr;
+  }
+
   .public-economy-exchange-form {
     grid-template-columns: 1fr 70px;
   }

@@ -45,6 +45,9 @@
   const AUTH_PUBLIC_PROGRESSION_PROFILE_URL = `${AUTH_API_BASE}/api/public/progression/profile`;
   const AUTH_PUBLIC_ECONOMY_ME_URL = `${AUTH_API_BASE}/api/public/economy/me`;
   const AUTH_PUBLIC_ECONOMY_EXCHANGE_URL = `${AUTH_API_BASE}/api/public/economy/me/exchange`;
+  const AUTH_PUBLIC_MARKET_EXCHANGE_URL = `${AUTH_API_BASE}/api/public/economy/market-exchange`;
+  const AUTH_PUBLIC_MARKET_EXCHANGE_POST_URL = `${AUTH_API_BASE}/api/public/economy/exchange`;
+  const AUTH_PUBLIC_MARKET_BUY_URL = `${AUTH_API_BASE}/api/public/economy/market/buy`;
   const ECONOMY_CURRENCY_SYMBOL_PATH = "/assets/games/currencyunit.svg";
   const AUTH_PUBLIC_ARTIFACTS_URL = `${AUTH_API_BASE}/api/public/artifacts`;
   const PUBLIC_WHEEL_EVENTS_URL = `${AUTH_API_BASE}/api/public/wheels/events`;
@@ -342,6 +345,19 @@
       filtersCollapsed: true,
       defaultFilters: [],
       render: renderGamesEconomyWorkspace
+    },
+    "media-market-exchange": {
+      path: "/market-exchange.html",
+      aliases: ["/market-exchange", "/market-exchange/"],
+      shellKind: "media",
+      activeHref: "/market-exchange",
+      topbarLabel: "Market & Exchange",
+      searchPlaceholder: "Search market and exchange",
+      hideSearch: true,
+      filterMode: "none",
+      filtersCollapsed: true,
+      defaultFilters: [],
+      render: renderMarketExchangeWorkspace
     },
     "detail-clip": {
       path: "/clips/detail.html",
@@ -2108,6 +2124,65 @@
         quantity,
         reason_text: reasonText
       })
+    });
+    const body = await parseJsonResponse(response);
+    if (!response.ok || body?.success === false) {
+      const error = new Error(resolveAuthorityErrorMessage(body, response.status));
+      error.status = response.status;
+      error.payload = body;
+      throw error;
+    }
+    return body;
+  }
+
+  async function fetchPublicMarketExchange() {
+    const response = await fetch(AUTH_PUBLIC_MARKET_EXCHANGE_URL, {
+      method: "GET",
+      cache: "no-store",
+      credentials: "include",
+      headers: { Accept: "application/json" }
+    });
+    const body = await parseJsonResponse(response);
+    if (!response.ok || body?.success === false) {
+      const error = new Error(resolveAuthorityErrorMessage(body, response.status));
+      error.status = response.status;
+      error.payload = body;
+      throw error;
+    }
+    return body;
+  }
+
+  async function exchangePublicMarketItem({ itemCode, quantity, reasonText = "" } = {}) {
+    const response = await fetch(AUTH_PUBLIC_MARKET_EXCHANGE_POST_URL, {
+      method: "POST",
+      cache: "no-store",
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ item_code: itemCode, quantity, reason_text: reasonText })
+    });
+    const body = await parseJsonResponse(response);
+    if (!response.ok || body?.success === false) {
+      const error = new Error(resolveAuthorityErrorMessage(body, response.status));
+      error.status = response.status;
+      error.payload = body;
+      throw error;
+    }
+    return body;
+  }
+
+  async function buyPublicMarketItem({ itemCode, quantity, reasonText = "" } = {}) {
+    const response = await fetch(AUTH_PUBLIC_MARKET_BUY_URL, {
+      method: "POST",
+      cache: "no-store",
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ item_code: itemCode, quantity, reason_text: reasonText })
     });
     const body = await parseJsonResponse(response);
     if (!response.ok || body?.success === false) {
@@ -8196,6 +8271,174 @@
         })
       ]
     });
+  }
+
+  function renderMarketExchangeWorkspace(ctx) {
+    const { host, authState, openAuthModal } = ctx;
+    clear(host);
+    applyDocumentTitle("Market & Exchange");
+    const authReady = Boolean(authState?.authenticated);
+    const hero = buildDashboardHero({
+      eyebrow: "StreamSuites economy",
+      title: "Market & Exchange",
+      body: authReady
+        ? "Convert eligible held items into Stekels, then spend Stekels on runtime-authorized inventory items."
+        : "Browse the live public catalog. Sign in to see your balance, held quantities, and transaction controls.",
+      tone: authReady ? "active" : "preview",
+      actions: authReady
+        ? [{ label: "Refresh catalog", href: "/market-exchange", emphasis: "strong" }]
+        : [{ label: "Use account menu", disabled: true, emphasis: "strong", note: "Open the existing account menu to sign in." }],
+      stats: [
+        { label: "Session", value: authReady ? "Signed in" : "Guest", note: authReady ? authState.displayName : "Read-only catalog" },
+        { label: "Authority", value: "Runtime", note: "/economy/market-exchange" }
+      ]
+    });
+    const balanceSlot = create("div", "market-exchange-balance-slot");
+    hero.appendChild(balanceSlot);
+    host.appendChild(hero);
+
+    const status = create("div", "market-exchange-status muted", "Loading Market & Exchange catalog...");
+    const resultPanel = create("div", "market-exchange-result", "");
+    resultPanel.hidden = true;
+    const grid = create("div", "market-exchange-layout");
+    const exchangeSection = create("section", "market-exchange-section");
+    const marketSection = create("section", "market-exchange-section");
+    grid.append(exchangeSection, marketSection);
+    host.append(status, resultPanel, grid);
+
+    const setResult = (message, state = "") => {
+      resultPanel.hidden = !message;
+      resultPanel.textContent = message || "";
+      resultPanel.dataset.state = state;
+    };
+
+    const renderPayload = (payload) => {
+      const wallet = payload?.wallet || payload?.balance || {};
+      balanceSlot.textContent = "";
+      balanceSlot.appendChild(buildEconomyBalanceValue(wallet, { prominent: true, fullColorIcon: true, showCashComponent: true }));
+      status.textContent = payload?.authenticated ? "Catalog and account quantities loaded from Runtime/Auth." : "Signed-out read-only catalog loaded from Runtime/Auth.";
+      renderMarketExchangeSection({
+        host: exchangeSection,
+        title: "Exchange",
+        subtitle: "Convert eligible held items into Stekels",
+        items: payload?.exchange || [],
+        authReady: Boolean(payload?.authenticated),
+        actionLabel: "Exchange",
+        valueLabel: "Value",
+        valueKey: "exchange_value_stekels",
+        emptyText: "No exchangeable items are configured yet.",
+        onAction: async (item, quantity) => exchangePublicMarketItem({ itemCode: item.item_code, quantity, reasonText: "Public Market & Exchange item exchange" }),
+        onResult: (result) => {
+          setResult(`Exchanged for ${formatNumber(result?.credits_granted || 0)} Stekels.`, "success");
+          load();
+        },
+        onAuthRequired: () => openAuthModal?.("login"),
+        onError: (message) => setResult(message, "error")
+      });
+      renderMarketExchangeSection({
+        host: marketSection,
+        title: "Market",
+        subtitle: "Spend Stekels on items",
+        items: payload?.market || [],
+        authReady: Boolean(payload?.authenticated),
+        actionLabel: "Buy",
+        valueLabel: "Price",
+        valueKey: "market_price_stekels",
+        emptyText: "No market items are available yet.",
+        onAction: async (item, quantity) => buyPublicMarketItem({ itemCode: item.item_code, quantity, reasonText: "Public Market & Exchange purchase" }),
+        onResult: (result) => {
+          setResult(`Purchased x${formatNumber(result?.quantity_purchased || 0)} ${result?.item_code || "item"} for ${formatNumber(result?.stekels_spent || 0)} Stekels.`, "success");
+          load();
+        },
+        onAuthRequired: () => openAuthModal?.("login"),
+        onError: (message) => setResult(message, "error")
+      });
+    };
+
+    const load = async () => {
+      try {
+        const payload = await fetchPublicMarketExchange();
+        renderPayload(payload);
+      } catch (error) {
+        status.textContent = error instanceof Error ? error.message : "Market & Exchange is unavailable right now.";
+        clear(exchangeSection);
+        clear(marketSection);
+        exchangeSection.appendChild(create("div", "empty-state", "Exchange catalog is unavailable right now."));
+        marketSection.appendChild(create("div", "empty-state", "Market catalog is unavailable right now."));
+      }
+    };
+    load();
+  }
+
+  function renderMarketExchangeSection(options = {}) {
+    const host = options.host;
+    clear(host);
+    const heading = create("div", "market-exchange-section-heading");
+    heading.append(create("span", "dashboard-card-kicker", options.title || ""), create("h2", "", options.subtitle || ""));
+    const list = create("div", "market-exchange-card-grid");
+    const items = Array.isArray(options.items) ? options.items : [];
+    if (!items.length) {
+      list.appendChild(create("div", "empty-state", options.emptyText || "No items available yet."));
+    } else {
+      items.forEach((item) => list.appendChild(buildMarketExchangeItemCard(item, options)));
+    }
+    host.append(heading, list);
+  }
+
+  function buildMarketExchangeItemCard(item = {}, options = {}) {
+    const card = create("article", "market-exchange-item-card");
+    const media = create("div", "market-exchange-item-media");
+    const iconPath = String(item.icon_url || item.icon_path || "").trim();
+    if (iconPath) {
+      const img = create("img", "");
+      img.src = economyAssetPath(iconPath);
+      img.alt = "";
+      img.loading = "lazy";
+      img.decoding = "async";
+      img.addEventListener("error", () => replaceImageWithIconFallback(img, "/assets/icons/ui/moneybag.svg", "inline-icon-mask"), { once: true });
+      media.appendChild(img);
+    } else {
+      media.appendChild(createIcon("/assets/icons/ui/moneybag.svg", "inline-icon-mask"));
+    }
+    const body = create("div", "market-exchange-item-body");
+    const title = create("h3", "", item.title || item.label || item.item_code || "Item");
+    const desc = create("p", "", item.description || item.tooltip_description || "Runtime-authorized inventory item.");
+    const meta = create("div", "market-exchange-item-meta");
+    meta.append(
+      create("span", "", item.item_code || ""),
+      create("span", "", [item.category, item.rarity || item.tier].filter(Boolean).join(" / ") || "Inventory"),
+      create("span", "", `Held: ${formatNumber(item.quantity || 0)}`)
+    );
+    const value = create("strong", "market-exchange-item-value", `${options.valueLabel || "Value"}: ${formatNumber(item[options.valueKey] || 0)} Stekels`);
+    body.append(title, desc, meta, value);
+    const controls = create("div", "market-exchange-controls");
+    const quantity = create("input", "market-exchange-quantity");
+    quantity.type = "number";
+    quantity.min = "1";
+    quantity.step = "1";
+    quantity.value = "1";
+    if (options.actionLabel === "Exchange") quantity.max = String(Math.max(1, Number(item.quantity || 1)));
+    const button = create("button", "dashboard-action is-strong", options.authReady ? options.actionLabel || "Submit" : "Sign in");
+    button.type = "button";
+    button.addEventListener("click", async () => {
+      if (!options.authReady) {
+        options.onAuthRequired?.();
+        return;
+      }
+      button.disabled = true;
+      try {
+        const requested = Math.max(1, Number(quantity.value || 1));
+        const result = await options.onAction?.(item, requested);
+        options.onResult?.(result);
+      } catch (error) {
+        options.onError?.(error instanceof Error ? error.message : "Transaction failed.");
+      } finally {
+        button.disabled = false;
+      }
+    });
+    controls.append(quantity, button);
+    card.append(media, body, controls);
+    return card;
   }
 
   function renderCommunityMyData(ctx) {

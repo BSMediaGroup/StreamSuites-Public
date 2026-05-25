@@ -2,6 +2,10 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.3-alpha
 
+- Added the combined Public `Market & Exchange` page at `/market-exchange`. The route uses the existing Public shell/sidebar/router, fetches Runtime/Auth `/api/public/economy/market-exchange`, renders separate Exchange and Market sections, shows signed-in Stekels balance/held quantities when available, keeps guests in a read-only catalog state, and posts exchange/buy actions only to the Runtime/Auth mutation endpoints before refreshing server truth.
+- Added focused route/sidebar styling for responsive item cards, quantity controls, result feedback, loading/error/empty states, and the new sidebar entry without redesigning the Public shell or changing profile wallet/inventory behavior.
+- Human note: Public users now have one polished Market & Exchange destination, but Public still does not calculate or mutate balances locally.
+
 - Restored and hardened the `/u/*` Latest Stream past/recent tray. The tray now renders from any valid latest/recent evidence Public receives: current live stream rows, ended recent stream rows, Runtime `tray_sources`, or a single current/latest source record with a source URL/channel. Missing thumbnails now show compact platform placeholder tiles instead of hiding the row, and the PlayViewer shows a source card with an `Open on Kick`/source link when no safe iframe exists.
 - Human note: live Kick still uses the safe `https://player.kick.com/{slug}` iframe, but ended or non-live Kick evidence renders as a recent/source card plus tray item rather than a fake live player. Profiles with genuinely no current/recent/latest stream data keep the compact no-data state.
 

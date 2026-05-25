@@ -26,11 +26,16 @@ test("public app wires authority request submission and my-data history to the r
   assert.match(source, /AUTH_PUBLIC_PROGRESSION_ME_URL = `\$\{AUTH_API_BASE\}\/api\/public\/progression\/me`/);
   assert.match(source, /AUTH_PUBLIC_ECONOMY_ME_URL = `\$\{AUTH_API_BASE\}\/api\/public\/economy\/me`/);
   assert.match(source, /AUTH_PUBLIC_ECONOMY_EXCHANGE_URL = `\$\{AUTH_API_BASE\}\/api\/public\/economy\/me\/exchange`/);
+  assert.match(source, /AUTH_PUBLIC_MARKET_EXCHANGE_URL = `\$\{AUTH_API_BASE\}\/api\/public\/economy\/market-exchange`/);
+  assert.match(source, /AUTH_PUBLIC_MARKET_BUY_URL = `\$\{AUTH_API_BASE\}\/api\/public\/economy\/market\/buy`/);
   assert.match(source, /submitPublicAuthorityRequest/);
   assert.match(source, /fetchMyPublicAuthorityRequests/);
   assert.match(source, /fetchMyPublicProgression/);
   assert.match(source, /fetchMyPublicEconomy/);
   assert.match(source, /exchangeMyPublicValueItem/);
+  assert.match(source, /renderMarketExchangeWorkspace/);
+  assert.match(source, /fetchPublicMarketExchange/);
+  assert.match(source, /buyPublicMarketItem/);
   assert.match(source, /summary\.xp_total \?\? summary\.total_xp/);
   assert.match(source, /PUBLIC_XP_ICON_PATH = "\/assets\/games\/xpstar\.webp"/);
   assert.match(source, /function buildProgressionLevelChip/);

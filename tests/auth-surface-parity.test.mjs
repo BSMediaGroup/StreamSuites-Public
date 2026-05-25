@@ -39,8 +39,9 @@ test("every public-shell route loads the shared turnstile helper", () => {
 test("leaderboard and standalone profile shells load active scoped progression assets before the router mounts", () => {
   const leaderboardHtml = read("leaderboards.html");
   const profileHtml = read("u/index.html");
+  const marketExchangeHtml = read("market-exchange.html");
   const redirects = read("_redirects");
-  for (const [label, html] of [["leaderboards.html", leaderboardHtml], ["u/index.html", profileHtml]]) {
+  for (const [label, html] of [["leaderboards.html", leaderboardHtml], ["u/index.html", profileHtml], ["market-exchange.html", marketExchangeHtml]]) {
     assert.match(html, /\/css\/public-shell\.css/, `${label} should load scoped progression styles`);
     assert.match(html, /\/js\/public-data-hub\.js/, `${label} should load the public data hub`);
     assert.match(html, /\/js\/public-pages-app\.js/, `${label} should load the public router`);
@@ -55,6 +56,7 @@ test("leaderboard and standalone profile shells load active scoped progression a
   }
   assert.match(redirects, /\/community\/leaderboard \/leaderboards\.html 200/);
   assert.match(redirects, /\/community\/leaderboard\/ \/leaderboards\.html 200/);
+  assert.match(redirects, /\/market-exchange \/market-exchange\.html 200/);
 });
 
 test("public login surfaces expose alternate surface links", () => {
