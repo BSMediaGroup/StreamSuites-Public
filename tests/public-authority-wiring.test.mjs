@@ -568,7 +568,8 @@ test("public economy rendering keeps denominations separate from inventory rows"
   assert.match(css, /\.economy-breakdown-row,[\s\S]*\.economy-denomination-chip,[\s\S]*\.inventory-summary-row\s*\{[\s\S]*padding:\s*var\(--profile-economy-row-padding-y, 7px\) var\(--profile-economy-row-padding-x, 9px\)/);
   assert.match(css, /\.economy-breakdown-row,[\s\S]*\.economy-denomination-chip,[\s\S]*\.inventory-summary-row\s*\{[\s\S]*border-radius:\s*var\(--profile-economy-row-radius, 10px\)/);
   assert.match(css, /\.economy-breakdown-icon,[\s\S]*\.economy-denomination-chip img,[\s\S]*\.inventory-summary-icon\s*\{[\s\S]*width:\s*var\(--profile-economy-row-icon-size, 24px\)/);
-  assert.match(css, /\.inventory-summary-row\s*\{\s*border-top:\s*0;\s*\}/);
+  assert.doesNotMatch(css, /\.inventory-summary-row\s*\{\s*border-top:\s*0;\s*\}/);
+  assert.match(css, /\.profile-game-inventory-stack\s*\{\s*margin-top:\s*0;\s*\}/);
   assert.match(css, /\.item-info-popover\s*\{/);
   assert.match(css, /\.item-info-popover\[data-item-info-popover="singleton"\]:not\(\[hidden\]\)/);
   assert.doesNotMatch(css, /\.economy-asset-row\[data-item-tooltip-active="true"\] > \.item-info-popover/);

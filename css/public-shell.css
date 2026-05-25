@@ -8564,10 +8564,6 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   object-fit: contain;
 }
 
-.inventory-summary-row {
-  border-top: 0;
-}
-
 .economy-breakdown-icon--fallback,
 .inventory-summary-icon--fallback {
   display: inline-grid;
@@ -8726,6 +8722,10 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   display: grid;
   gap: 8px;
   margin-top: 10px;
+}
+
+.profile-game-inventory-stack {
+  margin-top: 0;
 }
 
 .profile-scoped-progression-section {
