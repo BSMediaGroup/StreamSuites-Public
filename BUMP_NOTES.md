@@ -2,6 +2,9 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.3-alpha
 
+- Restored and hardened the `/u/*` Latest Stream past/recent tray. The tray now renders from any valid latest/recent evidence Public receives: current live stream rows, ended recent stream rows, Runtime `tray_sources`, or a single current/latest source record with a source URL/channel. Missing thumbnails now show compact platform placeholder tiles instead of hiding the row, and the PlayViewer shows a source card with an `Open on Kick`/source link when no safe iframe exists.
+- Human note: live Kick still uses the safe `https://player.kick.com/{slug}` iframe, but ended or non-live Kick evidence renders as a recent/source card plus tray item rather than a fake live player. Profiles with genuinely no current/recent/latest stream data keep the compact no-data state.
+
 - Inventory card now uses the dedicated `/assets/games/icon-inventory-2.webp` icon and a wallet-matched lead/header layout marker so the `/u/*` and `/@*` wallet and inventory lists align visually after the header/value area.
 - Follow-up corrected the remaining inventory-list spacing mismatch: the inventory stack no longer adds an extra top margin on top of the shared list margin, and inventory rows now keep the same full row border as wallet rows instead of suppressing their top border.
 

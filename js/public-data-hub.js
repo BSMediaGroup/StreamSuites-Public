@@ -651,6 +651,9 @@
       recentStreams: (Array.isArray(value.recent_streams) ? value.recent_streams : Array.isArray(value.recentStreams) ? value.recentStreams : [])
         .map((entry) => normalizeLatestStreamSourcePayload({ ...entry, platform }))
         .filter(Boolean),
+      traySources: (Array.isArray(value.tray_sources) ? value.tray_sources : Array.isArray(value.traySources) ? value.traySources : [])
+        .map((entry) => normalizeLatestStreamSourcePayload({ ...entry, platform }))
+        .filter(Boolean),
       status: String(value.status || "").trim()
     };
   }

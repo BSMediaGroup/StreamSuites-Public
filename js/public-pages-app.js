@@ -802,6 +802,9 @@
       recentStreams: (Array.isArray(value.recent_streams) ? value.recent_streams : Array.isArray(value.recentStreams) ? value.recentStreams : [])
         .map((entry) => normalizeLatestStreamSourcePayload({ ...entry, platform }))
         .filter(Boolean),
+      traySources: (Array.isArray(value.tray_sources) ? value.tray_sources : Array.isArray(value.traySources) ? value.traySources : [])
+        .map((entry) => normalizeLatestStreamSourcePayload({ ...entry, platform }))
+        .filter(Boolean),
       status: String(value.status || "").trim()
     };
   }
@@ -841,8 +844,29 @@
       url: selectedStream.url || selectedStream.sourceUrl || baseStream?.url,
       channelSlug: selectedStream.channelSlug || selectedStream.channelHandle || baseStream?.channelSlug,
       channelHandle: selectedStream.channelHandle || selectedStream.channelSlug || baseStream?.channelHandle,
-      recentStreams: baseStream?.recentStreams || []
+      recentStreams: baseStream?.recentStreams || [],
+      traySources: baseStream?.traySources || []
     };
+  }
+
+  function buildLatestStreamSourcePreview(stream) {
+    const card = create("div", "profile-latest-stream-source-card");
+    card.appendChild(createStreamPlatformIcon(stream?.platform || "", "profile-latest-stream-source-card-icon"));
+    const copy = create("span", "profile-latest-stream-source-card-copy");
+    copy.append(
+      create("strong", "", stream?.title || stream?.channelHandle || stream?.channelSlug || `${stream?.platformLabel || "Stream"} source`),
+      create("span", "", stream?.isLive ? "Player unavailable" : stream?.endedAt ? "Recent stream evidence" : "Source preview unavailable")
+    );
+    card.appendChild(copy);
+    const href = String(stream?.url || stream?.sourceUrl || "").trim();
+    if (href) {
+      const link = create("a", "profile-latest-stream-source-card-link", stream?.platform === "kick" ? "Open on Kick" : "Open source");
+      link.href = href;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      card.appendChild(link);
+    }
+    return card;
   }
 
   function renderLatestStreamMedia(media, stream, hasUsableStream) {
@@ -873,6 +897,11 @@
     }
     media.classList.add("is-fallback-preview");
     const placeholder = create("div", "profile-latest-stream-placeholder");
+    if (hasUsableStream && (stream?.url || stream?.sourceUrl)) {
+      placeholder.appendChild(buildLatestStreamSourcePreview(stream));
+      media.appendChild(placeholder);
+      return;
+    }
     const placeholderCard = create("div", "profile-latest-stream-placeholder-card");
     placeholderCard.append(
       createStreamPlatformIcon(hasUsableStream ? stream?.platform : "", "profile-latest-stream-placeholder-icon-image"),
@@ -886,12 +915,37 @@
     media.appendChild(placeholder);
   }
 
+  function buildLatestStreamTrayEntries(baseStream) {
+    const candidates = [
+      ...(Array.isArray(baseStream?.recentStreams) ? baseStream.recentStreams : []),
+      ...(Array.isArray(baseStream?.traySources) ? baseStream.traySources : [])
+    ];
+    if (baseStream && (baseStream.isLive || baseStream.title || baseStream.url || baseStream.sourceUrl)) {
+      candidates.push(baseStream);
+    }
+    const seen = new Set();
+    return candidates
+      .filter((entry) => entry && (entry.isLive || entry.title || entry.thumbnailUrl || entry.posterUrl || entry.url || entry.sourceUrl || entry.channelSlug || entry.channelHandle))
+      .filter((entry) => {
+        const key = [
+          entry.platform || baseStream?.platform || "",
+          entry.url || "",
+          entry.sourceUrl || "",
+          entry.title || "",
+          entry.startedAt || entry.endedAt || ""
+        ].join("|");
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, 6);
+  }
+
   function buildLatestStreamThumbnailRow(baseStream, media, body, helpers) {
-    const recent = Array.isArray(baseStream?.recentStreams) ? baseStream.recentStreams : [];
-    const realRows = recent.filter((entry) => entry && (entry.title || entry.thumbnailUrl || entry.posterUrl || entry.url || entry.sourceUrl)).slice(0, 6);
+    const realRows = buildLatestStreamTrayEntries(baseStream);
     const row = create("div", "profile-latest-stream-thumbnails");
     row.dataset.previousStreamsTray = "true";
-    row.setAttribute("aria-label", "Previous streams");
+    row.setAttribute("aria-label", "Recent streams");
     if (!realRows.length) return null;
     realRows.forEach((entry, index) => {
       const button = create("button", `profile-latest-stream-thumb${index === 0 ? " is-active" : ""}`);
@@ -914,8 +968,8 @@
       }
       const copy = create("span", "profile-latest-stream-thumb-copy");
       copy.append(
-        create("strong", "", entry.title || `${entry.platformLabel || baseStream.platformLabel} stream`),
-        create("span", "", entry.isLive ? "Live now" : (formatProfileDate(entry.startedAt || entry.scheduledAt || entry.endedAt, helpers) || entry.platformLabel || "Recent"))
+        create("strong", "", entry.title || entry.channelHandle || entry.channelSlug || `${entry.platformLabel || baseStream.platformLabel} source`),
+        create("span", "", entry.isLive ? "Live now" : (formatProfileDate(entry.startedAt || entry.scheduledAt || entry.endedAt || entry.lastCheckedAt, helpers) || entry.platformLabel || "Recent"))
       );
       button.append(imgWrap, copy);
       button.addEventListener("click", () => {

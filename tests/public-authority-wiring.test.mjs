@@ -411,6 +411,7 @@ test("public profile game section renders runtime progression and economy author
 
 test("public scoped platform icons and stable latest stream layout are pinned", () => {
   const app = read("js/public-pages-app.js");
+  const hub = read("js/public-data-hub.js");
   const css = read("css/public-shell.css");
   assert.match(app, /SCOPED_PLATFORM_ICON_MAP = Object\.freeze/);
   ["kick", "youtube", "rumble", "twitch", "pilled", "global", "unknown"].forEach((key) => {
@@ -440,14 +441,24 @@ test("public scoped platform icons and stable latest stream layout are pinned", 
   assert.match(app, /row\.dataset\.previousStreamsTray = "true"/);
   assert.match(app, /if \(!realRows\.length\) return null/);
   assert.doesNotMatch(app, /No past streams to show yet\./);
-  assert.match(app, /realRows = recent\.filter[\s\S]*\.slice\(0, 6\)/);
+  assert.match(app, /function buildLatestStreamTrayEntries\(baseStream\)/);
+  assert.match(app, /\.\.\.\(Array\.isArray\(baseStream\?\.recentStreams\) \? baseStream\.recentStreams : \[\]\)/);
+  assert.match(app, /\.\.\.\(Array\.isArray\(baseStream\?\.traySources\) \? baseStream\.traySources : \[\]\)/);
+  assert.match(app, /candidates\.push\(baseStream\)/);
+  assert.match(app, /entry\.isLive \|\| entry\.title \|\| entry\.thumbnailUrl \|\| entry\.posterUrl \|\| entry\.url \|\| entry\.sourceUrl \|\| entry\.channelSlug \|\| entry\.channelHandle/);
+  assert.match(app, /buildLatestStreamSourcePreview\(stream\)/);
+  assert.match(app, /profile-latest-stream-source-card/);
   assert.match(app, /stream\.platform === "kick" && stream\.isLive && host === "player\.kick\.com"/);
   assert.match(app, /if \(!stream\.isLive\) return ""/);
   assert.match(app, /"Open on Kick"/);
+  assert.match(hub, /traySources:\s*\(Array\.isArray\(value\.tray_sources\)/);
+  assert.match(app, /traySources:\s*\(Array\.isArray\(value\.tray_sources\)/);
   assert.match(app, /data-latest-stream-state/);
   assert.match(css, /\.profile-latest-stream-card\s*\{[\s\S]*grid-template-columns:\s*minmax\(320px, 1\.18fr\) minmax\(0, 0\.82fr\)/);
   assert.match(css, /\.profile-stream-panel\s*\{[\s\S]*display:\s*grid[\s\S]*gap:\s*10px/);
+  assert.match(css, /\.profile-latest-stream-source-card\s*\{/);
   assert.match(css, /\.profile-latest-stream-thumbnails\s*\{[\s\S]*grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/);
+  assert.match(css, /\.profile-latest-stream-thumbnails\s*\{[\s\S]*overflow-x:\s*auto/);
   assert.match(css, /\.profile-latest-stream-thumbnails\s*\{[\s\S]*border:\s*1px solid rgba\(203, 219, 246, 0\.13\)/);
   assert.match(css, /\.profile-latest-stream-thumbnails-empty\s*\{[\s\S]*border:\s*1px dashed rgba\(203, 219, 246, 0\.16\)/);
   assert.match(css, /\.profile-latest-stream-thumbnails-empty::before/);
