@@ -4333,6 +4333,27 @@ img.progression-leaderboard-scope-chip-icon {
   gap: 9px;
 }
 
+.profile-game-card-lead {
+  min-height: 34px;
+  align-items: center;
+  gap: 9px;
+}
+
+.profile-game-card-lead .profile-game-card-lead-icon,
+.profile-game-card-lead .economy-balance-icon {
+  width: 30px;
+  height: 30px;
+  flex-basis: 30px;
+}
+
+.profile-game-card-lead-icon--fallback {
+  display: inline-grid;
+  place-items: center;
+  border-radius: 8px;
+  color: rgba(238, 245, 255, 0.9);
+  background-color: rgba(125, 184, 255, 0.14);
+}
+
 .profile-game-preview-label,
 .profile-game-preview-note {
   color: rgba(185, 201, 226, 0.68);

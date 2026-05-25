@@ -334,7 +334,8 @@ test("public profile game section renders runtime progression and economy author
   assert.match(profileSection, /Messages/);
   assert.match(profileSection, /No scoped wallet data yet/);
   assert.match(profileSection, /No scoped inventory data yet/);
-  assert.match(profileSection, /buildEconomyBalanceValue\(economy \|\| \{\}, \{ prominent: true, fullColorIcon: true, showCashComponent: true \}\)/);
+  assert.match(profileSection, /buildEconomyBalanceValue\(economy \|\| \{\}, \{ prominent: true, fullColorIcon: true, showCashComponent: true, leadClassName: "profile-game-card-lead profile-game-card-lead--balance" \}\)/);
+  assert.match(profileSection, /buildInventoryCardLeadValue\(scoped \? scopedInventory\.length \? "Itemized" : scopedInventoryAvailable \? "Empty" : "Unavailable" : displayInventory\.length \? "Itemized" : "Empty"\)/);
   assert.match(profileSection, /buildEconomyDenominationBreakdown\(economy \|\| \{\}\)/);
   assert.match(profileSection, /buildInventorySummaryList\(displayInventory, \{ context: "Global profile inventory" \}\)/);
   assert.match(profileSection, /buildPublicValueItemExchangePanel\(exchangeableItems\)/);
@@ -510,6 +511,13 @@ test("public economy rendering keeps denominations separate from inventory rows"
   assert.match(app, /economy-balance-cash-component/);
   assert.match(app, /walletCard\.appendChild\(buildEconomyDenominationBreakdown\(wallet\)\)/);
   assert.match(app, /icon\.src = economyAssetPath\("\/assets\/games\/sscurrency\.webp"\)/);
+  assert.match(app, /function buildInventoryCardLeadValue\(statusText = "Empty"\)/);
+  assert.match(app, /economy-balance-value economy-balance-value--prominent profile-game-card-lead profile-game-card-lead--inventory/);
+  assert.match(app, /icon\.src = economyAssetPath\("\/assets\/games\/icon-inventory-2\.webp"\)/);
+  assert.match(app, /icon\.addEventListener\("error", \(\) => \{[\s\S]*createIcon\("\/assets\/icons\/ui\/moneybag\.svg", "inline-icon-mask economy-balance-icon profile-game-card-lead-icon profile-game-card-lead-icon--fallback profile-game-inventory-lead-icon-fallback"\)[\s\S]*icon\.replaceWith\(fallback\)/);
+  assert.match(app, /leadClassName: "profile-game-card-lead profile-game-card-lead--balance"/);
+  assert.match(app, /value: buildInventoryCardLeadValue\(scoped \? scopedInventory\.length \? "Itemized" : scopedInventoryAvailable \? "Empty" : "Unavailable" : displayInventory\.length \? "Itemized" : "Empty"\)/);
+  assert.doesNotMatch(app, /profile-game-inventory-lead-icon[\s\S]{0,300}(?:□|⬚|blank square)/i);
   assert.match(app, /function economyDenominationIconPath\(item = \{\}\)/);
   assert.match(app, /item\.icon_url \|\|[\s\S]*item\.icon_path \|\|[\s\S]*item\.image_asset_key/);
   assert.match(app, /iconPath: economyDenominationIconPath\(item\)/);
@@ -566,6 +574,9 @@ test("public economy rendering keeps denominations separate from inventory rows"
   assert.doesNotMatch(css, /\.economy-asset-row\[data-item-tooltip-active="true"\] > \.item-info-popover/);
   assert.match(css, /\.economy-breakdown-pager\s*\{/);
   assert.match(css, /\.economy-balance-cash-component\s*\{/);
+  assert.match(css, /\.profile-game-card-lead\s*\{[\s\S]*min-height:\s*34px/);
+  assert.match(css, /\.profile-game-card-lead \.profile-game-card-lead-icon,[\s\S]*\.profile-game-card-lead \.economy-balance-icon\s*\{[\s\S]*width:\s*30px/);
+  assert.match(css, /\.profile-game-card-lead-icon--fallback\s*\{[\s\S]*place-items:\s*center/);
 });
 
 test("public economy item tooltip controller keeps one active popover and preserves fallback copy", () => {

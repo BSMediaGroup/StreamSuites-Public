@@ -3300,7 +3300,7 @@
       : Number(walletOrValue || 0);
     const wrap = create(
       "span",
-      `economy-balance-value${options.compact ? " economy-balance-value--compact" : ""}${options.prominent ? " economy-balance-value--prominent" : ""}${options.standing ? " economy-balance-value--standing" : ""}`
+      `economy-balance-value${options.compact ? " economy-balance-value--compact" : ""}${options.prominent ? " economy-balance-value--prominent" : ""}${options.standing ? " economy-balance-value--standing" : ""}${options.leadClassName ? ` ${options.leadClassName}` : ""}`
     );
     const icon = options.fullColorIcon
       ? create("img", "economy-balance-icon economy-balance-icon--full-color")
@@ -3320,6 +3320,23 @@
     if (options.showCashComponent && cashValue !== null) {
       wrap.appendChild(create("span", "economy-balance-cash-component", `(${formatNumber(cashValue)} Cash)`));
     }
+    return wrap;
+  }
+
+  function buildInventoryCardLeadValue(statusText = "Empty") {
+    const wrap = create("span", "economy-balance-value economy-balance-value--prominent profile-game-card-lead profile-game-card-lead--inventory");
+    const icon = create("img", "economy-balance-icon economy-balance-icon--full-color profile-game-card-lead-icon profile-game-inventory-lead-icon");
+    icon.src = economyAssetPath("/assets/games/icon-inventory-2.webp");
+    icon.alt = "";
+    icon.loading = "lazy";
+    icon.decoding = "async";
+    icon.setAttribute("aria-hidden", "true");
+    icon.addEventListener("error", () => {
+      const fallback = createIcon("/assets/icons/ui/moneybag.svg", "inline-icon-mask economy-balance-icon profile-game-card-lead-icon profile-game-card-lead-icon--fallback profile-game-inventory-lead-icon-fallback");
+      fallback.setAttribute("aria-hidden", "true");
+      icon.replaceWith(fallback);
+    }, { once: true });
+    wrap.append(icon, create("span", "", statusText));
     return wrap;
   }
 
@@ -9990,8 +10007,8 @@
           className: "profile-game-preview-card--breakdown profile-game-preview-card--balance",
           label: scoped ? "Scoped balance" : "Current balance",
           value: scoped
-            ? scopedWallet ? buildEconomyBalanceValue(scopedWallet, { prominent: true, fullColorIcon: true, showCashComponent: true }) : "Unavailable"
-            : buildEconomyBalanceValue(economy || {}, { prominent: true, fullColorIcon: true, showCashComponent: true }),
+            ? scopedWallet ? buildEconomyBalanceValue(scopedWallet, { prominent: true, fullColorIcon: true, showCashComponent: true, leadClassName: "profile-game-card-lead profile-game-card-lead--balance" }) : "Unavailable"
+            : buildEconomyBalanceValue(economy || {}, { prominent: true, fullColorIcon: true, showCashComponent: true, leadClassName: "profile-game-card-lead profile-game-card-lead--balance" }),
           note: scoped
             ? scopedWallet ? "Scoped wallet hydrates from the selected Runtime/Auth scope." : "No scoped wallet data yet"
             : economy ? `${formatNumber(economy.earned_lifetime || 0)} earned lifetime from the runtime economy wallet` : "No economy events have been recorded yet.",
@@ -10002,7 +10019,7 @@
         {
           className: "profile-game-preview-card--breakdown profile-game-preview-card--inventory",
           label: scoped ? "Scoped inventory" : "Inventory",
-          value: scoped ? scopedInventory.length ? "Itemized" : scopedInventoryAvailable ? "Empty" : "Unavailable" : displayInventory.length ? "Itemized" : "Empty",
+          value: buildInventoryCardLeadValue(scoped ? scopedInventory.length ? "Itemized" : scopedInventoryAvailable ? "Empty" : "Unavailable" : displayInventory.length ? "Itemized" : "Empty"),
           note: scoped
             ? scopedInventory.length ? "Scoped inventory hydrates from the selected Runtime/Auth scope." : scopedInventoryAvailable ? "Scoped inventory is empty for this scope." : "No scoped inventory data yet"
             : displayInventory.length ? "Current quantities hydrate from runtime inventory state." : "No authority-owned items have been issued yet.",
