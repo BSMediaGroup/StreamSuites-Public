@@ -2,6 +2,10 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.3-alpha
 
+- Fixed the Market & Exchange route redirect loop by adding an explicit Public Pages catch-all branch that serves `market-exchange.html` for `/market-exchange`, `/market-exchange/`, and `/market-exchange.html` without redirect hops.
+- Confirmed the Market & Exchange page keeps its loading/error/offline catalog state and mounts even when the Runtime/Auth catalog fetch fails, instead of using client-side redirects as a fallback.
+- Added routing regression coverage for the clean, trailing-slash, and `.html` Market & Exchange URLs and pinned the sidebar/router route to the non-looping path.
+
 - Added the combined Public `Market & Exchange` page at `/market-exchange`. The route uses the existing Public shell/sidebar/router, fetches Runtime/Auth `/api/public/economy/market-exchange`, renders separate Exchange and Market sections, shows signed-in Stekels balance/held quantities when available, keeps guests in a read-only catalog state, and posts exchange/buy actions only to the Runtime/Auth mutation endpoints before refreshing server truth.
 - Added focused route/sidebar styling for responsive item cards, quantity controls, result feedback, loading/error/empty states, and the new sidebar entry without redesigning the Public shell or changing profile wallet/inventory behavior.
 - Human note: Public users now have one polished Market & Exchange destination, but Public still does not calculate or mutate balances locally.

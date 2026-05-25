@@ -59,6 +59,30 @@ test("leaderboard and standalone profile shells load active scoped progression a
   assert.match(redirects, /\/market-exchange \/market-exchange\.html 200/);
 });
 
+test("market exchange clean and html routes are served without redirect cycles", () => {
+  const redirects = read("_redirects");
+  const app = read("js/public-pages-app.js");
+  const shell = read("js/public-shell.js");
+  const aliasCatchAllFunction = read("functions/[[path]].js");
+
+  const lines = redirects.split(/\r?\n/).map((line) => line.trim()).filter((line) => line && !line.startsWith("#"));
+  const marketRules = lines
+    .map((line) => line.split(/\s+/))
+    .filter(([source]) => ["/market-exchange", "/market-exchange/", "/market-exchange.html"].includes(source));
+  const redirectsOnly = marketRules.filter((parts) => parts[2] && parts[2] !== "200");
+
+  assert.deepEqual(redirectsOnly, []);
+  assert.match(redirects, /^\/market-exchange \/market-exchange\.html 200$/m);
+  assert.match(redirects, /^\/market-exchange\/ \/market-exchange\.html 200$/m);
+  assert.match(aliasCatchAllFunction, /MARKET_EXCHANGE_PATHNAME_RE = \/\^\\\/market-exchange/);
+  assert.match(aliasCatchAllFunction, /requestUrl\.pathname = "\/market-exchange\.html";/);
+  assert.match(aliasCatchAllFunction, /return context\.env\.ASSETS\.fetch\(assetRequest\);/);
+  assert.match(app, /aliases: \["\/market-exchange", "\/market-exchange\/"\]/);
+  assert.match(app, /Exchange catalog is unavailable right now\./);
+  assert.match(app, /Market catalog is unavailable right now\./);
+  assert.match(shell, /href: "\/market-exchange"/);
+});
+
 test("public login surfaces expose alternate surface links", () => {
   const lander = read("index.html");
   const publicLogin = read("public-login.html");
