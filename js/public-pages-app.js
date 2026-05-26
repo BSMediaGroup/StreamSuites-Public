@@ -336,6 +336,7 @@
     },
     "media-economy": {
       path: "/economy.html",
+      aliases: ["/economy", "/economy/"],
       shellKind: "media",
       activeHref: "/economy.html",
       topbarLabel: "Games / Economy",
@@ -350,14 +351,14 @@
       path: "/market-exchange.html",
       aliases: ["/market-exchange", "/market-exchange/"],
       shellKind: "media",
-      activeHref: "/market-exchange",
-      topbarLabel: "Market & Exchange",
+      activeHref: "/economy.html",
+      topbarLabel: "Games / Economy",
       searchPlaceholder: "Search market and exchange",
       hideSearch: true,
       filterMode: "none",
       filtersCollapsed: true,
       defaultFilters: [],
-      render: renderMarketExchangeWorkspace
+      render: renderGamesEconomyWorkspace
     },
     "detail-clip": {
       path: "/clips/detail.html",
@@ -8237,42 +8238,311 @@
     });
   }
 
+  function buildEconomyJumpRow(anchors = []) {
+    const nav = create("nav", "economy-jump-row");
+    nav.setAttribute("aria-label", "Games and economy sections");
+    anchors.forEach((entry) => {
+      const id = String(entry?.id || "").trim();
+      const label = String(entry?.label || "").trim();
+      if (!id || !label) return;
+      const link = create("a", "economy-jump-link", label);
+      link.href = `#${id}`;
+      nav.appendChild(link);
+    });
+    return nav;
+  }
+
+  function createEconomyHubSection(id, title, options = {}) {
+    const section = create("section", `economy-hub-section${options.className ? ` ${options.className}` : ""}`);
+    section.id = id;
+    section.tabIndex = -1;
+    const heading = create("div", "economy-hub-section-heading");
+    heading.append(create("span", "dashboard-card-kicker", options.kicker || ""), create("h2", "", title || ""));
+    if (options.body) {
+      heading.appendChild(create("p", "economy-hub-section-copy", options.body));
+    }
+    section.appendChild(heading);
+    return section;
+  }
+
+  function scrollEconomyHashIntoView() {
+    const rawHash = String(window.location.hash || "").replace(/^#/, "");
+    if (!rawHash) return;
+    const target = document.getElementById(rawHash);
+    if (!target || !target.classList.contains("economy-hub-section")) return;
+    window.requestAnimationFrame(() => {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  function renderEconomyHubSummaryCards(host, payload = null, authReady = false) {
+    const wallet = payload?.wallet || payload?.balance || {};
+    const inventory = Array.isArray(payload?.inventory) ? payload.inventory : [];
+    const exchange = Array.isArray(payload?.exchange) ? payload.exchange : [];
+    const market = Array.isArray(payload?.market) ? payload.market : [];
+    const identityLabel = progressionDisplayName(payload?.identity) || (authReady ? "Signed in account" : "Guest catalog");
+    const grid = buildDashboardGrid([
+      buildDashboardCard({
+        title: "Runtime status",
+        kicker: "Authority",
+        badge: payload ? "Connected" : "Loading",
+        state: payload ? "active" : "preview",
+        body: payload
+          ? "Catalog, balance, inventory, market prices, and exchange values are read from Runtime/Auth."
+          : "Loading the Runtime/Auth economy catalog without falling back to local placeholder balances.",
+        meta: ["Public is read/submit only", "Runtime owns mutation"]
+      }),
+      buildDashboardCard({
+        title: "Catalog",
+        kicker: "Market / exchange",
+        badge: payload ? "Live" : "Pending",
+        state: payload ? "active" : "preview",
+        body: payload
+          ? `${formatNumber(market.length)} market items and ${formatNumber(exchange.length)} exchange rows are available from the current catalog.`
+          : "Market and exchange counts will appear when the catalog request completes.",
+        meta: [`Viewer: ${identityLabel}`, payload?.authenticated ? "Signed-in controls enabled" : "Read-only until sign-in"]
+      }),
+      buildDashboardCard({
+        title: "Games / rewards",
+        kicker: "Coming online",
+        badge: "Reserved",
+        state: "planned",
+        body: "Reward history and lightweight games remain staged here until a public-safe runtime contract is available.",
+        meta: ["No fake rewards", "No local game authority"]
+      })
+    ], "dashboard-card-grid--three economy-overview-grid");
+    host.appendChild(grid);
+
+    return { wallet, inventory };
+  }
+
+  function renderEconomyWalletInventorySections(options = {}) {
+    const { walletSection, inventorySection, payload, authReady } = options;
+    const wallet = payload?.wallet || payload?.balance || {};
+    const inventory = Array.isArray(payload?.inventory) ? payload.inventory : [];
+
+    clear(walletSection);
+    walletSection.appendChild(createEconomySectionHeader("Wallet", "Stekels summary", "Signed-in wallet totals hydrate from Runtime/Auth when an authenticated session is available."));
+    const walletGrid = buildDashboardGrid([], "dashboard-card-grid--three");
+    walletGrid.appendChild(buildDashboardCard({
+      title: "Current balance",
+      kicker: authReady ? "Runtime wallet" : "Signed-out",
+      badge: authReady && payload ? "Live" : "Read-only",
+      state: authReady && payload ? "active" : "preview",
+      body: authReady && payload
+        ? buildEconomyBalanceValue(wallet, { prominent: true, fullColorIcon: true, showCashComponent: true })
+        : "Sign in to view your server-backed Stekels balance. Public does not estimate wallet totals for guests.",
+      meta: authReady && payload ? ["Backed by /api/public/economy/market-exchange"] : ["Guest catalog remains browse-only"]
+    }));
+    walletGrid.appendChild(buildDashboardCard({
+      title: "Balance units",
+      kicker: "Denominations",
+      badge: wallet?.denomination_breakdown?.length ? "Loaded" : "Unavailable",
+      state: wallet?.denomination_breakdown?.length ? "active" : "preview",
+      body: wallet?.denomination_breakdown?.length
+        ? buildEconomyDenominationBreakdown(wallet)
+        : "No public denomination breakdown is available for this session yet.",
+      meta: ["Runtime-provided wallet metadata only"]
+    }));
+    walletSection.appendChild(walletGrid);
+
+    clear(inventorySection);
+    inventorySection.appendChild(createEconomySectionHeader("Inventory", "Held items", "Signed-in held quantities hydrate from Runtime/Auth when the catalog includes account inventory."));
+    const displayInventory = inventory.filter((item) => !isWalletDenominationInventoryItem(item));
+    const inventoryGrid = buildDashboardGrid([], "dashboard-card-grid--three");
+    inventoryGrid.appendChild(buildDashboardCard({
+      title: "Held item summary",
+      kicker: authReady ? "Runtime inventory" : "Signed-out",
+      badge: authReady && payload ? "Live" : "Read-only",
+      state: authReady && payload ? "active" : "preview",
+      body: authReady && payload
+        ? `${formatNumber(displayInventory.length)} public inventory rows are visible for this account.`
+        : "Sign in to view server-backed held quantities. Guest sessions only see catalog-level item information.",
+      meta: ["Wallet cash units are not double-counted as inventory"]
+    }));
+    inventoryGrid.appendChild(buildDashboardCard({
+      title: "Inventory rows",
+      kicker: "Visible items",
+      badge: displayInventory.length ? "Loaded" : "Unavailable",
+      state: displayInventory.length ? "active" : "preview",
+      body: displayInventory.length
+        ? buildInventorySummaryList(displayInventory, { context: "economy hub" })
+        : "No held public inventory rows are available for this account yet.",
+      meta: ["Descriptions stay runtime/public-safe"]
+    }));
+    inventorySection.appendChild(inventoryGrid);
+  }
+
+  function createEconomySectionHeader(title, kicker, body) {
+    const fragment = document.createDocumentFragment();
+    const heading = create("div", "economy-hub-section-heading economy-hub-section-heading--compact");
+    heading.append(create("span", "dashboard-card-kicker", kicker || ""), create("h2", "", title || ""));
+    if (body) heading.appendChild(create("p", "economy-hub-section-copy", body));
+    fragment.appendChild(heading);
+    return fragment;
+  }
+
+  function renderEconomyHubUnavailable(options = {}) {
+    const { status, resultPanel, exchangeSection, marketSection, walletSection, inventorySection, error } = options;
+    status.textContent = error instanceof Error ? error.message : "Market & Exchange is unavailable right now.";
+    clear(exchangeSection);
+    clear(marketSection);
+    clear(walletSection);
+    clear(inventorySection);
+    resultPanel.hidden = true;
+    exchangeSection.append(createEconomySectionHeader("Exchange", "Runtime catalog", "Exchange catalog state loads from the Runtime/Auth market-exchange endpoint."), create("div", "empty-state", "Exchange catalog is unavailable right now."));
+    marketSection.append(createEconomySectionHeader("Market", "Runtime catalog", "Market catalog state loads from the Runtime/Auth market-exchange endpoint."), create("div", "empty-state", "Market catalog is unavailable right now."));
+    walletSection.append(createEconomySectionHeader("Wallet", "Stekels summary", "Wallet totals are unavailable until Runtime/Auth responds."), create("div", "empty-state", "Wallet data is unavailable right now."));
+    inventorySection.append(createEconomySectionHeader("Inventory", "Held items", "Inventory rows are unavailable until Runtime/Auth responds."), create("div", "empty-state", "Inventory data is unavailable right now."));
+  }
+
   function renderGamesEconomyWorkspace(ctx) {
-    buildPlaceholderWorkspacePage(ctx, {
-      eyebrow: "Planned public module",
-      title: "Games / Economy",
-      body: "Games, balances, rewards, and public economy views are staged as first-class destinations in the unified dashboard without fabricating balances, inventory, or progression data before the backend exists.",
-      actions: [
-        { label: "Back to media home", href: "/media", emphasis: "strong" },
-        { label: "Open community", href: "/community" }
-      ],
+    const { host, authState, openAuthModal } = ctx;
+    clear(host);
+    applyDocumentTitle("Games & Economy");
+    const authReady = Boolean(authState?.authenticated);
+    const marketAliasEntry = normalizePath(window.location.pathname).startsWith("/market-exchange");
+    const hero = buildDashboardHero({
+      eyebrow: "StreamSuites economy",
+      title: "Games & Economy",
+      body: authReady
+        ? "Use the canonical public economy hub for Runtime/Auth-backed wallet, inventory, exchange, market, games, and reward surfaces."
+        : "Browse the live market and exchange catalog. Sign in to see server-backed wallet totals, held quantities, and transaction controls.",
+      tone: authReady ? "active" : "preview",
+      actions: authReady
+        ? [{ label: "Refresh economy", href: marketAliasEntry ? "/market-exchange#market" : "/economy.html#market", emphasis: "strong" }]
+        : [{ label: "Use account menu", disabled: true, emphasis: "strong", note: "Open the existing account menu to sign in." }],
       stats: [
-        { label: "Economy data", value: "Offline", note: "No public authority yet" },
-        { label: "Route status", value: "Ready", note: "Destination reserved" }
-      ],
-      cards: [
-        buildDashboardCard({
-          title: "Viewer economy summary",
-          kicker: "Not active yet",
-          badge: "Planned",
-          state: "planned",
-          body: "No balances, wallet, inventory, or reward history are being simulated here. This page exists to establish the public shell and navigation footprint only.",
-          meta: ["No fake hydration", "No wallet logic", "No rewards ledger"]
-        }),
-        buildDashboardCard({
-          title: "Games surface",
-          kicker: "Reserved for later",
-          badge: "Planned",
-          state: "planned",
-          body: "Future lightweight public game modules can attach to this route family later without splitting the public experience away from media and community again.",
-          meta: ["Route family reserved", "Shared dashboard styling"]
-        }),
-        buildActionScaffoldCard({
-          title: "Economy support requests",
-          body: "This CTA pattern is reserved for future balance disputes or data-correction requests when public economy systems become authoritative."
-        })
+        { label: "Canonical page", value: "Economy", note: "/economy.html" },
+        { label: "Authority", value: "Runtime", note: "/api/public/economy/market-exchange" }
       ]
     });
+    host.appendChild(hero);
+    host.appendChild(buildEconomyJumpRow([
+      { id: "overview", label: "Overview" },
+      { id: "market", label: "Market" },
+      { id: "exchange", label: "Exchange" },
+      { id: "inventory", label: "Inventory" },
+      { id: "wallet", label: "Wallet" },
+      { id: "games-rewards", label: "Games / Rewards" }
+    ]));
+
+    const overviewSection = createEconomyHubSection("overview", "Overview", {
+      kicker: "Runtime-backed status",
+      body: "This hub keeps public economy presentation together while Runtime/Auth remains the only source of balances, inventory, prices, and mutations."
+    });
+    const status = create("div", "market-exchange-status muted", "Loading Games & Economy catalog...");
+    const resultPanel = create("div", "market-exchange-result", "");
+    resultPanel.hidden = true;
+    overviewSection.append(status, resultPanel);
+
+    const marketSection = createEconomyHubSection("market", "Market", {
+      kicker: "Spend Stekels",
+      body: "Spend Runtime/Auth wallet value on public-safe market inventory items."
+    });
+    const exchangeSection = createEconomyHubSection("exchange", "Exchange", {
+      kicker: "Convert held value items",
+      body: "Convert eligible held gems and high-value units into Stekels through the runtime mutation endpoint."
+    });
+    const inventorySection = createEconomyHubSection("inventory", "Inventory", {
+      kicker: "Held items"
+    });
+    const walletSection = createEconomyHubSection("wallet", "Wallet", {
+      kicker: "Stekels summary"
+    });
+    const gamesSection = createEconomyHubSection("games-rewards", "Games / Rewards", {
+      kicker: "Coming online",
+      body: "Gameplay modules, reward history, and economy support workflows stay staged here until a public-safe backend contract exists."
+    });
+    gamesSection.appendChild(buildDashboardGrid([
+      buildDashboardCard({
+        title: "Games surface",
+        kicker: "Reserved",
+        badge: "Coming online",
+        state: "planned",
+        body: "Future public game modules can attach to this hub without splitting economy features into separate competing pages.",
+        meta: ["No local game state", "No fake outcomes"]
+      }),
+      buildDashboardCard({
+        title: "Reward history",
+        kicker: "Backend contract required",
+        badge: "Unavailable",
+        state: "preview",
+        body: "Reward ledgers will render here when Runtime/Auth exposes a public-safe history contract.",
+        meta: ["No fabricated ledger", "Runtime authority required"]
+      }),
+      buildActionScaffoldCard({
+        title: "Economy support requests",
+        body: "This CTA pattern remains informational until a real public economy target or support workflow is available."
+      })
+    ], "dashboard-card-grid--three"));
+
+    host.append(overviewSection, marketSection, exchangeSection, inventorySection, walletSection, gamesSection);
+
+    const setResult = (message, state = "") => {
+      resultPanel.hidden = !message;
+      resultPanel.textContent = message || "";
+      resultPanel.dataset.state = state;
+    };
+
+    const renderPayload = (payload) => {
+      clear(overviewSection);
+      overviewSection.appendChild(createEconomySectionHeader("Overview", "Runtime-backed status", "This hub keeps public economy presentation together while Runtime/Auth remains the only source of balances, inventory, prices, and mutations."));
+      overviewSection.append(status, resultPanel);
+      renderEconomyHubSummaryCards(overviewSection, payload, authReady);
+      status.textContent = payload?.authenticated ? "Catalog, wallet, and inventory loaded from Runtime/Auth." : "Signed-out read-only catalog loaded from Runtime/Auth.";
+      renderMarketExchangeSection({
+        host: exchangeSection,
+        title: "Exchange",
+        subtitle: "Convert eligible held items into Stekels",
+        items: payload?.exchange || [],
+        authReady: Boolean(payload?.authenticated),
+        actionLabel: "Exchange",
+        valueLabel: "Value",
+        valueKey: "exchange_value_stekels",
+        emptyText: "No exchangeable items are configured yet.",
+        onAction: async (item, quantity) => exchangePublicMarketItem({ itemCode: item.item_code, quantity, reasonText: "Public Games & Economy item exchange" }),
+        onResult: (result) => {
+          setResult(`Exchanged for ${formatNumber(result?.credits_granted || 0)} Stekels.`, "success");
+          load();
+        },
+        onAuthRequired: () => openAuthModal?.("login"),
+        onError: (message) => setResult(message, "error")
+      });
+      renderMarketExchangeSection({
+        host: marketSection,
+        title: "Market",
+        subtitle: "Spend Stekels on items",
+        items: payload?.market || [],
+        authReady: Boolean(payload?.authenticated),
+        actionLabel: "Buy",
+        valueLabel: "Price",
+        valueKey: "market_price_stekels",
+        emptyText: "No market items are available yet.",
+        onAction: async (item, quantity) => buyPublicMarketItem({ itemCode: item.item_code, quantity, reasonText: "Public Games & Economy purchase" }),
+        onResult: (result) => {
+          setResult(`Purchased x${formatNumber(result?.quantity_purchased || 0)} ${result?.item_code || "item"} for ${formatNumber(result?.stekels_spent || 0)} Stekels.`, "success");
+          load();
+        },
+        onAuthRequired: () => openAuthModal?.("login"),
+        onError: (message) => setResult(message, "error")
+      });
+      renderEconomyWalletInventorySections({ walletSection, inventorySection, payload, authReady: Boolean(payload?.authenticated) });
+      scrollEconomyHashIntoView();
+    };
+
+    const load = async () => {
+      try {
+        const payload = await fetchPublicMarketExchange();
+        renderPayload(payload);
+      } catch (error) {
+        renderEconomyHubUnavailable({ status, resultPanel, exchangeSection, marketSection, walletSection, inventorySection, error });
+        scrollEconomyHashIntoView();
+      }
+    };
+
+    renderEconomyHubSummaryCards(overviewSection, null, authReady);
+    load();
   }
 
   function renderMarketExchangeWorkspace(ctx) {

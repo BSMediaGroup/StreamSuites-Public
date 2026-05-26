@@ -2,6 +2,12 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.3-alpha
 
+- Consolidated Market & Exchange into the existing `economy.html` Games & Economy surface. The canonical public hub now renders overview/status, Market, Exchange, Inventory, Wallet, and Games / Rewards sections from the existing Runtime/Auth market-exchange payload where available, while preserving honest unavailable/coming-online states where no backend contract exists.
+- Added a compact anchor/jump row beneath the Games & Economy hero for Overview, Market, Exchange, Inventory, Wallet, and Games / Rewards, with `/economy.html#market`, `/economy.html#exchange`, and `/economy.html#wallet` deep links handled additively without taking over existing SPA hash routing.
+- Kept `/market-exchange`, `/market-exchange/`, and `/market-exchange.html` as safe entry points with no `_redirects` loop. Those routes now render the canonical Games & Economy hub and keep using the existing Runtime/Auth `/api/public/economy/market-exchange`, `/api/public/economy/exchange`, and `/api/public/economy/market/buy` contracts.
+- Removed the duplicate top-level Public sidebar `Market & Exchange` entry because Market and Exchange now live as sections under the canonical `Games & Economy` nav item. The removed nav row was redundant only; the static route entry points remain valid.
+- Human note: Public still does not calculate balances, inventory, prices, or mutations locally; successful exchange/buy actions continue to refresh server-backed catalog, wallet, and inventory state.
+
 - Updated Public wallet/inventory tooltip rendering to display Runtime/Auth-provided `chat_alias` as optional public-safe item metadata. Scoped wallet/inventory hydration continues to use the scoped/global payload fields returned by Runtime/Auth, and Public still does not fabricate missing scoped values.
 - Human note: item popovers can now show `Chat alias: lumber` when the backend sends it, while aliases stay hidden for items without one.
 

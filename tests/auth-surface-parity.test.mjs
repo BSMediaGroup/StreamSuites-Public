@@ -39,10 +39,11 @@ test("every public-shell route loads the shared turnstile helper", () => {
 test("leaderboard and standalone profile shells load active scoped progression assets before the router mounts", () => {
   const leaderboardHtml = read("leaderboards.html");
   const profileHtml = read("u/index.html");
+  const economyHtml = read("economy.html");
   const marketExchangeHtml = read("market-exchange.html");
   const marketExchangeIndexHtml = read("market-exchange/index.html");
   const redirects = read("_redirects");
-  for (const [label, html] of [["leaderboards.html", leaderboardHtml], ["u/index.html", profileHtml], ["market-exchange.html", marketExchangeHtml], ["market-exchange/index.html", marketExchangeIndexHtml]]) {
+  for (const [label, html] of [["leaderboards.html", leaderboardHtml], ["u/index.html", profileHtml], ["economy.html", economyHtml], ["market-exchange.html", marketExchangeHtml], ["market-exchange/index.html", marketExchangeIndexHtml]]) {
     assert.match(html, /\/css\/public-shell\.css/, `${label} should load scoped progression styles`);
     assert.match(html, /\/js\/public-data-hub\.js/, `${label} should load the public data hub`);
     assert.match(html, /\/js\/public-pages-app\.js/, `${label} should load the public router`);
@@ -57,10 +58,12 @@ test("leaderboard and standalone profile shells load active scoped progression a
   }
   assert.match(redirects, /\/community\/leaderboard \/leaderboards\.html 200/);
   assert.match(redirects, /\/community\/leaderboard\/ \/leaderboards\.html 200/);
+  assert.match(redirects, /\/economy \/economy\.html 200/);
+  assert.match(redirects, /\/economy\/ \/economy\.html 200/);
   assert.doesNotMatch(redirects, /^\/market-exchange\b/m);
 });
 
-test("market exchange clean and html routes are served without redirect cycles", () => {
+test("economy routes and market exchange aliases render the canonical economy hub without redirect cycles", () => {
   const redirects = read("_redirects");
   const app = read("js/public-pages-app.js");
   const shell = read("js/public-shell.js");
@@ -79,10 +82,19 @@ test("market exchange clean and html routes are served without redirect cycles",
   assert.match(marketExchangeIndexHtml, /\/js\/public-pages-app\.js/);
   assert.doesNotMatch(aliasCatchAllFunction, /market-exchange/i);
   assert.doesNotMatch(aliasCatchAllFunction, /requestUrl\.pathname = "\/market-exchange\.html";/);
+  assert.match(app, /aliases: \["\/economy", "\/economy\/"\]/);
   assert.match(app, /aliases: \["\/market-exchange", "\/market-exchange\/"\]/);
+  assert.match(app, /render: renderGamesEconomyWorkspace/);
+  assert.match(app, /id: "market", label: "Market"/);
+  assert.match(app, /id: "exchange", label: "Exchange"/);
+  assert.match(app, /id: "wallet", label: "Wallet"/);
+  assert.match(app, /classList\.contains\("economy-hub-section"\)/);
+  assert.match(app, /fetchPublicMarketExchange\(\)/);
+  assert.match(app, /Public Games & Economy purchase/);
   assert.match(app, /Exchange catalog is unavailable right now\./);
   assert.match(app, /Market catalog is unavailable right now\./);
-  assert.match(shell, /href: "\/market-exchange"/);
+  assert.match(shell, /href: "\/economy\.html", label: "Games & Economy"/);
+  assert.doesNotMatch(shell, /label: "Market & Exchange"/);
 });
 
 test("public login surfaces expose alternate surface links", () => {
