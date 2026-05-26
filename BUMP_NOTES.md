@@ -2,12 +2,17 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.3-alpha
 
+- Replaced the incorrect in-page Games & Economy anchor row with a shell-level dashboard-style fixed/collapsible/overflow-scrollable section bar.
+- Matched the Admin Dashboard `/economy` section-shell anchor bar placement and behavior more closely by rendering the Public economy section bar directly below the top bar instead of inside normal page content.
+- Fixed Games & Economy anchor jump offsets so Overview, Market, Exchange, Inventory, Wallet, and Games / Rewards sections are not hidden behind pinned shell bars.
+- Confirmed the shell-level section bar is configured only for the Games & Economy routes and not for other Public pages.
+
 - Fixed `/economy` ERR_TOO_MANY_REDIRECTS by consolidating Public Games & Economy alias handling in the catch-all Pages Function and removing the overlapping `_redirects` economy rewrites. `/economy`, `/economy/`, `/economy.html`, `/games`, `/market`, `/exchange`, `/shop`, and compatibility `/market-exchange` paths now direct-serve the canonical economy hub asset without redirect chains.
 - Added stable short Games & Economy shims for `/games`, `/market`, `/exchange`, and `/shop`. `/market-exchange` remains compatibility-only and is no longer the preferred Public shell or livechat-facing page slug.
 - Changed the Public shell canonical first page from `/media` to `/home` while keeping `/media`, `/media/`, and `/media.html` compatibility mapped to the same home shell content.
-- Reworked the Games & Economy anchor row into a fixed/pinned Public-shell jump bar with a collapsible control, compact horizontal pill links, horizontal overflow scrolling, and hash-safe section jumps for Overview, Market, Exchange, Inventory, Wallet, and Games.
+- Superseded the earlier Games & Economy content-flow jump bar implementation with the shell-level section bar above; the section links remain collapsible, compact, horizontally scrollable, and hash-safe.
 - Consolidated Market & Exchange into the existing `economy.html` Games & Economy surface. The canonical public hub now renders overview/status, Market, Exchange, Inventory, Wallet, and Games / Rewards sections from the existing Runtime/Auth market-exchange payload where available, while preserving honest unavailable/coming-online states where no backend contract exists.
-- Added a compact anchor/jump row beneath the Games & Economy hero for Overview, Market, Exchange, Inventory, Wallet, and Games / Rewards, with `/economy.html#market`, `/economy.html#exchange`, and `/economy.html#wallet` deep links handled additively without taking over existing SPA hash routing.
+- Removed the earlier compact anchor/jump row beneath the Games & Economy hero because that placement was incorrect; `/economy.html#market`, `/economy.html#exchange`, and `/economy.html#wallet` deep links remain handled additively without taking over existing SPA hash routing.
 - Kept `/market-exchange`, `/market-exchange/`, and `/market-exchange.html` as safe entry points with no `_redirects` loop. Those routes now render the canonical Games & Economy hub and keep using the existing Runtime/Auth `/api/public/economy/market-exchange`, `/api/public/economy/exchange`, and `/api/public/economy/market/buy` contracts.
 - Removed the duplicate top-level Public sidebar `Market & Exchange` entry because Market and Exchange now live as sections under the canonical `Games & Economy` nav item. The removed nav row was redundant only; the static route entry points remain valid.
 - Human note: Public still does not calculate balances, inventory, prices, or mutations locally; successful exchange/buy actions continue to refresh server-backed catalog, wallet, and inventory state.

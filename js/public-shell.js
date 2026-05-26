@@ -30,6 +30,7 @@
 
   const SIDEBAR_STATE_KEY = "ss-public-sidebar-state";
   const FILTER_COLLAPSE_STATE_KEY = "ss-public-filters-collapsed";
+  const SECTION_BAR_COLLAPSE_PREFIX = "ss-public-section-bar-collapsed";
   const SIDEBAR_STATES = Object.freeze({
     hidden: "hidden",
     icon: "icon",
@@ -202,6 +203,24 @@
     } catch (_err) {
       clearAuthAccessUnlockState();
       return { active: false, expiresAt: "" };
+    }
+  }
+
+  function readSectionBarCollapsedState(storageKey) {
+    if (!storageKey) return false;
+    try {
+      return window.sessionStorage.getItem(storageKey) === "1";
+    } catch (_err) {
+      return false;
+    }
+  }
+
+  function writeSectionBarCollapsedState(storageKey, collapsed) {
+    if (!storageKey) return;
+    try {
+      window.sessionStorage.setItem(storageKey, collapsed ? "1" : "0");
+    } catch (_err) {
+      // Ignore session storage failures.
     }
   }
 
@@ -515,6 +534,7 @@
       showLockoutBanner: false,
       filters: [],
       filtersCollapsed: false,
+      sectionBar: null,
       defaultSidebarState: "",
       multiFilter: false,
       accountLabel: "Guest",
@@ -655,6 +675,33 @@
     loadingBar.setAttribute("aria-hidden", "true");
     loadingBar.append(create("div", "shell-loading-track"), create("div", "shell-loading-bar"));
 
+    const sectionBar = create("nav", "public-section-shell-tabs");
+    sectionBar.hidden = true;
+    sectionBar.setAttribute("aria-label", "Page sections");
+    sectionBar.dataset.publicSectionBar = "shell";
+
+    const sectionBarToggle = create("button", "public-section-tabs-toggle");
+    sectionBarToggle.type = "button";
+    sectionBarToggle.setAttribute("aria-expanded", "true");
+    sectionBarToggle.setAttribute("aria-label", "Hide section tabs");
+    sectionBarToggle.appendChild(createIcon(UI_ICON_MAP.layoutStack, "public-section-tabs-toggle-icon"));
+
+    const sectionBarPrev = create("button", "public-section-tab-scroll public-section-tab-scroll--prev");
+    sectionBarPrev.type = "button";
+    sectionBarPrev.setAttribute("aria-label", "Scroll sections left");
+    sectionBarPrev.appendChild(create("span", "", "<"));
+
+    const sectionBarViewport = create("div", "public-section-tabs-viewport");
+    const sectionBarTrack = create("div", "public-section-tabs-inner");
+    sectionBarViewport.appendChild(sectionBarTrack);
+
+    const sectionBarNext = create("button", "public-section-tab-scroll public-section-tab-scroll--next");
+    sectionBarNext.type = "button";
+    sectionBarNext.setAttribute("aria-label", "Scroll sections right");
+    sectionBarNext.appendChild(create("span", "", ">"));
+
+    sectionBar.append(sectionBarToggle, sectionBarPrev, sectionBarViewport, sectionBarNext);
+
     topbar.append(topbarMain, filterDock);
 
     const pageBanner = create("section", "public-lockout-banner");
@@ -683,7 +730,7 @@
 
     const footer = buildFooter();
 
-    main.append(topbar, loadingBar, pageBanner, content);
+    main.append(topbar, sectionBar, loadingBar, pageBanner, content);
     layout.append(sidebar, main, footer);
     root.append(bg, layout);
 
@@ -1404,6 +1451,120 @@
       content.setAttribute("aria-busy", isActive ? "true" : "false");
     }
 
+    let activeSectionBarKey = "";
+    let activeSectionBarStorageKey = "";
+
+    function normalizeSectionBarSections(sections) {
+      if (!Array.isArray(sections)) return [];
+      return sections
+        .map((section) => ({
+          id: String(section?.id || "").trim().replace(/^#/, ""),
+          label: String(section?.label || "").trim()
+        }))
+        .filter((section) => section.id && section.label);
+    }
+
+    function updateSectionBarOverflow() {
+      if (sectionBar.hidden) return;
+      const maxScroll = Math.max(0, sectionBarTrack.scrollWidth - sectionBarTrack.clientWidth);
+      const scrollLeft = Math.max(0, sectionBarTrack.scrollLeft);
+      const hasOverflow = maxScroll > 1;
+      sectionBar.classList.toggle("has-overflow", hasOverflow);
+      sectionBar.classList.toggle("show-left-fade", hasOverflow && scrollLeft > 1);
+      sectionBar.classList.toggle("show-right-fade", hasOverflow && scrollLeft < maxScroll - 1);
+      sectionBarPrev.disabled = !hasOverflow || scrollLeft <= 1;
+      sectionBarNext.disabled = !hasOverflow || scrollLeft >= maxScroll - 1;
+    }
+
+    function setSectionBarCollapsed(collapsed, { persist = true } = {}) {
+      const isCollapsed = Boolean(collapsed);
+      sectionBar.classList.toggle("is-collapsed", isCollapsed);
+      sectionBarToggle.classList.toggle("is-collapsed", isCollapsed);
+      sectionBarToggle.setAttribute("aria-expanded", String(!isCollapsed));
+      sectionBarToggle.setAttribute("aria-label", isCollapsed ? "Show section tabs" : "Hide section tabs");
+      sectionBarViewport.setAttribute("aria-hidden", String(isCollapsed));
+      sectionBarPrev.hidden = isCollapsed;
+      sectionBarNext.hidden = isCollapsed;
+      if (persist) writeSectionBarCollapsedState(activeSectionBarStorageKey, isCollapsed);
+      window.requestAnimationFrame(updateSectionBarOverflow);
+    }
+
+    function setSectionBarActive(hashValue = window.location.hash) {
+      const activeId = String(hashValue || "").replace(/^#/, "");
+      sectionBarTrack.querySelectorAll("[data-public-section-anchor]").forEach((link) => {
+        const isActive = activeId && link.dataset.publicSectionAnchor === activeId;
+        link.classList.toggle("is-active", Boolean(isActive));
+        if (isActive) {
+          link.setAttribute("aria-current", "true");
+        } else {
+          link.removeAttribute("aria-current");
+        }
+      });
+    }
+
+    function scrollToSectionHash(hashValue = window.location.hash, options = {}) {
+      const targetId = String(hashValue || "").replace(/^#/, "");
+      if (!targetId || sectionBar.hidden) return false;
+      const target = document.getElementById(targetId);
+      if (!target) return false;
+      const targetRect = target.getBoundingClientRect();
+      const contentRect = content.getBoundingClientRect();
+      const top = Math.max(0, content.scrollTop + targetRect.top - contentRect.top - 8);
+      content.scrollTo({ top, behavior: options.behavior || "smooth" });
+      if (options.focus !== false && typeof target.focus === "function") {
+        target.focus({ preventScroll: true });
+      }
+      setSectionBarActive(`#${targetId}`);
+      return true;
+    }
+
+    function clearSectionBar() {
+      activeSectionBarKey = "";
+      activeSectionBarStorageKey = "";
+      sectionBar.hidden = true;
+      sectionBar.classList.remove("is-collapsed", "has-overflow", "show-left-fade", "show-right-fade");
+      sectionBarTrack.innerHTML = "";
+      sectionBar.dataset.sectionBarKey = "";
+      content.style.removeProperty("--ps-section-bar-offset");
+      document.body.classList.remove("public-section-bar-active");
+    }
+
+    function setSectionBar(config) {
+      const sections = normalizeSectionBarSections(config?.sections);
+      if (!sections.length) {
+        clearSectionBar();
+        return;
+      }
+
+      const key = String(config?.key || "sections").trim() || "sections";
+      activeSectionBarKey = key;
+      activeSectionBarStorageKey = String(config?.storageKey || `${SECTION_BAR_COLLAPSE_PREFIX}:${key}`).trim();
+      sectionBar.dataset.sectionBarKey = key;
+      sectionBar.setAttribute("aria-label", String(config?.label || "Page sections").trim() || "Page sections");
+      sectionBarTrack.innerHTML = "";
+
+      sections.forEach((section) => {
+        const link = create("a", "public-section-tab", section.label);
+        link.href = `#${section.id}`;
+        link.dataset.publicSectionAnchor = section.id;
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+          if (window.location.hash !== `#${section.id}`) {
+            window.history.pushState(window.history.state, "", `#${section.id}`);
+          }
+          scrollToSectionHash(`#${section.id}`, { behavior: "smooth" });
+        });
+        sectionBarTrack.appendChild(link);
+      });
+
+      sectionBar.hidden = false;
+      document.body.classList.add("public-section-bar-active");
+      content.style.setProperty("--ps-section-bar-offset", "16px");
+      setSectionBarCollapsed(readSectionBarCollapsedState(activeSectionBarStorageKey), { persist: false });
+      setSectionBarActive(window.location.hash);
+      window.requestAnimationFrame(updateSectionBarOverflow);
+    }
+
     function updateOptions(next = {}) {
       if (!next || typeof next !== "object") return;
 
@@ -1452,6 +1613,10 @@
         if (options.showLockoutBanner) {
           void loadPageBannerAccessState(false);
         }
+      }
+
+      if ("sectionBar" in next) {
+        setSectionBar(next.sectionBar);
       }
 
       if (Array.isArray(next.filters) || typeof next.multiFilter === "boolean") {
@@ -1509,6 +1674,29 @@
     filterToggle.addEventListener("click", () => {
       if (filterToggle.disabled) return;
       setFilterCollapsed(!filterCollapsed, { persist: true });
+    });
+
+    sectionBarToggle.addEventListener("click", () => {
+      setSectionBarCollapsed(!sectionBar.classList.contains("is-collapsed"), { persist: true });
+    });
+
+    sectionBarPrev.addEventListener("click", () => {
+      sectionBarTrack.scrollBy({ left: -Math.max(160, Math.floor(sectionBarTrack.clientWidth * 0.7)), behavior: "smooth" });
+    });
+
+    sectionBarNext.addEventListener("click", () => {
+      sectionBarTrack.scrollBy({ left: Math.max(160, Math.floor(sectionBarTrack.clientWidth * 0.7)), behavior: "smooth" });
+    });
+
+    sectionBarTrack.addEventListener("scroll", updateSectionBarOverflow, { passive: true });
+
+    window.addEventListener("hashchange", () => {
+      if (!activeSectionBarKey) return;
+      scrollToSectionHash(window.location.hash, { behavior: "smooth", focus: false });
+    });
+
+    window.addEventListener("streamsuites-public:scroll-section-hash", () => {
+      scrollToSectionHash(window.location.hash, { behavior: "smooth", focus: false });
     });
 
     filterRow.addEventListener("click", (event) => {
@@ -1575,6 +1763,7 @@
 
     renderSidebarNav(options.shellKind, options.activeHref);
     setFilterOptions(options.filters, options.multiFilter);
+    setSectionBar(options.sectionBar);
     setSearchVisible(options.showSearch);
     syncLockoutBannerUi();
     setAccountState({
@@ -1638,7 +1827,10 @@
       },
       closeAuthModal() {
         closeAuthModal();
-      }
+      },
+      setSectionBar,
+      clearSectionBar,
+      scrollToSectionHash
     };
   }
 

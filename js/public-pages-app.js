@@ -49,6 +49,19 @@
   const AUTH_PUBLIC_MARKET_EXCHANGE_POST_URL = `${AUTH_API_BASE}/api/public/economy/exchange`;
   const AUTH_PUBLIC_MARKET_BUY_URL = `${AUTH_API_BASE}/api/public/economy/market/buy`;
   const ECONOMY_CURRENCY_SYMBOL_PATH = "/assets/games/currencyunit.svg";
+  const ECONOMY_SECTION_BAR = Object.freeze({
+    key: "economy",
+    label: "Games and economy sections",
+    storageKey: "ss-public-economy-section-tabs-collapsed",
+    sections: Object.freeze([
+      Object.freeze({ id: "overview", label: "Overview" }),
+      Object.freeze({ id: "market", label: "Market" }),
+      Object.freeze({ id: "exchange", label: "Exchange" }),
+      Object.freeze({ id: "inventory", label: "Inventory" }),
+      Object.freeze({ id: "wallet", label: "Wallet" }),
+      Object.freeze({ id: "games", label: "Games / Rewards" })
+    ])
+  });
   const AUTH_PUBLIC_ARTIFACTS_URL = `${AUTH_API_BASE}/api/public/artifacts`;
   const PUBLIC_WHEEL_EVENTS_URL = `${AUTH_API_BASE}/api/public/wheels/events`;
   const PUBLIC_XP_ICON_PATH = "/assets/games/xpstar.webp";
@@ -344,6 +357,7 @@
       hideSearch: true,
       filterMode: "none",
       filtersCollapsed: true,
+      sectionBar: ECONOMY_SECTION_BAR,
       defaultFilters: [],
       render: renderGamesEconomyWorkspace
     },
@@ -357,6 +371,7 @@
       hideSearch: true,
       filterMode: "none",
       filtersCollapsed: true,
+      sectionBar: ECONOMY_SECTION_BAR,
       defaultFilters: [],
       render: renderGamesEconomyWorkspace
     },
@@ -8238,52 +8253,6 @@
     });
   }
 
-  function buildEconomyJumpRow(anchors = []) {
-    const nav = create("nav", "economy-jump-row economy-jump-row--pinned");
-    nav.setAttribute("aria-label", "Games and economy sections");
-    nav.dataset.economyJumpBar = "pinned";
-    nav.dataset.collapsed = "false";
-
-    const toggle = create("button", "economy-jump-toggle", "Sections");
-    toggle.type = "button";
-    toggle.setAttribute("aria-expanded", "true");
-
-    const scroller = create("div", "economy-jump-scroll");
-    scroller.dataset.economyJumpScroll = "true";
-    anchors.forEach((entry) => {
-      const id = String(entry?.id || "").trim();
-      const label = String(entry?.label || "").trim();
-      if (!id || !label) return;
-      const link = create("a", "economy-jump-link", label);
-      link.href = `#${id}`;
-      link.dataset.economyJumpLink = id;
-      if (String(window.location.hash || "").replace(/^#/, "") === id) {
-        link.classList.add("is-active");
-        link.setAttribute("aria-current", "true");
-      }
-      link.addEventListener("click", () => {
-        scroller.querySelectorAll(".economy-jump-link").forEach((item) => {
-          item.classList.toggle("is-active", item === link);
-          if (item === link) {
-            item.setAttribute("aria-current", "true");
-          } else {
-            item.removeAttribute("aria-current");
-          }
-        });
-      });
-      scroller.appendChild(link);
-    });
-
-    toggle.addEventListener("click", () => {
-      const collapsed = nav.dataset.collapsed !== "true";
-      nav.dataset.collapsed = collapsed ? "true" : "false";
-      toggle.setAttribute("aria-expanded", String(!collapsed));
-      scroller.setAttribute("aria-hidden", String(collapsed));
-    });
-    nav.append(toggle, scroller);
-    return nav;
-  }
-
   function createEconomyHubSection(id, title, options = {}) {
     const section = create("section", `economy-hub-section${options.className ? ` ${options.className}` : ""}`);
     section.id = id;
@@ -8303,7 +8272,7 @@
     const target = document.getElementById(rawHash);
     if (!target || !target.classList.contains("economy-hub-section")) return;
     window.requestAnimationFrame(() => {
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.dispatchEvent(new CustomEvent("streamsuites-public:scroll-section-hash"));
     });
   }
 
@@ -8449,14 +8418,6 @@
       ]
     });
     host.appendChild(hero);
-    host.appendChild(buildEconomyJumpRow([
-      { id: "overview", label: "Overview" },
-      { id: "market", label: "Market" },
-      { id: "exchange", label: "Exchange" },
-      { id: "inventory", label: "Inventory" },
-      { id: "wallet", label: "Wallet" },
-      { id: "games", label: "Games / Rewards" }
-    ]));
 
     const overviewSection = createEconomyHubSection("overview", "Overview", {
       kicker: "Runtime-backed status",
@@ -12207,13 +12168,14 @@
       ? mountStandaloneRoot()
       : window.StreamSuitesPublicShell.mount({
           shellKind: currentConfig.shellKind,
-        activeHref: currentConfig.activeHref,
-        topbarLabel: currentConfig.topbarLabel,
-        searchPlaceholder: currentConfig.searchPlaceholder,
-        showSearch: currentConfig.hideSearch !== true,
-        showLockoutBanner: currentConfig.showLockoutBanner === true,
-        filters: buildFiltersForConfig(currentConfig),
-        defaultSidebarState: resolveDefaultSidebarState(currentConfig),
+          activeHref: currentConfig.activeHref,
+          topbarLabel: currentConfig.topbarLabel,
+          searchPlaceholder: currentConfig.searchPlaceholder,
+          showSearch: currentConfig.hideSearch !== true,
+          showLockoutBanner: currentConfig.showLockoutBanner === true,
+          filters: buildFiltersForConfig(currentConfig),
+          defaultSidebarState: resolveDefaultSidebarState(currentConfig),
+          sectionBar: currentConfig.sectionBar || null,
           filtersCollapsed: currentConfig.filtersCollapsed,
           multiFilter: currentConfig.filterMode === "multi",
           accountLabel: "Guest"
@@ -12390,6 +12352,7 @@
         showLockoutBanner: nextConfig.showLockoutBanner === true,
         filters: buildFiltersForConfig(nextConfig),
         defaultSidebarState: resolveDefaultSidebarState(nextConfig),
+        sectionBar: nextConfig.sectionBar || null,
         multiFilter: nextConfig.filterMode === "multi",
         filtersCollapsed: nextConfig.filtersCollapsed,
         onSearch(query) {

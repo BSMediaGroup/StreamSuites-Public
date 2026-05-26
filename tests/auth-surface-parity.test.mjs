@@ -126,21 +126,49 @@ test("economy, home, and compatibility aliases serve direct assets without redir
   assert.doesNotMatch(shell, /href: "\/market-exchange"/);
 });
 
-test("games economy jump bar is pinned, collapsible, and overflow-capable", () => {
+test("games economy section bar is shell-level, collapsible, and overflow-capable", () => {
   const app = read("js/public-pages-app.js");
+  const shell = read("js/public-shell.js");
   const css = read("css/public-shell.css");
 
-  assert.match(app, /create\("nav", "economy-jump-row economy-jump-row--pinned"\)/);
-  assert.match(app, /nav\.dataset\.economyJumpBar = "pinned"/);
-  assert.match(app, /create\("button", "economy-jump-toggle", "Sections"\)/);
-  assert.match(app, /create\("div", "economy-jump-scroll"\)/);
-  assert.match(app, /toggle\.setAttribute\("aria-expanded", String\(!collapsed\)\)/);
-  assert.match(app, /scroller\.setAttribute\("aria-hidden", String\(collapsed\)\)/);
-  assert.match(app, /link\.href = `#\$\{id\}`/);
-  assert.match(css, /\.economy-jump-row\s*\{[\s\S]*position:\s*sticky;[\s\S]*top:\s*0;[\s\S]*grid-template-columns:\s*auto minmax\(0, 1fr\)/);
-  assert.match(css, /\.economy-jump-scroll\s*\{[\s\S]*overflow-x:\s*auto;[\s\S]*overflow-y:\s*hidden/);
-  assert.match(css, /\.economy-jump-row\[data-collapsed="true"\] \.economy-jump-scroll\s*\{[\s\S]*display:\s*none/);
-  assert.match(css, /\.economy-hub-section\s*\{[\s\S]*scroll-margin-top:/);
+  assert.match(app, /sectionBar: ECONOMY_SECTION_BAR/);
+  assert.match(app, /storageKey: "ss-public-economy-section-tabs-collapsed"/);
+  assert.match(app, /id: "overview", label: "Overview"/);
+  assert.match(app, /id: "market", label: "Market"/);
+  assert.match(app, /id: "exchange", label: "Exchange"/);
+  assert.match(app, /id: "inventory", label: "Inventory"/);
+  assert.match(app, /id: "wallet", label: "Wallet"/);
+  assert.match(app, /id: "games", label: "Games \/ Rewards"/);
+  assert.doesNotMatch(app, /host\.appendChild\(buildEconomyJumpRow/);
+  assert.doesNotMatch(app, /create\("nav", "economy-jump-row economy-jump-row--pinned"\)/);
+  assert.match(shell, /const sectionBar = create\("nav", "public-section-shell-tabs"\)/);
+  assert.match(shell, /main\.append\(topbar, sectionBar, loadingBar, pageBanner, content\)/);
+  assert.match(shell, /setSectionBar\(next\.sectionBar\)/);
+  assert.match(shell, /sectionBarToggle\.setAttribute\("aria-expanded", String\(!isCollapsed\)\)/);
+  assert.match(shell, /sectionBarTrack\.scrollBy\(\{ left: Math\.max/);
+  assert.match(shell, /window\.addEventListener\("streamsuites-public:scroll-section-hash"/);
+  assert.match(shell, /link\.href = `#\$\{section\.id\}`/);
+  assert.match(css, /\.public-section-shell-tabs\s*\{[\s\S]*flex:\s*0 0 auto;[\s\S]*z-index:\s*97;[\s\S]*min-height:\s*44px/);
+  assert.match(css, /\.public-section-tabs-inner\s*\{[\s\S]*overflow-x:\s*auto;[\s\S]*overflow-y:\s*hidden/);
+  assert.match(css, /\.public-section-shell-tabs\.is-collapsed \.public-section-tabs-viewport\s*\{[\s\S]*display:\s*none/);
+  assert.match(css, /\.public-section-shell-tabs\.show-right-fade \.public-section-tabs-viewport::after\s*\{[\s\S]*opacity:\s*1/);
+  assert.match(css, /\.economy-hub-section\s*\{[\s\S]*scroll-margin-top:\s*var\(--ps-section-bar-offset, 16px\)/);
+});
+
+test("economy shell section bar is not configured for other public pages", () => {
+  const app = read("js/public-pages-app.js");
+  const sectionBarUses = [...app.matchAll(/sectionBar: ECONOMY_SECTION_BAR/g)];
+  const pageConfigStart = app.indexOf("const PAGE_CONFIG");
+  const renderFunctionsStart = app.indexOf("function resolveConfigFromPath");
+  const pageConfig = app.slice(pageConfigStart, renderFunctionsStart);
+
+  assert.equal(sectionBarUses.length, 2);
+  assert.match(app, /"media-economy": \{[\s\S]*sectionBar: ECONOMY_SECTION_BAR[\s\S]*render: renderGamesEconomyWorkspace/);
+  assert.match(app, /"media-market-exchange": \{[\s\S]*sectionBar: ECONOMY_SECTION_BAR[\s\S]*render: renderGamesEconomyWorkspace/);
+  for (const [pageId, block] of [...pageConfig.matchAll(/"([^"]+)": \{([\s\S]*?)\n    \}/g)]) {
+    if (pageId === "media-economy" || pageId === "media-market-exchange") continue;
+    assert.doesNotMatch(block, /sectionBar:/, `${pageId} should not configure the economy section bar`);
+  }
 });
 
 test("public login surfaces expose alternate surface links", () => {
