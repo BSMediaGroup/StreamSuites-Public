@@ -2,6 +2,11 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.3-alpha
 
+- Restored the Public shell sidebar badge/sublabel to `PUBLIC DASHBOARD` across normal public shell pages without changing Admin, Creator, or standalone public profile labels.
+- Renamed the Public first-page shell asset from `media.html` to `home.html`; `/home`, `/home/`, and `/home.html` now direct-serve `home.html` as the canonical Public Dashboard home.
+- Kept `/media` and `/media/` as compatibility aliases that direct-serve the same `home.html` content, while `media.html` remains only a minimal compatibility shim for old `.html` links. Preferred navigation stays on `/home`.
+- Games & Economy aliases, the shell-level section bar, and `/games`-backed economy behavior remain intact; preferred Public links still avoid `/market-exchange`.
+
 - Replaced the incorrect in-page Games & Economy anchor row with a shell-level dashboard-style fixed/collapsible/overflow-scrollable section bar.
 - Matched the Admin Dashboard `/economy` section-shell anchor bar placement and behavior more closely by rendering the Public economy section bar directly below the top bar instead of inside normal page content.
 - Fixed Games & Economy anchor jump offsets so Overview, Market, Exchange, Inventory, Wallet, and Games / Rewards sections are not hidden behind pinned shell bars.

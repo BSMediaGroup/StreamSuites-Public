@@ -38,12 +38,13 @@ test("every public-shell route loads the shared turnstile helper", () => {
 
 test("leaderboard and standalone profile shells load active scoped progression assets before the router mounts", () => {
   const leaderboardHtml = read("leaderboards.html");
+  const homeHtml = read("home.html");
   const profileHtml = read("u/index.html");
   const economyHtml = read("economy.html");
   const marketExchangeHtml = read("market-exchange.html");
   const marketExchangeIndexHtml = read("market-exchange/index.html");
   const redirects = read("_redirects");
-  for (const [label, html] of [["leaderboards.html", leaderboardHtml], ["u/index.html", profileHtml], ["economy.html", economyHtml], ["market-exchange.html", marketExchangeHtml], ["market-exchange/index.html", marketExchangeIndexHtml]]) {
+  for (const [label, html] of [["leaderboards.html", leaderboardHtml], ["home.html", homeHtml], ["u/index.html", profileHtml], ["economy.html", economyHtml], ["market-exchange.html", marketExchangeHtml], ["market-exchange/index.html", marketExchangeIndexHtml]]) {
     assert.match(html, /\/css\/public-shell\.css/, `${label} should load scoped progression styles`);
     assert.match(html, /\/js\/public-data-hub\.js/, `${label} should load the public data hub`);
     assert.match(html, /\/js\/public-pages-app\.js/, `${label} should load the public router`);
@@ -72,11 +73,11 @@ test("economy, home, and compatibility aliases serve direct assets without redir
   const lines = redirects.split(/\r?\n/).map((line) => line.trim()).filter((line) => line && !line.startsWith("#"));
   const routeTable = {
     "/": "context.next",
-    "/home": "/media.html",
-    "/home/": "/media.html",
-    "/home.html": "/media.html",
-    "/media": "/media.html",
-    "/media/": "/media.html",
+    "/home": "/home.html",
+    "/home/": "/home.html",
+    "/home.html": "/home.html",
+    "/media": "/home.html",
+    "/media/": "/home.html",
     "/media.html": "/media.html",
     "/economy": "/economy.html",
     "/economy/": "/economy.html",
@@ -106,7 +107,8 @@ test("economy, home, and compatibility aliases serve direct assets without redir
   assert.match(aliasCatchAllFunction, /return context\.env\.ASSETS\.fetch\(assetRequestFor\(context, requestUrl, directAssetPathname\)\)/);
   assert.match(aliasCatchAllFunction, /return context\.next\(\)/);
   assert.doesNotMatch(aliasCatchAllFunction, /Response\.redirect|status:\s*30[1278]|301|302/);
-  assert.match(app, /aliases: \["\/home", "\/home\/", "\/home\.html", "\/media", "\/media\/"\]/);
+  assert.match(app, /path: "\/home\.html"/);
+  assert.match(app, /aliases: \["\/home", "\/home\/", "\/home\.html", "\/media", "\/media\/", "\/media\.html"\]/);
   assert.match(app, /aliases: \["\/economy", "\/economy\/", "\/games", "\/games\/", "\/market", "\/market\/", "\/exchange", "\/exchange\/", "\/shop", "\/shop\/"\]/);
   assert.match(app, /aliases: \["\/market-exchange", "\/market-exchange\/"\]/);
   assert.match(app, /render: renderGamesEconomyWorkspace/);
@@ -121,6 +123,8 @@ test("economy, home, and compatibility aliases serve direct assets without redir
   assert.match(app, /Exchange catalog is unavailable right now\./);
   assert.match(app, /Market catalog is unavailable right now\./);
   assert.match(shell, /href: "\/home", label: "Home"/);
+  assert.match(shell, /return "PUBLIC DASHBOARD"/);
+  assert.doesNotMatch(shell, /VIEWER DASHBOARD/);
   assert.match(shell, /href: "\/games", label: "Games & Economy"/);
   assert.doesNotMatch(shell, /label: "Market & Exchange"/);
   assert.doesNotMatch(shell, /href: "\/market-exchange"/);

@@ -42,7 +42,7 @@ flowchart TD
 
 ## Current Surface Model
 
-- The public `/media` and `/community` experiences now share one dashboard-style shell and one sidebar/navigation model, with `/media` remaining the default public home tab for the viewer/member dashboard.
+- The public `/home` and `/community` experiences now share one dashboard-style shell and one sidebar/navigation model, with `/home` remaining the default public home tab for the public dashboard and `/media` preserved only as a compatibility entry.
 - Canonical public profiles resolve at `/u/<slug>`, backed by the authoritative public slug model exported by `StreamSuites`.
 - Legacy `user_code` compatibility is still preserved during profile resolution and migration-safe routing.
 - Clean public artifact routes are supported for clips, polls, and scores via `/clips/<id-or-slug>`, `/polls/<id-or-slug>`, and `/scores/<id-or-slug>`, while legacy detail entry points remain available.
@@ -83,11 +83,13 @@ StreamSuites-Public/
 ├── auth-bridge.html
 ├── changelog.html
 ├── economy.html
+├── home.html
 ├── index.html
 ├── index-v2.html
 ├── market-exchange/
 │   └── index.html
 ├── market-exchange.html
+├── media.html                  # Compatibility shim for old /media.html links
 ├── public-login.html
 ├── README.md
 ├── requests-login.html

@@ -258,8 +258,8 @@
 
   const PAGE_CONFIG = {
     "media-home": {
-      path: "/media.html",
-      aliases: ["/home", "/home/", "/home.html", "/media", "/media/"],
+      path: "/home.html",
+      aliases: ["/home", "/home/", "/home.html", "/media", "/media/", "/media.html"],
       shellKind: "media",
       activeHref: "/home",
       topbarLabel: "Media Home",
@@ -8221,7 +8221,7 @@
       title: "Wheels",
       body: "This route now lives inside the unified public dashboard so future competition wheels, prize wheels, or community pickers can land without introducing another separate shell.",
       actions: [
-        { label: "Back to media home", href: "/home", emphasis: "strong" },
+        { label: "Back to public home", href: "/home", emphasis: "strong" },
         { label: "Browse polls", href: "/polls" }
       ],
       stats: [

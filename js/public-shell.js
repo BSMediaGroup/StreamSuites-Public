@@ -439,7 +439,7 @@
 
   function shellSubheading(shellKind) {
     if (shellKind === "public") return "PUBLIC PROFILE";
-    return "VIEWER DASHBOARD";
+    return "PUBLIC DASHBOARD";
   }
 
   function createSidebarLink(item, currentPath) {

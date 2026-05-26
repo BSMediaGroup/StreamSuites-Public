@@ -4,18 +4,19 @@ const PROFILE_ALIAS_PATHNAME_RE = /^\/@([^\/?#]+)\/?$/;
 // static assets through the Pages Function so aliases do not redirect between
 // one another and do not depend on browser state:
 // / -> static index.html via context.next()
-// /home, /home/, /home.html -> /media.html
-// /media, /media/, /media.html -> /media.html compatibility
+// /home, /home/, /home.html -> /home.html
+// /media, /media/ -> /home.html compatibility
+// /media.html -> static compatibility shim
 // /economy, /economy/, /economy.html -> /economy.html canonical hub
 // /games, /games/ -> /economy.html preferred Games & Economy entry
 // /market, /market/, /exchange, /exchange/, /shop, /shop/ -> /economy.html short shims
 // /market-exchange, /market-exchange/, /market-exchange.html -> /economy.html compatibility only
 const DIRECT_ASSET_ROUTES = new Map([
-  ["/home", "/media.html"],
-  ["/home/", "/media.html"],
-  ["/home.html", "/media.html"],
-  ["/media", "/media.html"],
-  ["/media/", "/media.html"],
+  ["/home", "/home.html"],
+  ["/home/", "/home.html"],
+  ["/home.html", "/home.html"],
+  ["/media", "/home.html"],
+  ["/media/", "/home.html"],
   ["/media.html", "/media.html"],
   ["/economy", "/economy.html"],
   ["/economy/", "/economy.html"],
