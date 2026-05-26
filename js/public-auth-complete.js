@@ -3,7 +3,7 @@
   const PUBLIC_BASE = /^https?:\/\//.test(CURRENT_ORIGIN) ? CURRENT_ORIGIN : "https://streamsuites.app";
   const ME_API_URL = new URL("/api/public/me", PUBLIC_BASE).toString();
   const LOGIN_URL = new URL("/public-login.html", PUBLIC_BASE).toString();
-  const DEFAULT_RETURN_TO = new URL("/media.html", PUBLIC_BASE).toString();
+  const DEFAULT_RETURN_TO = new URL("/home", PUBLIC_BASE).toString();
   const AUTH_COMPLETE_MESSAGE_TYPE = "ss_public_auth_complete";
   const CLOSE_FALLBACK_DELAY_MS = 700;
   const REQUEST_TIMEOUT_MS = 12000;

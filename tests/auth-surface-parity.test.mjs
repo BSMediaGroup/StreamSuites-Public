@@ -58,43 +58,89 @@ test("leaderboard and standalone profile shells load active scoped progression a
   }
   assert.match(redirects, /\/community\/leaderboard \/leaderboards\.html 200/);
   assert.match(redirects, /\/community\/leaderboard\/ \/leaderboards\.html 200/);
-  assert.match(redirects, /\/economy \/economy\.html 200/);
-  assert.match(redirects, /\/economy\/ \/economy\.html 200/);
+  assert.doesNotMatch(redirects, /^\/economy\b/m);
+  assert.doesNotMatch(redirects, /^\/economy\/\b/m);
   assert.doesNotMatch(redirects, /^\/market-exchange\b/m);
 });
 
-test("economy routes and market exchange aliases render the canonical economy hub without redirect cycles", () => {
+test("economy, home, and compatibility aliases serve direct assets without redirect cycles", () => {
   const redirects = read("_redirects");
   const app = read("js/public-pages-app.js");
   const shell = read("js/public-shell.js");
-  const marketExchangeIndexHtml = read("market-exchange/index.html");
   const aliasCatchAllFunction = read("functions/[[path]].js");
 
   const lines = redirects.split(/\r?\n/).map((line) => line.trim()).filter((line) => line && !line.startsWith("#"));
-  const marketRules = lines
+  const routeTable = {
+    "/": "context.next",
+    "/home": "/media.html",
+    "/home/": "/media.html",
+    "/home.html": "/media.html",
+    "/media": "/media.html",
+    "/media/": "/media.html",
+    "/media.html": "/media.html",
+    "/economy": "/economy.html",
+    "/economy/": "/economy.html",
+    "/economy.html": "/economy.html",
+    "/games": "/economy.html",
+    "/games/": "/economy.html",
+    "/market": "/economy.html",
+    "/market/": "/economy.html",
+    "/exchange": "/economy.html",
+    "/exchange/": "/economy.html",
+    "/shop": "/economy.html",
+    "/shop/": "/economy.html",
+    "/market-exchange": "/economy.html",
+    "/market-exchange/": "/economy.html",
+    "/market-exchange.html": "/economy.html"
+  };
+  const functionRoutes = aliasCatchAllFunction.match(/const DIRECT_ASSET_ROUTES = new Map\(\[[\s\S]*?\]\);/)?.[0] || "";
+  const functionRouteEntries = Object.entries(routeTable).filter(([source]) => source !== "/");
+  const aliasRedirectRules = lines
     .map((line) => line.split(/\s+/))
-    .filter(([source]) => ["/market-exchange", "/market-exchange/", "/market-exchange.html"].includes(source));
-  const redirectsOnly = marketRules.filter((parts) => parts[2] && parts[2] !== "200");
+    .filter(([source]) => functionRouteEntries.some(([route]) => route === source));
 
-  assert.deepEqual(marketRules, []);
-  assert.deepEqual(redirectsOnly, []);
-  assert.match(marketExchangeIndexHtml, /data-public-page="media-market-exchange"/);
-  assert.match(marketExchangeIndexHtml, /\/js\/public-pages-app\.js/);
-  assert.doesNotMatch(aliasCatchAllFunction, /market-exchange/i);
-  assert.doesNotMatch(aliasCatchAllFunction, /requestUrl\.pathname = "\/market-exchange\.html";/);
-  assert.match(app, /aliases: \["\/economy", "\/economy\/"\]/);
+  assert.deepEqual(aliasRedirectRules, []);
+  for (const [source, target] of functionRouteEntries) {
+    assert.match(functionRoutes, new RegExp(`\\["${source.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}", "${target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"\\]`), `${source} should direct-serve ${target}`);
+  }
+  assert.match(aliasCatchAllFunction, /return context\.env\.ASSETS\.fetch\(assetRequestFor\(context, requestUrl, directAssetPathname\)\)/);
+  assert.match(aliasCatchAllFunction, /return context\.next\(\)/);
+  assert.doesNotMatch(aliasCatchAllFunction, /Response\.redirect|status:\s*30[1278]|301|302/);
+  assert.match(app, /aliases: \["\/home", "\/home\/", "\/home\.html", "\/media", "\/media\/"\]/);
+  assert.match(app, /aliases: \["\/economy", "\/economy\/", "\/games", "\/games\/", "\/market", "\/market\/", "\/exchange", "\/exchange\/", "\/shop", "\/shop\/"\]/);
   assert.match(app, /aliases: \["\/market-exchange", "\/market-exchange\/"\]/);
   assert.match(app, /render: renderGamesEconomyWorkspace/);
   assert.match(app, /id: "market", label: "Market"/);
   assert.match(app, /id: "exchange", label: "Exchange"/);
+  assert.match(app, /id: "inventory", label: "Inventory"/);
   assert.match(app, /id: "wallet", label: "Wallet"/);
+  assert.match(app, /id: "games", label: "Games \/ Rewards"/);
   assert.match(app, /classList\.contains\("economy-hub-section"\)/);
   assert.match(app, /fetchPublicMarketExchange\(\)/);
   assert.match(app, /Public Games & Economy purchase/);
   assert.match(app, /Exchange catalog is unavailable right now\./);
   assert.match(app, /Market catalog is unavailable right now\./);
-  assert.match(shell, /href: "\/economy\.html", label: "Games & Economy"/);
+  assert.match(shell, /href: "\/home", label: "Home"/);
+  assert.match(shell, /href: "\/games", label: "Games & Economy"/);
   assert.doesNotMatch(shell, /label: "Market & Exchange"/);
+  assert.doesNotMatch(shell, /href: "\/market-exchange"/);
+});
+
+test("games economy jump bar is pinned, collapsible, and overflow-capable", () => {
+  const app = read("js/public-pages-app.js");
+  const css = read("css/public-shell.css");
+
+  assert.match(app, /create\("nav", "economy-jump-row economy-jump-row--pinned"\)/);
+  assert.match(app, /nav\.dataset\.economyJumpBar = "pinned"/);
+  assert.match(app, /create\("button", "economy-jump-toggle", "Sections"\)/);
+  assert.match(app, /create\("div", "economy-jump-scroll"\)/);
+  assert.match(app, /toggle\.setAttribute\("aria-expanded", String\(!collapsed\)\)/);
+  assert.match(app, /scroller\.setAttribute\("aria-hidden", String\(collapsed\)\)/);
+  assert.match(app, /link\.href = `#\$\{id\}`/);
+  assert.match(css, /\.economy-jump-row\s*\{[\s\S]*position:\s*sticky;[\s\S]*top:\s*0;[\s\S]*grid-template-columns:\s*auto minmax\(0, 1fr\)/);
+  assert.match(css, /\.economy-jump-scroll\s*\{[\s\S]*overflow-x:\s*auto;[\s\S]*overflow-y:\s*hidden/);
+  assert.match(css, /\.economy-jump-row\[data-collapsed="true"\] \.economy-jump-scroll\s*\{[\s\S]*display:\s*none/);
+  assert.match(css, /\.economy-hub-section\s*\{[\s\S]*scroll-margin-top:/);
 });
 
 test("public login surfaces expose alternate surface links", () => {
@@ -494,10 +540,10 @@ test("public profile route shim canonicalizes /@slug to /u/slug without adding a
   assert.doesNotMatch(redirects, /^\/@\s+\/u\/index\.html 200$/m);
   assert.doesNotMatch(redirects, /^\/@\*\s+\/u\/index\.html 200$/m);
   assert.match(aliasCatchAllFunction, /const PROFILE_ALIAS_PATHNAME_RE = \/\^\\\/@\(\[\^\\\/\?#\]\+\)\\\/\?\$\/;/);
-  assert.match(aliasCatchAllFunction, /if \(!isDirectProfileAliasPath\(requestUrl\.pathname\)\) \{\s*return context\.next\(\);/s);
-  assert.match(aliasCatchAllFunction, /requestUrl\.pathname = "\/u\/index\.html";/);
-  assert.match(aliasCatchAllFunction, /requestUrl\.search = "";/);
-  assert.match(aliasCatchAllFunction, /return context\.env\.ASSETS\.fetch\(assetRequest\);/);
+  assert.match(aliasCatchAllFunction, /if \(isDirectProfileAliasPath\(requestUrl\.pathname\)\) \{\s*return context\.env\.ASSETS\.fetch\(assetRequestFor\(context, requestUrl, "\/u\/index\.html"\)\);/s);
+  assert.match(aliasCatchAllFunction, /assetUrl\.pathname = assetPathname;/);
+  assert.match(aliasCatchAllFunction, /assetUrl\.search = "";/);
+  assert.match(aliasCatchAllFunction, /return context\.next\(\);/);
   assert.match(app, /function getProfileAliasSlug\(pathname\)/);
   assert.match(app, /const match = normalized\.match\(\/\^\\\/@\(\[\^\\\/\?#\]\+\)\$\/\);/);
   assert.match(app, /return normalizeUserCode\(decodePathSegment\(match\[1\]\), ""\);/);

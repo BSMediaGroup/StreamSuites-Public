@@ -9006,36 +9006,99 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 .economy-jump-row {
   position: sticky;
   top: 0;
-  z-index: 5;
-  display: flex;
-  flex-wrap: wrap;
+  z-index: 70;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 8px;
-  margin: 10px 0 16px;
-  padding: 8px;
+  align-items: center;
+  margin: -2px 0 10px;
+  padding: 7px 8px;
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 8px;
-  background: rgba(8, 13, 22, 0.82);
+  background: rgba(8, 13, 22, 0.9);
   backdrop-filter: blur(14px) saturate(120%);
+  box-shadow: 0 12px 26px rgba(2, 6, 23, 0.28);
+}
+
+.economy-jump-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  border: 1px solid rgba(154, 209, 255, 0.28);
+  border-radius: 999px;
+  padding: 0 10px;
+  background: rgba(18, 28, 43, 0.88);
+  color: rgba(231, 239, 252, 0.92);
+  font: inherit;
+  font-size: 0.64rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.economy-jump-toggle:hover,
+.economy-jump-toggle:focus-visible {
+  border-color: rgba(154, 209, 255, 0.56);
+  color: #f6fbff;
+  outline: none;
+}
+
+.economy-jump-scroll {
+  display: flex;
+  gap: 7px;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ps-scrollbar-thumb) transparent;
+}
+
+.economy-jump-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.economy-jump-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.economy-jump-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--ps-scrollbar-thumb);
+}
+
+.economy-jump-row[data-collapsed="true"] {
+  grid-template-columns: auto;
+  width: max-content;
+  max-width: 100%;
+}
+
+.economy-jump-row[data-collapsed="true"] .economy-jump-scroll {
+  display: none;
 }
 
 .economy-jump-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 30px;
+  flex: 0 0 auto;
+  min-height: 28px;
   border: 1px solid rgba(154, 209, 255, 0.24);
   border-radius: 999px;
-  padding: 0 11px;
+  padding: 0 10px;
   background: rgba(17, 26, 40, 0.78);
   color: rgba(231, 239, 252, 0.9);
-  font-size: 0.66rem;
+  font-size: 0.64rem;
   font-family: "SuiGenerisRg", "SuiGeneris", system-ui, sans-serif;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .economy-jump-link:hover,
-.economy-jump-link:focus-visible {
+.economy-jump-link:focus-visible,
+.economy-jump-link.is-active {
   border-color: rgba(154, 209, 255, 0.54);
   background: rgba(29, 44, 67, 0.92);
   color: #f6fbff;
@@ -9046,7 +9109,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   display: grid;
   gap: 12px;
   margin-top: 16px;
-  scroll-margin-top: 92px;
+  scroll-margin-top: 78px;
 }
 
 .economy-hub-section:focus {

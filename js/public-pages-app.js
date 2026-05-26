@@ -246,9 +246,9 @@
   const PAGE_CONFIG = {
     "media-home": {
       path: "/media.html",
-      aliases: ["/media", "/media/"],
+      aliases: ["/home", "/home/", "/home.html", "/media", "/media/"],
       shellKind: "media",
-      activeHref: "/media",
+      activeHref: "/home",
       topbarLabel: "Media Home",
       searchPlaceholder: "Search clips, polls, wheels, tallies",
       filterMode: "multi",
@@ -336,9 +336,9 @@
     },
     "media-economy": {
       path: "/economy.html",
-      aliases: ["/economy", "/economy/"],
+      aliases: ["/economy", "/economy/", "/games", "/games/", "/market", "/market/", "/exchange", "/exchange/", "/shop", "/shop/"],
       shellKind: "media",
-      activeHref: "/economy.html",
+      activeHref: "/games",
       topbarLabel: "Games / Economy",
       searchPlaceholder: "Search",
       hideSearch: true,
@@ -351,7 +351,7 @@
       path: "/market-exchange.html",
       aliases: ["/market-exchange", "/market-exchange/"],
       shellKind: "media",
-      activeHref: "/economy.html",
+      activeHref: "/games",
       topbarLabel: "Games / Economy",
       searchPlaceholder: "Search market and exchange",
       hideSearch: true,
@@ -2804,7 +2804,7 @@
             state: "planned",
             body: "Public games, economy snapshots, and viewer-facing balances are staged as dashboard destinations without inventing data before the runtime is ready.",
             meta: ["Route reserved", "No balance or inventory backend on this surface yet"],
-            actions: [{ label: "Open games / economy", href: "/economy.html" }]
+            actions: [{ label: "Open games / economy", href: "/games" }]
           }),
           buildDashboardCard({
             title: "My Data",
@@ -2961,7 +2961,7 @@
       if (type === "wheels") return `/wheels/${encoded}`;
       if (type === "scoreboards") return `/scores/${encoded}`;
       if (type === "leaderboards") return "/leaderboards";
-      return `/media.html`;
+      return `/home`;
     }
     const type = typeof itemOrType === "string" ? itemOrType : itemOrType?.type;
     const identifier = typeof itemOrType === "string" ? idOrRouteId : itemOrType?.routeId || itemOrType?.id;
@@ -2977,7 +2977,7 @@
   }
 
   function buildArtifactGalleryLink(type) {
-    return TYPE_TO_PAGE[type] || "/media.html";
+    return TYPE_TO_PAGE[type] || "/home";
   }
 
   function resolveWheelShareModel(item) {
@@ -8206,7 +8206,7 @@
       title: "Wheels",
       body: "This route now lives inside the unified public dashboard so future competition wheels, prize wheels, or community pickers can land without introducing another separate shell.",
       actions: [
-        { label: "Back to media home", href: "/media", emphasis: "strong" },
+        { label: "Back to media home", href: "/home", emphasis: "strong" },
         { label: "Browse polls", href: "/polls" }
       ],
       stats: [
@@ -8239,16 +8239,48 @@
   }
 
   function buildEconomyJumpRow(anchors = []) {
-    const nav = create("nav", "economy-jump-row");
+    const nav = create("nav", "economy-jump-row economy-jump-row--pinned");
     nav.setAttribute("aria-label", "Games and economy sections");
+    nav.dataset.economyJumpBar = "pinned";
+    nav.dataset.collapsed = "false";
+
+    const toggle = create("button", "economy-jump-toggle", "Sections");
+    toggle.type = "button";
+    toggle.setAttribute("aria-expanded", "true");
+
+    const scroller = create("div", "economy-jump-scroll");
+    scroller.dataset.economyJumpScroll = "true";
     anchors.forEach((entry) => {
       const id = String(entry?.id || "").trim();
       const label = String(entry?.label || "").trim();
       if (!id || !label) return;
       const link = create("a", "economy-jump-link", label);
       link.href = `#${id}`;
-      nav.appendChild(link);
+      link.dataset.economyJumpLink = id;
+      if (String(window.location.hash || "").replace(/^#/, "") === id) {
+        link.classList.add("is-active");
+        link.setAttribute("aria-current", "true");
+      }
+      link.addEventListener("click", () => {
+        scroller.querySelectorAll(".economy-jump-link").forEach((item) => {
+          item.classList.toggle("is-active", item === link);
+          if (item === link) {
+            item.setAttribute("aria-current", "true");
+          } else {
+            item.removeAttribute("aria-current");
+          }
+        });
+      });
+      scroller.appendChild(link);
     });
+
+    toggle.addEventListener("click", () => {
+      const collapsed = nav.dataset.collapsed !== "true";
+      nav.dataset.collapsed = collapsed ? "true" : "false";
+      toggle.setAttribute("aria-expanded", String(!collapsed));
+      scroller.setAttribute("aria-hidden", String(collapsed));
+    });
+    nav.append(toggle, scroller);
     return nav;
   }
 
@@ -8401,7 +8433,6 @@
     clear(host);
     applyDocumentTitle("Games & Economy");
     const authReady = Boolean(authState?.authenticated);
-    const marketAliasEntry = normalizePath(window.location.pathname).startsWith("/market-exchange");
     const hero = buildDashboardHero({
       eyebrow: "StreamSuites economy",
       title: "Games & Economy",
@@ -8410,10 +8441,10 @@
         : "Browse the live market and exchange catalog. Sign in to see server-backed wallet totals, held quantities, and transaction controls.",
       tone: authReady ? "active" : "preview",
       actions: authReady
-        ? [{ label: "Refresh economy", href: marketAliasEntry ? "/market-exchange#market" : "/economy.html#market", emphasis: "strong" }]
+        ? [{ label: "Refresh economy", href: "/games#market", emphasis: "strong" }]
         : [{ label: "Use account menu", disabled: true, emphasis: "strong", note: "Open the existing account menu to sign in." }],
       stats: [
-        { label: "Canonical page", value: "Economy", note: "/economy.html" },
+        { label: "Canonical page", value: "Economy", note: "/economy" },
         { label: "Authority", value: "Runtime", note: "/api/public/economy/market-exchange" }
       ]
     });
@@ -8424,7 +8455,7 @@
       { id: "exchange", label: "Exchange" },
       { id: "inventory", label: "Inventory" },
       { id: "wallet", label: "Wallet" },
-      { id: "games-rewards", label: "Games / Rewards" }
+      { id: "games", label: "Games / Rewards" }
     ]));
 
     const overviewSection = createEconomyHubSection("overview", "Overview", {
@@ -8450,7 +8481,7 @@
     const walletSection = createEconomyHubSection("wallet", "Wallet", {
       kicker: "Stekels summary"
     });
-    const gamesSection = createEconomyHubSection("games-rewards", "Games / Rewards", {
+    const gamesSection = createEconomyHubSection("games", "Games / Rewards", {
       kicker: "Coming online",
       body: "Gameplay modules, reward history, and economy support workflows stay staged here until a public-safe backend contract exists."
     });
@@ -8558,7 +8589,7 @@
         : "Browse the live public catalog. Sign in to see your balance, held quantities, and transaction controls.",
       tone: authReady ? "active" : "preview",
       actions: authReady
-        ? [{ label: "Refresh catalog", href: "/market-exchange", emphasis: "strong" }]
+        ? [{ label: "Refresh catalog", href: "/games#market", emphasis: "strong" }]
         : [{ label: "Use account menu", disabled: true, emphasis: "strong", note: "Open the existing account menu to sign in." }],
       stats: [
         { label: "Session", value: authReady ? "Signed in" : "Guest", note: authReady ? authState.displayName : "Read-only catalog" },

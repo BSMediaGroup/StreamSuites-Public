@@ -407,7 +407,7 @@
     if (type === "wheels") return `/wheels/${encoded}`;
     if (type === "scoreboards") return `/scores/${encoded}`;
     if (type === "tallies") return `/tallies/detail.html?id=${encoded}`;
-    return `/media.html`;
+    return `/home`;
   }
 
   function normalizeSlugAliases(value) {

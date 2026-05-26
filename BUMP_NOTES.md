@@ -2,6 +2,10 @@
 
 ## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.3-alpha
 
+- Fixed `/economy` ERR_TOO_MANY_REDIRECTS by consolidating Public Games & Economy alias handling in the catch-all Pages Function and removing the overlapping `_redirects` economy rewrites. `/economy`, `/economy/`, `/economy.html`, `/games`, `/market`, `/exchange`, `/shop`, and compatibility `/market-exchange` paths now direct-serve the canonical economy hub asset without redirect chains.
+- Added stable short Games & Economy shims for `/games`, `/market`, `/exchange`, and `/shop`. `/market-exchange` remains compatibility-only and is no longer the preferred Public shell or livechat-facing page slug.
+- Changed the Public shell canonical first page from `/media` to `/home` while keeping `/media`, `/media/`, and `/media.html` compatibility mapped to the same home shell content.
+- Reworked the Games & Economy anchor row into a fixed/pinned Public-shell jump bar with a collapsible control, compact horizontal pill links, horizontal overflow scrolling, and hash-safe section jumps for Overview, Market, Exchange, Inventory, Wallet, and Games.
 - Consolidated Market & Exchange into the existing `economy.html` Games & Economy surface. The canonical public hub now renders overview/status, Market, Exchange, Inventory, Wallet, and Games / Rewards sections from the existing Runtime/Auth market-exchange payload where available, while preserving honest unavailable/coming-online states where no backend contract exists.
 - Added a compact anchor/jump row beneath the Games & Economy hero for Overview, Market, Exchange, Inventory, Wallet, and Games / Rewards, with `/economy.html#market`, `/economy.html#exchange`, and `/economy.html#wallet` deep links handled additively without taking over existing SPA hash routing.
 - Kept `/market-exchange`, `/market-exchange/`, and `/market-exchange.html` as safe entry points with no `_redirects` loop. Those routes now render the canonical Games & Economy hub and keep using the existing Runtime/Auth `/api/public/economy/market-exchange`, `/api/public/economy/exchange`, and `/api/public/economy/market/buy` contracts.

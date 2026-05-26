@@ -8,7 +8,7 @@
   const LOGIN_PASSWORD_URL = `${API_BASE}/auth/login/password`;
   const SIGNUP_PASSWORD_URL = `${API_BASE}/auth/signup/password`;
   const COMPLETE_URL = new URL("/public-auth-complete.html", PUBLIC_BASE).toString();
-  const DEFAULT_RETURN_TO = new URL("/media.html", PUBLIC_BASE).toString();
+  const DEFAULT_RETURN_TO = new URL("/home", PUBLIC_BASE).toString();
   const MIN_PASSWORD_LENGTH = 8;
   const REQUEST_TIMEOUT_MS = 12000;
   const AUTH_ACCESS_STORAGE_KEY = "streamsuites.public.authAccessGate";
