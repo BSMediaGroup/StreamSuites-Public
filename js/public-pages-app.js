@@ -2759,87 +2759,75 @@
       })
     );
 
-    host.appendChild(
-      buildDashboardGrid([
-        buildDashboardCard({
-          title: "Clips",
-          kicker: "Operational now",
-          badge: "Active",
-          state: "active",
-          body: "Public clip cards, detail routes, and creator attribution are already live in the shared shell.",
-          meta: [`${formatNumber(clips.length)} available`, "Deep links preserved", "Gallery and detail views"],
-          actions: [{ label: "Open clips", href: "/clips" }]
-        }),
-        buildDashboardCard({
-          title: "Polls",
-          kicker: "Operational now",
-          badge: "Active",
-          state: "active",
-          body: "Published poll surfaces stay browseable from the same dashboard instead of living in a separate media identity.",
-          meta: [`${formatNumber(polls.length)} available`, "Results routes preserved"],
-          actions: [{ label: "Open polls", href: "/polls" }]
-        }),
-        buildDashboardCard({
-          title: "Wheels",
-          kicker: "Operational now",
-          badge: "Active",
-          state: "active",
-          body: "Wheel artifacts now hydrate from the authoritative runtime export, render with their persisted configuration, and keep list view attached to each wheel instead of splitting that mode into a second top-level destination.",
-          meta: [`${formatNumber(wheels.length)} wheels`, "Wheel and list view modes", "No fake winner history"],
-          actions: [{ label: "Open wheels", href: "/wheels" }, { label: "Open leaderboards", href: "/leaderboards", muted: true }]
-        }),
-        buildDashboardCard({
-          title: "Live + Community",
-          kicker: "Shared dashboard area",
-          badge: liveCount ? "Live now" : "Monitoring",
-          state: liveCount ? "active" : "planned",
-          body: "Live discovery, member browsing, and notices now sit inside the same dashboard model as media instead of branching into a separate shell.",
-          meta: [`${formatNumber(liveCount)} live now`, `${formatNumber(memberCount)} listed members`],
-          actions: [{ label: "Open live", href: "/live" }, { label: "Open community", href: "/community", muted: true }]
-        })
-      ])
-    );
-
-    host.appendChild(
+    const browseSection = buildSection("Browse public assets", null).section;
+    browseSection.classList.add("home-action-section");
+    browseSection.appendChild(
       buildDashboardGrid(
         [
           buildDashboardCard({
-            title: "Leaderboards",
-            kicker: "Progression surface",
+            title: "Clips",
+            kicker: `${formatNumber(clips.length)} available`,
             badge: "Live",
             state: "active",
-            body: "Leaderboards now reads the authoritative public XP/level API for global progression while legacy /scoreboards remains only as a compatibility alias and wheel list view stays inside each wheel.",
-            meta: ["Legacy /scoreboards alias preserved", "Runtime-owned XP/level", "Wheel list view stays internal"],
-            actions: [{ label: "Open leaderboards", href: "/leaderboards" }]
+            body: "Public creator clips.",
+            actions: [{ label: "Open", href: "/clips" }]
           }),
           buildDashboardCard({
-            title: "Games / Economy",
-            kicker: "Planned public module",
-            badge: "Planned",
-            state: "planned",
-            body: "Public games, economy snapshots, and viewer-facing balances are staged as dashboard destinations without inventing data before the runtime is ready.",
-            meta: ["Route reserved", "No balance or inventory backend on this surface yet"],
-            actions: [{ label: "Open games / economy", href: "/games" }]
+            title: "Polls",
+            kicker: `${formatNumber(polls.length)} available`,
+            badge: "Live",
+            state: "active",
+            body: "Browse published polls.",
+            actions: [{ label: "Open", href: "/polls" }]
+          }),
+          buildDashboardCard({
+            title: "Wheels",
+            kicker: `${formatNumber(wheels.length)} wheels`,
+            badge: "Live",
+            state: "active",
+            body: "Play published wheels.",
+            actions: [{ label: "Open", href: "/wheels" }]
+          }),
+          buildDashboardCard({
+            title: "Leaderboards",
+            kicker: "Progression",
+            badge: "Live",
+            state: "active",
+            body: "View public XP boards.",
+            actions: [{ label: "Open", href: "/leaderboards" }]
+          }),
+          buildDashboardCard({
+            title: "Games & Economy",
+            kicker: "Wallet + inventory",
+            badge: "Live",
+            state: "active",
+            body: "Open Market, Exchange, Wallet, and Inventory.",
+            actions: [{ label: "Open", href: "/games" }]
+          }),
+          buildDashboardCard({
+            title: "Live + Community",
+            kicker: `${formatNumber(liveCount)} live now`,
+            badge: liveCount ? "Live" : "Watch",
+            state: liveCount ? "active" : "planned",
+            body: `${formatNumber(memberCount)} listed members.`,
+            actions: [{ label: "Live", href: "/live" }, { label: "Community", href: "/community", muted: true }]
           }),
           buildDashboardCard({
             title: "My Data",
-            kicker: "Account workspace",
-            badge: "Live",
+            kicker: "Signed-in workspace",
+            badge: "Account",
             state: "active",
-            body: "The member data workspace now loads signed-in public XP/level progression and authority request history from the runtime-owned public APIs.",
-            meta: ["XP and level live", "Request history live", "No data export job exposed yet"],
-            actions: [{ label: "Open my data", href: "/community/my-data.html" }]
-          }),
-          buildActionScaffoldCard({
-            title: "Ownership and reporting",
-            body: "Future claim, assign, report, and removal-request flows are now represented inside the public dashboard language without simulating any backend approval behavior."
+            body: "Review your public progression and requests.",
+            actions: [{ label: "Open", href: "/community/my-data.html" }]
           })
         ],
-        "dashboard-card-grid--four"
+        "dashboard-card-grid--four home-action-grid"
       )
     );
+    host.appendChild(browseSection);
 
     const spotlightSection = buildSection("Current public media", "/clips").section;
+    spotlightSection.classList.add("home-primary-gallery");
     const spotlightGrid = create("div", "media-grid");
     [
       ...sliceRows(wheels, 1, 1),
@@ -2893,6 +2881,41 @@
     if (!renderedAny) {
       host.appendChild(create("div", "empty-state", "No media matches the current search/filter."));
     }
+
+    const statusSection = buildSection("Public status", null).section;
+    statusSection.classList.add("home-status-section");
+    statusSection.appendChild(
+      buildDashboardGrid(
+        [
+          buildDashboardCard({
+            title: "Route status",
+            kicker: "Home",
+            badge: "Canonical",
+            state: "active",
+            body: "/home is the preferred public dashboard URL.",
+            meta: ["/media compatibility retained"]
+          }),
+          buildDashboardCard({
+            title: "Wheel list view",
+            kicker: "Compatibility",
+            badge: "Internal",
+            state: "planned",
+            body: "Legacy /scoreboards remains a wheel list-view path.",
+            meta: ["Wheel stage stays on /wheels"]
+          }),
+          buildDashboardCard({
+            title: "Ownership requests",
+            kicker: "Context required",
+            badge: "Scoped",
+            state: "planned",
+            body: "Claim, assign, report, and removal flows stay on contextual profile or artifact pages.",
+            actions: [{ label: "Support", href: "/support.html", muted: true }]
+          })
+        ],
+        "dashboard-card-grid--three home-status-grid"
+      )
+    );
+    host.appendChild(statusSection);
   }
 
   function renderMediaList(ctx, config) {

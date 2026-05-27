@@ -123,11 +123,43 @@ test("economy, home, and compatibility aliases serve direct assets without redir
   assert.match(app, /Exchange catalog is unavailable right now\./);
   assert.match(app, /Market catalog is unavailable right now\./);
   assert.match(shell, /href: "\/home", label: "Home"/);
+  assert.doesNotMatch(shell, /href: "\/media"/);
   assert.match(shell, /return "PUBLIC DASHBOARD"/);
   assert.doesNotMatch(shell, /VIEWER DASHBOARD/);
   assert.match(shell, /href: "\/games", label: "Games & Economy"/);
   assert.doesNotMatch(shell, /label: "Market & Exchange"/);
   assert.doesNotMatch(shell, /href: "\/market-exchange"/);
+});
+
+test("home layout prioritizes gallery and action content before compact status notes", () => {
+  const app = read("js/public-pages-app.js");
+  const css = read("css/public-shell.css");
+  const shell = read("js/public-shell.js");
+
+  const renderStart = app.indexOf("function renderMediaHome(ctx)");
+  const renderEnd = app.indexOf("function renderMediaList(ctx, config)");
+  assert.notEqual(renderStart, -1, "renderMediaHome should exist");
+  assert.notEqual(renderEnd, -1, "renderMediaList should follow renderMediaHome");
+  const homeRenderer = app.slice(renderStart, renderEnd);
+
+  const heroIndex = homeRenderer.indexOf("buildDashboardHero");
+  const browseIndex = homeRenderer.indexOf('"home-action-section"');
+  const primaryGalleryIndex = homeRenderer.indexOf('"home-primary-gallery"');
+  const statusIndex = homeRenderer.indexOf('"home-status-section"');
+
+  assert.ok(heroIndex >= 0, "home should still render the hero first");
+  assert.ok(browseIndex > heroIndex, "browse/action content should appear directly after the hero");
+  assert.ok(primaryGalleryIndex > browseIndex, "primary media gallery should follow the top action section");
+  assert.ok(statusIndex > primaryGalleryIndex, "status/scaffold notes should render below gallery content");
+  assert.doesNotMatch(homeRenderer.slice(heroIndex, primaryGalleryIndex), /buildActionScaffoldCard|home-status-section|Future workflow scaffold/);
+  assert.match(homeRenderer, /title: "Games & Economy"[\s\S]*href: "\/games"/);
+  assert.match(homeRenderer, /title: "My Data"[\s\S]*href: "\/community\/my-data\.html"/);
+  assert.match(homeRenderer, /title: "Ownership requests"[\s\S]*home-status-grid/);
+  assert.match(css, /\.home-action-grid \.dashboard-card-link,[\s\S]*\.home-status-grid \.dashboard-card-link\s*\{[\s\S]*min-height:\s*27px/);
+  assert.match(css, /\.home-status-grid \.dashboard-card\s*\{[\s\S]*box-shadow:\s*none/);
+  assert.match(shell, /href: "\/home", label: "Home"/);
+  assert.match(shell, /return "PUBLIC DASHBOARD"/);
+  assert.doesNotMatch(shell, /href: "\/media"/);
 });
 
 test("games economy section bar is shell-level, collapsible, and overflow-capable", () => {

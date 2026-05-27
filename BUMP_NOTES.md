@@ -6,6 +6,10 @@
 - Renamed the Public first-page shell asset from `media.html` to `home.html`; `/home`, `/home/`, and `/home.html` now direct-serve `home.html` as the canonical Public Dashboard home.
 - Kept `/media` and `/media/` as compatibility aliases that direct-serve the same `home.html` content, while `media.html` remains only a minimal compatibility shim for old `.html` links. Preferred navigation stays on `/home`.
 - Games & Economy aliases, the shell-level section bar, and `/games`-backed economy behavior remain intact; preferred Public links still avoid `/market-exchange`.
+- Reordered `/home` so compact gallery/action content for Clips, Polls, Wheels, Leaderboards, Games & Economy, Live/Community, and My Data appears directly beneath the hero before status/scaffold notes.
+- Reduced the old `/home` scaffold/status cards into compact lower-priority Public status notes with short labels, one-line descriptions, and smaller Public-shell controls.
+- Standardized oversized scaffold buttons to smaller Public-shell controls in the lower `/home` status section.
+- Preserved `/home` canonical routing, `/media` compatibility, and the `PUBLIC DASHBOARD` shell label.
 
 - Replaced the incorrect in-page Games & Economy anchor row with a shell-level dashboard-style fixed/collapsible/overflow-scrollable section bar.
 - Matched the Admin Dashboard `/economy` section-shell anchor bar placement and behavior more closely by rendering the Public economy section bar directly below the top bar instead of inside normal page content.

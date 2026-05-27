@@ -1298,6 +1298,65 @@ body.public-standalone-page {
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
 }
 
+.home-action-section {
+  margin-top: 14px;
+}
+
+.home-action-grid {
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.home-action-grid .dashboard-card {
+  align-content: start;
+  gap: 9px;
+  padding: 12px;
+}
+
+.home-action-grid .dashboard-card-body {
+  line-height: 1.45;
+}
+
+.home-action-grid .dashboard-card-actions,
+.home-status-grid .dashboard-card-actions {
+  gap: 6px;
+}
+
+.home-action-grid .dashboard-card-link,
+.home-status-grid .dashboard-card-link {
+  min-height: 27px;
+  padding-inline: 10px;
+  font-size: 0.62rem;
+}
+
+.home-primary-gallery {
+  margin-top: 16px;
+}
+
+.home-status-section {
+  margin-top: 18px;
+}
+
+.home-status-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.home-status-grid .dashboard-card {
+  gap: 8px;
+  padding: 11px 12px;
+  box-shadow: none;
+}
+
+.home-status-grid .dashboard-card-body {
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.home-status-grid .dashboard-meta-pill,
+.home-status-grid .dashboard-state-badge {
+  min-height: 22px;
+  font-size: 0.58rem;
+}
+
 .dashboard-card {
   display: grid;
   gap: 12px;
