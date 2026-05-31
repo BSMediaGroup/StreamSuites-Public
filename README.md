@@ -4,7 +4,7 @@ Canonical public StreamSuites surface deployed to Cloudflare Pages at `https://s
 
 ## Release State
 
-- README state prepared for `v0.4.2-alpha`.
+- README state prepared for `v0.5.0-alpha`.
 - Runtime-displayed version/build labels are consumed at runtime from `https://admin.streamsuites.app/runtime/exports/version.json`.
 - This repo is not a canonical state authority. It renders authoritative runtime exports and Auth API responses.
 
@@ -101,7 +101,7 @@ StreamSuites-Public/
 ├── wheels.html
 ├── BUMP_NOTES.md
 ├── changelog/
-│   └── v0.4.2-alpha.md
+│   └── v0.5.0-CHANGELOG.md
 ├── functions/
 │   ├── [[path]].js
 │   ├── _shared/

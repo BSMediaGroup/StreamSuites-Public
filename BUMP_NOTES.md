@@ -1,6 +1,27 @@
 # Bump Notes
 
-## CURRENT VER= 0.4.2-alpha / PENDING VER= 0.4.3-alpha
+## RELEASED / PACKAGED: 0.4.2-alpha
+
+Packaged / released and no longer the active pending bucket. Preserve new notes for the open `0.5.0-alpha` section below.
+
+## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
+
+## Release Prep — v0.5.0-alpha
+
+- BUMP_NOTES.md updated with proper `RELEASED / PACKAGED: 0.4.2-alpha` archiving section following runtime conventions.
+- New detailed release notes created at `changelog/v0.5.0-CHANGELOG.md`.
+- Runtime-fed version labels and snapshot mirrors aligned to the 0.5.0-alpha platform cycle.
+- Several HTML comment version markers and data snapshot references refreshed for the new release train.
+- Master platform changelog published at `v0.5.0-PROJECT-CHANGELOG.md` in the runtime repo.
+
+### Files / Areas Touched
+
+- `BUMP_NOTES.md`
+- `changelog/v0.5.0-CHANGELOG.md` (new)
+- `README.md`
+- `index.html`, `index-v2.html`, `requests.html`, `404.html` (version comments)
+- Various `runtime/exports/` and `shared/state/` snapshot mirrors
+- `data/changelog.json`
 
 - Restored the Public shell sidebar badge/sublabel to `PUBLIC DASHBOARD` across normal public shell pages without changing Admin, Creator, or standalone public profile labels.
 - Renamed the Public first-page shell asset from `media.html` to `home.html`; `/home`, `/home/`, and `/home.html` now direct-serve `home.html` as the canonical Public Dashboard home.
