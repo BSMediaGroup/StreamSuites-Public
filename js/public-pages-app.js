@@ -8406,6 +8406,114 @@
     return fragment;
   }
 
+  function economyItemTitle(item = {}) {
+    return item.market_label || item.short_label || item.title || item.label || item.name || item.item_code || "Item";
+  }
+
+  function economyItemDescription(item = {}) {
+    return item.description || item.short_description || item.tooltip_description || item.long_description || "Runtime-authorized inventory item.";
+  }
+
+  function economyItemCategoryValue(item = {}) {
+    const explicit = item.category || item.item_type || item.type || item.subcategory || "";
+    if (explicit) return String(explicit);
+    const code = String(item.item_code || item.asset_code || "").toLowerCase();
+    if (code.includes("gem") || code.includes("diamond") || code.includes("bullion")) return "gems";
+    if (code.includes("coin") || code.includes("cash") || code.includes("currency") || code.includes("stekel")) return "currency";
+    if (code.includes("crate") || code.includes("chest") || code.includes("reward")) return "crates";
+    if (code.includes("potion") || code.includes("boost") || code.includes("consumable")) return "consumables";
+    if (code.includes("badge") || code.includes("skin") || code.includes("cosmetic")) return "cosmetics";
+    if (code.includes("weapon") || code.includes("sword") || code.includes("bow")) return "weapons";
+    if (code.includes("shield") || code.includes("armor") || code.includes("equipment")) return "equipment";
+    if (code.includes("material") || code.includes("brick") || code.includes("lumber") || code.includes("steel") || code.includes("fabric") || code.includes("ore")) return "materials";
+    return "other";
+  }
+
+  function economyItemCategoryLabel(item = {}) {
+    const raw = economyItemCategoryValue(item).toLowerCase().trim();
+    if (!raw) return "Other";
+    if (/material|resource|craft/.test(raw)) return "Materials";
+    if (/weapon/.test(raw)) return "Weapons";
+    if (/equipment|gear|armor|shield|tool/.test(raw)) return "Equipment";
+    if (/currency|cash|coin|banknote|stekel/.test(raw)) return "Currency";
+    if (/gem|diamond|bullion|value/.test(raw)) return "Gems";
+    if (/crate|chest|reward|loot/.test(raw)) return "Crates / Rewards";
+    if (/consumable|potion|boost|ticket/.test(raw)) return "Consumables";
+    if (/cosmetic|badge|skin/.test(raw)) return "Cosmetics";
+    return toTitle(raw.replace(/[_-]+/g, " "));
+  }
+
+  function economyMarketGroups(items = []) {
+    const order = ["Materials", "Weapons", "Equipment", "Currency", "Gems", "Crates / Rewards", "Consumables", "Cosmetics", "Other"];
+    const map = new Map();
+    items.forEach((item) => {
+      const label = economyItemCategoryLabel(item);
+      if (!map.has(label)) map.set(label, []);
+      map.get(label).push(item);
+    });
+    return Array.from(map.entries())
+      .map(([label, rows]) => ({ label, rows }))
+      .sort((a, b) => {
+        const ai = order.indexOf(a.label);
+        const bi = order.indexOf(b.label);
+        if (ai !== -1 || bi !== -1) return (ai === -1 ? order.length : ai) - (bi === -1 ? order.length : bi);
+        return a.label.localeCompare(b.label);
+      });
+  }
+
+  function economyItemRarityLabel(item = {}) {
+    return item.rarity || item.tier || item.quality || item.level || "";
+  }
+
+  function economyItemPriceLabel(item = {}, options = {}) {
+    const value = Number(item[options.valueKey] ?? item.market_price_stekels ?? item.market_price_credits ?? item.exchange_value_stekels ?? item.exchange_value_credits ?? 0);
+    return `${options.valueLabel || "Value"}: ${formatNumber(value)} Stekels`;
+  }
+
+  function economyItemAvailabilityLabel(item = {}, options = {}) {
+    const parts = [];
+    if (Number.isFinite(Number(item.quantity)) && options.actionLabel === "Exchange") {
+      parts.push(`Held: ${formatNumber(item.quantity || 0)}`);
+    }
+    const stock = item.stock ?? item.stock_limit ?? item.max_quantity ?? item.purchase_limit;
+    if (Number.isFinite(Number(stock)) && Number(stock) > 0) {
+      parts.push(`Limit: ${formatNumber(stock)}`);
+    } else if (item.unlimited_stock) {
+      parts.push("No stock limit");
+    }
+    if (item.can_buy === false || item.purchasable === false || item.market_enabled === false) {
+      parts.push("Unavailable");
+    }
+    return parts.join(" / ");
+  }
+
+  function economyItemImagePath(item = {}) {
+    return String(item.image_url || item.image_path || item.icon_url || item.icon_path || item.asset_url || item.asset_path || "").trim();
+  }
+
+  function buildEconomyItemMedia(item = {}, className = "market-exchange-item-media") {
+    const media = create("div", className);
+    const iconPath = economyItemImagePath(item);
+    if (iconPath) {
+      const img = create("img", "");
+      img.src = economyAssetPath(iconPath);
+      img.alt = "";
+      img.loading = "lazy";
+      img.decoding = "async";
+      img.addEventListener("error", () => {
+        const fallback = create("span", "market-gallery-item-fallback");
+        fallback.appendChild(createIcon("/assets/icons/ui/moneybag.svg", "inline-icon-mask"));
+        media.replaceChildren(fallback);
+      }, { once: true });
+      media.appendChild(img);
+    } else {
+      const fallback = create("span", "market-gallery-item-fallback");
+      fallback.appendChild(createIcon("/assets/icons/ui/moneybag.svg", "inline-icon-mask"));
+      media.appendChild(fallback);
+    }
+    return media;
+  }
+
   function renderEconomyHubUnavailable(options = {}) {
     const { status, resultPanel, exchangeSection, marketSection, walletSection, inventorySection, error } = options;
     status.textContent = error instanceof Error ? error.message : "Market & Exchange is unavailable right now.";
@@ -8414,8 +8522,9 @@
     clear(walletSection);
     clear(inventorySection);
     resultPanel.hidden = true;
-    exchangeSection.append(createEconomySectionHeader("Exchange", "Runtime catalog", "Exchange catalog state loads from the Runtime/Auth market-exchange endpoint."), create("div", "empty-state", "Exchange catalog is unavailable right now."));
-    marketSection.append(createEconomySectionHeader("Market", "Runtime catalog", "Market catalog state loads from the Runtime/Auth market-exchange endpoint."), create("div", "empty-state", "Market catalog is unavailable right now."));
+    exchangeSection.append(createEconomySectionHeader("Exchange", "Runtime catalog", "Exchange catalog state loads from the Runtime/Auth market-exchange endpoint."), create("div", "empty-state economy-unavailable-state", "Exchange catalog is unavailable right now."));
+    marketSection.dataset.marketView = "gallery";
+    marketSection.append(createEconomySectionHeader("Market", "Runtime catalog", "Market catalog state loads from the Runtime/Auth market-exchange endpoint."), create("div", "empty-state economy-unavailable-state", "Market catalog is unavailable right now."));
     walletSection.append(createEconomySectionHeader("Wallet", "Stekels summary", "Wallet totals are unavailable until Runtime/Auth responds."), create("div", "empty-state", "Wallet data is unavailable right now."));
     inventorySection.append(createEconomySectionHeader("Inventory", "Held items", "Inventory rows are unavailable until Runtime/Auth responds."), create("div", "empty-state", "Inventory data is unavailable right now."));
   }
@@ -8423,23 +8532,26 @@
   function renderGamesEconomyWorkspace(ctx) {
     const { host, authState, openAuthModal } = ctx;
     clear(host);
+    host.dataset.gamesEconomyPage = "present";
     applyDocumentTitle("Games & Economy");
     const authReady = Boolean(authState?.authenticated);
     const hero = buildDashboardHero({
       eyebrow: "StreamSuites economy",
       title: "Games & Economy",
       body: authReady
-        ? "Use the canonical public economy hub for Runtime/Auth-backed wallet, inventory, exchange, market, games, and reward surfaces."
-        : "Browse the live market and exchange catalog. Sign in to see server-backed wallet totals, held quantities, and transaction controls.",
+        ? "Enter the public economy hub: browse the live market, convert eligible inventory, and review Runtime/Auth-backed wallet and reward surfaces."
+        : "Browse the StreamSuites shop and exchange catalog. Sign in to unlock server-backed wallet totals, held quantities, and purchase controls.",
       tone: authReady ? "active" : "preview",
       actions: authReady
         ? [{ label: "Refresh economy", href: "/games#market", emphasis: "strong" }]
         : [{ label: "Use account menu", disabled: true, emphasis: "strong", note: "Open the existing account menu to sign in." }],
       stats: [
-        { label: "Canonical page", value: "Economy", note: "/economy" },
-        { label: "Authority", value: "Runtime", note: "/api/public/economy/market-exchange" }
+        { label: "Storefront", value: "Gallery", note: "Default market view" },
+        { label: "Authority", value: "Runtime", note: "/api/public/economy/market-exchange" },
+        { label: "Mode", value: authReady ? "Signed in" : "Browse", note: authReady ? "Wallet controls enabled" : "Read-only catalog" }
       ]
     });
+    hero.classList.add("games-economy-hero");
     host.appendChild(hero);
 
     const overviewSection = createEconomyHubSection("overview", "Overview", {
@@ -8500,6 +8612,8 @@
       resultPanel.dataset.state = state;
     };
 
+    let marketViewMode = "gallery";
+
     const renderPayload = (payload) => {
       clear(overviewSection);
       overviewSection.appendChild(createEconomySectionHeader("Overview", "Runtime-backed status", "This hub keeps public economy presentation together while Runtime/Auth remains the only source of balances, inventory, prices, and mutations."));
@@ -8527,13 +8641,19 @@
       renderMarketExchangeSection({
         host: marketSection,
         title: "Market",
-        subtitle: "Spend Stekels on items",
+        subtitle: "Runtime shop catalog",
         items: payload?.market || [],
         authReady: Boolean(payload?.authenticated),
         actionLabel: "Buy",
         valueLabel: "Price",
         valueKey: "market_price_stekels",
         emptyText: "No market items are available yet.",
+        viewMode: marketViewMode,
+        allowViewToggle: true,
+        onViewChange: (nextMode) => {
+          marketViewMode = nextMode === "list" ? "list" : "gallery";
+          renderPayload(payload);
+        },
         onAction: async (item, quantity) => buyPublicMarketItem({ itemCode: item.item_code, quantity, reasonText: "Public Games & Economy purchase" }),
         onResult: (result) => {
           setResult(`Purchased x${formatNumber(result?.quantity_purchased || 0)} ${result?.item_code || "item"} for ${formatNumber(result?.stekels_spent || 0)} Stekels.`, "success");
@@ -8660,44 +8780,104 @@
   function renderMarketExchangeSection(options = {}) {
     const host = options.host;
     clear(host);
+    const viewMode = options.viewMode === "list" ? "list" : "gallery";
+    host.dataset.marketView = viewMode;
     const heading = create("div", "market-exchange-section-heading");
     heading.append(create("span", "dashboard-card-kicker", options.title || ""), create("h2", "", options.subtitle || ""));
-    const list = create("div", "market-exchange-card-grid");
+    if (options.allowViewToggle) {
+      const toolbar = create("div", "market-view-toolbar");
+      const label = create("span", "market-view-toolbar-label", "Shop view");
+      const toggle = create("div", "market-view-toggle");
+      toggle.setAttribute("role", "group");
+      toggle.setAttribute("aria-label", "Market view");
+      ["gallery", "list"].forEach((mode) => {
+        const button = create("button", `market-view-toggle-button${viewMode === mode ? " is-active" : ""}`, toTitle(mode));
+        button.type = "button";
+        button.setAttribute("aria-pressed", String(viewMode === mode));
+        button.addEventListener("click", () => {
+          if (viewMode === mode) return;
+          options.onViewChange?.(mode);
+        });
+        toggle.appendChild(button);
+      });
+      toolbar.append(label, toggle);
+      heading.appendChild(toolbar);
+    }
+    const list = create("div", viewMode === "gallery" && options.allowViewToggle ? "market-gallery-layout" : "market-exchange-card-grid");
     const items = Array.isArray(options.items) ? options.items : [];
     if (!items.length) {
-      list.appendChild(create("div", "empty-state", options.emptyText || "No items available yet."));
+      list.appendChild(create("div", "empty-state market-empty-state", options.emptyText || "No items available yet."));
+    } else if (options.allowViewToggle && viewMode === "gallery") {
+      economyMarketGroups(items).forEach((group) => list.appendChild(buildMarketCategoryGroup(group, options)));
     } else {
       items.forEach((item) => list.appendChild(buildMarketExchangeItemCard(item, options)));
     }
     host.append(heading, list);
   }
 
+  function buildMarketCategoryGroup(group = {}, options = {}) {
+    const section = create("section", "market-category-group");
+    section.dataset.marketCategoryGroup = group.label || "Other";
+    const heading = create("div", "market-category-heading");
+    heading.append(
+      create("span", "dashboard-card-kicker", "Category"),
+      create("h3", "", group.label || "Other"),
+      create("span", "market-category-count", `${formatNumber((group.rows || []).length)} item${(group.rows || []).length === 1 ? "" : "s"}`)
+    );
+    const grid = create("div", "market-gallery-card-grid");
+    (group.rows || []).forEach((item) => grid.appendChild(buildMarketGalleryItemCard(item, options)));
+    section.append(heading, grid);
+    return section;
+  }
+
+  function buildMarketGalleryItemCard(item = {}, options = {}) {
+    const card = create("article", "market-gallery-item-card");
+    card.dataset.marketItemCard = "";
+    const category = economyItemCategoryLabel(item);
+    const rarity = economyItemRarityLabel(item);
+    const available = item.can_buy !== false && item.purchasable !== false && item.market_enabled !== false;
+    const media = buildEconomyItemMedia(item, "market-gallery-item-media");
+    const body = create("div", "market-gallery-item-body");
+    const chips = create("div", "market-gallery-item-chips");
+    chips.appendChild(create("span", "", category));
+    if (rarity) chips.appendChild(create("span", "", rarity));
+    const title = create("h3", "", economyItemTitle(item));
+    const desc = create("p", "", economyItemDescription(item));
+    const details = create("div", "market-gallery-item-details");
+    details.appendChild(create("strong", "market-exchange-item-value", economyItemPriceLabel(item, options)));
+    const availability = economyItemAvailabilityLabel(item, options);
+    if (availability) details.appendChild(create("span", "market-gallery-item-availability", availability));
+    body.append(chips, title, desc, details);
+    const controls = buildMarketExchangeControls(item, options, { available });
+    card.append(media, body, controls);
+    return card;
+  }
+
   function buildMarketExchangeItemCard(item = {}, options = {}) {
     const card = create("article", "market-exchange-item-card");
-    const media = create("div", "market-exchange-item-media");
-    const iconPath = String(item.icon_url || item.icon_path || "").trim();
-    if (iconPath) {
-      const img = create("img", "");
-      img.src = economyAssetPath(iconPath);
-      img.alt = "";
-      img.loading = "lazy";
-      img.decoding = "async";
-      img.addEventListener("error", () => replaceImageWithIconFallback(img, "/assets/icons/ui/moneybag.svg", "inline-icon-mask"), { once: true });
-      media.appendChild(img);
-    } else {
-      media.appendChild(createIcon("/assets/icons/ui/moneybag.svg", "inline-icon-mask"));
+    if (options.allowViewToggle) {
+      card.dataset.marketItemCard = "";
     }
+    const media = buildEconomyItemMedia(item, "market-exchange-item-media");
     const body = create("div", "market-exchange-item-body");
-    const title = create("h3", "", item.title || item.label || item.item_code || "Item");
-    const desc = create("p", "", item.description || item.tooltip_description || "Runtime-authorized inventory item.");
+    const title = create("h3", "", economyItemTitle(item));
+    const desc = create("p", "", economyItemDescription(item));
     const meta = create("div", "market-exchange-item-meta");
     meta.append(
       create("span", "", item.item_code || ""),
-      create("span", "", [item.category, item.rarity || item.tier].filter(Boolean).join(" / ") || "Inventory"),
-      create("span", "", `Held: ${formatNumber(item.quantity || 0)}`)
+      create("span", "", [economyItemCategoryLabel(item), economyItemRarityLabel(item)].filter(Boolean).join(" / ") || "Inventory"),
+      create("span", "", economyItemAvailabilityLabel(item, options) || "Runtime catalog")
     );
-    const value = create("strong", "market-exchange-item-value", `${options.valueLabel || "Value"}: ${formatNumber(item[options.valueKey] || 0)} Stekels`);
+    const value = create("strong", "market-exchange-item-value", economyItemPriceLabel(item, options));
     body.append(title, desc, meta, value);
+    const controls = buildMarketExchangeControls(item, options, {
+      available: item.can_buy !== false && item.purchasable !== false && item.market_enabled !== false
+    });
+    card.append(media, body, controls);
+    return card;
+  }
+
+  function buildMarketExchangeControls(item = {}, options = {}, controlOptions = {}) {
     const controls = create("div", "market-exchange-controls");
     const quantity = create("input", "market-exchange-quantity");
     quantity.type = "number";
@@ -8705,9 +8885,12 @@
     quantity.step = "1";
     quantity.value = "1";
     if (options.actionLabel === "Exchange") quantity.max = String(Math.max(1, Number(item.quantity || 1)));
-    const button = create("button", "dashboard-action is-strong", options.authReady ? options.actionLabel || "Submit" : "Sign in");
+    const available = controlOptions.available !== false;
+    const button = create("button", "dashboard-action is-strong", available ? (options.authReady ? options.actionLabel || "Submit" : "Sign in") : "Unavailable");
     button.type = "button";
+    button.disabled = !available;
     button.addEventListener("click", async () => {
+      if (!available) return;
       if (!options.authReady) {
         options.onAuthRequired?.();
         return;
@@ -8724,8 +8907,7 @@
       }
     });
     controls.append(quantity, button);
-    card.append(media, body, controls);
-    return card;
+    return controls;
   }
 
   function renderCommunityMyData(ctx) {

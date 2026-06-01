@@ -58,6 +58,63 @@ test("public app wires authority request submission and my-data history to the r
   assert.match(source, /openAuthModal:\s*ctx\.openAuthModal/);
 });
 
+test("games economy page uses gallery-first market groups and shell toolbar anchors", () => {
+  const app = read("js/public-pages-app.js");
+  const shell = read("js/public-shell.js");
+  const css = read("css/public-shell.css");
+
+  assert.match(app, /"media-economy": \{[\s\S]*aliases: \["\/economy", "\/economy\/", "\/games", "\/games\/", "\/market", "\/market\/", "\/exchange", "\/exchange\/", "\/shop", "\/shop\/"\][\s\S]*render: renderGamesEconomyWorkspace/);
+  assert.match(app, /"media-market-exchange": \{[\s\S]*sectionBar: ECONOMY_SECTION_BAR[\s\S]*render: renderGamesEconomyWorkspace/);
+  assert.match(app, /host\.dataset\.gamesEconomyPage = "present"/);
+  assert.match(app, /let marketViewMode = "gallery"/);
+  assert.match(app, /host\.dataset\.marketView = viewMode/);
+  assert.match(app, /viewMode === "list" \? "list" : "gallery"/);
+  assert.match(app, /allowViewToggle: true/);
+  assert.match(app, /market-view-toggle-button/);
+  assert.match(app, /options\.onViewChange\?\.\(mode\)/);
+  assert.match(app, /economyMarketGroups\(items\)\.forEach/);
+  assert.match(app, /function economyItemCategoryLabel\(item = \{\}\)/);
+  assert.match(app, /Materials/);
+  assert.match(app, /Weapons/);
+  assert.match(app, /Equipment/);
+  assert.match(app, /Currency/);
+  assert.match(app, /Gems/);
+  assert.match(app, /Crates \/ Rewards/);
+  assert.match(app, /Consumables/);
+  assert.match(app, /Cosmetics/);
+  assert.match(app, /section\.dataset\.marketCategoryGroup = group\.label/);
+  assert.match(app, /card\.dataset\.marketItemCard = ""/);
+  assert.match(app, /buildMarketGalleryItemCard/);
+  assert.match(app, /buildEconomyItemMedia\(item, "market-gallery-item-media"\)/);
+  assert.match(app, /market-gallery-item-fallback/);
+  assert.match(app, /economyItemTitle\(item\)/);
+  assert.match(app, /economyItemPriceLabel\(item, options\)/);
+  assert.match(app, /economyItemAvailabilityLabel\(item, options\)/);
+  assert.match(app, /buildMarketExchangeItemCard\(item, options\)/);
+  assert.match(app, /Runtime-authorized inventory item/);
+  assert.match(app, /marketSection\.dataset\.marketView = "gallery"/);
+  assert.match(app, /economy-unavailable-state/);
+  assert.match(shell, /layoutStack: "\/assets\/icons\/ui\/tabs\.svg"/);
+  assert.match(shell, /sectionBarToggle\.dataset\.gamesAnchorToggle = ""/);
+  assert.match(shell, /sectionBar\.dataset\.gamesAnchorToolbar = ""/);
+  assert.match(shell, /sectionBar\.dataset\.gamesAnchorOverflow = "false"/);
+  assert.match(shell, /topbarLeft\.appendChild\(sectionBarToggle\)/);
+  assert.match(shell, /sectionBar\.append\(sectionBarPrev, sectionBarViewport, sectionBarNext\)/);
+  assert.doesNotMatch(shell, /sectionBar\.append\(sectionBarToggle/);
+  assert.match(shell, /sectionBarPrev\.hidden = !hasOverflow/);
+  assert.match(shell, /sectionBarNext\.hidden = !hasOverflow/);
+  assert.match(shell, /sectionBar\.dataset\.gamesAnchorOverflow = hasOverflow \? "true" : "false"/);
+  assert.match(shell, /window\.addEventListener\("resize", updateSectionBarOverflow/);
+  assert.match(shell, /event\.preventDefault\(\);[\s\S]*window\.history\.pushState\(window\.history\.state, "", `#\$\{section\.id\}`\);[\s\S]*scrollToSectionHash/);
+  assert.match(css, /\.games-economy-hero\.dashboard-hero/);
+  assert.match(css, /\.market-gallery-card-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(css, /\.market-gallery-item-media\s*\{[\s\S]*min-height:\s*156px/);
+  assert.match(css, /\.market-gallery-item-fallback/);
+  assert.match(css, /\.market-view-toggle-button\.is-active/);
+  assert.match(css, /\.public-section-tabs-toggle\[hidden\],[\s\S]*\.public-section-tab-scroll\[hidden\]/);
+  assert.match(css, /@media \(max-width: 680px\)[\s\S]*\.market-gallery-card-grid\s*\{[\s\S]*grid-template-columns:\s*1fr/);
+});
+
 test("public profile owner editor stays runtime-backed and uses canonical social assets", () => {
   const app = read("js/public-pages-app.js");
   const hub = read("js/public-data-hub.js");

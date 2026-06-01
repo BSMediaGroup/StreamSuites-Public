@@ -6,6 +6,13 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
 
+- `/games` Games & Economy page redesigned and polished with a stronger public storefront hero while preserving Runtime/Auth as the economy authority.
+- Market/store now defaults to a gallery card view with larger item imagery, graceful image fallbacks, compact sale metadata, and unavailable states that do not invent price, stock, or purchase data.
+- Market list view remains available through an in-page Gallery/List toggle that only changes local presentation state.
+- Sale items are grouped by category/type from the public economy payload, with safe display-only code-derived grouping when explicit category metadata is missing.
+- Jump-to anchor collapse button moved out of the anchor bar into the top toolbar using `assets/icons/ui/tabs.svg`.
+- Anchor arrows now only appear when the anchor bar has horizontal overflow and update after render, resize, collapse/expand, and scroll changes.
+
 ## Release Prep — v0.5.0-alpha
 
 - BUMP_NOTES.md updated with proper `RELEASED / PACKAGED: 0.4.2-alpha` archiving section following runtime conventions.

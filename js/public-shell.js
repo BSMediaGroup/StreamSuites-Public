@@ -81,7 +81,7 @@
     filters: "/assets/icons/ui/filters.svg",
     cmd: "/assets/icons/ui/cmdkey.svg",
     layoutSide: "/assets/icons/ui/cards.svg",
-    layoutStack: "/assets/icons/ui/tablechart.svg",
+    layoutStack: "/assets/icons/ui/tabs.svg",
     check: "/assets/icons/ui/tickyes.svg"
   });
 
@@ -679,12 +679,17 @@
     sectionBar.hidden = true;
     sectionBar.setAttribute("aria-label", "Page sections");
     sectionBar.dataset.publicSectionBar = "shell";
+    sectionBar.dataset.gamesAnchorToolbar = "";
+    sectionBar.dataset.gamesAnchorOverflow = "false";
 
     const sectionBarToggle = create("button", "public-section-tabs-toggle");
     sectionBarToggle.type = "button";
+    sectionBarToggle.hidden = true;
     sectionBarToggle.setAttribute("aria-expanded", "true");
     sectionBarToggle.setAttribute("aria-label", "Hide section tabs");
+    sectionBarToggle.dataset.gamesAnchorToggle = "";
     sectionBarToggle.appendChild(createIcon(UI_ICON_MAP.layoutStack, "public-section-tabs-toggle-icon"));
+    topbarLeft.appendChild(sectionBarToggle);
 
     const sectionBarPrev = create("button", "public-section-tab-scroll public-section-tab-scroll--prev");
     sectionBarPrev.type = "button";
@@ -700,7 +705,7 @@
     sectionBarNext.setAttribute("aria-label", "Scroll sections right");
     sectionBarNext.appendChild(create("span", "", ">"));
 
-    sectionBar.append(sectionBarToggle, sectionBarPrev, sectionBarViewport, sectionBarNext);
+    sectionBar.append(sectionBarPrev, sectionBarViewport, sectionBarNext);
 
     topbar.append(topbarMain, filterDock);
 
@@ -1465,13 +1470,21 @@
     }
 
     function updateSectionBarOverflow() {
-      if (sectionBar.hidden) return;
+      if (sectionBar.hidden || sectionBar.classList.contains("is-collapsed")) {
+        sectionBar.dataset.gamesAnchorOverflow = "false";
+        sectionBarPrev.hidden = true;
+        sectionBarNext.hidden = true;
+        return;
+      }
       const maxScroll = Math.max(0, sectionBarTrack.scrollWidth - sectionBarTrack.clientWidth);
       const scrollLeft = Math.max(0, sectionBarTrack.scrollLeft);
       const hasOverflow = maxScroll > 1;
+      sectionBar.dataset.gamesAnchorOverflow = hasOverflow ? "true" : "false";
       sectionBar.classList.toggle("has-overflow", hasOverflow);
       sectionBar.classList.toggle("show-left-fade", hasOverflow && scrollLeft > 1);
       sectionBar.classList.toggle("show-right-fade", hasOverflow && scrollLeft < maxScroll - 1);
+      sectionBarPrev.hidden = !hasOverflow;
+      sectionBarNext.hidden = !hasOverflow;
       sectionBarPrev.disabled = !hasOverflow || scrollLeft <= 1;
       sectionBarNext.disabled = !hasOverflow || scrollLeft >= maxScroll - 1;
     }
@@ -1522,9 +1535,11 @@
       activeSectionBarKey = "";
       activeSectionBarStorageKey = "";
       sectionBar.hidden = true;
+      sectionBarToggle.hidden = true;
       sectionBar.classList.remove("is-collapsed", "has-overflow", "show-left-fade", "show-right-fade");
       sectionBarTrack.innerHTML = "";
       sectionBar.dataset.sectionBarKey = "";
+      sectionBar.dataset.gamesAnchorOverflow = "false";
       content.style.removeProperty("--ps-section-bar-offset");
       document.body.classList.remove("public-section-bar-active");
     }
@@ -1558,6 +1573,7 @@
       });
 
       sectionBar.hidden = false;
+      sectionBarToggle.hidden = false;
       document.body.classList.add("public-section-bar-active");
       content.style.setProperty("--ps-section-bar-offset", "16px");
       setSectionBarCollapsed(readSectionBarCollapsedState(activeSectionBarStorageKey), { persist: false });
@@ -1760,6 +1776,8 @@
       },
       { passive: true }
     );
+
+    window.addEventListener("resize", updateSectionBarOverflow, { passive: true });
 
     renderSidebarNav(options.shellKind, options.activeHref);
     setFilterOptions(options.filters, options.multiFilter);
