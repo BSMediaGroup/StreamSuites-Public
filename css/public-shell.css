@@ -9267,7 +9267,11 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .games-economy-hero.dashboard-hero {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  min-height: 154px;
+  align-items: stretch;
+  margin-top: 14px;
+  padding-block: 20px;
   border-color: rgba(111, 190, 255, 0.26);
   background:
     radial-gradient(circle at 18% 0%, rgba(64, 167, 255, 0.22), transparent 36%),
@@ -9295,6 +9299,11 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 .games-economy-hero .dashboard-hero-aside {
   position: relative;
   z-index: 1;
+  min-height: 0;
+}
+
+.games-economy-hero .dashboard-hero-aside {
+  align-content: stretch;
 }
 
 .market-exchange-status,
@@ -9325,7 +9334,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .market-exchange-section-heading {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px 16px;
   align-items: end;
   margin: 0 0 12px;
@@ -9338,11 +9347,13 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .market-view-toolbar {
-  display: inline-flex;
+  width: 100%;
+  display: flex;
   align-items: center;
   gap: 9px;
-  justify-self: end;
+  justify-self: stretch;
   align-self: center;
+  justify-content: flex-end;
 }
 
 .market-view-toolbar-label {
@@ -9921,7 +9932,8 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   }
 
   .market-view-toolbar {
-    justify-self: start;
+    justify-self: stretch;
+    justify-content: flex-end;
   }
 
   .market-gallery-card-grid {

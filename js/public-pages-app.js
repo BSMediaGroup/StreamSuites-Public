@@ -8482,20 +8482,20 @@
       ...(options.actionLabel === "Buy" ? priceCandidates : valueCandidates)
     ].filter((candidate) => candidate.key);
     const seen = new Set();
-    return candidates.reduce((entries, candidate) => {
-      if (seen.has(candidate.key)) return entries;
+    for (const candidate of candidates) {
+      if (seen.has(candidate.key)) continue;
       seen.add(candidate.key);
-      if (!(candidate.key in item)) return entries;
+      if (!(candidate.key in item)) continue;
       const value = Number(item[candidate.key]);
-      if (!Number.isFinite(value) || value < 0) return entries;
-      entries.push({
+      if (!Number.isFinite(value) || value < 0) continue;
+      return [{
         key: candidate.key,
         label: candidate.label,
         currency: candidate.currency,
         value
-      });
-      return entries;
-    }, []);
+      }];
+    }
+    return [];
   }
 
   function economyItemPriceLabel(item = {}, options = {}) {

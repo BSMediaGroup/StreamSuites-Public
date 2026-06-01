@@ -89,6 +89,7 @@ test("games economy page uses gallery-first market groups and shell toolbar anch
   assert.match(app, /market-gallery-item-fallback/);
   assert.match(app, /economyItemTitle\(item\)/);
   assert.match(app, /function economyItemPriceEntries\(item = \{\}, options = \{\}\)/);
+  assert.match(app, /return \[\{\s*key: candidate\.key,[\s\S]*currency: candidate\.currency,[\s\S]*value[\s\S]*\}\];/);
   assert.match(app, /function buildMarketPriceDisplay\(item = \{\}, options = \{\}, displayOptions = \{\}\)/);
   assert.match(app, /wrap\.dataset\.marketPrice = entries\.length \? "available" : "unavailable"/);
   assert.match(app, /icon\.src = economyAssetPath\("\/assets\/games\/sscurrency\.webp"\)/);
@@ -132,6 +133,8 @@ test("games economy page uses gallery-first market groups and shell toolbar anch
   assert.match(shell, /window\.addEventListener\("resize", updateSectionBarOverflow/);
   assert.match(shell, /event\.preventDefault\(\);[\s\S]*window\.history\.pushState\(window\.history\.state, "", `#\$\{section\.id\}`\);[\s\S]*scrollToSectionHash/);
   assert.match(css, /\.games-economy-hero\.dashboard-hero/);
+  assert.match(css, /\.games-economy-hero\.dashboard-hero\s*\{[\s\S]*overflow:\s*visible/);
+  assert.match(css, /\.games-economy-hero\.dashboard-hero\s*\{[\s\S]*min-height:\s*154px/);
   assert.match(css, /\.market-gallery-card-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
   assert.match(css, /\.market-gallery-item-media\s*\{[\s\S]*min-height:\s*156px/);
   assert.match(css, /\.market-gallery-item-fallback/);
@@ -142,6 +145,8 @@ test("games economy page uses gallery-first market groups and shell toolbar anch
   assert.match(css, /\.market-item-lightbox\s*\{[\s\S]*grid-template-columns:\s*minmax\(260px, 0\.92fr\) minmax\(0, 1\.08fr\)/);
   assert.match(css, /\.market-item-lightbox-media\s*\{[\s\S]*min-height:\s*360px/);
   assert.match(css, /\.market-item-lightbox-price/);
+  assert.match(css, /\.market-exchange-section-heading\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/);
+  assert.match(css, /\.market-view-toolbar\s*\{[\s\S]*justify-content:\s*flex-end/);
   assert.match(css, /\.market-view-toggle-button\.is-active/);
   assert.match(css, /\.public-section-tabs-toggle\[hidden\],[\s\S]*\.public-section-tab-scroll\[hidden\]/);
   assert.match(css, /\.public-section-shell-tabs\.is-collapsed\s*\{[\s\S]*display:\s*none/);

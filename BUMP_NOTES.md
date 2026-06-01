@@ -9,6 +9,8 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 - `/games` market gallery cards now show prominent item pricing with the StreamSuites currency icon.
 - Market items can expand into a responsive lightbox detail view.
 - Lightbox exposes large item art, descriptions, pricing, category/rarity, and action state from public-safe payload data.
+- `/games` item prices now render the primary Stekels shop price only when both Stekels and Credits fields are present, avoiding duplicate price pills in gallery cards and lightbox details.
+- `/games` top hero spacing and the Market Gallery/List toggle alignment were corrected so the hero content is not clipped and the view toggle sits on the right margin.
 - Jump-to anchor toggle now collapses the entire anchor container instead of only hiding buttons.
 - Anchor overflow arrows remain hidden unless overflow exists.
 - `/games` Games & Economy page redesigned and polished with a stronger public storefront hero while preserving Runtime/Auth as the economy authority.
