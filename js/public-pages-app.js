@@ -8465,9 +8465,74 @@
     return item.rarity || item.tier || item.quality || item.level || "";
   }
 
+  function economyItemPriceEntries(item = {}, options = {}) {
+    const primary = { key: options.valueKey, label: options.valueLabel || "Value", currency: String(options.valueKey || "").includes("credits") ? "Credits" : "Stekels" };
+    const priceCandidates = [
+      { key: "market_price_stekels", label: "Price", currency: "Stekels" },
+      { key: "market_price_credits", label: "Price", currency: "Credits" },
+      { key: "price_stekels", label: "Price", currency: "Stekels" },
+      { key: "cost_stekels", label: "Price", currency: "Stekels" }
+    ];
+    const valueCandidates = [
+      { key: "exchange_value_stekels", label: "Value", currency: "Stekels" },
+      { key: "exchange_value_credits", label: "Value", currency: "Credits" }
+    ];
+    const candidates = [
+      primary,
+      ...(options.actionLabel === "Buy" ? priceCandidates : valueCandidates)
+    ].filter((candidate) => candidate.key);
+    const seen = new Set();
+    return candidates.reduce((entries, candidate) => {
+      if (seen.has(candidate.key)) return entries;
+      seen.add(candidate.key);
+      if (!(candidate.key in item)) return entries;
+      const value = Number(item[candidate.key]);
+      if (!Number.isFinite(value) || value < 0) return entries;
+      entries.push({
+        key: candidate.key,
+        label: candidate.label,
+        currency: candidate.currency,
+        value
+      });
+      return entries;
+    }, []);
+  }
+
   function economyItemPriceLabel(item = {}, options = {}) {
-    const value = Number(item[options.valueKey] ?? item.market_price_stekels ?? item.market_price_credits ?? item.exchange_value_stekels ?? item.exchange_value_credits ?? 0);
-    return `${options.valueLabel || "Value"}: ${formatNumber(value)} Stekels`;
+    const [entry] = economyItemPriceEntries(item, options);
+    if (!entry) return options.actionLabel === "Buy" ? "Price unavailable" : "Value unavailable";
+    return `${entry.label}: ${formatNumber(entry.value)} ${entry.currency}`;
+  }
+
+  function buildMarketPriceDisplay(item = {}, options = {}, displayOptions = {}) {
+    const entries = economyItemPriceEntries(item, options);
+    const wrap = create("div", displayOptions.className || "market-item-price");
+    wrap.dataset.marketPrice = entries.length ? "available" : "unavailable";
+    if (!entries.length) {
+      wrap.classList.add("is-unavailable");
+      wrap.appendChild(create("span", "market-item-price-unavailable", options.actionLabel === "Buy" ? "Price unavailable" : "Value unavailable"));
+      return wrap;
+    }
+    entries.forEach((entry) => {
+      const row = create("span", "market-item-price-row");
+      const icon = create("img", "market-item-price-icon");
+      icon.src = economyAssetPath("/assets/games/sscurrency.webp");
+      icon.alt = "";
+      icon.loading = "lazy";
+      icon.decoding = "async";
+      icon.dataset.marketPriceIcon = "";
+      icon.setAttribute("aria-hidden", "true");
+      row.append(
+        icon,
+        create("span", "market-item-price-value", formatNumber(entry.value)),
+        create("span", "market-item-price-currency", entry.currency)
+      );
+      if (entries.length > 1 || displayOptions.showLabel) {
+        row.insertBefore(create("span", "market-item-price-label", entry.label), icon);
+      }
+      wrap.appendChild(row);
+    });
+    return wrap;
   }
 
   function economyItemAvailabilityLabel(item = {}, options = {}) {
@@ -8512,6 +8577,108 @@
       media.appendChild(fallback);
     }
     return media;
+  }
+
+  function economyItemDetailsText(item = {}) {
+    return String(
+      item.long_description ||
+      item.public_details ||
+      item.details ||
+      item.tooltip_description ||
+      item.public_tooltip ||
+      item.contextual_public_note ||
+      ""
+    ).trim();
+  }
+
+  function openMarketItemLightbox(item = {}, options = {}, sourceElement = null) {
+    const previousFocus = sourceElement || document.activeElement;
+    document.querySelectorAll("[data-market-item-lightbox]").forEach((node) => node.remove());
+    const overlay = create("div", "market-item-lightbox-backdrop");
+    overlay.dataset.marketItemLightbox = "";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-label", `${economyItemTitle(item)} item details`);
+
+    const panel = create("div", "market-item-lightbox");
+    const close = create("button", "market-item-lightbox-close", "Close");
+    close.type = "button";
+    close.setAttribute("aria-label", "Close item details");
+    const media = buildEconomyItemMedia(item, "market-item-lightbox-media");
+    const body = create("div", "market-item-lightbox-body");
+    const category = economyItemCategoryLabel(item);
+    const rarity = economyItemRarityLabel(item);
+    const chips = create("div", "market-item-lightbox-chips");
+    chips.appendChild(create("span", "", category));
+    if (rarity) chips.appendChild(create("span", "", rarity));
+    const title = create("h2", "", economyItemTitle(item));
+    const price = buildMarketPriceDisplay(item, options, { className: "market-item-lightbox-price", showLabel: true });
+    price.dataset.marketLightboxPrice = "";
+    const shortDescription = create("p", "market-item-lightbox-description", economyItemDescription(item));
+    const detailText = economyItemDetailsText(item);
+    const detailCopy = create("p", "market-item-lightbox-details", detailText || "No additional public details are available for this item.");
+    const meta = create("dl", "market-item-lightbox-meta");
+    const addMeta = (label, value) => {
+      const text = String(value || "").trim();
+      if (!text) return;
+      meta.append(create("dt", "", label), create("dd", "", text));
+    };
+    addMeta("Item code", item.item_code || item.asset_code);
+    addMeta("Chat alias", item.chat_alias || item.alias || item.command_alias);
+    addMeta("Availability", economyItemAvailabilityLabel(item, options) || (item.unlimited_stock ? "No stock limit" : ""));
+    const controls = buildMarketExchangeControls(item, options, {
+      available: item.can_buy !== false && item.purchasable !== false && item.market_enabled !== false
+    });
+    controls.classList.add("market-item-lightbox-actions");
+    body.append(chips, title, price, shortDescription, detailCopy);
+    if (meta.childElementCount) body.appendChild(meta);
+    body.appendChild(controls);
+    panel.append(close, media, body);
+    overlay.appendChild(panel);
+
+    const closeLightbox = () => {
+      document.removeEventListener("keydown", onKeydown);
+      overlay.remove();
+      if (previousFocus?.focus) previousFocus.focus({ preventScroll: true });
+    };
+    const onKeydown = (event) => {
+      if (event.key === "Escape") closeLightbox();
+      if (event.key === "Tab") {
+        const focusable = Array.from(overlay.querySelectorAll("button, input, [href], [tabindex]:not([tabindex='-1'])")).filter((node) => !node.disabled && !node.hidden);
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    close.addEventListener("click", closeLightbox);
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay) closeLightbox();
+    });
+    document.addEventListener("keydown", onKeydown);
+    document.body.appendChild(overlay);
+    close.focus({ preventScroll: true });
+  }
+
+  function wireMarketItemDetailsTrigger(trigger, item = {}, options = {}) {
+    trigger.dataset.marketItemDetailsTrigger = "";
+    trigger.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      openMarketItemLightbox(item, options, trigger);
+    });
+    trigger.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openMarketItemLightbox(item, options, trigger);
+      }
+    });
   }
 
   function renderEconomyHubUnavailable(options = {}) {
@@ -8837,19 +9004,30 @@
     const rarity = economyItemRarityLabel(item);
     const available = item.can_buy !== false && item.purchasable !== false && item.market_enabled !== false;
     const media = buildEconomyItemMedia(item, "market-gallery-item-media");
+    media.setAttribute("role", "button");
+    media.tabIndex = 0;
+    media.setAttribute("aria-label", `View ${economyItemTitle(item)} details`);
+    wireMarketItemDetailsTrigger(media, item, options);
     const body = create("div", "market-gallery-item-body");
+    body.setAttribute("role", "button");
+    body.tabIndex = 0;
+    body.setAttribute("aria-label", `View ${economyItemTitle(item)} details`);
+    wireMarketItemDetailsTrigger(body, item, options);
     const chips = create("div", "market-gallery-item-chips");
     chips.appendChild(create("span", "", category));
     if (rarity) chips.appendChild(create("span", "", rarity));
     const title = create("h3", "", economyItemTitle(item));
     const desc = create("p", "", economyItemDescription(item));
     const details = create("div", "market-gallery-item-details");
-    details.appendChild(create("strong", "market-exchange-item-value", economyItemPriceLabel(item, options)));
+    details.appendChild(buildMarketPriceDisplay(item, options, { className: "market-item-price market-item-price--gallery" }));
     const availability = economyItemAvailabilityLabel(item, options);
     if (availability) details.appendChild(create("span", "market-gallery-item-availability", availability));
     body.append(chips, title, desc, details);
+    const detailsButton = create("button", "dashboard-action market-item-details-action", "Details");
+    detailsButton.type = "button";
+    wireMarketItemDetailsTrigger(detailsButton, item, options);
     const controls = buildMarketExchangeControls(item, options, { available });
-    card.append(media, body, controls);
+    card.append(media, body, detailsButton, controls);
     return card;
   }
 
@@ -8859,7 +9037,15 @@
       card.dataset.marketItemCard = "";
     }
     const media = buildEconomyItemMedia(item, "market-exchange-item-media");
+    media.setAttribute("role", "button");
+    media.tabIndex = 0;
+    media.setAttribute("aria-label", `View ${economyItemTitle(item)} details`);
+    wireMarketItemDetailsTrigger(media, item, options);
     const body = create("div", "market-exchange-item-body");
+    body.setAttribute("role", "button");
+    body.tabIndex = 0;
+    body.setAttribute("aria-label", `View ${economyItemTitle(item)} details`);
+    wireMarketItemDetailsTrigger(body, item, options);
     const title = create("h3", "", economyItemTitle(item));
     const desc = create("p", "", economyItemDescription(item));
     const meta = create("div", "market-exchange-item-meta");
@@ -8868,12 +9054,15 @@
       create("span", "", [economyItemCategoryLabel(item), economyItemRarityLabel(item)].filter(Boolean).join(" / ") || "Inventory"),
       create("span", "", economyItemAvailabilityLabel(item, options) || "Runtime catalog")
     );
-    const value = create("strong", "market-exchange-item-value", economyItemPriceLabel(item, options));
+    const value = buildMarketPriceDisplay(item, options, { className: "market-item-price market-item-price--list" });
     body.append(title, desc, meta, value);
+    const detailsButton = create("button", "dashboard-action market-item-details-action", "Details");
+    detailsButton.type = "button";
+    wireMarketItemDetailsTrigger(detailsButton, item, options);
     const controls = buildMarketExchangeControls(item, options, {
       available: item.can_buy !== false && item.purchasable !== false && item.market_enabled !== false
     });
-    card.append(media, body, controls);
+    card.append(media, body, detailsButton, controls);
     return card;
   }
 

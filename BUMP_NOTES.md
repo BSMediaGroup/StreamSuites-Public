@@ -6,6 +6,11 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
 
+- `/games` market gallery cards now show prominent item pricing with the StreamSuites currency icon.
+- Market items can expand into a responsive lightbox detail view.
+- Lightbox exposes large item art, descriptions, pricing, category/rarity, and action state from public-safe payload data.
+- Jump-to anchor toggle now collapses the entire anchor container instead of only hiding buttons.
+- Anchor overflow arrows remain hidden unless overflow exists.
 - `/games` Games & Economy page redesigned and polished with a stronger public storefront hero while preserving Runtime/Auth as the economy authority.
 - Market/store now defaults to a gallery card view with larger item imagery, graceful image fallbacks, compact sale metadata, and unavailable states that do not invent price, stock, or purchase data.
 - Market list view remains available through an in-page Gallery/List toggle that only changes local presentation state.

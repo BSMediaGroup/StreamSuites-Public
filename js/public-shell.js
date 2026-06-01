@@ -680,6 +680,8 @@
     sectionBar.setAttribute("aria-label", "Page sections");
     sectionBar.dataset.publicSectionBar = "shell";
     sectionBar.dataset.gamesAnchorToolbar = "";
+    sectionBar.dataset.gamesAnchorContainer = "";
+    sectionBar.dataset.gamesAnchorCollapsed = "false";
     sectionBar.dataset.gamesAnchorOverflow = "false";
 
     const sectionBarToggle = create("button", "public-section-tabs-toggle");
@@ -1472,6 +1474,7 @@
     function updateSectionBarOverflow() {
       if (sectionBar.hidden || sectionBar.classList.contains("is-collapsed")) {
         sectionBar.dataset.gamesAnchorOverflow = "false";
+        sectionBar.classList.remove("has-overflow", "show-left-fade", "show-right-fade");
         sectionBarPrev.hidden = true;
         sectionBarNext.hidden = true;
         return;
@@ -1492,6 +1495,10 @@
     function setSectionBarCollapsed(collapsed, { persist = true } = {}) {
       const isCollapsed = Boolean(collapsed);
       sectionBar.classList.toggle("is-collapsed", isCollapsed);
+      sectionBar.hidden = isCollapsed;
+      sectionBar.dataset.gamesAnchorCollapsed = String(isCollapsed);
+      sectionBar.dataset.gamesAnchorOverflow = "false";
+      if (isCollapsed) sectionBar.classList.remove("has-overflow", "show-left-fade", "show-right-fade");
       sectionBarToggle.classList.toggle("is-collapsed", isCollapsed);
       sectionBarToggle.setAttribute("aria-expanded", String(!isCollapsed));
       sectionBarToggle.setAttribute("aria-label", isCollapsed ? "Show section tabs" : "Hide section tabs");
@@ -1540,6 +1547,7 @@
       sectionBarTrack.innerHTML = "";
       sectionBar.dataset.sectionBarKey = "";
       sectionBar.dataset.gamesAnchorOverflow = "false";
+      sectionBar.dataset.gamesAnchorCollapsed = "false";
       content.style.removeProperty("--ps-section-bar-offset");
       document.body.classList.remove("public-section-bar-active");
     }
