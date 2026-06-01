@@ -8411,13 +8411,14 @@
   }
 
   function economyItemDescription(item = {}) {
-    return item.description || item.short_description || item.tooltip_description || item.long_description || "Runtime-authorized inventory item.";
+    return item.description || item.short_description || item.tooltip_description || item.long_description || "Inventory item available for rewards, collections, and market listings.";
   }
 
   function economyItemCategoryValue(item = {}) {
-    const explicit = item.category || item.item_type || item.type || item.subcategory || "";
+    const explicit = item.category_label || item.item_type_label || item.type_label || item.category || item.item_type || item.type || item.subcategory || "";
     if (explicit) return String(explicit);
     const code = String(item.item_code || item.asset_code || "").toLowerCase();
+    if (/(combat_vehicle|tank|helicopter|apache|aircraft|plane|fighter|jet|bomber|blackbird|drone|uav|reaper|armored)/.test(code)) return "combat_vehicle";
     if (code.includes("gem") || code.includes("diamond") || code.includes("bullion")) return "gems";
     if (code.includes("coin") || code.includes("cash") || code.includes("currency") || code.includes("stekel")) return "currency";
     if (code.includes("crate") || code.includes("chest") || code.includes("reward")) return "crates";
@@ -8432,6 +8433,7 @@
   function economyItemCategoryLabel(item = {}) {
     const raw = economyItemCategoryValue(item).toLowerCase().trim();
     if (!raw) return "Other";
+    if (/combat\s*vehicles?|combat_vehicle|tactical\s*vehicles?|tank|helicopter|aircraft|plane|fighter|jet|bomber|blackbird|drone|uav|armored/.test(raw)) return "Combat Vehicles";
     if (/material|resource|craft/.test(raw)) return "Materials";
     if (/weapon/.test(raw)) return "Weapons";
     if (/equipment|gear|armor|shield|tool/.test(raw)) return "Equipment";
@@ -8444,7 +8446,7 @@
   }
 
   function economyMarketGroups(items = []) {
-    const order = ["Materials", "Weapons", "Equipment", "Currency", "Gems", "Crates / Rewards", "Consumables", "Cosmetics", "Other"];
+    const order = ["Combat Vehicles", "Weapons", "Equipment", "Materials", "Currency", "Gems", "Crates / Rewards", "Consumables", "Cosmetics", "Other"];
     const map = new Map();
     items.forEach((item) => {
       const label = economyItemCategoryLabel(item);

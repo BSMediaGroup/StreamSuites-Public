@@ -111,7 +111,9 @@ test("games economy page uses gallery-first market groups and shell toolbar anch
   assert.match(app, /addMeta\("Chat alias", item\.chat_alias \|\| item\.alias \|\| item\.command_alias\)/);
   assert.match(app, /event\.key === "Escape"/);
   assert.match(app, /market-item-details-action/);
-  assert.match(app, /Runtime-authorized inventory item/);
+  assert.match(app, /Inventory item available for rewards, collections, and market listings/);
+  assert.match(app, /combat_vehicle/);
+  assert.match(app, /Combat Vehicles/);
   assert.match(app, /marketSection\.dataset\.marketView = "gallery"/);
   assert.match(app, /economy-unavailable-state/);
   assert.match(shell, /layoutStack: "\/assets\/icons\/ui\/tabs\.svg"/);

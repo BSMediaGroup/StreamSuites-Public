@@ -6,6 +6,11 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
 
+- Public `/games` store grouping now recognizes `combat_vehicle` and displays the category as `Combat Vehicles` in gallery groups, chips, and detail views.
+- Store cards continue to consume Runtime/Auth item descriptions, with local fallback copy kept human-facing when catalog text is missing.
+- Weapons and combat vehicles are no longer presented as the same Public category.
+- Human note: tactical aircraft, drones, tanks, and helicopters can now sit in their own storefront group instead of being buried under Weapons.
+
 - `/games` market gallery cards now show prominent item pricing with the StreamSuites currency icon.
 - Market items can expand into a responsive lightbox detail view.
 - Lightbox exposes large item art, descriptions, pricing, category/rarity, and action state from public-safe payload data.
