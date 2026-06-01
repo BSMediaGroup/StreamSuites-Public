@@ -133,8 +133,11 @@ test("games economy page uses gallery-first market groups and shell toolbar anch
   assert.match(shell, /window\.addEventListener\("resize", updateSectionBarOverflow/);
   assert.match(shell, /event\.preventDefault\(\);[\s\S]*window\.history\.pushState\(window\.history\.state, "", `#\$\{section\.id\}`\);[\s\S]*scrollToSectionHash/);
   assert.match(css, /\.games-economy-hero\.dashboard-hero/);
-  assert.match(css, /\.games-economy-hero\.dashboard-hero\s*\{[\s\S]*overflow:\s*visible/);
-  assert.match(css, /\.games-economy-hero\.dashboard-hero\s*\{[\s\S]*min-height:\s*154px/);
+  assert.match(css, /\.games-economy-hero\.dashboard-hero\s*\{[\s\S]*overflow:\s*hidden/);
+  assert.match(css, /\.games-economy-hero\.dashboard-hero\s*\{[\s\S]*min-height:\s*220px/);
+  assert.match(css, /\.games-economy-hero\.dashboard-hero\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\) minmax\(360px, 0\.52fr\)/);
+  assert.doesNotMatch(css, /\.games-economy-hero\.dashboard-hero::after/);
+  assert.match(css, /\.games-economy-hero \.dashboard-stat-card:last-child\s*\{[\s\S]*grid-column:\s*1 \/ -1/);
   assert.match(css, /\.market-gallery-card-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
   assert.match(css, /\.market-gallery-item-media\s*\{[\s\S]*min-height:\s*156px/);
   assert.match(css, /\.market-gallery-item-fallback/);
