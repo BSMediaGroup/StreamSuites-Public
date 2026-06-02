@@ -6,6 +6,10 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
 
+- Public `/games` store category fallback display now recognizes Armor, Platform Badges, and Fish & Treasures while preserving Combat Vehicles and Weapons.
+- Store/category labels remain human-facing and avoid exposing raw internal category values such as `armor`, `platform_badge`, `fish_treasure`, or `combat_vehicle` in chips, groups, and detail metadata.
+- Store cards continue to consume improved Runtime/Auth item descriptions, with only human-facing local fallback copy when catalog text is absent.
+
 - Public `/games` store grouping now recognizes `combat_vehicle` and displays the category as `Combat Vehicles` in gallery groups, chips, and detail views.
 - Store cards continue to consume Runtime/Auth item descriptions, with local fallback copy kept human-facing when catalog text is missing.
 - Weapons and combat vehicles are no longer presented as the same Public category.

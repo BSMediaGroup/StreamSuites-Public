@@ -8419,6 +8419,9 @@
     if (explicit) return String(explicit);
     const code = String(item.item_code || item.asset_code || "").toLowerCase();
     if (/(combat_vehicle|tank|helicopter|apache|aircraft|plane|fighter|jet|bomber|blackbird|drone|uav|reaper|armored)/.test(code)) return "combat_vehicle";
+    if (/(platform_badge|badge_(kick|twitch|youtube|rumble|dc))/.test(code)) return "platform_badge";
+    if (/(fish_treasure|fish|swordfish|shark|treasure|sunken|mystery_loot)/.test(code)) return "fish_treasure";
+    if (/(armor|shield|helmet|body_armor|vest)/.test(code)) return "armor";
     if (code.includes("gem") || code.includes("diamond") || code.includes("bullion")) return "gems";
     if (code.includes("coin") || code.includes("cash") || code.includes("currency") || code.includes("stekel")) return "currency";
     if (code.includes("crate") || code.includes("chest") || code.includes("reward")) return "crates";
@@ -8434,9 +8437,12 @@
     const raw = economyItemCategoryValue(item).toLowerCase().trim();
     if (!raw) return "Other";
     if (/combat\s*vehicles?|combat_vehicle|tactical\s*vehicles?|tank|helicopter|aircraft|plane|fighter|jet|bomber|blackbird|drone|uav|armored/.test(raw)) return "Combat Vehicles";
+    if (/platform_badge|platform badges?|kick|twitch|youtube|rumble/.test(raw)) return "Platform Badges";
+    if (/fish_treasure|fish|treasure|sunken|mystery loot|rare catch/.test(raw)) return "Fish & Treasures";
+    if (/armor|body armor|helmet|shield|defensive/.test(raw)) return "Armor";
     if (/material|resource|craft/.test(raw)) return "Materials";
     if (/weapon/.test(raw)) return "Weapons";
-    if (/equipment|gear|armor|shield|tool/.test(raw)) return "Equipment";
+    if (/equipment|gear|tool/.test(raw)) return "Equipment";
     if (/currency|cash|coin|banknote|stekel/.test(raw)) return "Currency";
     if (/gem|diamond|bullion|value/.test(raw)) return "Gems";
     if (/crate|chest|reward|loot/.test(raw)) return "Crates / Rewards";
@@ -8446,7 +8452,7 @@
   }
 
   function economyMarketGroups(items = []) {
-    const order = ["Combat Vehicles", "Weapons", "Equipment", "Materials", "Currency", "Gems", "Crates / Rewards", "Consumables", "Cosmetics", "Other"];
+    const order = ["Combat Vehicles", "Weapons", "Armor", "Platform Badges", "Fish & Treasures", "Equipment", "Materials", "Currency", "Gems", "Crates / Rewards", "Consumables", "Cosmetics", "Other"];
     const map = new Map();
     items.forEach((item) => {
       const label = economyItemCategoryLabel(item);

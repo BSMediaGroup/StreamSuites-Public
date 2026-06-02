@@ -117,6 +117,13 @@ test("economy, home, and compatibility aliases serve direct assets without redir
   assert.match(app, /id: "inventory", label: "Inventory"/);
   assert.match(app, /id: "wallet", label: "Wallet"/);
   assert.match(app, /id: "games", label: "Games \/ Rewards"/);
+  assert.match(app, /return "Armor"/);
+  assert.match(app, /return "Platform Badges"/);
+  assert.match(app, /return "Fish & Treasures"/);
+  assert.match(app, /return "Combat Vehicles"/);
+  assert.match(app, /return "Weapons"/);
+  assert.match(app, /"Combat Vehicles", "Weapons", "Armor", "Platform Badges", "Fish & Treasures"/);
+  assert.doesNotMatch(app, /create\("span", "", category\.replace/);
   assert.match(app, /classList\.contains\("economy-hub-section"\)/);
   assert.match(app, /fetchPublicMarketExchange\(\)/);
   assert.match(app, /Public Games & Economy purchase/);
