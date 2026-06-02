@@ -6,6 +6,9 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
 
+- Corrected stale Public HTML version comments and runtime/shared-state mirror metadata that still reported `v0.4.2-alpha`; the public surface remains downstream of runtime/export authority.
+- Human note: Public static fallbacks and mirrored current-state payloads now align with the `v0.5.0-alpha` platform release.
+
 - Public `/games` store category fallback display now recognizes Armor, Platform Badges, and Fish & Treasures while preserving Combat Vehicles and Weapons.
 - Store/category labels remain human-facing and avoid exposing raw internal category values such as `armor`, `platform_badge`, `fish_treasure`, or `combat_vehicle` in chips, groups, and detail metadata.
 - Store cards continue to consume improved Runtime/Auth item descriptions, with only human-facing local fallback copy when catalog text is absent.
