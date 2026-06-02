@@ -1,7 +1,7 @@
 {
   "schema_version": "v1",
-  "generated_at": "2026-06-02T11:56:23.311849Z",
-  "server_generated_at": "2026-06-02T11:56:23.311849Z",
+  "generated_at": "2026-06-02T11:56:23.966388Z",
+  "server_generated_at": "2026-06-02T11:56:23.966388Z",
   "count": 5,
   "bots": [
     {
@@ -302,7 +302,7 @@
       "last_webhook_event_at": null,
       "last_chat_event_at": null,
       "uptime_seconds": 0,
-      "state_age_seconds": 8,
+      "state_age_seconds": 9,
       "is_stale": false,
       "stale_reason": null,
       "trace_available": false,
@@ -391,7 +391,7 @@
       "last_webhook_event_at": "2026-06-01T09:28:28.739421Z",
       "last_chat_event_at": "2026-06-01T09:28:28.739421Z",
       "uptime_seconds": 0,
-      "state_age_seconds": 95274,
+      "state_age_seconds": 95275,
       "is_stale": true,
       "stale_reason": "state_age_exceeds_threshold",
       "trace_available": false,
