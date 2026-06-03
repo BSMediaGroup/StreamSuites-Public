@@ -1,12 +1,464 @@
 {
   "schema_version": "v1",
-  "exported_at": "2026-06-02T18:21:06.156955Z",
+  "exported_at": "2026-06-03T19:12:08.257660Z",
   "runtime": {
     "project": "StreamSuites™ Runtime",
     "version": "0.5.0-alpha",
-    "build": "2026.06.02+008"
+    "build": "2026.06.02+011"
   },
   "audit": [
+    {
+      "id": "73c86415-3fa2-4ddb-ac87-998f551e095a",
+      "ts": "2026-06-03T13:23:04Z",
+      "actor_user_id": null,
+      "actor_user_code": null,
+      "actor_role": null,
+      "target_user_id": "b3a2875c-545b-4ab8-a9f2-9cd14ff12baf",
+      "target_user_code": "JQ6MMUB",
+      "action": "bootstrap_service_account_synced",
+      "metadata": {
+        "email": "automations@streamsuites.app",
+        "key": "automations",
+        "provider_user_id": "Automations",
+        "source": "bootstrap_service_env"
+      }
+    },
+    {
+      "id": "973e3861-6acc-43b9-b055-93e7d895ffa3",
+      "ts": "2026-06-03T13:23:03Z",
+      "actor_user_id": null,
+      "actor_user_code": null,
+      "actor_role": null,
+      "target_user_id": "3c426a3d-2409-4409-a0bf-c26960081027",
+      "target_user_code": "YR992ZS",
+      "action": "bootstrap_service_account_synced",
+      "metadata": {
+        "email": "admin@streamsuites.app",
+        "key": "admin",
+        "provider_user_id": "DCadmin",
+        "source": "bootstrap_service_env"
+      }
+    },
+    {
+      "id": "f19f6b3d-1d8b-4ad5-a7ac-b3517885e1c1",
+      "ts": "2026-06-03T13:23:03Z",
+      "actor_user_id": null,
+      "actor_user_code": null,
+      "actor_role": null,
+      "target_user_id": "45385ed3-1b85-4deb-853f-2bf75fa6360c",
+      "target_user_code": "Y55GHS6",
+      "action": "bootstrap_service_account_synced",
+      "metadata": {
+        "email": "system@streamsuites.app",
+        "key": "system",
+        "provider_user_id": "System",
+        "source": "bootstrap_service_env"
+      }
+    },
+    {
+      "id": "e2a41613-2a50-425c-93e5-b8f5f2e2f4dc",
+      "ts": "2026-06-03T09:44:28Z",
+      "actor_user_id": null,
+      "actor_user_code": null,
+      "actor_role": null,
+      "target_user_id": "45385ed3-1b85-4deb-853f-2bf75fa6360c",
+      "target_user_code": "Y55GHS6",
+      "action": "bootstrap_service_account_synced",
+      "metadata": {
+        "email": "system@streamsuites.app",
+        "key": "system",
+        "provider_user_id": "System",
+        "source": "bootstrap_service_env"
+      }
+    },
+    {
+      "id": "4ead8995-9363-4c52-a977-8265c4de3ef1",
+      "ts": "2026-06-03T09:44:28Z",
+      "actor_user_id": null,
+      "actor_user_code": null,
+      "actor_role": null,
+      "target_user_id": "b3a2875c-545b-4ab8-a9f2-9cd14ff12baf",
+      "target_user_code": "JQ6MMUB",
+      "action": "bootstrap_service_account_synced",
+      "metadata": {
+        "email": "automations@streamsuites.app",
+        "key": "automations",
+        "provider_user_id": "Automations",
+        "source": "bootstrap_service_env"
+      }
+    },
+    {
+      "id": "37efca1c-f545-41c2-be2d-2d934c95886a",
+      "ts": "2026-06-03T09:44:27Z",
+      "actor_user_id": null,
+      "actor_user_code": null,
+      "actor_role": null,
+      "target_user_id": "3c426a3d-2409-4409-a0bf-c26960081027",
+      "target_user_code": "YR992ZS",
+      "action": "bootstrap_service_account_synced",
+      "metadata": {
+        "email": "admin@streamsuites.app",
+        "key": "admin",
+        "provider_user_id": "DCadmin",
+        "source": "bootstrap_service_env"
+      }
+    },
+    {
+      "id": "932823f8-3e01-455b-a8e1-b67c7efb2dd7",
+      "ts": "2026-06-02T20:04:23Z",
+      "actor_user_id": "aa4359f0-b243-42de-bbf4-dbab8cbaa09c",
+      "actor_user_code": "4TiOlvS",
+      "actor_role": "admin",
+      "target_user_id": "aa4359f0-b243-42de-bbf4-dbab8cbaa09c",
+      "target_user_code": "4TiOlvS",
+      "action": "economy_market_item_updated",
+      "metadata": {
+        "item_code": "currency.bank_token",
+        "new": {
+          "category": "Currency",
+          "chat_alias": "banknotes",
+          "exchange_enabled": true,
+          "exchange_value_stekels": 25,
+          "is_enabled": true,
+          "item_type": "currency",
+          "market_enabled": false,
+          "market_label": "Bank Token",
+          "market_price_stekels": 0,
+          "short_label": "Bank Token",
+          "stock": null,
+          "stock_limit": null,
+          "unlimited_stock": false
+        },
+        "old": {
+          "category": "Currency",
+          "chat_alias": "banknotes",
+          "exchange_enabled": false,
+          "exchange_value_stekels": null,
+          "is_enabled": true,
+          "item_type": "Currency",
+          "market_enabled": false,
+          "market_label": "Bank Token",
+          "market_price_stekels": null,
+          "short_label": "Bank Token",
+          "stock": null,
+          "stock_limit": null,
+          "unlimited_stock": false
+        },
+        "reason_text": "D"
+      }
+    },
+    {
+      "id": "918ccc0e-7f8c-4e9e-96c8-5cb98d010377",
+      "ts": "2026-06-02T20:04:11Z",
+      "actor_user_id": "aa4359f0-b243-42de-bbf4-dbab8cbaa09c",
+      "actor_user_code": "4TiOlvS",
+      "actor_role": "admin",
+      "target_user_id": "aa4359f0-b243-42de-bbf4-dbab8cbaa09c",
+      "target_user_code": "4TiOlvS",
+      "action": "economy_market_item_updated",
+      "metadata": {
+        "item_code": "currency.coin",
+        "new": {
+          "category": "Currency",
+          "chat_alias": "coin",
+          "exchange_enabled": true,
+          "exchange_value_stekels": 1,
+          "is_enabled": true,
+          "item_type": "currency",
+          "market_enabled": false,
+          "market_label": "StreamSuites Coin",
+          "market_price_stekels": 0,
+          "short_label": "StreamSuites Coin",
+          "stock": null,
+          "stock_limit": null,
+          "unlimited_stock": false
+        },
+        "old": {
+          "category": "Currency",
+          "chat_alias": "coin",
+          "exchange_enabled": false,
+          "exchange_value_stekels": null,
+          "is_enabled": true,
+          "item_type": "Currency",
+          "market_enabled": false,
+          "market_label": "StreamSuites Coin",
+          "market_price_stekels": null,
+          "short_label": "StreamSuites Coin",
+          "stock": null,
+          "stock_limit": null,
+          "unlimited_stock": false
+        },
+        "reason_text": "D"
+      }
+    },
+    {
+      "id": "45f738d8-5b77-4699-a0fe-09e6be2d3f0f",
+      "ts": "2026-06-02T20:03:49Z",
+      "actor_user_id": "aa4359f0-b243-42de-bbf4-dbab8cbaa09c",
+      "actor_user_code": "4TiOlvS",
+      "actor_role": "admin",
+      "target_user_id": "aa4359f0-b243-42de-bbf4-dbab8cbaa09c",
+      "target_user_code": "4TiOlvS",
+      "action": "economy_market_item_updated",
+      "metadata": {
+        "item_code": "currency.gem.green",
+        "new": {
+          "category": "Currency",
+          "chat_alias": "green-gem",
+          "exchange_enabled": true,
+          "exchange_value_stekels": 150,
+          "is_enabled": true,
+          "item_type": "currency",
+          "market_enabled": false,
+          "market_label": "Green Gem",
+          "market_price_stekels": 0,
+          "short_label": "Green Gem",
+          "stock": null,
+          "stock_limit": null,
+          "unlimited_stock": false
+        },
+        "old": {
+          "category": "Currency",
+          "chat_alias": "green-gem",
+          "exchange_enabled": false,
+          "exchange_value_stekels": null,
+          "is_enabled": true,
+          "item_type": "Currency",
+          "market_enabled": false,
+          "market_label": "Green Gem",
+          "market_price_stekels": null,
+          "short_label": "Green Gem",
+          "stock": null,
+          "stock_limit": null,
+          "unlimited_stock": false
+        },
+        "reason_text": "D"
+      }
+    },
+    {
+      "id": "bae7cb4d-8811-4d85-90b0-69fc8bbe43c7",
+      "ts": "2026-06-02T20:03:36Z",
+      "actor_user_id": "aa4359f0-b243-42de-bbf4-dbab8cbaa09c",
+      "actor_user_code": "4TiOlvS",
+      "actor_role": "admin",
+      "target_user_id": "aa4359f0-b243-42de-bbf4-dbab8cbaa09c",
+      "target_user_code": "4TiOlvS",
+      "action": "economy_market_item_updated",
+      "metadata": {
+        "item_code": "currency.diamond",
+        "new": {
+          "category": "Currency",
+          "chat_alias": "diamond",
+          "exchange_enabled": true,
+          "exchange_value_stekels": 10000,
+          "is_enabled": true,
+          "item_type": "currency",
+          "market_enabled": false,
+          "market_label": "Diamond",
+          "market_price_stekels": 0,
+          "short_label": "Diamond",
+          "stock": null,
+          "stock_limit": null,
+          "unlimited_stock": false
+        },
+        "old": {
+          "category": "Currency",
+          "chat_alias": "diamond",
+          "exchange_enabled": false,
+          "exchange_value_stekels": null,
+          "is_enabled": true,
+          "item_type": "Currency",
+          "market_enabled": false,
+          "market_label": "Diamond",
+          "market_price_stekels": null,
+          "short_label": "Diamond",
+          "stock": null,
+          "stock_limit": null,
+          "unlimited_stock": false
+        },
+        "reason_text": "D"
+      }
+    },
+    {
+      "id": "2cf64c0a-a7ad-4071-a354-e5b47fd52b69",
+      "ts": "2026-06-02T20:03:21Z",
+      "actor_user_id": "aa4359f0-b243-42de-bbf4-dbab8cbaa09c",
+      "actor_user_code": "4TiOlvS",
+      "actor_role": "admin",
+      "target_user_id": "aa4359f0-b243-42de-bbf4-dbab8cbaa09c",
+      "target_user_code": "4TiOlvS",
+      "action": "economy_market_item_updated",
+      "metadata": {
+        "item_code": "currency.gem.blue",
+        "new": {
+          "category": "Currency",
+          "chat_alias": "blue-gem",
+          "exchange_enabled": true,
+          "exchange_value_stekels": 2500,
+          "is_enabled": true,
+          "item_type": "currency",
+          "market_enabled": false,
+          "market_label": "Blue Gem",
+          "market_price_stekels": 0,
+          "short_label": "Blue Gem",
+          "stock": null,
+          "stock_limit": null,
+          "unlimited_stock": false
+        },
+        "old": {
+          "category": "Currency",
+          "chat_alias": "blue-gem",
+          "exchange_enabled": false,
+          "exchange_value_stekels": null,
+          "is_enabled": true,
+          "item_type": "Currency",
+          "market_enabled": false,
+          "market_label": "Blue Gem",
+          "market_price_stekels": null,
+          "short_label": "Blue Gem",
+          "stock": null,
+          "stock_limit": null,
+          "unlimited_stock": false
+        },
+        "reason_text": "D"
+      }
+    },
+    {
+      "id": "a1e9ab27-6c46-4309-a5d5-ee0855020d01",
+      "ts": "2026-06-02T20:03:08Z",
+      "actor_user_id": "aa4359f0-b243-42de-bbf4-dbab8cbaa09c",
+      "actor_user_code": "4TiOlvS",
+      "actor_role": "admin",
+      "target_user_id": "aa4359f0-b243-42de-bbf4-dbab8cbaa09c",
+      "target_user_code": "4TiOlvS",
+      "action": "economy_market_item_updated",
+      "metadata": {
+        "item_code": "currency.gem.red",
+        "new": {
+          "category": "Currency",
+          "chat_alias": "red-gem",
+          "exchange_enabled": true,
+          "exchange_value_stekels": 500,
+          "is_enabled": true,
+          "item_type": "currency",
+          "market_enabled": false,
+          "market_label": "Red Gem",
+          "market_price_stekels": 0,
+          "short_label": "Red Gem",
+          "stock": null,
+          "stock_limit": null,
+          "unlimited_stock": false
+        },
+        "old": {
+          "category": "Currency",
+          "chat_alias": "red-gem",
+          "exchange_enabled": false,
+          "exchange_value_stekels": null,
+          "is_enabled": true,
+          "item_type": "Currency",
+          "market_enabled": false,
+          "market_label": "Red Gem",
+          "market_price_stekels": null,
+          "short_label": "Red Gem",
+          "stock": null,
+          "stock_limit": null,
+          "unlimited_stock": false
+        },
+        "reason_text": "0"
+      }
+    },
+    {
+      "id": "7f3079f8-289f-4e19-84f6-bf015863766c",
+      "ts": "2026-06-02T20:01:59Z",
+      "actor_user_id": "aa4359f0-b243-42de-bbf4-dbab8cbaa09c",
+      "actor_user_code": "4TiOlvS",
+      "actor_role": "admin",
+      "target_user_id": "aa4359f0-b243-42de-bbf4-dbab8cbaa09c",
+      "target_user_code": "4TiOlvS",
+      "action": "economy_market_item_updated",
+      "metadata": {
+        "item_code": "combat_vehicle.cadillac_escalade",
+        "new": {
+          "category": "combat_vehicle",
+          "chat_alias": "escalade",
+          "exchange_enabled": true,
+          "exchange_value_stekels": 298000,
+          "is_enabled": true,
+          "item_type": "combat_vehicle",
+          "market_enabled": true,
+          "market_label": "Cadillac Escalade",
+          "market_price_stekels": 356000,
+          "short_label": "Cadillac Escalade",
+          "stock": null,
+          "stock_limit": null,
+          "unlimited_stock": false
+        },
+        "old": {
+          "category": "combat_vehicle",
+          "chat_alias": "escalade",
+          "exchange_enabled": true,
+          "exchange_value_stekels": 98000,
+          "is_enabled": true,
+          "item_type": "combat_vehicle",
+          "market_enabled": true,
+          "market_label": "Cadillac Escalade",
+          "market_price_stekels": 142000,
+          "short_label": "Cadillac Escalade",
+          "stock": null,
+          "stock_limit": null,
+          "unlimited_stock": false
+        },
+        "reason_text": "DX"
+      }
+    },
+    {
+      "id": "540fdaa4-a8e2-451b-b055-86f8e9a2dc6b",
+      "ts": "2026-06-02T19:38:38Z",
+      "actor_user_id": null,
+      "actor_user_code": null,
+      "actor_role": null,
+      "target_user_id": "45385ed3-1b85-4deb-853f-2bf75fa6360c",
+      "target_user_code": "Y55GHS6",
+      "action": "bootstrap_service_account_synced",
+      "metadata": {
+        "email": "system@streamsuites.app",
+        "key": "system",
+        "provider_user_id": "System",
+        "source": "bootstrap_service_env"
+      }
+    },
+    {
+      "id": "703e3a0c-9995-4305-b3d9-956c31044c93",
+      "ts": "2026-06-02T19:38:38Z",
+      "actor_user_id": null,
+      "actor_user_code": null,
+      "actor_role": null,
+      "target_user_id": "b3a2875c-545b-4ab8-a9f2-9cd14ff12baf",
+      "target_user_code": "JQ6MMUB",
+      "action": "bootstrap_service_account_synced",
+      "metadata": {
+        "email": "automations@streamsuites.app",
+        "key": "automations",
+        "provider_user_id": "Automations",
+        "source": "bootstrap_service_env"
+      }
+    },
+    {
+      "id": "c0019f1a-c800-438d-bbb4-d609fbd749ce",
+      "ts": "2026-06-02T19:38:37Z",
+      "actor_user_id": null,
+      "actor_user_code": null,
+      "actor_role": null,
+      "target_user_id": "3c426a3d-2409-4409-a0bf-c26960081027",
+      "target_user_code": "YR992ZS",
+      "action": "bootstrap_service_account_synced",
+      "metadata": {
+        "email": "admin@streamsuites.app",
+        "key": "admin",
+        "provider_user_id": "DCadmin",
+        "source": "bootstrap_service_env"
+      }
+    },
     {
       "id": "5388ad24-e83e-413c-b086-7f78ed29faf4",
       "ts": "2026-06-02T18:20:43Z",
