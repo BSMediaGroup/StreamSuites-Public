@@ -6,6 +6,10 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
 
+- Emergency hotfixed Public avatar/profile image rendering with legacy-field compatibility for provider picture, profile photo, display/public avatar, nested media, and legacy `avatar` aliases.
+- Public image hydration now preserves external provider URLs without cache-query mutation and falls back visually only when no usable URL exists or an individual image element fails.
+- Human note: Public login/header, profile pages, and community/member cards should show real Runtime/Auth-owned images again instead of hiding valid URLs behind initials.
+
 - Public login/header, profile, community/member, and data-hub image hydration now consumes Runtime/Auth normalized image/profile media fields before legacy avatar aliases.
 - Added stable image cache-key handling and broken-image fallback behavior so Public swaps to initials/local fallback UI without clearing the stored Runtime/Auth URL.
 - Human note: Public avatars and profile images should survive refresh/cache clears more reliably and avoid raw broken image icons.
