@@ -531,6 +531,11 @@ test("standalone /u profile hydration keeps runtime profile media ahead of local
   assert.match(app, /provider_picture/);
   assert.match(app, /profile_photo_url/);
   assert.match(app, /public_avatar_url/);
+  assert.match(app, /function isUsableProfileImageUrl\(value\)/);
+  assert.match(app, /profileMedia\.provider_picture/);
+  assert.match(app, /media\.provider_picture/);
+  assert.match(app, /find\(isUsableProfileImageUrl\)/);
+  assert.match(app, /!source\.includes\("\/assets\/icons\/ui\/profile\.svg"\)/);
   assert.match(app, /parsed\.origin !== window\.location\.origin\) return source/);
   assert.match(normalizeProfilePayloadBlock, /const imageContract = normalizedImageContract\(payload, fallbackProfile\)/);
   assert.match(normalizeProfilePayloadBlock, /rawAvatarUrl: imageContract\.rawAvatarUrl/);
