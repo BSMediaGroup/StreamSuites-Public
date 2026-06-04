@@ -621,12 +621,17 @@
     searchInput.type = "search";
     searchInput.placeholder = options.searchPlaceholder || "Search";
     searchInput.setAttribute("data-shell-search", "");
+    const searchClear = create("button", "search-clear-button");
+    searchClear.type = "button";
+    searchClear.hidden = true;
+    searchClear.setAttribute("aria-label", "Clear search");
+    searchClear.appendChild(createIcon(UI_ICON_MAP.close, "search-clear-icon"));
     const searchHint = create("span", "search-kbd-hint");
     const searchCmdHint = create("span", "search-kbd-key");
     searchCmdHint.appendChild(createIcon(UI_ICON_MAP.cmd, "search-kbd-cmd-icon"));
     const searchKeyHint = create("kbd", "", "K");
     searchHint.append(searchCmdHint, searchKeyHint);
-    searchShell.append(searchIcon, searchInput, searchHint);
+    searchShell.append(searchIcon, searchInput, searchClear, searchHint);
     topbarCenter.appendChild(searchShell);
 
     const topbarRight = create("div", "topbar-right");
@@ -1407,6 +1412,7 @@
       searchShell.hidden = !show;
       if (!show) {
         searchInput.value = "";
+        searchClear.hidden = true;
         root.dispatchEvent(new CustomEvent("public-shell:search", { detail: { query: "" } }));
       }
     }
@@ -1698,8 +1704,19 @@
 
     searchInput.addEventListener("input", () => {
       const detail = { query: searchInput.value.trim() };
+      searchClear.hidden = !detail.query;
       root.dispatchEvent(new CustomEvent("public-shell:search", { detail }));
       if (typeof callbacks.onSearch === "function") callbacks.onSearch(detail.query);
+    });
+
+    searchClear.addEventListener("click", () => {
+      if (!searchInput.value) return;
+      searchInput.value = "";
+      searchClear.hidden = true;
+      searchInput.focus({ preventScroll: true });
+      const detail = { query: "" };
+      root.dispatchEvent(new CustomEvent("public-shell:search", { detail }));
+      if (typeof callbacks.onSearch === "function") callbacks.onSearch("");
     });
 
     filterToggle.addEventListener("click", () => {
@@ -1831,6 +1848,7 @@
       },
       setQuery(value) {
         searchInput.value = value || "";
+        searchClear.hidden = !searchInput.value.trim();
       },
       setLoading,
       setActiveHref(href) {

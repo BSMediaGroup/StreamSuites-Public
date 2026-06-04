@@ -6,6 +6,13 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
 
+- Public `/games` now uses the fixed Public shell topbar search for shop, market, and exchange catalog filtering, with an explicit clear/reset button shared with the existing shell search pattern.
+- `/games` market results now support Gallery, Condensed, and Compact view modes. Gallery remains the default, while Condensed/Compact hide in-card descriptions and reveal buy/exchange/details actions on hover or keyboard focus.
+- Market result paging now defaults to 50 results per page with 20/50/100 page-size options, truthful result summaries, and safe page resets when search, view, or page-size settings change.
+- Exchange-only items are merged into the storefront as exchange actions without adding Public-side authority, sold-out items remain visible with `SOLD OUT` state, and signed-in users without required exchange inventory see disabled exchange CTAs with a reason.
+- Exchange rendering now groups Runtime/Auth-provided exchange rows into slimmer category cards and shows truthful future-ready empty categories for non-currency/gem item types when no live exchange rules exist.
+- Human note: Games & Economy should feel more like a browsable public shop hub while still treating Runtime/Auth as the only source for balances, inventory, availability, prices, and mutation rules.
+
 - Restored Public profile/header avatar rendering from legacy and normalized Runtime/Auth image fields.
 - Fallback initials now apply only when no usable image URL exists or an individual image fails.
 - Public image helpers now reject known local fallback profile icons as source image URLs while preserving real external/custom/provider URLs unchanged.
