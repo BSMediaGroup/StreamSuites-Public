@@ -526,7 +526,11 @@ test("standalone /u profile hydration keeps runtime profile media ahead of local
   assert.ok(roleChipBlock, "buildStandaloneRoleChips should exist");
   assert.ok(profileTypeBlock, "buildProfileTypeChip should exist");
   assert.ok(profileTierBlock, "buildProfileTierChip should exist");
-  assert.match(normalizeProfilePayloadBlock, /payload\?\.avatar_url \|\| payload\?\.avatarUrl \|\| fallbackProfile\?\.avatar/);
+  assert.match(app, /function normalizedImageContract\(source = \{\}, fallback = \{\}\)/);
+  assert.match(app, /function stableImageUrl\(url, cacheKey\)/);
+  assert.match(normalizeProfilePayloadBlock, /const imageContract = normalizedImageContract\(payload, fallbackProfile\)/);
+  assert.match(normalizeProfilePayloadBlock, /rawAvatarUrl: imageContract\.rawAvatarUrl/);
+  assert.match(normalizeProfilePayloadBlock, /imageVersion: imageContract\.imageVersion/);
   assert.match(normalizeProfilePayloadBlock, /payload\?\.cover_image_url \|\| payload\?\.coverImageUrl \|\| fallbackProfile\?\.coverImageUrl/);
   assert.match(normalizeProfilePayloadBlock, /payload\?\.banner_image_url \|\| payload\?\.bannerImageUrl \|\| payload\?\.cover_image_url/);
   assert.match(normalizeProfilePayloadBlock, /payload\?\.canonical_user_code/);

@@ -6,6 +6,10 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
 
+- Public login/header, profile, community/member, and data-hub image hydration now consumes Runtime/Auth normalized image/profile media fields before legacy avatar aliases.
+- Added stable image cache-key handling and broken-image fallback behavior so Public swaps to initials/local fallback UI without clearing the stored Runtime/Auth URL.
+- Human note: Public avatars and profile images should survive refresh/cache clears more reliably and avoid raw broken image icons.
+
 - Corrected stale Public HTML version comments and runtime/shared-state mirror metadata that still reported `v0.4.2-alpha`; the public surface remains downstream of runtime/export authority.
 - Human note: Public static fallbacks and mirrored current-state payloads now align with the `v0.5.0-alpha` platform release.
 

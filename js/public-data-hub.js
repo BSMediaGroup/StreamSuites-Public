@@ -300,6 +300,57 @@
       .replace(/^[-_]+|[-_]+$/g, "");
   }
 
+  function stableImageUrl(url, cacheKey) {
+    const source = String(url || "").trim();
+    const key = String(cacheKey || "").trim();
+    if (!source || !key || source.startsWith("data:") || source.startsWith("blob:")) return source;
+    try {
+      const parsed = new URL(source, window.location.origin);
+      if (!parsed.searchParams.has("v")) parsed.searchParams.set("v", key);
+      return parsed.origin === window.location.origin && source.startsWith("/")
+        ? `${parsed.pathname}${parsed.search}${parsed.hash}`
+        : parsed.toString();
+    } catch (_) {
+      return source;
+    }
+  }
+
+  function normalizedImageContract(source = {}, fallback = {}) {
+    const profileMedia = source?.profile_media || source?.profileMedia || {};
+    const image = source?.image || profileMedia.avatar || {};
+    const avatarUrl = String(
+      image.avatar_url ||
+        image.profile_image_url ||
+        image.url ||
+        profileMedia.avatar_url ||
+        profileMedia.profile_image_url ||
+        source?.profile_image_url ||
+        source?.profileImageUrl ||
+        source?.avatar_url ||
+        source?.avatarUrl ||
+        source?.avatar ||
+        fallback?.avatar ||
+        ""
+    ).trim();
+    const imageVersion = String(
+      image.image_version ||
+        image.cache_key ||
+        profileMedia.image_version ||
+        profileMedia.cache_key ||
+        source?.image_version ||
+        source?.imageVersion ||
+        fallback?.imageVersion ||
+        ""
+    ).trim();
+    return {
+      avatarUrl: stableImageUrl(avatarUrl, imageVersion),
+      rawAvatarUrl: avatarUrl,
+      imageVersion,
+      avatarSource: String(image.avatar_source || image.source || profileMedia.avatar_source || source?.avatar_source || source?.avatarSource || "").trim(),
+      fallbackInitial: String(image.fallback_display_initial || profileMedia.fallback_display_initial || source?.fallback_display_initial || source?.fallbackDisplayInitial || "").trim()
+    };
+  }
+
   function normalizeArtifactLookup(value) {
     return String(value || "")
       .trim()
@@ -1011,6 +1062,7 @@
 
     const authorityIdentity =
       authorityIdentityMap?.get(normalizeAuthorityKey(raw?.user_code || raw?.userCode || raw?.username || id)) || null;
+    const imageContract = normalizedImageContract(raw, { avatar: authorityIdentity?.avatarUrl || FALLBACK_AVATAR });
     const canonicalAccountUserCode = String(
       raw?.canonical_user_code ||
         raw?.canonicalUserCode ||
@@ -1028,7 +1080,13 @@
       slugAliases,
       username: String(raw.username || raw.handle || id),
       displayName: raw.display_name || raw.displayName || raw.name || String(id),
-      avatar: raw.avatar || raw.avatar_url || authorityIdentity?.avatarUrl || FALLBACK_AVATAR,
+      avatar: imageContract.avatarUrl || FALLBACK_AVATAR,
+      rawAvatarUrl: imageContract.rawAvatarUrl,
+      imageVersion: imageContract.imageVersion,
+      avatarSource: imageContract.avatarSource,
+      fallbackDisplayInitial: imageContract.fallbackInitial,
+      image: raw?.image || raw?.profile_media?.avatar || null,
+      profileMedia: raw?.profile_media || raw?.profileMedia || null,
       platform,
       platformKey: normalizePlatformKey(platform),
       platformIcon: platformIconFor(platform),

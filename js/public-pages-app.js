@@ -1175,10 +1175,21 @@
       avatar.style.backgroundImage = `url(${image})`;
       avatar.classList.add("has-image");
       avatar.textContent = "";
+      const probe = new Image();
+      probe.addEventListener("error", () => {
+        avatar.style.backgroundImage = "";
+        avatar.classList.remove("has-image");
+        avatar.classList.add("is-fallback");
+        avatar.textContent =
+          String(profile?.fallbackDisplayInitial || "").trim().charAt(0).toUpperCase() ||
+          (profile?.displayName || "Public User").trim().charAt(0).toUpperCase() ||
+          "P";
+      }, { once: true });
+      probe.src = image;
       return avatar;
     }
 
-    const initial = (profile?.displayName || "Public User").trim().charAt(0).toUpperCase() || "P";
+    const initial = String(profile?.fallbackDisplayInitial || "").trim().charAt(0).toUpperCase() || (profile?.displayName || "Public User").trim().charAt(0).toUpperCase() || "P";
     avatar.textContent = initial;
     avatar.classList.add("is-fallback");
     return avatar;
@@ -2464,10 +2475,16 @@
     if (profile?.avatar) {
       avatar.style.backgroundImage = `url(${profile.avatar})`;
       avatar.textContent = "";
+      const probe = new Image();
+      probe.addEventListener("error", () => {
+        avatar.style.backgroundImage = "";
+        avatar.textContent = String(profile?.fallbackDisplayInitial || "").trim().charAt(0).toUpperCase() || textInitial(getMemberDisplayName(profile));
+      }, { once: true });
+      probe.src = profile.avatar;
       return avatar;
     }
 
-    avatar.textContent = textInitial(getMemberDisplayName(profile));
+    avatar.textContent = String(profile?.fallbackDisplayInitial || "").trim().charAt(0).toUpperCase() || textInitial(getMemberDisplayName(profile));
     return avatar;
   }
 
@@ -9439,6 +9456,57 @@
     return "/assets/icons/link.svg";
   }
 
+  function stableImageUrl(url, cacheKey) {
+    const source = String(url || "").trim();
+    const key = String(cacheKey || "").trim();
+    if (!source || !key || source.startsWith("data:") || source.startsWith("blob:")) return source;
+    try {
+      const parsed = new URL(source, window.location.origin);
+      if (!parsed.searchParams.has("v")) parsed.searchParams.set("v", key);
+      return parsed.origin === window.location.origin && source.startsWith("/")
+        ? `${parsed.pathname}${parsed.search}${parsed.hash}`
+        : parsed.toString();
+    } catch (_) {
+      return source;
+    }
+  }
+
+  function normalizedImageContract(source = {}, fallback = {}) {
+    const profileMedia = source?.profile_media || source?.profileMedia || {};
+    const image = source?.image || profileMedia.avatar || {};
+    const avatarUrl = String(
+      image.avatar_url ||
+        image.profile_image_url ||
+        image.url ||
+        profileMedia.avatar_url ||
+        profileMedia.profile_image_url ||
+        source?.profile_image_url ||
+        source?.profileImageUrl ||
+        source?.avatar_url ||
+        source?.avatarUrl ||
+        source?.avatar ||
+        fallback?.avatar ||
+        ""
+    ).trim();
+    const imageVersion = String(
+      image.image_version ||
+        image.cache_key ||
+        profileMedia.image_version ||
+        profileMedia.cache_key ||
+        source?.image_version ||
+        source?.imageVersion ||
+        fallback?.imageVersion ||
+        ""
+    ).trim();
+    return {
+      avatarUrl: stableImageUrl(avatarUrl, imageVersion),
+      rawAvatarUrl: avatarUrl,
+      imageVersion,
+      avatarSource: String(image.avatar_source || image.source || profileMedia.avatar_source || source?.avatar_source || source?.avatarSource || "").trim(),
+      fallbackInitial: String(image.fallback_display_initial || profileMedia.fallback_display_initial || source?.fallback_display_initial || source?.fallbackDisplayInitial || "").trim()
+    };
+  }
+
   function normalizeProfilePayload(payload, fallbackProfile, fallbackCode) {
     const inferredCreatorCapable = firstBoolean(payload?.creator_capable, payload?.creatorCapable, fallbackProfile?.creatorCapable);
     const inferredViewerOnly = firstBoolean(payload?.viewer_only, payload?.viewerOnly, fallbackProfile?.viewerOnly);
@@ -9484,7 +9552,8 @@
     );
     const canonicalPublicUrl = publicSlug ? `https://streamsuites.app/u/${encodeURIComponent(publicSlug)}` : "";
     const displayName = String(payload?.display_name || payload?.displayName || fallbackProfile?.displayName || "Public User").trim() || "Public User";
-    const avatar = String(payload?.avatar_url || payload?.avatarUrl || fallbackProfile?.avatar || window.StreamSuitesPublicData.DEFAULT_PROFILE.avatar || "").trim();
+    const imageContract = normalizedImageContract(payload, fallbackProfile);
+    const avatar = imageContract.avatarUrl;
     const coverImageUrl = String(payload?.cover_image_url || payload?.coverImageUrl || fallbackProfile?.coverImageUrl || DEFAULT_PROFILE_COVER).trim() || DEFAULT_PROFILE_COVER;
     const bannerImageUrl = String(
       payload?.banner_image_url || payload?.bannerImageUrl || payload?.cover_image_url || payload?.coverImageUrl || fallbackProfile?.bannerImageUrl || coverImageUrl
@@ -9596,6 +9665,12 @@
       username: fallbackProfile?.username || publicSlug || userCode,
       displayName,
       avatar,
+      rawAvatarUrl: imageContract.rawAvatarUrl,
+      imageVersion: imageContract.imageVersion,
+      avatarSource: imageContract.avatarSource,
+      fallbackDisplayInitial: imageContract.fallbackInitial,
+      image: payload?.image || payload?.profile_media?.avatar || null,
+      profileMedia: payload?.profile_media || payload?.profileMedia || null,
       platform: fallbackProfile?.platform || "StreamSuites",
       platformKey: fallbackProfile?.platformKey || "streamsuites",
       platformIcon: fallbackProfile?.platformIcon || "/assets/icons/pilled.svg",
@@ -12271,13 +12346,8 @@
       payload?.name ||
       "User"
     ).trim() || "User";
-    const avatarUrl = String(
-      payload?.avatar_url ||
-      payload?.data?.avatar_url ||
-      payload?.user?.avatar_url ||
-      payload?.creator?.avatar_url ||
-      ""
-    ).trim();
+    const authImage = normalizedImageContract(payload, payload?.user || payload?.data || payload?.creator || {});
+    const avatarUrl = authImage.avatarUrl;
     const accountType =
       normalizeAccountType(payload?.access_class) ||
       normalizeAccountType(payload?.data?.access_class) ||
@@ -12328,6 +12398,10 @@
       publicSlug,
       displayName,
       avatarUrl,
+      rawAvatarUrl: authImage.rawAvatarUrl,
+      imageVersion: authImage.imageVersion,
+      avatarSource: authImage.avatarSource,
+      fallbackDisplayInitial: authImage.fallbackInitial,
       accountType,
       accessClass: accountType,
       tier,
