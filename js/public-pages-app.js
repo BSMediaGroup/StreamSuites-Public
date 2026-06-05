@@ -3502,6 +3502,49 @@
     return String(value || "").trim();
   }
 
+  function normalizeItemDetailTags(value) {
+    if (value === undefined || value === null) return [];
+    const rawEntries = Array.isArray(value) ? value : [value];
+    const tags = [];
+    rawEntries.forEach((entry) => {
+      if (entry === undefined || entry === null) return;
+      if (typeof entry === "string") {
+        entry.split(/[,;|]/).forEach((part) => {
+          const tag = String(part || "").trim();
+          if (tag) tags.push(tag);
+        });
+        return;
+      }
+      if (typeof entry === "number" || typeof entry === "boolean") {
+        const tag = String(entry).trim();
+        if (tag) tags.push(tag);
+      }
+    });
+    const seen = new Set();
+    return tags.filter((tag) => {
+      const key = tag.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  function economyItemTagChipLabel(tag = "") {
+    const normalized = String(tag || "").trim();
+    if (!normalized) return "";
+    return normalized.startsWith("#") ? normalized : `#${normalized}`;
+  }
+
+  function buildEconomyItemTagChips(tags = []) {
+    const wrap = create("div", "economy-item-tag-chips");
+    tags.forEach((tag) => {
+      const label = economyItemTagChipLabel(tag);
+      if (!label) return;
+      wrap.appendChild(create("span", "economy-item-tag-chip", label));
+    });
+    return wrap;
+  }
+
   function isEconomyCurrencyDetailLabel(label = "") {
     return /(?:balance|value|price|cost|amount)/i.test(String(label || ""));
   }
@@ -3646,8 +3689,18 @@
     addStat("Stock", item.unlimited_stock ? "Unlimited" : firstPresent(item.stock, item.stock_limit, item.max_quantity, item.purchase_limit));
     const meta = [];
     const addMeta = (labelText, value, metaOptions = {}) => {
+      if (metaOptions.tags) {
+        const tags = normalizeItemDetailTags(value);
+        if (tags.length) meta.push({ label: labelText, tags, variant: "tags" });
+        return;
+      }
       const formatted = metaOptions.timestamp ? formatEconomyDetailTimestamp(value) : formatItemDetailValue(value);
-      if (formatted) meta.push({ label: labelText, value: formatted, rawValue: value, currency: Boolean(metaOptions.currency) });
+      if (!formatted) return;
+      if (labelText === "Item code") {
+        meta.push({ label: labelText, value: formatted, rawValue: value, variant: "item-code" });
+        return;
+      }
+      meta.push({ label: labelText, value: formatted, rawValue: value, currency: Boolean(metaOptions.currency) });
     };
     addMeta("Item code", itemCode);
     addMeta("Slug / ID", firstPresent(item.slug, item.id, item.asset_id, item.image_asset_id, item.image_asset_key));
@@ -3669,7 +3722,7 @@
     addMeta("Granted", firstPresent(item.granted_at, item.grant_time), { timestamp: true });
     addMeta("Acquired", firstPresent(item.acquired_at, item.acquired_time), { timestamp: true });
     addMeta("Expires", firstPresent(item.expires_at, item.expiration_at, item.expires_on), { timestamp: true });
-    addMeta("Tags", firstPresent(item.tags, item.chips, item.attributes, metadata.tags));
+    addMeta("Tags", firstPresent(item.tags, item.chips, item.attributes, metadata.tags), { tags: true });
     return {
       raw: item,
       kind,
@@ -3702,7 +3755,7 @@
     const itemCode = firstPresent(item.item_code, item.asset_code, item.denomination_code, definition.item_code);
     const meta = [];
     const formattedCode = formatItemDetailValue(itemCode);
-    if (formattedCode) meta.push({ label: "Item code", value: formattedCode });
+    if (formattedCode) meta.push({ label: "Item code", value: formattedCode, variant: "item-code" });
     return {
       raw: item,
       kind: options.kind || "market",
@@ -9220,6 +9273,19 @@
       });
       const meta = create("dl", "market-item-lightbox-meta");
       detail.meta.forEach((row) => {
+        if (row.variant === "tags" && Array.isArray(row.tags) && row.tags.length) {
+          const chips = buildEconomyItemTagChips(row.tags);
+          if (chips.childElementCount) {
+            const wrapper = create("dd", "");
+            wrapper.appendChild(chips);
+            meta.append(create("dt", "", row.label), wrapper);
+          }
+          return;
+        }
+        if (row.variant === "item-code") {
+          meta.append(create("dt", "", row.label), create("dd", "economy-item-code-value", row.value));
+          return;
+        }
         const value = row.currency && Number.isFinite(Number(row.rawValue))
           ? buildEconomyCurrencyAmount(Number(row.rawValue))
           : row.value;

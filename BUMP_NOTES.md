@@ -6,6 +6,10 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
 
+- Public and profile economy item detail lightboxes now render associated tags as slim `#hashtag` chips instead of plaintext comma-separated lines; item code values use scoped `SUSEMono` with a subtle blue tint; modal quantity inputs use dark-themed native spinner styling.
+- Technical note: tag chip rendering is presentation-only and consumes existing Runtime/Auth tag/chip/attribute fields already exposed to the shared lightbox normalizer; navigation, currency masks, timestamp formatting, and market action payloads are unchanged.
+- Human note: More Details on `/games`, wallet/inventory rows, and public profile economy rows should show premium tag chips and monospace item codes without changing buy/exchange behavior.
+
 - Public `/games` Exchange category columns still share full row height with empty space below short categories, while item rows stay top-aligned; each category keeps its own page index and only the global rows-per-category count is shared.
 - Exchange category item thumbnails are 50% larger in-category, and the More Details action spans the full item card width.
 - Exchange per-category Prev/Next now scrolls the paginated category card into view instead of jumping to the top of the whole Exchange section.

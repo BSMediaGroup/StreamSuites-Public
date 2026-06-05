@@ -871,6 +871,23 @@ this.formatEconomyDetailTimestamp = formatEconomyDetailTimestamp;`, context, { f
   assert.equal(context.formatEconomyDetailTimestamp("not-a-date"), "not-a-date");
 });
 
+test("public economy item lightbox renders hashtag tag chips and scoped item code styling", () => {
+  const app = read("js/public-pages-app.js");
+  const css = read("css/public-shell.css");
+
+  assert.match(app, /function normalizeItemDetailTags\(value\)/);
+  assert.match(app, /function buildEconomyItemTagChips\(tags = \[\]\)/);
+  assert.match(app, /economyItemTagChipLabel\(tag\)/);
+  assert.match(app, /variant: "tags"/);
+  assert.match(app, /variant: "item-code"/);
+  assert.match(app, /create\("dd", "economy-item-code-value", row\.value\)/);
+  assert.match(app, /buildEconomyItemTagChips\(row\.tags\)/);
+  assert.match(app, /addMeta\("Tags",[\s\S]*\{ tags: true \}/);
+  assert.match(css, /\.economy-item-tag-chip\s*\{/);
+  assert.match(css, /\.market-item-lightbox \.economy-item-code-value\s*\{[\s\S]*SUSEMono/);
+  assert.match(css, /\.market-item-lightbox \.market-exchange-quantity\s*\{[\s\S]*color-scheme:\s*dark/);
+});
+
 test("public economy item lightbox exposes scoped navigation and currentColor currency symbols", () => {
   const app = read("js/public-pages-app.js");
   const css = read("css/public-shell.css");

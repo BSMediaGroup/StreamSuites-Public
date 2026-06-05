@@ -10514,6 +10514,46 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   color: rgba(246, 251, 255, 0.9);
 }
 
+.market-item-lightbox .economy-item-code-value {
+  font-family: "SUSEMono", "SUSE Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: rgba(147, 197, 253, 0.94);
+  letter-spacing: 0.02em;
+}
+
+.economy-item-tag-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.economy-item-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(154, 209, 255, 0.22);
+  background: rgba(15, 23, 42, 0.72);
+  color: rgba(226, 236, 252, 0.88);
+  font-size: 0.68rem;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+}
+
+.market-item-lightbox .market-exchange-quantity {
+  color-scheme: dark;
+  accent-color: rgba(147, 197, 253, 0.85);
+  background: rgba(8, 13, 23, 0.92);
+  border: 1px solid rgba(154, 209, 255, 0.24);
+  color: rgba(248, 251, 255, 0.94);
+}
+
+.market-item-lightbox .market-exchange-quantity::-webkit-inner-spin-button,
+.market-item-lightbox .market-exchange-quantity::-webkit-outer-spin-button {
+  opacity: 0.92;
+  filter: brightness(1.45);
+}
+
 .market-item-lightbox-actions {
   margin-top: 4px;
 }
