@@ -3493,6 +3493,12 @@
       item.description,
       definition.short_description,
       definition.description,
+      item.lore,
+      item.flavor_text,
+      item.flavour_text,
+      definition.lore,
+      definition.flavor_text,
+      definition.flavour_text,
       publicMetadata.short_description,
       item.tooltip_description,
       definition.tooltip_description,
@@ -3503,6 +3509,18 @@
       item.long_description,
       item.public_details,
       item.details,
+      item.public_lore,
+      item.lore,
+      item.flavor_text,
+      item.flavour_text,
+      definition.public_lore,
+      definition.lore,
+      definition.flavor_text,
+      definition.flavour_text,
+      publicMetadata.public_lore,
+      publicMetadata.lore,
+      publicMetadata.flavor_text,
+      publicMetadata.flavour_text,
       item.tooltip_public_details,
       item.tooltip_description,
       definition.tooltip_public_details,
@@ -3517,6 +3535,7 @@
     const quantity = firstPresent(item.quantity, item.count, item.held_quantity, item.balance_count);
     const amount = firstPresent(item.value_total_credits, item.balance_total_credits, item.balance_current, item.amount, item.value_in_credits);
     const category = firstPresent(item.category_label, item.category, definition.category_label, definition.category, item.item_type, item.type, definition.type);
+    const subtype = firstPresent(item.subtype_label, item.subtype, item.item_subtype, definition.subtype_label, definition.subtype, definition.item_subtype);
     const rarity = firstPresent(item.rarity, item.tier, item.grade, definition.rarity, definition.tier, definition.grade);
     const itemCode = firstPresent(item.item_code, item.asset_code, item.denomination_code, definition.item_code);
     const imagePath = economyItemImagePath(item) || economyDenominationIconPath(item) || definition.icon_url || definition.icon_path || "";
@@ -3545,12 +3564,18 @@
     addMeta("Slug / ID", firstPresent(item.slug, item.id, item.asset_id, item.image_asset_id, item.image_asset_key));
     addMeta("Chat alias", firstPresent(item.chat_alias, definition.chat_alias, publicMetadata.chat_alias, item.alias, item.command_alias));
     addMeta("Category", category ? categoryDisplayLabel(category) : "");
+    addMeta("Subtype", subtype ? toTitle(subtype) : "");
     addMeta("Rarity / tier", rarity ? toTitle(rarity) : "");
     addMeta("Availability", kind === "market" ? economyItemAvailabilityLabel(item, options) : firstPresent(item.availability, item.availability_state, item.limited_state));
+    addMeta("Limited state", firstPresent(item.limited_state, item.limit_state, item.stock_state, definition.limited_state));
+    addMeta("Requirements", firstPresent(item.requirements, item.required_items, item.required_item_codes, item.requirement_text, definition.requirements, publicMetadata.requirements));
+    addMeta("Costs", firstPresent(item.costs, item.cost_breakdown, item.price_breakdown, item.cost_text, definition.costs, publicMetadata.costs));
+    addMeta("Exchange input", firstPresent(item.exchange_inputs, item.exchange_input, item.input_items, item.required_exchange_items, definition.exchange_inputs));
+    addMeta("Exchange output", firstPresent(item.exchange_outputs, item.exchange_output, item.output_items, item.grants, definition.exchange_outputs));
     addMeta("Enabled", firstPresent(item.is_enabled, definition.is_enabled, item.public_tooltip_enabled, definition.public_tooltip_enabled));
     addMeta("Source", firstPresent(item.source, item.provider, item.origin, item.source_domain, item.source_action));
     addMeta("Version", firstPresent(item.version, item.export_version, item.schema_version, metadata.version));
-    addMeta("Updated", firstPresent(item.updated_at, item.modified_at, item.exported_at, item.created_at));
+    addMeta("Updated", firstPresent(item.updated_at, item.modified_at, item.exported_at, item.created_at, item.acquired_at, item.granted_at));
     addMeta("Tags", firstPresent(item.tags, item.chips, item.attributes, metadata.tags));
     return {
       raw: item,
