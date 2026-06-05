@@ -9113,6 +9113,42 @@
     return next;
   }
 
+  function buildEconomyItemTagIndex(payload = {}) {
+    const index = new Map();
+    (Array.isArray(payload?.inventory) ? payload.inventory : []).forEach((entry) => {
+      const code = String(entry?.item_code || entry?.asset_code || "").trim();
+      if (!code) return;
+      const definition = entry?.definition && typeof entry.definition === "object" ? entry.definition : {};
+      const tags = Array.isArray(entry?.tags) && entry.tags.length
+        ? entry.tags
+        : Array.isArray(definition?.tags) ? definition.tags : [];
+      if (!tags.length) return;
+      index.set(code, { tags, definition });
+    });
+    return index;
+  }
+
+  function enrichEconomyCatalogItem(item = {}, tagIndex = new Map()) {
+    if (!item || typeof item !== "object") return item;
+    const code = String(item.item_code || item.asset_code || "").trim();
+    const existingTags = Array.isArray(item.tags) ? item.tags : [];
+    const indexed = tagIndex.get(code);
+    const tags = existingTags.length
+      ? existingTags
+      : Array.isArray(indexed?.tags) ? indexed.tags : [];
+    const definition = {
+      ...(indexed?.definition && typeof indexed.definition === "object" ? indexed.definition : {}),
+      ...(item.definition && typeof item.definition === "object" ? item.definition : {}),
+      tags
+    };
+    return tags.length ? { ...item, tags, definition } : item;
+  }
+
+  function enrichEconomyCatalogItems(items = [], payload = {}) {
+    const tagIndex = buildEconomyItemTagIndex(payload);
+    return (Array.isArray(items) ? items : []).map((item) => enrichEconomyCatalogItem(item, tagIndex));
+  }
+
   function buildGamesStorefrontItems(payload = {}) {
     const market = Array.isArray(payload?.market) ? payload.market : [];
     const exchange = Array.isArray(payload?.exchange) ? payload.exchange : [];
@@ -9124,7 +9160,7 @@
         return item.market_enabled === false || item.can_buy === false || item.purchasable === false || economyItemPriceEntries(item, { actionLabel: "Buy", valueKey: "market_price_stekels" }).length === 0;
       })
       .map((item) => ({ ...item, __storefront_action: "exchange" }));
-    return [...market, ...exchangeOnly];
+    return enrichEconomyCatalogItems([...market, ...exchangeOnly], payload);
   }
 
   function isEconomyExchangeCapableItem(item = {}) {
@@ -9171,7 +9207,7 @@
     appendPublicExchangeItems(rows, payload?.catalog, { seen });
     appendPublicExchangeItems(rows, payload?.public_item_definitions, { seen });
     appendPublicExchangeItems(rows, payload?.item_definitions, { seen });
-    return rows;
+    return enrichEconomyCatalogItems(rows, payload);
   }
 
   function economyExchangeCategoryGroups(items = []) {
@@ -9838,7 +9874,7 @@
         host: exchangeSection,
         title: "Exchange",
         subtitle: "Convert eligible held items into Stekels",
-        items: payload?.exchange || [],
+        items: enrichEconomyCatalogItems(payload?.exchange || [], payload),
         authReady: Boolean(payload?.authenticated),
         actionLabel: "Exchange",
         valueLabel: "Value",
@@ -9856,7 +9892,7 @@
         host: marketSection,
         title: "Market",
         subtitle: "Spend Stekels on items",
-        items: payload?.market || [],
+        items: enrichEconomyCatalogItems(payload?.market || [], payload),
         authReady: Boolean(payload?.authenticated),
         actionLabel: "Buy",
         valueLabel: "Price",
