@@ -9458,7 +9458,11 @@
         },
         onExchangeCategoryPageSizeChange: (nextPageSize) => {
           gamesState.exchangeCategoryPageSize = normalizeExchangeCategoryPageSize(nextPageSize);
-          gamesState.exchangeCategoryPages = {};
+          gamesState.exchangeCategoryPages = clampExchangeCategoryPages(
+            gamesState.exchangeCategoryPages,
+            exchangeGroups,
+            gamesState.exchangeCategoryPageSize
+          );
           renderPayload(payload);
         },
         onAction: async (item, quantity) => exchangePublicMarketItem({ itemCode: item.item_code, quantity, reasonText: "Public Games & Economy item exchange" }),
@@ -9760,6 +9764,7 @@
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     const page = clampMarketPage(options.page, total, pageSize);
     const controls = create("div", "market-exchange-category-pagination");
+    if (options.categoryLabel) controls.dataset.exchangeCategoryPagination = options.categoryLabel;
     const showingStart = total ? (page - 1) * pageSize + 1 : 0;
     const showingEnd = total ? Math.min(total, page * pageSize) : 0;
     controls.appendChild(
@@ -9802,6 +9807,7 @@
       );
     }
     const rows = create("div", "market-exchange-category-rows");
+    rows.dataset.exchangeCategoryRows = group.label || "Other";
     if (group.empty) {
       rows.appendChild(create("p", "market-exchange-category-empty", "No public exchange rules are available for this category yet."));
     } else {
@@ -9809,12 +9815,14 @@
     }
     section.append(heading, rows);
     if (!group.empty && totalRows > pageSize) {
-      section.appendChild(buildExchangeCategoryPaginationControls({
+      const pagination = buildExchangeCategoryPaginationControls({
         total: totalRows,
         pageSize,
         page: currentPage,
+        categoryLabel: group.label || "Other",
         onPageChange: (nextPage) => options.onExchangeCategoryPageChange?.(group.label || "Other", nextPage)
-      }));
+      });
+      section.appendChild(pagination);
     }
     return section;
   }

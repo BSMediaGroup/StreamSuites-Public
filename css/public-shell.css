@@ -10004,14 +10004,15 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   display: grid;
   gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
-  align-items: start;
+  align-items: stretch;
 }
 
 .market-exchange-category-card {
   min-width: 0;
-  align-self: start;
-  height: auto;
+  align-self: stretch;
+  height: 100%;
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 10px;
   padding: 12px;
   border: 1px solid rgba(154, 209, 255, 0.17);
@@ -10025,6 +10026,10 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   border-style: dashed;
   background: rgba(15, 23, 42, 0.44);
   opacity: 0.78;
+}
+
+.market-exchange-category-card:has(.market-exchange-category-pagination) {
+  grid-template-rows: auto minmax(0, 1fr) auto;
 }
 
 .market-exchange-category-heading {
@@ -10053,14 +10058,50 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .market-exchange-category-rows .market-exchange-item-card {
   padding: 10px;
-  grid-template-columns: 58px minmax(0, 1fr);
+  grid-template-columns: 87px minmax(0, 1fr);
+  grid-template-areas:
+    "media body"
+    "details details"
+    "controls controls";
   gap: 11px;
   box-shadow: none;
 }
 
 .market-exchange-category-rows .market-exchange-item-media {
-  width: 58px;
-  height: 58px;
+  grid-area: media;
+  width: 87px;
+  height: 87px;
+}
+
+.market-exchange-category-rows .market-exchange-item-media img,
+.market-exchange-category-rows .market-exchange-item-media .inline-icon-mask {
+  width: 51px;
+  height: 51px;
+}
+
+.market-exchange-category-rows .market-exchange-item-media .market-gallery-item-fallback {
+  width: 57px;
+  height: 57px;
+}
+
+.market-exchange-category-rows .market-exchange-item-media .market-gallery-item-fallback .inline-icon-mask {
+  width: 42px;
+  height: 42px;
+}
+
+.market-exchange-category-rows .market-exchange-item-body {
+  grid-area: body;
+}
+
+.market-exchange-category-rows .market-exchange-item-card > .market-item-details-action {
+  grid-area: details;
+  width: 100%;
+  justify-self: stretch;
+}
+
+.market-exchange-category-rows .market-exchange-item-card > .market-exchange-controls {
+  grid-area: controls;
+  width: 100%;
 }
 
 .market-exchange-category-rows .market-exchange-item-body p {

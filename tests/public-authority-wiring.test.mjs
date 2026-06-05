@@ -903,10 +903,12 @@ test("public games exchange section hydrates exchange-capable payload rows into 
   assert.match(app, /items: exchangeItems/);
   assert.match(app, /if \(!groups\.length\) wanted\.forEach/);
   assert.match(css, /\.market-exchange-category-layout\s*\{[\s\S]*minmax\(min\(100%, 360px\), 1fr\)/);
-  assert.match(css, /\.market-exchange-category-layout\s*\{[\s\S]*align-items:\s*start/);
-  assert.match(css, /\.market-exchange-category-card\s*\{[\s\S]*align-self:\s*start/);
+  assert.match(css, /\.market-exchange-category-layout\s*\{[\s\S]*align-items:\s*stretch/);
+  assert.match(css, /\.market-exchange-category-card\s*\{[\s\S]*align-self:\s*stretch/);
+  assert.match(css, /\.market-exchange-category-card\s*\{[\s\S]*grid-template-rows:\s*auto minmax\(0, 1fr\)/);
   assert.match(css, /\.market-exchange-category-rows\s*\{[\s\S]*align-content:\s*start/);
-  assert.match(css, /\.market-exchange-category-rows \.market-exchange-item-card\s*\{[\s\S]*grid-template-columns:\s*58px minmax\(0, 1fr\)/);
+  assert.match(css, /\.market-exchange-category-rows \.market-exchange-item-card\s*\{[\s\S]*grid-template-columns:\s*87px minmax\(0, 1fr\)/);
+  assert.match(css, /\.market-exchange-category-rows \.market-exchange-item-card > \.market-item-details-action\s*\{[\s\S]*width:\s*100%/);
   assert.match(app, /wireMarketItemDetailsTrigger\(detailsButton, item, itemOptions\)/);
 });
 
@@ -925,7 +927,9 @@ test("public games exchange section paginates categories independently with gems
   assert.match(app, /buildExchangeCategoryPaginationControls/);
   assert.match(app, /onExchangeCategoryPageChange/);
   assert.match(app, /onExchangeCategoryPageSizeChange/);
-  assert.match(app, /gamesState\.exchangeCategoryPages = \{\}/);
+  assert.match(app, /gamesState\.exchangeCategoryPages = clampExchangeCategoryPages/);
+  assert.match(app, /dataset\.exchangeCategoryPagination = options\.categoryLabel/);
+  assert.match(app, /onPageChange: \(nextPage\) => options\.onExchangeCategoryPageChange\?\.\(group\.label/);
   assert.match(app, /allRows\.slice\(pageStart, pageStart \+ pageSize\)/);
   assert.match(app, /totalRows > pageSize/);
   assert.match(css, /\.market-exchange-page-size-toolbar/);
