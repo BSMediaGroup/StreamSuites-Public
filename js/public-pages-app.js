@@ -3531,8 +3531,43 @@
     return "";
   }
 
+  function appendEconomyItemDetailTagSource(sources, value) {
+    if (value === undefined || value === null) return;
+    if (typeof value === "string" || Array.isArray(value)) {
+      if (typeof value === "string" ? String(value).trim() : value.length) sources.push(value);
+      return;
+    }
+    if (typeof value === "object") {
+      if (
+        value.label !== undefined ||
+        value.name !== undefined ||
+        value.tag !== undefined ||
+        value.hashtag !== undefined ||
+        value.alias !== undefined ||
+        value.keyword !== undefined ||
+        value.value !== undefined
+      ) {
+        sources.push(value);
+        return;
+      }
+      const values = Object.values(value);
+      if (
+        values.length &&
+        values.every((entry) => (
+          typeof entry === "string" ||
+          typeof entry === "number" ||
+          typeof entry === "boolean" ||
+          (entry && typeof entry === "object" && (entry.label !== undefined || entry.name !== undefined || entry.tag !== undefined))
+        ))
+      ) {
+        sources.push(value);
+      }
+    }
+  }
+
   function collectEconomyItemDetailTagSources(item = {}, definition = {}, metadata = {}, publicMetadata = {}) {
-    return [
+    const sources = [];
+    const candidates = [
       item.tags,
       item.tag,
       item.hashtags,
@@ -3543,7 +3578,6 @@
       item.item_tags,
       item.itemTags,
       item.attributes,
-      item.chips,
       metadata.tags,
       metadata.tag,
       metadata.hashtags,
@@ -3576,18 +3610,27 @@
       publicMetadata.chat_alias,
       publicMetadata.chatAlias
     ];
+    candidates.forEach((value) => appendEconomyItemDetailTagSource(sources, value));
+    return sources;
   }
 
   function normalizeItemDetailTags(...sources) {
     const tags = [];
     const seen = new Set();
-    const pushToken = (raw) => {
-      const token = formatItemDetailTagToken(raw);
-      if (!token) return;
-      const key = token.toLowerCase();
-      if (seen.has(key)) return;
-      seen.add(key);
-      tags.push(token);
+    const pushTokensFromRaw = (raw) => {
+      if (raw === undefined || raw === null) return;
+      const parts = String(raw)
+        .split(/[,;|]/)
+        .map((part) => part.trim())
+        .filter(Boolean);
+      parts.forEach((part) => {
+        const token = formatItemDetailTagToken(part);
+        if (!token) return;
+        const key = token.toLowerCase();
+        if (seen.has(key)) return;
+        seen.add(key);
+        tags.push(token);
+      });
     };
     const visit = (value) => {
       if (value === undefined || value === null) return;
@@ -3607,7 +3650,7 @@
           (value.value !== undefined && (typeof value.value === "string" || typeof value.value === "number"))
         );
         if (hasTagShape) {
-          pushToken(shapedToken);
+          pushTokensFromRaw(shapedToken);
           return;
         }
         const values = Object.values(value);
@@ -3621,11 +3664,7 @@
         }
         return;
       }
-      String(value)
-        .split(/[,;|]/)
-        .map((part) => part.trim())
-        .filter(Boolean)
-        .forEach(pushToken);
+      pushTokensFromRaw(value);
     };
     sources.forEach(visit);
     return tags;
