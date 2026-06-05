@@ -6,6 +6,7 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
 
+- Economy item detail hashtag chips use SUSEMono weight 200 with a soft light-blue tint for chip text (lighter than item code values).
 - Economy item detail hashtag chips render in the description block again (after short/details copy, before stats/metadata), not in the bottom metadata table, on `/games` and public profile lightboxes.
 - Emergency regression fix: economy item detail modals again show associated tags as slim `#hashtag` chips after the prior chip pass stopped rendering tags when payloads used nested definition/metadata fields, object-shaped tag arrays, or alternate tag field names.
 - Public and profile economy item detail lightboxes render associated tags as slim `#hashtag` chips instead of plaintext comma-separated lines; item code values use scoped `SUSEMono` with a subtle blue tint; modal quantity inputs use dark-themed native spinner styling.
