@@ -3274,7 +3274,7 @@
     if (!row || !popover) return;
     const rect = row.getBoundingClientRect();
     const spacing = 10;
-    const width = Math.min(400, Math.max(280, window.innerWidth - 32));
+    const width = Math.min(560, Math.max(320, window.innerWidth - 32));
     popover.style.width = `${width}px`;
     const measuredHeight = popover.offsetHeight || 150;
     const topSpace = rect.top;
@@ -3430,6 +3430,142 @@
     };
   }
 
+  function firstPresent(...values) {
+    for (const value of values) {
+      if (value === undefined || value === null) continue;
+      if (Array.isArray(value)) {
+        if (value.length) return value;
+        continue;
+      }
+      if (typeof value === "object") return value;
+      const textValue = String(value).trim();
+      if (textValue) return value;
+    }
+    return "";
+  }
+
+  function appendItemDetailRow(target, label, value) {
+    if (!target) return;
+    if (Array.isArray(value)) {
+      const filtered = value.map((item) => String(item || "").trim()).filter(Boolean);
+      if (!filtered.length) return;
+      value = filtered.join(", ");
+    }
+    const textValue = value === undefined || value === null ? "" : String(value).trim();
+    if (!textValue) return;
+    target.append(create("dt", "", label), create("dd", "", textValue));
+  }
+
+  function formatItemDetailValue(value) {
+    if (value === true) return "Yes";
+    if (value === false) return "No";
+    if (Array.isArray(value)) return value.map(formatItemDetailValue).filter(Boolean).join(", ");
+    if (value && typeof value === "object") {
+      return Object.entries(value)
+        .filter(([, entryValue]) => entryValue !== undefined && entryValue !== null && String(entryValue).trim() !== "")
+        .map(([key, entryValue]) => `${formatLabel(key)}: ${formatItemDetailValue(entryValue)}`)
+        .join(" / ");
+    }
+    if (typeof value === "number") return formatNumber(value);
+    return String(value || "").trim();
+  }
+
+  function normalizeEconomyItemLightboxData(item = {}, options = {}) {
+    const definition = item.definition && typeof item.definition === "object" ? item.definition : {};
+    const metadata = item.metadata && typeof item.metadata === "object" ? item.metadata : {};
+    const publicMetadata = definition.public_metadata || item.public_metadata || {};
+    const kind = options.kind || "market";
+    const label = String(firstPresent(
+      item.label,
+      item.display_name,
+      item.displayName,
+      item.item_name,
+      definition.label,
+      definition.display_name,
+      item.plural_label,
+      item.item_code,
+      item.asset_code,
+      item.denomination_code,
+      "Item"
+    )).trim();
+    const description = String(firstPresent(
+      item.short_description,
+      item.description,
+      definition.short_description,
+      definition.description,
+      publicMetadata.short_description,
+      item.tooltip_description,
+      definition.tooltip_description,
+      publicMetadata.tooltip_description,
+      ""
+    )).trim();
+    const details = String(firstPresent(
+      item.long_description,
+      item.public_details,
+      item.details,
+      item.tooltip_public_details,
+      item.tooltip_description,
+      definition.tooltip_public_details,
+      definition.tooltip_description,
+      publicMetadata.tooltip_public_details,
+      publicMetadata.tooltip_description,
+      item.contextual_public_note,
+      definition.contextual_public_note,
+      publicMetadata.contextual_public_note,
+      ""
+    )).trim();
+    const quantity = firstPresent(item.quantity, item.count, item.held_quantity, item.balance_count);
+    const amount = firstPresent(item.value_total_credits, item.balance_total_credits, item.balance_current, item.amount, item.value_in_credits);
+    const category = firstPresent(item.category_label, item.category, definition.category_label, definition.category, item.item_type, item.type, definition.type);
+    const rarity = firstPresent(item.rarity, item.tier, item.grade, definition.rarity, definition.tier, definition.grade);
+    const itemCode = firstPresent(item.item_code, item.asset_code, item.denomination_code, definition.item_code);
+    const imagePath = economyItemImagePath(item) || economyDenominationIconPath(item) || definition.icon_url || definition.icon_path || "";
+    const chips = [
+      kind === "wallet" ? "Wallet" : kind === "inventory" ? "Inventory" : economyItemActionLabel(item, options),
+      category ? categoryDisplayLabel(category) : "",
+      rarity ? toTitle(rarity) : ""
+    ].filter(Boolean);
+    const stats = [];
+    const addStat = (labelText, value) => {
+      const formatted = formatItemDetailValue(value);
+      if (formatted) stats.push({ label: labelText, value: formatted });
+    };
+    addStat(kind === "wallet" ? "Wallet amount" : "Held", quantity);
+    addStat("Balance / value", amount);
+    addStat("Unit value", firstPresent(item.unit_value, item.value_in_credits, item.currency_value, definition.currency_value));
+    addStat("Exchange value", firstPresent(item.exchange_value_stekels, item.exchange_value, item.exchange_value_credits, definition.exchange_value));
+    addStat("Price", firstPresent(item.market_price_stekels, item.price, item.price_credits, definition.market_price_stekels));
+    addStat("Stock", item.unlimited_stock ? "Unlimited" : firstPresent(item.stock, item.stock_limit, item.max_quantity, item.purchase_limit));
+    const meta = [];
+    const addMeta = (labelText, value) => {
+      const formatted = formatItemDetailValue(value);
+      if (formatted) meta.push({ label: labelText, value: formatted });
+    };
+    addMeta("Item code", itemCode);
+    addMeta("Slug / ID", firstPresent(item.slug, item.id, item.asset_id, item.image_asset_id, item.image_asset_key));
+    addMeta("Chat alias", firstPresent(item.chat_alias, definition.chat_alias, publicMetadata.chat_alias, item.alias, item.command_alias));
+    addMeta("Category", category ? categoryDisplayLabel(category) : "");
+    addMeta("Rarity / tier", rarity ? toTitle(rarity) : "");
+    addMeta("Availability", kind === "market" ? economyItemAvailabilityLabel(item, options) : firstPresent(item.availability, item.availability_state, item.limited_state));
+    addMeta("Enabled", firstPresent(item.is_enabled, definition.is_enabled, item.public_tooltip_enabled, definition.public_tooltip_enabled));
+    addMeta("Source", firstPresent(item.source, item.provider, item.origin, item.source_domain, item.source_action));
+    addMeta("Version", firstPresent(item.version, item.export_version, item.schema_version, metadata.version));
+    addMeta("Updated", firstPresent(item.updated_at, item.modified_at, item.exported_at, item.created_at));
+    addMeta("Tags", firstPresent(item.tags, item.chips, item.attributes, metadata.tags));
+    return {
+      raw: item,
+      kind,
+      title: label || "Item",
+      imagePath,
+      fallbackText: String(label || "?").slice(0, 1).toUpperCase(),
+      description,
+      details,
+      chips,
+      stats,
+      meta
+    };
+  }
+
   function wireItemInfoTrigger(row) {
     markItemInfoRow(row, "closed");
     row.addEventListener("mouseenter", () => activateItemInfo(row, "hover"));
@@ -3446,9 +3582,8 @@
     });
     row.addEventListener("click", (event) => {
       event.stopPropagation();
-      const pinned = itemInfoController.activeRow === row && itemInfoController.activeMode === "pinned";
       closeActiveItemInfo(document);
-      if (!pinned) activateItemInfo(row, "pinned");
+      openEconomyItemLightbox(row.__streamsuitesItemInfoRaw || row.__streamsuitesItemInfo || {}, { kind: row.dataset.itemInfoKind || "item" }, row);
     });
     row.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
@@ -3717,6 +3852,7 @@
       const info = normalizeItemInfo(entry.itemInfo || entry);
       if (info.enabled !== false) {
         row.__streamsuitesItemInfo = info;
+        row.__streamsuitesItemInfoRaw = entry.itemInfo || entry;
         row.dataset.itemInfoTrigger = "true";
         row.setAttribute("data-item-info-trigger", "true");
         wireItemInfoTrigger(row);
@@ -8772,55 +8908,62 @@
     ).trim();
   }
 
-  function openMarketItemLightbox(item = {}, options = {}, sourceElement = null) {
+  function openEconomyItemLightbox(item = {}, options = {}, sourceElement = null) {
     const itemOptions = economyItemEffectiveOptions(item, options);
+    if (options.kind && !itemOptions.kind) itemOptions.kind = options.kind;
+    const detail = normalizeEconomyItemLightboxData(item, itemOptions);
     const previousFocus = sourceElement || document.activeElement;
     document.querySelectorAll("[data-market-item-lightbox]").forEach((node) => node.remove());
     const overlay = create("div", "market-item-lightbox-backdrop");
     overlay.dataset.marketItemLightbox = "";
     overlay.setAttribute("role", "dialog");
     overlay.setAttribute("aria-modal", "true");
-    overlay.setAttribute("aria-label", `${economyItemTitle(item)} item details`);
+    overlay.setAttribute("aria-label", `${detail.title} item details`);
 
     const panel = create("div", "market-item-lightbox");
     const close = create("button", "market-item-lightbox-close", "Close");
     close.type = "button";
     close.setAttribute("aria-label", "Close item details");
-    const media = buildEconomyItemMedia(item, "market-item-lightbox-media");
+    const media = detail.imagePath
+      ? buildEconomyItemMedia({ ...item, image_path: detail.imagePath, icon_path: detail.imagePath }, "market-item-lightbox-media")
+      : buildEconomyItemMedia(item, "market-item-lightbox-media");
     const body = create("div", "market-item-lightbox-body");
-    const category = economyItemCategoryLabel(item);
-    const rarity = economyItemRarityLabel(item);
     const chips = create("div", "market-item-lightbox-chips");
-    chips.appendChild(create("span", "", category));
-    if (rarity) chips.appendChild(create("span", "", rarity));
-    const title = create("h2", "", economyItemTitle(item));
-    const price = buildMarketPriceDisplay(item, itemOptions, { className: "market-item-lightbox-price", showLabel: true });
-    price.dataset.marketLightboxPrice = "";
-    const shortDescription = create("p", "market-item-lightbox-description", economyItemDescription(item));
-    const detailText = economyItemDetailsText(item);
-    const detailCopy = create("p", "market-item-lightbox-details", detailText || "No additional public details are available for this item.");
-    const meta = create("dl", "market-item-lightbox-meta");
-    const addMeta = (label, value) => {
-      const text = String(value || "").trim();
-      if (!text) return;
-      meta.append(create("dt", "", label), create("dd", "", text));
-    };
-    addMeta("Item code", item.item_code || item.asset_code);
-    addMeta("Chat alias", item.chat_alias || item.alias || item.command_alias);
-    addMeta("Availability", economyItemAvailabilityLabel(item, itemOptions) || (item.unlimited_stock ? "No stock limit" : ""));
-    const controls = buildMarketExchangeControls(item, itemOptions, {
-      available: economyItemActionLabel(item, itemOptions) === "Exchange" ? economyItemCanExchange(item, itemOptions) : economyItemCanBuy(item)
+    detail.chips.forEach((chip) => chips.appendChild(create("span", "", chip)));
+    const title = create("h2", "", detail.title);
+    const shortDescription = create("p", "market-item-lightbox-description", detail.description || ITEM_INFO_FALLBACK_DESCRIPTION);
+    const detailCopy = create("p", "market-item-lightbox-details", detail.details || "No additional public details are available for this item.");
+    const stats = create("div", "market-item-lightbox-stats");
+    detail.stats.forEach((stat) => {
+      const card = create("div", "market-item-lightbox-stat");
+      card.append(create("span", "", stat.label), create("strong", "", stat.value));
+      stats.appendChild(card);
     });
-    controls.classList.add("market-item-lightbox-actions");
-    body.append(chips, title, price, shortDescription, detailCopy);
+    const meta = create("dl", "market-item-lightbox-meta");
+    detail.meta.forEach((row) => appendItemDetailRow(meta, row.label, row.value));
+    body.append(chips, title);
+    if (detail.kind === "market") {
+      const price = buildMarketPriceDisplay(item, itemOptions, { className: "market-item-lightbox-price", showLabel: true });
+      price.dataset.marketLightboxPrice = "";
+      body.appendChild(price);
+    }
+    body.append(shortDescription, detailCopy);
+    if (stats.childElementCount) body.appendChild(stats);
     if (meta.childElementCount) body.appendChild(meta);
-    body.appendChild(controls);
+    if (detail.kind === "market") {
+      const controls = buildMarketExchangeControls(item, itemOptions, {
+        available: economyItemActionLabel(item, itemOptions) === "Exchange" ? economyItemCanExchange(item, itemOptions) : economyItemCanBuy(item)
+      });
+      controls.classList.add("market-item-lightbox-actions");
+      body.appendChild(controls);
+    }
     panel.append(close, media, body);
     overlay.appendChild(panel);
 
     const closeLightbox = () => {
       document.removeEventListener("keydown", onKeydown);
       overlay.remove();
+      document.body?.classList?.remove("market-item-lightbox-open");
       if (previousFocus?.focus) previousFocus.focus({ preventScroll: true });
     };
     const onKeydown = (event) => {
@@ -8845,7 +8988,12 @@
     });
     document.addEventListener("keydown", onKeydown);
     document.body.appendChild(overlay);
+    document.body?.classList?.add("market-item-lightbox-open");
     close.focus({ preventScroll: true });
+  }
+
+  function openMarketItemLightbox(item = {}, options = {}, sourceElement = null) {
+    openEconomyItemLightbox(item, { ...options, kind: "market" }, sourceElement);
   }
 
   function wireMarketItemDetailsTrigger(trigger, item = {}, options = {}) {

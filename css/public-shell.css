@@ -8771,9 +8771,9 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   top: 12px;
   z-index: 140;
   display: none;
-  grid-template-columns: 80px minmax(0, 1fr);
+  grid-template-columns: 160px minmax(0, 1fr);
   gap: 14px;
-  width: min(400px, calc(100vw - 40px));
+  width: min(560px, calc(100vw - 32px));
   padding: 12px;
   border: 1px solid rgba(183, 215, 255, 0.22);
   border-radius: 12px;
@@ -8792,15 +8792,15 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 .item-info-popover-media {
   display: grid;
   place-items: center;
-  width: 80px;
-  height: 80px;
+  width: 160px;
+  height: 160px;
   border-radius: 10px;
   background: rgba(125, 184, 255, 0.12);
 }
 
 .item-info-popover-icon {
-  width: 70px;
-  height: 70px;
+  width: 140px;
+  height: 140px;
   object-fit: contain;
 }
 
@@ -10113,6 +10113,10 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   backdrop-filter: blur(14px);
 }
 
+.market-item-lightbox-open {
+  overflow: hidden;
+}
+
 .market-item-lightbox {
   position: relative;
   width: min(980px, calc(100vw - 48px));
@@ -10254,6 +10258,34 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   background: rgba(15, 23, 42, 0.5);
 }
 
+.market-item-lightbox-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  gap: 8px;
+}
+
+.market-item-lightbox-stat {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(154, 209, 255, 0.15);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.market-item-lightbox-stat span {
+  color: rgba(213, 226, 245, 0.62);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+}
+
+.market-item-lightbox-stat strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: rgba(248, 251, 255, 0.94);
+}
+
 .market-item-lightbox-meta dt,
 .market-item-lightbox-meta dd {
   margin: 0;
@@ -10326,6 +10358,21 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
   .market-item-lightbox-meta {
     grid-template-columns: 1fr;
+  }
+
+  .item-info-popover {
+    grid-template-columns: 104px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .item-info-popover-media {
+    width: 104px;
+    height: 104px;
+  }
+
+  .item-info-popover-icon {
+    width: 92px;
+    height: 92px;
   }
 
   .public-economy-exchange-form {

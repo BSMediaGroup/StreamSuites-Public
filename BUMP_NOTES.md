@@ -6,6 +6,12 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
 
+- Public `/games` wallet and inventory entries now open the shared maximum-detail economy item lightbox on click/tap or Enter/Space while preserving hover/focus tooltips.
+- Wallet/inventory tooltip media was enlarged from the previous 80px/70px presentation to a 160px media well with 140px item art, with a mobile clamp to prevent small-screen overflow.
+- The `/games` item detail lightbox now uses a presentation-only normalizer for market, inventory, and wallet/currency rows so it can show available titles, imagery, descriptions, quantities, balances, values, availability, source/version/timestamp metadata, tags, and other returned public-safe fields without inventing empty rows.
+- Existing market/shop lightbox behavior remains backed by the same Runtime/Auth market payload and continues to render buy/exchange controls only for market items.
+- Human note: players can inspect wallet units and held inventory like premium game items, but Public still does not own balances, inventory, pricing, exchange rules, availability, or mutations.
+
 - Public `/games` now uses the fixed Public shell topbar search for shop, market, and exchange catalog filtering, with an explicit clear/reset button shared with the existing shell search pattern.
 - `/games` market results now support Gallery, Condensed, and Compact view modes. Gallery remains the default, while Condensed/Compact hide in-card descriptions and reveal buy/exchange/details actions on hover or keyboard focus.
 - Market result paging now defaults to 50 results per page with 20/50/100 page-size options, truthful result summaries, and safe page resets when search, view, or page-size settings change.
