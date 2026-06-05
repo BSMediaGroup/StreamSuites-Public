@@ -953,6 +953,11 @@ test("public economy item lightbox renders hashtag tag chips and scoped item cod
   assert.match(app, /tags: item\.tags \|\| definition\.tags \|\| \[\]/);
   assert.match(app, /function enrichEconomyCatalogItems\(/);
   assert.match(app, /return enrichEconomyCatalogItems\(\[\.\.\.market, \.\.\.exchangeOnly\], payload\)/);
+  assert.match(app, /PUBLIC_ITEM_CATALOG_TAGS_URL = "\/assets\/data\/public-item-catalog-tags\.json"/);
+  assert.match(app, /function ensurePublicItemCatalogTagIndex\(/);
+  assert.match(app, /function hydrateEconomyCatalogItemForLightbox\(/);
+  assert.match(app, /catalogPayload: payload/);
+  assert.match(app, /hydrateEconomyCatalogItemForLightbox\(navigationItems\[currentIndex\]/);
 
   assert.match(app, /definition:\s*\{[\s\S]*tags: definition\.tags \|\| item\.tags \|\| \[\]/);
   assert.match(app, /tags: item\.tags \|\| definition\.tags \|\| \[\]/);
