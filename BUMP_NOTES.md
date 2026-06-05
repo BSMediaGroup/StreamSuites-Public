@@ -6,7 +6,8 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
 
-- Public and profile economy item detail lightboxes now render associated tags as slim `#hashtag` chips instead of plaintext comma-separated lines; item code values use scoped `SUSEMono` with a subtle blue tint; modal quantity inputs use dark-themed native spinner styling.
+- Emergency regression fix: economy item detail modals again show associated tags as slim `#hashtag` chips after the prior chip pass stopped rendering tags when payloads used nested definition/metadata fields, object-shaped tag arrays, or alternate tag field names.
+- Public and profile economy item detail lightboxes render associated tags as slim `#hashtag` chips instead of plaintext comma-separated lines; item code values use scoped `SUSEMono` with a subtle blue tint; modal quantity inputs use dark-themed native spinner styling.
 - Technical note: tag chip rendering is presentation-only and consumes existing Runtime/Auth tag/chip/attribute fields already exposed to the shared lightbox normalizer; navigation, currency masks, timestamp formatting, and market action payloads are unchanged.
 - Human note: More Details on `/games`, wallet/inventory rows, and public profile economy rows should show premium tag chips and monospace item codes without changing buy/exchange behavior.
 

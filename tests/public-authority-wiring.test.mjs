@@ -820,7 +820,8 @@ test("public economy item lightbox normalizes wallet inventory profile and marke
   vm.runInNewContext(`${snippet}
 this.normalizeEconomyItemLightboxData = normalizeEconomyItemLightboxData;
 this.fallbackEconomyItemLightboxData = fallbackEconomyItemLightboxData;
-this.formatEconomyDetailTimestamp = formatEconomyDetailTimestamp;`, context, { filename: "item-lightbox-normalizer.js" });
+this.formatEconomyDetailTimestamp = formatEconomyDetailTimestamp;
+this.normalizeItemDetailTags = normalizeItemDetailTags;`, context, { filename: "item-lightbox-normalizer.js" });
 
   const walletDetail = context.normalizeEconomyItemLightboxData({
     denomination_code: "currency.coin",
@@ -869,20 +870,41 @@ this.formatEconomyDetailTimestamp = formatEconomyDetailTimestamp;`, context, { f
   assert.ok(fallbackDetail.chips.includes("Inventory"));
   assert.equal(context.formatEconomyDetailTimestamp("2026-06-06T03:44:17Z"), "June 6th, 2026 at 03:44am UTC");
   assert.equal(context.formatEconomyDetailTimestamp("not-a-date"), "not-a-date");
+
+  const commaTagsDetail = context.normalizeEconomyItemLightboxData({
+    item_code: "vehicle.limo",
+    label: "Limo",
+    tags: "limo, limousine, Cadillac"
+  }, { kind: "market" });
+  const commaTagRow = commaTagsDetail.meta.find((row) => row.variant === "tags");
+  assert.ok(commaTagRow);
+  assert.equal(commaTagRow.tags.join("|"), "limo|limousine|cadillac");
+  assert.equal(commaTagsDetail.meta.find((row) => row.label === "Tags" && row.value), undefined);
+
+  const nestedDefinitionTags = context.normalizeEconomyItemLightboxData({
+    item_code: "vehicle.limo",
+    definition: { tags: ["#Limo", { label: "Cadillac" }] }
+  }, { kind: "inventory" });
+  const nestedTagRow = nestedDefinitionTags.meta.find((row) => row.variant === "tags");
+  assert.ok(nestedTagRow);
+  assert.equal(nestedTagRow.tags.join("|"), "limo|cadillac");
+
+  assert.equal(context.normalizeItemDetailTags("A, a, B").join("|"), "a|b");
 });
 
 test("public economy item lightbox renders hashtag tag chips and scoped item code styling", () => {
   const app = read("js/public-pages-app.js");
   const css = read("css/public-shell.css");
 
-  assert.match(app, /function normalizeItemDetailTags\(value\)/);
+  assert.match(app, /function collectEconomyItemDetailTagSources\(/);
+  assert.match(app, /function normalizeItemDetailTags\(\.\.\.sources\)/);
   assert.match(app, /function buildEconomyItemTagChips\(tags = \[\]\)/);
   assert.match(app, /economyItemTagChipLabel\(tag\)/);
   assert.match(app, /variant: "tags"/);
   assert.match(app, /variant: "item-code"/);
   assert.match(app, /create\("dd", "economy-item-code-value", row\.value\)/);
   assert.match(app, /buildEconomyItemTagChips\(row\.tags\)/);
-  assert.match(app, /addMeta\("Tags",[\s\S]*\{ tags: true \}/);
+  assert.match(app, /const detailTags = normalizeItemDetailTags\(\.\.\.collectEconomyItemDetailTagSources/);
   assert.match(css, /\.economy-item-tag-chip\s*\{/);
   assert.match(css, /\.market-item-lightbox \.economy-item-code-value\s*\{[\s\S]*SUSEMono/);
   assert.match(css, /\.market-item-lightbox \.market-exchange-quantity\s*\{[\s\S]*color-scheme:\s*dark/);
