@@ -45,6 +45,10 @@
   const AUTH_PUBLIC_PROGRESSION_PROFILE_URL = `${AUTH_API_BASE}/api/public/progression/profile`;
   const AUTH_PUBLIC_ECONOMY_ME_URL = `${AUTH_API_BASE}/api/public/economy/me`;
   const AUTH_PUBLIC_ECONOMY_EXCHANGE_URL = `${AUTH_API_BASE}/api/public/economy/me/exchange`;
+  const PUBLIC_ITEM_CATALOG_TAGS_URL = "/assets/data/public-item-catalog-tags.json";
+  let publicItemCatalogTagIndex = null;
+  let publicItemCatalogTagIndexPromise = null;
+
   const AUTH_PUBLIC_MARKET_EXCHANGE_URL = `${AUTH_API_BASE}/api/public/economy/market-exchange`;
   const AUTH_PUBLIC_MARKET_EXCHANGE_POST_URL = `${AUTH_API_BASE}/api/public/economy/exchange`;
   const AUTH_PUBLIC_MARKET_BUY_URL = `${AUTH_API_BASE}/api/public/economy/market/buy`;
@@ -9113,6 +9117,68 @@
     return next;
   }
 
+  async function ensurePublicItemCatalogTagIndex() {
+    if (publicItemCatalogTagIndex instanceof Map) return publicItemCatalogTagIndex;
+    if (!publicItemCatalogTagIndexPromise) {
+      publicItemCatalogTagIndexPromise = fetch(PUBLIC_ITEM_CATALOG_TAGS_URL, { cache: "no-store" })
+        .then((response) => (response.ok ? response.json() : {}))
+        .catch(() => ({}))
+        .then((payload) => {
+          publicItemCatalogTagIndex = new Map();
+          Object.entries(payload || {}).forEach(([itemCode, tags]) => {
+            const code = String(itemCode || "").trim();
+            if (!code || !Array.isArray(tags) || !tags.length) return;
+            publicItemCatalogTagIndex.set(code, {
+              tags,
+              definition: { item_code: code, tags }
+            });
+          });
+          return publicItemCatalogTagIndex;
+        });
+    }
+    return publicItemCatalogTagIndexPromise;
+  }
+
+  function mergeEconomyItemTagIndexes(...indexes) {
+    const merged = new Map();
+    indexes.forEach((index) => {
+      if (!(index instanceof Map)) return;
+      index.forEach((value, key) => {
+        const existing = merged.get(key) || { tags: [], definition: {} };
+        const tags = Array.isArray(value?.tags) && value.tags.length ? value.tags : existing.tags;
+        merged.set(key, {
+          tags,
+          definition: {
+            ...existing.definition,
+            ...(value?.definition && typeof value.definition === "object" ? value.definition : {}),
+            item_code: key,
+            tags
+          }
+        });
+      });
+    });
+    return merged;
+  }
+
+  function economyCatalogItemCode(item = {}) {
+    return String(item?.item_code || item?.asset_code || item?.denomination_code || "").trim();
+  }
+
+  function findEconomyCatalogNavigationIndex(items = [], item = {}) {
+    const code = economyCatalogItemCode(item);
+    if (!code) return items.indexOf(item);
+    const byCode = items.findIndex((entry) => economyCatalogItemCode(entry) === code);
+    return byCode >= 0 ? byCode : items.indexOf(item);
+  }
+
+  function hydrateEconomyCatalogItemForLightbox(item = {}, options = {}) {
+    const tagIndex = mergeEconomyItemTagIndexes(
+      publicItemCatalogTagIndex,
+      buildEconomyItemTagIndex(options.catalogPayload || {})
+    );
+    return enrichEconomyCatalogItem(item, tagIndex);
+  }
+
   function buildEconomyItemTagIndex(payload = {}) {
     const index = new Map();
     (Array.isArray(payload?.inventory) ? payload.inventory : []).forEach((entry) => {
@@ -9412,12 +9478,14 @@
   }
 
   function openEconomyItemLightbox(item = {}, options = {}, sourceElement = null) {
-    const navigationItems = Array.isArray(options.navigationItems) ? options.navigationItems.filter(Boolean) : [];
-    let currentItem = item || {};
-    let currentIndex = Number.isFinite(Number(options.navigationIndex)) ? Number(options.navigationIndex) : navigationItems.indexOf(currentItem);
+    const rawNavigationItems = Array.isArray(options.navigationItems) ? options.navigationItems.filter(Boolean) : [];
+    const navigationItems = rawNavigationItems.map((entry) => hydrateEconomyCatalogItemForLightbox(entry, options));
+    let currentItem = hydrateEconomyCatalogItemForLightbox(item || {}, options);
+    let currentIndex = Number.isFinite(Number(options.navigationIndex))
+      ? Number(options.navigationIndex)
+      : findEconomyCatalogNavigationIndex(rawNavigationItems, item);
     if (currentIndex < 0 && navigationItems.length) {
-      const currentCode = String(currentItem.item_code || currentItem.asset_code || currentItem.denomination_code || "").trim();
-      currentIndex = navigationItems.findIndex((entry) => String(entry?.item_code || entry?.asset_code || entry?.denomination_code || "").trim() === currentCode);
+      currentIndex = findEconomyCatalogNavigationIndex(navigationItems, currentItem);
     }
     if (currentIndex < 0) currentIndex = 0;
     const previousFocus = sourceElement || document.activeElement;
@@ -9441,7 +9509,7 @@
     nextButton.dataset.marketLightboxNext = "";
     const content = create("div", "market-item-lightbox-content");
     const renderCurrentItem = () => {
-      currentItem = navigationItems[currentIndex] || currentItem || {};
+      currentItem = hydrateEconomyCatalogItemForLightbox(navigationItems[currentIndex] || currentItem || {}, options);
       const itemOptions = economyItemEffectiveOptions(currentItem, options);
       if (options.kind && !itemOptions.kind) itemOptions.kind = options.kind;
       let detail;
@@ -9568,17 +9636,15 @@
   function wireMarketItemDetailsTrigger(trigger, item = {}, options = {}) {
     trigger.dataset.marketItemDetailsTrigger = "";
     const navigationItems = Array.isArray(options.navigationItems) ? options.navigationItems : [];
-    const navigationIndex = navigationItems.indexOf(item);
-    trigger.addEventListener("click", (event) => {
+    const navigationIndex = findEconomyCatalogNavigationIndex(navigationItems, item);
+    const openDetails = (event) => {
       event.preventDefault();
       event.stopPropagation();
       openMarketItemLightbox(item, { ...options, navigationItems, navigationIndex }, trigger);
-    });
+    };
+    trigger.addEventListener("click", openDetails);
     trigger.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        openMarketItemLightbox(item, { ...options, navigationItems, navigationIndex }, trigger);
-      }
+      if (event.key === "Enter" || event.key === " ") openDetails(event);
     });
   }
 
@@ -9718,6 +9784,7 @@
         title: "Exchange",
         subtitle: "Convert eligible held items into Stekels",
         items: exchangeItems,
+        catalogPayload: payload,
         authReady: Boolean(payload?.authenticated),
         actionLabel: "Exchange",
         valueLabel: "Value",
@@ -9758,6 +9825,7 @@
         title: "Market",
         subtitle: "Runtime shop catalog",
         items: buildGamesStorefrontItems(payload),
+        catalogPayload: payload,
         authReady: Boolean(payload?.authenticated),
         actionLabel: "Buy",
         valueLabel: "Price",
@@ -9810,6 +9878,7 @@
 
     const load = async () => {
       try {
+        await ensurePublicItemCatalogTagIndex();
         if (gamesState.payload && gamesState.authReady === authReady) {
           renderPayload(gamesState.payload);
           return;
@@ -9875,6 +9944,7 @@
         title: "Exchange",
         subtitle: "Convert eligible held items into Stekels",
         items: enrichEconomyCatalogItems(payload?.exchange || [], payload),
+        catalogPayload: payload,
         authReady: Boolean(payload?.authenticated),
         actionLabel: "Exchange",
         valueLabel: "Value",
@@ -9893,6 +9963,7 @@
         title: "Market",
         subtitle: "Spend Stekels on items",
         items: enrichEconomyCatalogItems(payload?.market || [], payload),
+        catalogPayload: payload,
         authReady: Boolean(payload?.authenticated),
         actionLabel: "Buy",
         valueLabel: "Price",
@@ -9910,6 +9981,7 @@
 
     const load = async () => {
       try {
+        await ensurePublicItemCatalogTagIndex();
         const payload = await fetchPublicMarketExchange();
         renderPayload(payload);
       } catch (error) {
