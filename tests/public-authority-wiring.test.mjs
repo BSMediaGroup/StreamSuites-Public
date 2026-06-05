@@ -900,11 +900,36 @@ test("public games exchange section hydrates exchange-capable payload rows into 
   assert.match(app, /appendPublicExchangeItems\(rows, payload\?\.public_item_definitions/);
   assert.match(app, /appendPublicExchangeItems\(rows, payload\?\.market/);
   assert.match(app, /isEconomyExchangeCapableItem/);
-  assert.match(app, /items: buildGamesExchangeItems\(payload\)/);
+  assert.match(app, /items: exchangeItems/);
   assert.match(app, /if \(!groups\.length\) wanted\.forEach/);
   assert.match(css, /\.market-exchange-category-layout\s*\{[\s\S]*minmax\(min\(100%, 360px\), 1fr\)/);
+  assert.match(css, /\.market-exchange-category-layout\s*\{[\s\S]*align-items:\s*start/);
+  assert.match(css, /\.market-exchange-category-card\s*\{[\s\S]*align-self:\s*start/);
+  assert.match(css, /\.market-exchange-category-rows\s*\{[\s\S]*align-content:\s*start/);
   assert.match(css, /\.market-exchange-category-rows \.market-exchange-item-card\s*\{[\s\S]*grid-template-columns:\s*58px minmax\(0, 1fr\)/);
   assert.match(app, /wireMarketItemDetailsTrigger\(detailsButton, item, itemOptions\)/);
+});
+
+test("public games exchange section paginates categories independently with gems and currency first", () => {
+  const app = read("js/public-pages-app.js");
+  const css = read("css/public-shell.css");
+
+  assert.match(app, /GAMES_EXCHANGE_CATEGORY_PAGE_SIZE_OPTIONS = Object\.freeze\(\[5, 10, 25, 50\]\)/);
+  assert.match(app, /GAMES_EXCHANGE_DEFAULT_CATEGORY_PAGE_SIZE = 5/);
+  assert.match(app, /function sortExchangeCategoryGroups/);
+  assert.match(app, /function exchangeCategorySortRank/);
+  assert.match(app, /const wanted = \["Gems", "Currency"/);
+  assert.match(app, /sortExchangeCategoryGroups\([\s\S]*economyMarketGroups/);
+  assert.match(app, /buildExchangeCategoryPageSizeControl/);
+  assert.match(app, /Rows per category/);
+  assert.match(app, /buildExchangeCategoryPaginationControls/);
+  assert.match(app, /onExchangeCategoryPageChange/);
+  assert.match(app, /onExchangeCategoryPageSizeChange/);
+  assert.match(app, /gamesState\.exchangeCategoryPages = \{\}/);
+  assert.match(app, /allRows\.slice\(pageStart, pageStart \+ pageSize\)/);
+  assert.match(app, /totalRows > pageSize/);
+  assert.match(css, /\.market-exchange-page-size-toolbar/);
+  assert.match(css, /\.market-exchange-category-pagination/);
 });
 
 test("public economy item rows delegate click and keyboard activation to the lightbox", () => {

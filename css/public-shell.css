@@ -10004,10 +10004,13 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   display: grid;
   gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  align-items: start;
 }
 
 .market-exchange-category-card {
   min-width: 0;
+  align-self: start;
+  height: auto;
   display: grid;
   gap: 10px;
   padding: 12px;
@@ -10044,6 +10047,8 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 .market-exchange-category-rows {
   display: grid;
   gap: 8px;
+  align-content: start;
+  justify-items: stretch;
 }
 
 .market-exchange-category-rows .market-exchange-item-card {
@@ -10067,6 +10072,88 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   color: rgba(213, 226, 245, 0.68);
   font-size: 0.74rem;
   line-height: 1.4;
+}
+
+.market-exchange-page-size-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 12px;
+  width: 100%;
+}
+
+.market-exchange-page-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: rgba(213, 226, 245, 0.72);
+  font-size: 0.72rem;
+}
+
+.market-exchange-page-size-select {
+  min-height: 28px;
+  border: 1px solid rgba(154, 209, 255, 0.22);
+  border-radius: 6px;
+  padding: 0 8px;
+  background: rgba(8, 13, 22, 0.82);
+  color: #f6fbff;
+  font: inherit;
+  font-size: 0.72rem;
+}
+
+.market-exchange-category-range {
+  display: block;
+  grid-column: 1 / -1;
+  margin: 0;
+  color: rgba(213, 226, 245, 0.62);
+  font-size: 0.66rem;
+  line-height: 1.3;
+}
+
+.market-exchange-category-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(154, 209, 255, 0.12);
+}
+
+.market-exchange-category-pagination-summary {
+  color: rgba(213, 226, 245, 0.68);
+  font-size: 0.66rem;
+}
+
+.market-exchange-category-pagination-nav {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.market-exchange-category-pagination-button {
+  min-height: 26px;
+  border: 1px solid rgba(154, 209, 255, 0.22);
+  border-radius: 6px;
+  padding: 0 10px;
+  background: rgba(8, 13, 22, 0.72);
+  color: rgba(231, 239, 252, 0.86);
+  font: inherit;
+  font-size: 0.66rem;
+  cursor: pointer;
+}
+
+.market-exchange-category-pagination-button:hover:not(:disabled),
+.market-exchange-category-pagination-button:focus-visible:not(:disabled) {
+  border-color: rgba(154, 209, 255, 0.42);
+  color: #f6fbff;
+  outline: none;
+}
+
+.market-exchange-category-pagination-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .market-pagination {
@@ -10409,6 +10496,10 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   .market-view-toolbar {
     justify-self: stretch;
     justify-content: flex-end;
+  }
+
+  .market-exchange-page-size-toolbar {
+    justify-content: flex-start;
   }
 
   .market-gallery-card-grid {

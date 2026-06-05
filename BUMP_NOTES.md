@@ -6,6 +6,12 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
 
+- Public `/games` Exchange category cards now size to their own content instead of stretching to the tallest column in the grid row; item rows stay top-aligned inside each category card.
+- Exchange categories now paginate independently with a global `Rows per category` control (5/10/25/50, default 5), compact per-category Prev/Next controls, and truthful `Showing X-Y of Z` counts that do not reuse Market page-level pagination.
+- Exchange category ordering now prioritizes Gemstones/Gems first and Currency/Wallet/Stekels categories second before the existing logical category sort.
+- Technical note: exchange pagination is presentation-only and slices already-hydrated public-safe exchange rows per category; Runtime/Auth remains the authority for exchange eligibility, held quantities, values, and mutations.
+- Human note: Exchange should no longer show tall empty columns beside live categories, and large categories like Combat Vehicles can be browsed five rows at a time without affecting Gems or Currency paging.
+
 - Public `/games` and profile item detail lightboxes now use a compact header navigation group for Previous/Next instead of side-positioned controls, preserving disabled edge states, Left/Right navigation, Escape close, focus return, and mobile stacking without covering item art or copy.
 - Public lightbox currency/Stekel/Credit values now force the currentColor `currencyunit.svg` mask and numeric value back to high-contrast white in modal price, value, balance, unit value, and exchange/cost rows while leaving pure quantities and metadata unsymbolized.
 - Public `/games` Exchange now hydrates categories from existing public-safe exchange-capable payload rows across exchange arrays, market/catalog rows, and public item definitions, deduped by item code; empty Future-ready cards only appear when no live exchange-capable rows exist.

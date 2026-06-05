@@ -52,6 +52,8 @@
   const GAMES_MARKET_VIEW_STORAGE_KEY = "ss-public-games-market-view";
   const GAMES_MARKET_PAGE_SIZE_OPTIONS = Object.freeze([20, 50, 100]);
   const GAMES_MARKET_DEFAULT_PAGE_SIZE = 50;
+  const GAMES_EXCHANGE_CATEGORY_PAGE_SIZE_OPTIONS = Object.freeze([5, 10, 25, 50]);
+  const GAMES_EXCHANGE_DEFAULT_CATEGORY_PAGE_SIZE = 5;
   const ECONOMY_SECTION_BAR = Object.freeze({
     key: "economy",
     label: "Games and economy sections",
@@ -8844,6 +8846,38 @@
     return GAMES_MARKET_PAGE_SIZE_OPTIONS.includes(parsed) ? parsed : GAMES_MARKET_DEFAULT_PAGE_SIZE;
   }
 
+  function normalizeExchangeCategoryPageSize(value) {
+    const parsed = Number(value);
+    return GAMES_EXCHANGE_CATEGORY_PAGE_SIZE_OPTIONS.includes(parsed) ? parsed : GAMES_EXCHANGE_DEFAULT_CATEGORY_PAGE_SIZE;
+  }
+
+  function exchangeCategorySortRank(label = "") {
+    const raw = String(label || "").trim().toLowerCase();
+    if (/(^|\b)(gem|gems|gemstone|gemstones|diamond|diamonds|bullion)(\b|$)/.test(raw)) return 0;
+    if (/(^|\b)(currency|currencies|wallet|stekel|stekels|cash|coin|coins|banknote)(\b|$)/.test(raw)) return 1;
+    return 2;
+  }
+
+  function sortExchangeCategoryGroups(groups = []) {
+    return [...groups].sort((a, b) => {
+      const ar = exchangeCategorySortRank(a.label);
+      const br = exchangeCategorySortRank(b.label);
+      if (ar !== br) return ar - br;
+      return String(a.label || "").localeCompare(String(b.label || ""));
+    });
+  }
+
+  function clampExchangeCategoryPages(pages = {}, groups = [], pageSize) {
+    const normalizedPageSize = normalizeExchangeCategoryPageSize(pageSize);
+    const next = {};
+    (groups || []).forEach((group) => {
+      const label = String(group?.label || "Other");
+      const total = Array.isArray(group?.rows) ? group.rows.length : 0;
+      next[label] = clampMarketPage(pages?.[label], total, normalizedPageSize);
+    });
+    return next;
+  }
+
   function buildGamesStorefrontItems(payload = {}) {
     const market = Array.isArray(payload?.market) ? payload.market : [];
     const exchange = Array.isArray(payload?.exchange) ? payload.exchange : [];
@@ -8906,8 +8940,10 @@
   }
 
   function economyExchangeCategoryGroups(items = []) {
-    const wanted = ["Currency", "Gems", "Weapons", "Combat Vehicles", "Collectibles", "Equipment", "Materials", "Tools", "Other"];
-    const groups = economyMarketGroups(items).map((group) => ({ ...group, kind: group.label }));
+    const wanted = ["Gems", "Currency", "Weapons", "Combat Vehicles", "Collectibles", "Equipment", "Materials", "Tools", "Other"];
+    const groups = sortExchangeCategoryGroups(
+      economyMarketGroups(items).map((group) => ({ ...group, kind: group.label }))
+    );
     const present = new Set(groups.map((group) => group.label));
     if (!groups.length) wanted.forEach((label) => {
       if (!present.has(label)) groups.push({ label, rows: [], empty: true });
@@ -9371,11 +9407,17 @@
       viewMode: readGamesMarketViewMode(),
       marketPage: 1,
       marketPageSize: GAMES_MARKET_DEFAULT_PAGE_SIZE,
+      exchangeCategoryPageSize: GAMES_EXCHANGE_DEFAULT_CATEGORY_PAGE_SIZE,
+      exchangeCategoryPages: {},
       payload: null,
       authReady: null
     };
     gamesState.viewMode = ["gallery", "condensed", "compact"].includes(gamesState.viewMode) ? gamesState.viewMode : "gallery";
     gamesState.marketPageSize = normalizeMarketPageSize(gamesState.marketPageSize);
+    gamesState.exchangeCategoryPageSize = normalizeExchangeCategoryPageSize(gamesState.exchangeCategoryPageSize);
+    gamesState.exchangeCategoryPages = gamesState.exchangeCategoryPages && typeof gamesState.exchangeCategoryPages === "object"
+      ? gamesState.exchangeCategoryPages
+      : {};
     ctx.state.gamesEconomy = gamesState;
 
     const renderPayload = (payload) => {
@@ -9386,11 +9428,18 @@
       overviewSection.append(status, resultPanel);
       renderEconomyHubSummaryCards(overviewSection, payload, authReady);
       status.textContent = payload?.authenticated ? "Catalog, wallet, and inventory loaded from Runtime/Auth." : "Signed-out read-only catalog loaded from Runtime/Auth.";
+      const exchangeItems = buildGamesExchangeItems(payload);
+      const exchangeGroups = economyExchangeCategoryGroups(filterEconomyItems(exchangeItems, ctx.state.query, { actionLabel: "Exchange" }));
+      gamesState.exchangeCategoryPages = clampExchangeCategoryPages(
+        gamesState.exchangeCategoryPages,
+        exchangeGroups,
+        gamesState.exchangeCategoryPageSize
+      );
       renderMarketExchangeSection({
         host: exchangeSection,
         title: "Exchange",
         subtitle: "Convert eligible held items into Stekels",
-        items: buildGamesExchangeItems(payload),
+        items: exchangeItems,
         authReady: Boolean(payload?.authenticated),
         actionLabel: "Exchange",
         valueLabel: "Value",
@@ -9398,6 +9447,20 @@
         emptyText: "No exchangeable items are configured yet.",
         viewMode: "exchange",
         searchQuery: ctx.state.query,
+        exchangeCategoryPageSize: gamesState.exchangeCategoryPageSize,
+        exchangeCategoryPages: gamesState.exchangeCategoryPages,
+        onExchangeCategoryPageChange: (label, page) => {
+          gamesState.exchangeCategoryPages = {
+            ...gamesState.exchangeCategoryPages,
+            [label]: page
+          };
+          renderPayload(payload);
+        },
+        onExchangeCategoryPageSizeChange: (nextPageSize) => {
+          gamesState.exchangeCategoryPageSize = normalizeExchangeCategoryPageSize(nextPageSize);
+          gamesState.exchangeCategoryPages = {};
+          renderPayload(payload);
+        },
         onAction: async (item, quantity) => exchangePublicMarketItem({ itemCode: item.item_code, quantity, reasonText: "Public Games & Economy item exchange" }),
         onResult: (result) => {
           setResult(`Exchanged for ${formatNumber(result?.credits_granted || 0)} Stekels.`, "success");
@@ -9605,13 +9668,28 @@
     const pageItems = options.allowViewToggle
       ? filteredItems.slice((currentPage - 1) * pageSize, currentPage * pageSize)
       : filteredItems;
-    const summary = create("div", "market-results-summary");
-    const showingStart = filteredItems.length ? (currentPage - 1) * pageSize + 1 : 0;
-    const showingEnd = filteredItems.length ? Math.min(filteredItems.length, currentPage * pageSize) : 0;
-    summary.textContent = options.searchQuery
-      ? `Showing ${formatNumber(showingStart)}-${formatNumber(showingEnd)} of ${formatNumber(filteredItems.length)} matching ${formatNumber(items.length)} total.`
-      : `Showing ${formatNumber(showingStart)}-${formatNumber(showingEnd)} of ${formatNumber(items.length)}.`;
-    heading.appendChild(summary);
+    if (viewMode === "exchange") {
+      const toolbar = create("div", "market-exchange-page-size-toolbar");
+      toolbar.appendChild(buildExchangeCategoryPageSizeControl({
+        pageSize: normalizeExchangeCategoryPageSize(options.exchangeCategoryPageSize),
+        onPageSizeChange: options.onExchangeCategoryPageSizeChange
+      }));
+      heading.appendChild(toolbar);
+      const summary = create("div", "market-results-summary");
+      const categoryCount = economyExchangeCategoryGroups(filteredItems).length;
+      summary.textContent = options.searchQuery
+        ? `${formatNumber(filteredItems.length)} matching exchange item${filteredItems.length === 1 ? "" : "s"} across ${formatNumber(categoryCount)} categor${categoryCount === 1 ? "y" : "ies"} (${formatNumber(items.length)} total).`
+        : `${formatNumber(filteredItems.length)} exchangeable item${filteredItems.length === 1 ? "" : "s"} across ${formatNumber(categoryCount)} categor${categoryCount === 1 ? "y" : "ies"}.`;
+      heading.appendChild(summary);
+    } else {
+      const summary = create("div", "market-results-summary");
+      const showingStart = filteredItems.length ? (currentPage - 1) * pageSize + 1 : 0;
+      const showingEnd = filteredItems.length ? Math.min(filteredItems.length, currentPage * pageSize) : 0;
+      summary.textContent = options.searchQuery
+        ? `Showing ${formatNumber(showingStart)}-${formatNumber(showingEnd)} of ${formatNumber(filteredItems.length)} matching ${formatNumber(items.length)} total.`
+        : `Showing ${formatNumber(showingStart)}-${formatNumber(showingEnd)} of ${formatNumber(items.length)}.`;
+      heading.appendChild(summary);
+    }
 
     const listClass = viewMode === "exchange"
       ? "market-exchange-category-layout"
@@ -9660,22 +9738,84 @@
     return section;
   }
 
+  function buildExchangeCategoryPageSizeControl(options = {}) {
+    const pageSize = normalizeExchangeCategoryPageSize(options.pageSize);
+    const label = create("label", "market-exchange-page-size");
+    label.appendChild(create("span", "", "Rows per category"));
+    const select = create("select", "market-exchange-page-size-select");
+    GAMES_EXCHANGE_CATEGORY_PAGE_SIZE_OPTIONS.forEach((value) => {
+      const option = create("option", "", String(value));
+      option.value = String(value);
+      option.selected = value === pageSize;
+      select.appendChild(option);
+    });
+    select.addEventListener("change", () => options.onPageSizeChange?.(Number(select.value)));
+    label.appendChild(select);
+    return label;
+  }
+
+  function buildExchangeCategoryPaginationControls(options = {}) {
+    const total = Math.max(0, Number(options.total || 0));
+    const pageSize = normalizeExchangeCategoryPageSize(options.pageSize);
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const page = clampMarketPage(options.page, total, pageSize);
+    const controls = create("div", "market-exchange-category-pagination");
+    const showingStart = total ? (page - 1) * pageSize + 1 : 0;
+    const showingEnd = total ? Math.min(total, page * pageSize) : 0;
+    controls.appendChild(
+      create("span", "market-exchange-category-pagination-summary", `Showing ${formatNumber(showingStart)}-${formatNumber(showingEnd)} of ${formatNumber(total)}`)
+    );
+    const nav = create("div", "market-exchange-category-pagination-nav");
+    const prev = create("button", "market-exchange-category-pagination-button", "Prev");
+    const next = create("button", "market-exchange-category-pagination-button", "Next");
+    prev.type = "button";
+    next.type = "button";
+    prev.disabled = page <= 1;
+    next.disabled = page >= totalPages;
+    prev.addEventListener("click", () => options.onPageChange?.(page - 1));
+    next.addEventListener("click", () => options.onPageChange?.(page + 1));
+    nav.append(prev, next);
+    controls.appendChild(nav);
+    return controls;
+  }
+
   function buildExchangeCategoryGroup(group = {}, options = {}) {
     const section = create("section", `market-exchange-category-card${group.empty ? " is-empty" : ""}`);
     section.dataset.exchangeCategory = group.label || "Other";
+    const allRows = Array.isArray(group.rows) ? group.rows : [];
+    const pageSize = normalizeExchangeCategoryPageSize(options.exchangeCategoryPageSize);
+    const totalRows = allRows.length;
+    const currentPage = clampMarketPage(options.exchangeCategoryPages?.[group.label || "Other"], totalRows, pageSize);
+    const pageStart = (currentPage - 1) * pageSize;
+    const pageRows = group.empty ? [] : allRows.slice(pageStart, pageStart + pageSize);
     const heading = create("div", "market-exchange-category-heading");
     heading.append(
       create("span", "dashboard-card-kicker", group.empty ? "Future-ready" : "Exchange category"),
       create("h3", "", group.label || "Other"),
-      create("span", "market-category-count", group.empty ? "No live trades" : `${formatNumber((group.rows || []).length)} trade${(group.rows || []).length === 1 ? "" : "s"}`)
+      create("span", "market-category-count", group.empty ? "No live trades" : `${formatNumber(totalRows)} trade${totalRows === 1 ? "" : "s"}`)
     );
+    if (!group.empty && totalRows) {
+      const showingStart = pageStart + 1;
+      const showingEnd = pageStart + pageRows.length;
+      heading.appendChild(
+        create("span", "market-exchange-category-range", `Showing ${formatNumber(showingStart)}-${formatNumber(showingEnd)} of ${formatNumber(totalRows)}`)
+      );
+    }
     const rows = create("div", "market-exchange-category-rows");
     if (group.empty) {
       rows.appendChild(create("p", "market-exchange-category-empty", "No public exchange rules are available for this category yet."));
     } else {
-      (group.rows || []).forEach((item) => rows.appendChild(buildMarketExchangeItemCard(item, options)));
+      pageRows.forEach((item) => rows.appendChild(buildMarketExchangeItemCard(item, options)));
     }
     section.append(heading, rows);
+    if (!group.empty && totalRows > pageSize) {
+      section.appendChild(buildExchangeCategoryPaginationControls({
+        total: totalRows,
+        pageSize,
+        page: currentPage,
+        onPageChange: (nextPage) => options.onExchangeCategoryPageChange?.(group.label || "Other", nextPage)
+      }));
+    }
     return section;
   }
 
