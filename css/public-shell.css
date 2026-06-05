@@ -9858,9 +9858,9 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .market-item-price-icon {
   display: inline-block;
-  width: 22px;
-  height: 22px;
-  flex: 0 0 22px;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
   background: currentColor;
   -webkit-mask: var(--economy-currency-symbol) center / contain no-repeat;
   mask: var(--economy-currency-symbol) center / contain no-repeat;
@@ -10387,9 +10387,9 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .market-item-lightbox-price .market-item-price-icon {
-  width: 20px;
-  height: 20px;
-  flex-basis: 20px;
+  width: 22px;
+  height: 22px;
+  flex-basis: 22px;
 }
 
 .market-item-lightbox-price .market-item-price-value {
