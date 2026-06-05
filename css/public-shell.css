@@ -9857,10 +9857,38 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .market-item-price-icon {
+  display: inline-block;
   width: 22px;
   height: 22px;
   flex: 0 0 22px;
-  object-fit: contain;
+  background: currentColor;
+  -webkit-mask: var(--economy-currency-symbol) center / contain no-repeat;
+  mask: var(--economy-currency-symbol) center / contain no-repeat;
+}
+
+.economy-currency-amount {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.28em;
+  color: currentColor;
+  white-space: nowrap;
+}
+
+.economy-currency-amount-icon {
+  display: inline-block;
+  width: 0.92em;
+  height: 0.92em;
+  flex: 0 0 0.92em;
+  transform: translateY(0.08em);
+  background: currentColor;
+  -webkit-mask: var(--economy-currency-symbol) center / contain no-repeat;
+  mask: var(--economy-currency-symbol) center / contain no-repeat;
+}
+
+.economy-currency-amount-label {
+  color: currentColor;
+  opacity: 0.72;
+  font-size: 0.76em;
 }
 
 .market-item-price-value {
@@ -10134,6 +10162,10 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   padding: 24px;
 }
 
+.market-item-lightbox-content {
+  display: contents;
+}
+
 .market-item-lightbox-close {
   position: absolute;
   top: 14px;
@@ -10154,6 +10186,42 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   border-color: rgba(232, 238, 248, 0.42);
   color: #f8fbff;
   outline: none;
+}
+
+.market-item-lightbox-nav {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  min-height: 36px;
+  border: 1px solid rgba(225, 232, 244, 0.2);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.9);
+  color: rgba(248, 251, 255, 0.92);
+  font: inherit;
+  font-size: 0.74rem;
+  padding: 0 11px;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.market-item-lightbox-nav--prev {
+  left: 14px;
+}
+
+.market-item-lightbox-nav--next {
+  right: 14px;
+}
+
+.market-item-lightbox-nav:hover,
+.market-item-lightbox-nav:focus-visible {
+  border-color: rgba(251, 191, 36, 0.48);
+  color: #fff7d6;
+  outline: none;
+}
+
+.market-item-lightbox-nav:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
 }
 
 .market-item-lightbox-media {
@@ -10346,6 +10414,12 @@ body.public-shell-page .dashboard-card-link:focus-visible {
     grid-template-columns: 1fr;
     gap: 16px;
     padding: 18px;
+  }
+
+  .market-item-lightbox-nav {
+    top: auto;
+    bottom: 12px;
+    transform: none;
   }
 
   .market-item-lightbox-media {

@@ -113,7 +113,7 @@ test("games economy page uses gallery-first market groups and shell toolbar anch
   assert.match(app, /return \[\{\s*key: candidate\.key,[\s\S]*currency: candidate\.currency,[\s\S]*value[\s\S]*\}\];/);
   assert.match(app, /function buildMarketPriceDisplay\(item = \{\}, options = \{\}, displayOptions = \{\}\)/);
   assert.match(app, /wrap\.dataset\.marketPrice = entries\.length \? "available" : "unavailable"/);
-  assert.match(app, /icon\.src = economyAssetPath\("\/assets\/games\/sscurrency\.webp"\)/);
+  assert.match(app, /icon\.style\.setProperty\("--economy-currency-symbol", `url\("\$\{economyAssetPath\(ECONOMY_CURRENCY_SYMBOL_PATH\)\}"\)`\)/);
   assert.match(app, /icon\.dataset\.marketPriceIcon = ""/);
   assert.match(app, /Price unavailable/);
   assert.match(app, /buildMarketPriceDisplay\(item, itemOptions, \{ className: "market-item-price market-item-price--gallery" \}\)/);
@@ -121,18 +121,18 @@ test("games economy page uses gallery-first market groups and shell toolbar anch
   assert.match(app, /SOLD OUT/);
   assert.match(app, /You do not hold the required item\./);
   assert.match(app, /buildMarketExchangeItemCard\(item, options\)/);
-  assert.match(app, /buildMarketQuickItemCard\(item, options, viewMode\)/);
+  assert.match(app, /buildMarketQuickItemCard\(item, scopedOptions, viewMode\)/);
   assert.match(app, /function openMarketItemLightbox\(item = \{\}, options = \{\}, sourceElement = null\)/);
   assert.match(app, /function openEconomyItemLightbox\(item = \{\}, options = \{\}, sourceElement = null\)/);
-  assert.match(app, /normalizeEconomyItemLightboxData\(item, itemOptions\)/);
+  assert.match(app, /normalizeEconomyItemLightboxData\(currentItem, itemOptions\)/);
   assert.match(app, /overlay\.dataset\.marketItemLightbox = ""/);
   assert.match(app, /price\.dataset\.marketLightboxPrice = ""/);
   assert.match(app, /function wireMarketItemDetailsTrigger\(trigger, item = \{\}, options = \{\}\)/);
   assert.match(app, /trigger\.dataset\.marketItemDetailsTrigger = ""/);
-  assert.match(app, /buildEconomyItemMedia\(item, "market-item-lightbox-media"\)/);
+  assert.match(app, /buildEconomyItemMedia\(currentItem, "market-item-lightbox-media"\)/);
   assert.match(app, /detail\.stats\.forEach/);
   assert.match(app, /detail\.meta\.forEach/);
-  assert.match(app, /appendItemDetailRow\(meta, row\.label, row\.value\)/);
+  assert.match(app, /appendItemDetailRow\(meta, row\.label, value\)/);
   assert.match(app, /event\.key === "Escape"/);
   assert.match(app, /document\.body\?\.classList\?\.add\("market-item-lightbox-open"\)/);
   assert.match(app, /market-item-details-action/);
@@ -760,7 +760,7 @@ test("public economy item tooltip controller keeps one active popover and preser
   assert.match(app, /row\.matches\?\.\('\[data-wallet-row="true"\], \[data-inventory-row="true"\], \[data-profile-economy-row="true"\]'\)/);
   assert.match(app, /function shouldIgnoreItemInfoActivation\(target, row\)/);
   assert.match(app, /function openItemInfoLightboxFromRow\(row\)/);
-  assert.match(app, /openEconomyItemLightbox\(payload, \{ kind: row\.dataset\.itemInfoKind \|\| "item" \}, row\)/);
+  assert.match(app, /openEconomyItemLightbox\(payload, \{[\s\S]*kind: row\.dataset\.itemInfoKind \|\| "item"[\s\S]*navigationItems: row\.__streamsuitesItemInfoNavigationItems \|\| \[\][\s\S]*navigationIndex: Number\(row\.dataset\.itemInfoNavigationIndex \|\| 0\)[\s\S]*\}, row\)/);
   assert.match(app, /document\.addEventListener\("click", \(event\) => \{[\s\S]*const row = findItemInfoActivationRow\(event\.target\)[\s\S]*openItemInfoLightboxFromRow\(row\)/);
   assert.match(app, /document\.addEventListener\("keydown", \(event\) => \{[\s\S]*event\.key === "Enter" \|\| event\.key === " "[\s\S]*openItemInfoLightboxFromRow\(row\)/);
   const wireItemInfoTriggerBlock = extractBetween(app, "  function wireItemInfoTrigger(row) {", "  if (!window.__streamsuitesItemInfoDismissBound) {");
@@ -819,7 +819,8 @@ test("public economy item lightbox normalizes wallet inventory profile and marke
   };
   vm.runInNewContext(`${snippet}
 this.normalizeEconomyItemLightboxData = normalizeEconomyItemLightboxData;
-this.fallbackEconomyItemLightboxData = fallbackEconomyItemLightboxData;`, context, { filename: "item-lightbox-normalizer.js" });
+this.fallbackEconomyItemLightboxData = fallbackEconomyItemLightboxData;
+this.formatEconomyDetailTimestamp = formatEconomyDetailTimestamp;`, context, { filename: "item-lightbox-normalizer.js" });
 
   const walletDetail = context.normalizeEconomyItemLightboxData({
     denomination_code: "currency.coin",
@@ -861,10 +862,29 @@ this.fallbackEconomyItemLightboxData = fallbackEconomyItemLightboxData;`, contex
   assert.equal(marketDetail.title, "Tank");
   assert.ok(marketDetail.chips.includes("Buy"));
   assert.ok(marketDetail.meta.some((row) => row.label === "Category" && row.value === "Combat Vehicles"));
+  assert.ok(marketDetail.stats.some((row) => row.label === "Price" && row.currency === true));
 
   const fallbackDetail = context.fallbackEconomyItemLightboxData({ item_code: "fallback.item" }, { kind: "inventory" });
   assert.equal(fallbackDetail.title, "fallback.item");
   assert.ok(fallbackDetail.chips.includes("Inventory"));
+  assert.equal(context.formatEconomyDetailTimestamp("2026-06-06T03:44:17Z"), "June 6th, 2026 at 03:44am UTC");
+  assert.equal(context.formatEconomyDetailTimestamp("not-a-date"), "not-a-date");
+});
+
+test("public economy item lightbox exposes scoped navigation and currentColor currency symbols", () => {
+  const app = read("js/public-pages-app.js");
+  const css = read("css/public-shell.css");
+
+  assert.match(app, /navigationItems: row\.__streamsuitesItemInfoNavigationItems \|\| \[\]/);
+  assert.match(app, /navigationItems = Array\.isArray\(options\.navigationItems\)/);
+  assert.match(app, /event\.key === "ArrowLeft"[\s\S]*navigate\(-1\)/);
+  assert.match(app, /event\.key === "ArrowRight"[\s\S]*navigate\(1\)/);
+  assert.match(app, /buildEconomyCurrencyAmount\(Number\(stat\.rawValue\)\)/);
+  assert.match(app, /market-item-price-icon"\);[\s\S]*--economy-currency-symbol/);
+  assert.match(css, /\.market-item-lightbox-nav--prev/);
+  assert.match(css, /\.market-item-lightbox-nav--next/);
+  assert.match(css, /\.market-item-price-icon\s*\{[\s\S]*background:\s*currentColor[\s\S]*mask:\s*var\(--economy-currency-symbol\)/);
+  assert.match(css, /\.economy-currency-amount-icon\s*\{[\s\S]*height:\s*0\.92em[\s\S]*background:\s*currentColor/);
 });
 
 test("public economy item rows delegate click and keyboard activation to the lightbox", () => {

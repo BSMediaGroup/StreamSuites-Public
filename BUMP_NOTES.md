@@ -6,6 +6,12 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
 
+- Public `/games` and profile economy item detail lightboxes now support scoped Previous/Next navigation inside the open modal for market pages, wallet rows, and inventory rows, with Left/Right arrow key support, disabled edge controls, Escape close behavior, and focus return to the original trigger preserved.
+- Lightbox currency, stekel, and credit amount fields now use the existing `assets/games/currencyunit.svg` via a currentColor CSS mask so the symbol renders inline before values at text height instead of as a black image.
+- Lightbox timestamp metadata now formats parseable ISO/machine timestamps as human UTC strings with ordinal suffixes while preserving unparseable source text.
+- Technical note: navigation context is presentation-only and scoped to the currently rendered visible collection where available; Public continues to consume Runtime/Auth wallet, inventory, market, and item-definition payloads without owning balances, inventory, prices, exchange rules, or mutations.
+- Human note: players can inspect adjacent items without closing the modal, while currency values and Updated/Created/Granted/Acquired/Expires dates should read cleanly across `/games` and public profiles.
+
 - Emergency regression fix: Public item detail modal was blocked by a JavaScript ReferenceError and now opens on games/profile surfaces.
 - Technical note: `normalizeEconomyItemLightboxData` no longer references an undeclared `categoryDisplayLabel` and now handles wallet/inventory/market/profile payloads defensively.
 

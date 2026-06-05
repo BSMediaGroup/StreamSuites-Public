@@ -3406,7 +3406,11 @@
     if (!row) return false;
     const payload = row.__streamsuitesItemInfoRaw || row.__streamsuitesItemInfo || {};
     closeActiveItemInfo(document);
-    openEconomyItemLightbox(payload, { kind: row.dataset.itemInfoKind || "item" }, row);
+    openEconomyItemLightbox(payload, {
+      kind: row.dataset.itemInfoKind || "item",
+      navigationItems: row.__streamsuitesItemInfoNavigationItems || [],
+      navigationIndex: Number(row.dataset.itemInfoNavigationIndex || 0)
+    }, row);
     return true;
   }
 
@@ -3466,6 +3470,12 @@
 
   function appendItemDetailRow(target, label, value) {
     if (!target) return;
+    if (typeof Node !== "undefined" && value instanceof Node) {
+      const wrapper = create("dd", "");
+      wrapper.appendChild(value);
+      target.append(create("dt", "", label), wrapper);
+      return;
+    }
     if (Array.isArray(value)) {
       const filtered = value.map((item) => String(item || "").trim()).filter(Boolean);
       if (!filtered.length) return;
@@ -3488,6 +3498,43 @@
     }
     if (typeof value === "number") return formatNumber(value);
     return String(value || "").trim();
+  }
+
+  function isEconomyCurrencyDetailLabel(label = "") {
+    return /(?:balance|value|price|cost|amount)/i.test(String(label || ""));
+  }
+
+  function buildEconomyCurrencyAmount(value, options = {}) {
+    const wrap = create("span", "economy-currency-amount");
+    const icon = create("span", "economy-currency-amount-icon");
+    icon.style.setProperty("--economy-currency-symbol", `url("${economyAssetPath(ECONOMY_CURRENCY_SYMBOL_PATH)}")`);
+    icon.setAttribute("aria-hidden", "true");
+    wrap.append(icon, create("span", "economy-currency-amount-value", formatNumber(value)));
+    if (options.currency) wrap.appendChild(create("span", "economy-currency-amount-label", options.currency));
+    return wrap;
+  }
+
+  function formatEconomyDetailTimestamp(value) {
+    const raw = String(value ?? "").trim();
+    if (!raw) return "";
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return raw;
+    const day = parsed.getUTCDate();
+    const suffix = day % 100 >= 11 && day % 100 <= 13
+      ? "th"
+      : day % 10 === 1
+        ? "st"
+        : day % 10 === 2
+          ? "nd"
+          : day % 10 === 3
+            ? "rd"
+            : "th";
+    const month = parsed.toLocaleString("en-US", { month: "long", timeZone: "UTC" });
+    let hours = parsed.getUTCHours();
+    const minutes = String(parsed.getUTCMinutes()).padStart(2, "0");
+    const period = hours >= 12 ? "pm" : "am";
+    hours = hours % 12 || 12;
+    return `${month} ${day}${suffix}, ${parsed.getUTCFullYear()} at ${String(hours).padStart(2, "0")}:${minutes}${period} UTC`;
   }
 
   function normalizeEconomyItemLightboxData(item = {}, options = {}) {
@@ -3585,20 +3632,20 @@
       rarity ? toTitle(rarity) : ""
     ].filter(Boolean);
     const stats = [];
-    const addStat = (labelText, value) => {
+    const addStat = (labelText, value, statOptions = {}) => {
       const formatted = formatItemDetailValue(value);
-      if (formatted) stats.push({ label: labelText, value: formatted });
+      if (formatted) stats.push({ label: labelText, value: formatted, rawValue: value, currency: Boolean(statOptions.currency) });
     };
     addStat(kind === "wallet" ? "Wallet amount" : "Held", quantity);
-    addStat("Balance / value", amount);
-    addStat("Unit value", firstPresent(item.unit_value, item.value_in_credits, item.currency_value, definition.currency_value));
-    addStat("Exchange value", firstPresent(item.exchange_value_stekels, item.exchange_value, item.exchange_value_credits, definition.exchange_value));
-    addStat("Price", firstPresent(item.market_price_stekels, item.price, item.price_credits, definition.market_price_stekels));
+    addStat("Balance / value", amount, { currency: true });
+    addStat("Unit value", firstPresent(item.unit_value, item.value_in_credits, item.currency_value, definition.currency_value), { currency: true });
+    addStat("Exchange value", firstPresent(item.exchange_value_stekels, item.exchange_value, item.exchange_value_credits, definition.exchange_value), { currency: true });
+    addStat("Price", firstPresent(item.market_price_stekels, item.price, item.price_credits, definition.market_price_stekels), { currency: true });
     addStat("Stock", item.unlimited_stock ? "Unlimited" : firstPresent(item.stock, item.stock_limit, item.max_quantity, item.purchase_limit));
     const meta = [];
-    const addMeta = (labelText, value) => {
-      const formatted = formatItemDetailValue(value);
-      if (formatted) meta.push({ label: labelText, value: formatted });
+    const addMeta = (labelText, value, metaOptions = {}) => {
+      const formatted = metaOptions.timestamp ? formatEconomyDetailTimestamp(value) : formatItemDetailValue(value);
+      if (formatted) meta.push({ label: labelText, value: formatted, rawValue: value, currency: Boolean(metaOptions.currency) });
     };
     addMeta("Item code", itemCode);
     addMeta("Slug / ID", firstPresent(item.slug, item.id, item.asset_id, item.image_asset_id, item.image_asset_key));
@@ -3609,13 +3656,17 @@
     addMeta("Availability", kind === "market" ? economyItemAvailabilityLabel(item, options) : firstPresent(item.availability, item.availability_state, item.limited_state));
     addMeta("Limited state", firstPresent(item.limited_state, item.limit_state, item.stock_state, definition.limited_state));
     addMeta("Requirements", firstPresent(item.requirements, item.required_items, item.required_item_codes, item.requirement_text, definition.requirements, publicMetadata.requirements));
-    addMeta("Costs", firstPresent(item.costs, item.cost_breakdown, item.price_breakdown, item.cost_text, definition.costs, publicMetadata.costs));
+    addMeta("Costs", firstPresent(item.costs, item.cost_breakdown, item.price_breakdown, item.cost_text, definition.costs, publicMetadata.costs), { currency: true });
     addMeta("Exchange input", firstPresent(item.exchange_inputs, item.exchange_input, item.input_items, item.required_exchange_items, definition.exchange_inputs));
     addMeta("Exchange output", firstPresent(item.exchange_outputs, item.exchange_output, item.output_items, item.grants, definition.exchange_outputs));
     addMeta("Enabled", firstPresent(item.is_enabled, definition.is_enabled, item.public_tooltip_enabled, definition.public_tooltip_enabled));
     addMeta("Source", firstPresent(item.source, item.provider, item.origin, item.source_domain, item.source_action));
     addMeta("Version", firstPresent(item.version, item.export_version, item.schema_version, metadata.version));
-    addMeta("Updated", firstPresent(item.updated_at, item.modified_at, item.exported_at, item.created_at, item.acquired_at, item.granted_at));
+    addMeta("Updated", firstPresent(item.updated_at, item.modified_at, item.exported_at), { timestamp: true });
+    addMeta("Created", firstPresent(item.created_at, definition.created_at), { timestamp: true });
+    addMeta("Granted", firstPresent(item.granted_at, item.grant_time), { timestamp: true });
+    addMeta("Acquired", firstPresent(item.acquired_at, item.acquired_time), { timestamp: true });
+    addMeta("Expires", firstPresent(item.expires_at, item.expiration_at, item.expires_on), { timestamp: true });
     addMeta("Tags", firstPresent(item.tags, item.chips, item.attributes, metadata.tags));
     return {
       raw: item,
@@ -3907,6 +3958,7 @@
       const pageCount = Math.max(1, Math.ceil(entries.length / pageSize));
       page = Math.max(1, Math.min(page, pageCount));
       const visibleEntries = entries.slice((page - 1) * pageSize, page * pageSize);
+      const visiblePayloads = visibleEntries.map((entry) => entry.itemInfo || entry);
       visibleEntries.forEach((entry) => {
       const row = create("div", `economy-breakdown-row${entry.className ? ` ${entry.className}` : ""}`);
       row.classList.add("economy-asset-row", "economy-item-row", "profile-economy-item-row");
@@ -3951,6 +4003,8 @@
       if (info.enabled !== false) {
         row.__streamsuitesItemInfo = info;
         row.__streamsuitesItemInfoRaw = entry.itemInfo || entry;
+        row.__streamsuitesItemInfoNavigationItems = visiblePayloads;
+        row.dataset.itemInfoNavigationIndex = String(visibleEntries.indexOf(entry));
         row.dataset.itemInfoTrigger = "true";
         row.setAttribute("data-item-info-trigger", "true");
         wireItemInfoTrigger(row);
@@ -8927,11 +8981,8 @@
     }
     entries.forEach((entry) => {
       const row = create("span", "market-item-price-row");
-      const icon = create("img", "market-item-price-icon");
-      icon.src = economyAssetPath("/assets/games/sscurrency.webp");
-      icon.alt = "";
-      icon.loading = "lazy";
-      icon.decoding = "async";
+      const icon = create("span", "market-item-price-icon");
+      icon.style.setProperty("--economy-currency-symbol", `url("${economyAssetPath(ECONOMY_CURRENCY_SYMBOL_PATH)}")`);
       icon.dataset.marketPriceIcon = "";
       icon.setAttribute("aria-hidden", "true");
       row.append(
@@ -9007,61 +9058,102 @@
   }
 
   function openEconomyItemLightbox(item = {}, options = {}, sourceElement = null) {
-    const itemOptions = economyItemEffectiveOptions(item, options);
-    if (options.kind && !itemOptions.kind) itemOptions.kind = options.kind;
-    let detail;
-    try {
-      detail = normalizeEconomyItemLightboxData(item, itemOptions);
-    } catch (error) {
-      console.error("Failed to normalize public economy item detail.", error);
-      detail = fallbackEconomyItemLightboxData(item, itemOptions);
+    const navigationItems = Array.isArray(options.navigationItems) ? options.navigationItems.filter(Boolean) : [];
+    let currentItem = item || {};
+    let currentIndex = Number.isFinite(Number(options.navigationIndex)) ? Number(options.navigationIndex) : navigationItems.indexOf(currentItem);
+    if (currentIndex < 0 && navigationItems.length) {
+      const currentCode = String(currentItem.item_code || currentItem.asset_code || currentItem.denomination_code || "").trim();
+      currentIndex = navigationItems.findIndex((entry) => String(entry?.item_code || entry?.asset_code || entry?.denomination_code || "").trim() === currentCode);
     }
+    if (currentIndex < 0) currentIndex = 0;
     const previousFocus = sourceElement || document.activeElement;
     document.querySelectorAll("[data-market-item-lightbox]").forEach((node) => node.remove());
     const overlay = create("div", "market-item-lightbox-backdrop");
     overlay.dataset.marketItemLightbox = "";
     overlay.setAttribute("role", "dialog");
     overlay.setAttribute("aria-modal", "true");
-    overlay.setAttribute("aria-label", `${detail.title} item details`);
 
     const panel = create("div", "market-item-lightbox");
     const close = create("button", "market-item-lightbox-close", "Close");
     close.type = "button";
     close.setAttribute("aria-label", "Close item details");
-    const media = detail.imagePath
-      ? buildEconomyItemMedia({ ...item, image_path: detail.imagePath, icon_path: detail.imagePath }, "market-item-lightbox-media")
-      : buildEconomyItemMedia(item, "market-item-lightbox-media");
-    const body = create("div", "market-item-lightbox-body");
-    const chips = create("div", "market-item-lightbox-chips");
-    detail.chips.forEach((chip) => chips.appendChild(create("span", "", chip)));
-    const title = create("h2", "", detail.title);
-    const shortDescription = create("p", "market-item-lightbox-description", detail.description || ITEM_INFO_FALLBACK_DESCRIPTION);
-    const detailCopy = create("p", "market-item-lightbox-details", detail.details || "No additional public details are available for this item.");
-    const stats = create("div", "market-item-lightbox-stats");
-    detail.stats.forEach((stat) => {
-      const card = create("div", "market-item-lightbox-stat");
-      card.append(create("span", "", stat.label), create("strong", "", stat.value));
-      stats.appendChild(card);
-    });
-    const meta = create("dl", "market-item-lightbox-meta");
-    detail.meta.forEach((row) => appendItemDetailRow(meta, row.label, row.value));
-    body.append(chips, title);
-    if (detail.kind === "market") {
-      const price = buildMarketPriceDisplay(item, itemOptions, { className: "market-item-lightbox-price", showLabel: true });
-      price.dataset.marketLightboxPrice = "";
-      body.appendChild(price);
-    }
-    body.append(shortDescription, detailCopy);
-    if (stats.childElementCount) body.appendChild(stats);
-    if (meta.childElementCount) body.appendChild(meta);
-    if (detail.kind === "market") {
-      const controls = buildMarketExchangeControls(item, itemOptions, {
-        available: economyItemActionLabel(item, itemOptions) === "Exchange" ? economyItemCanExchange(item, itemOptions) : economyItemCanBuy(item)
+    const prevButton = create("button", "market-item-lightbox-nav market-item-lightbox-nav--prev", "Previous");
+    prevButton.type = "button";
+    prevButton.dataset.marketLightboxPrevious = "";
+    const nextButton = create("button", "market-item-lightbox-nav market-item-lightbox-nav--next", "Next");
+    nextButton.type = "button";
+    nextButton.dataset.marketLightboxNext = "";
+    const content = create("div", "market-item-lightbox-content");
+    const renderCurrentItem = () => {
+      currentItem = navigationItems[currentIndex] || currentItem || {};
+      const itemOptions = economyItemEffectiveOptions(currentItem, options);
+      if (options.kind && !itemOptions.kind) itemOptions.kind = options.kind;
+      let detail;
+      try {
+        detail = normalizeEconomyItemLightboxData(currentItem, itemOptions);
+      } catch (error) {
+        console.error("Failed to normalize public economy item detail.", error);
+        detail = fallbackEconomyItemLightboxData(currentItem, itemOptions);
+      }
+      overlay.setAttribute("aria-label", `${detail.title} item details`);
+      const media = detail.imagePath
+        ? buildEconomyItemMedia({ ...currentItem, image_path: detail.imagePath, icon_path: detail.imagePath }, "market-item-lightbox-media")
+        : buildEconomyItemMedia(currentItem, "market-item-lightbox-media");
+      const body = create("div", "market-item-lightbox-body");
+      const chips = create("div", "market-item-lightbox-chips");
+      detail.chips.forEach((chip) => chips.appendChild(create("span", "", chip)));
+      const title = create("h2", "", detail.title);
+      const shortDescription = create("p", "market-item-lightbox-description", detail.description || ITEM_INFO_FALLBACK_DESCRIPTION);
+      const detailCopy = create("p", "market-item-lightbox-details", detail.details || "No additional public details are available for this item.");
+      const stats = create("div", "market-item-lightbox-stats");
+      detail.stats.forEach((stat) => {
+        const card = create("div", "market-item-lightbox-stat");
+        const value = stat.currency && Number.isFinite(Number(stat.rawValue))
+          ? buildEconomyCurrencyAmount(Number(stat.rawValue))
+          : stat.value;
+        card.append(create("span", "", stat.label), typeof value === "string" ? create("strong", "", value) : create("strong", "", ""));
+        if (typeof value !== "string") card.lastChild.appendChild(value);
+        stats.appendChild(card);
       });
-      controls.classList.add("market-item-lightbox-actions");
-      body.appendChild(controls);
-    }
-    panel.append(close, media, body);
+      const meta = create("dl", "market-item-lightbox-meta");
+      detail.meta.forEach((row) => {
+        const value = row.currency && Number.isFinite(Number(row.rawValue))
+          ? buildEconomyCurrencyAmount(Number(row.rawValue))
+          : row.value;
+        appendItemDetailRow(meta, row.label, value);
+      });
+      body.append(chips, title);
+      if (detail.kind === "market") {
+        const price = buildMarketPriceDisplay(currentItem, itemOptions, { className: "market-item-lightbox-price", showLabel: true });
+        price.dataset.marketLightboxPrice = "";
+        body.appendChild(price);
+      }
+      body.append(shortDescription, detailCopy);
+      if (stats.childElementCount) body.appendChild(stats);
+      if (meta.childElementCount) body.appendChild(meta);
+      if (detail.kind === "market") {
+        const controls = buildMarketExchangeControls(currentItem, itemOptions, {
+          available: economyItemActionLabel(currentItem, itemOptions) === "Exchange" ? economyItemCanExchange(currentItem, itemOptions) : economyItemCanBuy(currentItem)
+        });
+        controls.classList.add("market-item-lightbox-actions");
+        body.appendChild(controls);
+      }
+      content.replaceChildren(media, body);
+      prevButton.disabled = !navigationItems.length || currentIndex <= 0;
+      nextButton.disabled = !navigationItems.length || currentIndex >= navigationItems.length - 1;
+    };
+    const navigate = (delta) => {
+      if (!navigationItems.length) return;
+      const nextIndex = currentIndex + delta;
+      if (nextIndex < 0 || nextIndex >= navigationItems.length) return;
+      currentIndex = nextIndex;
+      renderCurrentItem();
+      panel.focus({ preventScroll: true });
+    };
+    prevButton.addEventListener("click", () => navigate(-1));
+    nextButton.addEventListener("click", () => navigate(1));
+    panel.tabIndex = -1;
+    panel.append(close, prevButton, nextButton, content);
     overlay.appendChild(panel);
 
     const closeLightbox = () => {
@@ -9072,6 +9164,14 @@
     };
     const onKeydown = (event) => {
       if (event.key === "Escape") closeLightbox();
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        navigate(-1);
+      }
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        navigate(1);
+      }
       if (event.key === "Tab") {
         const focusable = Array.from(overlay.querySelectorAll("button, input, [href], [tabindex]:not([tabindex='-1'])")).filter((node) => !node.disabled && !node.hidden);
         if (!focusable.length) return;
@@ -9093,6 +9193,7 @@
     document.addEventListener("keydown", onKeydown);
     document.body.appendChild(overlay);
     document.body?.classList?.add("market-item-lightbox-open");
+    renderCurrentItem();
     close.focus({ preventScroll: true });
   }
 
@@ -9102,15 +9203,17 @@
 
   function wireMarketItemDetailsTrigger(trigger, item = {}, options = {}) {
     trigger.dataset.marketItemDetailsTrigger = "";
+    const navigationItems = Array.isArray(options.navigationItems) ? options.navigationItems : [];
+    const navigationIndex = navigationItems.indexOf(item);
     trigger.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      openMarketItemLightbox(item, options, trigger);
+      openMarketItemLightbox(item, { ...options, navigationItems, navigationIndex }, trigger);
     });
     trigger.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        openMarketItemLightbox(item, options, trigger);
+        openMarketItemLightbox(item, { ...options, navigationItems, navigationIndex }, trigger);
       }
     });
   }
@@ -9470,11 +9573,14 @@
     } else if (!filteredItems.length) {
       list.appendChild(create("div", "empty-state market-empty-state", options.searchQuery ? "No shop, market, or exchange rows match this search." : options.emptyText || "No items available yet."));
     } else if (viewMode === "exchange") {
-      economyExchangeCategoryGroups(filteredItems).forEach((group) => list.appendChild(buildExchangeCategoryGroup(group, options)));
+      const scopedOptions = { ...options, navigationItems: filteredItems };
+      economyExchangeCategoryGroups(filteredItems).forEach((group) => list.appendChild(buildExchangeCategoryGroup(group, scopedOptions)));
     } else if (viewMode === "gallery") {
-      economyMarketGroups(pageItems).forEach((group) => list.appendChild(buildMarketCategoryGroup(group, options)));
+      const scopedOptions = { ...options, navigationItems: pageItems };
+      economyMarketGroups(pageItems).forEach((group) => list.appendChild(buildMarketCategoryGroup(group, scopedOptions)));
     } else {
-      pageItems.forEach((item) => list.appendChild(buildMarketQuickItemCard(item, options, viewMode)));
+      const scopedOptions = { ...options, navigationItems: pageItems };
+      pageItems.forEach((item) => list.appendChild(buildMarketQuickItemCard(item, scopedOptions, viewMode)));
     }
     host.append(heading, list);
     if (options.allowViewToggle) {
