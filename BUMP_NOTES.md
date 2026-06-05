@@ -6,6 +6,10 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
 
+- Emergency regression fix: Public wallet/inventory item rows now use delegated click and keyboard activation for the maximum-detail economy item lightbox, scoped to the shared wallet/inventory/profile row data attributes so `/games` and `/u/*` rows continue working after hydration, pagination, and profile scope re-renders.
+- The old row-local click/key modal wiring is no longer the active lightbox path; row-local listeners remain for hover/focus tooltip behavior only, while click/tap and Enter/Space close the tooltip state and open the read-only item lightbox with the existing public-safe row payload.
+- Human note: clicking wallet units, inventory items, and profile economy rows should open the full detail viewer again instead of only affecting the tooltip, while Dashboard `/economy` remains untouched.
+
 - Public `/u/*` and `/@*` profile wallet/inventory rows now share the public economy item lightbox path: hover/focus keeps the enlarged tooltip, while click/tap or Enter/Space opens the maximum-detail read-only item viewer and Escape returns focus to the triggering row.
 - The shared public item detail normalizer now includes additional profile-safe fields when present, including lore/flavour text, subtype, limited state, requirements, costs, exchange inputs/outputs, acquisition/grant timestamps, and existing source/version/tag metadata without fabricating empty rows.
 - Human note: profile visitors can inspect held items and wallet units with the same polished viewer used by `/games`, while Public remains a read-only consumer of Runtime/Auth profile economy data.

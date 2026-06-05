@@ -3390,6 +3390,26 @@
     requestAnimationFrame(() => positionItemInfoPopover(row, popover));
   }
 
+  function findItemInfoActivationRow(target) {
+    const row = target?.closest?.("[data-item-info-trigger]");
+    if (!row) return null;
+    if (!row.matches?.('[data-wallet-row="true"], [data-inventory-row="true"], [data-profile-economy-row="true"]')) return null;
+    return row;
+  }
+
+  function shouldIgnoreItemInfoActivation(target, row) {
+    const interactive = target?.closest?.("a[href], button, input, select, textarea, summary, [data-ignore-item-info-activation]");
+    return Boolean(interactive && interactive !== row);
+  }
+
+  function openItemInfoLightboxFromRow(row) {
+    if (!row) return false;
+    const payload = row.__streamsuitesItemInfoRaw || row.__streamsuitesItemInfo || {};
+    closeActiveItemInfo(document);
+    openEconomyItemLightbox(payload, { kind: row.dataset.itemInfoKind || "item" }, row);
+    return true;
+  }
+
   function normalizeItemInfo(entry = {}) {
     const definition = entry.definition && typeof entry.definition === "object" ? entry.definition : {};
     const publicMetadata = definition.public_metadata || entry.public_metadata || {};
@@ -3605,28 +3625,28 @@
         closeActiveItemInfo(document);
       }
     });
-    row.addEventListener("click", (event) => {
-      event.stopPropagation();
-      closeActiveItemInfo(document);
-      openEconomyItemLightbox(row.__streamsuitesItemInfoRaw || row.__streamsuitesItemInfo || {}, { kind: row.dataset.itemInfoKind || "item" }, row);
-    });
-    row.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        row.click();
-      }
-      if (event.key === "Escape") {
-        closeActiveItemInfo(document);
-      }
-    });
   }
 
   if (!window.__streamsuitesItemInfoDismissBound) {
     window.__streamsuitesItemInfoDismissBound = true;
     document.addEventListener("click", (event) => {
+      const row = findItemInfoActivationRow(event.target);
+      if (row && !shouldIgnoreItemInfoActivation(event.target, row)) {
+        event.preventDefault();
+        event.stopPropagation();
+        openItemInfoLightboxFromRow(row);
+        return;
+      }
       if (!event.target?.closest?.("[data-item-info-trigger]") && !event.target?.closest?.('[data-item-info-popover="singleton"]')) closePinnedItemInfo(document);
     });
     document.addEventListener("keydown", (event) => {
+      const row = findItemInfoActivationRow(event.target);
+      if (row && !shouldIgnoreItemInfoActivation(event.target, row) && (event.key === "Enter" || event.key === " ")) {
+        event.preventDefault();
+        event.stopPropagation();
+        openItemInfoLightboxFromRow(row);
+        return;
+      }
       if (event.key === "Escape") closeActiveItemInfo(document);
     });
     window.addEventListener("resize", () => {

@@ -2,11 +2,20 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
+import vm from "node:vm";
 
 const repoRoot = process.cwd();
 
 function read(relativePath) {
   return fs.readFileSync(path.join(repoRoot, relativePath), "utf8");
+}
+
+function extractBetween(source, start, end) {
+  const startIndex = source.indexOf(start);
+  const endIndex = source.indexOf(end, startIndex);
+  assert.notEqual(startIndex, -1, `Missing start marker: ${start}`);
+  assert.notEqual(endIndex, -1, `Missing end marker: ${end}`);
+  return source.slice(startIndex, endIndex);
 }
 
 test("public data hub consumes runtime public authority exports", () => {
@@ -746,7 +755,17 @@ test("public economy item tooltip controller keeps one active popover and preser
   assert.match(app, /row\.addEventListener\("mouseenter", \(\) => activateItemInfo\(row, "hover"\)\)/);
   assert.match(app, /row\.addEventListener\("mouseleave", \(\) => \{[\s\S]*closeActiveItemInfo\(document\)/);
   assert.match(app, /row\.addEventListener\("focus", \(\) => activateItemInfo\(row, "hover"\)\)/);
-  assert.match(app, /openEconomyItemLightbox\(row\.__streamsuitesItemInfoRaw \|\| row\.__streamsuitesItemInfo \|\| \{\}, \{ kind: row\.dataset\.itemInfoKind \|\| "item" \}, row\)/);
+  assert.match(app, /function findItemInfoActivationRow\(target\)/);
+  assert.match(app, /target\?\.closest\?\.\("\[data-item-info-trigger\]"\)/);
+  assert.match(app, /row\.matches\?\.\('\[data-wallet-row="true"\], \[data-inventory-row="true"\], \[data-profile-economy-row="true"\]'\)/);
+  assert.match(app, /function shouldIgnoreItemInfoActivation\(target, row\)/);
+  assert.match(app, /function openItemInfoLightboxFromRow\(row\)/);
+  assert.match(app, /openEconomyItemLightbox\(payload, \{ kind: row\.dataset\.itemInfoKind \|\| "item" \}, row\)/);
+  assert.match(app, /document\.addEventListener\("click", \(event\) => \{[\s\S]*const row = findItemInfoActivationRow\(event\.target\)[\s\S]*openItemInfoLightboxFromRow\(row\)/);
+  assert.match(app, /document\.addEventListener\("keydown", \(event\) => \{[\s\S]*event\.key === "Enter" \|\| event\.key === " "[\s\S]*openItemInfoLightboxFromRow\(row\)/);
+  const wireItemInfoTriggerBlock = extractBetween(app, "  function wireItemInfoTrigger(row) {", "  if (!window.__streamsuitesItemInfoDismissBound) {");
+  assert.doesNotMatch(wireItemInfoTriggerBlock, /row\.addEventListener\("click"/);
+  assert.doesNotMatch(wireItemInfoTriggerBlock, /openEconomyItemLightbox/);
   assert.match(app, /row\.__streamsuitesItemInfoRaw = entry\.itemInfo \|\| entry/);
   assert.match(app, /event\.key === "Escape"[\s\S]*closeActiveItemInfo\(document\)/);
   assert.match(app, /event\.target\?\.closest\?\.\('\[data-item-info-popover="singleton"\]'\)/);
@@ -761,6 +780,84 @@ test("public economy item tooltip controller keeps one active popover and preser
   assert.match(css, /\.item-info-popover-icon\s*\{[\s\S]*width:\s*140px/);
   assert.match(app, /item-info-popover-icon item-info-popover-icon--large/);
   assert.match(app, /info\.description \|\| ITEM_INFO_FALLBACK_DESCRIPTION/);
+});
+
+test("public economy item rows delegate click and keyboard activation to the lightbox", () => {
+  const app = read("js/public-pages-app.js");
+  const snippet = extractBetween(app, "  const itemInfoController = {", "  function economyCurrencyLabel(wallet = {}, value = 0) {");
+  const listeners = { click: [], keydown: [] };
+  const opened = [];
+  const context = {
+    window: {
+      __streamsuitesItemInfoDismissBound: false,
+      addEventListener() {}
+    },
+    document: {
+      addEventListener(type, handler) {
+        if (listeners[type]) listeners[type].push(handler);
+      },
+      querySelector() {
+        return null;
+      },
+      querySelectorAll() {
+        return [];
+      }
+    },
+    requestAnimationFrame() {},
+    openEconomyItemLightbox(payload, options, row) {
+      opened.push({ payload, options, row });
+    }
+  };
+  vm.runInNewContext(snippet, context, { filename: "item-info-delegation.js" });
+
+  const row = {
+    dataset: { itemInfoKind: "inventory", itemTooltipActive: "false", itemTooltipState: "closed", itemTooltipPinned: "false" },
+    __streamsuitesItemInfoRaw: { item_code: "gem.red", quantity: 2 },
+    classList: { toggle() {}, remove() {} },
+    setAttribute(name, value) {
+      this[name] = value;
+    },
+    matches(selector) {
+      return selector.includes("[data-inventory-row=\"true\"]");
+    },
+    closest(selector) {
+      return selector === "[data-item-info-trigger]" ? this : null;
+    }
+  };
+  const clickEvent = {
+    target: row,
+    defaultPrevented: false,
+    propagationStopped: false,
+    preventDefault() {
+      this.defaultPrevented = true;
+    },
+    stopPropagation() {
+      this.propagationStopped = true;
+    }
+  };
+  listeners.click.forEach((handler) => handler(clickEvent));
+  assert.equal(opened.length, 1);
+  assert.equal(opened[0].payload.item_code, "gem.red");
+  assert.equal(opened[0].options.kind, "inventory");
+  assert.equal(opened[0].row, row);
+  assert.equal(clickEvent.defaultPrevented, true);
+  assert.equal(clickEvent.propagationStopped, true);
+  assert.equal(row.dataset.itemTooltipState, "closed");
+
+  const keyEvent = {
+    target: { ...row, dataset: { ...row.dataset, itemInfoKind: "wallet" }, __streamsuitesItemInfoRaw: { denomination_code: "currency.coin", count: 4 } },
+    key: " ",
+    defaultPrevented: false,
+    preventDefault() {
+      this.defaultPrevented = true;
+    },
+    stopPropagation() {}
+  };
+  listeners.keydown.forEach((handler) => handler(keyEvent));
+  assert.equal(opened.length, 2);
+  assert.equal(opened[1].options.kind, "wallet");
+  assert.equal(opened[1].payload.denomination_code, "currency.coin");
+  assert.equal(keyEvent.defaultPrevented, true);
 });
 
 test("public profile progress meter uses animated electric blue fill", () => {
