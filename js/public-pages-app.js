@@ -8613,6 +8613,24 @@
     });
   }
 
+  function scrollExchangeCategoryIntoView(label = "") {
+    const normalized = String(label || "").trim();
+    if (!normalized) return false;
+    const content = document.querySelector(".public-content");
+    if (!content) return false;
+    const target = Array.from(content.querySelectorAll("[data-exchange-category]")).find(
+      (card) => card.dataset.exchangeCategory === normalized
+    );
+    if (!target) return false;
+    window.requestAnimationFrame(() => {
+      const targetRect = target.getBoundingClientRect();
+      const contentRect = content.getBoundingClientRect();
+      const top = Math.max(0, content.scrollTop + targetRect.top - contentRect.top - 8);
+      content.scrollTo({ top, behavior: "smooth" });
+    });
+    return true;
+  }
+
   function renderEconomyHubSummaryCards(host, payload = null, authReady = false) {
     const wallet = payload?.wallet || payload?.balance || {};
     const inventory = Array.isArray(payload?.inventory) ? payload.inventory : [];
@@ -9409,6 +9427,7 @@
       marketPageSize: GAMES_MARKET_DEFAULT_PAGE_SIZE,
       exchangeCategoryPageSize: GAMES_EXCHANGE_DEFAULT_CATEGORY_PAGE_SIZE,
       exchangeCategoryPages: {},
+      pendingExchangeCategoryScroll: "",
       payload: null,
       authReady: null
     };
@@ -9454,6 +9473,7 @@
             ...gamesState.exchangeCategoryPages,
             [label]: page
           };
+          gamesState.pendingExchangeCategoryScroll = String(label || "").trim();
           renderPayload(payload);
         },
         onExchangeCategoryPageSizeChange: (nextPageSize) => {
@@ -9520,7 +9540,13 @@
         onError: (message) => setResult(message, "error")
       });
       renderEconomyWalletInventorySections({ walletSection, inventorySection, payload, authReady: Boolean(payload?.authenticated) });
-      scrollEconomyHashIntoView();
+      const pendingCategoryScroll = String(gamesState.pendingExchangeCategoryScroll || "").trim();
+      gamesState.pendingExchangeCategoryScroll = "";
+      if (pendingCategoryScroll) {
+        scrollExchangeCategoryIntoView(pendingCategoryScroll);
+      } else {
+        scrollEconomyHashIntoView();
+      }
     };
 
     const load = async () => {

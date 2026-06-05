@@ -930,6 +930,9 @@ test("public games exchange section paginates categories independently with gems
   assert.match(app, /gamesState\.exchangeCategoryPages = clampExchangeCategoryPages/);
   assert.match(app, /dataset\.exchangeCategoryPagination = options\.categoryLabel/);
   assert.match(app, /onPageChange: \(nextPage\) => options\.onExchangeCategoryPageChange\?\.\(group\.label/);
+  assert.match(app, /function scrollExchangeCategoryIntoView/);
+  assert.match(app, /pendingExchangeCategoryScroll/);
+  assert.match(app, /scrollExchangeCategoryIntoView\(pendingCategoryScroll\)/);
   assert.match(app, /allRows\.slice\(pageStart, pageStart \+ pageSize\)/);
   assert.match(app, /totalRows > pageSize/);
   assert.match(css, /\.market-exchange-page-size-toolbar/);

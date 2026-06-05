@@ -8,6 +8,7 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 - Public `/games` Exchange category columns still share full row height with empty space below short categories, while item rows stay top-aligned; each category keeps its own page index and only the global rows-per-category count is shared.
 - Exchange category item thumbnails are 50% larger in-category, and the More Details action spans the full item card width.
+- Exchange per-category Prev/Next now scrolls the paginated category card into view instead of jumping to the top of the whole Exchange section.
 - Exchange categories now paginate independently with a global `Rows per category` control (5/10/25/50, default 5), compact per-category Prev/Next controls, and truthful `Showing X-Y of Z` counts that do not reuse Market page-level pagination.
 - Exchange category ordering now prioritizes Gemstones/Gems first and Currency/Wallet/Stekels categories second before the existing logical category sort.
 - Technical note: exchange pagination is presentation-only and slices already-hydrated public-safe exchange rows per category; Runtime/Auth remains the authority for exchange eligibility, held quantities, values, and mutations.
