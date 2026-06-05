@@ -821,7 +821,8 @@ test("public economy item lightbox normalizes wallet inventory profile and marke
 this.normalizeEconomyItemLightboxData = normalizeEconomyItemLightboxData;
 this.fallbackEconomyItemLightboxData = fallbackEconomyItemLightboxData;
 this.formatEconomyDetailTimestamp = formatEconomyDetailTimestamp;
-this.normalizeItemDetailTags = normalizeItemDetailTags;`, context, { filename: "item-lightbox-normalizer.js" });
+this.normalizeItemDetailTags = normalizeItemDetailTags;
+this.collectEconomyItemDetailTagSources = collectEconomyItemDetailTagSources;`, context, { filename: "item-lightbox-normalizer.js" });
 
   const walletDetail = context.normalizeEconomyItemLightboxData({
     denomination_code: "currency.coin",
@@ -886,6 +887,35 @@ this.normalizeItemDetailTags = normalizeItemDetailTags;`, context, { filename: "
   assert.equal(nestedDefinitionTags.tags.join("|"), "limo|cadillac");
 
   assert.equal(context.normalizeItemDetailTags("A, a, B").join("|"), "a|b");
+
+  assert.equal(context.normalizeItemDetailTags(["limo", "limousine", "Cadillac"]).length, 3);
+  assert.equal(
+    context.normalizeItemDetailTags([{ label: "limo" }, { name: "limousine" }, { value: "Cadillac" }]).join("|"),
+    "limo|limousine|cadillac"
+  );
+  assert.equal(
+    context.normalizeItemDetailTags(
+      ...context.collectEconomyItemDetailTagSources(
+        { item_code: "vehicle.limo" },
+        { tags: ["limousine", "Cadillac"] },
+        { tags: ["limo"] },
+        {}
+      )
+    ).join("|"),
+    "limo|limousine|cadillac"
+  );
+  assert.equal(
+    context.normalizeItemDetailTags(
+      ...context.collectEconomyItemDetailTagSources({ attributes: { tags: ["limo", "limousine", "Cadillac"] } }, {}, {}, {})
+    ).join("|"),
+    "limo|limousine|cadillac"
+  );
+  assert.equal(
+    context.normalizeItemDetailTags(
+      ...context.collectEconomyItemDetailTagSources({ tags: [{ label: "limo, limousine, Cadillac" }] }, {}, {}, {})
+    ).join("|"),
+    "limo|limousine|cadillac"
+  );
 });
 
 test("public economy item lightbox renders hashtag tag chips and scoped item code styling", () => {
@@ -893,6 +923,8 @@ test("public economy item lightbox renders hashtag tag chips and scoped item cod
   const css = read("css/public-shell.css");
 
   assert.match(app, /function collectEconomyItemDetailTagSources\(/);
+  assert.match(app, /function appendEconomyItemDetailTagFields\(/);
+  assert.match(app, /function economyItemDetailTagContainer\(/);
   assert.match(app, /function normalizeItemDetailTags\(\.\.\.sources\)/);
   assert.match(app, /function buildEconomyItemTagChips\(tags = \[\]\)/);
   assert.match(app, /economyItemTagChipLabel\(tag\)/);

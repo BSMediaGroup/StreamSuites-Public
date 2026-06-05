@@ -6,6 +6,8 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
 
+- Emergency regression fix: item detail modals now render all available tags as individual hashtag chips instead of only one tag.
+- Technical note: tag extraction now aggregates all supported tag sources (strings, arrays, object rows, nested definition/metadata/attributes fields) before normalization and case-insensitive dedupe across Public `/games` and profile lightboxes.
 - Economy item detail hashtag chips use Sui Generis Regular (lightest available face) with a soft light-blue tint for chip text; item code values remain SUSEMono.
 - Economy item detail hashtag chips render in the description block again (after short/details copy, before stats/metadata), not in the bottom metadata table, on `/games` and public profile lightboxes.
 - Emergency regression fix: economy item detail modals again show associated tags as slim `#hashtag` chips after the prior chip pass stopped rendering tags when payloads used nested definition/metadata fields, object-shaped tag arrays, or alternate tag field names.

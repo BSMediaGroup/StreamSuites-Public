@@ -3531,38 +3531,42 @@
     return "";
   }
 
+  const ECONOMY_ITEM_DETAIL_TAG_FIELD_KEYS = [
+    "tags", "tag", "hashtags", "keywords", "aliases", "search_tags", "searchTags",
+    "item_tags", "itemTags", "chat_alias", "chatAlias", "command_alias", "commandAlias"
+  ];
+
+  function economyItemDetailTagContainer(value = {}) {
+    return value && typeof value === "object" && !Array.isArray(value)
+      && ECONOMY_ITEM_DETAIL_TAG_FIELD_KEYS.some((key) => value[key] !== undefined);
+  }
+
   function appendEconomyItemDetailTagSource(sources, value) {
     if (value === undefined || value === null) return;
-    if (typeof value === "string" || Array.isArray(value)) {
-      if (typeof value === "string" ? String(value).trim() : value.length) sources.push(value);
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean" || Array.isArray(value)) {
+      if (typeof value === "string" ? String(value).trim() : Array.isArray(value) ? value.length : String(value).trim()) {
+        sources.push(value);
+      }
       return;
     }
     if (typeof value === "object") {
-      if (
-        value.label !== undefined ||
-        value.name !== undefined ||
-        value.tag !== undefined ||
-        value.hashtag !== undefined ||
-        value.alias !== undefined ||
-        value.keyword !== undefined ||
-        value.value !== undefined
-      ) {
+      if (economyItemDetailTagContainer(value)) {
         sources.push(value);
         return;
       }
-      const values = Object.values(value);
       if (
-        values.length &&
-        values.every((entry) => (
-          typeof entry === "string" ||
-          typeof entry === "number" ||
-          typeof entry === "boolean" ||
-          (entry && typeof entry === "object" && (entry.label !== undefined || entry.name !== undefined || entry.tag !== undefined))
-        ))
+        value.label !== undefined || value.name !== undefined || value.tag !== undefined ||
+        value.hashtag !== undefined || value.alias !== undefined || value.keyword !== undefined ||
+        value.text !== undefined || value.code !== undefined || value.value !== undefined
       ) {
         sources.push(value);
       }
     }
+  }
+
+  function appendEconomyItemDetailTagFields(sources, container = {}) {
+    if (!container || typeof container !== "object") return;
+    ECONOMY_ITEM_DETAIL_TAG_FIELD_KEYS.forEach((key) => appendEconomyItemDetailTagSource(sources, container[key]));
   }
 
   function collectEconomyItemDetailTagSources(item = {}, definition = {}, metadata = {}, publicMetadata = {}) {
@@ -3573,11 +3577,13 @@
       item.hashtags,
       item.keywords,
       item.aliases,
+      item.alias,
       item.search_tags,
       item.searchTags,
       item.item_tags,
       item.itemTags,
       item.attributes,
+      item.metadata,
       metadata.tags,
       metadata.tag,
       metadata.hashtags,
@@ -3592,6 +3598,7 @@
       definition.hashtags,
       definition.keywords,
       definition.aliases,
+      definition.alias,
       definition.search_tags,
       definition.searchTags,
       definition.item_tags,
@@ -3605,12 +3612,20 @@
       publicMetadata.searchTags,
       item.chat_alias,
       item.chatAlias,
+      item.command_alias,
+      item.commandAlias,
       definition.chat_alias,
       definition.chatAlias,
+      definition.command_alias,
+      definition.commandAlias,
       publicMetadata.chat_alias,
       publicMetadata.chatAlias
     ];
     candidates.forEach((value) => appendEconomyItemDetailTagSource(sources, value));
+    appendEconomyItemDetailTagFields(sources, item.attributes);
+    appendEconomyItemDetailTagFields(sources, metadata);
+    appendEconomyItemDetailTagFields(sources, definition);
+    appendEconomyItemDetailTagFields(sources, publicMetadata);
     return sources;
   }
 
@@ -3639,6 +3654,10 @@
         return;
       }
       if (typeof value === "object") {
+        if (economyItemDetailTagContainer(value)) {
+          ECONOMY_ITEM_DETAIL_TAG_FIELD_KEYS.forEach((key) => visit(value[key]));
+          return;
+        }
         const shapedToken = extractItemDetailTagToken(value);
         const hasTagShape = shapedToken && (
           value.label !== undefined ||
@@ -3647,21 +3666,15 @@
           value.hashtag !== undefined ||
           value.alias !== undefined ||
           value.keyword !== undefined ||
+          value.text !== undefined ||
+          value.code !== undefined ||
           (value.value !== undefined && (typeof value.value === "string" || typeof value.value === "number"))
         );
         if (hasTagShape) {
           pushTokensFromRaw(shapedToken);
           return;
         }
-        const values = Object.values(value);
-        if (values.length && values.every((entry) => (
-          typeof entry === "string" ||
-          typeof entry === "number" ||
-          typeof entry === "boolean" ||
-          (entry && typeof entry === "object" && (entry.label !== undefined || entry.name !== undefined || entry.tag !== undefined))
-        ))) {
-          values.forEach(visit);
-        }
+        Object.values(value).forEach(visit);
         return;
       }
       pushTokensFromRaw(value);
