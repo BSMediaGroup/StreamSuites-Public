@@ -950,6 +950,8 @@ test("public economy item lightbox renders hashtag tag chips and scoped item cod
   assert.match(app, /create\("dd", "economy-item-code-value", row\.value\)/);
   assert.match(app, /buildEconomyItemDetailTagGroup\(detail\.tags\)/);
   assert.match(app, /tags: normalizeItemDetailTags\(\.\.\.collectEconomyItemDetailTagSources/);
+  assert.match(app, /tags: item\.tags \|\| definition\.tags \|\| \[\]/);
+  assert.match(app, /definition: \{[\s\S]*tags: definition\.tags \|\| item\.tags \|\| \[\]/);
   assert.match(css, /\.market-item-lightbox-tags\s*\{/);
   assert.match(css, /\.economy-item-tag-chip\s*\{[\s\S]*SuiGenerisRg[\s\S]*font-weight:\s*400[\s\S]*rgba\(186,\s*220,\s*255/);
   assert.match(css, /\.market-item-lightbox \.economy-item-code-value\s*\{[\s\S]*SUSEMono/);

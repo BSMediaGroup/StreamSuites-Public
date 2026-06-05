@@ -4144,7 +4144,11 @@
           meta: [definition.category, definition.rarity].filter(Boolean).join(" • ") || item.item_code || "",
           itemInfo: {
             ...item,
-            definition,
+            definition: {
+              ...definition,
+              tags: definition.tags || item.tags || []
+            },
+            tags: item.tags || definition.tags || [],
             label: definition.label || item.item_code || "Item",
             quantity: item.quantity || 0,
             quantityPrefix: "x",
