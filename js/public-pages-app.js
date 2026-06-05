@@ -3532,8 +3532,15 @@
   }
 
   const ECONOMY_ITEM_DETAIL_TAG_FIELD_KEYS = [
-    "tags", "tag", "hashtags", "keywords", "aliases", "search_tags", "searchTags",
-    "item_tags", "itemTags", "chat_alias", "chatAlias", "command_alias", "commandAlias"
+    "tags",
+    "tag",
+    "hashtags",
+    "keywords",
+    "aliases",
+    "search_tags",
+    "searchTags",
+    "item_tags",
+    "itemTags"
   ];
 
   function economyItemDetailTagContainer(value = {}) {
@@ -3555,9 +3562,15 @@
         return;
       }
       if (
-        value.label !== undefined || value.name !== undefined || value.tag !== undefined ||
-        value.hashtag !== undefined || value.alias !== undefined || value.keyword !== undefined ||
-        value.text !== undefined || value.code !== undefined || value.value !== undefined
+        value.label !== undefined ||
+        value.name !== undefined ||
+        value.tag !== undefined ||
+        value.hashtag !== undefined ||
+        value.alias !== undefined ||
+        value.keyword !== undefined ||
+        value.text !== undefined ||
+        value.code !== undefined ||
+        value.value !== undefined
       ) {
         sources.push(value);
       }
@@ -3577,7 +3590,6 @@
       item.hashtags,
       item.keywords,
       item.aliases,
-      item.alias,
       item.search_tags,
       item.searchTags,
       item.item_tags,
@@ -3598,7 +3610,6 @@
       definition.hashtags,
       definition.keywords,
       definition.aliases,
-      definition.alias,
       definition.search_tags,
       definition.searchTags,
       definition.item_tags,
@@ -3609,17 +3620,7 @@
       publicMetadata.keywords,
       publicMetadata.aliases,
       publicMetadata.search_tags,
-      publicMetadata.searchTags,
-      item.chat_alias,
-      item.chatAlias,
-      item.command_alias,
-      item.commandAlias,
-      definition.chat_alias,
-      definition.chatAlias,
-      definition.command_alias,
-      definition.commandAlias,
-      publicMetadata.chat_alias,
-      publicMetadata.chatAlias
+      publicMetadata.searchTags
     ];
     candidates.forEach((value) => appendEconomyItemDetailTagSource(sources, value));
     appendEconomyItemDetailTagFields(sources, item.attributes);
@@ -3634,18 +3635,18 @@
     const seen = new Set();
     const pushTokensFromRaw = (raw) => {
       if (raw === undefined || raw === null) return;
-      const parts = String(raw)
+      String(raw)
         .split(/[,;|]/)
         .map((part) => part.trim())
-        .filter(Boolean);
-      parts.forEach((part) => {
-        const token = formatItemDetailTagToken(part);
-        if (!token) return;
-        const key = token.toLowerCase();
-        if (seen.has(key)) return;
-        seen.add(key);
-        tags.push(token);
-      });
+        .filter(Boolean)
+        .forEach((part) => {
+          const token = formatItemDetailTagToken(part);
+          if (!token) return;
+          const key = token.toLowerCase();
+          if (seen.has(key)) return;
+          seen.add(key);
+          tags.push(token);
+        });
     };
     const visit = (value) => {
       if (value === undefined || value === null) return;

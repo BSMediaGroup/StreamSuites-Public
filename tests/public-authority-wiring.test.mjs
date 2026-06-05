@@ -916,6 +916,23 @@ this.collectEconomyItemDetailTagSources = collectEconomyItemDetailTagSources;`, 
     ).join("|"),
     "limo|limousine|cadillac"
   );
+  assert.equal(
+    context.normalizeItemDetailTags(
+      ...context.collectEconomyItemDetailTagSources(
+        { chat_alias: "limo", tags: ["limousine", "Cadillac"] },
+        {},
+        {},
+        {}
+      )
+    ).join("|"),
+    "limousine|cadillac"
+  );
+  assert.equal(
+    context.normalizeItemDetailTags(
+      ...context.collectEconomyItemDetailTagSources({ chat_alias: "limo", alias: "limo" }, {}, {}, {})
+    ).length,
+    0
+  );
 });
 
 test("public economy item lightbox renders hashtag tag chips and scoped item code styling", () => {
