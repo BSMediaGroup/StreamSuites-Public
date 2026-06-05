@@ -8858,11 +8858,58 @@
     return [...market, ...exchangeOnly];
   }
 
+  function isEconomyExchangeCapableItem(item = {}) {
+    if (!item || typeof item !== "object") return false;
+    if (item.can_exchange === false || item.exchange_enabled === false || item.exchangeable === false) return false;
+    if (item.can_exchange === true || item.exchange_enabled === true || item.exchangeable === true) return true;
+    if (Number(item.exchange_value_stekels ?? item.exchange_value_credits ?? item.exchange_value) > 0) return true;
+    const exchangeInputs = item.exchange_inputs || item.exchange_input || item.input_items || item.required_exchange_items || item.exchange_requirements;
+    const exchangeOutputs = item.exchange_outputs || item.exchange_output || item.output_items || item.grants;
+    return Boolean(
+      (Array.isArray(exchangeInputs) && exchangeInputs.length) ||
+      (Array.isArray(exchangeOutputs) && exchangeOutputs.length) ||
+      (exchangeInputs && typeof exchangeInputs === "object" && Object.keys(exchangeInputs).length) ||
+      (exchangeOutputs && typeof exchangeOutputs === "object" && Object.keys(exchangeOutputs).length)
+    );
+  }
+
+  function appendPublicExchangeItems(target, source, options = {}) {
+    if (!Array.isArray(source)) return;
+    source.forEach((item) => {
+      if (!isEconomyExchangeCapableItem(item)) return;
+      const itemCode = String(item?.item_code || item?.asset_code || item?.denomination_code || item?.slug || "").trim();
+      if (!itemCode || options.seen.has(itemCode)) return;
+      options.seen.add(itemCode);
+      target.push({
+        ...item,
+        item_code: item.item_code || itemCode,
+        __storefront_action: "exchange",
+        can_exchange: item.can_exchange !== false,
+        exchange_enabled: item.exchange_enabled !== false
+      });
+    });
+  }
+
+  function buildGamesExchangeItems(payload = {}) {
+    const rows = [];
+    const seen = new Set();
+    appendPublicExchangeItems(rows, payload?.exchange, { seen });
+    appendPublicExchangeItems(rows, payload?.exchange_items, { seen });
+    appendPublicExchangeItems(rows, payload?.exchange_catalog, { seen });
+    appendPublicExchangeItems(rows, payload?.exchange_rules, { seen });
+    appendPublicExchangeItems(rows, payload?.market, { seen });
+    appendPublicExchangeItems(rows, payload?.items, { seen });
+    appendPublicExchangeItems(rows, payload?.catalog, { seen });
+    appendPublicExchangeItems(rows, payload?.public_item_definitions, { seen });
+    appendPublicExchangeItems(rows, payload?.item_definitions, { seen });
+    return rows;
+  }
+
   function economyExchangeCategoryGroups(items = []) {
     const wanted = ["Currency", "Gems", "Weapons", "Combat Vehicles", "Collectibles", "Equipment", "Materials", "Tools", "Other"];
     const groups = economyMarketGroups(items).map((group) => ({ ...group, kind: group.label }));
     const present = new Set(groups.map((group) => group.label));
-    wanted.forEach((label) => {
+    if (!groups.length) wanted.forEach((label) => {
       if (!present.has(label)) groups.push({ label, rows: [], empty: true });
     });
     return groups;
@@ -9077,10 +9124,12 @@
     const close = create("button", "market-item-lightbox-close", "Close");
     close.type = "button";
     close.setAttribute("aria-label", "Close item details");
-    const prevButton = create("button", "market-item-lightbox-nav market-item-lightbox-nav--prev", "Previous");
+    const header = create("div", "market-item-lightbox-header");
+    const navGroup = create("div", "market-item-lightbox-nav-group");
+    const prevButton = create("button", "market-item-lightbox-nav market-item-lightbox-nav--prev", "<- Previous");
     prevButton.type = "button";
     prevButton.dataset.marketLightboxPrevious = "";
-    const nextButton = create("button", "market-item-lightbox-nav market-item-lightbox-nav--next", "Next");
+    const nextButton = create("button", "market-item-lightbox-nav market-item-lightbox-nav--next", "Next ->");
     nextButton.type = "button";
     nextButton.dataset.marketLightboxNext = "";
     const content = create("div", "market-item-lightbox-content");
@@ -9153,7 +9202,9 @@
     prevButton.addEventListener("click", () => navigate(-1));
     nextButton.addEventListener("click", () => navigate(1));
     panel.tabIndex = -1;
-    panel.append(close, prevButton, nextButton, content);
+    navGroup.append(prevButton, nextButton);
+    header.append(navGroup, close);
+    panel.append(header, content);
     overlay.appendChild(panel);
 
     const closeLightbox = () => {
@@ -9339,7 +9390,7 @@
         host: exchangeSection,
         title: "Exchange",
         subtitle: "Convert eligible held items into Stekels",
-        items: payload?.exchange || [],
+        items: buildGamesExchangeItems(payload),
         authReady: Boolean(payload?.authenticated),
         actionLabel: "Exchange",
         valueLabel: "Value",

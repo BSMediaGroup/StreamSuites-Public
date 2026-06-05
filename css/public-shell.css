@@ -10002,8 +10002,8 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .market-exchange-category-layout {
   display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
 }
 
 .market-exchange-category-card {
@@ -10021,6 +10021,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 .market-exchange-category-card.is-empty {
   border-style: dashed;
   background: rgba(15, 23, 42, 0.44);
+  opacity: 0.78;
 }
 
 .market-exchange-category-heading {
@@ -10047,14 +10048,14 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .market-exchange-category-rows .market-exchange-item-card {
   padding: 10px;
-  grid-template-columns: 44px minmax(0, 1fr);
-  gap: 9px;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 11px;
   box-shadow: none;
 }
 
 .market-exchange-category-rows .market-exchange-item-media {
-  width: 44px;
-  height: 44px;
+  width: 58px;
+  height: 58px;
 }
 
 .market-exchange-category-rows .market-exchange-item-body p {
@@ -10159,7 +10160,15 @@ body.public-shell-page .dashboard-card-link:focus-visible {
     linear-gradient(140deg, rgba(24, 35, 54, 0.98), rgba(8, 13, 23, 0.98)),
     rgba(8, 13, 23, 0.98);
   box-shadow: 0 34px 110px rgba(0, 0, 0, 0.62);
-  padding: 24px;
+  padding: 18px 24px 24px;
+}
+
+.market-item-lightbox-header {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
 }
 
 .market-item-lightbox-content {
@@ -10167,9 +10176,6 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .market-item-lightbox-close {
-  position: absolute;
-  top: 14px;
-  right: 14px;
   min-height: 30px;
   border: 1px solid rgba(225, 232, 244, 0.16);
   border-radius: 8px;
@@ -10189,10 +10195,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .market-item-lightbox-nav {
-  position: absolute;
-  top: 50%;
-  z-index: 2;
-  min-height: 36px;
+  min-height: 30px;
   border: 1px solid rgba(225, 232, 244, 0.2);
   border-radius: 8px;
   background: rgba(15, 23, 42, 0.9);
@@ -10201,15 +10204,18 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   font-size: 0.74rem;
   padding: 0 11px;
   cursor: pointer;
-  transform: translateY(-50%);
 }
 
-.market-item-lightbox-nav--prev {
-  left: 14px;
+.market-item-lightbox-nav-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 
+.market-item-lightbox-nav--prev,
 .market-item-lightbox-nav--next {
-  right: 14px;
+  white-space: nowrap;
 }
 
 .market-item-lightbox-nav:hover,
@@ -10301,6 +10307,15 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .market-item-lightbox-price .market-item-price-value {
   font-size: 1.35rem;
+}
+
+.market-item-lightbox .market-item-price-row,
+.market-item-lightbox .market-item-price-icon,
+.market-item-lightbox .market-item-price-value,
+.market-item-lightbox .economy-currency-amount,
+.market-item-lightbox .economy-currency-amount-icon,
+.market-item-lightbox .economy-currency-amount-value {
+  color: #f8fbff;
 }
 
 .market-item-lightbox-description,
@@ -10416,10 +10431,19 @@ body.public-shell-page .dashboard-card-link:focus-visible {
     padding: 18px;
   }
 
-  .market-item-lightbox-nav {
-    top: auto;
-    bottom: 12px;
-    transform: none;
+  .market-item-lightbox-header {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .market-item-lightbox-nav-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .market-item-lightbox-nav,
+  .market-item-lightbox-close {
+    flex: 1 1 auto;
   }
 
   .market-item-lightbox-media {

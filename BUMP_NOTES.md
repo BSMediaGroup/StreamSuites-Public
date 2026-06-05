@@ -6,6 +6,13 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
 
+- Public `/games` and profile item detail lightboxes now use a compact header navigation group for Previous/Next instead of side-positioned controls, preserving disabled edge states, Left/Right navigation, Escape close, focus return, and mobile stacking without covering item art or copy.
+- Public lightbox currency/Stekel/Credit values now force the currentColor `currencyunit.svg` mask and numeric value back to high-contrast white in modal price, value, balance, unit value, and exchange/cost rows while leaving pure quantities and metadata unsymbolized.
+- Public `/games` Exchange now hydrates categories from existing public-safe exchange-capable payload rows across exchange arrays, market/catalog rows, and public item definitions, deduped by item code; empty Future-ready cards only appear when no live exchange-capable rows exist.
+- Public `/games` Exchange category cards now use a wider responsive grid and larger in-category item rows so thumbnails, title, value, held/unavailable state, action controls, and More Details have room.
+- Technical note: the exchange collector remains a read-only consumer of Runtime/Auth payload fields such as `exchange_enabled`, `exchangeable`, `can_exchange`, `exchange_value_*`, and exchange input/output metadata; it does not invent balances, inventory, prices, exchange rules, or mutation paths.
+- Human note: exchange-capable items should now appear as real category listings where Runtime/Auth provides them, while scaffold empty states remain truthful for genuinely absent exchange data.
+
 - Public `/games` and profile economy item detail lightboxes now support scoped Previous/Next navigation inside the open modal for market pages, wallet rows, and inventory rows, with Left/Right arrow key support, disabled edge controls, Escape close behavior, and focus return to the original trigger preserved.
 - Lightbox currency, stekel, and credit amount fields now use the existing `assets/games/currencyunit.svg` via a currentColor CSS mask so the symbol renders inline before values at text height instead of as a black image.
 - Lightbox timestamp metadata now formats parseable ISO/machine timestamps as human UTC strings with ordinal suffixes while preserving unparseable source text.

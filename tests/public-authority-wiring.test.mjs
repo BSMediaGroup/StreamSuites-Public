@@ -879,12 +879,32 @@ test("public economy item lightbox exposes scoped navigation and currentColor cu
   assert.match(app, /navigationItems = Array\.isArray\(options\.navigationItems\)/);
   assert.match(app, /event\.key === "ArrowLeft"[\s\S]*navigate\(-1\)/);
   assert.match(app, /event\.key === "ArrowRight"[\s\S]*navigate\(1\)/);
+  assert.match(app, /market-item-lightbox-header/);
+  assert.match(app, /market-item-lightbox-nav-group/);
   assert.match(app, /buildEconomyCurrencyAmount\(Number\(stat\.rawValue\)\)/);
   assert.match(app, /market-item-price-icon"\);[\s\S]*--economy-currency-symbol/);
   assert.match(css, /\.market-item-lightbox-nav--prev/);
   assert.match(css, /\.market-item-lightbox-nav--next/);
+  assert.doesNotMatch(css, /\.market-item-lightbox-nav\s*\{[\s\S]*position:\s*absolute[\s\S]*top:\s*50%/);
+  assert.match(css, /\.market-item-lightbox-header\s*\{[\s\S]*grid-column:\s*1 \/ -1/);
   assert.match(css, /\.market-item-price-icon\s*\{[\s\S]*background:\s*currentColor[\s\S]*mask:\s*var\(--economy-currency-symbol\)/);
   assert.match(css, /\.economy-currency-amount-icon\s*\{[\s\S]*height:\s*0\.92em[\s\S]*background:\s*currentColor/);
+  assert.match(css, /\.market-item-lightbox \.economy-currency-amount-value[\s\S]*color:\s*#f8fbff/);
+});
+
+test("public games exchange section hydrates exchange-capable payload rows into wider category cards", () => {
+  const app = read("js/public-pages-app.js");
+  const css = read("css/public-shell.css");
+
+  assert.match(app, /function buildGamesExchangeItems\(payload = \{\}\)/);
+  assert.match(app, /appendPublicExchangeItems\(rows, payload\?\.public_item_definitions/);
+  assert.match(app, /appendPublicExchangeItems\(rows, payload\?\.market/);
+  assert.match(app, /isEconomyExchangeCapableItem/);
+  assert.match(app, /items: buildGamesExchangeItems\(payload\)/);
+  assert.match(app, /if \(!groups\.length\) wanted\.forEach/);
+  assert.match(css, /\.market-exchange-category-layout\s*\{[\s\S]*minmax\(min\(100%, 360px\), 1fr\)/);
+  assert.match(css, /\.market-exchange-category-rows \.market-exchange-item-card\s*\{[\s\S]*grid-template-columns:\s*58px minmax\(0, 1fr\)/);
+  assert.match(app, /wireMarketItemDetailsTrigger\(detailsButton, item, itemOptions\)/);
 });
 
 test("public economy item rows delegate click and keyboard activation to the lightbox", () => {
