@@ -6,6 +6,9 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
 
+- Emergency regression fix: Public item detail modal was blocked by a JavaScript ReferenceError and now opens on games/profile surfaces.
+- Technical note: `normalizeEconomyItemLightboxData` no longer references an undeclared `categoryDisplayLabel` and now handles wallet/inventory/market/profile payloads defensively.
+
 - Emergency regression fix: Public wallet/inventory item rows now use delegated click and keyboard activation for the maximum-detail economy item lightbox, scoped to the shared wallet/inventory/profile row data attributes so `/games` and `/u/*` rows continue working after hydration, pagination, and profile scope re-renders.
 - The old row-local click/key modal wiring is no longer the active lightbox path; row-local listeners remain for hover/focus tooltip behavior only, while click/tap and Enter/Space close the tooltip state and open the read-only item lightbox with the existing public-safe row payload.
 - Human note: clicking wallet units, inventory items, and profile economy rows should open the full detail viewer again instead of only affecting the tooltip, while Dashboard `/economy` remains untouched.

@@ -3555,13 +3555,33 @@
     const quantity = firstPresent(item.quantity, item.count, item.held_quantity, item.balance_count);
     const amount = firstPresent(item.value_total_credits, item.balance_total_credits, item.balance_current, item.amount, item.value_in_credits);
     const category = firstPresent(item.category_label, item.category, definition.category_label, definition.category, item.item_type, item.type, definition.type);
+    const categorySource = {
+      category_label: firstPresent(item.category_label, definition.category_label),
+      category,
+      item_type: firstPresent(item.item_type, definition.item_type),
+      type: firstPresent(item.type, definition.type),
+      subcategory: firstPresent(item.subcategory, definition.subcategory),
+      item_code: firstPresent(item.item_code, item.asset_code, definition.item_code),
+      asset_code: firstPresent(item.asset_code, definition.asset_code)
+    };
+    const categoryLabel = firstPresent(category, categorySource.item_code, categorySource.asset_code)
+      ? economyItemCategoryLabel({
+        category_label: categorySource.category_label,
+        category: categorySource.category,
+        item_type: categorySource.item_type,
+        type: categorySource.type,
+        subcategory: categorySource.subcategory,
+        item_code: categorySource.item_code,
+        asset_code: categorySource.asset_code
+      })
+      : "";
     const subtype = firstPresent(item.subtype_label, item.subtype, item.item_subtype, definition.subtype_label, definition.subtype, definition.item_subtype);
     const rarity = firstPresent(item.rarity, item.tier, item.grade, definition.rarity, definition.tier, definition.grade);
     const itemCode = firstPresent(item.item_code, item.asset_code, item.denomination_code, definition.item_code);
     const imagePath = economyItemImagePath(item) || economyDenominationIconPath(item) || definition.icon_url || definition.icon_path || "";
     const chips = [
       kind === "wallet" ? "Wallet" : kind === "inventory" ? "Inventory" : economyItemActionLabel(item, options),
-      category ? categoryDisplayLabel(category) : "",
+      categoryLabel,
       rarity ? toTitle(rarity) : ""
     ].filter(Boolean);
     const stats = [];
@@ -3583,7 +3603,7 @@
     addMeta("Item code", itemCode);
     addMeta("Slug / ID", firstPresent(item.slug, item.id, item.asset_id, item.image_asset_id, item.image_asset_key));
     addMeta("Chat alias", firstPresent(item.chat_alias, definition.chat_alias, publicMetadata.chat_alias, item.alias, item.command_alias));
-    addMeta("Category", category ? categoryDisplayLabel(category) : "");
+    addMeta("Category", categoryLabel);
     addMeta("Subtype", subtype ? toTitle(subtype) : "");
     addMeta("Rarity / tier", rarity ? toTitle(rarity) : "");
     addMeta("Availability", kind === "market" ? economyItemAvailabilityLabel(item, options) : firstPresent(item.availability, item.availability_state, item.limited_state));
@@ -3607,6 +3627,39 @@
       details,
       chips,
       stats,
+      meta
+    };
+  }
+
+  function fallbackEconomyItemLightboxData(item = {}, options = {}) {
+    const definition = item.definition && typeof item.definition === "object" ? item.definition : {};
+    const label = String(firstPresent(
+      item.label,
+      item.display_name,
+      item.displayName,
+      item.item_name,
+      definition.label,
+      definition.display_name,
+      item.item_code,
+      item.asset_code,
+      item.denomination_code,
+      "Item"
+    )).trim();
+    const imagePath = economyItemImagePath(item) || economyDenominationIconPath(item) || definition.icon_url || definition.icon_path || "";
+    const itemCode = firstPresent(item.item_code, item.asset_code, item.denomination_code, definition.item_code);
+    const meta = [];
+    const formattedCode = formatItemDetailValue(itemCode);
+    if (formattedCode) meta.push({ label: "Item code", value: formattedCode });
+    return {
+      raw: item,
+      kind: options.kind || "market",
+      title: label || "Item",
+      imagePath,
+      fallbackText: String(label || "?").slice(0, 1).toUpperCase(),
+      description: String(firstPresent(item.short_description, item.description, definition.short_description, definition.description, "")).trim(),
+      details: "",
+      chips: [options.kind === "wallet" ? "Wallet" : options.kind === "inventory" ? "Inventory" : ""].filter(Boolean),
+      stats: [],
       meta
     };
   }
@@ -8956,7 +9009,13 @@
   function openEconomyItemLightbox(item = {}, options = {}, sourceElement = null) {
     const itemOptions = economyItemEffectiveOptions(item, options);
     if (options.kind && !itemOptions.kind) itemOptions.kind = options.kind;
-    const detail = normalizeEconomyItemLightboxData(item, itemOptions);
+    let detail;
+    try {
+      detail = normalizeEconomyItemLightboxData(item, itemOptions);
+    } catch (error) {
+      console.error("Failed to normalize public economy item detail.", error);
+      detail = fallbackEconomyItemLightboxData(item, itemOptions);
+    }
     const previousFocus = sourceElement || document.activeElement;
     document.querySelectorAll("[data-market-item-lightbox]").forEach((node) => node.remove());
     const overlay = create("div", "market-item-lightbox-backdrop");

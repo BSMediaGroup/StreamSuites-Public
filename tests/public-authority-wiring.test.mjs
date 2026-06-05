@@ -782,6 +782,91 @@ test("public economy item tooltip controller keeps one active popover and preser
   assert.match(app, /info\.description \|\| ITEM_INFO_FALLBACK_DESCRIPTION/);
 });
 
+test("public economy item lightbox normalizes wallet inventory profile and market payloads safely", () => {
+  const app = read("js/public-pages-app.js");
+  assert.doesNotMatch(app, /categoryDisplayLabel/);
+  const snippet = extractBetween(app, "  function firstPresent(...values) {", "  function wireItemInfoTrigger(row) {");
+  const context = {
+    console,
+    toTitle(value) {
+      return String(value || "").trim().replace(/[_-]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+    },
+    formatLabel(value) {
+      return String(value || "").trim().replace(/[_-]+/g, " ");
+    },
+    formatNumber(value) {
+      return String(value);
+    },
+    economyItemCategoryLabel(item = {}) {
+      if (String(item.item_code || "").includes("combat_vehicle")) return "Combat Vehicles";
+      return String(item.category_label || item.category || item.item_type || item.type || item.item_code || "").trim().replace(/[_-]+/g, " ") || "Other";
+    },
+    economyItemImagePath(item = {}) {
+      return String(item.image_url || item.image_path || item.icon_url || item.icon_path || "").trim();
+    },
+    economyDenominationIconPath(item = {}) {
+      return String(item.denomination_icon_url || item.icon_url || "").trim();
+    },
+    economyItemActionLabel(item = {}, options = {}) {
+      return options.actionLabel || (item.__storefront_action === "exchange" ? "Exchange" : "Buy");
+    },
+    economyItemAvailabilityLabel(item = {}) {
+      return String(item.availability || "").trim();
+    },
+    create() {
+      return { append() {} };
+    }
+  };
+  vm.runInNewContext(`${snippet}
+this.normalizeEconomyItemLightboxData = normalizeEconomyItemLightboxData;
+this.fallbackEconomyItemLightboxData = fallbackEconomyItemLightboxData;`, context, { filename: "item-lightbox-normalizer.js" });
+
+  const walletDetail = context.normalizeEconomyItemLightboxData({
+    denomination_code: "currency.coin",
+    display_name: "Coin",
+    count: 4,
+    balance_total_credits: 400,
+    type: "currency"
+  }, { kind: "wallet" });
+  assert.equal(walletDetail.title, "Coin");
+  assert.ok(walletDetail.chips.includes("Wallet"));
+  assert.ok(walletDetail.meta.some((row) => row.label === "Category" && row.value === "currency"));
+
+  const inventoryDetail = context.normalizeEconomyItemLightboxData({
+    item_code: "gem.red",
+    label: "Red Gem",
+    quantity: 2,
+    category: "gems",
+    definition: { public_metadata: {} }
+  }, { kind: "inventory" });
+  assert.equal(inventoryDetail.title, "Red Gem");
+  assert.ok(inventoryDetail.chips.includes("Inventory"));
+  assert.ok(inventoryDetail.stats.some((row) => row.label === "Held" && row.value === "2"));
+
+  const profileDetail = context.normalizeEconomyItemLightboxData({
+    item_code: "profile.badge",
+    display_name: "Profile Badge",
+    quantity: 1,
+    category_label: "Platform Badges"
+  }, { kind: "inventory" });
+  assert.equal(profileDetail.title, "Profile Badge");
+  assert.ok(profileDetail.meta.some((row) => row.label === "Category" && row.value === "Platform Badges"));
+
+  const marketDetail = context.normalizeEconomyItemLightboxData({
+    item_code: "combat_vehicle.tank",
+    display_name: "Tank",
+    market_price_stekels: 25,
+    availability: "Available"
+  }, { kind: "market", actionLabel: "Buy" });
+  assert.equal(marketDetail.title, "Tank");
+  assert.ok(marketDetail.chips.includes("Buy"));
+  assert.ok(marketDetail.meta.some((row) => row.label === "Category" && row.value === "Combat Vehicles"));
+
+  const fallbackDetail = context.fallbackEconomyItemLightboxData({ item_code: "fallback.item" }, { kind: "inventory" });
+  assert.equal(fallbackDetail.title, "fallback.item");
+  assert.ok(fallbackDetail.chips.includes("Inventory"));
+});
+
 test("public economy item rows delegate click and keyboard activation to the lightbox", () => {
   const app = read("js/public-pages-app.js");
   const snippet = extractBetween(app, "  const itemInfoController = {", "  function economyCurrencyLabel(wallet = {}, value = 0) {");
@@ -858,6 +943,24 @@ test("public economy item rows delegate click and keyboard activation to the lig
   assert.equal(opened[1].options.kind, "wallet");
   assert.equal(opened[1].payload.denomination_code, "currency.coin");
   assert.equal(keyEvent.defaultPrevented, true);
+
+  const profileRow = {
+    dataset: { itemInfoKind: "inventory", itemTooltipActive: "false", itemTooltipState: "closed", itemTooltipPinned: "false" },
+    __streamsuitesItemInfoRaw: { item_code: "profile.badge", quantity: 1 },
+    classList: { toggle() {}, remove() {} },
+    setAttribute(name, value) {
+      this[name] = value;
+    },
+    matches(selector) {
+      return selector.includes("[data-profile-economy-row=\"true\"]");
+    },
+    closest(selector) {
+      return selector === "[data-item-info-trigger]" ? this : null;
+    }
+  };
+  listeners.click.forEach((handler) => handler({ target: profileRow, preventDefault() {}, stopPropagation() {} }));
+  assert.equal(opened.length, 3);
+  assert.equal(opened[2].payload.item_code, "profile.badge");
 });
 
 test("public profile progress meter uses animated electric blue fill", () => {
