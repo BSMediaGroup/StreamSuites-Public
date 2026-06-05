@@ -3857,16 +3857,16 @@
     const meta = [];
     const addMeta = (labelText, value, metaOptions = {}) => {
       const formatted = metaOptions.timestamp ? formatEconomyDetailTimestamp(value) : formatItemDetailValue(value);
-      if (!formatted) return;
-      if (labelText === "Item code") {
-        meta.push({ label: labelText, value: formatted, rawValue: value, variant: "item-code" });
+      if (!formatted && !metaOptions.always) return;
+      if (labelText === "Item code" || labelText === "Chat alias") {
+        meta.push({ label: labelText, value: formatted || "—", rawValue: value, variant: "item-code" });
         return;
       }
       meta.push({ label: labelText, value: formatted, rawValue: value, currency: Boolean(metaOptions.currency) });
     };
     addMeta("Item code", itemCode);
+    addMeta("Chat alias", firstPresent(item.chat_alias, definition.chat_alias, publicMetadata.chat_alias, item.command_alias), { always: true });
     addMeta("Slug / ID", firstPresent(item.slug, item.id, item.asset_id, item.image_asset_id, item.image_asset_key));
-    addMeta("Chat alias", firstPresent(item.chat_alias, definition.chat_alias, publicMetadata.chat_alias, item.alias, item.command_alias));
     addMeta("Category", categoryLabel);
     addMeta("Subtype", subtype ? toTitle(subtype) : "");
     addMeta("Rarity / tier", rarity ? toTitle(rarity) : "");
@@ -3919,6 +3919,8 @@
     const meta = [];
     const formattedCode = formatItemDetailValue(itemCode);
     if (formattedCode) meta.push({ label: "Item code", value: formattedCode, variant: "item-code" });
+    const formattedChatAlias = formatItemDetailValue(firstPresent(item.chat_alias, definition.chat_alias, definition.public_metadata?.chat_alias, item.public_metadata?.chat_alias, item.command_alias));
+    meta.push({ label: "Chat alias", value: formattedChatAlias || "—", variant: "item-code" });
     return {
       raw: item,
       kind: options.kind || "market",

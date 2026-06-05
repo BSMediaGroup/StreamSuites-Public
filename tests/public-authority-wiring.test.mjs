@@ -947,6 +947,9 @@ test("public economy item lightbox renders hashtag tag chips and scoped item cod
   assert.match(app, /economyItemTagChipLabel\(tag\)/);
   assert.match(app, /tags: normalizeItemDetailTags/);
   assert.match(app, /variant: "item-code"/);
+  assert.match(app, /labelText === "Item code" \|\| labelText === "Chat alias"/);
+  assert.match(app, /addMeta\("Item code", itemCode\);[\s\S]*addMeta\("Chat alias"/);
+  assert.match(app, /addMeta\("Chat alias", firstPresent\(item\.chat_alias[\s\S]*\{ always: true \}\)/);
   assert.match(app, /create\("dd", "economy-item-code-value", row\.value\)/);
   assert.match(app, /buildEconomyItemDetailTagGroup\(detail\.tags\)/);
   assert.match(app, /tags: normalizeItemDetailTags\(\.\.\.collectEconomyItemDetailTagSources/);
