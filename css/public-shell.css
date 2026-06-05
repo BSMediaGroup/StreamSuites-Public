@@ -10458,6 +10458,14 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   color: rgba(246, 251, 255, 0.9);
 }
 
+.market-item-lightbox-tags {
+  margin: 2px 0 4px;
+}
+
+.market-item-lightbox-tags .economy-item-tag-chips {
+  margin-top: 2px;
+}
+
 .market-item-lightbox-meta {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);

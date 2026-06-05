@@ -3647,6 +3647,14 @@
     return wrap;
   }
 
+  function buildEconomyItemDetailTagGroup(tags = []) {
+    const chips = buildEconomyItemTagChips(tags);
+    if (!chips.childElementCount) return null;
+    const wrap = create("div", "market-item-lightbox-tags");
+    wrap.appendChild(chips);
+    return wrap;
+  }
+
   function isEconomyCurrencyDetailLabel(label = "") {
     return /(?:balance|value|price|cost|amount)/i.test(String(label || ""));
   }
@@ -3819,8 +3827,7 @@
     addMeta("Granted", firstPresent(item.granted_at, item.grant_time), { timestamp: true });
     addMeta("Acquired", firstPresent(item.acquired_at, item.acquired_time), { timestamp: true });
     addMeta("Expires", firstPresent(item.expires_at, item.expiration_at, item.expires_on), { timestamp: true });
-    const detailTags = normalizeItemDetailTags(...collectEconomyItemDetailTagSources(item, definition, metadata, publicMetadata));
-    if (detailTags.length) meta.push({ label: "Tags", tags: detailTags, variant: "tags" });
+    const tags = normalizeItemDetailTags(...collectEconomyItemDetailTagSources(item, definition, metadata, publicMetadata));
     return {
       raw: item,
       kind,
@@ -3829,6 +3836,7 @@
       fallbackText: String(label || "?").slice(0, 1).toUpperCase(),
       description,
       details,
+      tags,
       chips,
       stats,
       meta
@@ -3862,6 +3870,7 @@
       fallbackText: String(label || "?").slice(0, 1).toUpperCase(),
       description: String(firstPresent(item.short_description, item.description, definition.short_description, definition.description, "")).trim(),
       details: "",
+      tags: normalizeItemDetailTags(...collectEconomyItemDetailTagSources(item, definition, item.metadata || {}, definition.public_metadata || item.public_metadata || {})),
       chips: [options.kind === "wallet" ? "Wallet" : options.kind === "inventory" ? "Inventory" : ""].filter(Boolean),
       stats: [],
       meta
@@ -9371,15 +9380,6 @@
       });
       const meta = create("dl", "market-item-lightbox-meta");
       detail.meta.forEach((row) => {
-        if (row.variant === "tags" && Array.isArray(row.tags) && row.tags.length) {
-          const chips = buildEconomyItemTagChips(row.tags);
-          if (chips.childElementCount) {
-            const wrapper = create("dd", "");
-            wrapper.appendChild(chips);
-            meta.append(create("dt", "", row.label), wrapper);
-          }
-          return;
-        }
         if (row.variant === "item-code") {
           meta.append(create("dt", "", row.label), create("dd", "economy-item-code-value", row.value));
           return;
@@ -9396,6 +9396,8 @@
         body.appendChild(price);
       }
       body.append(shortDescription, detailCopy);
+      const tagGroup = buildEconomyItemDetailTagGroup(detail.tags);
+      if (tagGroup) body.appendChild(tagGroup);
       if (stats.childElementCount) body.appendChild(stats);
       if (meta.childElementCount) body.appendChild(meta);
       if (detail.kind === "market") {
