@@ -10262,7 +10262,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 .market-item-lightbox-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 260;
+  z-index: 1200;
   display: grid;
   place-items: center;
   padding: 16px;
@@ -10291,7 +10291,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
     linear-gradient(140deg, rgba(24, 35, 54, 0.98), rgba(8, 13, 23, 0.98)),
     rgba(8, 13, 23, 0.98);
   box-shadow: 0 34px 110px rgba(0, 0, 0, 0.62);
-  padding: 18px 24px 24px;
+  padding: 18px 24px 30px;
 }
 
 .market-item-lightbox::-webkit-scrollbar {
@@ -10441,7 +10441,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   display: grid;
   align-content: start;
   gap: 12px;
-  padding: 26px 8px 6px 0;
+  padding: 0px 8px 0px 0;
 }
 
 .market-item-lightbox-chips {
