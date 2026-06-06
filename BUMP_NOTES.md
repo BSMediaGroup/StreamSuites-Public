@@ -6,6 +6,7 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
 
+- Item detail lightbox layout: desktop economy item modals on `/games` and public profiles are wider (`min(1360px, calc(100vw - 32px))`) with a larger copy column ratio and slim dark-themed scrollbars on the modal surface.
 - Item detail metadata parity: Chat alias now renders immediately after Item code in wallet, inventory, and market lightbox metadata on `/games` and public profiles, using the same scoped `SUSEMono` blue tint (`economy-item-code-value`) as item codes; empty aliases show `—`.
 - Authoritative item-definition `tags` field: Runtime/Auth now stores comma-normalized catalog tags on all 157 public item definitions, exposes them on profile/global inventory payloads, and Public profile inventory rows hoist `item.tags` / `definition.tags` into item detail modal chip sources.
 - Emergency regression fix: item detail modals now render all available tags as individual hashtag chips instead of only one tag.

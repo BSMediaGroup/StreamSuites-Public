@@ -182,7 +182,10 @@ test("games economy page uses gallery-first market groups and shell toolbar anch
   assert.match(css, /\.market-exchange-category-layout\s*\{/);
   assert.match(css, /\.market-gallery-item-card\[data-market-sold-out="true"\]::after/);
   assert.match(css, /\.market-item-lightbox-backdrop\s*\{[\s\S]*position:\s*fixed/);
-  assert.match(css, /\.market-item-lightbox\s*\{[\s\S]*grid-template-columns:\s*minmax\(260px, 0\.92fr\) minmax\(0, 1\.08fr\)/);
+  assert.match(css, /\.market-item-lightbox\s*\{[\s\S]*width:\s*min\(1360px, calc\(100vw - 32px\)\)/);
+  assert.match(css, /\.market-item-lightbox\s*\{[\s\S]*grid-template-columns:\s*minmax\(300px, 0\.8fr\) minmax\(0, 1\.2fr\)/);
+  assert.match(css, /\.market-item-lightbox\s*\{[\s\S]*scrollbar-width:\s*thin/);
+  assert.match(css, /\.market-item-lightbox::-webkit-scrollbar-thumb\s*\{/);
   assert.match(css, /\.market-item-lightbox-media\s*\{[\s\S]*min-height:\s*360px/);
   assert.match(css, /\.market-item-lightbox-price/);
   assert.match(css, /\.market-item-lightbox-stats/);
