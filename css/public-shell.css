@@ -10327,9 +10327,9 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 
 .market-item-lightbox-close {
   flex: 0 0 auto;
-  width: 40px;
-  min-width: 40px;
-  height: 40px;
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
   display: inline-grid;
   place-items: center;
   border: 1px solid rgba(132, 184, 255, 0.22);
@@ -10341,8 +10341,8 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .market-item-lightbox-close-icon {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   display: block;
   background-color: currentColor;
   -webkit-mask-image: url("/assets/icons/ui/cross.svg");
