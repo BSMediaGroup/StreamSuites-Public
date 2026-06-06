@@ -10447,22 +10447,35 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 .market-item-lightbox-price .market-item-price-row {
   min-height: 44px;
   padding: 7px 13px;
+  align-items: center;
+  font-size: 1.35rem;
 }
 
 .market-item-lightbox-price .market-item-price-icon {
-  width: 1.2rem;
-  height: 1.2rem;
-  flex-basis: 1.2rem;
-}
-
-.market-item-lightbox-stat .economy-currency-amount-icon {
-  width: 1.2rem;
-  height: 1.2rem;
-  flex-basis: 1.2rem;
+  width: 1.12em;
+  height: 1.12em;
+  flex: 0 0 1.12em;
 }
 
 .market-item-lightbox-price .market-item-price-value {
-  font-size: 1.35rem;
+  font-size: 1em;
+  line-height: 1;
+}
+
+.market-item-lightbox .economy-currency-amount {
+  align-items: center;
+  gap: 0.34em;
+}
+
+.market-item-lightbox .economy-currency-amount-icon {
+  width: 1.12em;
+  height: 1.12em;
+  flex: 0 0 1.12em;
+  transform: none;
+}
+
+.market-item-lightbox-stat strong .economy-currency-amount {
+  font-size: 0.96rem;
 }
 
 .market-item-lightbox .market-item-price-row,

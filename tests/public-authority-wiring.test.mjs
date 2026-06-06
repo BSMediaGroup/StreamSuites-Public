@@ -191,8 +191,9 @@ test("games economy page uses gallery-first market groups and shell toolbar anch
   assert.match(css, /\.market-item-lightbox\s*\{[\s\S]*scrollbar-width:\s*thin/);
   assert.match(css, /\.market-item-lightbox::-webkit-scrollbar-thumb\s*\{/);
   assert.match(css, /\.market-item-lightbox-media\s*\{[\s\S]*min-height:\s*360px/);
-  assert.match(css, /\.market-item-lightbox-price \.market-item-price-icon\s*\{[\s\S]*width:\s*1\.2rem/);
-  assert.match(css, /\.market-item-lightbox-stat \.economy-currency-amount-icon\s*\{[\s\S]*width:\s*1\.2rem/);
+  assert.match(css, /\.market-item-lightbox-price \.market-item-price-icon\s*\{[\s\S]*width:\s*1\.12em/);
+  assert.match(css, /\.market-item-lightbox \.economy-currency-amount\s*\{[\s\S]*align-items:\s*center/);
+  assert.match(css, /\.market-item-lightbox \.economy-currency-amount-icon\s*\{[\s\S]*width:\s*1\.12em[\s\S]*transform:\s*none/);
   assert.match(css, /\.market-item-lightbox-stats/);
   assert.match(css, /\.market-item-lightbox-open\s*\{[\s\S]*overflow:\s*hidden/);
   assert.match(css, /\.market-exchange-section-heading\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/);
