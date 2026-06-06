@@ -9649,9 +9649,12 @@
     overlay.setAttribute("aria-modal", "true");
 
     const panel = create("div", "market-item-lightbox");
-    const close = create("button", "market-item-lightbox-close", "Close");
+    const close = create("button", "market-item-lightbox-close");
     close.type = "button";
     close.setAttribute("aria-label", "Close item details");
+    const closeIcon = create("span", "market-item-lightbox-close-icon");
+    closeIcon.setAttribute("aria-hidden", "true");
+    close.appendChild(closeIcon);
     const header = create("div", "market-item-lightbox-header");
     const navGroup = create("div", "market-item-lightbox-nav-group");
     const prevButton = create("button", "market-item-lightbox-nav market-item-lightbox-nav--prev", "<- Previous");

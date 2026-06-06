@@ -1067,6 +1067,9 @@ test("public economy item lightbox exposes scoped navigation and currentColor cu
   assert.match(css, /\.market-item-lightbox-nav--prev/);
   assert.match(css, /\.market-item-lightbox-nav--next/);
   assert.doesNotMatch(css, /\.market-item-lightbox-nav\s*\{[\s\S]*position:\s*absolute[\s\S]*top:\s*50%/);
+  assert.match(css, /\.market-item-lightbox-close\s*\{[\s\S]*color:\s*#edf5ff/);
+  assert.match(css, /\.market-item-lightbox-close-icon\s*\{[\s\S]*-webkit-mask-image:\s*url\("\/assets\/icons\/ui\/cross\.svg"\)/);
+  assert.match(app, /market-item-lightbox-close-icon/);
   assert.match(css, /\.market-item-lightbox-header\s*\{[\s\S]*grid-column:\s*1 \/ -1/);
   assert.match(css, /\.market-item-price-icon\s*\{[\s\S]*background:\s*currentColor[\s\S]*mask:\s*var\(--economy-currency-symbol\)/);
   assert.match(css, /\.economy-currency-amount-icon\s*\{[\s\S]*height:\s*0\.92em[\s\S]*background:\s*currentColor/);

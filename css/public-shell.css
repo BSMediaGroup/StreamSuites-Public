@@ -10326,22 +10326,50 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .market-item-lightbox-close {
-  min-height: 30px;
-  border: 1px solid rgba(225, 232, 244, 0.16);
-  border-radius: 8px;
-  background: rgba(15, 23, 42, 0.86);
-  color: rgba(231, 239, 252, 0.86);
-  font: inherit;
-  font-size: 0.72rem;
-  padding: 0 10px;
+  flex: 0 0 auto;
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(132, 184, 255, 0.22);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #edf5ff;
+  padding: 0;
   cursor: pointer;
+}
+
+.market-item-lightbox-close-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  background-color: currentColor;
+  -webkit-mask-image: url("/assets/icons/ui/cross.svg");
+  mask-image: url("/assets/icons/ui/cross.svg");
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
 }
 
 .market-item-lightbox-close:hover,
 .market-item-lightbox-close:focus-visible {
-  border-color: rgba(232, 238, 248, 0.42);
-  color: #f8fbff;
+  border-color: rgba(255, 210, 110, 0.52);
+  background: rgba(255, 210, 110, 0.12);
+  color: #ffffff;
   outline: none;
+}
+
+.market-item-lightbox-close:focus-visible {
+  box-shadow: 0 0 0 3px rgba(98, 168, 255, 0.28);
+}
+
+.market-item-lightbox-close:active {
+  transform: translateY(1px);
+  background: rgba(255, 210, 110, 0.18);
 }
 
 .market-item-lightbox-nav {
@@ -10666,9 +10694,12 @@ body.public-shell-page .dashboard-card-link:focus-visible {
     justify-content: space-between;
   }
 
-  .market-item-lightbox-nav,
-  .market-item-lightbox-close {
+  .market-item-lightbox-nav {
     flex: 1 1 auto;
+  }
+
+  .market-item-lightbox-close {
+    flex: 0 0 auto;
   }
 
   .market-item-lightbox-media {
