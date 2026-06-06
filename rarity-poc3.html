@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StreamSuites - Rarity System POC (Tailwind)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Inter', system_ui, sans-serif;
+    }
+    
+    .mythic-glow {
+      animation: mythic-glow 3s ease-in-out infinite alternate;
+    }
+    
+    @keyframes mythic-glow {
+      from { filter: brightness(1) drop-shadow(0 0 8px #c026d3); }
+      to { filter: brightness(1.25) drop-shadow(0 0 20px #c026d3); }
+    }
+    
+    .particle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #a855f7;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: floatParticle linear infinite;
+    }
+    
+    @keyframes floatParticle {
+      0% { transform: translateY(120px); opacity: 0; }
+      20% { opacity: 0.9; }
+      80% { opacity: 0.9; }
+      100% { transform: translateY(-120px); opacity: 0; }
+    }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-200 min-h-screen pb-12">
+  <div class="max-w-7xl mx-auto px-6 py-12">
+    <h1 class="text-4xl font-bold text-center mb-12 text-white tracking-tight">
+      StreamSuites — Rarity System POC (Tailwind)
+    </h1>
+
+    <!-- 1. Full Color Palette -->
+    <div class="mb-16">
+      <h2 class="text-2xl font-semibold mb-6 text-white">1. Full Rarity Color Palette</h2>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="palette"></div>
+    </div>
+
+    <!-- 2. Badge Styles + Icon System -->
+    <div class="mb-16">
+      <h2 class="text-2xl font-semibold mb-6 text-white">2. Badge Styles with Icon System</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="badges"></div>
+    </div>
+
+    <!-- 3. Range Badges -->
+    <div class="mb-16">
+      <h2 class="text-2xl font-semibold mb-6 text-white">3. Range / Composite Badges</h2>
+      <div class="flex flex-wrap gap-4 justify-center" id="ranges"></div>
+    </div>
+
+    <!-- 4. Advanced Effects -->
+    <div class="relative bg-zinc-900 rounded-3xl p-10 overflow-hidden border border-zinc-800" id="advanced-section">
+      <div id="particles" class="absolute inset-0 pointer-events-none"></div>
+      
+      <h2 class="text-2xl font-semibold mb-8 text-white relative z-10">4. Advanced Effects (Particles + Glow + Icons)</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10" id="advanced"></div>
+    </div>
+  </div>
+
+  <script>
+    const rarities = [
+      {key: "common", label: "COMMON", color: "bg-zinc-600 text-zinc-200"},
+      {key: "uncommon", label: "UNCOMMON", color: "bg-green-500 text-black"},
+      {key: "rare", label: "RARE", color: "bg-blue-600 text-white"},
+      {key: "epic", label: "EPIC", color: "bg-purple-600 text-white"},
+      {key: "legendary", label: "LEGENDARY", color: "bg-amber-500 text-zinc-900"},
+      {key: "mythic", label: "MYTHIC", color: "bg-gradient-to-r from-pink-500 via-purple-600 to-cyan-400 text-white"},
+      {key: "system", label: "SYSTEM", color: "bg-teal-500 text-white"},
+      {key: "debug", label: "DEBUG", color: "bg-red-600 text-white"},
+      {key: "common_to_epic", label: "COMMON TO EPIC", color: "bg-gradient-to-r from-zinc-600 to-blue-600 text-white border border-blue-400"},
+      {key: "common_to_legendary", label: "COMMON TO LEGENDARY", color: "bg-gradient-to-r from-zinc-600 to-amber-500 text-white border border-amber-400"},
+      {key: "common_to_mythic", label: "COMMON TO MYTHIC", color: "bg-gradient-to-r from-zinc-600 to-purple-600 text-white border border-purple-400"},
+      {key: "common_to_jackpot", label: "COMMON TO JACKPOT", color: "bg-gradient-to-r from-zinc-600 to-rose-500 text-white border border-rose-400"},
+      {key: "rare_to_legendary", label: "RARE TO LEGENDARY", color: "bg-gradient-to-r from-blue-600 to-amber-500 text-white border border-amber-400"},
+      {key: "rare_to_mythic", label: "RARE TO MYTHIC", color: "bg-gradient-to-r from-blue-600 to-purple-600 text-white border border-purple-400"},
+      {key: "uncommon_to_epic", label: "UNCOMMON TO EPIC", color: "bg-gradient-to-r from-green-500 to-purple-600 text-white border border-purple-400"},
+      {key: "uncommon_to_legendary", label: "UNCOMMON TO LEGENDARY", color: "bg-gradient-to-r from-green-500 to-amber-500 text-white border border-amber-400"}
+    ];
+
+    // Palette
+    const paletteContainer = document.getElementById('palette');
+    rarities.forEach(r => {
+      const el = document.createElement('div');
+      el.className = `px-6 py-4 rounded-2xl text-sm font-bold tracking-wider text-center ${r.color} shadow-xl`;
+      el.textContent = r.label;
+      paletteContainer.appendChild(el);
+    });
+
+    // Badges with Icons
+    const badgesContainer = document.getElementById('badges');
+    rarities.forEach(r => {
+      const card = document.createElement('div');
+      card.className = `bg-zinc-900 border border-zinc-700 rounded-2xl p-6 flex items-center gap-6 hover:border-zinc-500 transition-colors`;
+      
+      let icon = '';
+      if (r.key.includes('mythic')) icon = '🌌';
+      else if (r.key.includes('legendary')) icon = '🏆';
+      else if (r.key.includes('epic')) icon = '🔮';
+      else icon = '⚔️';
+
+      card.innerHTML = `
+        <div class="px-6 py-3 rounded-full text-sm font-bold tracking-widest ${r.color} shadow-lg flex items-center gap-2">
+          ${r.key.includes('legendary') || r.key.includes('mythic') ? '★ ' : ''}
+          ${r.label}
+        </div>
+        <div class="text-4xl ml-auto opacity-80">${icon}</div>
+      `;
+      badgesContainer.appendChild(card);
+    });
+
+    // Range Badges
+    const rangesContainer = document.getElementById('ranges');
+    rarities.filter(r => r.key.includes('to_')).forEach(r => {
+      const badge = document.createElement('div');
+      badge.className = `px-8 py-4 rounded-3xl text-sm font-bold tracking-widest ${r.color} shadow-xl`;
+      badge.textContent = r.label;
+      rangesContainer.appendChild(badge);
+    });
+
+    // Advanced Section
+    const advancedContainer = document.getElementById('advanced');
+    const premium = rarities.filter(r => ['legendary','mythic'].includes(r.key) || r.key.includes('to_mythic'));
+    
+    premium.forEach(r => {
+      const card = document.createElement('div');
+      card.className = `bg-zinc-900 border border-zinc-700 rounded-2xl p-8 flex items-center gap-6 ${r.key === 'mythic' ? 'mythic-glow border-purple-500' : 'border-amber-400'}`;
+      card.innerHTML = `
+        <div class="px-8 py-4 rounded-full text-base font-bold ${r.color} shadow-2xl">
+          ✦ ${r.label} ✦
+        </div>
+        <div class="text-6xl ml-auto">${r.key === 'mythic' ? '🌟' : '🏅'}</div>
+      `;
+      advancedContainer.appendChild(card);
+    });
+
+    // Particle System
+    function createParticle() {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      
+      const left = Math.random() * 100;
+      particle.style.left = `${left}%`;
+      particle.style.animationDuration = `${Math.random() * 8 + 7}s`;
+      particle.style.animationDelay = `-${Math.random() * 10}s`;
+      particle.style.opacity = Math.random() * 0.6 + 0.4;
+      
+      if (Math.random() > 0.6) particle.style.background = '#eab308';
+      
+      document.getElementById('particles').appendChild(particle);
+      
+      setTimeout(() => particle.remove(), 20000);
+    }
+
+    setInterval(() => {
+      for (let i = 0; i < 4; i++) createParticle();
+    }, 220);
+  </script>
+</body>
+</html>
