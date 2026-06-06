@@ -48,6 +48,8 @@
   const PUBLIC_ITEM_CATALOG_TAGS_URL = "/assets/data/public-item-catalog-tags.json";
   let publicItemCatalogTagIndex = null;
   let publicItemCatalogTagIndexPromise = null;
+  let publicMarketExchangeCatalogIndex = null;
+  let publicMarketExchangeCatalogIndexPromise = null;
 
   const AUTH_PUBLIC_MARKET_EXCHANGE_URL = `${AUTH_API_BASE}/api/public/economy/market-exchange`;
   const AUTH_PUBLIC_MARKET_EXCHANGE_POST_URL = `${AUTH_API_BASE}/api/public/economy/exchange`;
@@ -3855,8 +3857,21 @@
     if (kind !== "wallet") {
       const saleEnabled = economyItemMarketSaleEnabled(item);
       const exchangeEnabled = isEconomyExchangeCapableItem(item);
-      const marketPrice = firstPresent(item.market_price_stekels, item.price, item.price_credits, definition.market_price_stekels);
-      const exchangeValue = firstPresent(item.exchange_value_stekels, item.exchange_value, item.exchange_value_credits, definition.exchange_value);
+      const marketPrice = firstPresent(
+        item.market_price_stekels,
+        item.price,
+        item.price_credits,
+        definition.market_price_stekels,
+        definition.market_price_credits
+      );
+      const exchangeValue = firstPresent(
+        item.exchange_value_stekels,
+        item.exchange_value,
+        item.exchange_value_credits,
+        definition.exchange_value_stekels,
+        definition.exchange_value,
+        definition.exchange_value_credits
+      );
       const priceNumber = Number(marketPrice);
       const exchangeNumber = Number(exchangeValue);
       const pushCurrencyStat = (labelText, numeric, unavailable = false) => {
@@ -3867,12 +3882,12 @@
         if (!Number.isFinite(numeric)) return;
         stats.push({ label: labelText, rawValue: numeric, currency: true, value: formatNumber(numeric) });
       };
-      if (!saleEnabled && exchangeEnabled) {
+      if (!saleEnabled) {
         pushCurrencyStat("Price", priceNumber, true);
       } else if (Number.isFinite(priceNumber)) {
         pushCurrencyStat("Price", priceNumber, false);
       }
-      if (saleEnabled && !exchangeEnabled) {
+      if (!exchangeEnabled) {
         pushCurrencyStat("Exchange value", exchangeNumber, true);
       } else if (Number.isFinite(exchangeNumber)) {
         pushCurrencyStat("Exchange value", exchangeNumber, false);
@@ -9040,8 +9055,25 @@
     };
   }
 
+  function economyItemDefinition(item = {}) {
+    return item.definition && typeof item.definition === "object" ? item.definition : {};
+  }
+
   function economyItemMarketSaleEnabled(item = {}) {
-    return item.can_buy !== false && item.purchasable !== false && item.market_enabled !== false;
+    const definition = economyItemDefinition(item);
+    const marketEnabled = firstPresent(item.market_enabled, definition.market_enabled);
+    const canBuy = firstPresent(item.can_buy, definition.can_buy);
+    const purchasable = firstPresent(item.purchasable, definition.purchasable);
+    if (marketEnabled === false || canBuy === false || purchasable === false) return false;
+    if (marketEnabled === true || canBuy === true || purchasable === true) return true;
+    const marketPrice = Number(firstPresent(
+      item.market_price_stekels,
+      item.price,
+      item.price_credits,
+      definition.market_price_stekels,
+      definition.market_price_credits
+    ));
+    return Number.isFinite(marketPrice) && marketPrice > 0;
   }
 
   function economyItemSoldOut(item = {}) {
@@ -9170,6 +9202,53 @@
     return publicItemCatalogTagIndexPromise;
   }
 
+
+  async function ensurePublicMarketExchangeCatalogIndex() {
+    if (publicMarketExchangeCatalogIndex instanceof Map) return publicMarketExchangeCatalogIndex;
+    if (!publicMarketExchangeCatalogIndexPromise) {
+      publicMarketExchangeCatalogIndexPromise = fetchPublicMarketExchange()
+        .then((payload) => {
+          publicMarketExchangeCatalogIndex = new Map();
+          const append = (entry) => {
+            const code = economyCatalogItemCode(entry);
+            if (!code) return;
+            const existing = publicMarketExchangeCatalogIndex.get(code);
+            publicMarketExchangeCatalogIndex.set(code, existing ? { ...existing, ...entry } : { ...entry });
+          };
+          (Array.isArray(payload?.market) ? payload.market : []).forEach(append);
+          (Array.isArray(payload?.exchange) ? payload.exchange : []).forEach(append);
+          return publicMarketExchangeCatalogIndex;
+        })
+        .catch(() => {
+          publicMarketExchangeCatalogIndex = new Map();
+          return publicMarketExchangeCatalogIndex;
+        });
+    }
+    return publicMarketExchangeCatalogIndexPromise;
+  }
+
+  function mergeEconomyCatalogListing(item = {}, catalogEntry = {}) {
+    if (!catalogEntry || typeof catalogEntry !== "object" || !Object.keys(catalogEntry).length) return item;
+    const definition = {
+      ...(catalogEntry.definition && typeof catalogEntry.definition === "object" ? catalogEntry.definition : {}),
+      ...(item.definition && typeof item.definition === "object" ? item.definition : {})
+    };
+    return {
+      ...catalogEntry,
+      ...item,
+      definition,
+      market_price_stekels: firstPresent(item.market_price_stekels, catalogEntry.market_price_stekels, definition.market_price_stekels),
+      exchange_value_stekels: firstPresent(item.exchange_value_stekels, catalogEntry.exchange_value_stekels, definition.exchange_value_stekels),
+      market_enabled: firstPresent(item.market_enabled, catalogEntry.market_enabled, definition.market_enabled),
+      exchange_enabled: firstPresent(item.exchange_enabled, catalogEntry.exchange_enabled, definition.exchange_enabled),
+      can_buy: firstPresent(item.can_buy, catalogEntry.can_buy, definition.can_buy),
+      can_exchange: firstPresent(item.can_exchange, catalogEntry.can_exchange, definition.can_exchange),
+      purchasable: firstPresent(item.purchasable, catalogEntry.purchasable, definition.purchasable),
+      quantity: firstPresent(item.quantity, item.count, item.held_quantity),
+      count: firstPresent(item.count, item.quantity),
+      held_quantity: firstPresent(item.held_quantity, item.quantity)
+    };
+  }
   function mergeEconomyItemTagIndexes(...indexes) {
     const merged = new Map();
     indexes.forEach((index) => {
@@ -9207,7 +9286,13 @@
       publicItemCatalogTagIndex,
       buildEconomyItemTagIndex(options.catalogPayload || {})
     );
-    return enrichEconomyCatalogItem(item, tagIndex);
+    let hydrated = enrichEconomyCatalogItem(item, tagIndex);
+    const code = economyCatalogItemCode(hydrated);
+    const catalogEntry = publicMarketExchangeCatalogIndex instanceof Map && code
+      ? publicMarketExchangeCatalogIndex.get(code)
+      : null;
+    if (catalogEntry) hydrated = mergeEconomyCatalogListing(hydrated, catalogEntry);
+    return hydrated;
   }
 
   function buildEconomyItemTagIndex(payload = {}) {
@@ -9262,11 +9347,37 @@
 
   function isEconomyExchangeCapableItem(item = {}) {
     if (!item || typeof item !== "object") return false;
-    if (item.can_exchange === false || item.exchange_enabled === false || item.exchangeable === false) return false;
-    if (item.can_exchange === true || item.exchange_enabled === true || item.exchangeable === true) return true;
-    if (Number(item.exchange_value_stekels ?? item.exchange_value_credits ?? item.exchange_value) > 0) return true;
-    const exchangeInputs = item.exchange_inputs || item.exchange_input || item.input_items || item.required_exchange_items || item.exchange_requirements;
-    const exchangeOutputs = item.exchange_outputs || item.exchange_output || item.output_items || item.grants;
+    const definition = economyItemDefinition(item);
+    const exchangeEnabled = firstPresent(item.exchange_enabled, definition.exchange_enabled);
+    const canExchange = firstPresent(item.can_exchange, definition.can_exchange);
+    const exchangeable = firstPresent(item.exchangeable, definition.exchangeable);
+    if (exchangeEnabled === false || canExchange === false || exchangeable === false) return false;
+    if (exchangeEnabled === true || canExchange === true || exchangeable === true) return true;
+    const exchangeValue = Number(firstPresent(
+      item.exchange_value_stekels,
+      item.exchange_value_credits,
+      item.exchange_value,
+      definition.exchange_value_stekels,
+      definition.exchange_value_credits,
+      definition.exchange_value
+    ));
+    if (Number.isFinite(exchangeValue) && exchangeValue > 0) return true;
+    const exchangeInputs = firstPresent(item.exchange_inputs, definition.exchange_inputs)
+      || item.exchange_input
+      || item.input_items
+      || item.required_exchange_items
+      || item.exchange_requirements
+      || definition.exchange_input
+      || definition.input_items
+      || definition.required_exchange_items
+      || definition.exchange_requirements;
+    const exchangeOutputs = firstPresent(item.exchange_outputs, definition.exchange_outputs)
+      || item.exchange_output
+      || item.output_items
+      || item.grants
+      || definition.exchange_output
+      || definition.output_items
+      || definition.grants;
     return Boolean(
       (Array.isArray(exchangeInputs) && exchangeInputs.length) ||
       (Array.isArray(exchangeOutputs) && exchangeOutputs.length) ||
@@ -9509,6 +9620,17 @@
   }
 
   function openEconomyItemLightbox(item = {}, options = {}, sourceElement = null) {
+    const launchLightbox = () => openEconomyItemLightboxReady(item, options, sourceElement);
+    Promise.all([
+      ensurePublicItemCatalogTagIndex().catch(() => null),
+      ensurePublicMarketExchangeCatalogIndex().catch(() => null)
+    ]).then(launchLightbox).catch((error) => {
+      console.error("Failed to preload economy catalog for item lightbox.", error);
+      launchLightbox();
+    });
+  }
+
+  function openEconomyItemLightboxReady(item = {}, options = {}, sourceElement = null) {
     const rawNavigationItems = Array.isArray(options.navigationItems) ? options.navigationItems.filter(Boolean) : [];
     const navigationItems = rawNavigationItems.map((entry) => hydrateEconomyCatalogItemForLightbox(entry, options));
     let currentItem = hydrateEconomyCatalogItemForLightbox(item || {}, options);
