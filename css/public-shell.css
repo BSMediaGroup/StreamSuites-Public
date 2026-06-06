@@ -10450,9 +10450,15 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .market-item-lightbox-price .market-item-price-icon {
-  width: 22px;
-  height: 22px;
-  flex-basis: 22px;
+  width: 1.2rem;
+  height: 1.2rem;
+  flex-basis: 1.2rem;
+}
+
+.market-item-lightbox-stat .economy-currency-amount-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+  flex-basis: 1.2rem;
 }
 
 .market-item-lightbox-price .market-item-price-value {

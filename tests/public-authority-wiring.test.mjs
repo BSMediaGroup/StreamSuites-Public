@@ -130,7 +130,11 @@ test("games economy page uses gallery-first market groups and shell toolbar anch
   assert.match(app, /function wireMarketItemDetailsTrigger\(trigger, item = \{\}, options = \{\}\)/);
   assert.match(app, /trigger\.dataset\.marketItemDetailsTrigger = ""/);
   assert.match(app, /buildEconomyItemMedia\(currentItem, "market-item-lightbox-media"\)/);
-  assert.match(app, /detail\.stats\.forEach/);
+  assert.match(app, /function economyItemMarketSaleEnabled\(/);
+  assert.match(app, /stat\.unavailable[\s\S]*buildEconomyCurrencyAmount\(0, \{ unavailable: true \}\)/);
+  assert.match(app, /options\.unavailable \? "N\/A" : formatNumber\(value\)/);
+  assert.match(app, /pushCurrencyStat\("Price", priceNumber, true\)/);
+  assert.match(app, /pushCurrencyStat\("Exchange value", exchangeNumber, true\)/);
   assert.match(app, /detail\.meta\.forEach/);
   assert.match(app, /appendItemDetailRow\(meta, row\.label, value\)/);
   assert.match(app, /event\.key === "Escape"/);
@@ -187,7 +191,8 @@ test("games economy page uses gallery-first market groups and shell toolbar anch
   assert.match(css, /\.market-item-lightbox\s*\{[\s\S]*scrollbar-width:\s*thin/);
   assert.match(css, /\.market-item-lightbox::-webkit-scrollbar-thumb\s*\{/);
   assert.match(css, /\.market-item-lightbox-media\s*\{[\s\S]*min-height:\s*360px/);
-  assert.match(css, /\.market-item-lightbox-price/);
+  assert.match(css, /\.market-item-lightbox-price \.market-item-price-icon\s*\{[\s\S]*width:\s*1\.2rem/);
+  assert.match(css, /\.market-item-lightbox-stat \.economy-currency-amount-icon\s*\{[\s\S]*width:\s*1\.2rem/);
   assert.match(css, /\.market-item-lightbox-stats/);
   assert.match(css, /\.market-item-lightbox-open\s*\{[\s\S]*overflow:\s*hidden/);
   assert.match(css, /\.market-exchange-section-heading\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/);
@@ -816,6 +821,13 @@ test("public economy item lightbox normalizes wallet inventory profile and marke
     economyItemAvailabilityLabel(item = {}) {
       return String(item.availability || "").trim();
     },
+    economyItemMarketSaleEnabled(item = {}) {
+      return item.can_buy !== false && item.purchasable !== false && item.market_enabled !== false;
+    },
+    isEconomyExchangeCapableItem(item = {}) {
+      if (item.can_exchange === false || item.exchange_enabled === false || item.exchangeable === false) return false;
+      return item.can_exchange === true || item.exchange_enabled === true || item.exchangeable === true || Number(item.exchange_value_stekels || 0) > 0;
+    },
     create() {
       return { append() {} };
     }
@@ -868,6 +880,28 @@ this.collectEconomyItemDetailTagSources = collectEconomyItemDetailTagSources;`, 
   assert.ok(marketDetail.chips.includes("Buy"));
   assert.ok(marketDetail.meta.some((row) => row.label === "Category" && row.value === "Combat Vehicles"));
   assert.ok(marketDetail.stats.some((row) => row.label === "Price" && row.currency === true));
+
+  const saleOnlyDetail = context.normalizeEconomyItemLightboxData({
+    item_code: "material.brick",
+    market_price_stekels: 12,
+    market_enabled: true,
+    can_buy: true,
+    can_exchange: false,
+    exchange_enabled: false,
+    exchange_value_stekels: 0
+  }, { kind: "market", actionLabel: "Buy" });
+  assert.ok(saleOnlyDetail.stats.some((row) => row.label === "Exchange value" && row.unavailable === true));
+
+  const exchangeOnlyDetail = context.normalizeEconomyItemLightboxData({
+    item_code: "currency.gem.green",
+    exchange_value_stekels: 50,
+    can_exchange: true,
+    exchange_enabled: true,
+    market_enabled: false,
+    can_buy: false,
+    market_price_stekels: 0
+  }, { kind: "market", actionLabel: "Exchange" });
+  assert.ok(exchangeOnlyDetail.stats.some((row) => row.label === "Price" && row.unavailable === true));
 
   const fallbackDetail = context.fallbackEconomyItemLightboxData({ item_code: "fallback.item" }, { kind: "inventory" });
   assert.equal(fallbackDetail.title, "fallback.item");
@@ -984,7 +1018,7 @@ test("public economy item lightbox exposes scoped navigation and currentColor cu
   assert.match(app, /event\.key === "ArrowRight"[\s\S]*navigate\(1\)/);
   assert.match(app, /market-item-lightbox-header/);
   assert.match(app, /market-item-lightbox-nav-group/);
-  assert.match(app, /buildEconomyCurrencyAmount\(Number\(stat\.rawValue\)\)/);
+  assert.match(app, /stat\.unavailable[\s\S]*buildEconomyCurrencyAmount\(0, \{ unavailable: true \}\)/);
   assert.match(app, /market-item-price-icon"\);[\s\S]*--economy-currency-symbol/);
   assert.match(css, /\.market-item-lightbox-nav--prev/);
   assert.match(css, /\.market-item-lightbox-nav--next/);
