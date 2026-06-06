@@ -10291,7 +10291,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
     linear-gradient(140deg, rgba(24, 35, 54, 0.98), rgba(8, 13, 23, 0.98)),
     rgba(8, 13, 23, 0.98);
   box-shadow: 0 34px 110px rgba(0, 0, 0, 0.62);
-  padding: 18px 24px 30px;
+  padding: 18px 14px 24px 24px;
 }
 
 .market-item-lightbox::-webkit-scrollbar {
