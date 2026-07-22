@@ -6,6 +6,12 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
 
+### 2026-07-23 - Explicit StudioApp product release metadata
+
+- Updated the guarded StudioApp download manifest parser to accept both deployed legacy v1 and explicit `streamsuites-studioapp` v2 manifests. StudioApp product version/build is primary; optional StreamSuites system compatibility version/build is secondary and no Runtime export is used as installer identity.
+- The existing `/downloads/studioapp` route, server-side bypass validation, gate variables, controlled redirect, alpha-manifest hydration and no-installer-in-Public boundary remain intact. Normal StudioApp R2 releases require no Public redeployment; the private StudioApp Release Manager only verifies this page and guides a separate manual Public deployment when Public source itself changes.
+- Added focused old/new manifest, product identity, secondary metadata, gate-preservation, secret-boundary and route-presentation assertions. No installer was copied here and no Cloudflare Pages deployment was performed.
+
 ### 2026-07-22 - Canonical guarded StudioApp ALPHA download page
 
 - Added the responsive `/downloads/studioapp` landing page with truthful native-Windows ALPHA capabilities, requirements, unsigned-build guidance, reduced-motion/high-contrast support, and the existing Public access-modal and lockout-banner visual language.

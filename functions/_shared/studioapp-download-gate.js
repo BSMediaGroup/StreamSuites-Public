@@ -5,6 +5,7 @@ const MIN_TTL_MINUTES = 1;
 const MAX_TTL_MINUTES = 60;
 const MANIFEST_URL = "https://updates.streamsuites.app/studioapp/windows-x64/alpha/manifest.json";
 const EXPECTED_PRODUCT = "StreamSuites StudioApp";
+const EXPECTED_PRODUCT_ID = "streamsuites-studioapp";
 const EXPECTED_CHANNEL = "alpha";
 const EXPECTED_ARCHITECTURE = "windows-x64";
 const EXPECTED_INSTALLER_HOST = "updates.streamsuites.app";
@@ -131,7 +132,9 @@ export async function fetchValidatedManifest(fetchImpl = fetch) {
   const contentType = String(response.headers.get("Content-Type") || "").toLowerCase();
   if (!contentType.includes("application/json")) throw new Error("manifest_invalid");
   const manifest = await response.json();
-  if (manifest?.schema_version !== 1 || manifest?.product !== EXPECTED_PRODUCT || manifest?.channel !== EXPECTED_CHANNEL || manifest?.architecture !== EXPECTED_ARCHITECTURE) throw new Error("manifest_invalid");
+  const legacyManifest = manifest?.schema_version === 1 && (manifest?.product_id == null || manifest.product_id === EXPECTED_PRODUCT_ID);
+  const productManifest = manifest?.schema_version === 2 && manifest?.product_id === EXPECTED_PRODUCT_ID;
+  if ((!legacyManifest && !productManifest) || manifest?.product !== EXPECTED_PRODUCT || manifest?.channel !== EXPECTED_CHANNEL || manifest?.architecture !== EXPECTED_ARCHITECTURE) throw new Error("manifest_invalid");
   if (typeof manifest.version !== "string" || !manifest.version || manifest.version.length > 64 || typeof manifest.build !== "string" || !manifest.build || manifest.build.length > 64) throw new Error("manifest_invalid");
   if (!Number.isSafeInteger(manifest.installer_size) || manifest.installer_size <= 0 || !/^[a-f0-9]{64}$/i.test(String(manifest.installer_sha256 || ""))) throw new Error("manifest_invalid");
   if (!/^[A-Za-z0-9._-]+\.exe$/.test(String(manifest.installer_filename || ""))) throw new Error("manifest_invalid");
@@ -145,8 +148,13 @@ export async function fetchValidatedManifest(fetchImpl = fetch) {
   return Object.freeze({
     installerUrl: installer.toString(),
     publicMetadata: {
+      product_id: productManifest ? EXPECTED_PRODUCT_ID : null,
       version: manifest.version,
       build: manifest.build,
+      system_version: typeof manifest.system_version === "string" ? manifest.system_version.slice(0, 64) : null,
+      system_build: typeof manifest.system_build === "string" ? manifest.system_build.slice(0, 64) : null,
+      source_revision: typeof manifest.source_revision === "string" ? manifest.source_revision.slice(0, 80) : null,
+      package_provenance_version: Number.isSafeInteger(manifest.package_provenance_version) ? manifest.package_provenance_version : null,
       architecture: EXPECTED_ARCHITECTURE,
       installer_filename: manifest.installer_filename,
       installer_size: manifest.installer_size,

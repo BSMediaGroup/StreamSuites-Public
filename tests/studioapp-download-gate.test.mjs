@@ -64,6 +64,12 @@ test("manifest validation accepts only the canonical product channel architectur
   const responseFor = (payload, headers = { "Content-Type": "application/json" }) => async () => new Response(JSON.stringify(payload), { status: 200, headers });
   const release = await gate.fetchValidatedManifest(responseFor(valid));
   assert.equal(release.publicMetadata.version, valid.version); assert.equal(release.installerUrl, valid.installer_url);
+  const current = { ...valid, schema_version: 2, product_id: "streamsuites-studioapp", build: "2026.07.22+007", system_version: "0.5.0-alpha", system_build: "2026.07.22+006", package_provenance_version: 2 };
+  const currentRelease = await gate.fetchValidatedManifest(responseFor(current));
+  assert.equal(currentRelease.publicMetadata.product_id, "streamsuites-studioapp");
+  assert.equal(currentRelease.publicMetadata.system_build, "2026.07.22+006");
+  await assert.rejects(() => gate.fetchValidatedManifest(responseFor({ ...current, product_id: "other-product" })), /manifest_invalid/);
+  await assert.rejects(() => gate.fetchValidatedManifest(responseFor({ ...valid, product_id: "other-product" })), /manifest_invalid/);
   for (const mutation of [
     { product: "Other" }, { channel: "stable" }, { architecture: "arm64" },
     { installer_url: "http://updates.streamsuites.app/a.exe" },
@@ -84,6 +90,7 @@ test("static download route reuses access visuals, contains no secret, and expos
   assert.match(html, /\/assets\/icons\/ui\/streamsuitesicon\.svg/);
   assert.ok(fs.statSync(path.join(root, "assets/icons/ui/streamsuitesicon.svg")).size > 0);
   assert.match(html, /aria-modal="true"/); assert.match(html, /aria-live="polite"/); assert.match(html, /prefers-reduced-motion|studioapp-download\.css/);
+  assert.match(html, /StudioApp version/); assert.match(html, /System compatibility/);
   assert.match(css, /prefers-reduced-motion:reduce/); assert.match(css, /forced-colors:active/); assert.match(css, /@media\(max-width:620px\)/);
   assert.match(redirects, /\/downloads\/studioapp \/downloads\/studioapp\/index\.html 200/);
   assert.doesNotMatch(html, /https:\/\/updates\.streamsuites\.app\/studioapp\/windows-x64\/releases\//);

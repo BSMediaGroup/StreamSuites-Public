@@ -42,7 +42,7 @@ flowchart TD
 
 ## Current Surface Model
 
-- `/downloads/studioapp` is the canonical Windows StudioApp ALPHA landing page. It renders only server-validated release metadata and sends normal downloads through a same-origin Pages Function that validates the canonical update manifest before issuing a controlled redirect; the static page contains no raw installer URL.
+- `/downloads/studioapp` is the canonical Windows StudioApp ALPHA landing page. It treats StudioApp product version/build from the alpha manifest as primary and optional StreamSuites system compatibility version/build as secondary; it never uses Runtime `version.json` as installer identity. The server accepts deployed legacy v1 and explicit `streamsuites-studioapp` v2 manifests before issuing a controlled redirect; the static page contains no raw installer URL.
 - Download lockout is configured only through Pages environment values (`DOWNLOAD_ACCESS_LOCKED`, `DOWNLOAD_ACCESS_MESSAGE`, `DOWNLOAD_BYPASS_ENABLED`, secret `DOWNLOAD_BYPASS_CODE`, bounded `DOWNLOAD_BYPASS_TTL_MINUTES`, and `SHOW_DOWNLOAD_LOCKOUT_BANNER`). Approved tester access uses a short-lived HMAC-signed HttpOnly/Secure/SameSite cookie scoped to the download API. Failure to validate access, cookie, or manifest keeps the download unavailable.
 - The public `/home` and `/community` experiences now share one dashboard-style shell and one sidebar/navigation model, with `/home` remaining the default public home tab for the public dashboard and `/media` preserved only as a compatibility entry.
 - Canonical public profiles resolve at `/u/<slug>`, backed by the authoritative public slug model exported by `StreamSuites`.
@@ -70,7 +70,7 @@ flowchart TD
 
 ## StudioApp Download Gate Operations
 
-The gate owns the canonical page and its normal same-origin download action. It does not make the existing updater objects private: `updates.streamsuites.app` must remain publicly readable by installed StudioApp updaters, and a visitor who already knows an immutable updater URL can still retrieve it. Full binary privacy would require a later signed-token or authenticated updater-distribution design.
+The gate owns the canonical page and its normal same-origin download action. The installer exists only in R2; the alpha manifest identifies the latest immutable object and the Public repository never receives a second installer upload. The private StudioApp Release Manager may verify the route, safe access endpoint and manifest hydration, but it stores no gate secret and does not deploy Pages.
 
 Configure Production and Preview independently in Cloudflare:
 
@@ -84,7 +84,7 @@ Configure Production and Preview independently in Cloudflare:
 
 `DOWNLOAD_BYPASS_TTL_MINUTES` defaults to 15 minutes when absent or invalid and is bounded by the server implementation. The temporary authorization cookie is HMAC-signed from the configured bypass secret, contains no bypass code, and is HttpOnly, Secure, SameSite=Lax, expiring, and scoped to `/api/downloads/studioapp`.
 
-This repository is a static Pages project with no package manifest, install step, lint script, typecheck, or bundle build. Run the focused gate tests with `node --test tests/studioapp-download-gate.test.mjs`; route and Pages Function behavior must also be validated in a Cloudflare Preview before production deployment. The canonical manifest remains `https://updates.streamsuites.app/studioapp/windows-x64/alpha/manifest.json`; no installer is stored in this repository.
+This repository is a static Pages project with no package manifest, install step, lint script, typecheck, or bundle build. Run the focused gate tests with `node --test tests/studioapp-download-gate.test.mjs`; route and Pages Function behavior must also be validated in a Cloudflare Preview before production deployment. The canonical manifest remains `https://updates.streamsuites.app/studioapp/windows-x64/alpha/manifest.json`; no installer is stored here. Normal StudioApp R2 publication requires no Public redeployment. Redeploy Public only when its page/function source or Pages variables change, through the separate manual commit/push/Cloudflare workflow.
 
 ## Cross-Repo Orientation
 

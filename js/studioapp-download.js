@@ -57,6 +57,7 @@
   }
   function renderRelease(release) {
     $("release-version").textContent = release.version || "—"; $("release-build").textContent = release.build || "—";
+    $("release-system-version").textContent = release.system_version || "Not reported"; $("release-system-build").textContent = release.system_build || "Not reported";
     $("release-size").textContent = formatBytes(release.installer_size); $("release-published").textContent = release.published_at ? new Date(release.published_at).toLocaleString() : "Not reported";
     $("release-signature").textContent = release.signed ? (release.signature_subject || "Signed") : "Unsigned ALPHA";
     $("release-sha").textContent = release.installer_sha256; $("copy-release-sha").disabled = false;
