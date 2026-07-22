@@ -7,3 +7,5 @@
 /community/leaderboard/ /leaderboards.html 200
 /u /u/index.html 200
 /u/* /u/index.html 200
+/downloads/studioapp /downloads/studioapp/index.html 200
+/downloads/studioapp/ /downloads/studioapp/index.html 200

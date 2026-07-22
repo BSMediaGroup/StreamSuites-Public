@@ -6,6 +6,16 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
 
+### 2026-07-22 - Canonical guarded StudioApp ALPHA download page
+
+- Added the responsive `/downloads/studioapp` landing page with truthful native-Windows ALPHA capabilities, requirements, unsigned-build guidance, reduced-motion/high-contrast support, and the existing Public access-modal and lockout-banner visual language.
+- Added server-side Pages access configuration, constant-shape tester-code comparison, bounded unlock requests, short-lived HMAC-signed HttpOnly/Secure/SameSite cookies, same-origin mutation checks, expiry/tamper/code-rotation rejection, and a presentation-only banner dismissal that never grants access.
+- Added canonical update-manifest validation and a same-origin controlled download redirect. Product, channel, architecture, immutable release path, filename, size, SHA-256, HTTPS host, and optional safe release-notes metadata fail closed; no raw installer URL or bypass secret is shipped to the static page.
+- Added focused Node tests for locked/unlocked configuration, cookie lifecycle, request bounds/origin, malicious manifest fields, static secret/installer leakage, route aliases, and server-only download control. No deployment, R2 publication, installer rebuild, version change, or Runtime/Auth change was performed.
+- All six focused Node gate suites and module syntax checks passed. Local desktop, tablet, and mobile browser fixtures covered locked/no-bypass, locked/bypass, rejected-code, manifest-unavailable, and unlocked metadata/download states; Cloudflare Preview/production execution and a real production bypass were deliberately not run.
+
+Approved testers can use the temporary access field when the Pages operator enables it. Everyone else sees the honest ALPHA access notice, and a missing or invalid server response keeps Download disabled.
+
 - Public item detail price/exchange stat cards now show currency-icon `N/A` when an item is sale-only (exchange unavailable) or exchange-only (purchase unavailable) instead of misleading `0` Stekel values; lightbox currency symbols stay ~12% larger than adjacent value text (`1.12em`) and vertically center-align with values on `/games` and profile modals.
 - Item detail lightbox layout: desktop economy item modals on `/games` and public profiles are wider (`min(1360px, calc(100vw - 32px))`) with a larger copy column ratio and slim dark-themed scrollbars on the modal surface.
 - Item detail metadata parity: Chat alias now renders immediately after Item code in wallet, inventory, and market lightbox metadata on `/games` and public profiles, using the same scoped `SUSEMono` blue tint (`economy-item-code-value`) as item codes; empty aliases show `—`.

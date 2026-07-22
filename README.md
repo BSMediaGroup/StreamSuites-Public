@@ -42,6 +42,8 @@ flowchart TD
 
 ## Current Surface Model
 
+- `/downloads/studioapp` is the canonical Windows StudioApp ALPHA landing page. It renders only server-validated release metadata and sends normal downloads through a same-origin Pages Function that validates the canonical update manifest before issuing a controlled redirect; the static page contains no raw installer URL.
+- Download lockout is configured only through Pages environment values (`DOWNLOAD_ACCESS_LOCKED`, `DOWNLOAD_ACCESS_MESSAGE`, `DOWNLOAD_BYPASS_ENABLED`, secret `DOWNLOAD_BYPASS_CODE`, bounded `DOWNLOAD_BYPASS_TTL_MINUTES`, and `SHOW_DOWNLOAD_LOCKOUT_BANNER`). Approved tester access uses a short-lived HMAC-signed HttpOnly/Secure/SameSite cookie scoped to the download API. Failure to validate access, cookie, or manifest keeps the download unavailable.
 - The public `/home` and `/community` experiences now share one dashboard-style shell and one sidebar/navigation model, with `/home` remaining the default public home tab for the public dashboard and `/media` preserved only as a compatibility entry.
 - Canonical public profiles resolve at `/u/<slug>`, backed by the authoritative public slug model exported by `StreamSuites`.
 - Legacy `user_code` compatibility is still preserved during profile resolution and migration-safe routing.
@@ -59,11 +61,30 @@ flowchart TD
 ## Routing and Runtime Integration
 
 - Cloudflare Pages routing is handled by the root `_redirects` file plus Pages Functions under `functions/`.
+- `/downloads/studioapp` and its trailing-slash alias resolve to the same static landing page; `/api/downloads/studioapp/*` owns access-state, unlock/end-session, release-metadata, and controlled-download behavior. The dismissible banner is presentation-only and never authorizes a download.
 - The legacy public `/requests` route is now expected to hand off to the developer console feedback hub at `https://console.streamsuites.app/feedback`, while authoritative request data remains runtime-owned.
 - Same-origin auth and API proxy paths forward browser requests to the authoritative Auth API without moving backend ownership into this repo.
 - Public auth entry points now consume `/auth/access-state` and the short-lived `/auth/debug/unlock` bypass flow so public pages remain browseable while new auth starts can be gated by runtime mode.
 - Route handlers under `functions/clips`, `functions/leaderboards`, `functions/polls`, `functions/scoreboards`, `functions/scores`, `functions/tallies`, `functions/wheels`, and `functions/u` preserve gallery deep links plus clean artifact and profile routes.
 - Public shell/profile code in `js/public-pages-app.js` and `js/public-data-hub.js` consumes the authoritative slug, visibility, FindMeHere eligibility, media, live-status fields, economy/inventory summaries, and the runtime-owned community member directory API.
+
+## StudioApp Download Gate Operations
+
+The gate owns the canonical page and its normal same-origin download action. It does not make the existing updater objects private: `updates.streamsuites.app` must remain publicly readable by installed StudioApp updaters, and a visitor who already knows an immutable updater URL can still retrieve it. Full binary privacy would require a later signed-token or authenticated updater-distribution design.
+
+Configure Production and Preview independently in Cloudflare:
+
+1. Open **Cloudflare Dashboard**.
+2. Open **Workers & Pages** and select the StreamSuites-Public Pages project.
+3. Open **Settings**, then **Variables and Secrets**.
+4. Add `DOWNLOAD_ACCESS_LOCKED`, `DOWNLOAD_ACCESS_MESSAGE`, `DOWNLOAD_BYPASS_ENABLED`, `DOWNLOAD_BYPASS_TTL_MINUTES`, and `SHOW_DOWNLOAD_LOCKOUT_BANNER` as normal variables.
+5. Add `DOWNLOAD_BYPASS_CODE` only as an encrypted Secret. Never put its value in Git, `.env.example`, Pages client JavaScript, or browser storage.
+6. Apply appropriate values separately to Production and Preview.
+7. Redeploy the Pages project after changing the values.
+
+`DOWNLOAD_BYPASS_TTL_MINUTES` defaults to 15 minutes when absent or invalid and is bounded by the server implementation. The temporary authorization cookie is HMAC-signed from the configured bypass secret, contains no bypass code, and is HttpOnly, Secure, SameSite=Lax, expiring, and scoped to `/api/downloads/studioapp`.
+
+This repository is a static Pages project with no package manifest, install step, lint script, typecheck, or bundle build. Run the focused gate tests with `node --test tests/studioapp-download-gate.test.mjs`; route and Pages Function behavior must also be validated in a Cloudflare Preview before production deployment. The canonical manifest remains `https://updates.streamsuites.app/studioapp/windows-x64/alpha/manifest.json`; no installer is stored in this repository.
 
 ## Cross-Repo Orientation
 
@@ -76,6 +97,7 @@ flowchart TD
 
 ```text
 StreamSuites-Public/
+├── .env.example             # Download-gate variable names; secret value intentionally blank
 ├── .gitignore
 ├── _redirects
 ├── 404.html
@@ -106,9 +128,15 @@ StreamSuites-Public/
 │   ├── [[path]].js
 │   ├── _shared/
 │   │   ├── artifact-route.js
-│   │   └── auth-api-proxy.js
+│   │   ├── auth-api-proxy.js
+│   │   └── studioapp-download-gate.js
 │   ├── api/
-│   │   └── [[path]].js
+│   │   ├── [[path]].js
+│   │   └── downloads/studioapp/
+│   │       ├── access-state.js
+│   │       ├── latest.js
+│   │       ├── lock.js
+│   │       └── unlock.js
 │   ├── auth/
 │   │   └── [[path]].js
 │   ├── clips/
@@ -142,6 +170,9 @@ StreamSuites-Public/
 │   └── settings.html
 ├── live/
 │   └── index.html
+├── downloads/
+│   └── studioapp/
+│       └── index.html
 ├── login/
 │   └── index.html
 ├── u/
@@ -177,6 +208,7 @@ StreamSuites-Public/
 │   ├── public-requests.js
 │   ├── public-shell.js
 │   ├── public-toast.js
+│   ├── studioapp-download.js
 │   ├── status-widget.js
 │   ├── turnstile-inline.js
 │   └── utils/
@@ -191,11 +223,13 @@ StreamSuites-Public/
 │   ├── public-shell.css
 │   ├── requests-auth.css
 │   ├── requests.css
+│   ├── studioapp-download.css
 │   └── status-widget.css
 ├── tests/
 │   ├── auth-surface-parity.test.mjs
 │   ├── live-status-authority.test.mjs
 │   ├── public-authority-wiring.test.mjs
+│   ├── studioapp-download-gate.test.mjs
 │   └── wheels-authority.test.mjs
 └── assets/
     ├── css/

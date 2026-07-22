@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Download the Windows-native StreamSuites StudioApp ALPHA." />
+  <meta name="color-scheme" content="dark" />
+  <title>Download StudioApp ALPHA | StreamSuites</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="/css/theme-dark.css" />
+  <link rel="stylesheet" href="/css/public-shell.css" />
+  <link rel="stylesheet" href="/css/studioapp-download.css" />
+  <script src="/js/studioapp-download.js" defer></script>
+</head>
+<body class="public-standalone-page studioapp-download-page">
+  <a class="download-skip-link" href="#main-content">Skip to content</a>
+  <header class="download-topbar">
+    <a class="download-brand" href="/" aria-label="StreamSuites home"><img src="/assets/icons/ui/streamsuitesicon.svg" alt="" /><span>STREAMSUITES</span></a>
+    <nav aria-label="Primary"><a href="/home">Public</a><a href="https://studio.streamsuites.app">Browser Studio</a><a href="https://docs.streamsuites.app">Docs</a></nav>
+  </header>
+
+  <aside id="download-lockout-banner" class="public-lockout-banner download-lockout-banner" hidden aria-live="polite">
+    <div class="public-lockout-banner__body"><div class="public-lockout-banner__meta"><span class="public-lockout-banner__eyebrow">ALPHA access notice</span><p id="download-banner-message" class="public-lockout-banner__message"></p></div><button id="dismiss-download-banner" class="public-lockout-banner__close" type="button" aria-label="Dismiss access notice">×</button></div>
+  </aside>
+
+  <main id="main-content">
+    <section class="download-hero" aria-labelledby="download-title">
+      <div class="download-hero-copy">
+        <div class="download-kicker"><span>WINDOWS NATIVE</span><strong>ALPHA</strong></div>
+        <h1 id="download-title">Your native StreamSuites production workspace.</h1>
+        <p>StudioApp brings Runtime/Auth-backed rooms, local Windows display capture, a native Stage preview, detachable production docks, destinations, and managed updates into one focused desktop application.</p>
+        <div class="download-actions">
+          <a id="studioapp-download-action" class="download-primary-action" role="button" aria-disabled="true">Download for Windows</a>
+          <a class="download-secondary-action" href="https://studio.streamsuites.app">Open browser Studio</a>
+        </div>
+        <p id="download-action-note" class="download-action-note">Checking StudioApp download access and the current ALPHA release…</p>
+      </div>
+      <div class="download-product-card" aria-label="StreamSuites StudioApp preview">
+        <div class="download-window-chrome"><span></span><span></span><span></span><b>STREAMSUITES STUDIOAPP</b></div>
+        <div class="download-product-mark"><img src="/assets/logos/studiologo.png" alt="StreamSuites StudioApp" /><div><strong>STUDIOAPP</strong><span>Native Windows production</span></div></div>
+        <div class="download-stage-preview"><span>OFF AIR · LOCAL PREVIEW</span><div><b>STAGE</b><small>Windows Display Capture</small></div></div>
+        <div class="download-dock-preview"><span>SCENES</span><span>AUDIO MIXER</span><span>PARTICIPANTS</span></div>
+      </div>
+    </section>
+
+    <section class="download-grid" aria-label="Release and requirements">
+      <article class="download-panel download-release-card">
+        <div class="download-panel-heading"><div><span>CURRENT RELEASE</span><h2>StudioApp ALPHA</h2></div><span id="release-state" class="download-state-pill">Checking</span></div>
+        <dl class="download-release-facts">
+          <div><dt>Version</dt><dd id="release-version">—</dd></div><div><dt>Build</dt><dd id="release-build">—</dd></div>
+          <div><dt>Platform</dt><dd>Windows x64</dd></div><div><dt>Installer size</dt><dd id="release-size">—</dd></div>
+          <div><dt>Published</dt><dd id="release-published">—</dd></div><div><dt>Signature</dt><dd id="release-signature">Checking</dd></div>
+        </dl>
+        <div class="download-hash"><span>SHA-256</span><code id="release-sha">Release metadata unavailable</code><button id="copy-release-sha" type="button" disabled>Copy</button></div>
+        <div class="download-release-links"><a id="release-notes-link" hidden>Release notes</a><button id="end-download-session" type="button" hidden>End tester session</button></div>
+        <p class="download-warning"><strong>Unsigned ALPHA:</strong> the current installer may trigger Microsoft Defender SmartScreen. Verify the SHA-256 shown here before running it.</p>
+      </article>
+
+      <article class="download-panel">
+        <span class="download-panel-label">SYSTEM REQUIREMENTS</span><h2>Built for modern Windows</h2>
+        <ul class="download-check-list"><li>Windows 10 build 19041 or later</li><li>64-bit Windows installation</li><li>Compatible display and Windows Graphics Capture support</li><li>No Visual Studio or .NET SDK required by the self-contained installer</li></ul>
+        <p>Capture and GPU behavior varies by device, display topology, driver, and Windows configuration. No unsupported minimum RAM or GPU claim is made.</p>
+      </article>
+    </section>
+
+    <section class="download-capabilities" aria-labelledby="capabilities-title">
+      <div><span class="download-panel-label">CURRENT ALPHA</span><h2 id="capabilities-title">Native foundations, truthful boundaries.</h2><p>StudioApp remains a native WPF/C++ application. Runtime/Auth owns accounts, rooms, permissions, credentials, and destinations; the supervised native engine owns local media work.</p></div>
+      <div class="download-capability-grid"><article><h3>Available now</h3><p>Account and room access, native display capture, Stage preview, detachable docks, destination configuration, updater, and local media foundations.</p></article><article><h3>Not yet available</h3><p>Live output, recording, clipping, and native remote-participant rendering are not implemented. ALPHA is not presented as production-stable.</p></article><article><h3>Trust the artifact</h3><p>Release data comes from the canonical <code>updates.streamsuites.app</code> manifest. Validate the installer hash and publisher/signature state before use.</p></article></div>
+    </section>
+  </main>
+
+  <footer class="download-footer"><span>© 2026 Brainstream Media Group</span><nav aria-label="Legal"><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="/accessibility.html">Accessibility</a><a href="https://docs.streamsuites.app">Documentation</a></nav></footer>
+
+  <div id="download-access-modal" class="auth-modal-backdrop" aria-hidden="true">
+    <section class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="download-access-title" tabindex="-1">
+      <button id="close-download-access" class="auth-modal-close" type="button" aria-label="Close access notice"><span class="auth-modal-close-icon" aria-hidden="true"></span></button>
+      <div class="auth-modal-header"><p class="auth-modal-eyebrow">StudioApp ALPHA access</p><h2 id="download-access-title" class="auth-modal-title">Downloads are temporarily limited</h2><p id="download-access-message" class="auth-modal-subtitle"></p></div>
+      <div id="download-bypass-gate" class="ss-auth-access-gate" hidden>
+        <form id="download-bypass-form" class="ss-auth-access-gate__form"><label class="ss-auth-access-gate__label" for="download-bypass-code">Tester access code</label><input id="download-bypass-code" class="ss-auth-access-gate__input" type="password" maxlength="256" autocomplete="off" spellcheck="false" /><button class="ss-auth-access-gate__submit" type="submit">Unlock download</button><p id="download-bypass-feedback" class="ss-auth-access-gate__feedback" role="status" aria-live="polite"></p></form>
+      </div>
+      <button id="return-to-download-page" class="download-modal-secondary" type="button">Return to page</button>
+    </section>
+  </div>
+  <div id="download-live-status" class="download-sr-only" role="status" aria-live="polite"></div>
+</body>
+</html>
