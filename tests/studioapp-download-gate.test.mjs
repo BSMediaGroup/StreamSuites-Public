@@ -81,6 +81,23 @@ test("manifest validation accepts only the canonical product channel architectur
   await assert.rejects(() => gate.fetchValidatedManifest(responseFor(valid, { "Content-Type": "text/html" })), /manifest_invalid/);
 });
 
+test("product manifest is preferred and the deployed legacy path remains a bounded fallback", async () => {
+  const product = {
+    schema_version: 2, product_id: "streamsuites-studioapp", product: "StreamSuites StudioApp", channel: "alpha", architecture: "windows-x64",
+    version: "0.2.4-alpha", build: "2026.07.23+001", installer_filename: "StreamSuites-StudioApp-0.2.4-alpha-windows-x64-setup.exe",
+    installer_url: "https://updates.streamsuites.app/studioapp/windows-x64/releases/0.2.4-alpha/2026.07.23_2b001/StreamSuites-StudioApp-0.2.4-alpha-windows-x64-setup.exe",
+    installer_size: 42, installer_sha256: "a".repeat(64), published_at: "2026-07-23T00:00:00Z", signed: false,
+    system_version: "0.5.0-alpha", system_build: "2026.07.22+007", package_provenance_version: 2,
+  };
+  const productUrls = [];
+  const preferred = await gate.fetchValidatedManifest(async (url) => { productUrls.push(url); return new Response(JSON.stringify(product), { status: 200, headers: { "Content-Type": "application/json" } }); });
+  assert.equal(preferred.publicMetadata.version, "0.2.4-alpha"); assert.equal(preferred.publicMetadata.manifest_source, "product"); assert.equal(productUrls.length, 1);
+  const legacy = { ...product, schema_version: 1, product_id: undefined, version: "0.5.0-alpha", installer_url: "https://updates.streamsuites.app/studioapp/windows-x64/releases/0.5.0-alpha/2026.07.23_2b001/StreamSuites-StudioApp-0.2.4-alpha-windows-x64-setup.exe" };
+  const fallbackUrls = [];
+  const fallback = await gate.fetchValidatedManifest(async (url) => { fallbackUrls.push(url); return fallbackUrls.length === 1 ? new Response("missing", { status: 404 }) : new Response(JSON.stringify(legacy), { status: 200, headers: { "Content-Type": "application/json" } }); });
+  assert.equal(fallback.publicMetadata.manifest_source, "legacy"); assert.equal(fallbackUrls.length, 2);
+});
+
 test("static download route reuses access visuals, contains no secret, and exposes no raw installer URL", () => {
   const html = read("downloads/studioapp/index.html");
   const client = read("js/studioapp-download.js");

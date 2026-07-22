@@ -6,6 +6,13 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
 
+### 2026-07-23 - Independent StudioApp manifest preference
+
+- The guarded download endpoint now requests schema-v2 `product-manifest.json` first so the page presents independent `0.2.4-alpha` StudioApp identity, then safely falls back to the exact deployed schema-v1 `manifest.json` bridge for rollout/offline compatibility.
+- Existing access lockout, HMAC cookie, strict host/path/hash/size/AppId validation, controlled redirect, no-installer boundary, and no-secret browser payload remain unchanged. Focused tests cover product preference and legacy fallback.
+- No installer, live manifest, bypass code, Pages variable or deployment was changed.
+- All seven focused Node gate suites passed locally. The production page was checked only for unauthenticated reachability; no gate bypass, Preview or production deployment was exercised.
+
 ### 2026-07-23 - Explicit StudioApp product release metadata
 
 - Updated the guarded StudioApp download manifest parser to accept both deployed legacy v1 and explicit `streamsuites-studioapp` v2 manifests. StudioApp product version/build is primary; optional StreamSuites system compatibility version/build is secondary and no Runtime export is used as installer identity.

@@ -3,7 +3,8 @@ const COOKIE_VERSION = "v1";
 const DEFAULT_TTL_MINUTES = 15;
 const MIN_TTL_MINUTES = 1;
 const MAX_TTL_MINUTES = 60;
-const MANIFEST_URL = "https://updates.streamsuites.app/studioapp/windows-x64/alpha/manifest.json";
+const PRODUCT_MANIFEST_URL = "https://updates.streamsuites.app/studioapp/windows-x64/alpha/product-manifest.json";
+const LEGACY_MANIFEST_URL = "https://updates.streamsuites.app/studioapp/windows-x64/alpha/manifest.json";
 const EXPECTED_PRODUCT = "StreamSuites StudioApp";
 const EXPECTED_PRODUCT_ID = "streamsuites-studioapp";
 const EXPECTED_CHANNEL = "alpha";
@@ -127,7 +128,8 @@ export function jsonResponse(payload, status = 200, extraHeaders = {}) {
 export async function fetchValidatedManifest(fetchImpl = fetch) {
   const options = { headers: { Accept: "application/json" }, redirect: "error" };
   if (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function") options.signal = AbortSignal.timeout(5000);
-  const response = await fetchImpl(MANIFEST_URL, options);
+  let response = await fetchImpl(PRODUCT_MANIFEST_URL, options);
+  if (!response.ok) response = await fetchImpl(LEGACY_MANIFEST_URL, options);
   if (!response.ok) throw new Error("manifest_unavailable");
   const contentType = String(response.headers.get("Content-Type") || "").toLowerCase();
   if (!contentType.includes("application/json")) throw new Error("manifest_invalid");
@@ -149,6 +151,7 @@ export async function fetchValidatedManifest(fetchImpl = fetch) {
     installerUrl: installer.toString(),
     publicMetadata: {
       product_id: productManifest ? EXPECTED_PRODUCT_ID : null,
+      manifest_source: productManifest ? "product" : "legacy",
       version: manifest.version,
       build: manifest.build,
       system_version: typeof manifest.system_version === "string" ? manifest.system_version.slice(0, 64) : null,
