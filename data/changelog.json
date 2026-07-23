@@ -1,11 +1,28 @@
 {
   "meta": {
     "source": "runtime",
-    "project": "StreamSuites™",
-    "version": "0.4.2-alpha",
+  "project": "StreamSuites™",
+  "version": "0.5.4-alpha",
     "generated_at": "2026-03-20"
   },
   "entries": [
+    {
+      "id": "2026-07-24-project-v0-5-4-alpha",
+      "date": "2026-07-24",
+      "version": "0.5.4-alpha",
+      "scope": "runtime",
+      "title": "StreamSuites v0.5.4-alpha",
+      "summary": "Runtime/Auth release marker aligned to the 0.5.4-alpha platform cycle.",
+      "details": [
+        "Updated the Public runtime-facing metadata references for release cycle alignment.",
+        "Published a synchronized v0.5.4-alpha changelog release marker."
+      ],
+      "tags": [
+        "runtime",
+        "release",
+        "metadata"
+      ]
+    },
     {
       "id": "2026-03-20-public-v0-4-2-alpha",
       "date": "2026-03-20",

@@ -1,10 +1,16 @@
 # Bump Notes
 
-## RELEASED / PACKAGED: 0.4.2-alpha
+## RELEASED / PACKAGED: 0.5.0-alpha
 
-Packaged / released and no longer the active pending bucket. Preserve new notes for the open `0.5.0-alpha` section below.
+Packaged / released and no longer the active pending bucket. Preserve new notes for the open `0.5.4-alpha` section below.
 
-## CURRENT VER= 0.5.0-alpha / PENDING VER= 0.5.1-alpha
+## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
+
+### 2026-07-24 - Version-cycle synchronization only
+
+- Opened the next Public bucket at `0.5.4-alpha / 0.5.5-alpha`.
+- Updated Public runtime mirror metadata to match runtime `0.5.4-alpha`.
+- No user-facing behavior changes are included in this cycle.
 
 ### 2026-07-23 - Independent StudioApp manifest preference
 
