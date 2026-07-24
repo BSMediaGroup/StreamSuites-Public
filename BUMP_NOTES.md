@@ -13,6 +13,7 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 - Added `/downloads/studioapp/extensions/` with accessible search, filters, sorting, URL state, loading/empty/unavailable/error states, strict schema validation, and a production catalog that is deliberately non-authoritative and empty. Runtime/Auth or its authoritative generated export remains the future listing authority; no extension-download contract was created.
 - Added shared/product CSS and focused Node contracts for routes, copy, asset provenance, gate preservation, safe catalog rendering, unsafe-field rejection, and fixture-only populated states. Local Cloudflare Functions compilation and real-browser desktop/tablet/mobile checks covered locked, rejected-code, unlocked manifest, loading, unavailable, empty, populated, filtered, keyboard-focus, reduced-motion/forced-colors-aware styling, and overflow behavior.
 - Human note: the Studio family now has one clear, restrained download area that says exactly what is available today and what is still being built.
+- Updated the Extensions / Plugin Store visual identity so `/downloads/studioapp/extensions/` and related cross-links now use `/assets/icons/packboxicon-plugin.webp` (`StreamSuites StudioApp Extensions`/`StreamSuites Plugin Store`) while preserving StudioApp app branding and OBS plugin branding in their own contexts.
 - No runtime, Studio, StudioApp, OBS, Dashboard, Pages environment, installer, deployment, release, commit, or version metadata was changed.
 
 ### 2026-07-24 - Version-cycle synchronization only

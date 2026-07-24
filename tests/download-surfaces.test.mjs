@@ -23,10 +23,17 @@ test("download routes share Browser Studio typography and the authoritative Stud
   assert.match(shared, /--download-font-display:\s*"Recharge"/);
   [studio, obs, extensions].forEach((html) => {
     assert.match(html, /\/css\/download-surface\.css/);
-    assert.match(html, /\/assets\/logos\/studiologo3\.webp/);
     assert.match(html, /aria-label="Studio downloads"/);
     assert.match(html, /prefers-reduced-motion|download-surface\.css/);
   });
+  assert.match(studio, /<img src="\/assets\/logos\/studiologo3\.webp" alt="" width="52" height="52" \/>/);
+  assert.match(studio, /<img src="\/assets\/icons\/packboxicon-plugin\.webp" alt="StreamSuites Plugin Store" width="44" height="44" \/>/);
+  assert.match(obs, /<img src="\/assets\/icons\/obs-white\.svg" alt="" width="52" height="52" \/>/);
+  assert.match(obs, /<img src="\/assets\/logos\/studiologo3\.webp" alt="" width="38" height="38" \/>/);
+  assert.match(obs, /<img src="\/assets\/logos\/studiologo3\.webp" alt="" \/>/);
+  assert.match(extensions, /<img src="\/assets\/icons\/packboxicon-plugin\.webp" alt="StreamSuites Plugin Store" width="52" height="52" \/>/);
+  assert.match(extensions, /<img src="\/assets\/logos\/studiologo3\.webp" alt="StreamSuites StudioApp" width="44" height="44" \/>/);
+  assert.doesNotMatch(extensions, /<img src="\/assets\/logos\/studiologo3\.webp" alt="StreamSuites Plugin Store"/);
 });
 
 test("OBS route is a truthful unavailable product scaffold with required cross-links", () => {

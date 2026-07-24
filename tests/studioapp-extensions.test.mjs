@@ -21,7 +21,7 @@ const baseEntry = Object.freeze({
   maximum_studioapp_version: null,
   verification_status: "verified",
   first_party: true,
-  icon_path: "/assets/logos/studiologo3.webp",
+  icon_path: "/assets/icons/packboxicon-plugin.webp",
   documentation_url: "https://docs.streamsuites.app/test-only",
   source_url: null,
   published_at: "2026-01-01T00:00:00Z",
@@ -94,6 +94,7 @@ test("strict catalog contract accepts bounded synthetic fixtures and rejects uns
   const validated = directory.validateCatalog(catalog());
   assert.equal(validated.entries.length, 3);
   assert.equal(validated.entries[0].name, "Synthetic Test Dock");
+  assert.equal(validated.entries[0].icon_path, "/assets/icons/packboxicon-plugin.webp");
 
   assert.throws(() => directory.validateCatalog(catalog([{ ...baseEntry, download_url: "https://example.com/file.exe" }])), /entry_shape_invalid/);
   assert.throws(() => directory.validateCatalog(catalog([{ ...baseEntry, documentation_url: "javascript:alert(1)" }])), /documentation_url_invalid/);
@@ -102,6 +103,17 @@ test("strict catalog contract accepts bounded synthetic fixtures and rejects uns
   assert.throws(() => directory.validateCatalog(catalog([{ ...baseEntry, tags: Array.from({ length: 13 }, (_, index) => `tag${index}`) }])), /tags_invalid/);
   assert.throws(() => directory.validateCatalog({ ...catalog(), authoritative: true }), /catalog_authority_invalid/);
   assert.throws(() => directory.validateCatalog(catalog([baseEntry, { ...baseEntry, slug: "other" }])), /entry_identity_duplicate/);
+});
+
+test("Extensions page and catalog fixture keep the dedicated plugin-store artwork", () => {
+  const html = read("downloads/studioapp/extensions/index.html");
+  const production = JSON.parse(read("data/studioapp-extension-catalog.v1.json"));
+  assert.match(html, /\/assets\/icons\/packboxicon-plugin\.webp/);
+  assert.match(html, /alt=\"StreamSuites Plugin Store\"/);
+  assert.doesNotMatch(html, /\/assets\/logos\/studiologo3\.webp\"[^>]*alt=\"StreamSuites Plugin Store\"/);
+  assert.match(production.authority, /Runtime\/Auth/);
+  assert.equal(production.authoritative, false);
+  assert.equal(production.entries.length, 0);
 });
 
 test("catalog text is preserved as text and the renderer never uses raw HTML", () => {
