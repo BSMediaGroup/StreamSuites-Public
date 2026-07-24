@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="The planned searchable directory for future StreamSuites StudioApp extensions and addable docks. The public catalog is not yet open." />
+  <meta name="color-scheme" content="dark" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="StreamSuites" />
+  <meta property="og:title" content="StreamSuites StudioApp Extensions — Planned directory" />
+  <meta property="og:description" content="A future directory for StudioApp extensions and docks. No extensions are currently available for installation." />
+  <meta property="og:url" content="https://streamsuites.app/downloads/studioapp/extensions/" />
+  <link rel="canonical" href="https://streamsuites.app/downloads/studioapp/extensions/" />
+  <title>StudioApp Extensions and Plugins | Planned Directory</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="preload" href="/assets/fonts/SuiGeneris-Regular.otf" as="font" type="font/otf" crossorigin />
+  <link rel="preload" href="/assets/fonts/Recharge-Bold.otf" as="font" type="font/otf" crossorigin />
+  <link rel="stylesheet" href="/css/download-surface.css" />
+  <link rel="stylesheet" href="/css/studioapp-extensions.css" />
+  <script type="module" src="/js/studioapp-extensions.js"></script>
+</head>
+<body class="download-surface studioapp-extensions-page">
+  <a class="download-skip-link" href="#main-content">Skip to content</a>
+
+  <header class="download-topbar">
+    <div class="download-topbar__inner download-page-width">
+      <a class="download-brand" href="/" aria-label="StreamSuites home">
+        <img src="/assets/logos/studiologo3.webp" alt="" width="38" height="38" />
+        <span class="download-brand__copy"><strong>StreamSuites</strong><span>Studio</span></span>
+      </a>
+      <nav class="download-global-nav" aria-label="Primary">
+        <a href="/home">Public</a>
+        <a href="https://studio.streamsuites.app">Browser Studio</a>
+        <a href="https://docs.streamsuites.app">Docs</a>
+      </nav>
+      <span class="download-status-chip download-status-chip--pending download-header-status">Catalog planned</span>
+    </div>
+  </header>
+
+  <div class="download-product-nav-shell">
+    <nav class="download-product-nav download-page-width" aria-label="Studio downloads">
+      <a href="/downloads/studioapp/">StudioApp</a>
+      <a href="/downloads/obs-plugin/">OBS Plugin</a>
+      <a href="/downloads/studioapp/extensions/" aria-current="page">Extensions</a>
+    </nav>
+  </div>
+
+  <main id="main-content">
+    <section class="download-hero download-hero--compact extensions-hero download-page-width" aria-labelledby="extensions-title">
+      <div class="download-hero__copy">
+        <div class="download-hero__identity">
+          <img src="/assets/logos/studiologo3.webp" alt="" width="52" height="52" />
+          <span class="download-hero__identity-copy"><strong>Future StudioApp ecosystem</strong><span>Extensions · Addable docks · Plugins</span></span>
+        </div>
+        <p class="download-eyebrow">Directory scaffold</p>
+        <h1 id="extensions-title">StudioApp Extensions and Plugins</h1>
+        <p class="download-hero__summary">The future searchable directory for StudioApp extensions and addable docks. The catalog is not open, and no extensions are currently available for installation.</p>
+        <div class="download-chip-row">
+          <span class="download-status-chip download-status-chip--pending">Planned</span>
+          <span class="download-status-chip">0 available</span>
+          <span class="download-status-chip">Non-authoritative presentation</span>
+        </div>
+      </div>
+
+      <aside class="download-panel extensions-hero__status" aria-labelledby="extensions-status-title">
+        <p class="download-eyebrow">Current status</p>
+        <h2 id="extensions-status-title">A functional shell with an empty catalog.</h2>
+        <p>Search, filtering, sorting, URL state, validation, loading, empty, unavailable, and error treatments are ready for a future authoritative catalog source.</p>
+        <div class="extensions-hero__status-grid">
+          <div><strong>Catalog</strong><span>Not yet open</span></div>
+          <div><strong>Installable items</strong><span>None</span></div>
+          <div><strong>StudioApp</strong><span>Works without extensions</span></div>
+          <div><strong>Future authority</strong><span>Runtime/Auth or its generated export</span></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="download-section extensions-catalog-section download-page-width" aria-labelledby="catalog-title">
+      <div class="download-section-heading">
+        <p class="download-eyebrow">Browse the future catalog</p>
+        <h2 id="catalog-title">Find an extension</h2>
+        <p>Production data is intentionally empty. Filters remain active so this directory can accept a future authoritative export without redesigning the page.</p>
+      </div>
+
+      <div id="extensions-catalog-shell" class="download-panel extensions-catalog-shell" aria-busy="true">
+        <form id="extensions-catalog-form" class="extensions-catalog-toolbar" role="search">
+          <div class="extensions-search-field">
+            <label for="extensions-search">Search extensions</label>
+            <input id="extensions-search" name="q" type="search" maxlength="120" autocomplete="off" placeholder="Search name, summary, publisher, or tags" />
+          </div>
+          <div class="extensions-filter-grid">
+            <div class="extensions-filter">
+              <label for="extensions-type">Type</label>
+              <select id="extensions-type" name="type"><option value="">All types</option></select>
+            </div>
+            <div class="extensions-filter">
+              <label for="extensions-publisher">Publisher</label>
+              <select id="extensions-publisher" name="publisher">
+                <option value="">All publishers</option>
+                <option value="first-party">First-party</option>
+                <option value="community">Community</option>
+              </select>
+            </div>
+            <div class="extensions-filter">
+              <label for="extensions-compatibility">Compatibility</label>
+              <select id="extensions-compatibility" name="compatibility">
+                <option value="">Any declaration</option>
+                <option value="declared">Declared</option>
+                <option value="unreported">Not reported</option>
+              </select>
+            </div>
+            <div class="extensions-filter">
+              <label for="extensions-verification">Verification</label>
+              <select id="extensions-verification" name="verification">
+                <option value="">All statuses</option>
+                <option value="verified">Verified</option>
+                <option value="pending">Pending</option>
+                <option value="unverified">Unverified</option>
+              </select>
+            </div>
+            <div class="extensions-filter">
+              <label for="extensions-sort">Sort</label>
+              <select id="extensions-sort" name="sort">
+                <option value="name">Name</option>
+                <option value="updated">Recently updated</option>
+                <option value="published">Recently published</option>
+              </select>
+            </div>
+          </div>
+          <div class="extensions-toolbar-footer">
+            <p id="extensions-result-count" class="extensions-result-count" role="status" aria-live="polite">Loading catalog…</p>
+            <button id="extensions-clear" class="extensions-clear" type="button" disabled>Clear filters</button>
+          </div>
+        </form>
+
+        <div class="extensions-catalog-results">
+          <div id="extensions-loading" class="extensions-loading" aria-label="Loading extensions"><span></span><span></span><span></span></div>
+          <div id="extensions-card-grid" class="extensions-card-grid" hidden></div>
+
+          <div id="extensions-empty" class="download-empty-state extensions-state" hidden>
+            <div class="download-empty-state__body">
+              <p class="download-eyebrow">Catalog not yet open</p>
+              <h3>No extensions are available for installation.</h3>
+              <p>StudioApp extensions and addable docks are planned. This page is their future directory, and StudioApp remains functional without them.</p>
+            </div>
+          </div>
+
+          <div id="extensions-no-results" class="download-empty-state extensions-state" hidden>
+            <div class="download-empty-state__body">
+              <p class="download-eyebrow">No results</p>
+              <h3>No extensions match these filters.</h3>
+              <p>Adjust the search or clear the current filters.</p>
+            </div>
+          </div>
+
+          <div id="extensions-unavailable" class="download-empty-state extensions-state" hidden>
+            <div class="download-empty-state__body">
+              <p class="download-eyebrow">Catalog unavailable</p>
+              <h3>The catalog source could not be reached.</h3>
+              <p>No cached or sample listing is substituted. Try again later.</p>
+            </div>
+          </div>
+
+          <div id="extensions-error" class="download-empty-state extensions-state" hidden>
+            <div class="download-empty-state__body">
+              <p class="download-eyebrow">Catalog rejected</p>
+              <h3>The catalog did not match the bounded presentation contract.</h3>
+              <p>Unsafe or malformed entries fail closed and are not rendered.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="download-section download-page-width" aria-labelledby="catalog-authority-title">
+      <div class="download-callout extensions-authority-note">
+        <div>
+          <p class="download-eyebrow">Authority boundary</p>
+          <h2 id="catalog-authority-title">Public is a catalog viewer, never the registry.</h2>
+          <p>The current versioned file is an explicitly non-authoritative empty presentation contract. Future listings must come from Runtime/Auth or an authoritative generated export. This milestone creates no Runtime endpoint and no executable download contract.</p>
+        </div>
+        <code>schema_version: 1</code>
+      </div>
+    </section>
+
+    <section class="download-section download-page-width" aria-labelledby="extensions-related-title">
+      <div class="download-section-heading">
+        <p class="download-eyebrow">Related products</p>
+        <h2 id="extensions-related-title">Return to the Studio product family.</h2>
+      </div>
+      <div class="download-card-grid">
+        <article class="download-panel download-product-family-card">
+          <div class="download-product-family-card__brand"><img src="/assets/logos/studiologo3.webp" alt="" /><div><h3>StreamSuites StudioApp</h3><p>Windows-native ALPHA</p></div></div>
+          <p>Review the current gated StudioApp release and its verified native Windows requirements.</p>
+          <div class="download-actions"><a class="download-button download-button--secondary" href="/downloads/studioapp/">View StudioApp</a></div>
+        </article>
+        <article class="download-panel download-product-family-card">
+          <div class="download-product-family-card__brand"><img src="/assets/icons/obs-white.svg" alt="" /><div><h3>StreamSuites Studio for OBS</h3><p>In development</p></div></div>
+          <p>Review the truthful project status and OBS/Runtime ownership boundaries.</p>
+          <div class="download-actions"><a class="download-button download-button--secondary" href="/downloads/obs-plugin/">View OBS Plugin</a></div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="download-footer">
+    <div class="download-footer__inner download-page-width">
+      <span>© 2026 Brainstream Media Group</span>
+      <nav aria-label="Legal"><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="/accessibility.html">Accessibility</a><a href="https://docs.streamsuites.app">Documentation</a></nav>
+    </div>
+  </footer>
+</body>
+</html>

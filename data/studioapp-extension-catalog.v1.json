@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "catalog_id": "studioapp-extensions",
+  "authoritative": false,
+  "authority": "StreamSuites Runtime/Auth or an authoritative generated export",
+  "generated_at": null,
+  "entries": []
+}

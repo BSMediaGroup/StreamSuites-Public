@@ -6,6 +6,15 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-07-24 - Studio product download surfaces
+
+- Rebuilt `/downloads/studioapp/` as a polished responsive Windows-native ALPHA product page using Browser Studio's exact local Sui Generis body font, Recharge display font, and Studio brand mark. Existing Pages gate variables, HMAC cookie, Functions, manifest preference/fallback, strict validation, and same-origin controlled download remain authoritative and fail closed.
+- Added `/downloads/obs-plugin/` for **StreamSuites Studio for OBS** with an explicit in-development state, real project boundaries, and no invented public artifact, version, release date, or compatibility range.
+- Added `/downloads/studioapp/extensions/` with accessible search, filters, sorting, URL state, loading/empty/unavailable/error states, strict schema validation, and a production catalog that is deliberately non-authoritative and empty. Runtime/Auth or its authoritative generated export remains the future listing authority; no extension-download contract was created.
+- Added shared/product CSS and focused Node contracts for routes, copy, asset provenance, gate preservation, safe catalog rendering, unsafe-field rejection, and fixture-only populated states. Local Cloudflare Functions compilation and real-browser desktop/tablet/mobile checks covered locked, rejected-code, unlocked manifest, loading, unavailable, empty, populated, filtered, keyboard-focus, reduced-motion/forced-colors-aware styling, and overflow behavior.
+- Human note: the Studio family now has one clear, restrained download area that says exactly what is available today and what is still being built.
+- No runtime, Studio, StudioApp, OBS, Dashboard, Pages environment, installer, deployment, release, commit, or version metadata was changed.
+
 ### 2026-07-24 - Version-cycle synchronization only
 
 - Opened the next Public bucket at `0.5.4-alpha / 0.5.5-alpha`.

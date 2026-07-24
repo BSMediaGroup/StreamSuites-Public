@@ -102,17 +102,25 @@ test("static download route reuses access visuals, contains no secret, and expos
   const html = read("downloads/studioapp/index.html");
   const client = read("js/studioapp-download.js");
   const css = read("css/studioapp-download.css");
+  const sharedCss = read("css/download-surface.css");
   const redirects = read("_redirects");
   assert.match(html, /auth-modal-backdrop/); assert.match(html, /public-lockout-banner/); assert.match(html, /ss-auth-access-gate/);
-  assert.match(html, /\/assets\/icons\/ui\/streamsuitesicon\.svg/);
-  assert.ok(fs.statSync(path.join(root, "assets/icons/ui/streamsuitesicon.svg")).size > 0);
+  assert.match(html, /\/assets\/logos\/studiologo3\.webp/);
+  assert.doesNotMatch(html, /\/assets\/icons\/ui\/streamsuitesicon\.svg/);
+  assert.ok(fs.statSync(path.join(root, "assets/logos/studiologo3.webp")).size > 0);
   assert.match(html, /aria-modal="true"/); assert.match(html, /aria-live="polite"/); assert.match(html, /prefers-reduced-motion|studioapp-download\.css/);
   assert.match(html, /StudioApp version/); assert.match(html, /System compatibility/);
-  assert.match(css, /prefers-reduced-motion:reduce/); assert.match(css, /forced-colors:active/); assert.match(css, /@media\(max-width:620px\)/);
+  assert.match(sharedCss, /font-family:\s*"Sui Generis"/); assert.match(sharedCss, /font-family:\s*"Recharge"/);
+  assert.match(sharedCss, /SuiGeneris-Regular\.otf/); assert.match(sharedCss, /Recharge-Bold\.otf/);
+  assert.match(sharedCss, /prefers-reduced-motion:\s*reduce/); assert.match(sharedCss, /forced-colors:\s*active/);
+  assert.match(sharedCss, /font-size:\s*clamp\(2\.4rem,\s*4\.4vw,\s*3\.5rem\)/);
+  assert.match(sharedCss, /@media \(max-width:\s*640px\)/); assert.match(css, /@media \(max-width:\s*520px\)/);
   assert.match(redirects, /\/downloads\/studioapp \/downloads\/studioapp\/index\.html 200/);
   assert.doesNotMatch(html, /https:\/\/updates\.streamsuites\.app\/studioapp\/windows-x64\/releases\//);
   assert.doesNotMatch(html + client, /DOWNLOAD_BYPASS_CODE|test-only-bypass-value/);
   assert.match(client, /sessionStorage\.setItem\(BANNER_KEY/); assert.match(client, /accessState\.authorized = false/);
+  assert.match(client, /navigator\.clipboard\.writeText/); assert.match(client, /setReleaseUnavailable/);
+  assert.doesNotMatch(html, /\b0\.\d+\.\d+-alpha\b/);
 });
 
 test("Pages Function routes keep the bypass code server-side and normal downloads controlled", () => {

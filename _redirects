@@ -9,3 +9,7 @@
 /u/* /u/index.html 200
 /downloads/studioapp /downloads/studioapp/index.html 200
 /downloads/studioapp/ /downloads/studioapp/index.html 200
+/downloads/obs-plugin /downloads/obs-plugin/index.html 200
+/downloads/obs-plugin/ /downloads/obs-plugin/index.html 200
+/downloads/studioapp/extensions /downloads/studioapp/extensions/index.html 200
+/downloads/studioapp/extensions/ /downloads/studioapp/extensions/index.html 200

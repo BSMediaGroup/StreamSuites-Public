@@ -44,6 +44,8 @@ flowchart TD
 
 - `/downloads/studioapp` is the canonical Windows StudioApp ALPHA landing page. It requests explicit `product-manifest.json` first, falls back to deployed `manifest.json`, treats independent StudioApp product version/build as primary and optional StreamSuites system compatibility as secondary, and never uses Runtime `version.json` as installer identity. Both paths retain the same fail-closed controlled redirect; the static page contains no raw installer URL.
 - Download lockout is configured only through Pages environment values (`DOWNLOAD_ACCESS_LOCKED`, `DOWNLOAD_ACCESS_MESSAGE`, `DOWNLOAD_BYPASS_ENABLED`, secret `DOWNLOAD_BYPASS_CODE`, bounded `DOWNLOAD_BYPASS_TTL_MINUTES`, and `SHOW_DOWNLOAD_LOCKOUT_BANNER`). Approved tester access uses a short-lived HMAC-signed HttpOnly/Secure/SameSite cookie scoped to the download API. Failure to validate access, cookie, or manifest keeps the download unavailable.
+- `/downloads/obs-plugin/` truthfully presents **StreamSuites Studio for OBS** as in development. It publishes no artifact, version, release date, or compatibility claim; Runtime/Auth remains the control authority and OBS owns the media pipeline.
+- `/downloads/studioapp/extensions/` is a searchable directory shell backed by the versioned, intentionally empty `data/studioapp-extension-catalog.v1.json` presentation contract. Public is not an extension registry: future listings must come from Runtime/Auth or an authoritative generated export, and the current catalog contains no installable item or executable-download field.
 - The public `/home` and `/community` experiences now share one dashboard-style shell and one sidebar/navigation model, with `/home` remaining the default public home tab for the public dashboard and `/media` preserved only as a compatibility entry.
 - Canonical public profiles resolve at `/u/<slug>`, backed by the authoritative public slug model exported by `StreamSuites`.
 - Legacy `user_code` compatibility is still preserved during profile resolution and migration-safe routing.
@@ -62,6 +64,7 @@ flowchart TD
 
 - Cloudflare Pages routing is handled by the root `_redirects` file plus Pages Functions under `functions/`.
 - `/downloads/studioapp` and its trailing-slash alias resolve to the same static landing page; `/api/downloads/studioapp/*` owns access-state, unlock/end-session, release-metadata, and controlled-download behavior. The dismissible banner is presentation-only and never authorizes a download.
+- `/downloads/obs-plugin` and `/downloads/studioapp/extensions` resolve to their directory pages; normal directory routing serves the trailing-slash forms used by product navigation.
 - The legacy public `/requests` route is now expected to hand off to the developer console feedback hub at `https://console.streamsuites.app/feedback`, while authoritative request data remains runtime-owned.
 - Same-origin auth and API proxy paths forward browser requests to the authoritative Auth API without moving backend ownership into this repo.
 - Public auth entry points now consume `/auth/access-state` and the short-lived `/auth/debug/unlock` bypass flow so public pages remain browseable while new auth starts can be gated by runtime mode.
@@ -84,7 +87,17 @@ Configure Production and Preview independently in Cloudflare:
 
 `DOWNLOAD_BYPASS_TTL_MINUTES` defaults to 15 minutes when absent or invalid and is bounded by the server implementation. The temporary authorization cookie is HMAC-signed from the configured bypass secret, contains no bypass code, and is HttpOnly, Secure, SameSite=Lax, expiring, and scoped to `/api/downloads/studioapp`.
 
-This repository is a static Pages project with no package manifest, install step, lint script, typecheck, or bundle build. Run the focused gate tests with `node --test tests/studioapp-download-gate.test.mjs`; route and Pages Function behavior must also be validated in a Cloudflare Preview before production deployment. The preferred canonical manifest is `https://updates.streamsuites.app/studioapp/windows-x64/alpha/product-manifest.json`, with legacy fallback at `manifest.json`; no installer is stored here. Normal StudioApp R2 publication requires no Public redeployment. Redeploy Public only when its page/function source or Pages variables change, through the separate manual commit/push/Cloudflare workflow.
+This repository is a static Pages project with no package manifest, install step, lint script, typecheck, or bundle build. Run the focused download-surface contracts with `node --test tests/studioapp-download-gate.test.mjs tests/download-surfaces.test.mjs tests/studioapp-extensions.test.mjs`; route and Pages Function behavior must also be validated in a Cloudflare Preview before production deployment. The preferred canonical manifest is `https://updates.streamsuites.app/studioapp/windows-x64/alpha/product-manifest.json`, with legacy fallback at `manifest.json`; no installer is stored here. Normal StudioApp R2 publication requires no Public redeployment. Redeploy Public only when its page/function source or Pages variables change, through the separate manual commit/push/Cloudflare workflow.
+
+## Studio Download Surface Assets and Contracts
+
+The Studio product-family pages use the same local font files and brand mark as Browser Studio:
+
+- Body/UI type: `assets/fonts/SuiGeneris-Regular.otf`, byte-identical to the Browser Studio-owned source at `StreamSuites-Studio/assets/fonts/SuiGeneris-Regular.otf` (SHA-256 `39B21DF023A5833E2D891A5C0D72703DB4306B9008C0D44D4DC01F2350C71964`).
+- Display type: `assets/fonts/Recharge-Bold.otf`, byte-identical to `StreamSuites-Studio/assets/fonts/Recharge-Bold.otf` (SHA-256 `1FAA8AF96C598F49D2E6791DE161F7845379197C1D36C489CD39AD548550EF1F`).
+- Studio brand mark: `assets/logos/studiologo3.webp`, byte-identical to the Browser Studio asset selected by `src/components/BrandMark.tsx` (SHA-256 `43C28A45FBABC4A710C4DAD151ECD33952FA823C5A2E17D615343F1C6BF7A786`).
+
+`css/download-surface.css` owns the shared restrained dark shell, product navigation, responsive spacing, focus treatment, reduced-motion handling, and forced-colors support. Product-specific CSS keeps status and capability presentation separate. The extension JavaScript accepts only a bounded schema-v1 allowlist, rejects unknown fields and unsafe URLs, creates content with DOM text nodes, and keeps search/filter state in the URL. Synthetic catalog entries belong only in tests; production remains empty until canonical authority exists.
 
 ## Cross-Repo Orientation
 
@@ -171,7 +184,11 @@ StreamSuites-Public/
 ├── live/
 │   └── index.html
 ├── downloads/
+│   ├── obs-plugin/
+│   │   └── index.html
 │   └── studioapp/
+│       ├── extensions/
+│       │   └── index.html
 │       └── index.html
 ├── login/
 │   └── index.html
@@ -199,6 +216,7 @@ StreamSuites-Public/
 │   ├── polls.json
 │   ├── roadmap.json
 │   ├── scoreboards.json
+│   ├── studioapp-extension-catalog.v1.json
 │   ├── tallies.json
 │   └── wheels.json
 ├── js/
@@ -208,6 +226,7 @@ StreamSuites-Public/
 │   ├── public-requests.js
 │   ├── public-shell.js
 │   ├── public-toast.js
+│   ├── studioapp-extensions.js
 │   ├── studioapp-download.js
 │   ├── status-widget.js
 │   ├── turnstile-inline.js
@@ -218,18 +237,23 @@ StreamSuites-Public/
 ├── css/
 │   ├── aurora-landing.css
 │   ├── aurora-landing-v2.css
+│   ├── download-surface.css
+│   ├── obs-plugin-download.css
 │   ├── public-login.css
 │   ├── public-pages-v2.css
 │   ├── public-shell.css
 │   ├── requests-auth.css
 │   ├── requests.css
+│   ├── studioapp-extensions.css
 │   ├── studioapp-download.css
 │   └── status-widget.css
 ├── tests/
 │   ├── auth-surface-parity.test.mjs
+│   ├── download-surfaces.test.mjs
 │   ├── live-status-authority.test.mjs
 │   ├── public-authority-wiring.test.mjs
 │   ├── studioapp-download-gate.test.mjs
+│   ├── studioapp-extensions.test.mjs
 │   └── wheels-authority.test.mjs
 └── assets/
     ├── css/

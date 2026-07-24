@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Project status for StreamSuites Studio for OBS, a native OBS integration currently in development." />
+  <meta name="color-scheme" content="dark" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="StreamSuites" />
+  <meta property="og:title" content="StreamSuites Studio for OBS — In development" />
+  <meta property="og:description" content="A native StreamSuites integration for OBS. Public download is not yet available." />
+  <meta property="og:url" content="https://streamsuites.app/downloads/obs-plugin/" />
+  <link rel="canonical" href="https://streamsuites.app/downloads/obs-plugin/" />
+  <title>StreamSuites Studio for OBS | In Development</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="preload" href="/assets/fonts/SuiGeneris-Regular.otf" as="font" type="font/otf" crossorigin />
+  <link rel="preload" href="/assets/fonts/Recharge-Bold.otf" as="font" type="font/otf" crossorigin />
+  <link rel="stylesheet" href="/css/download-surface.css" />
+  <link rel="stylesheet" href="/css/obs-plugin-download.css" />
+</head>
+<body class="download-surface obs-plugin-download-page">
+  <a class="download-skip-link" href="#main-content">Skip to content</a>
+
+  <header class="download-topbar">
+    <div class="download-topbar__inner download-page-width">
+      <a class="download-brand" href="/" aria-label="StreamSuites home">
+        <img src="/assets/logos/studiologo3.webp" alt="" width="38" height="38" />
+        <span class="download-brand__copy"><strong>StreamSuites</strong><span>Studio</span></span>
+      </a>
+      <nav class="download-global-nav" aria-label="Primary">
+        <a href="/home">Public</a>
+        <a href="https://studio.streamsuites.app">Browser Studio</a>
+        <a href="https://docs.streamsuites.app">Docs</a>
+      </nav>
+      <span class="download-status-chip download-status-chip--pending download-header-status">In development</span>
+    </div>
+  </header>
+
+  <div class="download-product-nav-shell">
+    <nav class="download-product-nav download-page-width" aria-label="Studio downloads">
+      <a href="/downloads/studioapp/">StudioApp</a>
+      <a href="/downloads/obs-plugin/" aria-current="page">OBS Plugin</a>
+      <a href="/downloads/studioapp/extensions/">Extensions</a>
+    </nav>
+  </div>
+
+  <main id="main-content">
+    <section class="download-hero download-hero--compact download-page-width" aria-labelledby="obs-title">
+      <div class="download-hero__copy">
+        <div class="download-hero__identity">
+          <img src="/assets/icons/obs-white.svg" alt="" width="52" height="52" />
+          <span class="download-hero__identity-copy"><strong>Native OBS integration</strong><span>Plugin client · Active development</span></span>
+        </div>
+        <p class="download-eyebrow">StreamSuites + OBS</p>
+        <h1 id="obs-title">StreamSuites Studio for OBS</h1>
+        <p class="download-hero__summary">A separate native OBS plugin and StreamSuites client for authorized guest-ingress workflows. It is not an OBS fork, an OBS replacement, or a substitute for StudioApp.</p>
+        <div class="download-chip-row">
+          <span class="download-status-chip download-status-chip--pending">In development</span>
+          <span class="download-status-chip">Native OBS plugin</span>
+          <span class="download-status-chip">GPL-2.0-or-later</span>
+        </div>
+        <div class="download-actions">
+          <button class="download-button download-button--primary" type="button" disabled aria-describedby="obs-download-status">Download not yet available</button>
+          <a class="download-button download-button--secondary" href="/downloads/studioapp/">View StudioApp</a>
+        </div>
+        <p id="obs-download-status" class="download-action-note">No public OBS Plugin artifact, version, release date, or compatibility range is authorized on this page.</p>
+      </div>
+
+      <div class="download-panel obs-hero-visual" aria-label="StreamSuites and OBS integration identity">
+        <div class="obs-hero-visual__lockup">
+          <div class="obs-hero-visual__icons" aria-hidden="true">
+            <img src="/assets/logos/studiologo3.webp" alt="" />
+            <span class="obs-hero-visual__connector"><i></i><i></i><i></i></span>
+            <img src="/assets/icons/obs-white.svg" alt="" />
+          </div>
+          <strong>STREAMSUITES STUDIO FOR OBS</strong>
+          <span>Runtime/Auth-authorized control. OBS-owned media pipeline.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="download-section download-page-width" aria-labelledby="obs-current-title">
+      <div class="download-section-heading">
+        <p class="download-eyebrow">Current project reality</p>
+        <h2 id="obs-current-title">A working development integration, not a public release.</h2>
+        <p>The source repository documents an ALPHA native dock and receiver bridge. Public distribution remains deliberately unavailable here until an artifact is explicitly approved.</p>
+      </div>
+      <div class="download-card-grid">
+        <article class="download-panel download-info-card">
+          <span class="download-status-chip download-status-chip--available">Implemented in development</span>
+          <h3>Runtime/Auth control plane</h3>
+          <p>System-browser pairing, scoped sessions, room and invitation control, guest assignment, and receiver authorization consume canonical Runtime/Auth state.</p>
+        </article>
+        <article class="download-panel download-info-card">
+          <span class="download-status-chip download-status-chip--available">Implemented in development</span>
+          <h3>Guest receiver workflow</h3>
+          <p>Explicit Camera, Screen, and Audio source controls support up to eight assigned guest slots through bounded local receiver plumbing.</p>
+        </article>
+        <article class="download-panel download-info-card">
+          <span class="download-status-chip download-status-chip--available">Implemented in development</span>
+          <h3>OBS-native ownership</h3>
+          <p>The plugin uses supported OBS module, frontend, dock, source, and Browser Source seams while OBS retains scene, mixer, composition, encoding, recording, and output ownership.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="download-section download-page-width" aria-labelledby="obs-boundaries-title">
+      <div class="download-section-heading">
+        <p class="download-eyebrow">Architecture boundaries</p>
+        <h2 id="obs-boundaries-title">Integration without duplicating the studio.</h2>
+      </div>
+      <div class="obs-boundary-grid">
+        <article class="download-panel">
+          <h3>Runtime/Auth remains authoritative</h3>
+          <p>Accounts, sessions, roles, permissions, rooms, invitations, tokens, credentials, destinations, automation, shared state, and canonical system authority stay in StreamSuites Runtime/Auth.</p>
+        </article>
+        <article class="download-panel">
+          <h3>OBS retains its media pipeline</h3>
+          <p>OBS owns capture surfaces, scenes, sources, its audio mixer, compositing, encoding, recording, and streaming output. The plugin does not become a media engine.</p>
+        </article>
+        <article class="download-panel">
+          <h3>StudioApp stays separate</h3>
+          <p>The OBS plugin does not replace StudioApp and does not duplicate StudioApp’s supervised native media engine.</p>
+        </article>
+        <article class="download-panel">
+          <h3>No bundled OBS distribution</h3>
+          <p>This project is a plugin/client. It is not an OBS fork and does not vendor or redistribute OBS as a competing application.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="download-section download-page-width" aria-labelledby="obs-not-yet-title">
+      <div class="download-callout">
+        <p class="download-eyebrow">Not presented as complete</p>
+        <h2 id="obs-not-yet-title">Important development limits remain.</h2>
+        <p>Native media decoding, automatic scene layout, provider device control, production chat, alerts, overlays, automation controls, output orchestration, and a second provider path are not presented as available. This page makes no promise about public release timing or supported OBS versions.</p>
+      </div>
+    </section>
+
+    <section class="download-section download-page-width" aria-labelledby="obs-distribution-title">
+      <div class="download-panel download-panel--padded obs-distribution">
+        <div>
+          <p class="download-eyebrow">Planned distribution</p>
+          <h2 id="obs-distribution-title">Public package approval is still pending.</h2>
+          <p>When a public artifact is authorized, this area can present verified package, signature, hash, compatibility, installation, and licensing details. It contains no hidden or inactive artifact URL today.</p>
+        </div>
+        <div class="download-actions">
+          <button class="download-button download-button--primary" type="button" disabled>Download not yet available</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="download-section download-page-width" aria-labelledby="obs-related-title">
+      <div class="download-section-heading">
+        <p class="download-eyebrow">Related products</p>
+        <h2 id="obs-related-title">Continue through the Studio family.</h2>
+      </div>
+      <div class="download-card-grid">
+        <article class="download-panel download-product-family-card">
+          <div class="download-product-family-card__brand"><img src="/assets/logos/studiologo3.webp" alt="" /><div><h3>StreamSuites StudioApp</h3><p>Windows-native ALPHA</p></div></div>
+          <p>Review the current StudioApp release, requirements, security metadata, and gated tester access.</p>
+          <div class="download-actions"><a class="download-button download-button--secondary" href="/downloads/studioapp/">View StudioApp</a></div>
+        </article>
+        <article class="download-panel download-product-family-card">
+          <div class="download-product-family-card__brand"><img src="/assets/logos/studiologo3.webp" alt="" /><div><h3>StudioApp Extensions</h3><p>Planned catalog</p></div></div>
+          <p>Explore the empty, non-authoritative directory scaffold for future StudioApp extensions and docks.</p>
+          <div class="download-actions"><a class="download-button download-button--secondary" href="/downloads/studioapp/extensions/">View Extensions</a></div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="download-footer">
+    <div class="download-footer__inner download-page-width">
+      <span>© 2026 Brainstream Media Group</span>
+      <nav aria-label="Legal"><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="/accessibility.html">Accessibility</a><a href="https://docs.streamsuites.app">Documentation</a></nav>
+    </div>
+  </footer>
+</body>
+</html>

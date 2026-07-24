@@ -3,83 +3,301 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Download the Windows-native StreamSuites StudioApp ALPHA." />
+  <meta name="description" content="Download the Windows-native StreamSuites StudioApp ALPHA and review current release, security, compatibility, and product status." />
   <meta name="color-scheme" content="dark" />
-  <title>Download StudioApp ALPHA | StreamSuites</title>
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="StreamSuites" />
+  <meta property="og:title" content="StreamSuites StudioApp for Windows" />
+  <meta property="og:description" content="The native Windows StreamSuites production workspace, currently available as a gated ALPHA." />
+  <meta property="og:url" content="https://streamsuites.app/downloads/studioapp/" />
+  <meta property="og:image" content="https://streamsuites.app/assets/logos/studiologo3.webp" />
+  <link rel="canonical" href="https://streamsuites.app/downloads/studioapp/" />
+  <title>StreamSuites StudioApp for Windows | ALPHA Download</title>
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="preload" href="/assets/fonts/SuiGeneris-Regular.otf" as="font" type="font/otf" crossorigin />
+  <link rel="preload" href="/assets/fonts/Recharge-Bold.otf" as="font" type="font/otf" crossorigin />
   <link rel="stylesheet" href="/css/theme-dark.css" />
   <link rel="stylesheet" href="/css/public-shell.css" />
+  <link rel="stylesheet" href="/css/download-surface.css" />
   <link rel="stylesheet" href="/css/studioapp-download.css" />
   <script src="/js/studioapp-download.js" defer></script>
 </head>
-<body class="public-standalone-page studioapp-download-page">
+<body class="public-standalone-page download-surface studioapp-download-page">
   <a class="download-skip-link" href="#main-content">Skip to content</a>
+
   <header class="download-topbar">
-    <a class="download-brand" href="/" aria-label="StreamSuites home"><img src="/assets/icons/ui/streamsuitesicon.svg" alt="" /><span>STREAMSUITES</span></a>
-    <nav aria-label="Primary"><a href="/home">Public</a><a href="https://studio.streamsuites.app">Browser Studio</a><a href="https://docs.streamsuites.app">Docs</a></nav>
+    <div class="download-topbar__inner download-page-width">
+      <a class="download-brand" href="/" aria-label="StreamSuites home">
+        <img src="/assets/logos/studiologo3.webp" alt="" width="38" height="38" />
+        <span class="download-brand__copy"><strong>StreamSuites</strong><span>Studio</span></span>
+      </a>
+      <nav class="download-global-nav" aria-label="Primary">
+        <a href="/home">Public</a>
+        <a href="https://studio.streamsuites.app">Browser Studio</a>
+        <a href="https://docs.streamsuites.app">Docs</a>
+      </nav>
+      <span class="download-status-chip download-status-chip--alpha download-header-status">ALPHA</span>
+    </div>
   </header>
 
+  <div class="download-product-nav-shell">
+    <nav class="download-product-nav download-page-width" aria-label="Studio downloads">
+      <a href="/downloads/studioapp/" aria-current="page">StudioApp</a>
+      <a href="/downloads/obs-plugin/">OBS Plugin</a>
+      <a href="/downloads/studioapp/extensions/">Extensions</a>
+    </nav>
+  </div>
+
   <aside id="download-lockout-banner" class="public-lockout-banner download-lockout-banner" hidden aria-live="polite">
-    <div class="public-lockout-banner__body"><div class="public-lockout-banner__meta"><span class="public-lockout-banner__eyebrow">ALPHA access notice</span><p id="download-banner-message" class="public-lockout-banner__message"></p></div><button id="dismiss-download-banner" class="public-lockout-banner__close" type="button" aria-label="Dismiss access notice">×</button></div>
+    <div class="public-lockout-banner__body">
+      <div class="public-lockout-banner__meta">
+        <span class="public-lockout-banner__eyebrow">ALPHA access notice</span>
+        <p id="download-banner-message" class="public-lockout-banner__message"></p>
+      </div>
+      <button id="dismiss-download-banner" class="public-lockout-banner__close" type="button" aria-label="Dismiss access notice">×</button>
+    </div>
   </aside>
 
   <main id="main-content">
-    <section class="download-hero" aria-labelledby="download-title">
-      <div class="download-hero-copy">
-        <div class="download-kicker"><span>WINDOWS NATIVE</span><strong>ALPHA</strong></div>
-        <h1 id="download-title">Your native StreamSuites production workspace.</h1>
-        <p>StudioApp brings Runtime/Auth-backed rooms, local Windows display capture, a native Stage preview, detachable production docks, destinations, and managed updates into one focused desktop application.</p>
+    <section class="download-hero studioapp-hero download-page-width" aria-labelledby="download-title">
+      <div class="download-hero__copy">
+        <div class="download-hero__identity">
+          <img src="/assets/logos/studiologo3.webp" alt="" width="52" height="52" />
+          <span class="download-hero__identity-copy">
+            <strong>Native production workspace</strong>
+            <span>Windows · x64</span>
+          </span>
+        </div>
+        <p class="download-eyebrow">StreamSuites Studio for Windows</p>
+        <h1 id="download-title">StreamSuites StudioApp</h1>
+        <p class="download-hero__summary">A focused native Windows application for Runtime/Auth-backed rooms, explicit local display capture, Stage preview, detachable production surfaces, destinations, and managed updates.</p>
+        <div class="download-chip-row" aria-label="Product status">
+          <span class="download-status-chip download-status-chip--alpha">ALPHA</span>
+          <span class="download-status-chip">Windows x64</span>
+          <span class="download-status-chip">Native WPF + C++</span>
+        </div>
         <div class="download-actions">
-          <a id="studioapp-download-action" class="download-primary-action" role="button" aria-disabled="true">Download for Windows</a>
-          <a class="download-secondary-action" href="https://studio.streamsuites.app">Open browser Studio</a>
+          <a id="studioapp-download-action" class="download-button download-button--primary" role="button" aria-disabled="true">Checking download access…</a>
+          <a class="download-button download-button--secondary" href="https://studio.streamsuites.app">Open Browser Studio</a>
         </div>
         <p id="download-action-note" class="download-action-note">Checking StudioApp download access and the current ALPHA release…</p>
       </div>
-      <div class="download-product-card" aria-label="StreamSuites StudioApp preview">
-        <div class="download-window-chrome"><span></span><span></span><span></span><b>STREAMSUITES STUDIOAPP</b></div>
-        <div class="download-product-mark"><img src="/assets/logos/studiologo.png" alt="StreamSuites StudioApp" /><div><strong>STUDIOAPP</strong><span>Native Windows production</span></div></div>
-        <div class="download-stage-preview"><span>OFF AIR · LOCAL PREVIEW</span><div><b>STAGE</b><small>Windows Display Capture</small></div></div>
-        <div class="download-dock-preview"><span>SCENES</span><span>AUDIO MIXER</span><span>PARTICIPANTS</span></div>
+
+      <div class="download-panel studioapp-preview" aria-label="Truthful abstract preview of the current StudioApp production workspace">
+        <div class="studioapp-preview__window">
+          <div class="studioapp-preview__titlebar">
+            <span class="studioapp-preview__window-controls" aria-hidden="true"><span></span><span></span><span></span></span>
+            <strong>STREAMSUITES STUDIOAPP</strong>
+          </div>
+          <div class="studioapp-preview__layout" aria-hidden="true">
+            <div class="studioapp-preview__dock"><span>PRODUCTION</span><i></i><i></i><i></i></div>
+            <div class="studioapp-preview__stage">
+              <em class="studioapp-preview__stage-status">OFF AIR · LOCAL PREVIEW</em>
+              <span class="studioapp-preview__stage-mark">
+                <img src="/assets/logos/studiologo3.webp" alt="" />
+                <strong>STAGE</strong>
+                <small>Explicit Windows Display Capture</small>
+              </span>
+            </div>
+            <div class="studioapp-preview__dock"><span>INSPECTOR</span><i></i><i></i><i></i></div>
+            <div class="studioapp-preview__mixer"><span>AUDIO</span><span class="studioapp-preview__meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+            <div class="studioapp-preview__rail"><span>ENGINE READY</span><strong>OFF AIR</strong></div>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section class="download-grid" aria-label="Release and requirements">
-      <article class="download-panel download-release-card">
-        <div class="download-panel-heading"><div><span>CURRENT RELEASE</span><h2>StudioApp ALPHA</h2></div><span id="release-state" class="download-state-pill">Checking</span></div>
-        <dl class="download-release-facts">
-          <div><dt>StudioApp version</dt><dd id="release-version">—</dd></div><div><dt>StudioApp build</dt><dd id="release-build">—</dd></div>
-          <div><dt>System compatibility</dt><dd id="release-system-version">—</dd></div><div><dt>System build</dt><dd id="release-system-build">—</dd></div>
-          <div><dt>Platform</dt><dd>Windows x64</dd></div><div><dt>Installer size</dt><dd id="release-size">—</dd></div>
-          <div><dt>Published</dt><dd id="release-published">—</dd></div><div><dt>Signature</dt><dd id="release-signature">Checking</dd></div>
+    <section class="studioapp-release-layout download-page-width" aria-label="Current release and requirements">
+      <article id="studioapp-release-card" class="download-panel studioapp-release-card is-loading" aria-labelledby="release-title" aria-busy="true">
+        <div class="studioapp-release-card__heading">
+          <div>
+            <p class="download-eyebrow">Current release</p>
+            <h2 id="release-title">StudioApp ALPHA</h2>
+          </div>
+          <span id="release-state" class="download-status-chip">Checking</span>
+        </div>
+        <dl class="studioapp-release-facts">
+          <div><dt>StudioApp version</dt><dd id="release-version">Loading</dd></div>
+          <div><dt>StudioApp build</dt><dd id="release-build">Loading</dd></div>
+          <div><dt>System compatibility</dt><dd id="release-system-version">Loading</dd></div>
+          <div><dt>System build</dt><dd id="release-system-build">Loading</dd></div>
+          <div><dt>Platform</dt><dd>Windows x64</dd></div>
+          <div><dt>Installer size</dt><dd id="release-size">Loading</dd></div>
+          <div><dt>Published</dt><dd id="release-published">Loading</dd></div>
+          <div><dt>Signature</dt><dd id="release-signature">Loading</dd></div>
         </dl>
-        <div class="download-hash"><span>SHA-256</span><code id="release-sha">Release metadata unavailable</code><button id="copy-release-sha" type="button" disabled>Copy</button></div>
-        <div class="download-release-links"><a id="release-notes-link" hidden>Release notes</a><button id="end-download-session" type="button" hidden>End tester session</button></div>
-        <p class="download-warning"><strong>Unsigned ALPHA:</strong> the current installer may trigger Microsoft Defender SmartScreen. Verify the SHA-256 shown here before running it.</p>
+        <p id="release-summary" class="studioapp-release-summary">Validating the canonical release manifest and installer metadata.</p>
+        <div class="studioapp-release-hash">
+          <span>SHA-256</span>
+          <code id="release-sha">Release metadata has not loaded yet.</code>
+          <button id="copy-release-sha" class="studioapp-copy-action" type="button" disabled>Copy hash</button>
+        </div>
+        <p id="copy-release-feedback" class="studioapp-copy-feedback" role="status" aria-live="polite"></p>
+        <div class="studioapp-release-card__actions">
+          <a id="release-download-action" class="download-button download-button--primary" role="button" aria-disabled="true">Download unavailable</a>
+          <a id="release-notes-link" hidden>Read release notes</a>
+          <button id="end-download-session" class="download-button download-button--secondary" type="button" hidden>End tester session</button>
+        </div>
+        <p class="studioapp-release-warning"><strong>Unsigned ALPHA:</strong> the current installer may trigger Microsoft Defender SmartScreen. The signature state above remains authoritative; verify the displayed SHA-256 before running the installer.</p>
       </article>
 
-      <article class="download-panel">
-        <span class="download-panel-label">SYSTEM REQUIREMENTS</span><h2>Built for modern Windows</h2>
-        <ul class="download-check-list"><li>Windows 10 build 19041 or later</li><li>64-bit Windows installation</li><li>Compatible display and Windows Graphics Capture support</li><li>No Visual Studio or .NET SDK required by the self-contained installer</li></ul>
-        <p>Capture and GPU behavior varies by device, display topology, driver, and Windows configuration. No unsupported minimum RAM or GPU claim is made.</p>
+      <article class="download-panel studioapp-requirements-card" aria-labelledby="requirements-title">
+        <p class="download-eyebrow">System requirements</p>
+        <h2 id="requirements-title">Windows-native baseline</h2>
+        <ul class="download-list">
+          <li>Windows 10 build 19041 or later</li>
+          <li>64-bit Windows installation</li>
+          <li>Compatible display and Windows Graphics Capture support</li>
+          <li>No Visual Studio or .NET SDK required by the self-contained installer</li>
+        </ul>
+        <p>Capture behavior varies by device, display topology, driver, and Windows configuration. No unsupported RAM, CPU, GPU, or vendor minimum is claimed.</p>
       </article>
     </section>
 
-    <section class="download-capabilities" aria-labelledby="capabilities-title">
-      <div><span class="download-panel-label">CURRENT ALPHA</span><h2 id="capabilities-title">Native foundations, truthful boundaries.</h2><p>StudioApp remains a native WPF/C++ application. Runtime/Auth owns accounts, rooms, permissions, credentials, and destinations; the supervised native engine owns local media work.</p></div>
-      <div class="download-capability-grid"><article><h3>Available now</h3><p>Account and room access, native display capture, Stage preview, detachable docks, destination configuration, updater, and local media foundations.</p></article><article><h3>Not yet available</h3><p>Live output, recording, clipping, and native remote-participant rendering are not implemented. ALPHA is not presented as production-stable.</p></article><article><h3>Trust the artifact</h3><p>Release data comes from the canonical <code>updates.streamsuites.app</code> manifest. Validate the installer hash and publisher/signature state before use.</p></article></div>
+    <section class="download-section download-page-width" aria-labelledby="available-title">
+      <div class="download-section-heading">
+        <p class="download-eyebrow">Available now</p>
+        <h2 id="available-title">A native foundation built around truthful state.</h2>
+        <p>StudioApp stays visibly OFF AIR unless real output exists. Local capture begins only after an explicit operator action.</p>
+      </div>
+      <div class="download-card-grid">
+        <article class="download-panel download-info-card">
+          <div class="download-info-card__meta"><span class="download-status-chip download-status-chip--available">Available now</span></div>
+          <h3>Rooms and identity</h3>
+          <p>Account access, rooms, invitations, permissions, credentials, and destinations continue to come from Runtime/Auth rather than local client state.</p>
+        </article>
+        <article class="download-panel download-info-card">
+          <div class="download-info-card__meta"><span class="download-status-chip download-status-chip--available">Available now</span></div>
+          <h3>Local production workspace</h3>
+          <p>Explicit native display capture, a local Stage preview, detachable production surfaces, native audio foundations, and engine diagnostics stay on the Windows machine.</p>
+        </article>
+        <article class="download-panel download-info-card">
+          <div class="download-info-card__meta"><span class="download-status-chip download-status-chip--available">Available now</span></div>
+          <h3>Destinations and updates</h3>
+          <p>Configure Runtime/Auth-owned destination intent and consume strictly validated updates without exposing publishing credentials or storing installers in Public.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="download-section download-page-width" aria-labelledby="workspace-title">
+      <div class="download-section-heading">
+        <p class="download-eyebrow">Production workspace</p>
+        <h2 id="workspace-title">One native shell. Independently managed surfaces.</h2>
+        <p>The current workspace keeps one Stage preview and coordinated Production, Inspector, Audio Mixer, and Production Controls surfaces that can dock, hide, or move into native popouts without fabricating media state.</p>
+      </div>
+      <div class="studioapp-trust-grid">
+        <article class="download-panel studioapp-boundary-card">
+          <h3>WPF owns the operator experience</h3>
+          <p>C# and WPF own UX, local settings, API clients, orchestration, and supervision. StudioApp is not a WebView or wrapped Browser Studio site.</p>
+        </article>
+        <article class="download-panel studioapp-boundary-card">
+          <h3>C++ owns local media foundations</h3>
+          <p>The separately supervised native engine owns capture, Direct3D preview composition foundations, WASAPI audio, Media Foundation startup, device control, and bounded telemetry.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="download-section download-page-width" aria-labelledby="trust-title">
+      <div class="download-section-heading">
+        <p class="download-eyebrow">Artifact trust</p>
+        <h2 id="trust-title">Know exactly what you are downloading.</h2>
+        <p>The Public site never stores the installer. Access and manifest validation remain server-side before a controlled redirect reaches the canonical update host.</p>
+      </div>
+      <div class="download-card-grid">
+        <article class="download-panel download-info-card"><h3>Canonical source</h3><p>Release metadata and immutable artifacts originate from <code>updates.streamsuites.app</code> through a strictly validated product manifest.</p></article>
+        <article class="download-panel download-info-card"><h3>Hash verification</h3><p>The installer size and SHA-256 are validated before being presented. Copy the hash from the release card and verify it locally.</p></article>
+        <article class="download-panel download-info-card"><h3>Honest signature state</h3><p>The page reports the manifest’s signature state. An unsigned ALPHA is never described as code-signed or silently executed.</p></article>
+      </div>
+    </section>
+
+    <section class="download-section download-page-width" aria-labelledby="limitations-title">
+      <div class="download-callout">
+        <p class="download-eyebrow">ALPHA boundaries</p>
+        <h2 id="limitations-title">Built for evaluation, not production broadcasting.</h2>
+        <p>Live broadcast output, local recording, clipping/replay, native remote-participant video rendering, a finished multi-source scene compositor, and production stability are not available. StudioApp remains useful for its current native foundations without claiming those future capabilities.</p>
+      </div>
+    </section>
+
+    <section class="download-section download-page-width" aria-labelledby="family-title">
+      <div class="download-section-heading">
+        <p class="download-eyebrow">Studio product family</p>
+        <h2 id="family-title">Choose the surface that fits the workflow.</h2>
+        <p>Each product remains a client of Runtime/Auth authority and keeps media ownership inside the surface designed to handle it.</p>
+      </div>
+      <div class="download-card-grid">
+        <article class="download-panel download-product-family-card">
+          <div class="download-product-family-card__brand">
+            <img src="/assets/logos/studiologo3.webp" alt="" />
+            <div><h3>Browser Studio</h3><p>Cloudflare Realtime-first browser production</p></div>
+          </div>
+          <p>Open the current web-based Studio experience without installing a desktop application.</p>
+          <div class="download-actions"><a class="download-button download-button--secondary" href="https://studio.streamsuites.app">Open Browser Studio</a></div>
+        </article>
+        <article class="download-panel download-product-family-card">
+          <div class="download-product-family-card__brand">
+            <img src="/assets/icons/obs-white.svg" alt="" />
+            <div><h3>StreamSuites Studio for OBS</h3><p>Native OBS plugin · In development</p></div>
+          </div>
+          <p>An OBS integration that uses supported OBS interfaces while OBS retains ownership of scenes, mixing, encoding, recording, and output.</p>
+          <div class="download-actions">
+            <a class="download-button download-button--secondary" href="/downloads/obs-plugin/">View project status</a>
+            <span class="download-button download-button--secondary" aria-disabled="true">Download not yet available</span>
+          </div>
+        </article>
+        <article class="download-panel download-product-family-card">
+          <div class="download-product-family-card__brand">
+            <img src="/assets/logos/studiologo3.webp" alt="" />
+            <div><h3>StudioApp Extensions</h3><p>Planned ecosystem · Catalog closed</p></div>
+          </div>
+          <p>A searchable future directory for StudioApp extensions and addable docks. No installable extensions are currently listed.</p>
+          <div class="download-actions"><a class="download-button download-button--secondary" href="/downloads/studioapp/extensions/">Explore the directory</a></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="download-section download-page-width" aria-labelledby="faq-title">
+      <div class="download-section-heading">
+        <p class="download-eyebrow">Questions and support</p>
+        <h2 id="faq-title">Before you install.</h2>
+      </div>
+      <div class="studioapp-faq-grid">
+        <article class="download-panel"><h3>Does StudioApp replace Browser Studio?</h3><p>No. StudioApp is the Windows-native production surface; Browser Studio remains a separate browser experience.</p></article>
+        <article class="download-panel"><h3>Where is the installer hosted?</h3><p>Only on the canonical StreamSuites update host. Public validates metadata and issues a controlled same-origin redirect after access checks.</p></article>
+        <article class="download-panel"><h3>Is capture automatic?</h3><p>No. Display and audio capture require explicit operator action and are never started merely by launching StudioApp or opening a room.</p></article>
+        <article class="download-panel"><h3>Where can I get help?</h3><p>Review the <a href="https://docs.streamsuites.app">StreamSuites documentation</a> or visit <a href="/support.html">Public support</a>.</p></article>
+      </div>
     </section>
   </main>
 
-  <footer class="download-footer"><span>© 2026 Brainstream Media Group</span><nav aria-label="Legal"><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="/accessibility.html">Accessibility</a><a href="https://docs.streamsuites.app">Documentation</a></nav></footer>
+  <footer class="download-footer">
+    <div class="download-footer__inner download-page-width">
+      <span>© 2026 Brainstream Media Group</span>
+      <nav aria-label="Legal">
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+        <a href="/accessibility.html">Accessibility</a>
+        <a href="https://docs.streamsuites.app">Documentation</a>
+      </nav>
+    </div>
+  </footer>
 
   <div id="download-access-modal" class="auth-modal-backdrop" aria-hidden="true">
     <section class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="download-access-title" tabindex="-1">
       <button id="close-download-access" class="auth-modal-close" type="button" aria-label="Close access notice"><span class="auth-modal-close-icon" aria-hidden="true"></span></button>
-      <div class="auth-modal-header"><p class="auth-modal-eyebrow">StudioApp ALPHA access</p><h2 id="download-access-title" class="auth-modal-title">Downloads are temporarily limited</h2><p id="download-access-message" class="auth-modal-subtitle"></p></div>
-      <div id="download-bypass-gate" class="ss-auth-access-gate" hidden>
-        <form id="download-bypass-form" class="ss-auth-access-gate__form"><label class="ss-auth-access-gate__label" for="download-bypass-code">Tester access code</label><input id="download-bypass-code" class="ss-auth-access-gate__input" type="password" maxlength="256" autocomplete="off" spellcheck="false" /><button class="ss-auth-access-gate__submit" type="submit">Unlock download</button><p id="download-bypass-feedback" class="ss-auth-access-gate__feedback" role="status" aria-live="polite"></p></form>
+      <div class="auth-modal-header">
+        <p class="auth-modal-eyebrow">StudioApp ALPHA access</p>
+        <h2 id="download-access-title" class="auth-modal-title">Downloads are temporarily limited</h2>
+        <p id="download-access-message" class="auth-modal-subtitle"></p>
       </div>
-      <button id="return-to-download-page" class="download-modal-secondary" type="button">Return to page</button>
+      <div id="download-bypass-gate" class="ss-auth-access-gate" hidden>
+        <form id="download-bypass-form" class="ss-auth-access-gate__form">
+          <label class="ss-auth-access-gate__label" for="download-bypass-code">Tester access code</label>
+          <input id="download-bypass-code" class="ss-auth-access-gate__input" type="password" maxlength="256" autocomplete="off" spellcheck="false" />
+          <button class="ss-auth-access-gate__submit" type="submit">Unlock download</button>
+          <p id="download-bypass-feedback" class="ss-auth-access-gate__feedback" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+      <button id="return-to-download-page" class="download-button download-button--secondary download-modal-secondary" type="button">Return to page</button>
     </section>
   </div>
   <div id="download-live-status" class="download-sr-only" role="status" aria-live="polite"></div>
