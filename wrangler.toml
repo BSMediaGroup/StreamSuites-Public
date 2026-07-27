@@ -1,0 +1,4 @@
+name = "streamsuites-public"
+pages_build_output_dir = "."
+compatibility_date = "2026-07-27"
+compatibility_flags = ["global_fetch_strictly_public"]

@@ -153,16 +153,16 @@ function manifestError(category) {
   return error;
 }
 
-async function readManifestResponse(response) {
-  if (!response?.ok) throw manifestError("manifest_unavailable");
+async function readManifestResponse(response, prefix) {
+  if (!response?.ok) throw manifestError(`${prefix}_http_status`);
   const contentType = String(response.headers.get("Content-Type") || "").toLowerCase();
-  if (!contentType.includes("application/json")) throw manifestError("manifest_invalid_content_type");
+  if (!contentType.includes("application/json")) throw manifestError(`${prefix}_content_type`);
   const text = await response.text();
-  if (encoder.encode(text).byteLength > MAX_MANIFEST_BYTES) throw manifestError("manifest_too_large");
+  if (encoder.encode(text).byteLength > MAX_MANIFEST_BYTES) throw manifestError(`${prefix}_contract_failed`);
   try {
     return JSON.parse(text);
   } catch {
-    throw manifestError("manifest_malformed");
+    throw manifestError(`${prefix}_parse_failed`);
   }
 }
 
@@ -246,9 +246,14 @@ async function fetchLegacyManifest(fetchImpl) {
   try {
     response = await requestManifest(LEGACY_MANIFEST_URL, fetchImpl);
   } catch {
-    throw manifestError("manifest_unavailable");
+    throw manifestError("legacy_manifest_fetch_failed");
   }
-  return validateManifest(await readManifestResponse(response), "legacy");
+  try {
+    return validateManifest(await readManifestResponse(response, "legacy_manifest"), "legacy");
+  } catch (error) {
+    if (String(error?.category || "").startsWith("legacy_manifest_")) throw error;
+    throw manifestError("legacy_manifest_contract_failed");
+  }
 }
 
 export async function fetchValidatedManifest(fetchImpl = fetch) {
@@ -256,12 +261,20 @@ export async function fetchValidatedManifest(fetchImpl = fetch) {
   try {
     response = await requestManifest(PRODUCT_MANIFEST_URL, fetchImpl);
   } catch {
-    return fetchLegacyManifest(fetchImpl);
+    try {
+      return await fetchLegacyManifest(fetchImpl);
+    } catch {
+      throw manifestError("product_manifest_fetch_failed");
+    }
   }
   if (!response.ok) return fetchLegacyManifest(fetchImpl);
-  const manifest = await readManifestResponse(response);
+  const manifest = await readManifestResponse(response, "product_manifest");
   if (manifest?.schema_version !== 2) return fetchLegacyManifest(fetchImpl);
-  return validateManifest(manifest, "product");
+  try {
+    return validateManifest(manifest, "product");
+  } catch {
+    throw manifestError("product_manifest_contract_failed");
+  }
 }
 
 export async function fetchValidatedManifestForContext(context) {
@@ -293,7 +306,7 @@ export function projectPublicRelease(release, config, authorized) {
 }
 
 export function unavailablePublicRelease(config, authorized, error) {
-  const category = typeof error?.category === "string" ? error.category : "manifest_unavailable";
+  const category = typeof error?.category === "string" ? error.category : "release_projection_failed";
   return Object.freeze({
     available: false,
     product_id: EXPECTED_PRODUCT_ID,

@@ -6,6 +6,19 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-07-27 - StudioApp manifest hydration and retry idempotence
+
+#### Technical notes
+
+- Identified the production `manifest_unavailable` cause as the Pages Function's same-zone global fetch to `updates.streamsuites.app`: the update manifest was healthy over public HTTPS, while the deployed Worker runtime was not routing that subrequest through Cloudflare's public front door. Added the Pages Wrangler compatibility configuration with `global_fetch_strictly_public`; strict product/legacy validation remains unchanged.
+- Replaced the collapsing diagnostic with bounded nonsecret fetch, HTTP-status, content-type, parse, contract, and projection categories. Valid current schema-v2 metadata hydrates while locked; unauthorized download remains fail-closed and an authorized request can redirect only to the exact validated installer URL.
+- Deployment-marker schema 2 is deterministic from canonical relevant Public source excluding the marker, StudioApp product/version/build, and route. It contains no timestamp, random value, branch, or self-referential commit SHA; remote Git SHA remains a separate verification.
+- Focused tests cover same-zone runtime configuration, exact locked metadata, diagnostic classification, strict malformed-manifest rejection, marker contract, unauthorized denial, and exact controlled redirect. No Pages deployment, environment mutation, installer upload, R2 write, version/build bump, commit, or push was performed.
+
+#### Human-readable notes
+
+The locked page can show the real published release again after this source is deployed. Repeating the same Public release step produces the same marker bytes instead of endless marker-only commits, while the download gate remains closed to unauthorized users.
+
 ### 2026-07-27 - Locked StudioApp release metadata and deployment proof
 
 - Added a locked-safe same-origin StudioApp release metadata endpoint backed by bounded strict schema-v2 validation and a strict schema-v1 compatibility fallback. The page now shows the real `0.2.4-alpha / 2026.07.26+002` identity, exact installer size/hash, system compatibility and unsigned ALPHA state while truthfully remaining **Locked**.

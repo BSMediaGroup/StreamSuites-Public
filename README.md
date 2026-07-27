@@ -73,7 +73,7 @@ flowchart TD
 
 ## StudioApp Download Gate Operations
 
-The gate owns the canonical page and its normal same-origin download action. The installer exists only in R2; the alpha manifest identifies the latest immutable object and the Public repository never receives a second installer upload. `deployment-markers/studioapp-release.json` contains only nonsecret production-correlation metadata. The private StudioApp Release Manager semantically verifies the page, access/release APIs, rendered metadata, exact marker, manifest and locked redirect; its optional authorized check keeps the masked code only in memory and never downloads the installer. It does not store the code or invoke a Pages deployment API.
+The gate owns the canonical page and its normal same-origin download action. The installer exists only in R2; the alpha manifest identifies the latest immutable object and the Public repository never receives a second installer upload. `deployment-markers/studioapp-release.json` is a deterministic nonsecret schema-2 correlation identity derived from canonical relevant Public source (excluding the marker), product, published version/build, and route. It contains no clock, random value, branch, or self-referential commit SHA; remote Git SHA is verified separately. The private StudioApp Release Manager semantically verifies the page, access/release APIs, rendered metadata, exact marker, manifest and locked redirect; its optional authorized check keeps the masked code only in memory and never downloads the installer. It does not store the code or invoke a Pages deployment API.
 
 Configure Production and Preview independently in Cloudflare:
 
@@ -87,7 +87,7 @@ Configure Production and Preview independently in Cloudflare:
 
 `DOWNLOAD_BYPASS_TTL_MINUTES` safely defaults to 15 minutes when absent or invalid, while `access-state` still reports that Production/Preview configuration as requiring correction. Missing lock configuration defaults to locked. The temporary authorization cookie is HMAC-signed from the configured bypass secret, contains no bypass code, and is HttpOnly, Secure, SameSite=Lax, expiring, and scoped to `/api/downloads/studioapp`.
 
-This repository is a static Pages project with no package manifest, install step, lint script, typecheck, or bundle build. Run the focused download-surface contracts with `node --test tests/studioapp-download-gate.test.mjs tests/download-surfaces.test.mjs tests/studioapp-extensions.test.mjs`. Local browser verification may use the localhost-only `LOCAL_STUDIOAPP_RELEASE_FIXTURE` and bounded `STUDIOAPP_RELEASE_FIXTURE_JSON` Wrangler bindings in a temporary untracked environment file; production hosts reject that fixture seam, and the file/process/state must be removed after testing. Route and Pages Function behavior must also be validated in a Cloudflare Preview before production deployment. The preferred canonical manifest is `https://updates.streamsuites.app/studioapp/windows-x64/alpha/product-manifest.json`, with legacy fallback at `manifest.json`; no installer is stored here. Normal StudioApp R2 publication requires no Public redeployment. Redeploy Public only when its page/function source or Pages variables change, through the separate manual commit/push/Cloudflare workflow.
+This repository is a static Pages project with no package manifest, install step, lint script, typecheck, or bundle build. `wrangler.toml` is the checked-in Pages runtime contract; `global_fetch_strictly_public` is required because the Function retrieves the authoritative update manifest from the same Cloudflare zone at `updates.streamsuites.app`. Run the focused download-surface contracts with `node --test tests/studioapp-download-gate.test.mjs tests/download-surfaces.test.mjs tests/studioapp-extensions.test.mjs`. Local browser verification may use the localhost-only `LOCAL_STUDIOAPP_RELEASE_FIXTURE` and bounded `STUDIOAPP_RELEASE_FIXTURE_JSON` Wrangler bindings in a temporary untracked environment file; production hosts reject that fixture seam, and the file/process/state must be removed after testing. Route and Pages Function behavior must also be validated in a Cloudflare Preview before production deployment. The preferred canonical manifest is `https://updates.streamsuites.app/studioapp/windows-x64/alpha/product-manifest.json`, with legacy fallback at `manifest.json`; no installer is stored here. Normal StudioApp R2 publication requires no Public redeployment. Redeploy Public only when its page/function source or Pages variables change, through the separate manual commit/push/Cloudflare workflow.
 
 ## Studio Download Surface Assets and Contracts
 
@@ -127,6 +127,7 @@ StreamSuites-Public/
 ├── media.html                  # Compatibility shim for old /media.html links
 ├── public-login.html
 ├── README.md
+├── wrangler.toml              # Pages runtime compatibility contract
 ├── requests-login.html
 ├── requests.html
 ├── leaderboards.html

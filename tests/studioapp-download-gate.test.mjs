@@ -30,29 +30,29 @@ const currentManifest = {
   product: "StreamSuites StudioApp",
   channel: "alpha",
   version: "0.2.4-alpha",
-  build: "2026.07.26+002",
+  build: "2026.07.27+001",
   system_version: "0.5.4-alpha",
-  system_build: "2026.07.27+001",
-  source_revision: "94f8dc594d6cd6b3d547075f3f6b01ee1185aef1",
+  system_build: "2026.07.27+003",
+  source_revision: "036646be4e29bc3f3bfbfedd8b62cb39382dd091",
   package_provenance_version: 2,
   product_version_epoch: 1,
-  published_at: "2026-07-27T03:50:19.2295924+00:00",
-  installer_url: "https://updates.streamsuites.app/studioapp/windows-x64/releases/0.2.4-alpha/2026.07.26_2b002/StreamSuites-StudioApp-0.2.4-alpha-windows-x64-setup.exe",
+  published_at: "2026-07-27T18:25:16.2849697+10:00",
+  installer_url: "https://updates.streamsuites.app/studioapp/windows-x64/releases/0.2.4-alpha/2026.07.27_2b001/StreamSuites-StudioApp-0.2.4-alpha-windows-x64-setup.exe",
   installer_filename: "StreamSuites-StudioApp-0.2.4-alpha-windows-x64-setup.exe",
-  installer_size: 58213269,
-  installer_sha256: "accf2504a19d3842c4e81541687f8b5320a0e67ce85c0e00795c0f98046cdd64",
+  installer_size: 58257989,
+  installer_sha256: "982f1fcdd3b1bbd51a55cf94147c0bb970102039c903c69c52663277f5d40d8f",
   signed: false,
   signature_subject: null,
   architecture: "windows-x64",
   title: "StreamSuites StudioApp 0.2.4-alpha ALPHA",
-  summary: "StreamSuites StudioApp 0.2.4-alpha (2026.07.26+002) for Windows x64.",
+  summary: "StreamSuites StudioApp 0.2.4-alpha (2026.07.27+001) for Windows x64.",
 };
 const legacyManifest = {
   ...currentManifest,
   schema_version: 1,
   product_id: undefined,
   version: "0.5.0-alpha",
-  installer_url: "https://updates.streamsuites.app/studioapp/windows-x64/releases/0.5.0-alpha/2026.07.26_2b002/StreamSuites-StudioApp-0.2.4-alpha-windows-x64-setup.exe",
+  installer_url: "https://updates.streamsuites.app/studioapp/windows-x64/releases/0.5.0-alpha/2026.07.27_2b001/StreamSuites-StudioApp-0.2.4-alpha-windows-x64-setup.exe",
 };
 const json = (payload, status = 200) => new Response(JSON.stringify(payload), { status, headers: { "Content-Type": "application/json" } });
 
@@ -116,7 +116,7 @@ test("manifest validation accepts only the canonical product channel architectur
     { installer_filename: "../unsafe.exe" }, { installer_sha256: "bad" }, { installer_size: 0 },
     { installer_url: "https://updates.streamsuites.app/uncontrolled/setup.exe", installer_filename: "setup.exe" },
   ]) await assert.rejects(() => gate.fetchValidatedManifest(responseFor({ ...valid, ...mutation })), /manifest_/);
-  await assert.rejects(() => gate.fetchValidatedManifest(async () => new Response("bad", { status: 502 })), /manifest_unavailable/);
+  await assert.rejects(() => gate.fetchValidatedManifest(async () => new Response("bad", { status: 502 })), /legacy_manifest_http_status/);
   await assert.rejects(() => gate.fetchValidatedManifest(responseFor(valid, { "Content-Type": "text/html" })), /manifest_/);
 });
 
@@ -140,9 +140,9 @@ test("product manifest is preferred and the deployed legacy path remains a bound
 test("current schema-v2 product release projects exact public metadata while locked", async () => {
   const release = await gate.fetchValidatedManifest(async () => json(currentManifest));
   assert.equal(release.publicMetadata.version, "0.2.4-alpha");
-  assert.equal(release.publicMetadata.build, "2026.07.26+002");
+  assert.equal(release.publicMetadata.build, "2026.07.27+001");
   assert.equal(release.publicMetadata.release_epoch, 1);
-  assert.equal(release.publicMetadata.installer_size, 58213269);
+  assert.equal(release.publicMetadata.installer_size, 58257989);
   assert.equal(release.publicMetadata.installer_sha256, currentManifest.installer_sha256);
   assert.equal(release.publicMetadata.signature, "Unsigned ALPHA");
   const locked = gate.projectPublicRelease(release, gate.readDownloadAccessConfig(configEnv), false);
@@ -150,7 +150,7 @@ test("current schema-v2 product release projects exact public metadata while loc
   assert.equal(locked.access_locked, true);
   assert.equal(locked.download_available, false);
   assert.equal(Object.hasOwn(locked, "installer_url"), false);
-  assert.match(locked.controlled_download_url, /version=0\.2\.4-alpha&build=2026\.07\.26%2B002/);
+  assert.match(locked.controlled_download_url, /version=0\.2\.4-alpha&build=2026\.07\.27%2B001/);
   const unlocked = gate.projectPublicRelease(release, gate.readDownloadAccessConfig(configEnv), true);
   assert.equal(unlocked.access_locked, false);
   assert.equal(unlocked.download_available, true);
@@ -175,7 +175,7 @@ test("manifest fallback is limited to unavailable or unsupported product contrac
     return calls === 1
       ? new Response("{", { status: 200, headers: { "Content-Type": "application/json" } })
       : json(legacyManifest);
-  }), /manifest_malformed/);
+  }), /product_manifest_parse_failed/);
   assert.equal(calls, 1);
 });
 
@@ -212,7 +212,7 @@ test("release metadata stays visible while locked and controlled download fails 
 
     const unauthorized = await latestFunction.onRequestGet({
       env: configEnv,
-      request: new Request("https://streamsuites.app/api/downloads/studioapp/latest?version=0.2.4-alpha&build=2026.07.26%2B002"),
+      request: new Request("https://streamsuites.app/api/downloads/studioapp/latest?version=0.2.4-alpha&build=2026.07.27%2B001"),
     });
     assert.equal(unauthorized.status, 403);
     const injected = await latestFunction.onRequestGet({
@@ -229,7 +229,7 @@ test("release metadata stays visible while locked and controlled download fails 
     const cookie = await gate.createAccessCookie(gate.readDownloadAccessConfig(configEnv));
     const authorized = await latestFunction.onRequestGet({
       env: configEnv,
-      request: new Request("https://streamsuites.app/api/downloads/studioapp/latest?version=0.2.4-alpha&build=2026.07.26%2B002", {
+      request: new Request("https://streamsuites.app/api/downloads/studioapp/latest?version=0.2.4-alpha&build=2026.07.27%2B001", {
         headers: { Cookie: cookie.header.split(";")[0] },
       }),
     });
@@ -317,10 +317,17 @@ test("Pages Function routes keep the bypass code server-side and normal download
 
 test("deployment marker is nonsecret and identifies the exact public route", () => {
   const marker = JSON.parse(read("deployment-markers/studioapp-release.json"));
-  assert.equal(marker.schema_version, 1);
+  assert.equal(marker.schema_version, 2);
   assert.equal(marker.deployment_id, marker.marker_id);
-  assert.match(marker.source_commit, /^[a-f0-9]{40}$/);
-  assert.equal(marker.source_branch, "main");
+  assert.match(marker.source_identity, /^[a-f0-9]{64}$/);
+  assert.equal(marker.product_id, "streamsuites-studioapp");
   assert.equal(marker.route, "/downloads/studioapp/");
+  assert.doesNotMatch(JSON.stringify(marker), /generated_at|source_commit|source_branch/i);
   assert.doesNotMatch(JSON.stringify(marker), /secret|token|password|bypass_code/i);
+});
+
+test("Pages runtime routes the same-zone update-manifest fetch through the public front door", () => {
+  const wrangler = read("wrangler.toml");
+  assert.match(wrangler, /pages_build_output_dir\s*=\s*"\."/);
+  assert.match(wrangler, /global_fetch_strictly_public/);
 });

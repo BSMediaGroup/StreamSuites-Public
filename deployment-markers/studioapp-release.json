@@ -1,11 +1,10 @@
 {
-  "schema_version": 1,
-  "deployment_id": "studioapp-20260727083623-6ee5ecaeb22742e6b1644219d34afa6e",
-  "marker_id": "studioapp-20260727083623-6ee5ecaeb22742e6b1644219d34afa6e",
-  "source_commit": "811cd1f24c72865c4dabeaecf076560264be233d",
-  "source_branch": "main",
-  "route": "/downloads/studioapp/",
-  "generated_at": "2026-07-27T08:36:24.3950215+00:00",
+  "schema_version": 2,
+  "deployment_id": "studioapp-v2-d38b9efbd295d06c48f712a8107e13a1",
+  "marker_id": "studioapp-v2-d38b9efbd295d06c48f712a8107e13a1",
+  "source_identity": "91a1543593ad21671c4325d64e120fbf2d9ed6c01322ae8c70601f1be55e5d54",
+  "product_id": "streamsuites-studioapp",
   "studioapp_version": "0.2.4-alpha",
-  "studioapp_build": "2026.07.27\u002B001"
+  "studioapp_build": "2026.07.27+001",
+  "route": "/downloads/studioapp/"
 }
