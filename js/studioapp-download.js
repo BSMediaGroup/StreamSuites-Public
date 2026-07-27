@@ -51,7 +51,7 @@
       } else {
         action.removeAttribute("href");
         action.tabIndex = 0;
-        action.textContent = action.id === "studioapp-download-action" ? "Download unavailable" : "Download unavailable";
+        action.textContent = release?.access_locked ? "Download locked" : "Download unavailable";
       }
     });
   }

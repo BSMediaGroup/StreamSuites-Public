@@ -6,6 +6,19 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-07-28 - Direct R2 StudioApp release reads
+
+#### Technical notes
+
+- Bound Pages Functions directly to the existing `streamsuites-updates` bucket as `STREAMSUITES_UPDATES_BUCKET` and replaced the production same-zone HTTP manifest fetch with bounded direct R2 reads. The product object remains preferred; legacy fallback is permitted only when that object is missing or declares an unsupported integer schema.
+- Preserved strict release identity, immutable host/path, size, hash and signature-state validation. Missing binding, R2 read, body-size, UTF-8, JSON, schema, contract and projection failures remain distinct nonsecret diagnostics instead of collapsing into `manifest_unavailable`.
+- Production cannot silently use HTTP fallback. The explicit compatibility seam is restricted to localhost, `127.0.0.1`, and Cloudflare Preview `.pages.dev` hosts. Locked users still receive validated release metadata, while only the controlled installer request remains denied.
+- Focused contracts cover direct R2 product and legacy reads, fallback boundaries, invalid and hostile objects, missing binding, locked metadata, exact redirect, and arbitrary-redirect rejection. No Pages binding/environment mutation, deployment, R2 write, installer upload, version/build bump, commit, or push was performed.
+
+#### Human-readable notes
+
+After the checked-in binding is configured for both Cloudflare Production and Preview and this source is deployed, the locked StudioApp page can read the published release directly from its R2 bucket without depending on a same-zone network fetch. The earlier compatibility flag did not repair the active production path and is no longer the production design.
+
 ### 2026-07-27 - StudioApp manifest hydration and retry idempotence
 
 #### Technical notes

@@ -5,6 +5,10 @@ const MIN_TTL_MINUTES = 1;
 const MAX_TTL_MINUTES = 60;
 const PRODUCT_MANIFEST_URL = "https://updates.streamsuites.app/studioapp/windows-x64/alpha/product-manifest.json";
 const LEGACY_MANIFEST_URL = "https://updates.streamsuites.app/studioapp/windows-x64/alpha/manifest.json";
+const PRODUCT_MANIFEST_KEY = "studioapp/windows-x64/alpha/product-manifest.json";
+const LEGACY_MANIFEST_KEY = "studioapp/windows-x64/alpha/manifest.json";
+const UPDATES_BUCKET_BINDING = "STREAMSUITES_UPDATES_BUCKET";
+const HTTP_FALLBACK_FLAG = "STUDIOAPP_MANIFEST_HTTP_FALLBACK_ENABLED";
 const EXPECTED_PRODUCT = "StreamSuites StudioApp";
 const EXPECTED_PRODUCT_ID = "streamsuites-studioapp";
 const EXPECTED_CHANNEL = "alpha";
@@ -170,6 +174,17 @@ function boundedString(value, maximum = 64) {
   return typeof value === "string" && value.length > 0 && value.length <= maximum ? value : null;
 }
 
+function updateObjectSegment(value) {
+  let result = "";
+  for (const byte of encoder.encode(value)) {
+    result += (byte >= 65 && byte <= 90) || (byte >= 97 && byte <= 122) ||
+      (byte >= 48 && byte <= 57) || byte === 46 || byte === 45
+      ? String.fromCharCode(byte)
+      : `_${byte.toString(16).padStart(2, "0")}`;
+  }
+  return result;
+}
+
 function validateManifest(manifest, source) {
   const productManifest = source === "product";
   if (!manifest || typeof manifest !== "object") throw manifestError("manifest_invalid");
@@ -185,6 +200,7 @@ function validateManifest(manifest, source) {
   for (const name of ["release_epoch", "product_version_epoch", "package_provenance_version"]) {
     if (manifest[name] != null && (!Number.isSafeInteger(manifest[name]) || manifest[name] < 0)) throw manifestError("manifest_metadata_invalid");
   }
+  if (manifest.published_at != null && Number.isNaN(Date.parse(manifest.published_at))) throw manifestError("manifest_metadata_invalid");
   if (typeof manifest.signed !== "boolean") throw manifestError("manifest_signature_invalid");
   if (manifest.signed && manifest.signature_subject != null && !boundedString(manifest.signature_subject, 256)) throw manifestError("manifest_signature_invalid");
   if (!Number.isSafeInteger(manifest.installer_size) || manifest.installer_size <= 0 || !/^[a-f0-9]{64}$/i.test(String(manifest.installer_sha256 || ""))) throw manifestError("manifest_artifact_invalid");
@@ -195,7 +211,8 @@ function validateManifest(manifest, source) {
   } catch {
     throw manifestError("manifest_installer_url_invalid");
   }
-  if (installer.protocol !== "https:" || installer.hostname !== EXPECTED_INSTALLER_HOST || installer.username || installer.password || installer.port || installer.search || installer.hash || !installer.pathname.startsWith("/studioapp/windows-x64/releases/") || !installer.pathname.endsWith(`/${manifest.installer_filename}`)) throw manifestError("manifest_installer_url_invalid");
+  const expectedInstallerPath = `/studioapp/windows-x64/releases/${updateObjectSegment(manifest.version)}/${updateObjectSegment(manifest.build)}/${manifest.installer_filename}`;
+  if (installer.protocol !== "https:" || installer.hostname !== EXPECTED_INSTALLER_HOST || installer.username || installer.password || installer.port || installer.search || installer.hash || installer.pathname !== expectedInstallerPath) throw manifestError("manifest_installer_url_invalid");
   let releaseNotesUrl = null;
   if (manifest.release_notes_url) {
     try {
@@ -222,6 +239,8 @@ function validateManifest(manifest, source) {
       package_provenance_version: Number.isSafeInteger(manifest.package_provenance_version) ? manifest.package_provenance_version : null,
       architecture: EXPECTED_ARCHITECTURE,
       installer_filename: manifest.installer_filename,
+      installer_host: installer.hostname,
+      installer_path: installer.pathname,
       installer_size: manifest.installer_size,
       installer_sha256: String(manifest.installer_sha256).toLowerCase(),
       published_at: boundedString(manifest.published_at, 80),
@@ -261,36 +280,119 @@ export async function fetchValidatedManifest(fetchImpl = fetch) {
   try {
     response = await requestManifest(PRODUCT_MANIFEST_URL, fetchImpl);
   } catch {
-    try {
-      return await fetchLegacyManifest(fetchImpl);
-    } catch {
-      throw manifestError("product_manifest_fetch_failed");
-    }
+    throw manifestError("product_manifest_fetch_failed");
   }
-  if (!response.ok) return fetchLegacyManifest(fetchImpl);
+  if (response.status === 404) return { ...(await fetchLegacyManifest(fetchImpl)), releaseSource: "http_fallback", bindingConfigured: false };
   const manifest = await readManifestResponse(response, "product_manifest");
-  if (manifest?.schema_version !== 2) return fetchLegacyManifest(fetchImpl);
+  if (Number.isInteger(manifest?.schema_version) && manifest.schema_version !== 2)
+    return { ...(await fetchLegacyManifest(fetchImpl)), releaseSource: "http_fallback", bindingConfigured: false };
   try {
-    return validateManifest(manifest, "product");
+    return { ...validateManifest(manifest, "product"), releaseSource: "http_fallback", bindingConfigured: false };
   } catch {
     throw manifestError("product_manifest_contract_failed");
   }
 }
 
-export async function fetchValidatedManifestForContext(context) {
-  const fixtureEnabled = parseBoolean(context?.env?.LOCAL_STUDIOAPP_RELEASE_FIXTURE, false);
-  if (!fixtureEnabled) return fetchValidatedManifest();
-  const hostname = new URL(context.request.url).hostname;
-  if (!["127.0.0.1", "localhost"].includes(hostname)) throw manifestError("local_fixture_forbidden");
-  const raw = String(context.env.STUDIOAPP_RELEASE_FIXTURE_JSON || "");
-  if (!raw || encoder.encode(raw).byteLength > MAX_MANIFEST_BYTES) throw manifestError("local_fixture_invalid");
+function hasUpdatesBucket(env = {}) {
+  return Boolean(env[UPDATES_BUCKET_BINDING] && typeof env[UPDATES_BUCKET_BINDING].get === "function");
+}
+
+function httpFallbackAllowed(context) {
+  if (!parseBoolean(context?.env?.[HTTP_FALLBACK_FLAG], false)) return false;
+  const hostname = new URL(context.request.url).hostname.toLowerCase();
+  return hostname === "127.0.0.1" || hostname === "localhost" || hostname.endsWith(".pages.dev");
+}
+
+async function readR2Manifest(bucket, key, prefix) {
+  let object;
+  try {
+    object = await bucket.get(key);
+  } catch {
+    throw manifestError(`${prefix}_read_failed`);
+  }
+  if (!object) throw manifestError(`${prefix}_missing`);
+  if (Number.isSafeInteger(object.size) && object.size > MAX_MANIFEST_BYTES) throw manifestError(`${prefix}_too_large`);
+  let bytes;
+  try {
+    if (typeof object.arrayBuffer === "function") {
+      bytes = new Uint8Array(await object.arrayBuffer());
+    } else if (typeof object.text === "function") {
+      bytes = encoder.encode(await object.text());
+    } else {
+      throw new Error("R2 object body is unavailable.");
+    }
+  } catch {
+    throw manifestError(`${prefix}_read_failed`);
+  }
+  if (bytes.byteLength > MAX_MANIFEST_BYTES) throw manifestError(`${prefix}_too_large`);
+  let text;
+  try {
+    text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    throw manifestError(`${prefix}_parse_failed`);
+  }
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw manifestError(`${prefix}_parse_failed`);
+  }
+}
+
+async function fetchLegacyManifestFromR2(bucket) {
+  const manifest = await readR2Manifest(bucket, LEGACY_MANIFEST_KEY, "legacy_manifest");
+  try {
+    return { ...validateManifest(manifest, "legacy"), releaseSource: "r2_binding", bindingConfigured: true };
+  } catch (error) {
+    if (String(error?.category || "").startsWith("legacy_manifest_")) throw error;
+    throw manifestError("legacy_manifest_contract_failed");
+  }
+}
+
+export async function fetchValidatedManifestFromR2(bucket) {
   let manifest;
   try {
-    manifest = JSON.parse(raw);
-  } catch {
-    throw manifestError("local_fixture_malformed");
+    manifest = await readR2Manifest(bucket, PRODUCT_MANIFEST_KEY, "product_manifest");
+  } catch (error) {
+    if (error?.category === "product_manifest_missing") return fetchLegacyManifestFromR2(bucket);
+    throw error;
   }
-  return validateManifest(manifest, "product");
+  if (Number.isInteger(manifest?.schema_version) && manifest.schema_version !== 2)
+    return fetchLegacyManifestFromR2(bucket);
+  try {
+    return { ...validateManifest(manifest, "product"), releaseSource: "r2_binding", bindingConfigured: true };
+  } catch {
+    throw manifestError("product_manifest_contract_failed");
+  }
+}
+
+export function publicManifestSourceState(context) {
+  const bindingConfigured = hasUpdatesBucket(context?.env);
+  return Object.freeze({
+    binding_configured: bindingConfigured,
+    release_source: bindingConfigured ? "r2_binding" : httpFallbackAllowed(context) ? "http_fallback" : null,
+  });
+}
+
+export async function fetchValidatedManifestForContext(context) {
+  const fixtureEnabled = parseBoolean(context?.env?.LOCAL_STUDIOAPP_RELEASE_FIXTURE, false);
+  if (fixtureEnabled) {
+    const hostname = new URL(context.request.url).hostname;
+    if (!["127.0.0.1", "localhost"].includes(hostname)) throw manifestError("local_fixture_forbidden");
+    const raw = String(context.env.STUDIOAPP_RELEASE_FIXTURE_JSON || "");
+    if (!raw || encoder.encode(raw).byteLength > MAX_MANIFEST_BYTES) throw manifestError("local_fixture_invalid");
+    let manifest;
+    try {
+      manifest = JSON.parse(raw);
+    } catch {
+      throw manifestError("local_fixture_malformed");
+    }
+    return { ...validateManifest(manifest, "product"), releaseSource: "fixture", bindingConfigured: false };
+  }
+  if (hasUpdatesBucket(context?.env))
+    return fetchValidatedManifestFromR2(context.env[UPDATES_BUCKET_BINDING]);
+  if (httpFallbackAllowed(context))
+    return fetchValidatedManifest(context?.fetch || fetch);
+  throw manifestError("r2_binding_missing");
 }
 
 export function projectPublicRelease(release, config, authorized) {
@@ -298,6 +400,8 @@ export function projectPublicRelease(release, config, authorized) {
   return Object.freeze({
     available: true,
     ...release.publicMetadata,
+    release_source: release.releaseSource,
+    binding_configured: release.bindingConfigured,
     download_available: !accessLocked,
     access_locked: accessLocked,
     controlled_download_url: `/api/downloads/studioapp/latest?version=${encodeURIComponent(release.publicMetadata.version)}&build=${encodeURIComponent(release.publicMetadata.build)}`,
@@ -305,11 +409,13 @@ export function projectPublicRelease(release, config, authorized) {
   });
 }
 
-export function unavailablePublicRelease(config, authorized, error) {
+export function unavailablePublicRelease(config, authorized, error, sourceState = {}) {
   const category = typeof error?.category === "string" ? error.category : "release_projection_failed";
   return Object.freeze({
     available: false,
     product_id: EXPECTED_PRODUCT_ID,
+    release_source: sourceState.release_source ?? null,
+    binding_configured: sourceState.binding_configured === true,
     download_available: false,
     access_locked: config.locked && !authorized,
     diagnostic: category,
