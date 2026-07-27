@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "deployment_id": "studioapp-20260727083116-7330a190c20f4c72bbbc2eb9798ef344",
-  "marker_id": "studioapp-20260727083116-7330a190c20f4c72bbbc2eb9798ef344",
-  "source_commit": "6345392c0a02a7133e6f41b4175efcb297c669f2",
+  "deployment_id": "studioapp-20260727083623-6ee5ecaeb22742e6b1644219d34afa6e",
+  "marker_id": "studioapp-20260727083623-6ee5ecaeb22742e6b1644219d34afa6e",
+  "source_commit": "811cd1f24c72865c4dabeaecf076560264be233d",
   "source_branch": "main",
   "route": "/downloads/studioapp/",
-  "generated_at": "2026-07-27T08:31:16.5480084+00:00",
+  "generated_at": "2026-07-27T08:36:24.3950215+00:00",
   "studioapp_version": "0.2.4-alpha",
   "studioapp_build": "2026.07.27\u002B001"
 }
