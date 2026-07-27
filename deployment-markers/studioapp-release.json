@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "deployment_id": "studioapp-public-repair-pending-stage-11",
+  "marker_id": "studioapp-public-repair-pending-stage-11",
+  "source_commit": "4e98a15e52d0800d6919d85285cce5e4fec63a75",
+  "source_branch": "main",
+  "route": "/downloads/studioapp/",
+  "generated_at": "2026-07-27T05:30:00Z"
+}

@@ -42,7 +42,7 @@ flowchart TD
 
 ## Current Surface Model
 
-- `/downloads/studioapp` is the canonical Windows StudioApp ALPHA landing page. It requests explicit `product-manifest.json` first, falls back to deployed `manifest.json`, treats independent StudioApp product version/build as primary and optional StreamSuites system compatibility as secondary, and never uses Runtime `version.json` as installer identity. Both paths retain the same fail-closed controlled redirect; the static page contains no raw installer URL.
+- `/downloads/studioapp` is the canonical Windows StudioApp ALPHA landing page. Its same-origin `/api/downloads/studioapp/release` metadata seam remains visible while download access is locked, validates strict schema-v2 `product-manifest.json` with bounded schema-v1 fallback, treats independent StudioApp product version/build as primary and optional StreamSuites system compatibility as secondary, and never uses Runtime `version.json` as installer identity. Only an authorized short-lived session enables the separate controlled redirect; the static page and metadata response contain no raw installer URL.
 - Download lockout is configured only through Pages environment values (`DOWNLOAD_ACCESS_LOCKED`, `DOWNLOAD_ACCESS_MESSAGE`, `DOWNLOAD_BYPASS_ENABLED`, secret `DOWNLOAD_BYPASS_CODE`, bounded `DOWNLOAD_BYPASS_TTL_MINUTES`, and `SHOW_DOWNLOAD_LOCKOUT_BANNER`). Approved tester access uses a short-lived HMAC-signed HttpOnly/Secure/SameSite cookie scoped to the download API. Failure to validate access, cookie, or manifest keeps the download unavailable.
 - `/downloads/obs-plugin/` truthfully presents **StreamSuites Studio for OBS** as in development. It publishes no artifact, version, release date, or compatibility claim; Runtime/Auth remains the control authority and OBS owns the media pipeline.
 - `/downloads/studioapp/extensions/` is a searchable directory shell backed by the versioned, intentionally empty `data/studioapp-extension-catalog.v1.json` presentation contract. Public is not an extension registry: future listings must come from Runtime/Auth or an authoritative generated export, and the current catalog contains no installable item or executable-download field.
@@ -63,7 +63,7 @@ flowchart TD
 ## Routing and Runtime Integration
 
 - Cloudflare Pages routing is handled by the root `_redirects` file plus Pages Functions under `functions/`.
-- `/downloads/studioapp` and its trailing-slash alias resolve to the same static landing page; `/api/downloads/studioapp/*` owns access-state, unlock/end-session, release-metadata, and controlled-download behavior. The dismissible banner is presentation-only and never authorizes a download.
+- `/downloads/studioapp` and its trailing-slash alias resolve to the same static landing page; `/api/downloads/studioapp/*` owns access-state, unlock/end-session, locked-safe release metadata, and controlled-download behavior. `access-state` reports explicit configured/missing-variable state without exposing values, and arbitrary redirect parameters or stale version/build requests fail closed. The dismissible banner is presentation-only and never authorizes a download.
 - `/downloads/obs-plugin` and `/downloads/studioapp/extensions` resolve to their directory pages; normal directory routing serves the trailing-slash forms used by product navigation.
 - The legacy public `/requests` route is now expected to hand off to the developer console feedback hub at `https://console.streamsuites.app/feedback`, while authoritative request data remains runtime-owned.
 - Same-origin auth and API proxy paths forward browser requests to the authoritative Auth API without moving backend ownership into this repo.
@@ -73,7 +73,7 @@ flowchart TD
 
 ## StudioApp Download Gate Operations
 
-The gate owns the canonical page and its normal same-origin download action. The installer exists only in R2; the alpha manifest identifies the latest immutable object and the Public repository never receives a second installer upload. The private StudioApp Release Manager may verify the route, safe access endpoint and manifest hydration, but it stores no gate secret and does not deploy Pages.
+The gate owns the canonical page and its normal same-origin download action. The installer exists only in R2; the alpha manifest identifies the latest immutable object and the Public repository never receives a second installer upload. `deployment-markers/studioapp-release.json` contains only nonsecret production-correlation metadata. The private StudioApp Release Manager semantically verifies the page, access/release APIs, rendered metadata, exact marker, manifest and locked redirect; its optional authorized check keeps the masked code only in memory and never downloads the installer. It does not store the code or invoke a Pages deployment API.
 
 Configure Production and Preview independently in Cloudflare:
 
@@ -85,9 +85,9 @@ Configure Production and Preview independently in Cloudflare:
 6. Apply appropriate values separately to Production and Preview.
 7. Redeploy the Pages project after changing the values.
 
-`DOWNLOAD_BYPASS_TTL_MINUTES` defaults to 15 minutes when absent or invalid and is bounded by the server implementation. The temporary authorization cookie is HMAC-signed from the configured bypass secret, contains no bypass code, and is HttpOnly, Secure, SameSite=Lax, expiring, and scoped to `/api/downloads/studioapp`.
+`DOWNLOAD_BYPASS_TTL_MINUTES` safely defaults to 15 minutes when absent or invalid, while `access-state` still reports that Production/Preview configuration as requiring correction. Missing lock configuration defaults to locked. The temporary authorization cookie is HMAC-signed from the configured bypass secret, contains no bypass code, and is HttpOnly, Secure, SameSite=Lax, expiring, and scoped to `/api/downloads/studioapp`.
 
-This repository is a static Pages project with no package manifest, install step, lint script, typecheck, or bundle build. Run the focused download-surface contracts with `node --test tests/studioapp-download-gate.test.mjs tests/download-surfaces.test.mjs tests/studioapp-extensions.test.mjs`; route and Pages Function behavior must also be validated in a Cloudflare Preview before production deployment. The preferred canonical manifest is `https://updates.streamsuites.app/studioapp/windows-x64/alpha/product-manifest.json`, with legacy fallback at `manifest.json`; no installer is stored here. Normal StudioApp R2 publication requires no Public redeployment. Redeploy Public only when its page/function source or Pages variables change, through the separate manual commit/push/Cloudflare workflow.
+This repository is a static Pages project with no package manifest, install step, lint script, typecheck, or bundle build. Run the focused download-surface contracts with `node --test tests/studioapp-download-gate.test.mjs tests/download-surfaces.test.mjs tests/studioapp-extensions.test.mjs`. Local browser verification may use the localhost-only `LOCAL_STUDIOAPP_RELEASE_FIXTURE` and bounded `STUDIOAPP_RELEASE_FIXTURE_JSON` Wrangler bindings in a temporary untracked environment file; production hosts reject that fixture seam, and the file/process/state must be removed after testing. Route and Pages Function behavior must also be validated in a Cloudflare Preview before production deployment. The preferred canonical manifest is `https://updates.streamsuites.app/studioapp/windows-x64/alpha/product-manifest.json`, with legacy fallback at `manifest.json`; no installer is stored here. Normal StudioApp R2 publication requires no Public redeployment. Redeploy Public only when its page/function source or Pages variables change, through the separate manual commit/push/Cloudflare workflow.
 
 ## Studio Download Surface Assets and Contracts
 
@@ -149,6 +149,7 @@ StreamSuites-Public/
 │   │       ├── access-state.js
 │   │       ├── latest.js
 │   │       ├── lock.js
+│   │       ├── release.js
 │   │       └── unlock.js
 │   ├── auth/
 │   │   └── [[path]].js
@@ -174,6 +175,8 @@ StreamSuites-Public/
 │   │   └── index.js
 │   └── u/
 │       └── [[slug]].js
+├── deployment-markers/
+│   └── studioapp-release.json # Nonsecret production deployment correlation
 ├── community/
 │   ├── index.html
 │   ├── members.html

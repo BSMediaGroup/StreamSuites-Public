@@ -78,7 +78,8 @@ test("StudioApp surface preserves dynamic release and gate hooks without live va
   assert.match(client, /\/api\/downloads\/studioapp\/unlock/);
   assert.match(client, /\/api\/downloads\/studioapp\/lock/);
   assert.match(client, /\/api\/downloads\/studioapp\/latest/);
-  assert.match(client, /\?metadata=1/);
+  assert.match(client, /\/api\/downloads\/studioapp\/release/);
+  assert.match(client, /controlled_download_url/);
   assert.doesNotMatch(html + client, /DOWNLOAD_BYPASS_CODE/);
   assert.doesNotMatch(html, /updates\.streamsuites\.app\/studioapp\/windows-x64\/releases/);
   assert.doesNotMatch(html, /\b20\d{2}\.\d{2}\.\d{2}\+\d+\b/);

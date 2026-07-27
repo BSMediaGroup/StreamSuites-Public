@@ -4,6 +4,7 @@
   const ACCESS_URL = "/api/downloads/studioapp/access-state";
   const UNLOCK_URL = "/api/downloads/studioapp/unlock";
   const LOCK_URL = "/api/downloads/studioapp/lock";
+  const RELEASE_URL = "/api/downloads/studioapp/release";
   const LATEST_URL = "/api/downloads/studioapp/latest";
   const BANNER_KEY = "streamsuites.studioapp.downloadBanner.dismissed";
   const $ = (id) => document.getElementById(id);
@@ -40,11 +41,11 @@
     if (liveStatus) liveStatus.textContent = message;
   }
 
-  function setDownloadEnabled(enabled) {
+  function setDownloadEnabled(enabled, release = null) {
     downloadActions.forEach((action) => {
       action.setAttribute("aria-disabled", String(!enabled));
       if (enabled) {
-        action.href = LATEST_URL;
+        action.href = release?.controlled_download_url || LATEST_URL;
         action.removeAttribute("tabindex");
         action.textContent = "Download for Windows";
       } else {
@@ -125,7 +126,6 @@
     $("end-download-session").hidden = !(accessState.locked && accessState.authorized);
     if (locked) {
       actionNote.textContent = "The download is locked. Approved testers may use the server-validated access code when enabled.";
-      setReleaseUnavailable("Locked", "Release metadata remains behind the same secure tester-access gate as the installer.", "pending");
       openModal();
     } else {
       actionNote.textContent = "Access is available. Validating the current release before enabling the installer download.";
@@ -160,7 +160,7 @@
     $("release-summary").textContent = release.summary || "The current release manifest passed server-side validation.";
     $("release-sha").textContent = release.installer_sha256;
     $("copy-release-sha").disabled = false;
-    setReleaseState("Available", "available");
+    setReleaseState(release.access_locked ? "Locked" : "Available", release.access_locked ? "pending" : "available");
     const notes = $("release-notes-link");
     if (release.release_notes_url) {
       notes.href = release.release_notes_url;
@@ -168,21 +168,22 @@
     } else {
       notes.hidden = true;
     }
-    setDownloadEnabled(true);
-    actionNote.textContent = "Release metadata is validated server-side before the installer download begins.";
+    setDownloadEnabled(release.download_available === true, release);
+    actionNote.textContent = release.access_locked
+      ? "The current release is validated and visible. Download remains locked until tester access is authorized."
+      : "Release metadata is validated server-side before the installer download begins.";
   }
 
   async function loadRelease() {
-    if (accessState.locked && !accessState.authorized) return;
     setReleaseLoading();
     try {
-      const response = await fetch(`${LATEST_URL}?metadata=1`, {
+      const response = await fetch(RELEASE_URL, {
         credentials: "same-origin",
         headers: { Accept: "application/json" },
       });
       const payload = await response.json();
-      if (!response.ok || !payload?.release) throw new Error("release_unavailable");
-      renderRelease(payload.release);
+      if (!response.ok || payload?.available !== true) throw new Error(payload?.diagnostic || "release_unavailable");
+      renderRelease(payload);
       announce("Current StudioApp ALPHA release metadata loaded.");
     } catch {
       setReleaseUnavailable("Unavailable", "The current release manifest could not be validated. Download remains unavailable.");

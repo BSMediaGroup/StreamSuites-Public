@@ -6,6 +6,13 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-07-27 - Locked StudioApp release metadata and deployment proof
+
+- Added a locked-safe same-origin StudioApp release metadata endpoint backed by bounded strict schema-v2 validation and a strict schema-v1 compatibility fallback. The page now shows the real `0.2.4-alpha / 2026.07.26+002` identity, exact installer size/hash, system compatibility and unsigned ALPHA state while truthfully remaining **Locked**.
+- Preserved the existing fail-closed access boundary: only a valid short-lived HttpOnly cookie enables the controlled route, arbitrary redirect inputs and stale version/build requests are rejected, and the browser receives no bypass secret. Access state now distinguishes configured from missing required Pages variables without exposing their values.
+- Added a nonsecret deployment-correlation marker and expanded focused contracts for valid, missing, malformed and incompatible manifests, locked metadata, invalid authorization, exact authorized redirect and secret-free browser responses.
+- No installer, StudioApp/Runtime version or build, R2 object/manifest, Pages environment, deployment, commit or push was changed.
+
 ### 2026-07-24 - Studio product download surfaces
 
 - Rebuilt `/downloads/studioapp/` as a polished responsive Windows-native ALPHA product page using Browser Studio's exact local Sui Generis body font, Recharge display font, and Studio brand mark. Existing Pages gate variables, HMAC cookie, Functions, manifest preference/fallback, strict validation, and same-origin controlled download remain authoritative and fail closed.

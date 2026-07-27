@@ -6,7 +6,15 @@ import path from "node:path";
 const root = process.cwd();
 const read = (relative) => fs.readFileSync(path.join(root, relative), "utf8");
 const gateSource = read("functions/_shared/studioapp-download-gate.js");
-const gate = await import(`data:text/javascript;base64,${Buffer.from(gateSource).toString("base64")}`);
+const gateModuleUrl = `data:text/javascript;base64,${Buffer.from(gateSource).toString("base64")}`;
+const gate = await import(gateModuleUrl);
+const importFunction = async (relative) => {
+  const source = read(relative).replace(
+    /["']\.\.\/\.\.\/\.\.\/_shared\/studioapp-download-gate\.js["']/,
+    JSON.stringify(gateModuleUrl),
+  );
+  return import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}#${encodeURIComponent(relative)}`);
+};
 const secret = "test-only-bypass-value";
 const configEnv = {
   DOWNLOAD_ACCESS_LOCKED: "true",
@@ -16,6 +24,37 @@ const configEnv = {
   DOWNLOAD_BYPASS_TTL_MINUTES: "15",
   SHOW_DOWNLOAD_LOCKOUT_BANNER: "true",
 };
+const currentManifest = {
+  schema_version: 2,
+  product_id: "streamsuites-studioapp",
+  product: "StreamSuites StudioApp",
+  channel: "alpha",
+  version: "0.2.4-alpha",
+  build: "2026.07.26+002",
+  system_version: "0.5.4-alpha",
+  system_build: "2026.07.27+001",
+  source_revision: "94f8dc594d6cd6b3d547075f3f6b01ee1185aef1",
+  package_provenance_version: 2,
+  product_version_epoch: 1,
+  published_at: "2026-07-27T03:50:19.2295924+00:00",
+  installer_url: "https://updates.streamsuites.app/studioapp/windows-x64/releases/0.2.4-alpha/2026.07.26_2b002/StreamSuites-StudioApp-0.2.4-alpha-windows-x64-setup.exe",
+  installer_filename: "StreamSuites-StudioApp-0.2.4-alpha-windows-x64-setup.exe",
+  installer_size: 58213269,
+  installer_sha256: "accf2504a19d3842c4e81541687f8b5320a0e67ce85c0e00795c0f98046cdd64",
+  signed: false,
+  signature_subject: null,
+  architecture: "windows-x64",
+  title: "StreamSuites StudioApp 0.2.4-alpha ALPHA",
+  summary: "StreamSuites StudioApp 0.2.4-alpha (2026.07.26+002) for Windows x64.",
+};
+const legacyManifest = {
+  ...currentManifest,
+  schema_version: 1,
+  product_id: undefined,
+  version: "0.5.0-alpha",
+  installer_url: "https://updates.streamsuites.app/studioapp/windows-x64/releases/0.5.0-alpha/2026.07.26_2b002/StreamSuites-StudioApp-0.2.4-alpha-windows-x64-setup.exe",
+};
+const json = (payload, status = 200) => new Response(JSON.stringify(payload), { status, headers: { "Content-Type": "application/json" } });
 
 test("download configuration is bounded and fails closed when locked", () => {
   const unlocked = gate.readDownloadAccessConfig({ DOWNLOAD_ACCESS_LOCKED: "false" });
@@ -68,17 +107,17 @@ test("manifest validation accepts only the canonical product channel architectur
   const currentRelease = await gate.fetchValidatedManifest(responseFor(current));
   assert.equal(currentRelease.publicMetadata.product_id, "streamsuites-studioapp");
   assert.equal(currentRelease.publicMetadata.system_build, "2026.07.22+006");
-  await assert.rejects(() => gate.fetchValidatedManifest(responseFor({ ...current, product_id: "other-product" })), /manifest_invalid/);
-  await assert.rejects(() => gate.fetchValidatedManifest(responseFor({ ...valid, product_id: "other-product" })), /manifest_invalid/);
+  await assert.rejects(() => gate.fetchValidatedManifest(responseFor({ ...current, product_id: "other-product" })), /manifest_/);
+  await assert.rejects(() => gate.fetchValidatedManifest(responseFor({ ...valid, product_id: "other-product" })), /manifest_/);
   for (const mutation of [
     { product: "Other" }, { channel: "stable" }, { architecture: "arm64" },
     { installer_url: "http://updates.streamsuites.app/a.exe" },
     { installer_url: "https://example.com/StreamSuites-StudioApp-test-setup.exe" },
     { installer_filename: "../unsafe.exe" }, { installer_sha256: "bad" }, { installer_size: 0 },
     { installer_url: "https://updates.streamsuites.app/uncontrolled/setup.exe", installer_filename: "setup.exe" },
-  ]) await assert.rejects(() => gate.fetchValidatedManifest(responseFor({ ...valid, ...mutation })), /manifest_invalid/);
+  ]) await assert.rejects(() => gate.fetchValidatedManifest(responseFor({ ...valid, ...mutation })), /manifest_/);
   await assert.rejects(() => gate.fetchValidatedManifest(async () => new Response("bad", { status: 502 })), /manifest_unavailable/);
-  await assert.rejects(() => gate.fetchValidatedManifest(responseFor(valid, { "Content-Type": "text/html" })), /manifest_invalid/);
+  await assert.rejects(() => gate.fetchValidatedManifest(responseFor(valid, { "Content-Type": "text/html" })), /manifest_/);
 });
 
 test("product manifest is preferred and the deployed legacy path remains a bounded fallback", async () => {
@@ -96,6 +135,148 @@ test("product manifest is preferred and the deployed legacy path remains a bound
   const fallbackUrls = [];
   const fallback = await gate.fetchValidatedManifest(async (url) => { fallbackUrls.push(url); return fallbackUrls.length === 1 ? new Response("missing", { status: 404 }) : new Response(JSON.stringify(legacy), { status: 200, headers: { "Content-Type": "application/json" } }); });
   assert.equal(fallback.publicMetadata.manifest_source, "legacy"); assert.equal(fallbackUrls.length, 2);
+});
+
+test("current schema-v2 product release projects exact public metadata while locked", async () => {
+  const release = await gate.fetchValidatedManifest(async () => json(currentManifest));
+  assert.equal(release.publicMetadata.version, "0.2.4-alpha");
+  assert.equal(release.publicMetadata.build, "2026.07.26+002");
+  assert.equal(release.publicMetadata.release_epoch, 1);
+  assert.equal(release.publicMetadata.installer_size, 58213269);
+  assert.equal(release.publicMetadata.installer_sha256, currentManifest.installer_sha256);
+  assert.equal(release.publicMetadata.signature, "Unsigned ALPHA");
+  const locked = gate.projectPublicRelease(release, gate.readDownloadAccessConfig(configEnv), false);
+  assert.equal(locked.available, true);
+  assert.equal(locked.access_locked, true);
+  assert.equal(locked.download_available, false);
+  assert.equal(Object.hasOwn(locked, "installer_url"), false);
+  assert.match(locked.controlled_download_url, /version=0\.2\.4-alpha&build=2026\.07\.26%2B002/);
+  const unlocked = gate.projectPublicRelease(release, gate.readDownloadAccessConfig(configEnv), true);
+  assert.equal(unlocked.access_locked, false);
+  assert.equal(unlocked.download_available, true);
+});
+
+test("manifest fallback is limited to unavailable or unsupported product contracts", async () => {
+  let calls = 0;
+  const unavailable = await gate.fetchValidatedManifest(async () => {
+    calls += 1;
+    return calls === 1 ? json({ error: "missing" }, 404) : json(legacyManifest);
+  });
+  assert.equal(unavailable.publicMetadata.manifest_source, "legacy");
+  calls = 0;
+  const unsupported = await gate.fetchValidatedManifest(async () => {
+    calls += 1;
+    return calls === 1 ? json({ ...currentManifest, schema_version: 3 }) : json(legacyManifest);
+  });
+  assert.equal(unsupported.publicMetadata.manifest_source, "legacy");
+  calls = 0;
+  await assert.rejects(() => gate.fetchValidatedManifest(async () => {
+    calls += 1;
+    return calls === 1
+      ? new Response("{", { status: 200, headers: { "Content-Type": "application/json" } })
+      : json(legacyManifest);
+  }), /manifest_malformed/);
+  assert.equal(calls, 1);
+});
+
+test("optional system metadata may be absent but artifact identity remains strict", async () => {
+  const optional = { ...currentManifest };
+  delete optional.system_version;
+  delete optional.system_build;
+  const release = await gate.fetchValidatedManifest(async () => json(optional));
+  assert.equal(release.publicMetadata.system_version, null);
+  assert.equal(release.publicMetadata.system_build, null);
+  for (const mutation of [
+    { product_id: "wrong" },
+    { architecture: "windows-arm64" },
+    { installer_sha256: "0".repeat(63) },
+    { installer_url: "https://example.com/setup.exe", installer_filename: "setup.exe" },
+  ]) await assert.rejects(() => gate.fetchValidatedManifest(async () => json({ ...currentManifest, ...mutation })), /manifest_/);
+});
+
+test("release metadata stays visible while locked and controlled download fails closed", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => json(currentManifest);
+  try {
+    const releaseFunction = await importFunction("functions/api/downloads/studioapp/release.js");
+    const latestFunction = await importFunction("functions/api/downloads/studioapp/latest.js");
+    const releaseResponse = await releaseFunction.onRequestGet({
+      env: configEnv,
+      request: new Request("https://streamsuites.app/api/downloads/studioapp/release"),
+    });
+    const releasePayload = await releaseResponse.json();
+    assert.equal(releasePayload.available, true);
+    assert.equal(releasePayload.access_locked, true);
+    assert.equal(releasePayload.download_available, false);
+    assert.equal(releasePayload.version, currentManifest.version);
+
+    const unauthorized = await latestFunction.onRequestGet({
+      env: configEnv,
+      request: new Request("https://streamsuites.app/api/downloads/studioapp/latest?version=0.2.4-alpha&build=2026.07.26%2B002"),
+    });
+    assert.equal(unauthorized.status, 403);
+    const injected = await latestFunction.onRequestGet({
+      env: { DOWNLOAD_ACCESS_LOCKED: "false" },
+      request: new Request("https://streamsuites.app/api/downloads/studioapp/latest?url=https://example.com/evil.exe"),
+    });
+    assert.equal(injected.status, 400);
+    const stale = await latestFunction.onRequestGet({
+      env: { DOWNLOAD_ACCESS_LOCKED: "false" },
+      request: new Request("https://streamsuites.app/api/downloads/studioapp/latest?version=0.2.3-alpha&build=old"),
+    });
+    assert.equal(stale.status, 409);
+
+    const cookie = await gate.createAccessCookie(gate.readDownloadAccessConfig(configEnv));
+    const authorized = await latestFunction.onRequestGet({
+      env: configEnv,
+      request: new Request("https://streamsuites.app/api/downloads/studioapp/latest?version=0.2.4-alpha&build=2026.07.26%2B002", {
+        headers: { Cookie: cookie.header.split(";")[0] },
+      }),
+    });
+    assert.equal(authorized.status, 302);
+    assert.equal(authorized.headers.get("Location"), currentManifest.installer_url);
+    assert.match(authorized.headers.get("Content-Disposition"), /attachment/);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("access state reports configuration blockers without exposing the bypass secret", async () => {
+  const accessFunction = await importFunction("functions/api/downloads/studioapp/access-state.js");
+  const response = await accessFunction.onRequestGet({
+    env: { ...configEnv, DOWNLOAD_BYPASS_CODE: "" },
+    request: new Request("https://streamsuites.app/api/downloads/studioapp/access-state"),
+  });
+  const text = await response.text();
+  const payload = JSON.parse(text);
+  assert.equal(payload.configuration_state, "required");
+  assert.deepEqual(payload.missing_variables, ["DOWNLOAD_BYPASS_CODE"]);
+  assert.equal(payload.bypass_enabled, false);
+  assert.doesNotMatch(text, new RegExp(secret));
+
+  const invalidResponse = await accessFunction.onRequestGet({
+    env: { ...configEnv, DOWNLOAD_BYPASS_TTL_MINUTES: "999" },
+    request: new Request("https://streamsuites.app/api/downloads/studioapp/access-state"),
+  });
+  const invalidPayload = await invalidResponse.json();
+  assert.equal(invalidPayload.configuration_state, "invalid");
+  assert.deepEqual(invalidPayload.invalid_variables, ["DOWNLOAD_BYPASS_TTL_MINUTES"]);
+});
+
+test("local manifest fixture is strictly localhost-only", async () => {
+  const env = {
+    LOCAL_STUDIOAPP_RELEASE_FIXTURE: "true",
+    STUDIOAPP_RELEASE_FIXTURE_JSON: JSON.stringify(currentManifest),
+  };
+  const local = await gate.fetchValidatedManifestForContext({
+    env,
+    request: new Request("http://127.0.0.1:8788/api/downloads/studioapp/release"),
+  });
+  assert.equal(local.publicMetadata.version, currentManifest.version);
+  await assert.rejects(() => gate.fetchValidatedManifestForContext({
+    env,
+    request: new Request("https://streamsuites.app/api/downloads/studioapp/release"),
+  }), /local_fixture_forbidden/);
 });
 
 test("static download route reuses access visuals, contains no secret, and exposes no raw installer URL", () => {
@@ -132,4 +313,14 @@ test("Pages Function routes keep the bypass code server-side and normal download
   assert.match(unlock, /readBoundedCode/); assert.match(unlock, /safeCodeEqual/); assert.match(unlock, /Set-Cookie/);
   assert.match(latest, /verifyAccessCookie/); assert.match(latest, /fetchValidatedManifest/); assert.match(latest, /status: 302/);
   assert.doesNotMatch(latest, /updates\.streamsuites\.app/);
+});
+
+test("deployment marker is nonsecret and identifies the exact public route", () => {
+  const marker = JSON.parse(read("deployment-markers/studioapp-release.json"));
+  assert.equal(marker.schema_version, 1);
+  assert.equal(marker.deployment_id, marker.marker_id);
+  assert.match(marker.source_commit, /^[a-f0-9]{40}$/);
+  assert.equal(marker.source_branch, "main");
+  assert.equal(marker.route, "/downloads/studioapp/");
+  assert.doesNotMatch(JSON.stringify(marker), /secret|token|password|bypass_code/i);
 });

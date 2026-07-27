@@ -10,5 +10,8 @@ export async function onRequestGet(context) {
     bypass_enabled: config.bypassEnabled && Boolean(config.bypassCode),
     show_banner: config.showBanner,
     ttl_minutes: config.ttlMinutes,
+    configuration_state: config.missingVariables.length ? "required" : config.invalidVariables.length ? "invalid" : "valid",
+    missing_variables: config.missingVariables,
+    invalid_variables: config.invalidVariables,
   });
 }

@@ -10,6 +10,8 @@ const EXPECTED_PRODUCT_ID = "streamsuites-studioapp";
 const EXPECTED_CHANNEL = "alpha";
 const EXPECTED_ARCHITECTURE = "windows-x64";
 const EXPECTED_INSTALLER_HOST = "updates.streamsuites.app";
+const MANIFEST_TIMEOUT_MS = 5000;
+const MAX_MANIFEST_BYTES = 1024 * 1024;
 const encoder = new TextEncoder();
 
 export function parseBoolean(value, fallback = false) {
@@ -20,12 +22,30 @@ export function parseBoolean(value, fallback = false) {
 }
 
 export function readDownloadAccessConfig(env = {}) {
-  const locked = parseBoolean(env.DOWNLOAD_ACCESS_LOCKED, false);
+  const locked = parseBoolean(env.DOWNLOAD_ACCESS_LOCKED, true);
   const bypassEnabled = locked && parseBoolean(env.DOWNLOAD_BYPASS_ENABLED, false);
   const parsedTtl = Number.parseInt(String(env.DOWNLOAD_BYPASS_TTL_MINUTES ?? ""), 10);
   const ttlMinutes = Number.isFinite(parsedTtl) && parsedTtl >= MIN_TTL_MINUTES && parsedTtl <= MAX_TTL_MINUTES
     ? parsedTtl
     : DEFAULT_TTL_MINUTES;
+  const requiredVariables = [
+    "DOWNLOAD_ACCESS_LOCKED",
+    "DOWNLOAD_ACCESS_MESSAGE",
+    "DOWNLOAD_BYPASS_ENABLED",
+    "DOWNLOAD_BYPASS_TTL_MINUTES",
+    "SHOW_DOWNLOAD_LOCKOUT_BANNER",
+  ];
+  const missingVariables = requiredVariables.filter((name) => !String(env[name] ?? "").trim());
+  if (locked && bypassEnabled && !String(env.DOWNLOAD_BYPASS_CODE || "")) missingVariables.push("DOWNLOAD_BYPASS_CODE");
+  const invalidVariables = [
+    ...["DOWNLOAD_ACCESS_LOCKED", "DOWNLOAD_BYPASS_ENABLED", "SHOW_DOWNLOAD_LOCKOUT_BANNER"].filter((name) => {
+      const value = String(env[name] ?? "").trim().toLowerCase();
+      return value && !["1", "true", "yes", "on", "0", "false", "no", "off"].includes(value);
+    }),
+    ...(!missingVariables.includes("DOWNLOAD_BYPASS_TTL_MINUTES") &&
+      (!Number.isSafeInteger(parsedTtl) || parsedTtl < MIN_TTL_MINUTES || parsedTtl > MAX_TTL_MINUTES)
+      ? ["DOWNLOAD_BYPASS_TTL_MINUTES"] : []),
+  ];
   return Object.freeze({
     locked,
     message: String(env.DOWNLOAD_ACCESS_MESSAGE || "StudioApp ALPHA downloads are temporarily limited to approved testers.").trim().slice(0, 500),
@@ -33,6 +53,8 @@ export function readDownloadAccessConfig(env = {}) {
     bypassCode: String(env.DOWNLOAD_BYPASS_CODE || ""),
     ttlMinutes,
     showBanner: locked && parseBoolean(env.SHOW_DOWNLOAD_LOCKOUT_BANNER, false),
+    missingVariables: Object.freeze(missingVariables),
+    invalidVariables: Object.freeze(invalidVariables),
   });
 }
 
@@ -125,49 +147,158 @@ export function jsonResponse(payload, status = 200, extraHeaders = {}) {
   return Response.json(payload, { status, headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff", ...extraHeaders } });
 }
 
-export async function fetchValidatedManifest(fetchImpl = fetch) {
-  const options = { headers: { Accept: "application/json" }, redirect: "error" };
-  if (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function") options.signal = AbortSignal.timeout(5000);
-  let response = await fetchImpl(PRODUCT_MANIFEST_URL, options);
-  if (!response.ok) response = await fetchImpl(LEGACY_MANIFEST_URL, options);
-  if (!response.ok) throw new Error("manifest_unavailable");
+function manifestError(category) {
+  const error = new Error(category);
+  error.category = category;
+  return error;
+}
+
+async function readManifestResponse(response) {
+  if (!response?.ok) throw manifestError("manifest_unavailable");
   const contentType = String(response.headers.get("Content-Type") || "").toLowerCase();
-  if (!contentType.includes("application/json")) throw new Error("manifest_invalid");
-  const manifest = await response.json();
-  const legacyManifest = manifest?.schema_version === 1 && (manifest?.product_id == null || manifest.product_id === EXPECTED_PRODUCT_ID);
-  const productManifest = manifest?.schema_version === 2 && manifest?.product_id === EXPECTED_PRODUCT_ID;
-  if ((!legacyManifest && !productManifest) || manifest?.product !== EXPECTED_PRODUCT || manifest?.channel !== EXPECTED_CHANNEL || manifest?.architecture !== EXPECTED_ARCHITECTURE) throw new Error("manifest_invalid");
-  if (typeof manifest.version !== "string" || !manifest.version || manifest.version.length > 64 || typeof manifest.build !== "string" || !manifest.build || manifest.build.length > 64) throw new Error("manifest_invalid");
-  if (!Number.isSafeInteger(manifest.installer_size) || manifest.installer_size <= 0 || !/^[a-f0-9]{64}$/i.test(String(manifest.installer_sha256 || ""))) throw new Error("manifest_invalid");
-  if (!/^[A-Za-z0-9._-]+\.exe$/.test(String(manifest.installer_filename || ""))) throw new Error("manifest_invalid");
-  const installer = new URL(String(manifest.installer_url || ""));
-  if (installer.protocol !== "https:" || installer.hostname !== EXPECTED_INSTALLER_HOST || installer.username || installer.password || installer.search || installer.hash || !installer.pathname.startsWith("/studioapp/windows-x64/releases/") || !installer.pathname.endsWith(`/${manifest.installer_filename}`)) throw new Error("manifest_invalid");
+  if (!contentType.includes("application/json")) throw manifestError("manifest_invalid_content_type");
+  const text = await response.text();
+  if (encoder.encode(text).byteLength > MAX_MANIFEST_BYTES) throw manifestError("manifest_too_large");
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw manifestError("manifest_malformed");
+  }
+}
+
+function boundedString(value, maximum = 64) {
+  return typeof value === "string" && value.length > 0 && value.length <= maximum ? value : null;
+}
+
+function validateManifest(manifest, source) {
+  const productManifest = source === "product";
+  if (!manifest || typeof manifest !== "object") throw manifestError("manifest_invalid");
+  if (productManifest && manifest.schema_version !== 2) throw manifestError("product_manifest_unsupported");
+  if (!productManifest && manifest.schema_version !== 1) throw manifestError("legacy_manifest_unsupported");
+  if (productManifest && manifest.product_id !== EXPECTED_PRODUCT_ID) throw manifestError("manifest_product_mismatch");
+  if (!productManifest && manifest.product_id != null && manifest.product_id !== EXPECTED_PRODUCT_ID) throw manifestError("manifest_product_mismatch");
+  if (manifest.product !== EXPECTED_PRODUCT || manifest.channel !== EXPECTED_CHANNEL || manifest.architecture !== EXPECTED_ARCHITECTURE) throw manifestError("manifest_contract_mismatch");
+  if (!boundedString(manifest.version) || !boundedString(manifest.build)) throw manifestError("manifest_version_invalid");
+  for (const name of ["system_version", "system_build", "source_revision", "published_at"]) {
+    if (manifest[name] != null && !boundedString(manifest[name], name === "source_revision" ? 80 : 128)) throw manifestError("manifest_metadata_invalid");
+  }
+  for (const name of ["release_epoch", "product_version_epoch", "package_provenance_version"]) {
+    if (manifest[name] != null && (!Number.isSafeInteger(manifest[name]) || manifest[name] < 0)) throw manifestError("manifest_metadata_invalid");
+  }
+  if (typeof manifest.signed !== "boolean") throw manifestError("manifest_signature_invalid");
+  if (manifest.signed && manifest.signature_subject != null && !boundedString(manifest.signature_subject, 256)) throw manifestError("manifest_signature_invalid");
+  if (!Number.isSafeInteger(manifest.installer_size) || manifest.installer_size <= 0 || !/^[a-f0-9]{64}$/i.test(String(manifest.installer_sha256 || ""))) throw manifestError("manifest_artifact_invalid");
+  if (!/^[A-Za-z0-9._-]+\.exe$/.test(String(manifest.installer_filename || ""))) throw manifestError("manifest_filename_invalid");
+  let installer;
+  try {
+    installer = new URL(String(manifest.installer_url || ""));
+  } catch {
+    throw manifestError("manifest_installer_url_invalid");
+  }
+  if (installer.protocol !== "https:" || installer.hostname !== EXPECTED_INSTALLER_HOST || installer.username || installer.password || installer.port || installer.search || installer.hash || !installer.pathname.startsWith("/studioapp/windows-x64/releases/") || !installer.pathname.endsWith(`/${manifest.installer_filename}`)) throw manifestError("manifest_installer_url_invalid");
   let releaseNotesUrl = null;
   if (manifest.release_notes_url) {
-    const notes = new URL(String(manifest.release_notes_url));
-    if (notes.protocol === "https:" && ["updates.streamsuites.app", "streamsuites.app", "docs.streamsuites.app"].includes(notes.hostname)) releaseNotesUrl = notes.toString();
+    try {
+      const notes = new URL(String(manifest.release_notes_url));
+      if (notes.protocol === "https:" && !notes.username && !notes.password && ["updates.streamsuites.app", "streamsuites.app", "docs.streamsuites.app"].includes(notes.hostname)) releaseNotesUrl = notes.toString();
+    } catch {
+      releaseNotesUrl = null;
+    }
   }
   return Object.freeze({
     installerUrl: installer.toString(),
     publicMetadata: {
-      product_id: productManifest ? EXPECTED_PRODUCT_ID : null,
-      manifest_source: productManifest ? "product" : "legacy",
+      product_id: EXPECTED_PRODUCT_ID,
+      manifest_source: source,
       version: manifest.version,
       build: manifest.build,
-      system_version: typeof manifest.system_version === "string" ? manifest.system_version.slice(0, 64) : null,
-      system_build: typeof manifest.system_build === "string" ? manifest.system_build.slice(0, 64) : null,
-      source_revision: typeof manifest.source_revision === "string" ? manifest.source_revision.slice(0, 80) : null,
+      release_epoch: Number.isSafeInteger(manifest.release_epoch)
+        ? manifest.release_epoch
+        : Number.isSafeInteger(manifest.product_version_epoch) ? manifest.product_version_epoch : null,
+      channel: EXPECTED_CHANNEL,
+      system_version: boundedString(manifest.system_version),
+      system_build: boundedString(manifest.system_build),
+      source_revision: boundedString(manifest.source_revision, 80),
       package_provenance_version: Number.isSafeInteger(manifest.package_provenance_version) ? manifest.package_provenance_version : null,
       architecture: EXPECTED_ARCHITECTURE,
       installer_filename: manifest.installer_filename,
       installer_size: manifest.installer_size,
       installer_sha256: String(manifest.installer_sha256).toLowerCase(),
-      published_at: typeof manifest.published_at === "string" ? manifest.published_at : null,
+      published_at: boundedString(manifest.published_at, 80),
       signed: manifest.signed === true,
       signature_subject: manifest.signed === true && typeof manifest.signature_subject === "string" ? manifest.signature_subject.slice(0, 256) : null,
+      signature: manifest.signed === true ? (boundedString(manifest.signature_subject, 256) || "Signed") : "Unsigned ALPHA",
       title: typeof manifest.title === "string" ? manifest.title.slice(0, 160) : "StudioApp ALPHA",
       summary: typeof manifest.summary === "string" ? manifest.summary.slice(0, 2000) : "",
       release_notes_url: releaseNotesUrl,
     },
+  });
+}
+
+async function requestManifest(url, fetchImpl) {
+  const options = { headers: { Accept: "application/json" }, redirect: "error", cache: "no-store" };
+  if (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function") options.signal = AbortSignal.timeout(MANIFEST_TIMEOUT_MS);
+  return fetchImpl(url, options);
+}
+
+async function fetchLegacyManifest(fetchImpl) {
+  let response;
+  try {
+    response = await requestManifest(LEGACY_MANIFEST_URL, fetchImpl);
+  } catch {
+    throw manifestError("manifest_unavailable");
+  }
+  return validateManifest(await readManifestResponse(response), "legacy");
+}
+
+export async function fetchValidatedManifest(fetchImpl = fetch) {
+  let response;
+  try {
+    response = await requestManifest(PRODUCT_MANIFEST_URL, fetchImpl);
+  } catch {
+    return fetchLegacyManifest(fetchImpl);
+  }
+  if (!response.ok) return fetchLegacyManifest(fetchImpl);
+  const manifest = await readManifestResponse(response);
+  if (manifest?.schema_version !== 2) return fetchLegacyManifest(fetchImpl);
+  return validateManifest(manifest, "product");
+}
+
+export async function fetchValidatedManifestForContext(context) {
+  const fixtureEnabled = parseBoolean(context?.env?.LOCAL_STUDIOAPP_RELEASE_FIXTURE, false);
+  if (!fixtureEnabled) return fetchValidatedManifest();
+  const hostname = new URL(context.request.url).hostname;
+  if (!["127.0.0.1", "localhost"].includes(hostname)) throw manifestError("local_fixture_forbidden");
+  const raw = String(context.env.STUDIOAPP_RELEASE_FIXTURE_JSON || "");
+  if (!raw || encoder.encode(raw).byteLength > MAX_MANIFEST_BYTES) throw manifestError("local_fixture_invalid");
+  let manifest;
+  try {
+    manifest = JSON.parse(raw);
+  } catch {
+    throw manifestError("local_fixture_malformed");
+  }
+  return validateManifest(manifest, "product");
+}
+
+export function projectPublicRelease(release, config, authorized) {
+  const accessLocked = config.locked && !authorized;
+  return Object.freeze({
+    available: true,
+    ...release.publicMetadata,
+    download_available: !accessLocked,
+    access_locked: accessLocked,
+    controlled_download_url: `/api/downloads/studioapp/latest?version=${encodeURIComponent(release.publicMetadata.version)}&build=${encodeURIComponent(release.publicMetadata.build)}`,
+    diagnostic: null,
+  });
+}
+
+export function unavailablePublicRelease(config, authorized, error) {
+  const category = typeof error?.category === "string" ? error.category : "manifest_unavailable";
+  return Object.freeze({
+    available: false,
+    product_id: EXPECTED_PRODUCT_ID,
+    download_available: false,
+    access_locked: config.locked && !authorized,
+    diagnostic: category,
   });
 }
