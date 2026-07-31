@@ -90,6 +90,39 @@ test("production landing is Studio-first and preserves the production access con
   assert.match(css, /@media \(prefers-reduced-motion:\s*reduce\)/);
 });
 
+test("production landing preserves the approved POC hero, bento modules, and authority map", () => {
+  const html = read("index.html");
+  const css = read("css/studio-first-landing.css");
+
+  assert.match(html, /class="scroll-cue" href="#products"/);
+  assert.match(html, /Explore the suite/);
+  assert.match(css, /\.landing-hero h1 span\s*\{[\s\S]*linear-gradient\(95deg,[\s\S]*background-clip:\s*text/);
+  assert.match(css, /\.scroll-cue i\s*\{[\s\S]*animation:\s*scrollCue/);
+
+  assert.match(html, /class="bento-grid"/);
+  for (const moduleClass of ["rooms", "destinations", "chat", "alerts", "engagement", "media"]) {
+    assert.match(html, new RegExp(`bento-card--${moduleClass}`));
+  }
+  for (const detailClass of ["bento-card__icon", "mini-room-list", "destination-row", "chat-stack", "alert-wave", "engagement-pills", "media-strip"]) {
+    assert.match(html, new RegExp(detailClass));
+    assert.match(css, new RegExp(`\\.${detailClass}`));
+  }
+  for (const publicRoute of ["/clips", "/polls", "/wheels", "/tallies", "/leaderboards", "/live"]) {
+    assert.match(html, new RegExp(`href="${publicRoute}"`));
+  }
+  assert.doesNotMatch(html, /class="capability-grid"/);
+
+  assert.match(html, /class="authority-map__grid"/);
+  assert.match(html, /class="authority-node__icon"[^>]*>S<\/span>/);
+  assert.equal((html.match(/class="authority-node__accent"/g) || []).length, 3);
+  assert.match(html, /authority-branch--browser[\s\S]*?branch-line[\s\S]*?authority-node--surface/);
+  assert.match(html, /legend-line--authority/);
+  assert.match(html, /legend-line--media/);
+  assert.match(css, /\.authority-map__grid\s*\{[\s\S]*background-size:\s*31px 31px/);
+  assert.match(css, /\.authority-branch--native \.branch-line\s*\{[\s\S]*border-radius:\s*18px 0 0/);
+  assert.match(css, /\.authority-branch--obs \.branch-line\s*\{[\s\S]*border-radius:\s*0 18px 0 0/);
+});
+
 test("approved typography is centralized without external font requests", () => {
   const fonts = read("css/public-fonts.css");
   const landing = read("css/studio-first-landing.css");
@@ -162,7 +195,7 @@ test("functional shell connects to real product routes without changing route co
   assert.match(shell, /\/downloads\/obs-plugin\//);
   assert.match(shell, /\/assets\/logos\/ssmainlogosq\.webp/);
   assert.match(shell, /logo\.src = "\/assets\/logos\/ssmainlogosq\.webp"/);
-  assert.match(read("css/public-shell.css"), /body\.public-shell-page \.sidebar-brand-title\s*\{[\s\S]*font-weight:\s*800/);
+  assert.match(read("css/public-shell.css"), /body\.public-shell-page \.sidebar-brand-title\s*\{[\s\S]*font-weight:\s*700/);
   assert.match(read("css/public-shell.css"), /body\.public-shell-page \.sidebar-brand-subheading-text\s*\{[\s\S]*font-weight:\s*400/);
   assert.match(read("css/public-shell.css"), /body\.public-shell-page \.account-menu-overview-value\s*\{[\s\S]*font-family:\s*ui-monospace/);
   assert.match(pages, /title:\s*"Public Dashboard"/);

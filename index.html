@@ -225,6 +225,10 @@
           </div>
         </div>
       </div>
+
+      <a class="scroll-cue" href="#products" aria-label="Continue to products">
+        <span>Explore the suite</span><i aria-hidden="true"></i>
+      </a>
     </section>
 
     <section id="products" class="landing-section section--products">
@@ -315,26 +319,49 @@
           </div>
         </div>
 
-        <div class="authority-map reveal reveal--delay" aria-label="StreamSuites authority and media ownership diagram">
-          <div class="authority-branch authority-branch--browser">
-            <div class="authority-node authority-node--surface"><small>BROWSER MEDIA</small><strong>Studio</strong><p>Cloudflare RealtimeKit</p></div>
-            <span class="branch-line"></span>
-          </div>
+        <div class="authority-map reveal reveal--delay" aria-label="StreamSuites authority and media architecture diagram">
+          <div class="authority-map__grid" aria-hidden="true"></div>
           <div class="authority-node authority-node--core">
-            <span class="studio-mark" aria-hidden="true">S</span>
+            <span class="authority-node__icon" aria-hidden="true">S</span>
             <small>SHARED AUTHORITY</small>
             <strong>Runtime / Auth</strong>
             <p>Identity · rooms · permissions · destinations · automation · state · versioning</p>
           </div>
+
+          <div class="authority-branch authority-branch--browser">
+            <span class="branch-line"></span>
+            <div class="authority-node authority-node--surface">
+              <span class="authority-node__accent"></span>
+              <small>BROWSER MEDIA</small>
+              <strong>Studio</strong>
+              <p>Cloudflare RealtimeKit</p>
+            </div>
+          </div>
+
           <div class="authority-branch authority-branch--native">
             <span class="branch-line"></span>
-            <div class="authority-node authority-node--surface"><small>NATIVE MEDIA</small><strong>StudioApp</strong><p>Supervised C++ engine</p></div>
+            <div class="authority-node authority-node--surface">
+              <span class="authority-node__accent"></span>
+              <small>NATIVE MEDIA</small>
+              <strong>StudioApp</strong>
+              <p>Supervised C++ engine</p>
+            </div>
           </div>
+
           <div class="authority-branch authority-branch--obs">
             <span class="branch-line"></span>
-            <div class="authority-node authority-node--surface"><small>OBS MEDIA</small><strong>Studio for OBS</strong><p>OBS-owned pipeline</p></div>
+            <div class="authority-node authority-node--surface">
+              <span class="authority-node__accent"></span>
+              <small>OBS MEDIA</small>
+              <strong>Studio for OBS</strong>
+              <p>OBS-owned pipeline</p>
+            </div>
           </div>
-          <div class="map-legend"><span><i class="legend-authority"></i> Authority / state</span><span><i class="legend-boundary"></i> Product media boundary</span></div>
+
+          <div class="map-legend">
+            <span><i class="legend-line legend-line--authority"></i> Authority / state</span>
+            <span><i class="legend-line legend-line--media"></i> Product media boundary</span>
+          </div>
         </div>
       </div>
     </section>
@@ -346,41 +373,65 @@
           <p>Automation and engagement remain first-class StreamSuites capabilities, now presented as modules supporting the production family.</p>
         </div>
 
-        <div class="capability-grid">
-          <article class="capability-card capability-card--wide reveal">
-            <span class="capability-card__index">01 / ROOMS</span>
+        <div class="bento-grid">
+          <article class="bento-card bento-card--wide bento-card--rooms reveal">
+            <div class="bento-card__icon" aria-hidden="true">⌁</div>
+            <span class="bento-card__index">01 / ROOMS</span>
             <h3>Guests, rooms, and invitations</h3>
-            <p>Runtime-backed directors, cohosts, backstage guests, approvals, and room identity support the production surfaces.</p>
-            <div class="mini-room-list" aria-hidden="true"><span><b>D</b><strong>Director</strong><small>On Stage</small></span><span><b>G</b><strong>Guest</strong><small>Backstage</small></span></div>
+            <p>Coordinate directors, cohosts, backstage guests, approvals, and room identity from Runtime/Auth-backed workflows.</p>
+            <div class="mini-room-list" aria-hidden="true">
+              <span><i class="avatar avatar--one">D</i><b>Director</b><small>On Stage</small></span>
+              <span><i class="avatar avatar--two">M</i><b>Guest Maya</b><small>Backstage</small></span>
+              <span><i class="avatar avatar--three">J</i><b>Guest Jordan</b><small>Requested</small></span>
+            </div>
           </article>
-          <article class="capability-card reveal reveal--delay">
-            <span class="capability-card__index">02 / CONTROL</span>
+
+          <article class="bento-card bento-card--destinations reveal reveal--delay">
+            <div class="bento-card__icon" aria-hidden="true">↗</div>
+            <span class="bento-card__index">02 / OUTPUT</span>
+            <h3>Destinations</h3>
+            <p>Keep authorization and destination intent under one shared authority.</p>
+            <div class="destination-row" aria-hidden="true"><i>Y</i><i>T</i><i>R</i><i>K</i><i>+</i></div>
+          </article>
+
+          <article class="bento-card bento-card--chat reveal reveal--delay-2">
+            <div class="bento-card__icon" aria-hidden="true">••</div>
+            <span class="bento-card__index">03 / CHAT</span>
             <h3>Live chat and automation</h3>
-            <p>Provider-aware event normalization, triggers, cooldowns, and operator surfaces stay under Runtime authority.</p>
+            <p>Normalize audience events, run triggers, and surface relevant interactions to operators.</p>
+            <div class="chat-stack" aria-hidden="true">
+              <span><i></i><b>New member joined</b><small>Discord</small></span>
+              <span><i></i><b>Clip command triggered</b><small>Twitch</small></span>
+            </div>
           </article>
-          <article class="capability-card reveal reveal--delay-2">
-            <span class="capability-card__index">03 / ALERTS</span>
-            <h3>Alerts and overlays</h3>
-            <p>Backend-authored alerts, overlay/browser-source outputs, and Windows alert clients surround the show without owning its media.</p>
+
+          <article class="bento-card bento-card--alerts reveal">
+            <div class="bento-card__icon" aria-hidden="true">!</div>
+            <span class="bento-card__index">04 / ALERTS</span>
+            <h3>Alerts and operator surfaces</h3>
+            <p>Backend-authored rules, notifications, delivery history, and native operator clients.</p>
+            <div class="alert-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
           </article>
-          <a class="capability-card capability-card--link reveal" href="/clips">
-            <span class="capability-card__index">04 / MEDIA</span><h3>Clips</h3><p>Browse public creator media from the existing Runtime-published artifact surface.</p><span class="capability-card__action">Browse clips ↗</span>
-          </a>
-          <a class="capability-card capability-card--link reveal" href="/polls">
-            <span class="capability-card__index">05 / ENGAGEMENT</span><h3>Polls</h3><p>Published audience questions and results on their current public routes.</p><span class="capability-card__action">Browse polls ↗</span>
-          </a>
-          <a class="capability-card capability-card--link reveal" href="/wheels">
-            <span class="capability-card__index">06 / INTERACTION</span><h3>Wheels</h3><p>Runtime-authored interactive wheel artifacts with public gallery and detail views.</p><span class="capability-card__action">Browse wheels ↗</span>
-          </a>
-          <a class="capability-card capability-card--link reveal" href="/tallies">
-            <span class="capability-card__index">07 / RESULTS</span><h3>Tallies</h3><p>Published totals and list views rendered from existing public-safe data.</p><span class="capability-card__action">Browse tallies ↗</span>
-          </a>
-          <a class="capability-card capability-card--link reveal" href="/leaderboards">
-            <span class="capability-card__index">08 / PROGRESSION</span><h3>Profiles and progression</h3><p>Public profiles, community discovery, XP, and leaderboards remain connected audience surfaces.</p><span class="capability-card__action">View leaderboards ↗</span>
-          </a>
-          <a class="capability-card capability-card--link reveal" href="/live">
-            <span class="capability-card__index">09 / DISCOVERY</span><h3>Live and community</h3><p>Discover eligible public creators, current live state, notices, and community profiles.</p><span class="capability-card__action">View live ↗</span>
-          </a>
+
+          <article class="bento-card bento-card--engagement reveal reveal--delay">
+            <div class="bento-card__icon" aria-hidden="true">◈</div>
+            <span class="bento-card__index">05 / ENGAGEMENT</span>
+            <h3>Overlays, polls, wheels, and scoreboards</h3>
+            <p>Turn audience activity into visual, interactive show elements without making those tools the product family’s primary identity.</p>
+            <div class="engagement-pills"><a href="/polls">Polls</a><a href="/wheels">Wheels</a><a href="/tallies">Tallies</a><a href="/leaderboards">Scoreboards</a></div>
+          </article>
+
+          <article class="bento-card bento-card--wide bento-card--media reveal reveal--delay-2">
+            <div class="bento-card__icon" aria-hidden="true">▶</div>
+            <span class="bento-card__index">06 / MEDIA</span>
+            <h3>Clips and public experiences</h3>
+            <p>Publish clips, public profiles, leaderboards, and community experiences from authoritative data and media artifacts.</p>
+            <div class="media-strip">
+              <a href="/clips" aria-label="Browse clips" style="--media-bg: linear-gradient(135deg, #1d2330, #7b2cff)"></a>
+              <a href="/leaderboards" aria-label="Browse leaderboards" style="--media-bg: linear-gradient(135deg, #101927, #0eb6ff)"></a>
+              <a href="/live" aria-label="Browse live and community" style="--media-bg: linear-gradient(135deg, #151923, #8cc736)"></a>
+            </div>
+          </article>
         </div>
       </div>
     </section>
