@@ -1,3 +1,100 @@
+@font-face {
+  font-family: "Tektur";
+  src: url("./assets/fonts/Tektur-VariableFont_wdth,wght.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400 900;
+  font-stretch: 75% 100%;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Sans";
+  src: url("./assets/fonts/Geist-Light.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Sans";
+  src: url("./assets/fonts/Geist-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Sans";
+  src: url("./assets/fonts/Geist-Medium.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Sans";
+  src: url("./assets/fonts/Geist-SemiBold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Sans";
+  src: url("./assets/fonts/Geist-Bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Sans";
+  src: url("./assets/fonts/Geist-ExtraBold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("./assets/fonts/IBMPlexMono-Light.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("./assets/fonts/IBMPlexMono-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("./assets/fonts/IBMPlexMono-Medium.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("./assets/fonts/IBMPlexMono-SemiBold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("./assets/fonts/IBMPlexMono-Bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
 :root {
   --bg: #05070a;
   --bg-deep: #020304;
@@ -25,6 +122,19 @@
   --product-accent-bright: var(--blue-bright);
   --product-glow: rgba(80, 168, 255, 0.24);
   --header-height: 74px;
+  --font-display: "Tektur", "Geist Sans", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --font-ui: "Geist Sans", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "Cascadia Mono", Consolas, Menlo, Monaco, monospace;
+  --font-weight-body: 400;
+  --font-weight-ui-medium: 500;
+  --font-weight-ui-semibold: 600;
+  --font-weight-heading-bold: 700;
+  --font-weight-display-medium: 500;
+  --font-weight-display-semibold: 600;
+  --font-weight-display-bold: 700;
+  --font-weight-mono-regular: 400;
+  --font-weight-mono-medium: 500;
+  --font-weight-mono-semibold: 600;
 }
 
 html[data-product="native"] {
@@ -46,6 +156,7 @@ html[data-product="obs"] {
 html {
   scroll-behavior: smooth;
   background: var(--bg-deep);
+  font-synthesis: none;
 }
 
 body {
@@ -57,8 +168,10 @@ body {
     radial-gradient(circle at 20% 36%, rgba(140, 199, 54, 0.045), transparent 23%),
     var(--bg);
   color: var(--text);
-  font-family: "Segoe UI", Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-ui);
   font-size: 16px;
+  font-weight: var(--font-weight-body);
+  letter-spacing: 0;
   line-height: 1.55;
   text-rendering: optimizeLegibility;
 }
@@ -126,7 +239,7 @@ button {
   background: #fff;
   color: #05070a;
   padding: 10px 14px;
-  font-weight: 700;
+  font-weight: var(--font-weight-ui-semibold);
   text-decoration: none;
   transition: transform 160ms ease;
 }
@@ -247,8 +360,8 @@ button {
   position: relative;
   color: #a8b2bf;
   font-size: 0.77rem;
-  font-weight: 650;
-  letter-spacing: 0.02em;
+  font-weight: var(--font-weight-ui-medium);
+  letter-spacing: 0.035em;
   text-decoration: none;
   white-space: nowrap;
 }
@@ -303,8 +416,8 @@ button {
   padding: 0 18px;
   cursor: pointer;
   font-size: 0.8rem;
-  font-weight: 750;
-  letter-spacing: 0.02em;
+  font-weight: var(--font-weight-ui-semibold);
+  letter-spacing: 0.045em;
   text-decoration: none;
   transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease, color 180ms ease;
 }
@@ -376,8 +489,8 @@ button {
   color: #bdc8d4;
   padding: 0 10px;
   font-size: 0.61rem;
-  font-weight: 780;
-  letter-spacing: 0.1em;
+  font-weight: var(--font-weight-mono-medium);
+  letter-spacing: 0.085em;
   line-height: 1;
   text-transform: uppercase;
   white-space: nowrap;
@@ -491,8 +604,8 @@ button {
   margin: 0 0 18px;
   color: #aeb8c4;
   font-size: 0.68rem;
-  font-weight: 760;
-  letter-spacing: 0.15em;
+  font-weight: var(--font-weight-ui-semibold);
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
@@ -521,9 +634,9 @@ button {
 .about-statement h2,
 .alpha-panel h2 {
   margin: 0;
-  font-family: "Segoe UI", Inter, system-ui, sans-serif;
-  font-weight: 780;
-  letter-spacing: -0.048em;
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-display-semibold);
+  letter-spacing: -0.015em;
   line-height: 0.98;
 }
 
@@ -562,7 +675,7 @@ button {
   margin-top: 28px;
   color: #7f8a97;
   font-size: 0.72rem;
-  font-weight: 620;
+  font-weight: var(--font-weight-mono-regular);
 }
 
 .hero-proof span {
@@ -787,7 +900,7 @@ button {
   border-radius: 6px;
   background: color-mix(in srgb, var(--product-accent) 12%, #0a0d12);
   color: var(--product-accent-bright);
-  font-weight: 850;
+  font-weight: var(--font-weight-display-bold);
   line-height: 1;
   box-shadow: 0 0 15px var(--product-glow);
 }
@@ -805,8 +918,8 @@ button {
   gap: 6px;
   color: #f29aa0;
   font-size: 0.55rem;
-  font-weight: 760;
-  letter-spacing: 0.09em;
+  font-weight: var(--font-weight-mono-semibold);
+  letter-spacing: 0.08em;
 }
 
 .off-air-dot {
@@ -837,8 +950,8 @@ button {
   margin: 0 4px 10px;
   color: #596675;
   font-size: 0.5rem;
-  font-weight: 760;
-  letter-spacing: 0.11em;
+  font-weight: var(--font-weight-mono-medium);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
@@ -869,7 +982,7 @@ button {
 .rail-item b {
   overflow: hidden;
   font-size: 0.54rem;
-  font-weight: 650;
+  font-weight: var(--font-weight-ui-medium);
   text-overflow: ellipsis;
 }
 
@@ -918,7 +1031,7 @@ button {
   color: #657180;
   padding: 0 10px;
   font-size: 0.48rem;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
 }
 
 .stage-toolbar__room {
@@ -979,14 +1092,14 @@ button {
 .show-title small {
   color: var(--product-accent-bright);
   font-size: 0.47rem;
-  font-weight: 770;
-  letter-spacing: 0.16em;
+  font-weight: var(--font-weight-mono-semibold);
+  letter-spacing: 0.1em;
 }
 
 .show-title strong {
   color: rgba(237, 243, 248, 0.74);
   font-size: 0.64rem;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
 }
 
 .participant {
@@ -1030,8 +1143,8 @@ button {
   background: rgba(0, 0, 0, 0.28);
   color: #d8e1e9;
   font-size: 0.7rem;
-  font-weight: 780;
-  letter-spacing: 0.08em;
+  font-weight: var(--font-weight-ui-semibold);
+  letter-spacing: 0.02em;
 }
 
 .participant__label {
@@ -1056,7 +1169,7 @@ button {
 .participant__label small {
   color: #7d8997;
   font-size: 0.39rem;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
 }
 
 .lower-third {
@@ -1084,7 +1197,7 @@ button {
   background: var(--product-accent);
   color: #071006;
   font-size: 0.7rem;
-  font-weight: 900;
+  font-weight: var(--font-weight-display-bold);
 }
 
 .lower-third div {
@@ -1094,7 +1207,7 @@ button {
 
 .lower-third strong {
   font-size: 0.5rem;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
 }
 
 .lower-third small {
@@ -1115,7 +1228,7 @@ button {
   color: #f39aa0;
   padding: 4px 7px;
   font-size: 0.43rem;
-  font-weight: 760;
+  font-weight: var(--font-weight-mono-semibold);
   letter-spacing: 0.08em;
 }
 
@@ -1155,7 +1268,7 @@ button {
 
 .audio-channel b {
   color: #98a4b1;
-  font-weight: 650;
+  font-weight: var(--font-weight-mono-medium);
 }
 
 .meter {
@@ -1196,7 +1309,7 @@ button {
   overflow: hidden;
   color: #9aa6b3;
   font-size: 0.48rem;
-  font-weight: 620;
+  font-weight: var(--font-weight-mono-regular);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1220,8 +1333,8 @@ button {
   background: rgba(240, 113, 120, 0.08);
   color: #f2999f;
   font-size: 0.46rem;
-  font-weight: 760;
-  letter-spacing: 0.08em;
+  font-weight: var(--font-weight-mono-semibold);
+  letter-spacing: 0.07em;
 }
 
 .go-live span {
@@ -1271,14 +1384,14 @@ button {
 .floating-signal small {
   color: #667381;
   font-size: 0.42rem;
-  font-weight: 760;
-  letter-spacing: 0.09em;
+  font-weight: var(--font-weight-mono-medium);
+  letter-spacing: 0.08em;
 }
 
 .floating-signal strong {
   color: #dbe3eb;
   font-size: 0.59rem;
-  font-weight: 680;
+  font-weight: var(--font-weight-mono-medium);
 }
 
 .product-caption {
@@ -1320,8 +1433,8 @@ button {
   gap: 8px;
   color: #647180;
   font-size: 0.58rem;
-  font-weight: 720;
-  letter-spacing: 0.14em;
+  font-weight: var(--font-weight-ui-medium);
+  letter-spacing: 0.09em;
   text-decoration: none;
   text-transform: uppercase;
 }
@@ -1448,7 +1561,7 @@ button {
   right: 22px;
   color: rgba(205, 218, 232, 0.07);
   font-size: 4.8rem;
-  font-weight: 800;
+  font-weight: var(--font-weight-mono-semibold);
   line-height: 1;
 }
 
@@ -1481,7 +1594,7 @@ button {
   z-index: 1;
   margin: 42px 0 4px;
   font-size: clamp(1.55rem, 2vw, 2.05rem);
-  letter-spacing: -0.03em;
+  letter-spacing: -0.015em;
 }
 
 .product-card__kicker {
@@ -1490,8 +1603,8 @@ button {
   margin: 0 0 22px;
   color: #748191 !important;
   font-size: 0.72rem;
-  font-weight: 710;
-  letter-spacing: 0.08em;
+  font-weight: var(--font-weight-ui-semibold);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -1557,7 +1670,7 @@ button {
   padding: 0;
   cursor: pointer;
   font-size: 0.73rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-ui-semibold);
   text-decoration: none;
 }
 
@@ -1615,8 +1728,8 @@ button {
 .principle-list > div > span {
   color: var(--lime);
   font-size: 0.66rem;
-  font-weight: 780;
-  letter-spacing: 0.08em;
+  font-weight: var(--font-weight-mono-medium);
+  letter-spacing: 0.07em;
 }
 
 .principle-list p {
@@ -1691,8 +1804,8 @@ button {
 .authority-node small {
   color: #6c7886;
   font-size: 0.53rem;
-  font-weight: 760;
-  letter-spacing: 0.12em;
+  font-weight: var(--font-weight-mono-medium);
+  letter-spacing: 0.08em;
 }
 
 .authority-node strong {
@@ -1849,22 +1962,22 @@ button {
   background: rgba(140, 199, 54, 0.07);
   color: var(--lime-bright);
   font-size: 0.95rem;
-  font-weight: 760;
+  font-weight: var(--font-weight-ui-semibold);
 }
 
 .bento-card__index {
   margin-top: 20px;
   color: #5f6c7a;
   font-size: 0.55rem;
-  font-weight: 760;
-  letter-spacing: 0.12em;
+  font-weight: var(--font-weight-mono-medium);
+  letter-spacing: 0.09em;
 }
 
 .bento-card h3 {
   max-width: 470px;
   margin: 12px 0 8px;
   font-size: 1.35rem;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.01em;
 }
 
 .bento-card > p {
@@ -1905,7 +2018,7 @@ button {
   color: #cfd8e1;
   font-size: 0.58rem;
   font-style: normal;
-  font-weight: 750;
+  font-weight: var(--font-weight-ui-semibold);
 }
 
 .avatar--one { box-shadow: inset 0 0 0 1px rgba(80, 168, 255, 0.35); }
@@ -1943,7 +2056,7 @@ button {
   color: #aab5c1;
   font-size: 0.62rem;
   font-style: normal;
-  font-weight: 780;
+  font-weight: var(--font-weight-mono-semibold);
 }
 
 .destination-row i:nth-child(1) { background: #5d1621; }
@@ -1986,7 +2099,7 @@ button {
 .chat-stack b {
   color: #abb6c1;
   font-size: 0.6rem;
-  font-weight: 650;
+  font-weight: var(--font-weight-ui-medium);
 }
 
 .chat-stack small {
@@ -2096,7 +2209,7 @@ button {
   margin-left: 9px;
   color: #667381;
   font-size: 0.54rem;
-  letter-spacing: 0.06em;
+  letter-spacing: 0;
 }
 
 .dashboard-browser img {
@@ -2147,7 +2260,7 @@ button {
 
 .dashboard-thumbnails span {
   font-size: 0.67rem;
-  font-weight: 720;
+  font-weight: var(--font-weight-ui-semibold);
 }
 
 .dashboard-thumbnails small {
@@ -2186,7 +2299,7 @@ button {
 
 .surface-list span {
   font-size: 0.8rem;
-  font-weight: 720;
+  font-weight: var(--font-weight-ui-semibold);
 }
 
 .surface-list small {
@@ -2237,8 +2350,8 @@ button {
 .value-card > span {
   color: var(--lime);
   font-size: 0.62rem;
-  font-weight: 780;
-  letter-spacing: 0.12em;
+  font-weight: var(--font-weight-mono-medium);
+  letter-spacing: 0.08em;
 }
 
 .value-card h3 {
@@ -2368,7 +2481,7 @@ button {
   border-top: 1px solid var(--line);
   color: #56616e;
   font-size: 0.61rem;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
 }
 
 .site-footer__bottom span:nth-child(2) {
@@ -2405,6 +2518,49 @@ button {
 .reveal.is-visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* Approved typography roles */
+.product-card h3,
+.authority-node strong {
+  font-family: var(--font-display);
+  font-stretch: 100%;
+  font-weight: var(--font-weight-display-semibold);
+}
+
+.status-pill,
+.hero-proof,
+.product-switcher__tab small,
+.studio-window__identity,
+.studio-window__status,
+.rail-heading,
+.rail-item span,
+.rail-state,
+.stage-toolbar,
+.show-title,
+.participant__label small,
+.live-chip,
+.audio-channel,
+.inspector-card,
+.go-live,
+.floating-signal,
+.product-card__number,
+.principle-list > div > span,
+.authority-node small,
+.authority-node p,
+.bento-card__index,
+.mini-room-list small,
+.chat-stack small,
+.dashboard-browser__bar span,
+.value-card > span,
+.footer-status,
+.site-footer__bottom span:last-child {
+  font-family: var(--font-mono);
+}
+
+.footer-status,
+.site-footer__bottom span:last-child {
+  letter-spacing: 0.05em;
 }
 
 @keyframes pulse {
