@@ -312,6 +312,7 @@ test("public account menu keeps the overview card and capability-aware console l
   assert.match(app, /Developer Console/);
   assert.match(shell, /account-menu-overview/);
   assert.match(css, /account-menu-overview/);
+  assert.match(css, /body\.public-shell-page \.account-menu-overview-value\s*\{[\s\S]*font-family:\s*ui-monospace/);
 });
 
 test("standalone /u profile pages own the cinematic header and hero treatment", () => {

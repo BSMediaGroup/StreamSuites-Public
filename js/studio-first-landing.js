@@ -173,6 +173,29 @@
     link.addEventListener("click", () => setNavOpen(false));
   });
 
+  const headerLoginMenu = document.querySelector("[data-header-login-menu]");
+  const headerLoginTrigger = headerLoginMenu?.querySelector("[data-creator-cta]");
+  const setHeaderLoginMenuOpen = (open, { restoreFocus = false } = {}) => {
+    headerLoginMenu?.classList.toggle("is-open", open);
+    headerLoginTrigger?.setAttribute("aria-expanded", open ? "true" : "false");
+    if (!open && restoreFocus) headerLoginTrigger?.focus();
+  };
+
+  headerLoginMenu?.addEventListener("pointerenter", () => setHeaderLoginMenuOpen(true));
+  headerLoginMenu?.addEventListener("pointerleave", () => setHeaderLoginMenuOpen(false));
+  headerLoginMenu?.addEventListener("focusin", () => setHeaderLoginMenuOpen(true));
+  headerLoginMenu?.addEventListener("focusout", () => {
+    window.setTimeout(() => {
+      if (!headerLoginMenu.contains(document.activeElement)) setHeaderLoginMenuOpen(false);
+    }, 0);
+  });
+  headerLoginMenu?.querySelectorAll(".header-login-menu__item").forEach((link) => {
+    link.addEventListener("click", () => {
+      setHeaderLoginMenuOpen(false);
+      setNavOpen(false);
+    });
+  });
+
   document.querySelectorAll("[data-auth-trigger]").forEach((trigger) => {
     trigger.addEventListener("click", () => setNavOpen(false), { capture: true });
   });
@@ -185,6 +208,11 @@
   });
 
   document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && headerLoginMenu?.classList.contains("is-open")) {
+      event.preventDefault();
+      setHeaderLoginMenuOpen(false, { restoreFocus: true });
+      return;
+    }
     if (event.key === "Escape" && primaryNav?.classList.contains("is-open")) {
       event.preventDefault();
       setNavOpen(false, { restoreFocus: true });

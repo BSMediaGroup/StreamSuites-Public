@@ -1,5 +1,5 @@
 (() => {
-  const NAV_GROUP_ORDER = Object.freeze(["products", "dashboard", "community", "account", "quick"]);
+  const NAV_GROUP_ORDER = Object.freeze(["dashboard", "products", "community", "account", "quick"]);
   const NAV_GROUP_LABELS = Object.freeze({
     products: "Production",
     dashboard: "Dashboard",

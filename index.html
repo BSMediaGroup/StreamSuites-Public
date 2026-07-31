@@ -50,7 +50,7 @@
   <header class="site-header" data-site-header>
     <div class="landing-shell site-header__inner">
       <a class="brand" href="#top" aria-label="StreamSuites home">
-        <img src="/assets/logos/sswordmarktm.webp" alt="StreamSuites™" />
+        <img src="/assets/logos/wmnew.webp" alt="StreamSuites™" />
       </a>
 
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" data-nav-toggle>
@@ -67,7 +67,21 @@
 
       <div class="header-actions">
         <a class="text-link" href="/home.html">Public dashboard</a>
-        <button class="button button--quiet button--small" type="button" data-auth-trigger="login" data-creator-cta>Creator Login</button>
+        <div class="header-login-menu" data-header-login-menu>
+          <button
+            class="button button--quiet button--small"
+            type="button"
+            aria-haspopup="menu"
+            aria-expanded="false"
+            data-auth-trigger="login"
+            data-creator-cta
+          >Creator Login</button>
+          <div class="header-login-menu__dropdown" role="menu" aria-label="Other login surfaces">
+            <a class="button button--quiet button--small header-login-menu__item" href="/public-login.html" role="menuitem">Public</a>
+            <a class="button button--quiet button--small header-login-menu__item" href="https://studio.streamsuites.app/login" role="menuitem">Studio</a>
+            <a class="button button--quiet button--small header-login-menu__item" href="https://console.streamsuites.app/login/" role="menuitem">Developer</a>
+          </div>
+        </div>
         <a class="button button--primary button--small" href="https://studio.streamsuites.app">Open Studio</a>
       </div>
     </div>

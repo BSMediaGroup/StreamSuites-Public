@@ -12467,7 +12467,6 @@ body.public-shell-page :where(
 }
 
 body.public-shell-page :where(
-  .sidebar-brand-subheading,
   .search-kbd-hint kbd,
   .account-badge-role-chip,
   .badge-role-chip,
@@ -12480,10 +12479,29 @@ body.public-shell-page :where(
 }
 
 body.public-shell-page :where(
+  .sidebar-brand-title,
+  .sidebar-brand-subheading-text,
   .topbar-title,
   .profile-overlay-brand-text
 ) {
   font-family: var(--public-font-display);
+}
+
+body.public-shell-page .sidebar-brand-title {
+  font-variation-settings: "wdth" 100;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+
+body.public-shell-page .sidebar-brand-subheading-text {
+  font-variation-settings: "wdth" 94;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+}
+
+body.public-shell-page .account-menu-overview-value {
+  font-family: ui-monospace, "Cascadia Mono", "Cascadia Code", Consolas, monospace;
+  font-variant-numeric: tabular-nums;
 }
 
 body.public-shell-page :where(

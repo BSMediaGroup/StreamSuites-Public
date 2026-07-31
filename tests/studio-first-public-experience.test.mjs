@@ -58,7 +58,18 @@ test("production landing is Studio-first and preserves the production access con
   assert.match(html, /\/js\/status-widget\.js/);
   assert.match(html, /\/js\/turnstile-inline\.js/);
   assert.match(html, /\/js\/studio-first-landing\.js/);
+  assert.match(html, /\/assets\/logos\/wmnew\.webp/);
   assert.match(html, /\/assets\/logos\/ssmainlogosq\.webp/);
+  assert.ok(exists("assets/logos/wmnew.webp"));
+  assert.ok(exists("assets/icons/ui/info.svg"));
+  assert.ok(exists("assets/icons/ui/close.svg"));
+  assert.match(html, /data-header-login-menu/);
+  assert.match(html, /href="\/public-login\.html"[^>]*role="menuitem">Public</);
+  assert.match(html, /href="https:\/\/studio\.streamsuites\.app\/login"[^>]*role="menuitem">Studio</);
+  assert.match(html, /href="https:\/\/console\.streamsuites\.app\/login\/"[^>]*role="menuitem">Developer</);
+  const headerLoginMenu = html.match(/<div class="header-login-menu"[\s\S]*?<\/div>\s*<a class="button button--primary/)?.[0] || "";
+  assert.ok(headerLoginMenu, "landing header login dropdown should exist");
+  assert.doesNotMatch(headerLoginMenu, /Admin/i);
   assert.match(client, /ArrowLeft/);
   assert.match(client, /ArrowRight/);
   assert.match(client, /prefers-reduced-motion:\s*reduce/);
@@ -66,6 +77,11 @@ test("production landing is Studio-first and preserves the production access con
   assert.match(client, /sessionStorage/);
   assert.match(client, /querySelectorAll\("\[data-auth-trigger\]"\)/);
   assert.match(client, /setNavOpen\(false\), \{ capture: true \}/);
+  assert.match(client, /pointerenter/);
+  assert.match(client, /focusin/);
+  assert.match(css, /\.landing-lockout-banner__eyebrow-icon\s*\{[\s\S]*\/assets\/icons\/ui\/info\.svg/);
+  assert.match(css, /\.landing-lockout-banner__close-icon\s*\{[\s\S]*\/assets\/icons\/ui\/close\.svg/);
+  assert.match(css, /\.header-login-menu:hover \.header-login-menu__dropdown/);
   assert.match(css, /\.auth-modal-backdrop\.is-open/);
   assert.match(css, /\.ss-auth-access-gate__icon\s*\{[\s\S]*\/assets\/icons\/ui\/key\.svg/);
   assert.match(css, /\.ss-auth-surface-links__summary-label\s*\{[\s\S]*font-size:\s*11px/);
@@ -140,10 +156,14 @@ test("functional shell connects to real product routes without changing route co
   const redirects = read("_redirects");
 
   assert.match(shell, /products:\s*"Production"/);
+  assert.match(shell, /NAV_GROUP_ORDER = Object\.freeze\(\["dashboard", "products", "community", "account", "quick"\]\)/);
   assert.match(shell, /https:\/\/studio\.streamsuites\.app/);
   assert.match(shell, /\/downloads\/studioapp\//);
   assert.match(shell, /\/downloads\/obs-plugin\//);
   assert.match(shell, /\/assets\/logos\/ssmainlogosq\.webp/);
+  assert.match(read("css/public-shell.css"), /body\.public-shell-page \.sidebar-brand-title\s*\{[\s\S]*font-weight:\s*900/);
+  assert.match(read("css/public-shell.css"), /body\.public-shell-page \.sidebar-brand-subheading-text\s*\{[\s\S]*font-weight:\s*400/);
+  assert.match(read("css/public-shell.css"), /body\.public-shell-page \.account-menu-overview-value\s*\{[\s\S]*font-family:\s*ui-monospace/);
   assert.match(pages, /title:\s*"Public Dashboard"/);
   assert.match(pages, /Runtime\/Auth-owned public state/);
   assert.doesNotMatch(pages, /Leaderboards", value: "Scaffold"/);
