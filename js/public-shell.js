@@ -578,7 +578,7 @@
     const brand = create("a", "sidebar-brand");
     brand.href = "/";
     const logo = create("img");
-    logo.src = "/assets/logos/logo.png";
+    logo.src = "/assets/logos/ssmainlogosq.webp";
     logo.alt = "StreamSuites";
     const labels = create("span", "sidebar-brand-label");
     const brandSubheading = create("span", "sidebar-brand-subheading");

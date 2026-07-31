@@ -12489,7 +12489,7 @@ body.public-shell-page :where(
 
 body.public-shell-page .sidebar-brand-title {
   font-variation-settings: "wdth" 100;
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: -0.025em;
 }
 
