@@ -1,33 +1,9 @@
+@import url("/css/public-fonts.css");
+
 /* ======================================================================
    StreamSuites Dashboard — Dark Theme
    Influenced by Map.css (contrast-first, low-noise, long-session safe)
    ====================================================================== */
-
-/* ----------------------------------------------------------------------
-   Font Faces
-   ---------------------------------------------------------------------- */
-
-@font-face {
-  font-family: "RechargeBd";
-  src: url("https://raw.githubusercontent.com/BSMediaGroup/Resources/master/FONTS/Recharge%20Bd.otf")
-       format("opentype");
-  font-weight: 700;
-}
-
-@font-face {
-  font-family: "SuiGenerisRg";
-  src: url("https://raw.githubusercontent.com/BSMediaGroup/Resources/master/FONTS/Sui%20Generis%20Rg.otf")
-       format("opentype");
-  font-weight: 400;
-}
-
-@font-face {
-  font-family: "SUSEMono";
-  src: url("/assets/fonts/mono/SUSEMono-Variable.ttf") format("truetype");
-  font-weight: 100 800;
-  font-style: normal;
-  font-display: swap;
-}
 
 /* ----------------------------------------------------------------------
    CSS Variables — Dark Theme Palette
@@ -73,6 +49,8 @@
 body {
   background-color: var(--bg-root);
   color: var(--text-primary);
+  font-family: var(--public-font-body);
+  font-synthesis: none;
 }
 
 ::selection {
@@ -220,8 +198,9 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: "RechargeBd", sans-serif;
-  letter-spacing: 0.04em;
+  font-family: var(--public-font-display);
+  font-variation-settings: "wdth" 88;
+  letter-spacing: -0.02em;
   color: var(--text-primary);
 }
 
@@ -347,7 +326,7 @@ table {
 }
 
 th {
-  font-family: "RechargeBd", sans-serif;
+  font-family: var(--public-font-mono);
   color: var(--text-secondary);
   text-align: left;
   padding: 10px;

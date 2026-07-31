@@ -208,7 +208,7 @@ test("economy shell section bar is not configured for other public pages", () =>
   assert.equal(sectionBarUses.length, 2);
   assert.match(app, /"media-economy": \{[\s\S]*sectionBar: ECONOMY_SECTION_BAR[\s\S]*render: renderGamesEconomyWorkspace/);
   assert.match(app, /"media-market-exchange": \{[\s\S]*sectionBar: ECONOMY_SECTION_BAR[\s\S]*render: renderGamesEconomyWorkspace/);
-  for (const [pageId, block] of [...pageConfig.matchAll(/"([^"]+)": \{([\s\S]*?)\n    \}/g)]) {
+  for (const [pageId, block] of [...pageConfig.matchAll(/"([^"]+)": \{([\s\S]*?)\r?\n    \}/g)]) {
     if (pageId === "media-economy" || pageId === "media-market-exchange") continue;
     assert.doesNotMatch(block, /sectionBar:/, `${pageId} should not configure the economy section bar`);
   }
@@ -262,26 +262,26 @@ test("shared public turnstile helper collapses auth surfaces cleanly when runtim
 test("public modal surfaces keep the shared divider hook above alternate surface links", () => {
   const lander = read("index.html");
   const shell = read("js/public-shell.js");
-  const auroraCss = read("css/aurora-landing.css");
+  const landingCss = read("css/studio-first-landing.css");
   const shellCss = read("css/public-shell.css");
 
   assert.match(lander, /auth-modal-section-divider/);
   assert.match(shell, /auth-modal-section-divider/);
   assert.match(shell, /ss-auth-surface-links ss-auth-surface-links--compact/);
-  assert.match(auroraCss, /\.auth-modal-section-divider/);
+  assert.match(landingCss, /\.auth-modal-section-divider/);
   assert.match(shellCss, /\.auth-modal-section-divider/);
 });
 
-test("public modal disclaimer links use the shared blue treatment", () => {
-  const auroraCss = read("css/aurora-landing.css");
+test("public modal disclaimer links retain the shared blue treatment", () => {
+  const landingCss = read("css/studio-first-landing.css");
   const shellCss = read("css/public-shell.css");
 
-  assert.match(auroraCss, /\.auth-legal a,[\s\S]*#9ad1ff/);
+  assert.match(landingCss, /\.auth-legal a\s*\{[\s\S]*var\(--landing-blue-bright\)/);
   assert.match(shellCss, /\.auth-legal a,[\s\S]*#9ad1ff/);
 });
 
 test("shared public-shell modal ships the lander selector set and divider rhythm", () => {
-  const auroraCss = read("css/aurora-landing.css");
+  const landingCss = read("css/studio-first-landing.css");
   const shellCss = read("css/public-shell.css");
 
   for (const selector of [
@@ -291,13 +291,13 @@ test("shared public-shell modal ships the lander selector set and divider rhythm
     ".ss-auth-surface-links__summary-label",
     ".ss-auth-surface-links__link",
   ]) {
-    assert.match(auroraCss, new RegExp(selector.replaceAll(".", "\\.")));
+    assert.match(landingCss, new RegExp(selector.replaceAll(".", "\\.")));
     assert.match(shellCss, new RegExp(selector.replaceAll(".", "\\.")));
   }
 
-  assert.match(auroraCss, /\.auth-modal-section-divider\s*\{[\s\S]*margin:\s*10px 0 0/);
+  assert.match(landingCss, /\.auth-modal-section-divider\s*\{[\s\S]*margin:\s*23px 0 16px/);
   assert.match(shellCss, /\.auth-modal-section-divider\s*\{[\s\S]*margin:\s*10px 0 0/);
-  assert.match(auroraCss, /\.ss-auth-surface-links\s*\{[\s\S]*margin-top:\s*8px/);
+  assert.match(landingCss, /\.ss-auth-surface-links\s*\{[\s\S]*font-size:\s*11px/);
   assert.match(shellCss, /\.ss-auth-surface-links\s*\{[\s\S]*margin-top:\s*8px/);
 });
 
@@ -319,8 +319,8 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   const css = read("css/public-shell.css");
   const statusCss = read("css/status-widget.css");
   const profileHtml = read("u/index.html");
-  const standaloneUtilityBlock = app.match(/function renderStandaloneProfileUtilityBody\(profileCard, profile, canEdit, options = \{\}\) \{[\s\S]*?\n  \}\n\n  function buildProfileLoadingSection/)?.[0] || "";
-  const standaloneLoadingBlock = app.match(/function renderStandaloneProfileLoadingUtilityBody\(profileCard\) \{[\s\S]*?\n  \}\n\n  function renderStandaloneProfilePage/)?.[0] || "";
+  const standaloneUtilityBlock = app.match(/function renderStandaloneProfileUtilityBody\(profileCard, profile, canEdit, options = \{\}\) \{[\s\S]*?\r?\n  \}\r?\n\r?\n  function buildProfileLoadingSection/)?.[0] || "";
+  const standaloneLoadingBlock = app.match(/function renderStandaloneProfileLoadingUtilityBody\(profileCard\) \{[\s\S]*?\r?\n  \}\r?\n\r?\n  function renderStandaloneProfilePage/)?.[0] || "";
 
   assert.match(app, /function renderStandaloneProfilePage\(host, profile, canEdit, options = \{\}\)/);
   assert.match(app, /buildStandaloneProfileHero\(profile, options\.authState \|\| null, options\)/);
@@ -516,11 +516,11 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
 test("standalone /u profile hydration keeps runtime profile media ahead of local fallback data", () => {
   const app = read("js/public-pages-app.js");
   const profileFunction = read("functions/u/[[slug]].js");
-  const normalizeProfilePayloadBlock = app.match(/function normalizeProfilePayload\(payload, fallbackProfile, fallbackCode\) \{[\s\S]*?\n  \}\n\n  async function fetchPublicProfileByIdentifier/)?.[0] || "";
-  const roleChipBlock = app.match(/function buildStandaloneRoleChips\(profile\) \{[\s\S]*?\n  \}/)?.[0] || "";
-  const profileTypeBlock = app.match(/function buildProfileTypeChip\(profile\) \{[\s\S]*?\n  \}/)?.[0] || "";
-  const profileTierBlock = app.match(/function buildProfileTierChip\(tier\) \{[\s\S]*?\n  \}/)?.[0] || "";
-  const standaloneProfileBlock = app.match(/function renderStandaloneProfile\(ctx\) \{[\s\S]*?\n  \}\n\n  function renderCommunitySettings/)?.[0] || "";
+  const normalizeProfilePayloadBlock = app.match(/function normalizeProfilePayload\(payload, fallbackProfile, fallbackCode\) \{[\s\S]*?\r?\n  \}\r?\n\r?\n  async function fetchPublicProfileByIdentifier/)?.[0] || "";
+  const roleChipBlock = app.match(/function buildStandaloneRoleChips\(profile\) \{[\s\S]*?\r?\n  \}/)?.[0] || "";
+  const profileTypeBlock = app.match(/function buildProfileTypeChip\(profile\) \{[\s\S]*?\r?\n  \}/)?.[0] || "";
+  const profileTierBlock = app.match(/function buildProfileTierChip\(tier\) \{[\s\S]*?\r?\n  \}/)?.[0] || "";
+  const standaloneProfileBlock = app.match(/function renderStandaloneProfile\(ctx\) \{[\s\S]*?\r?\n  \}\r?\n\r?\n  function renderCommunitySettings/)?.[0] || "";
 
   assert.ok(normalizeProfilePayloadBlock, "normalizeProfilePayload should exist");
   assert.ok(roleChipBlock, "buildStandaloneRoleChips should exist");
@@ -673,7 +673,7 @@ test("community member gallery cards keep slug-first handles and the cleaned too
   const app = read("js/public-pages-app.js");
   const dataHub = read("js/public-data-hub.js");
   const css = read("css/public-shell.css");
-  const memberCardBlock = app.match(/function buildMemberGalleryCard\(profile, data\) \{[\s\S]*?return card;\n  \}/)?.[0] || "";
+  const memberCardBlock = app.match(/function buildMemberGalleryCard\(profile, data\) \{[\s\S]*?return card;\r?\n  \}/)?.[0] || "";
 
   assert.match(app, /function getMemberPublicHandle\(profile\)/);
   assert.match(app, /function getCanonicalSlugFromUrl\(value\)/);

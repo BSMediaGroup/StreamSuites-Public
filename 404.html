@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- ===================================================================== -->
 <!-- StreamSuites™ Public 404 Surface                                      -->
-<!-- Version: v0.5.0-alpha                                                 -->
+<!-- Version/build: hydrated from Runtime/Auth authority                  -->
 <!-- Copyright: © 2026 Brainstream Media Group                             -->
 <!-- ===================================================================== -->
 <html lang="en">
@@ -11,150 +11,172 @@
   <title>StreamSuites™ — Page Not Found</title>
   <meta name="description" content="StreamSuites public 404 page." />
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="/css/theme-dark.css" />
   <link rel="stylesheet" href="/css/status-widget.css" />
-  <link rel="stylesheet" href="/css/aurora-landing.css" />
   <style>
-    .hero.hero-404 {
-      width: min(980px, 94vw);
-      gap: 16px;
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 75% 15%, rgba(80, 168, 255, 0.11), transparent 28%),
+        radial-gradient(circle at 15% 80%, rgba(140, 199, 54, 0.06), transparent 24%),
+        #05070a;
+      color: #f5f8fb;
+      font-family: var(--public-font-body);
+      font-synthesis: none;
     }
 
-    .hero-404 .wordmark img {
-      width: clamp(360px, 52vw, 760px);
+    body::before {
+      position: fixed;
+      z-index: -1;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+      background-size: 64px 64px;
+      content: "";
+      mask-image: linear-gradient(#000, transparent 82%);
+    }
+
+    .not-found-shell {
+      width: min(900px, calc(100vw - 40px));
+      margin: 40px auto 120px;
+      text-align: center;
+    }
+
+    .not-found-wordmark {
+      width: min(390px, 78vw);
+      margin: 0 auto 48px;
     }
 
     .hero-404-title {
       margin: 0;
-      font-size: clamp(22px, 5vw, 36px);
-      letter-spacing: 0.04em;
+      font-family: var(--public-font-display);
+      font-size: clamp(62px, 13vw, 138px);
+      font-variation-settings: "wdth" 82;
+      font-weight: 650;
+      letter-spacing: -0.055em;
+      line-height: 0.85;
+    }
+
+    .hero-404-kicker {
+      margin: 26px 0 0;
+      color: #76c3ff;
+      font-family: var(--public-font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
     }
 
     .hero-404-message {
-      margin: 0;
-      max-width: 700px;
-      font-size: 14px;
-      line-height: 1.6;
-      color: var(--text-muted);
+      max-width: 620px;
+      margin: 18px auto 0;
+      color: #a7b2c0;
+      font-size: 17px;
+      line-height: 1.65;
     }
 
     .hero-404-actions {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      width: min(620px, 100%);
-      margin-top: 10px;
+      margin-top: 32px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
     }
 
-    .hero-404-actions .cta-primary-wrap {
-      width: 100%;
-    }
-
-    .hero-404-actions .cta-primary {
-      display: block;
-      width: 100%;
-      text-align: center;
+    .hero-404-actions a {
+      min-height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 18px;
+      border: 1px solid rgba(205, 218, 232, 0.2);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.03);
+      color: #f5f8fb;
+      font-weight: 650;
       text-decoration: none;
     }
 
+    .hero-404-actions a:first-child {
+      border-color: #50a8ff;
+      background: #50a8ff;
+      color: #03111f;
+    }
+
+    .hero-404-actions a:hover,
+    .hero-404-actions a:focus-visible {
+      border-color: rgba(255,255,255,0.38);
+      outline: 2px solid #50a8ff;
+      outline-offset: 3px;
+    }
+
     .hero-404-path {
-      margin: 6px 0 0;
-      font-size: 11px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: rgba(230,232,235,0.48);
+      margin: 25px 0 0;
+      color: #6f7b89;
+      font-family: var(--public-font-mono);
+      font-size: 9px;
+      letter-spacing: 0.05em;
       min-height: 1.2em;
     }
 
-    @media (max-width: 720px) {
-      .hero-404-actions {
-        grid-template-columns: 1fr;
-      }
+    .not-found-footer {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      min-height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      padding: 10px 20px;
+      border-top: 1px solid rgba(205, 218, 232, 0.12);
+      background: rgba(3, 5, 7, 0.88);
+      color: #7d8998;
+      font-family: var(--public-font-mono);
+      font-size: 8px;
+      backdrop-filter: blur(14px);
+    }
 
-      .hero-404 .wordmark img {
-        width: clamp(280px, 82vw, 460px);
-      }
+    .not-found-footer a {
+      color: inherit;
+    }
+
+    @media (max-width: 620px) {
+      .not-found-shell { margin-bottom: 155px; }
+      .hero-404-actions { display: grid; }
+      .not-found-footer { flex-wrap: wrap; gap: 8px 14px; }
     }
   </style>
 </head>
 
 <body>
-  <div class="stage">
-    <main class="hero hero-404" aria-label="404 page">
-      <div class="wordmark">
-        <img src="./assets/logos/wordmarkchromefull.webp" alt="StreamSuites™" />
-      </div>
-
-      <h1 class="hero-404-title">Page not found</h1>
-      <p class="hero-404-message">
-        The page you are looking for does not exist or may have been moved.
-      </p>
-
-      <div class="hero-404-actions" aria-label="Navigation options">
-        <div class="cta-primary-wrap">
-          <a class="cta-primary" href="https://streamsuites.app">Go to Home</a>
-        </div>
-        <div class="cta-primary-wrap">
-          <a class="cta-primary" href="https://creator.streamsuites.app">Creator Dashboard</a>
-        </div>
-        <div class="cta-primary-wrap">
-          <a class="cta-primary" href="https://streamsuites.app/support">Support</a>
-        </div>
-        <div class="cta-primary-wrap">
-          <a class="cta-primary" href="https://docs.streamsuites.app">Documentation</a>
-        </div>
-      </div>
-
-      <p class="hero-404-path muted" id="requested-path" aria-live="polite"></p>
-    </main>
-
-    <div class="logo-shine"></div>
-    <div class="grid-motif"></div>
-    <img class="grid-shot grid-shot-1 is-active" src="/assets/illustrations/f1.webp" alt="" aria-hidden="true" />
-
-    <div class="aurora">
-      <div class="blob purple"></div>
-      <div class="blob magenta"></div>
-      <div class="blob blue"></div>
-      <div class="blob secondary"></div>
-      <div class="blob accent"></div>
+  <main class="not-found-shell" aria-label="404 page">
+    <img class="not-found-wordmark" src="/assets/logos/sswordmarktm.webp" alt="StreamSuites™" />
+    <h1 class="hero-404-title">404</h1>
+    <p class="hero-404-kicker">That route is not part of the current suite</p>
+    <p class="hero-404-message">The page may have moved, or the address may not exist. Return to the product overview or continue to an established StreamSuites surface.</p>
+    <div class="hero-404-actions" aria-label="Navigation options">
+      <a href="/">Product overview</a>
+      <a href="/home.html">Public dashboard</a>
+      <a href="https://studio.streamsuites.app">Browser Studio</a>
+      <a href="/support.html">Support</a>
     </div>
+    <p class="hero-404-path" id="requested-path" aria-live="polite"></p>
+  </main>
 
-    <div class="fade"></div>
-
-    <div class="secondary-pills" aria-label="Public Galleries">
-      <a href="/clips.html">Clips</a>
-      <a href="/polls.html">Polls</a>
-      <a href="/media.html">More</a>
-    </div>
-
-    <div class="footer-shell">
-      <div class="footer-status" data-status-slot></div>
-
-      <div class="footer-bar">
-        <div class="footer-links">
-          <a href="/support.html">/support</a>
-          <a href="/donate.html">/donate</a>
-          <a href="/privacy.html">/privacy</a>
-          <a href="/about.html">/about</a>
-        </div>
-
-        <div class="footer-meta">
-          <a class="footer-copyright" href="https://brainstream.media" target="_blank" rel="noopener noreferrer">
-            © 2026 Brainstream Media Group
-          </a>
-          <span class="footer-version-tooltip-container">
-            <a class="footer-version" href="/changelog" aria-describedby="footer-version-tooltip">Loading version…</a>
-            <div class="footer-version-tooltip" id="footer-version-tooltip" role="tooltip">
-              <div class="footer-version-tooltip-line" data-footer-version-tooltip="version">Loading version…</div>
-              <div class="footer-version-tooltip-line" data-footer-version-tooltip="build">Build …</div>
-              <a class="footer-version-tooltip-link" href="/changelog">View changelog</a>
-            </div>
-          </span>
-        </div>
-      </div>
-    </div>
-  </div>
+  <footer class="not-found-footer">
+    <span class="footer-status" data-status-slot></span>
+    <a href="/about.html">About</a>
+    <a href="/privacy.html">Privacy</a>
+    <a class="footer-version" href="/changelog">Loading version…</a>
+    <a href="https://brainstream.media" target="_blank" rel="noopener noreferrer">© 2026 Brainstream Media Group</a>
+  </footer>
 
   <script>
     (function () {

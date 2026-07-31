@@ -1,21 +1,21 @@
 {
-  "lastUpdated": "2026-01-14",
+  "lastUpdated": "2026-07-31",
   "sections": [
     {
       "id": "what-streamsuites-is",
       "order": 1,
-      "title": "What StreamSuites Is",
+      "title": "What StreamSuites Is Now",
       "entries": [
         {
           "id": "definition",
           "order": 1,
           "consumer": {
-            "title": "What StreamSuites Is",
-            "body": "StreamSuites is a modular automation system for livestreaming across multiple platforms. It’s designed to watch chats, interpret activity, manage modules like clips, polls, tallies, and scoreboards, and publish clean read-only snapshots that other interfaces can display. It aims to feel like a unified product even though each platform behaves differently."
+            "title": "A Connected Livestream-Production Suite",
+            "body": "StreamSuites is centered on two production experiences: Browser Studio and the native Windows StudioApp. StreamSuites Studio for OBS extends the same system into existing OBS workflows, while automation, engagement, alerts, public profiles, and creator tools connect around the show."
           },
           "developer": {
-            "title": "Authoritative Runtime Architecture",
-            "body": "StreamSuites is architected around an authoritative runtime that owns execution, state, and exports, plus a separate static dashboard that never runs bots and never mutates runtime state. The runtime is responsible for deterministic behavior, lifecycle control, quotas, orchestration, and producing JSON artifacts for downstream consumers."
+            "title": "Production Surfaces over Shared Runtime/Auth Authority",
+            "body": "StreamSuites Studio, StudioApp, and StreamSuites Studio for OBS are separate clients with separate media ownership. The Python Runtime/Auth repository is the sole authority for shared identity, permissions, rooms, invitations, destinations, credentials, automation state, alerts, exports, and canonical project versioning; it is not a shared media engine."
           }
         }
       ]
@@ -23,18 +23,18 @@
     {
       "id": "two-repositories",
       "order": 2,
-      "title": "The Repositories and Why They Exist",
+      "title": "A Product Family, Not One Monolith",
       "entries": [
         {
           "id": "repo-split",
           "order": 1,
           "consumer": {
-            "title": "Runtime, Dashboard, and Live Chat Launcher",
-            "body": "StreamSuites is organized into three repositories. The Runtime (StreamSuites) is the engine that performs all execution and state management. The Dashboard (StreamSuites-Dashboard) is a static, read-only interface for viewing system state and artifacts. The LiveChat / ChatReplay Launcher (StreamSuites-LiveChat-Launcher) is a small companion application used to launch chat replay and live chat viewer surfaces."
+            "title": "Purpose-Built Surfaces",
+            "body": "Browser production, native Windows production, OBS integration, Creator configuration, Public experiences, administration, developer tools, documentation, and FindMeHere discovery each have a focused surface. They feel connected because they rely on the same authoritative system underneath."
           },
           "developer": {
-            "title": "Authoritative Runtime with Read-Only Companion Surfaces",
-            "body": "The runtime repository is the single source of truth. It owns execution, canonical state, quotas, schedulers, triggers, platform workers, and deterministic exports. The dashboard repository is static and offline-first: it never runs bots, never mutates runtime state, drafts configuration locally via localStorage, validates against schemas, and renders runtime-exported JSON artifacts without live API calls or a backend. The LiveChat / ChatReplay Launcher repository is intentionally minimal and non-authoritative; it does not own state, does not issue commands, and exists solely to launch and present replay or live chat viewer surfaces that consume the same deterministic exports as the dashboard."
+            "title": "Repository and Authority Boundaries",
+            "body": "StreamSuites is the authoritative Runtime/Auth repository. StreamSuites-Studio, StreamSuites-StudioApp, StreamSuites-OBS, Public, Creator, Dashboard/Admin, Developer, Docs, Members/FindMeHere, and LiveChat Launcher are clients with distinct responsibilities. Authenticated Creator and Admin writes flow through permission-checked Runtime/Auth APIs; no client creates a competing canonical store."
           }
         }
       ]
@@ -42,18 +42,18 @@
     {
       "id": "release-posture",
       "order": 3,
-      "title": "Version Stage and Release Posture",
+      "title": "Active Alpha Development",
       "entries": [
         {
           "id": "late-alpha",
           "order": 1,
           "consumer": {
-            "title": "Late Alpha Stage",
-            "body": "You’re in late alpha: the system works in meaningful ways, but reliability, observability, and the rules of the world are still being locked down before promising stability to external testers and future users. Read-only dashboards and galleries are usable today, while live controls remain intentionally off."
+            "title": "Useful Foundations, Explicit Limits",
+            "body": "StreamSuites is in active Alpha development. Meaningful foundations are implemented, but products and modules are at different stages and may still change. Access, availability, and capability labels are kept visible so previews are not mistaken for general availability."
           },
           "developer": {
-            "title": "Alpha Versioning and Licensing",
-            "body": "The runtime is explicitly marked using semantic versioning with prerelease tags. Alpha indicates that breaking changes are still possible and contract permanence is not guaranteed. The dashboard mirrors runtime version metadata via the /runtime/exports/version.json export and remains in lockstep with runtime releases. Licensing posture is Proprietary / All Rights Reserved under Brainstream Media Group."
+            "title": "Runtime-Authoritative System Version",
+            "body": "Runtime/Auth owns canonical project version and build metadata. Independently distributed components may publish clearly labelled product release identities without replacing system authority. Alpha contracts may change; each product repository remains authoritative for its narrower validation and availability posture."
           }
         }
       ]
@@ -61,18 +61,18 @@
     {
       "id": "runtime-writes",
       "order": 4,
-      "title": "Runtime Writes, Everyone Else Reads",
+      "title": "Runtime/Auth Owns Shared Truth",
       "entries": [
         {
           "id": "single-source-of-truth",
           "order": 1,
           "consumer": {
-            "title": "One Source of Truth",
-            "body": "StreamSuites is designed so that only the engine produces truth. Everything else — the dashboard, public pages, and future tools — simply displays what the engine exported."
+            "title": "One Coordinated Identity and State System",
+            "body": "Accounts, permissions, rooms, invitations, destinations, alerts, and shared creator state come from one authority. Public pages and product clients present approved views of that state instead of inventing their own."
           },
           "developer": {
-            "title": "Read-Only Consumers",
-            "body": "The dashboard and public pages do not mutate runtime state and do not issue live commands. They render snapshots only. Snapshots include metadata such as timestamps, sources, and visibility tags (public, dashboard-only, internal-only) so consumers can filter data without relying solely on folder structure."
+            "title": "Canonical APIs, Stores, and Safe Projections",
+            "body": "Runtime/Auth owns canonical SQLite and protected credential state, authenticated APIs, deterministic public exports, and version metadata. Downstream surfaces consume authorized payloads or public-safe projections. Client-local settings may remain local only when they do not compete with identity, permission, room, destination, credential, or shared-project authority."
           }
         }
       ]
@@ -80,18 +80,18 @@
     {
       "id": "export-model",
       "order": 5,
-      "title": "The Export Model: Data and Signals",
+      "title": "Exports as Safe Public Projections",
       "entries": [
         {
           "id": "exports-as-surface",
           "order": 1,
           "consumer": {
-            "title": "Showing the System’s Work",
-            "body": "Instead of hiding what’s happening, StreamSuites is built to show its work. It produces readable JSON outputs so state and module activity can be inspected and public galleries can exist without exposing sensitive data."
+            "title": "Public Results Without Exposing Private State",
+            "body": "Clips, polls, tallies, scores, profiles, progression, and live discovery can be shown publicly through deliberately shaped data without exposing private credentials or internal control state."
           },
           "developer": {
-            "title": "Export Classes and Dashboard Rendering",
-            "body": "The runtime generates deterministic, timestamped JSON documents across three export classes: public exports (clips, polls, tallies, scoreboards, export manifest), dashboard-only signals (normalized chat events, poll vote events, tally increments, score adjustments), and admin/internal exports (creators registry, trigger definitions, jobs, rate limits, integrations, permissions placeholders). Replay and overlay shapes have now been incorporated into the contract without enabling live hydration. The dashboard includes a Data & Signals view to render these exports using client-side pagination and search while maintaining a no-writes posture."
+            "title": "Mirrors and Hydration Inputs, Not Competing Truth",
+            "body": "Runtime exports are deterministic mirrors and hydration inputs. Public routes may combine existing same-origin public APIs with checked-in or generated fallback exports, but they do not treat a stale mirror as independent authority and never expose session cookies, OAuth tokens, stream keys, provider credentials, or internal-only fields."
           }
         }
       ]
@@ -99,18 +99,18 @@
     {
       "id": "multi-runtime-architecture",
       "order": 6,
-      "title": "Architecture Overview: One Repo, Multiple Runtimes",
+      "title": "Control and Media Stay Separate",
       "entries": [
         {
           "id": "runtime-entrypoints",
           "order": 1,
           "consumer": {
-            "title": "Multiple Processes for Stability",
-            "body": "StreamSuites can run as more than one process so that a Discord bot used for control or status does not get tangled up with livestream chat ingestion logic."
+            "title": "Connected Control, Product-Owned Media",
+            "body": "The suite coordinates access and state centrally, but video and audio follow the architecture appropriate to each production product."
           },
           "developer": {
-            "title": "Streaming Runtime and Discord Control Plane",
-            "body": "The runtime repository contains two primary entrypoints: the streaming runtime (core/app.py), which owns platform ingestion workers, scheduler lifecycle, and export cadence; and the Discord control-plane runtime (core/discord_app.py), which is intended for operational commands, status, heartbeat, and notifications. A shared scheduler coordinates lifecycles while keeping control-plane behavior separate from data-plane logic."
+            "title": "Three Media Boundaries",
+            "body": "Browser Studio connects directly to Cloudflare RealtimeKit using Runtime/Auth-issued participant credentials. StudioApp keeps local capture, composition, audio, encoding, recording, replay, and direct output in its supervised native C++ engine. StreamSuites Studio for OBS delivers authorized guest tracks to loopback OBS Browser Sources while OBS retains scenes, mixing, encoding, recording, and streaming. None of these media paths terminates in Python."
           }
         }
       ]
@@ -118,18 +118,18 @@
     {
       "id": "scheduler-lifecycle",
       "order": 7,
-      "title": "Scheduler and Lifecycle Philosophy",
+      "title": "Bounded and Observable Lifecycles",
       "entries": [
         {
           "id": "deterministic-lifecycle",
           "order": 1,
           "consumer": {
-            "title": "Predictable Execution",
-            "body": "StreamSuites is built to be predictable. Tasks start cleanly, run continuously, and shut down cleanly without getting stuck in hidden background states."
+            "title": "Predictable Background Work",
+            "body": "Long-running jobs, room activity, platform workers, and media supervision are designed to start, report state, and stop cleanly rather than hiding uncontrolled background behavior."
           },
           "developer": {
-            "title": "Explicit Ownership and Controlled Shutdown",
-            "body": "Key runtime principles include deterministic behavior, explicit lifecycle ownership, avoidance of hidden background state, cancellable long-running tasks, and Windows-first compatibility. Scheduler responsibilities include starting per-creator workers based on platform flags, coordinating shutdown and cleanup, and explicitly not evaluating triggers or executing trigger actions at this stage."
+            "title": "Explicit Ownership and Cleanup",
+            "body": "Runtime schedulers, browser media sessions, StudioApp Engine.Host supervision, and OBS plugin workers each retain explicit ownership, bounded retries, cancellation, redacted diagnostics, and controlled shutdown within their own architecture. A client does not silently duplicate another product's worker or media lifecycle."
           }
         }
       ]
@@ -137,18 +137,18 @@
     {
       "id": "configuration-strategy",
       "order": 8,
-      "title": "Configuration Over Code",
+      "title": "Configuration Follows Authority",
       "entries": [
         {
           "id": "json-driven-config",
           "order": 1,
           "consumer": {
-            "title": "Driven by Configuration",
-            "body": "Instead of baking behavior into code, StreamSuites is driven by JSON configuration so rules, toggles, and module behavior can be changed safely."
+            "title": "Settings Where They Belong",
+            "body": "Creators and operators can configure the suite through focused interfaces, while sensitive or shared settings stay protected by the central authority."
           },
           "developer": {
-            "title": "Schema-Validated Configuration Ingestion",
-            "body": "Runtime configuration lives under shared/config and covers system, creators, logging, services, rate limits, tiers, monetization, chat behavior, and posting rules. The dashboard can generate schema-validated creators.json and platforms.json bundles which the runtime ingests via a validated config loader."
+            "title": "Server-Backed Shared State and Local Device State",
+            "body": "Runtime/Auth owns shared configuration, integrations, credentials, destinations, roles, permissions, rooms, and account state. StudioApp may own machine-local device, workspace, hotkey, and path settings. Browser and static clients do not turn localStorage or exported JSON into canonical shared state."
           }
         }
       ]
@@ -156,18 +156,18 @@
     {
       "id": "quotas",
       "order": 9,
-      "title": "Quotas and Enforcement",
+      "title": "Permission and Usage Guardrails",
       "entries": [
         {
           "id": "quota-enforcement",
           "order": 1,
           "consumer": {
-            "title": "System Speed Limits",
-            "body": "Quotas act as speed limits. They prevent runaway automation and help keep the system stable and safe."
+            "title": "Guardrails Around Shared Capabilities",
+            "body": "Permissions, tiers, cooldowns, and usage limits protect shared services and keep actions scoped to the right creator and room."
           },
           "developer": {
-            "title": "Runtime-Only Quota Architecture",
-            "body": "Quota enforcement is intentionally runtime-owned and in-memory. QuotaTracker handles daily usage with buffers and hard caps, while QuotaRegistry maintains a global registry. Snapshot cadence merges tracker state and writes deterministic exports such as shared/state/quotas.json. The dashboard renders quotas as a visual-only health surface with no enforcement."
+            "title": "Runtime-Owned Enforcement",
+            "body": "Roles and tiers remain distinct. Runtime/Auth performs permission checks, creator scoping, destination ownership checks, cooldown policy, quota tracking, access grants, and session enforcement. Public presentation can explain or render those states but cannot weaken or replace server enforcement."
           }
         }
       ]
@@ -175,18 +175,18 @@
     {
       "id": "trigger-system",
       "order": 10,
-      "title": "Trigger System",
+      "title": "Automation as a Connected Capability",
       "entries": [
         {
           "id": "evaluate-now-execute-later",
           "order": 1,
           "consumer": {
-            "title": "Rules Before Actions",
-            "body": "Triggers define how the system responds to events, but actions are staged carefully so behavior can be reviewed and trusted."
+            "title": "Rules That Support the Show",
+            "body": "Chat events, triggers, and automation remain part of StreamSuites, but they now support a production-centered product family rather than standing alone as the whole identity."
           },
           "developer": {
-            "title": "Deferred Action Execution",
-            "body": "The trigger registry is platform-agnostic. Workers normalize chat events and feed them into the TriggerRegistry, which emits structured action descriptors as pure data. Action execution is deferred by design; triggers do not dispatch jobs or mutate external state at this stage. Design-locked trigger types include command, regex, keyword, and cooldown-scoped triggers."
+            "title": "Mixed-Maturity, Runtime-Owned Automation",
+            "body": "Provider-aware event normalization, creator-scoped trigger registries, cooldown policy, controlled actions, and operator surfaces exist at mixed maturity. Action execution and cross-platform coverage are not uniformly complete. Runtime/Auth retains execution and policy authority; product clients consume capability and state contracts."
           }
         }
       ]
@@ -194,18 +194,18 @@
     {
       "id": "modules-first-class",
       "order": 11,
-      "title": "Modules as First-Class Entities",
+      "title": "Audience Modules Remain First-Class",
       "entries": [
         {
           "id": "modules-over-bot",
           "order": 1,
           "consumer": {
-            "title": "Beyond a Chat Bot",
-            "body": "StreamSuites is not just a bot. It includes real modules that power public-facing content like clip galleries, polls, and tallies."
+            "title": "Engagement Around the Production",
+            "body": "Clips, polls, tallies, scoreboards, wheels, games, profiles, progression, alerts, and overlays remain connected suite capabilities for creators and audiences."
           },
           "developer": {
-            "title": "Runtime-Owned Module Entities",
-            "body": "The runtime treats clips, polls, tallies, and scoreboards as first-class concepts with export surfaces. Clips are implemented with deterministic lifecycle state and destinations. Polls export read-only results. Tallies are schema-backed entities prepared for public and dashboard visibility. Scoreboards export aggregate snapshots with gallery shells."
+            "title": "Runtime Contracts at Different Maturity Levels",
+            "body": "Runtime-owned schemas, stores, APIs, and exports exist across engagement modules at different maturity levels. Public, Creator, and Admin surfaces consume those contracts without inventing missing backend fields or presenting every module as a complete live workflow."
           }
         }
       ]
@@ -213,18 +213,18 @@
     {
       "id": "clips-deep-dive",
       "order": 12,
-      "title": "Clips Module Deep Understanding",
+      "title": "Clips, Recording, and Replay",
       "entries": [
         {
           "id": "clips-pipeline",
           "order": 1,
           "consumer": {
-            "title": "A Mini Production Pipeline",
-            "body": "The clips module receives clip requests, processes them in the background, uploads finished media, and publishes results for dashboards and public pages to display."
+            "title": "Different Pipelines for Different Jobs",
+            "body": "Public clips and native local production media can both appear in the suite, but they come from separate workflows with separate ownership."
           },
           "developer": {
-            "title": "Deterministic Clip Processing",
-            "body": "Clips use SQLite-backed state (data/streamsuites.db), bounded-concurrency workers, deterministic IDs and file naming, FFmpeg-based encoding, explicit lifecycle states, and scheduled export cadence. Destination is read from configuration with future per-creator flexibility planned."
+            "title": "Runtime Clips and StudioApp Local Media Are Separate",
+            "body": "The Runtime clipping module publishes public-safe artifacts through its own bounded pipeline. StudioApp's native recording, replay, and Clip workflow stays inside its C++ media engine and local storage contract. Browser Studio recording and broadcast output remain unimplemented."
           }
         }
       ]
@@ -232,18 +232,18 @@
     {
       "id": "state-publishing",
       "order": 13,
-      "title": "State Publishing and Dashboard Lookup Order",
+      "title": "Hydration and Publishing",
       "entries": [
         {
           "id": "state-resolution",
           "order": 1,
           "consumer": {
-            "title": "Flexible Data Sources",
-            "body": "The dashboard can load data from multiple locations depending on environment, making it usable in different setups."
+            "title": "Public Pages Resolve Real Published State",
+            "body": "Public galleries, profiles, and discovery views load authorized published data and keep clear loading, empty, degraded, and unavailable states when that data cannot be resolved."
           },
           "developer": {
-            "title": "Export Publishing and Resolution Priority",
-            "body": "Runtime writes snapshots under shared/state and can mirror them into the dashboard root. Publishing can be automated or manual via helper scripts. Dashboard resolution order is stateRoot query override, local published shared/state, then fallback to the runtime repo’s raw GitHub state."
+            "title": "API-First and Export-Fallback Resolution",
+            "body": "Public features preserve their established API, query, hash, slug, and fallback resolution contracts. Runtime-generated copies remain mirrors. Version and status widgets hydrate their existing endpoints, and route aliases or Cloudflare redirects remain part of the deployed contract."
           }
         }
       ]
@@ -251,18 +251,18 @@
     {
       "id": "dashboard-identity",
       "order": 14,
-      "title": "Dashboard Identity",
+      "title": "Focused Public, Creator, and Admin Experiences",
       "entries": [
         {
           "id": "static-dashboard",
           "order": 1,
           "consumer": {
-            "title": "A Safe and Portable Interface",
-            "body": "The dashboard feels like a real admin and creator interface while remaining safe and portable because it is built entirely from static files."
+            "title": "The Right Surface for Each Audience",
+            "body": "Public presents profiles and published artifacts, Creator manages creator-facing settings and integrations, and Admin provides privileged operational workflows."
           },
           "developer": {
-            "title": "Static CMS and Inspection Surface",
-            "body": "The dashboard is fully client-side with no authentication, backend, or live platform API calls. It is schema-driven, uses localStorage for drafts, supports deterministic config export/import, and includes multiple public-facing pages that share a unified styling system."
+            "title": "Clients of Runtime/Auth, Not Standalone Authorities",
+            "body": "Public is a read-oriented public and authenticated-account client. Creator and Dashboard/Admin may perform implemented permission-checked writes through Runtime/Auth. Developer, Docs, Members/FindMeHere, and LiveChat Launcher remain focused clients. Their local presentation state never displaces authoritative account, role, tier, room, integration, or shared-project state."
           }
         }
       ]

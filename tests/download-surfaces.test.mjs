@@ -7,20 +7,29 @@ import path from "node:path";
 const root = process.cwd();
 const read = (relative) => fs.readFileSync(path.join(root, relative), "utf8");
 
-test("download routes share Browser Studio typography and the authoritative Studio mark", () => {
+test("download routes use the approved Public typography and retain authoritative product marks", () => {
   const shared = read("css/download-surface.css");
+  const fonts = read("css/public-fonts.css");
   const studio = read("downloads/studioapp/index.html");
   const obs = read("downloads/obs-plugin/index.html");
   const extensions = read("downloads/studioapp/extensions/index.html");
-  const studioFontHash = crypto.createHash("sha256").update(fs.readFileSync(path.join(root, "assets/fonts/SuiGeneris-Regular.otf"))).digest("hex");
-  const displayFontHash = crypto.createHash("sha256").update(fs.readFileSync(path.join(root, "assets/fonts/Recharge-Bold.otf"))).digest("hex");
+  const displayFontHash = crypto.createHash("sha256").update(fs.readFileSync(path.join(root, "assets/fonts/Tektur-VariableFont_wdth,wght.ttf"))).digest("hex");
+  const bodyFontHash = crypto.createHash("sha256").update(fs.readFileSync(path.join(root, "assets/fonts/Geist-Regular.ttf"))).digest("hex");
+  const monoFontHash = crypto.createHash("sha256").update(fs.readFileSync(path.join(root, "assets/fonts/mono/IBMPlexMono-Regular.ttf"))).digest("hex");
   const studioIconHash = crypto.createHash("sha256").update(fs.readFileSync(path.join(root, "assets/logos/studiologo3.webp"))).digest("hex");
 
-  assert.equal(studioFontHash, "39b21df023a5833e2d891a5c0d72703db4306b9008c0d44d4dc01f2350c71964");
-  assert.equal(displayFontHash, "1faa8af96c598f49d2e6791de161f7845379197c1d36c489cd39ad548550ef1f");
+  assert.equal(displayFontHash, "1ff1792ecc4728cf011d31e43a53a5c97e82f5c7cc7b9f23af24b209106e962c");
+  assert.equal(bodyFontHash, "cf1737280af17d036786e06d0eb49b2ce83fc303169a0a438c3f4b2f80ee8e06");
+  assert.equal(monoFontHash, "ab08018ccd276b79fb2c636bb95b9c543598f9d50505fe92506fcb4dae7810cd");
   assert.equal(studioIconHash, "43c28a45fbabc4a710c4dad151ecd33952fa823c5a2e17d615343f1c6bf7a786");
-  assert.match(shared, /--download-font-body:\s*"Sui Generis"/);
-  assert.match(shared, /--download-font-display:\s*"Recharge"/);
+  assert.match(shared, /@import url\("\/css\/public-fonts\.css"\)/);
+  assert.match(shared, /--download-font-body:\s*var\(--public-font-body\)/);
+  assert.match(shared, /--download-font-display:\s*var\(--public-font-display\)/);
+  assert.match(shared, /--download-font-mono:\s*var\(--public-font-mono\)/);
+  assert.match(fonts, /font-family:\s*"Tektur"/);
+  assert.match(fonts, /font-family:\s*"Geist Sans"/);
+  assert.match(fonts, /font-family:\s*"IBM Plex Mono"/);
+  assert.doesNotMatch(shared, /SuiGeneris|Recharge/);
   [studio, obs, extensions].forEach((html) => {
     assert.match(html, /\/css\/download-surface\.css/);
     assert.match(html, /aria-label="Studio downloads"/);

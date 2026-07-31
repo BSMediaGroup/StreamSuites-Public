@@ -258,7 +258,7 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   assert.match(app, /authorityIdentity\?\.account_user_code/);
   assert.match(app, /function leaderboardHandle\(identity = \{\}\)/);
   assert.match(app, /identity\.public_slug[\s\S]*identity\.profile_slug[\s\S]*identity\.slug[\s\S]*identity\.handle[\s\S]*identity\.canonical_slug[\s\S]*profileUrlSlug/);
-  assert.doesNotMatch(app.match(/function leaderboardHandle\(identity = \{\}\) \{[\s\S]*?return "";\n  \}/)?.[0] || "", /identity\.user_code/);
+  assert.doesNotMatch(app.match(/function leaderboardHandle\(identity = \{\}\) \{[\s\S]*?return "";\r?\n  \}/)?.[0] || "", /identity\.user_code/);
   assert.match(app, /return `@\$\{handle\}`/);
   assert.match(app, /fallback_public_identity_code/);
   assert.match(app, /function leaderboardProfileHref\(entry = \{\}\)/);
@@ -384,7 +384,7 @@ test("public leaderboards route hydrates from authoritative progression API", ()
   assert.match(app, /pageRows\.forEach\(\(entry\) => list\.appendChild\(buildLeaderboardRow\(entry, state\)\)\)/);
   assert.match(app, /renderSignedOutStanding\(standingHost, openAuthModal\)/);
   assert.match(app, /renderSignedInStanding\(standingHost, standingEntry, progressionPayload, economyPayload, authState \|\| \{\}\)/);
-  const standingBlock = app.match(/function renderSignedInStanding\(host, entry = null, progressionPayload = \{\}, economyPayload = \{\}, authState = \{\}\) \{[\s\S]*?host\.appendChild\(card\);\n  \}/)?.[0] || "";
+  const standingBlock = app.match(/function renderSignedInStanding\(host, entry = null, progressionPayload = \{\}, economyPayload = \{\}, authState = \{\}\) \{[\s\S]*?host\.appendChild\(card\);\r?\n  \}/)?.[0] || "";
   assert.match(standingBlock, /const authSlug = getCanonicalProfileSlug\(authState, ""\)/);
   assert.doesNotMatch(standingBlock, /buildProfileHref\(authState\)/);
   assert.match(standingBlock, /buildEconomyBalanceValue\(wallet, \{ compact: true, compactNumber: true, standing: true \}\)/);
@@ -461,8 +461,8 @@ test("public leaderboards route hydrates from authoritative progression API", ()
 test("public profile game section renders runtime progression and economy authority summaries", () => {
   const app = read("js/public-pages-app.js");
   const css = read("css/public-shell.css");
-  const profileSection = app.match(/function buildProfileGameCompetitionSection\(profile = null, options = \{\}\) \{[\s\S]*?return details;\n  \}/)?.[0] || "";
-  const scopedProfileSection = app.match(/function buildProfileScopedProgressionSection\(profile = null\) \{[\s\S]*?return section;\n  \}/)?.[0] || "";
+  const profileSection = app.match(/function buildProfileGameCompetitionSection\(profile = null, options = \{\}\) \{[\s\S]*?return details;\r?\n  \}/)?.[0] || "";
+  const scopedProfileSection = app.match(/function buildProfileScopedProgressionSection\(profile = null\) \{[\s\S]*?return section;\r?\n  \}/)?.[0] || "";
   assert.ok(profileSection, "profile progression section should exist");
   assert.ok(scopedProfileSection, "profile scoped progression section should exist");
   assert.match(app, /payload\?\.progression && typeof payload\.progression === "object"/);
@@ -633,7 +633,7 @@ test("public scoped platform icons and stable latest stream layout are pinned", 
 
 test("public profile overview table uses the same runtime progression summary as games", () => {
   const app = read("js/public-pages-app.js");
-  const overviewSection = app.match(/function buildProfileOverviewPanel\(profile, artifacts, helpers\) \{[\s\S]*?return section;\n  \}/)?.[0] || "";
+  const overviewSection = app.match(/function buildProfileOverviewPanel\(profile, artifacts, helpers\) \{[\s\S]*?return section;\r?\n  \}/)?.[0] || "";
   assert.ok(overviewSection, "profile overview section should exist");
   assert.match(overviewSection, /const progression = profile\?\.progression && typeof profile\.progression === "object" \? profile\.progression : null/);
   assert.match(overviewSection, /const economy = profile\?\.economy && typeof profile\.economy === "object" \? profile\.economy : null/);
@@ -1049,8 +1049,8 @@ test("public economy item lightbox renders hashtag tag chips and scoped item cod
   assert.match(app, /tags: item\.tags \|\| definition\.tags \|\| \[\]/);
   assert.match(app, /definition: \{[\s\S]*tags: definition\.tags \|\| item\.tags \|\| \[\]/);
   assert.match(css, /\.market-item-lightbox-tags\s*\{/);
-  assert.match(css, /\.economy-item-tag-chip\s*\{[\s\S]*SuiGenerisRg[\s\S]*font-weight:\s*400[\s\S]*rgba\(186,\s*220,\s*255/);
-  assert.match(css, /\.market-item-lightbox \.economy-item-code-value\s*\{[\s\S]*SUSEMono/);
+  assert.match(css, /\.economy-item-tag-chip\s*\{[\s\S]*var\(--public-font-body\)[\s\S]*font-weight:\s*400[\s\S]*rgba\(186,\s*220,\s*255/);
+  assert.match(css, /\.market-item-lightbox \.economy-item-code-value\s*\{[\s\S]*var\(--public-font-mono\)/);
   assert.match(css, /\.market-item-lightbox \.market-exchange-quantity\s*\{[\s\S]*color-scheme:\s*dark/);
 });
 

@@ -22,7 +22,8 @@ body {
 }
 
 body {
-  font-family: "SuiGenerisRg", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--public-font-body);
+  font-synthesis: none;
   font-size: 12px;
   line-height: 1.5;
   overflow: hidden;
@@ -257,7 +258,7 @@ body.discord-authenticated .ss-auth-lock {
 }
 
 .app-title {
-  font-family: "RechargeBd", sans-serif;
+  font-family: var(--public-font-display);
   font-size: 22px;
   letter-spacing: 0.5px;
 }
@@ -506,7 +507,7 @@ body.discord-authenticated .ss-auth-lock {
    ------------------------------ */
 
 h1, h2, h3, h4, h5 {
-  font-family: "RechargeBd", sans-serif;
+  font-family: var(--public-font-display);
   font-weight: 700;
 }
 

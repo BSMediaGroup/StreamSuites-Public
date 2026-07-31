@@ -2,7 +2,8 @@ body.ss-public-login {
   margin: 0;
   min-height: 100vh;
   color: var(--text-primary);
-  font-family: "SuiGenerisRg", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--public-font-body);
+  font-synthesis: none;
   background: linear-gradient(176deg, #070d16 0%, #0a1322 100%);
 }
 
@@ -41,7 +42,7 @@ body.ss-public-login {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-family: "RechargeBd", sans-serif;
+  font-family: var(--public-font-display);
   font-size: clamp(1.05rem, 1.7vw, 1.3rem);
   letter-spacing: 0.03em;
   color: #f2f7ff;
@@ -118,7 +119,7 @@ body.ss-public-login {
   background: rgba(255, 255, 255, 0.04);
   color: #edf4ff;
   cursor: pointer;
-  font-family: "SuiGenerisRg", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--public-font-body);
 }
 
 .ss-auth-access-gate__toggle:hover,
@@ -155,7 +156,7 @@ body.ss-public-login {
 .ss-auth-access-gate__label {
   grid-column: 1 / -1;
   font-size: 0.68rem;
-  font-family: "SuiGenerisRg", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--public-font-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(206, 220, 243, 0.74);
@@ -168,7 +169,7 @@ body.ss-public-login {
   background: rgba(8, 13, 22, 0.82);
   color: #edf4ff;
   padding: 0 12px;
-  font-family: "SuiGenerisRg", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--public-font-body);
   font-size: 0.78rem;
 }
 
@@ -185,7 +186,7 @@ body.ss-public-login {
   border-radius: 11px;
   background: linear-gradient(165deg, rgba(41, 63, 95, 0.9), rgba(25, 39, 62, 0.92));
   color: #eef5ff;
-  font-family: "SuiGenerisRg", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--public-font-mono);
   font-size: 0.7rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;

@@ -392,8 +392,8 @@ test("static download route reuses access visuals, contains no secret, and expos
   assert.ok(fs.statSync(path.join(root, "assets/logos/studiologo3.webp")).size > 0);
   assert.match(html, /aria-modal="true"/); assert.match(html, /aria-live="polite"/); assert.match(html, /prefers-reduced-motion|studioapp-download\.css/);
   assert.match(html, /StudioApp version/); assert.match(html, /System compatibility/);
-  assert.match(sharedCss, /font-family:\s*"Sui Generis"/); assert.match(sharedCss, /font-family:\s*"Recharge"/);
-  assert.match(sharedCss, /SuiGeneris-Regular\.otf/); assert.match(sharedCss, /Recharge-Bold\.otf/);
+  assert.match(sharedCss, /--download-font-body:\s*var\(--public-font-body\)/); assert.match(sharedCss, /--download-font-display:\s*var\(--public-font-display\)/);
+  assert.match(sharedCss, /@import url\("\/css\/public-fonts\.css"\)/); assert.match(sharedCss, /--download-font-mono:\s*var\(--public-font-mono\)/);
   assert.match(sharedCss, /prefers-reduced-motion:\s*reduce/); assert.match(sharedCss, /forced-colors:\s*active/);
   assert.match(sharedCss, /font-size:\s*clamp\(2\.4rem,\s*4\.4vw,\s*3\.5rem\)/);
   assert.match(sharedCss, /@media \(max-width:\s*640px\)/); assert.match(css, /@media \(max-width:\s*520px\)/);

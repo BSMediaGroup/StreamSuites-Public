@@ -13,7 +13,8 @@ body {
   min-height: 100vh;
   background: var(--bg-root);
   color: var(--text-primary);
-  font-family: "SuiGenerisRg", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--public-font-body);
+  font-synthesis: none;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -96,7 +97,7 @@ body {
 
 .brand-title h1 {
   margin: 0;
-  font-family: "RechargeBd", sans-serif;
+  font-family: var(--public-font-display);
   font-size: 22px;
   letter-spacing: 0.04em;
 }
@@ -545,7 +546,7 @@ body {
 
 .title {
   font-size: 16px;
-  font-family: "RechargeBd", sans-serif;
+  font-family: var(--public-font-display);
   letter-spacing: 0.02em;
 }
 
@@ -979,7 +980,7 @@ body {
 }
 
 .detail-title {
-  font-family: "RechargeBd", sans-serif;
+  font-family: var(--public-font-display);
   font-size: 22px;
   margin: 0;
 }
@@ -1090,7 +1091,7 @@ body {
   border: 0;
   background: transparent;
   color: var(--text-secondary);
-  font-family: "SuiGenerisRg", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--public-font-body);
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1302,7 +1303,7 @@ body {
 }
 
 .pie-center .center-title {
-  font-family: "RechargeBd", sans-serif;
+  font-family: var(--public-font-display);
   font-size: 13px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1379,7 +1380,7 @@ body {
 }
 
 .bar-label {
-  font-family: "RechargeBd", sans-serif;
+  font-family: var(--public-font-display);
   font-size: 12px;
   letter-spacing: 0.05em;
   margin-bottom: 8px;
@@ -2100,7 +2101,7 @@ body.viz-expanded {
   color: var(--text-muted);
   line-height: 1.5;
   width: 100%;
-  font-family: "SuiGenerisRg", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--public-font-body);
 }
 
 .ss-legend-row { font-size: 0.84em; line-height: 1.45; }

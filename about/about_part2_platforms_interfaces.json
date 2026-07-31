@@ -1,21 +1,21 @@
 {
-  "lastUpdated": "2026-01-14",
+  "lastUpdated": "2026-07-31",
   "sections": [
     {
       "id": "platform-integrations-unifying-idea",
       "order": 15,
-      "title": "Platform Integrations — The Unifying Idea",
+      "title": "Provider Integrations at Mixed Maturity",
       "entries": [
         {
           "id": "platform-parity-concept",
           "order": 1,
           "consumer": {
-            "title": "A Unified Experience Across Platforms",
-            "body": "StreamSuites works across different livestream platforms without forcing them to behave the same. Each platform is respected for what it is, but the system still presents a unified experience to creators and viewers with common overlays, chat replay previews, and gallery navigation."
+            "title": "One Experience Without Pretending Every Provider Is the Same",
+            "body": "StreamSuites connects to livestream providers through the capabilities each provider actually supports. Labels remain explicit when a connection is available, partial, paused, credential-gated, scaffolded, or planned."
           },
           "developer": {
-            "title": "Three-Stage Platform Integration Pipeline",
-            "body": "Each platform integration follows the same conceptual pipeline even if implementation differs: ingest raw events (chat messages, joins, paid events where available), normalize them into StreamSuites’ internal event model, and emit deterministic exports for triggers, modules, telemetry, overlays, and public visibility. Replay and browser-source overlay shapes are defined even when a given platform’s ingestion is paused, which keeps dashboard and OBS views renderable without live sockets. This enables platform parity without pretending parity exists at the API level."
+            "title": "Capability Catalogs and Provider-Specific Contracts",
+            "body": "Runtime/Auth owns provider capability and integration state. Event normalization, public projections, destination metadata, and creator connection surfaces may share shapes, but provider APIs, permissions, quotas, and output support are not assumed to have parity. Clients render authoritative capability flags instead of inferring readiness."
           }
         }
       ]
@@ -23,18 +23,18 @@
     {
       "id": "rumble-sse",
       "order": 16,
-      "title": "Rumble — Primary Live Chat Ingestion (SSE-first)",
+      "title": "Live Chat and Event Ingestion",
       "entries": [
         {
           "id": "rumble-primary-platform",
           "order": 1,
           "consumer": {
-            "title": "The Most Mature Live Platform",
-            "body": "Rumble is the most mature live platform inside StreamSuites, with ingest paths and exports already shaping clips, polls, tallies, and public galleries. Runtime ingestion is currently paused for hardening, but the dashboard and public pages still render the latest exports."
+            "title": "Provider-Aware Chat Foundations",
+            "body": "Live chat, notices, clip requests, and engagement events can support StreamSuites modules where an authorized provider path is implemented, while unavailable paths stay visibly unavailable."
           },
           "developer": {
-            "title": "SSE-Preferred Ingestion with DOM/API Fallbacks",
-            "body": "Rumble chat ingestion is now multi-mode. SSE (Server-Sent Events) remains the preferred path, but the runtime automatically falls back to DOM-based collection or API polling when SSE is unavailable. Messages flow into the same normalized chat event model used by triggers, polls, tallies, and clip commands. The pipeline is quota-aware and integrated into runtime enforcement. Stable exports already exist for public galleries, dashboard data and signals, and module-specific snapshots; runtime ingest is temporarily paused while the multi-mode pipeline is hardened for routine use."
+            "title": "Runtime-Owned Workers and Normalization",
+            "body": "Runtime platform workers and provider services own implemented ingestion, normalization, redacted telemetry, quotas, and lifecycle control. Their current maturity varies by provider and credential posture. Public and production clients do not start duplicate workers or claim a provider is connected solely because a UI scaffold exists."
           }
         }
       ]
@@ -42,18 +42,18 @@
     {
       "id": "twitch-irc",
       "order": 17,
-      "title": "Twitch — IRC-Based Runtime Path",
+      "title": "Creator Connections and Destinations",
       "entries": [
         {
           "id": "twitch-careful-integration",
           "order": 1,
           "consumer": {
-            "title": "Careful and Deliberate Twitch Support",
-            "body": "Twitch support is being built carefully so it doesn’t become fragile or unpredictable. Dashboard previews exist, but Twitch remains a guarded rollout while exports and quotas settle."
+            "title": "Connections Stay Account-Owned",
+            "body": "Creator integrations and destinations belong to the signed-in creator and are shown only through authorized account surfaces."
           },
           "developer": {
-            "title": "IRC Ingestion with Parity-Oriented Exports",
-            "body": "Twitch ingestion is designed around IRC rather than EventSub at this stage. The runtime already includes connection logic, message parsing, and normalization drafts. Export shapes are being aligned to match Rumble-derived artifacts so dashboards, overlays, and public pages do not require platform-specific render logic. Missing pieces include quota parity, moderation signal depth, and richer metadata for triggers and future paid interactions. Twitch intentionally trails Rumble to avoid unstable surface promises."
+            "title": "Protected Credentials and Capability-Gated Use",
+            "body": "Runtime/Auth owns encrypted or provider-managed credentials, OAuth state, connection status, destination ownership, and safe capability metadata. Public pages never expose stream keys or tokens. Studio, StudioApp, and OBS receive only the scoped credentials or leases required for their implemented workflow."
           }
         }
       ]
@@ -61,18 +61,18 @@
     {
       "id": "youtube-scaffolded",
       "order": 18,
-      "title": "YouTube — Scaffolded, Export-First Design",
+      "title": "Browser Studio",
       "entries": [
         {
           "id": "youtube-foundation-only",
           "order": 1,
           "consumer": {
-            "title": "Foundation Without Reliance",
-            "body": "YouTube support exists as a foundation, but it’s not yet something creators should rely on."
+            "title": "Private Browser Production Rooms",
+            "body": "Browser Studio provides private rooms, guest staging, layouts, branding, browser sources, and direct browser media. It remains closed access and OFF AIR."
           },
           "developer": {
-            "title": "Scaffold-Level Integration Awaiting Stable Exports",
-            "body": "YouTube integration is currently scaffold-level. Chat polling or ingestion paths are drafted and message normalization schemas exist, but no production-grade export cadence is locked yet. The system is designed so YouTube can slot in once stable exports are ready, without requiring rewrites of dashboard or public page logic, and replay overlays can hydrate once exports exist. This is why YouTube is labeled scaffolded rather than partially functional."
+            "title": "Cloudflare RealtimeKit Media, Runtime-Owned Authority",
+            "body": "The React/TypeScript/Vite Studio consumes Runtime/Auth-owned sessions, room state, invitations, roles, permissions, participant credentials, destinations, branding, and chat state. Browser media connects directly to Cloudflare RealtimeKit. Runtime/Auth does not proxy media. Browser recording and broadcast output remain unimplemented; self-hosted LiveKit plus Egress is a later direction."
           }
         }
       ]
@@ -80,18 +80,18 @@
     {
       "id": "kick-scaffolded",
       "order": 18.5,
-      "title": "Kick — First-Class Scaffold With Parity Goals",
+      "title": "Native StudioApp",
       "entries": [
         {
           "id": "kick-foundation",
           "order": 1,
           "consumer": {
-            "title": "Kick Surfaces Are Visible and Read-Only",
-            "body": "Kick is now a first-class platform in the dashboard, mirroring YouTube and Twitch layouts while remaining read-only. Dedicated Kick views and settings rows signal parity intent without pretending live control exists, and the header mode badge clarifies when connected snapshots are available."
+            "title": "A Native Windows Production Workspace",
+            "body": "StudioApp is the Windows-first native StreamSuites studio for local capture, production, audio, recording, replay, and output foundations."
           },
           "developer": {
-            "title": "Scaffolded Integration Awaiting Runtime Exports",
-            "body": "Kick wiring is scaffolded to hydrate from runtime snapshots when available, reusing the same normalization and quota placeholder patterns as other chat platforms. Dashboard toggles stay disabled, routing remains static-first, and runtime exports from the authoritative repo will populate the new Kick view without enabling mutations. Hydration prefers shared/state/runtime_snapshot.json with docs/data fallbacks so static hosting stays intact."
+            "title": "WPF Shell and Supervised C++20 Media Engine",
+            "body": "StudioApp is not a WebView or wrapped site. Its C#/.NET/WPF shell owns UX, settings, API clients, orchestration, and engine supervision. The native C++20 engine owns local capture, Direct3D composition, WASAPI audio, encoding, recording, replay, and direct output. Runtime/Auth authorizes shared state and protected output leases without carrying media."
           }
         }
       ]
@@ -99,18 +99,18 @@
     {
       "id": "pilled-planned",
       "order": 18.6,
-      "title": "Pilled — Planned Ingest-Only Path",
+      "title": "StreamSuites Studio for OBS",
       "entries": [
         {
           "id": "pilled-roadmap",
           "order": 1,
           "consumer": {
-            "title": "Planned, Ingest-Only Visibility",
-            "body": "Pilled appears in the dashboard as a planned platform with a dedicated read-only view. It is labeled ingest-only and does not expose admin controls, keeping expectations clear for operators and viewers."
+            "title": "StreamSuites Inside an Existing OBS Workflow",
+            "body": "StreamSuites Studio for OBS is a separate plugin and integration for creators who continue using OBS. It does not replace OBS, Browser Studio, or StudioApp."
           },
           "developer": {
-            "title": "Reserved Export Slot Without Mutation",
-            "body": "Pilled is reserved as an ingest-only integration. Dashboard scaffolding is limited to snapshot rendering once runtime collectors export data. Switches are locked, telemetry is disabled by default, and all mutations remain off until the runtime path is implemented in the authoritative repository. Hydration will mirror Kick, preferring shared/state/runtime_snapshot.json when available."
+            "title": "OBS-Owned Media with Scoped Receiver Sessions",
+            "body": "Runtime/Auth brokers short-lived capability-scoped receiver authority. Cloudflare RealtimeKit guest tracks reach loopback-only OBS Browser Sources while OBS retains scenes, sources, mixing, composition, encoding, recording, and streaming. The plugin does not duplicate StudioApp's media engine and is not an OBS fork."
           }
         }
       ]
@@ -118,18 +118,18 @@
     {
       "id": "creator-parity-foundation",
       "order": 18.65,
-      "title": "Creator Dashboard Parity (Read-Only)",
+      "title": "Creator",
       "entries": [
         {
           "id": "creator-parity-inert",
           "order": 1,
           "consumer": {
-            "title": "Creators See Their Data, Not Controls",
-            "body": "Creator parity is being prepared as a read-only mode so creators can see their own status, platform readiness, and roadmap context without exposing admin controls or live mutations. The experience mirrors the admin dashboard layout but keeps buttons inert and clearly non-destructive."
+            "title": "Creator Configuration and Integrations",
+            "body": "Creator provides signed-in creators with account, integration, destination, and module configuration through implemented StreamSuites workflows."
           },
           "developer": {
-            "title": "Context-Aware Rendering Without Writes",
-            "body": "The dashboard now accepts a creator context (creatorId, permissions, platform scopes) so views can filter data and gate sections without enabling writes. Scaffolding is inert by design: state loading stays static-first, controls remain disabled, and platform views are marked for future scope-based visibility without altering hosting or runtime behavior."
+            "title": "Permission-Checked Runtime/Auth Client",
+            "body": "Creator consumes Runtime/Auth session, identity, role, tier, permission, integration, destination, and module APIs. It may perform implemented creator-scoped writes through those APIs, but it does not store canonical credentials or shared state independently."
           }
         }
       ]
@@ -137,18 +137,18 @@
     {
       "id": "admin-desktop-app",
       "order": 18.7,
-      "title": "Desktop Admin Application (Local, Active)",
+      "title": "Admin and Windows Operator Tools",
       "entries": [
         {
           "id": "admin-desktop-contract",
           "order": 1,
           "consumer": {
-            "title": "Local, Authoritative Admin UI",
-            "body": "A Windows-first desktop Admin application is actively being built to provide a local, authoritative control surface for StreamSuites operators. It mirrors the dashboard’s admin views while remaining safe, explicit, and offline-capable, and adds inline log viewing for multiple managed runtimes."
+            "title": "Protected Operational Surfaces",
+            "body": "Administrative and Windows operator tools provide privileged visibility and controlled operations for authorized StreamSuites operators."
           },
           "developer": {
-            "title": "Active Development and Parity Targets",
-            "body": "The Desktop Admin EXE (Visual Studio 2026 target) is under active development. It reads runtime state directly from disk, writes validated configuration locally, and triggers controlled runtime reloads without bypassing safety gates. The inline log viewer is read-only (not a terminal emulator), with an “Open in external terminal” action for interactive troubleshooting. Windows is the initial target, with parity goals for macOS and Linux. No remote bindings or network control paths are assumed."
+            "title": "Runtime/Auth-Enforced Administration",
+            "body": "Dashboard/Admin writes use Runtime/Auth and remain role- and permission-checked. Runtime-owned Windows desktop tools may access local operator state under their documented boundaries. Public presentation does not grant administrative authority or imply that a static page is the backend."
           }
         }
       ]
@@ -156,18 +156,18 @@
     {
       "id": "discord-control-plane",
       "order": 19,
-      "title": "Discord — Control Plane, Not a Stream Platform",
+      "title": "Control and Notification Surfaces",
       "entries": [
         {
           "id": "discord-not-chat-ingestion",
           "order": 1,
           "consumer": {
-            "title": "Operational Visibility and Control",
-            "body": "Discord is not treated as just another chat source. It’s a place for operators to observe, receive notifications, and eventually issue safe commands."
+            "title": "Operational Signals Stay Separate from Production Media",
+            "body": "Notifications, status, and operational controls can support the suite without becoming a media path or competing production application."
           },
           "developer": {
-            "title": "Separate Runtime Process and Responsibility",
-            "body": "Discord runs as a separate runtime process and is not intended to ingest livestream chat, run triggers, or execute modules. Intended responsibilities include heartbeat and health notifications, quota warnings, clip published alerts, and operational summaries. This separation ensures Discord outages do not affect livestream automation and minimizes privilege escalation risks. Discord is a control surface, not a data plane."
+            "title": "Separate Lifecycles and Least Privilege",
+            "body": "Control-plane, alert, and notification workers retain separate bounded lifecycles and scoped authority. They do not ingest or transport Studio, StudioApp, or OBS video and audio, and their failure must not silently create duplicate workers or privileged fallback behavior."
           }
         }
       ]
@@ -175,18 +175,18 @@
     {
       "id": "twitter-deferred",
       "order": 20,
-      "title": "Twitter / X — Deferred by Design",
+      "title": "Planned Capabilities Stay Planned",
       "entries": [
         {
           "id": "twitter-concept-only",
           "order": 1,
           "consumer": {
-            "title": "A Future Idea, Not a Current Feature",
-            "body": "Twitter/X integration is a future idea, not a current feature."
+            "title": "No Placeholder Is a Promise",
+            "body": "A named provider or capability is not presented as usable until its current authoritative contract says it is available."
           },
           "developer": {
-            "title": "No Scaffolding or Exports Yet",
-            "body": "No runtime scaffolding or exports exist for Twitter/X. The dashboard only reserves conceptual placeholders. Intended future use cases include mention ingestion, DM-based commands, and announcement broadcasting. Integration remains deferred until platform rules stabilize and enforcement logic is clear."
+            "title": "Fail Closed on Unknown Capability",
+            "body": "Clients distinguish unavailable, planned, scaffolded, credential-gated, degraded, and ready states. Unknown or missing capability data fails closed. UI placeholders do not invent provider APIs, output support, connection status, or release commitments."
           }
         }
       ]
@@ -194,18 +194,18 @@
     {
       "id": "public-facing-pages",
       "order": 21,
-      "title": "Public-Facing Pages — Runtime Artifacts",
+      "title": "Public Experiences",
       "entries": [
         {
           "id": "public-pages-artifacts",
           "order": 1,
           "consumer": {
-            "title": "Real Outputs, Not Just Information",
-            "body": "The public pages aren’t just informational. They show real outputs from the system such as clips, polls, tallies, scoreboards, and the staged chat replay previews that mirror dashboard surfaces."
+            "title": "Profiles, Discovery, and Published Artifacts",
+            "body": "Public brings together creator profiles, eligible live discovery, clips, polls, wheels, tallies, scores, progression, and other deliberately published audience experiences."
           },
           "developer": {
-            "title": "Static, Read-Only, Export-Driven Pages",
-            "body": "Public pages are static, read-only, runtime-driven, and export-backed. They make no live API calls, maintain no session state, and never mutate runtime data. They are safe to host anywhere. Public pages include galleries, per-entity detail pages, changelog, roadmap, about, and legal surfaces, all consuming the same exports as the dashboard filtered by visibility. OBS/browser-source overlays and pop-out replay windows are documented alongside these pages so live scenes can reference the same JSON once hydration lands."
+            "title": "Read-Oriented Runtime/Auth Client",
+            "body": "Public uses existing public APIs, authorized sessions where required, and runtime-export fallbacks. It preserves slugs, hashes, queries, deep links, route aliases, loading and empty states, and public-visibility rules. It does not create canonical account, live-status, profile, or module state."
           }
         }
       ]
@@ -213,18 +213,18 @@
     {
       "id": "about-pages",
       "order": 22,
-      "title": "The About Pages",
+      "title": "The About Product Story",
       "entries": [
         {
           "id": "about-conceptual-heart",
           "order": 1,
           "consumer": {
-            "title": "Explaining the System as a Whole",
-            "body": "The About section explains what StreamSuites is, what problems it solves, and how all the moving parts fit together, alongside links back to the creator dashboard home for real examples."
+            "title": "The System Explained as a Whole",
+            "body": "This page explains how the production products, shared authority, engagement tools, and wider product ecosystem fit together."
           },
           "developer": {
-            "title": "Centralized, Structured About System",
-            "body": "A centralized About page already exists with placeholders for expanded partials and an intent to break content into structured sections rather than a monolithic block. The About system is intended to cover the entire project scope, explain philosophy rather than just features, and remain accurate as modules evolve. Centralizing About content into JSON is the correct architectural move, and recent creator dashboard work (home.html) is reflected here without duplicating markup."
+            "title": "Editorial Overview with Structured Detail",
+            "body": "The static editorial sections establish the current Studio-first hierarchy and media boundaries. The manifest-driven records beneath them keep consumer and developer explanations together, preserve stable anchors, and provide expandable technical constraints without duplicating renderer logic."
           }
         }
       ]
@@ -232,18 +232,18 @@
     {
       "id": "dashboard-about",
       "order": 23,
-      "title": "Dashboard About Page",
+      "title": "Technical Context Across Clients",
       "entries": [
         {
           "id": "developer-first-about",
           "order": 1,
           "consumer": {
-            "title": "Not for Casual Visitors",
-            "body": "The dashboard’s About page is not meant for casual visitors."
+            "title": "Technical Depth When It Is Useful",
+            "body": "General readers can understand the product story first, then reveal implementation details when they want the deeper architecture."
           },
           "developer": {
-            "title": "Canonical Technical Narrative",
-            "body": "The dashboard About page shows developer and technical entries only. It assumes familiarity with schemas, runtimes, exports, and constraints and acts as living technical documentation during alpha and beta. It serves as the canonical technical narrative, while public pages act as explanatory overlays."
+            "title": "Shared Structured Sources, Audience-Specific Rendering",
+            "body": "Public renders consumer text with collapsed developer details. Other clients may render the same source material differently for their audience, but no presentation should contradict current Runtime/Auth or product-repository authority."
           }
         }
       ]
@@ -251,18 +251,18 @@
     {
       "id": "documentation-section",
       "order": 24,
-      "title": "Documentation Section",
+      "title": "Documentation",
       "entries": [
         {
           "id": "docs-future-manual",
           "order": 1,
           "consumer": {
-            "title": "A Future User Manual",
-            "body": "The docs section will eventually explain how to use StreamSuites properly."
+            "title": "Shipped Reality and Operator Guidance",
+            "body": "StreamSuites Docs explains implemented behavior, constraints, setup, and operations as the suite evolves."
           },
           "developer": {
-            "title": "Phased Documentation Strategy",
-            "body": "Documentation is explicitly not final in alpha. Planned phases include: Alpha for philosophy, scope, constraints, and architecture; Beta for user workflows and creator onboarding; RC for operator manuals, recovery procedures, and deployment guides; and Stable for full reference documentation. Docs will be structured, versioned, slower-changing than code, and aligned to release milestones."
+            "title": "Documentation Follows Implemented Contracts",
+            "body": "Docs is a client of shipped reality, not a roadmap authority. Product and Runtime repositories remain authoritative for current implementation and validation. Documentation must not turn planned LiveKit/Egress work, deferred native capabilities, or incomplete plugin features into current claims."
           }
         }
       ]
@@ -276,12 +276,12 @@
           "id": "dual-layer-model",
           "order": 1,
           "consumer": {
-            "title": "Clarity and Trust Through Transparency",
-            "body": "Seeing both consumer-friendly explanations and developer details builds trust and clarity."
+            "title": "Clarity Without Hiding the Boundaries",
+            "body": "A readable explanation and an optional technical explanation can stay aligned as the products change."
           },
           "developer": {
-            "title": "Preventing Drift and Preserving Accuracy",
-            "body": "Keeping consumer and developer explanations together prevents drift, ensures accuracy, allows public transparency without overwhelming casual readers, and lets dashboards selectively render technical depth. This dual-layer model mirrors how the runtime separates intent from execution, how triggers emit action descriptors without executing them, and how public pages show artifacts while dashboards show mechanics."
+            "title": "One Record, Stable Anchors, Less Drift",
+            "body": "Each entry keeps consumer and developer text in the same ordered JSON record. Stable section and entry identifiers preserve deep links, while the Public renderer keeps technical details collapsed by default and accessible through explicit controls."
           }
         }
       ]

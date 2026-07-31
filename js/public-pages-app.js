@@ -273,7 +273,7 @@
       aliases: ["/home", "/home/", "/home.html", "/media", "/media/", "/media.html"],
       shellKind: "media",
       activeHref: "/home",
-      topbarLabel: "Media Home",
+      topbarLabel: "Public Dashboard",
       searchPlaceholder: "Search clips, polls, wheels, tallies",
       filterMode: "multi",
       filtersCollapsed: true,
@@ -2770,21 +2770,21 @@
 
     host.appendChild(
       buildDashboardHero({
-        eyebrow: "Viewer dashboard",
-        title: "Media home",
-        body: "One public dashboard for clips, polls, wheels, tallies, live discovery, and community surfaces. Wheel artifacts now render from the authoritative runtime export, keep list view as an internal wheel presentation mode, and reserve Leaderboards as the future standalone scoring IA.",
+        eyebrow: "Connected public experiences",
+        title: "Public Dashboard",
+        body: "Explore the public profiles, clips, polls, wheels, tallies, scoreboards, live discovery, and community surfaces connected around the StreamSuites production family. Every item remains hydrated from its established public API or Runtime-published projection.",
         highlights: [
-          "Public-facing shell consolidated",
+          "Runtime/Auth-owned public state",
           `${formatNumber(liveCount)} live creator${liveCount === 1 ? "" : "s"} now`,
           `${formatNumber(memberCount)} listed member${memberCount === 1 ? "" : "s"}`
         ],
         actions: [
-          { label: "Browse wheels", href: "/wheels", emphasis: "strong" },
-          { label: "Open community", href: "/community" }
+          { label: "Open Browser Studio", href: "https://studio.streamsuites.app", emphasis: "strong" },
+          { label: "Browse public media", href: "/clips" }
         ],
         stats: [
           { label: "Wheels", value: formatNumber(wheels.length), note: "Published artifacts" },
-          { label: "Leaderboards", value: "Scaffold", note: "Reserved route" },
+          { label: "Scoreboards", value: formatNumber(scoreboards.length), note: "Published artifacts" },
           { label: "Clips", value: formatNumber(clips.length), note: "Public artifacts" },
           { label: "Notices", value: formatNumber(noticeCount), note: "Community updates" }
         ]

@@ -1,18 +1,4 @@
-@font-face {
-  font-family: "Recharge";
-  src: url("/assets/fonts/Recharge-Bold.otf") format("opentype");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Sui Generis";
-  src: url("/assets/fonts/SuiGeneris-Regular.otf") format("opentype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
+@import url("/css/public-fonts.css");
 
 :root {
   color-scheme: dark;
@@ -38,8 +24,9 @@
   --download-section-space: clamp(64px, 8vw, 104px);
   --download-card-radius: 14px;
   --download-control-radius: 8px;
-  --download-font-display: "Recharge", "Arial Narrow", sans-serif;
-  --download-font-body: "Sui Generis", Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --download-font-display: var(--public-font-display);
+  --download-font-body: var(--public-font-body);
+  --download-font-mono: var(--public-font-mono);
 }
 
 *,
@@ -65,6 +52,7 @@ body.download-surface {
     var(--download-page-bg);
   color: var(--download-text);
   font-family: var(--download-font-body);
+  font-synthesis: none;
   font-size: 15px;
   line-height: 1.6;
   text-rendering: optimizeLegibility;
@@ -104,6 +92,17 @@ body.download-surface.modal-open {
   font-family: var(--download-font-display);
   font-weight: 700;
   letter-spacing: 0.015em;
+}
+
+.download-surface code,
+.download-surface kbd,
+.download-surface samp,
+.download-status,
+.download-eyebrow,
+.release-metadata,
+.release-fact,
+.extension-count {
+  font-family: var(--download-font-mono);
 }
 
 .download-surface :focus-visible {

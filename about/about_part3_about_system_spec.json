@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-01-14",
+  "lastUpdated": "2026-07-31",
   "sections": [
     {
       "id": "about-design-goals",
@@ -15,7 +15,7 @@
           },
           "developer": {
             "title": "Centralized, Accurate, Dual-Audience Documentation",
-            "body": "The About system must cover the entire project scope including the runtime, the static dashboard, and companion interface surfaces (including the LiveChat/ChatReplay Launcher); remain accurate as features evolve; support dual-audience reading; avoid duplication across public pages, dashboard pages, and docs; and be centrally managed so updates are not scattered across HTML files. It also needs to restate system guarantees such as deterministic exports, read-only dashboards, and the line between replay scaffolds and live ingestion. This disqualifies hardcoded content and justifies a single JSON source of truth."
+            "body": "The About system must cover Browser Studio, native StudioApp, StreamSuites Studio for OBS, Runtime/Auth authority, the engagement foundation, and focused client surfaces; remain accurate as products evolve; support dual-audience reading; and avoid duplicated technical narratives. It restates the three media boundaries, the distinction between authoritative state and public projections, and the current Alpha posture without converting planned capabilities into present claims."
           }
         }
       ]
@@ -34,7 +34,7 @@
           },
           "developer": {
             "title": "Content as Data, Not Markup",
-            "body": "From an architectural standpoint, changelog, roadmap, and About content become data rather than markup. The UI becomes a renderer instead of an author, versioning and diffing become trivial, and future localization or audience filtering becomes possible. This mirrors how the runtime exports data and how dashboard and public pages render it."
+            "body": "The ordered JSON sources keep reusable product explanations and technical constraints separate from the renderer. The editorial page can establish hierarchy visually while the structured record preserves stable anchors, focused diffs, dual-audience rendering, and consistent explanations across authorized clients."
           }
         }
       ]
@@ -53,7 +53,7 @@
           },
           "developer": {
             "title": "Versioned Root Object with Ordered Sections",
-            "body": "The About JSON uses a top-level object containing version, lastUpdated, and an ordered sections array. The version matches runtime and dashboard versions, lastUpdated is informational, and sections is an ordered array rather than an object to preserve intentional narrative flow."
+            "body": "Each About source uses a top-level object with lastUpdated and an ordered sections array. Runtime/Auth version and build are hydrated separately from the established version contract; About content does not allocate or hardcode a competing system version. Ordered arrays preserve intentional narrative flow."
           }
         }
       ]
@@ -72,7 +72,7 @@
           },
           "developer": {
             "title": "Stable Section Identifiers and Ordered Narrative",
-            "body": "Each section has a stable id, explicit order, human-readable title, optional summary, and an entries array. Sections represent conceptual pillars such as architecture, runtime engine, dashboard UI, public interfaces, platform integrations, modules, and release philosophy."
+            "body": "Each section has a stable id, explicit order, human-readable title, and an entries array. Sections represent conceptual pillars such as the production family, authority and media boundaries, public interfaces, provider posture, connected modules, and release philosophy."
           }
         }
       ]
@@ -129,7 +129,7 @@
           },
           "developer": {
             "title": "Technical Accuracy Without Speculation",
-            "body": "Developer entries may reference repositories, folders, schemas, lifecycle rules, and architectural decisions. They may describe constraints and intentional omissions, but must remain factual, current, and avoid speculative promises. Replay versus live capabilities must be called out explicitly so deterministic, read-only behavior stays clear."
+            "body": "Developer entries may reference repositories, schemas, lifecycle rules, and architectural decisions. They may describe constraints and intentional omissions, but must remain factual, current, and avoid speculative promises. Browser, native, and OBS media ownership must remain explicit, and planned or scaffolded capability must not be described as shipped."
           }
         }
       ]
@@ -148,7 +148,7 @@
           },
           "developer": {
             "title": "Enforced Rendering Rules",
-            "body": "On the public About page, section titles and consumer entries are always visible, while developer entries are collapsed by default and expandable. On the dashboard About page, only developer entries are rendered and no collapse logic is required. This prevents duplication, drift, and divergent narratives while using a single JSON source."
+            "body": "On the public About page, section titles and consumer entries are always visible while developer entries are collapsed by default and expandable. Other authorized clients may render the same source differently for their audience. Every renderer must preserve the meaning, stable identifiers, and current authority boundaries."
           }
         }
       ]
@@ -167,7 +167,7 @@
           },
           "developer": {
             "title": "Client-Side Expand/Collapse Rules",
-            "body": "On public pages, consumer entries are always visible while developer entries are hidden by default and revealed via client-side expand/collapse controls with accessible labels. No state persistence is required. The dashboard does not implement collapse behavior."
+            "body": "On Public, consumer entries are always visible while developer entries are hidden by default and revealed through client-side controls with accessible labels and accurate expanded state. No state persistence is required."
           }
         }
       ]
@@ -224,7 +224,7 @@
           },
           "developer": {
             "title": "Scalable, Evolvable Content Model",
-            "body": "This model survives alpha through beta and release because content is data rather than markup. Entries can be reordered, expanded, deprecated, or annotated. Developer entries can evolve without breaking consumer understanding, and the dashboard always shows the most precise truth available as contracts become stricter."
+            "body": "This model can evolve through later release stages because entries remain ordered data with stable identifiers. Content can be revised or deprecated as contracts change, while Runtime/Auth and individual product repositories remain the authoritative source for implementation and validation truth."
           }
         }
       ]

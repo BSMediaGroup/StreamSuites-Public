@@ -194,7 +194,7 @@
 .donate-page .impact-amount {
   margin: 0;
   font-size: 1.3rem;
-  font-family: "RechargeBd", sans-serif;
+  font-family: var(--public-font-display);
   letter-spacing: 0.04em;
   color: #edf2ff;
 }

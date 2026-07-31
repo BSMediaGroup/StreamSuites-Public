@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<!-- StreamSuites™ — Public About Page (JSON-driven) -->
+<!-- StreamSuites™ — Studio-first public product story (JSON-backed details) -->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>About StreamSuites™</title>
-  <meta name="description" content="Canonical About content for StreamSuites, rendered directly from JSON with manifest-defined ordering." />
+  <meta name="description" content="How StreamSuites connects Browser Studio, native StudioApp, an OBS integration, and creator tools through one shared Runtime/Auth authority." />
   <link rel="canonical" href="https://streamsuites.app/about.html" />
   <meta property="og:title" content="About StreamSuites™" />
-  <meta property="og:description" content="Canonical About content for StreamSuites, rendered directly from JSON with manifest-defined ordering." />
+  <meta property="og:description" content="A connected livestream-production suite for browser, native Windows, OBS, and the audience around every show." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://streamsuites.app/about.html" />
   <meta property="og:image" content="/assets/backgrounds/seoshare.jpg" />
@@ -19,17 +19,14 @@
   <link rel="stylesheet" href="/css/public-pages-v2.css" />
   <link rel='stylesheet' href='/css/status-widget.css' />
 </head>
-<body>
+<body class="public-about-page">
+  <a class="public-skip-link" href="#main">Skip to content</a>
   <div class="public-bg" aria-hidden="true"></div>
   <div class="public-surface">
     <div class="public-shell">
-      <header class="public-topbar">
-        <a class="public-brand" href="/">
-          <img src="/assets/logos/logo.png" alt="StreamSuites" />
-          <div>
-            <h1>StreamSuites™</h1>
-            <p class="brand-subtitle">Public surface</p>
-          </div>
+      <header class="public-topbar public-topbar--studio">
+        <a class="public-brand public-brand--wordmark" href="/">
+          <img src="/assets/logos/sswordmarktm.webp" alt="StreamSuites™" />
         </a>
         <div class="public-nav-wrapper">
           <input type="checkbox" id="public-nav-toggle" class="nav-toggle" aria-label="Toggle navigation" />
@@ -42,59 +39,186 @@
           </label>
           <div class="public-nav">
             <span class="version-pill version-badge">Loading version…</span>
-            <a href="/about.html">About</a>
-            <a href="/tools.html">Tools</a>
+            <a href="https://studio.streamsuites.app">Browser Studio</a>
+            <a href="/downloads/studioapp/">StudioApp</a>
+            <a href="/downloads/obs-plugin/">Studio for OBS</a>
+            <a href="/home.html">Public dashboard</a>
             <a href="/support.html">Support</a>
-            <a href="/privacy.html">Privacy</a>
-            <a href="/changelog.html">Changelog</a>
-            <a href="/accessibility.html">Accessibility</a>
           </div>
         </div>
       </header>
 
-      <section class="public-hero public-glass-panel">
-        <div class="section-heading">
-          <h2>About StreamSuites™</h2>
-          <span class="public-badge">JSON-driven</span>
-        </div>
-        <p>
-          This page renders the canonical About record for StreamSuites directly from
-          <code>/about/about.manifest.json</code> and its referenced sources so public visitors and dashboard users see the same ordered content.
-        </p>
-        <p class="muted">
-          Consumer-friendly entries are always visible. Technical entries start collapsed with accessible toggles to reveal the developer view when needed.
-        </p>
-        <div class="ss-meta-row public-about-meta">
-          <span><strong>Version:</strong> <span id="public-about-version-meta">Loading…</span></span>
-          <span aria-hidden="true">•</span>
-          <span><strong>Build:</strong> <span id="public-about-build-meta">Loading…</span></span>
-          <span aria-hidden="true">•</span>
-          <span><strong>Last updated:</strong> <span id="public-about-updated-meta">Loading…</span></span>
-          <span aria-hidden="true">•</span>
-          <span><strong>Owner:</strong> <span id="public-about-owner-meta">Loading…</span></span>
-          <span aria-hidden="true">•</span>
-          <span><strong>Copyright:</strong> <span id="public-about-copyright-meta">Loading…</span></span>
-        </div>
-      </section>
+      <main id="main" class="public-about-story">
+        <section class="public-about-hero">
+          <div class="public-about-hero__copy">
+            <p class="public-story-eyebrow">One suite · purpose-built production surfaces</p>
+            <h1>Production at the center.<br /><span>Everything connected.</span></h1>
+            <p class="public-about-hero__lede">
+              StreamSuites is a connected livestream-production suite built around Browser Studio,
+              native StudioApp, and an OBS integration—with automation, engagement, alerts, and public
+              experiences supporting the show.
+            </p>
+            <div class="public-story-actions">
+              <a class="public-story-button public-story-button--primary" href="https://studio.streamsuites.app">Open Browser Studio <span aria-hidden="true">↗</span></a>
+              <a class="public-story-button" href="/downloads/studioapp/">Explore StudioApp</a>
+            </div>
+            <div class="public-story-principles" aria-label="Product principles">
+              <span>Active Alpha</span>
+              <span>Runtime/Auth authority</span>
+              <span>Product-owned media</span>
+            </div>
+          </div>
+          <div class="public-about-hero__system" aria-label="StreamSuites product family">
+            <div class="public-story-orbit public-story-orbit--browser">
+              <small>Browser media</small>
+              <strong>Studio</strong>
+              <span>Cloudflare RealtimeKit</span>
+            </div>
+            <div class="public-story-orbit public-story-orbit--native">
+              <small>Native media</small>
+              <strong>StudioApp</strong>
+              <span>Supervised C++ engine</span>
+            </div>
+            <div class="public-story-orbit public-story-orbit--obs">
+              <small>OBS media</small>
+              <strong>Studio for OBS</strong>
+              <span>OBS-owned pipeline</span>
+            </div>
+            <div class="public-story-core">
+              <span aria-hidden="true">S</span>
+              <small>Shared authority</small>
+              <strong>Runtime / Auth</strong>
+              <p>Identity · permissions · rooms · destinations · shared state</p>
+            </div>
+          </div>
+        </section>
 
-      <section class="public-about-shell" aria-label="About details">
-        <div id="public-about-errors"></div>
-        <div id="public-about-sections" class="public-about-sections"></div>
-      </section>
+        <section class="public-story-section" aria-labelledby="about-products-title">
+          <div class="public-story-heading">
+            <p class="public-story-eyebrow">The production family</p>
+            <h2 id="about-products-title">Three ways into the control room.</h2>
+            <p>Each product has a distinct media architecture. They share authoritative identity and state without forcing media through the Python runtime.</p>
+          </div>
+          <div class="public-story-product-grid">
+            <article class="public-story-product public-story-product--browser">
+              <div><span>01</span><small>Closed access</small></div>
+              <h3>Browser Studio</h3>
+              <p>Private Runtime-backed rooms, guests, layouts, branding, and direct browser media through Cloudflare RealtimeKit.</p>
+              <ul><li>Browser-native, not a wrapper</li><li>OFF AIR; recording and output are not shipped</li><li>Runtime-owned room access and permissions</li></ul>
+              <a href="https://studio.streamsuites.app">Open Studio ↗</a>
+            </article>
+            <article class="public-story-product public-story-product--native">
+              <div><span>02</span><small>Windows Alpha</small></div>
+              <h3>StudioApp</h3>
+              <p>A native C#/.NET/WPF production shell supervising a C++20 engine for local capture, composition, audio, recording, replay, and output foundations.</p>
+              <ul><li>Native Windows—not a WebView</li><li>Local media remains engine-owned</li><li>Approved-tester download stays gated</li></ul>
+              <a href="/downloads/studioapp/">View StudioApp ↗</a>
+            </article>
+            <article class="public-story-product public-story-product--obs">
+              <div><span>03</span><small>In development</small></div>
+              <h3>Studio for OBS</h3>
+              <p>A supported plugin and integration path for StreamSuites rooms, guest receiver foundations, and control surfaces inside existing OBS workflows.</p>
+              <ul><li>OBS remains the media owner</li><li>Not an OBS fork or replacement</li><li>No StudioApp engine duplication</li></ul>
+              <a href="/downloads/obs-plugin/">View integration ↗</a>
+            </article>
+          </div>
+        </section>
 
-      <footer class="public-footer">
+        <section class="public-story-section public-story-section--split" aria-labelledby="about-authority-title">
+          <div class="public-story-heading">
+            <p class="public-story-eyebrow">Architecture with boundaries</p>
+            <h2 id="about-authority-title">One authority. Separate media paths.</h2>
+          </div>
+          <div class="public-story-prose">
+            <p>Runtime/Auth is the canonical source for accounts, sessions, roles, permissions, rooms, invitations, credentials, destinations, alerts, automation, shared state, exports, and versioning.</p>
+            <p>It coordinates the suite, but it does not carry Browser Studio, StudioApp, or OBS media. Each production surface keeps its own appropriate media architecture and lifecycle.</p>
+            <div class="public-story-boundaries">
+              <span><b>Browser</b> Direct browser media</span>
+              <span><b>Windows</b> Native engine media</span>
+              <span><b>OBS</b> OBS-owned media</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="public-story-section" aria-labelledby="about-capabilities-title">
+          <div class="public-story-heading">
+            <p class="public-story-eyebrow">Connected around the show</p>
+            <h2 id="about-capabilities-title">The engagement foundation still matters.</h2>
+            <p>StreamSuites began with automation and audience tools. Those capabilities remain first-class modules, now connected around the production workflow instead of defining the product alone.</p>
+          </div>
+          <div class="public-story-capability-grid">
+            <a href="/live"><span>01</span><strong>Live and community</strong><small>Eligible creators, public identity, current live state</small></a>
+            <a href="/clips"><span>02</span><strong>Clips</strong><small>Runtime-published creator media</small></a>
+            <a href="/polls"><span>03</span><strong>Polls</strong><small>Published audience questions and results</small></a>
+            <a href="/wheels"><span>04</span><strong>Wheels</strong><small>Interactive artifacts and public galleries</small></a>
+            <a href="/tallies"><span>05</span><strong>Tallies</strong><small>Published totals and detail views</small></a>
+            <a href="/leaderboards"><span>06</span><strong>Progression</strong><small>Profiles, XP, and leaderboards</small></a>
+          </div>
+        </section>
+
+        <section class="public-story-section public-story-section--ecosystem" aria-labelledby="about-ecosystem-title">
+          <div class="public-story-heading">
+            <p class="public-story-eyebrow">A wider product system</p>
+            <h2 id="about-ecosystem-title">Focused clients. Shared truth.</h2>
+            <p>Public, Creator, Admin, Developer, Docs, and FindMeHere each serve a specific audience while Runtime/Auth remains authoritative underneath.</p>
+          </div>
+          <div class="public-story-surface-list">
+            <a href="/home.html"><strong>Public</strong><span>Public profiles and artifacts</span><b>↗</b></a>
+            <a href="https://creator.streamsuites.app"><strong>Creator</strong><span>Configuration and integrations</span><b>↗</b></a>
+            <a href="https://admin.streamsuites.app"><strong>Admin</strong><span>Privileged operations through Runtime/Auth</span><b>↗</b></a>
+            <a href="https://console.streamsuites.app"><strong>Developer</strong><span>Developer console and feedback</span><b>↗</b></a>
+            <a href="https://docs.streamsuites.app"><strong>Docs</strong><span>Shipped reality and operator guidance</span><b>↗</b></a>
+            <a href="https://findmehere.live"><strong>FindMeHere</strong><span>Eligible creator discovery</span><b>↗</b></a>
+          </div>
+        </section>
+
+        <section class="public-about-record" aria-labelledby="about-record-title">
+          <div class="public-story-heading public-story-heading--record">
+            <p class="public-story-eyebrow">Living product record</p>
+            <h2 id="about-record-title">Current context, with technical depth on demand.</h2>
+            <p>The structured About sources keep general explanations and expandable implementation constraints together in manifest-defined order.</p>
+          </div>
+          <div class="ss-meta-row public-about-meta">
+            <span><strong>Version:</strong> <span id="public-about-version-meta">Loading…</span></span>
+            <span aria-hidden="true">•</span>
+            <span><strong>Build:</strong> <span id="public-about-build-meta">Loading…</span></span>
+            <span aria-hidden="true">•</span>
+            <span><strong>Last updated:</strong> <span id="public-about-updated-meta">Loading…</span></span>
+            <span aria-hidden="true">•</span>
+            <span><strong>Owner:</strong> <span id="public-about-owner-meta">Loading…</span></span>
+            <span aria-hidden="true">•</span>
+            <span><strong>Copyright:</strong> <span id="public-about-copyright-meta">Loading…</span></span>
+          </div>
+          <div class="public-about-shell" aria-label="About details">
+            <div id="public-about-errors"></div>
+            <div id="public-about-sections" class="public-about-sections"></div>
+          </div>
+        </section>
+
+        <section class="public-story-alpha" aria-labelledby="about-alpha-title">
+          <span aria-hidden="true">α</span>
+          <div>
+            <p class="public-story-eyebrow">Current development posture</p>
+            <h2 id="about-alpha-title">An active Alpha, presented without pretending otherwise.</h2>
+            <p>Products are at different implementation stages. Current product pages, access gates, and Runtime/Auth metadata remain authoritative for capability and availability.</p>
+          </div>
+          <a class="public-story-button public-story-button--primary" href="/">Return to the product overview</a>
+        </section>
+      </main>
+
+      <footer class="public-footer public-footer--studio">
         <div>
           <span class="footer-version">Version</span>
-          <span class="footer-copyright">©</span>
+          <span class="footer-copyright">© 2026 Brainstream Media Group</span>
         </div>
         <nav aria-label="Public footer navigation">
           <a href="/about.html">About</a>
-          <a href="/tools.html">Tools</a>
           <a href="/support.html">Support</a>
-          <a href="/donate.html">Donate</a>
           <a href="/privacy.html">Privacy</a>
-          <a href="/changelog.html">Changelog</a>
+          <a href="/terms.html">Terms</a>
+          <a href="/changelog">Changelog</a>
           <a href="/accessibility.html">Accessibility</a>
+          <a href="https://streamsuites.statuspage.io/" target="_blank" rel="noopener noreferrer">Status</a>
         </nav>
       </footer>
     </div>

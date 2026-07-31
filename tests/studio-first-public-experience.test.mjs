@@ -1,0 +1,160 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+
+const root = process.cwd();
+const read = (relative) => fs.readFileSync(path.join(root, relative), "utf8");
+const exists = (relative) => fs.existsSync(path.join(root, relative));
+
+test("production landing is Studio-first and preserves the production access contracts", () => {
+  const html = read("index.html");
+  const client = read("js/studio-first-landing.js");
+  const css = read("css/studio-first-landing.css");
+
+  assert.match(html, /StreamSuites Studio/);
+  assert.match(html, /StreamSuites StudioApp/);
+  assert.match(html, /StreamSuites Studio for OBS/);
+  assert.match(html, /https:\/\/studio\.streamsuites\.app/);
+  assert.match(html, /\/downloads\/studioapp\//);
+  assert.match(html, /\/downloads\/obs-plugin\//);
+  assert.match(html, /Cloudflare RealtimeKit/);
+  assert.match(html, /supervised native C\+\+ media engine|supervising a C\+\+20 engine/i);
+  assert.match(html, /OBS remains the media owner|OBS retains its media pipeline/i);
+  assert.match(html, /Runtime\/Auth/);
+  assert.match(html, /not a WebView/i);
+  assert.match(html, /not an OBS fork/i);
+  assert.match(html, /OFF AIR/);
+  assert.match(html, /broadcast output (?:remains unimplemented|are not shipped)/i);
+  assert.doesNotMatch(html, /broadcast-grade|generally available/i);
+
+  for (const hook of [
+    "landing-lockout-banner",
+    "auth-modal",
+    "data-auth-trigger=\"login\"",
+    "data-auth-oauth=\"google\"",
+    "data-auth-oauth=\"github\"",
+    "data-auth-oauth=\"x\"",
+    "data-auth-oauth=\"discord\"",
+    "data-auth-oauth=\"twitch\"",
+    "data-auth-turnstile-panel",
+    "data-auth-access-gate",
+  ]) {
+    assert.match(html, new RegExp(hook));
+  }
+
+  for (const contract of [
+    "/auth/access-state",
+    "/auth/session",
+    "/auth/turnstile/config",
+    "/debug/unlock",
+    "/auth/login",
+    "/signup/email",
+  ]) {
+    assert.match(html, new RegExp(contract.replaceAll("/", "\\/")));
+  }
+
+  assert.match(html, /\/js\/utils\/version-stamp\.js/);
+  assert.match(html, /\/js\/status-widget\.js/);
+  assert.match(html, /\/js\/turnstile-inline\.js/);
+  assert.match(html, /\/js\/studio-first-landing\.js/);
+  assert.match(html, /\/assets\/logos\/ssmainlogosq\.webp/);
+  assert.match(client, /ArrowLeft/);
+  assert.match(client, /ArrowRight/);
+  assert.match(client, /prefers-reduced-motion:\s*reduce/);
+  assert.match(client, /IntersectionObserver/);
+  assert.match(client, /sessionStorage/);
+  assert.match(client, /querySelectorAll\("\[data-auth-trigger\]"\)/);
+  assert.match(client, /setNavOpen\(false\), \{ capture: true \}/);
+  assert.match(css, /\.auth-modal-backdrop\.is-open/);
+  assert.match(css, /@media \(max-width:\s*720px\)/);
+  assert.match(css, /@media \(prefers-reduced-motion:\s*reduce\)/);
+});
+
+test("approved typography is centralized without external font requests", () => {
+  const fonts = read("css/public-fonts.css");
+  const landing = read("css/studio-first-landing.css");
+  const shell = read("css/public-shell.css");
+  const shared = read("css/public-pages-v2.css");
+  const download = read("css/download-surface.css");
+
+  for (const expected of [
+    "/assets/fonts/Tektur-VariableFont_wdth,wght.ttf",
+    "/assets/fonts/Geist-Regular.ttf",
+    "/assets/fonts/Geist-Medium.ttf",
+    "/assets/fonts/Geist-SemiBold.ttf",
+    "/assets/fonts/Geist-Bold.ttf",
+    "/assets/fonts/mono/IBMPlexMono-Regular.ttf",
+    "/assets/fonts/mono/IBMPlexMono-Medium.ttf",
+    "/assets/fonts/mono/IBMPlexMono-SemiBold.ttf",
+  ]) {
+    assert.match(fonts, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    assert.ok(exists(expected.slice(1)), `missing ${expected}`);
+  }
+
+  assert.match(fonts, /font-display:\s*swap/g);
+  assert.match(fonts, /--public-font-display:\s*"Tektur"/);
+  assert.match(fonts, /--public-font-body:\s*"Geist Sans"/);
+  assert.match(fonts, /--public-font-mono:\s*"IBM Plex Mono"/);
+  [fonts, landing, shell, shared, download].forEach((css) => {
+    assert.doesNotMatch(css, /https?:\/\/[^)"']+\.(?:woff2?|ttf|otf)/i);
+  });
+  assert.doesNotMatch(download, /SuiGeneris|Recharge/);
+});
+
+test("About tells the current product story and keeps its manifest renderer hooks", () => {
+  const html = read("about.html");
+  const part1 = JSON.parse(read("about/about_part1_core.json"));
+  const part2 = JSON.parse(read("about/about_part2_platforms_interfaces.json"));
+  const part3 = JSON.parse(read("about/about_part3_about_system_spec.json"));
+
+  assert.match(html, /Production at the center/);
+  assert.match(html, /Browser Studio/);
+  assert.match(html, /StudioApp/);
+  assert.match(html, /Studio for OBS/);
+  assert.match(html, /One authority\. Separate media paths/);
+  assert.match(html, /Brainstream Media Group/);
+  assert.match(html, /id="public-about-errors"/);
+  assert.match(html, /id="public-about-sections"/);
+  assert.match(html, /id="public-about-version-meta"/);
+  assert.match(html, /\/js\/public-about\.js/);
+  assert.equal(part1.lastUpdated, "2026-07-31");
+  assert.equal(part2.lastUpdated, "2026-07-31");
+  assert.equal(part3.lastUpdated, "2026-07-31");
+
+  const narrative = JSON.stringify([part1, part2, part3]);
+  assert.match(narrative, /connected livestream-production suite/i);
+  assert.match(narrative, /Cloudflare RealtimeKit/);
+  assert.match(narrative, /WPF/);
+  assert.match(narrative, /OBS-owned|OBS retains/);
+  assert.match(narrative, /None of these media paths terminates in Python/);
+  assert.doesNotMatch(narrative, /organized into three repositories|fully client-side with no authentication/);
+});
+
+test("functional shell connects to real product routes without changing route contracts", () => {
+  const shell = read("js/public-shell.js");
+  const pages = read("js/public-pages-app.js");
+  const redirects = read("_redirects");
+
+  assert.match(shell, /products:\s*"Production"/);
+  assert.match(shell, /https:\/\/studio\.streamsuites\.app/);
+  assert.match(shell, /\/downloads\/studioapp\//);
+  assert.match(shell, /\/downloads\/obs-plugin\//);
+  assert.match(shell, /\/assets\/logos\/ssmainlogosq\.webp/);
+  assert.match(pages, /title:\s*"Public Dashboard"/);
+  assert.match(pages, /Runtime\/Auth-owned public state/);
+  assert.doesNotMatch(pages, /Leaderboards", value: "Scaffold"/);
+  assert.ok(exists("home.html"));
+  assert.match(redirects, /\/downloads\/studioapp \/downloads\/studioapp\/index\.html 200/);
+  assert.match(redirects, /\/downloads\/obs-plugin \/downloads\/obs-plugin\/index\.html 200/);
+});
+
+test("POC references remain intact and obsolete live landing CSS is retired", () => {
+  assert.ok(exists("sspoc1/index.html"));
+  assert.ok(exists("sspoc1/styles.css"));
+  assert.ok(exists("StreamSuites-Landing-POC-Option-1-Typography.zip"));
+  assert.ok(exists("index-v2.html"));
+  assert.ok(exists("css/aurora-landing-v2.css"));
+  assert.equal(exists("css/aurora-landing.css"), false);
+  assert.doesNotMatch(read("index.html"), /data-about-slide|data-about-progress|about-open/);
+});

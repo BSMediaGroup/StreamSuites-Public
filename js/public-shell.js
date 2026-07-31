@@ -1,6 +1,7 @@
 (() => {
-  const NAV_GROUP_ORDER = Object.freeze(["dashboard", "community", "account", "quick"]);
+  const NAV_GROUP_ORDER = Object.freeze(["products", "dashboard", "community", "account", "quick"]);
   const NAV_GROUP_LABELS = Object.freeze({
+    products: "Production",
     dashboard: "Dashboard",
     community: "Community",
     account: "Account",
@@ -8,6 +9,9 @@
   });
 
   const PUBLIC_DASHBOARD_NAV = [
+    { href: "https://studio.streamsuites.app", label: "Browser Studio", icon: "/assets/icons/ui/browser.svg", group: "products" },
+    { href: "/downloads/studioapp/", label: "StudioApp", icon: "/assets/icons/ui/exitapp.svg", group: "products" },
+    { href: "/downloads/obs-plugin/", label: "Studio for OBS", icon: "/assets/icons/obs.svg", group: "products" },
     { href: "/home", label: "Home", icon: "/assets/icons/ui/home.svg", group: "dashboard" },
     { href: "/clips", label: "Clips", icon: "/assets/icons/ui/clipcards.svg", group: "dashboard" },
     { href: "/polls", label: "Polls", icon: "/assets/icons/ui/vote.svg", group: "dashboard" },
@@ -769,7 +773,7 @@
         <div class="auth-modal-header">
           <p class="auth-modal-eyebrow">Public access</p>
           <h2 id="public-auth-modal-title" class="auth-modal-title">
-            <img src="/assets/logos/pubcon.webp" alt="StreamSuites logo" />
+            <img src="/assets/logos/ssmainlogosq.webp" alt="StreamSuites logo" />
             <span data-auth-title-text>Log in to StreamSuites™</span>
           </h2>
           <p class="auth-modal-subtitle" data-auth-subtitle>Use OAuth to continue.</p>

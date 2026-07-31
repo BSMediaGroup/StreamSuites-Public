@@ -303,7 +303,7 @@
   min-width: 0;
   overflow-wrap: anywhere;
   color: #c7d1dc;
-  font-family: "SUSEMono", "Source Code Pro", "Cascadia Code", monospace;
+  font-family: var(--public-font-mono);
   font-size: 0.72rem;
 }
 

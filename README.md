@@ -4,8 +4,9 @@ Canonical public StreamSuites surface deployed to Cloudflare Pages at `https://s
 
 ## Release State
 
-- README state prepared for `v0.5.0-alpha`.
+- Current Public milestone bucket: `0.5.4-alpha`; pending bucket: `0.5.5-alpha`. This redesign does not allocate or bump either value.
 - Runtime-displayed version/build labels are consumed at runtime from `https://admin.streamsuites.app/runtime/exports/version.json`.
+- Runtime/Auth remains the canonical system-version authority. The checked-in Public mirror may lag the authoritative runtime export until the established publication workflow refreshes it.
 - This repo is not a canonical state authority. It renders authoritative runtime exports and Auth API responses.
 
 ## Scope & Authority
@@ -14,6 +15,24 @@ Canonical public StreamSuites surface deployed to Cloudflare Pages at `https://s
 - Same-origin Cloudflare Pages Functions proxy browser requests to the authoritative Auth API, but they do not move backend ownership into this repo.
 - Canonical slug resolution, profile visibility, share URLs, and FindMeHere eligibility remain runtime/Auth-owned in `StreamSuites`.
 - Public routes render authoritative runtime exports and Auth payloads; they do not mint competing profile or live-status truth.
+
+## Studio-First Public Identity
+
+- The production `/` landing now presents StreamSuites as a connected livestream-production suite centered on Browser Studio and native StudioApp, with StreamSuites Studio for OBS as the separate OBS integration. Engagement, automation, alerts, overlays, profiles, progression, and public artifacts are connected capabilities around production.
+- Browser Studio links to `https://studio.streamsuites.app`, remains closed-access and OFF AIR, and uses direct Cloudflare RealtimeKit browser media. Browser recording and broadcast output are not presented as shipped.
+- StudioApp links to `/downloads/studioapp/`, remains a native Windows C#/.NET/WPF shell with a supervised C++20 media engine, and is explicitly not a WebView or browser wrapper.
+- StreamSuites Studio for OBS links to `/downloads/obs-plugin/`, remains a plugin/integration rather than an OBS fork or replacement, and leaves scenes, mixing, composition, encoding, recording, and output inside OBS.
+- Runtime/Auth remains the shared authority for identity, permissions, rooms, invitations, destinations, protected credentials, alerts, automation, exports, shared state, and canonical versioning. It is not the media path for Browser Studio, StudioApp, or OBS.
+- `about.html` is now an editorial product-story page with the same product hierarchy and media-boundary explanation. Its existing manifest-driven consumer/developer records, stable anchors, expandable technical details, version/status hydration, and renderer hooks are retained; the three About JSON sources were refreshed to remove the obsolete three-repository/static-dashboard narrative.
+
+## Shared Public Design System
+
+- `css/public-fonts.css` is the local typography contract: Tektur for display headings, Geist Sans for body/UI copy, and IBM Plex Mono for version, status, system, code, and compact metadata. Every face uses `font-display: swap`; refreshed surfaces use `font-synthesis: none`; no external font request or JavaScript font loader is required.
+- `css/studio-first-landing.css` owns the cinematic landing layout, responsive product preview, architecture diagram, connected-capability and ecosystem sections, Alpha messaging, footer, and consolidated production auth/access-modal presentation.
+- `css/theme-dark.css`, `css/public-pages-v2.css`, and `css/public-shell.css` carry the quieter shared graphite palette, typography roles, focus language, cards, forms, status metadata, dense functional shell treatment, and reduced-motion behavior across support, legal, account, Public Dashboard, gallery, profile, and feature routes.
+- `js/studio-first-landing.js` owns keyboard-accessible product tabs, ecosystem preview selection, the dismissible Alpha notice, mobile navigation, sticky-header state, and IntersectionObserver-based reveals with reduced-motion fallback. It does not own auth, status, version, or access enforcement.
+- The specialized StudioApp, OBS, and Extensions pages retain their product-specific layouts, real manifest/catalog behavior, fail-closed gates, icons, and route handling. Only their shared typography contract was aligned.
+- Responsive layouts are explicitly defined for desktop, tablet, and narrow mobile widths. Skip links, visible focus states, semantic tabs, keyboard arrow navigation, Escape handling, reduced-motion fallbacks, and readable long-form line lengths are part of the shared treatment.
 
 ## Repo-Scoped Flowchart
 
@@ -42,6 +61,8 @@ flowchart TD
 
 ## Current Surface Model
 
+- `/` is the Studio Command Center landing with real product routes, truthful product states, a non-operational illustrative workspace, product-specific media ownership, connected Public capabilities, wider ecosystem links, and hydrated status/version metadata. Its original `/auth/access-state`, `/auth/session`, OAuth/email auth, Turnstile, access-code, lockout-banner, and creator-routing contracts remain in place. The landing and shared Public-shell login modals use the first-party square `assets/logos/ssmainlogosq.webp` brand mark.
+- `/about.html` is the full product story plus the existing manifest-driven technical record.
 - `/downloads/studioapp` is the canonical Windows StudioApp ALPHA landing page. Its same-origin `/api/downloads/studioapp/release` metadata seam remains visible while download access is locked, validates strict schema-v2 `product-manifest.json` with bounded schema-v1 fallback, treats independent StudioApp product version/build as primary and optional StreamSuites system compatibility as secondary, and never uses Runtime `version.json` as installer identity. Only an authorized short-lived session enables the separate controlled redirect; the static page and metadata response contain no raw installer URL.
 - Download lockout is configured only through Pages environment values (`DOWNLOAD_ACCESS_LOCKED`, `DOWNLOAD_ACCESS_MESSAGE`, `DOWNLOAD_BYPASS_ENABLED`, secret `DOWNLOAD_BYPASS_CODE`, bounded `DOWNLOAD_BYPASS_TTL_MINUTES`, and `SHOW_DOWNLOAD_LOCKOUT_BANNER`). Approved tester access uses a short-lived HMAC-signed HttpOnly/Secure/SameSite cookie scoped to the download API. Failure to validate access, cookie, or manifest keeps the download unavailable.
 - `/downloads/obs-plugin/` truthfully presents **StreamSuites Studio for OBS** as in development. It publishes no artifact, version, release date, or compatibility claim; Runtime/Auth remains the control authority and OBS owns the media pipeline.
@@ -59,6 +80,14 @@ flowchart TD
 - Live badge, live ring, live-directory cards, and live profile-banner treatment consume the centralized runtime `live_status` export first. Individual `/u/*` profiles render the normalized latest/current livestream in the PlayViewer area when Runtime provides safe embed/source fields, and render the slim recent stream tray from real recent rows, Runtime `tray_sources`, or the current/latest source record. Ended Kick evidence stays a recent poster/source-card fallback without a live-only `player.kick.com` iframe. Optional Rumble discovery enrichment is used only when the existing UI needs missing watch/title metadata.
 - `/live` is the dedicated public live view and only lists creators whose StreamSuites public profile is currently eligible and visible.
 - Reserved media fields are reflected from the authoritative payload, including cover or banner usage plus reserved `background_image_url`.
+
+### Route treatment for this milestone
+
+- Fully redesigned expressive surfaces: `/`, `/about.html`, and the presentation-only `404.html`.
+- Visually harmonized functional surfaces: `/home`, clips, polls, wheels, tallies, scoreboards, leaderboards, games/economy, market exchange, `/live`, community pages, settings/my-data, and `/u` profiles through the shared `public-shell.css` and existing renderer code.
+- Visually harmonized quiet utility/information surfaces: login/auth pages, requests entry pages, support, changelog, resources, tools, stats, privacy, terms, accessibility, postmortem, and donation pages through the existing shared page styles.
+- Intentionally specialized: `/downloads/studioapp/`, `/downloads/obs-plugin/`, and `/downloads/studioapp/extensions/`; their layouts and behavior were preserved and only the approved shared typography was applied.
+- Intentionally excluded from the general redesign: auth callback/bridge shims, overlay/browser-source surfaces, generated exports, functions/data artifacts, fixtures/samples, archived `index-v2.html` plus `css/aurora-landing-v2.css`, the `sspoc1` reference, and its preserved ZIP archives.
 
 ## Routing and Runtime Integration
 
@@ -93,15 +122,20 @@ This repository is a static Pages project with no package manifest, install step
 
 Production never silently switches to public HTTP manifest fetching. The `STUDIOAPP_MANIFEST_HTTP_FALLBACK_ENABLED` compatibility seam is accepted only on localhost, `127.0.0.1`, or a Cloudflare Preview `.pages.dev` host. Local browser verification may instead use the localhost-only `LOCAL_STUDIOAPP_RELEASE_FIXTURE` and bounded `STUDIOAPP_RELEASE_FIXTURE_JSON` bindings in a temporary untracked environment file; production hosts reject both development seams, and test files/processes/state must be removed afterward. Run the focused download-surface contracts with `node --test tests/studioapp-download-gate.test.mjs tests/download-surfaces.test.mjs tests/studioapp-extensions.test.mjs`. Route and Pages Function behavior must also be validated in a Cloudflare Preview before production deployment. Normal StudioApp R2 publication requires no Public redeployment. Redeploy Public only when page/function source, bindings, or Pages variables change, through the separate manual commit/push/Cloudflare workflow.
 
-## Studio Download Surface Assets and Contracts
+## Public Typography Assets and Studio Download Contracts
 
-The Studio product-family pages use the same local font files and brand mark as Browser Studio:
+The approved local font files were already present under the production asset tree, so this milestone copied no font binary:
 
-- Body/UI type: `assets/fonts/SuiGeneris-Regular.otf`, byte-identical to the Browser Studio-owned source at `StreamSuites-Studio/assets/fonts/SuiGeneris-Regular.otf` (SHA-256 `39B21DF023A5833E2D891A5C0D72703DB4306B9008C0D44D4DC01F2350C71964`).
-- Display type: `assets/fonts/Recharge-Bold.otf`, byte-identical to `StreamSuites-Studio/assets/fonts/Recharge-Bold.otf` (SHA-256 `1FAA8AF96C598F49D2E6791DE161F7845379197C1D36C489CD39AD548550EF1F`).
+- Display: `assets/fonts/Tektur-VariableFont_wdth,wght.ttf` (`400–900`, `75%–100%` stretch).
+- Body/UI: `assets/fonts/Geist-Light.ttf`, `Geist-Regular.ttf`, `Geist-Medium.ttf`, `Geist-SemiBold.ttf`, `Geist-Bold.ttf`, and `Geist-ExtraBold.ttf`.
+- System metadata: `assets/fonts/mono/IBMPlexMono-Light.ttf`, `IBMPlexMono-Regular.ttf`, `IBMPlexMono-Medium.ttf`, `IBMPlexMono-SemiBold.ttf`, and `IBMPlexMono-Bold.ttf`.
+- The existing Geist and IBM Plex Mono license files remain at `assets/fonts/GEISTMONOOFL.txt` and `assets/fonts/mono/IBMPLEXMONOOFL.txt`.
+- The POC/font-package notes reference a Tektur `OFL.txt`, but that exact license file was not found in the POC or neighboring StreamSuites repositories. No license text was fabricated. Recovering and reviewing that file remains a release/licensing follow-up before publication.
 - Studio brand mark: `assets/logos/studiologo3.webp`, byte-identical to the Browser Studio asset selected by `src/components/BrandMark.tsx` (SHA-256 `43C28A45FBABC4A710C4DAD151ECD33952FA823C5A2E17D615343F1C6BF7A786`).
 
 `css/download-surface.css` owns the shared restrained dark shell, product navigation, responsive spacing, focus treatment, reduced-motion handling, and forced-colors support. Product-specific CSS keeps status and capability presentation separate. The extension JavaScript accepts only a bounded schema-v1 allowlist, rejects unknown fields and unsafe URLs, creates content with DOM text nodes, and keeps search/filter state in the URL. Synthetic catalog entries belong only in tests; production remains empty until canonical authority exists.
+
+The design reference is preserved at `sspoc1/`. Its original archive remains `StreamSuites-Landing-POC-Option-1-Typography.zip`; `StreamSuites-Landing-POC-Option-1.zip` is also retained. Production uses the existing `assets/fonts/` copies rather than loading the POC directory.
 
 ## Cross-Repo Orientation
 
@@ -125,6 +159,8 @@ StreamSuites-Public/
 ├── home.html
 ├── index.html
 ├── index-v2.html
+├── StreamSuites-Landing-POC-Option-1-Typography.zip
+├── StreamSuites-Landing-POC-Option-1.zip
 ├── market-exchange/
 │   └── index.html
 ├── market-exchange.html
@@ -233,6 +269,7 @@ StreamSuites-Public/
 │   ├── public-pages-app.js
 │   ├── public-requests.js
 │   ├── public-shell.js
+│   ├── studio-first-landing.js
 │   ├── public-toast.js
 │   ├── studioapp-extensions.js
 │   ├── studioapp-download.js
@@ -243,9 +280,9 @@ StreamSuites-Public/
 │       ├── version-stamp.js
 │       └── versioning.js
 ├── css/
-│   ├── aurora-landing.css
 │   ├── aurora-landing-v2.css
 │   ├── download-surface.css
+│   ├── public-fonts.css
 │   ├── obs-plugin-download.css
 │   ├── public-login.css
 │   ├── public-pages-v2.css
@@ -254,6 +291,7 @@ StreamSuites-Public/
 │   ├── requests.css
 │   ├── studioapp-extensions.css
 │   ├── studioapp-download.css
+│   ├── studio-first-landing.css
 │   └── status-widget.css
 ├── tests/
 │   ├── auth-surface-parity.test.mjs
@@ -262,13 +300,24 @@ StreamSuites-Public/
 │   ├── public-authority-wiring.test.mjs
 │   ├── studioapp-download-gate.test.mjs
 │   ├── studioapp-extensions.test.mjs
+│   ├── studio-first-public-experience.test.mjs
 │   └── wheels-authority.test.mjs
+├── sspoc1/                    # Read-only visual/typography reference retained in place
+│   ├── index.html
+│   ├── app.js
+│   ├── styles.css
+│   ├── assets/
+│   └── previews/
 └── assets/
     ├── css/
     │   └── ss-profile-hovercard.css
     ├── fonts/
+    │   ├── Tektur-VariableFont_wdth,wght.ttf
+    │   ├── Geist-{Light,Regular,Medium,SemiBold,Bold,ExtraBold}.ttf
+    │   ├── GEISTMONOOFL.txt
     │   └── mono/
-    │       └── SUSEMono-Variable.ttf
+    │       ├── IBMPlexMono-{Light,Regular,Medium,SemiBold,Bold}.ttf
+    │       └── IBMPLEXMONOOFL.txt
     ├── placeholders/
     │   └── wheelcenterdefault.webp
     └── icons/

@@ -1,3 +1,5 @@
+@import url("/css/public-fonts.css");
+
 :root {
   --ps-bg-0: #060b13;
   --ps-bg-1: #0b1220;
@@ -39,7 +41,8 @@ body.public-shell-page {
   margin: 0;
   min-height: 100vh;
   color: var(--ps-text);
-  font-family: "SuiGeneris", "SuiGenerisRg", "Segoe UI", sans-serif;
+  font-family: var(--public-font-body);
+  font-synthesis: none;
   background: linear-gradient(172deg, var(--ps-bg-0) 0%, var(--ps-bg-1) 46%, var(--ps-bg-2) 100%);
   overflow: hidden;
 }
@@ -10592,7 +10595,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
 }
 
 .market-item-lightbox .economy-item-code-value {
-  font-family: "SUSEMono", "SUSE Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--public-font-mono);
   color: rgba(147, 197, 253, 0.94);
   letter-spacing: 0.02em;
 }
@@ -10611,7 +10614,7 @@ body.public-shell-page .dashboard-card-link:focus-visible {
   border-radius: 999px;
   border: 1px solid rgba(154, 209, 255, 0.22);
   background: rgba(15, 23, 42, 0.72);
-  font-family: "SuiGenerisRg", "SuiGeneris", sans-serif;
+  font-family: var(--public-font-body);
   font-weight: 400;
   font-style: normal;
   font-synthesis: none;
@@ -12401,4 +12404,150 @@ body.public-standalone-page:not([data-public-page="public-profile-standalone"]) 
     0 24px 60px rgba(0, 0, 0, 0.36),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(14px) saturate(116%);
+}
+
+/* Studio-first Public shell refinement.
+   The functional layouts and data contracts above remain unchanged. */
+
+body.public-shell-page {
+  --ps-bg-0: #05070a;
+  --ps-bg-1: #080d14;
+  --ps-bg-2: #0b121c;
+  --ps-panel: linear-gradient(150deg, rgba(15, 21, 30, 0.92), rgba(7, 11, 17, 0.94));
+  --ps-panel-soft: linear-gradient(160deg, rgba(18, 25, 35, 0.86), rgba(8, 12, 18, 0.9));
+  --ps-panel-border: rgba(205, 218, 232, 0.14);
+  --ps-text: #f2f6fa;
+  --ps-muted: #8d9aa9;
+  --ps-link-primary: #76c3ff;
+  --ps-link-secondary: rgba(199, 208, 218, 0.78);
+  --ps-link-secondary-hover: #f5f8fb;
+  --ps-chip: rgba(23, 31, 43, 0.88);
+  --ps-chip-active: rgba(80, 168, 255, 0.13);
+  --ps-chip-active-text: #dcedff;
+  --ps-chip-border: rgba(205, 218, 232, 0.18);
+  --ps-glass-bg: rgba(8, 12, 18, 0.88);
+  --ps-glass-border: rgba(205, 218, 232, 0.17);
+  font-family: var(--public-font-body);
+  font-synthesis: none;
+  letter-spacing: 0;
+}
+
+body.public-shell-page .public-shell-bg {
+  background:
+    radial-gradient(900px 520px at 10% -8%, rgba(80, 168, 255, 0.11), transparent 61%),
+    radial-gradient(830px 470px at 91% -17%, rgba(154, 130, 255, 0.08), transparent 62%),
+    linear-gradient(172deg, var(--ps-bg-0) 0%, var(--ps-bg-1) 48%, var(--ps-bg-2) 100%);
+}
+
+body.public-shell-page :where(h1, h2, h3, h4, .dashboard-hero-title, .section-heading h2, .profile-hero-name) {
+  font-family: var(--public-font-display);
+  font-variation-settings: "wdth" 88;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+body.public-shell-page :where(button, input, select, textarea) {
+  font-family: var(--public-font-body);
+}
+
+body.public-shell-page :where(
+  .search-shell,
+  .search-shell input,
+  .account-widget,
+  .account-name,
+  .account-menu-item,
+  .filter-row,
+  .filter-chip,
+  .dashboard-card-link,
+  .wheel-share-field__copy,
+  .ss-badge-floating-tooltip,
+  .public-section-tab
+) {
+  font-family: var(--public-font-body);
+}
+
+body.public-shell-page :where(
+  .sidebar-brand-subheading,
+  .search-kbd-hint kbd,
+  .account-badge-role-chip,
+  .badge-role-chip,
+  .profile-not-found-attempt,
+  .profile-social-gallery-body span,
+  .member-gallery-card-handle,
+  .share-link-text
+) {
+  font-family: var(--public-font-mono);
+}
+
+body.public-shell-page :where(
+  .topbar-title,
+  .profile-overlay-brand-text
+) {
+  font-family: var(--public-font-display);
+}
+
+body.public-shell-page :where(
+  code,
+  kbd,
+  samp,
+  .version-pill,
+  .version-badge,
+  .footer-version,
+  .status-chip,
+  .dashboard-hero-eyebrow,
+  .section-kicker,
+  .progression-leaderboard-section-kicker,
+  [class*="meta"],
+  [class*="timestamp"]
+) {
+  font-family: var(--public-font-mono);
+}
+
+body.public-shell-page :where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 2px solid #50a8ff;
+  outline-offset: 3px;
+}
+
+body.public-shell-page :where(
+  .public-shell-header,
+  .public-shell-sidebar,
+  .dashboard-hero,
+  .content-card,
+  .public-card,
+  .gallery-card,
+  .profile-card,
+  .section-card,
+  .filter-panel
+) {
+  border-color: var(--ps-panel-border);
+}
+
+body.public-shell-page .dashboard-hero {
+  background:
+    linear-gradient(115deg, rgba(80, 168, 255, 0.07), transparent 43%),
+    var(--ps-panel);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+body.public-shell-page .dashboard-hero-title {
+  color: #f5f8fb;
+}
+
+body.public-shell-page .dashboard-hero-body {
+  color: #a9b4c1;
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.public-shell-page *,
+  body.public-shell-page *::before,
+  body.public-shell-page *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
