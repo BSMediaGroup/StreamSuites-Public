@@ -172,7 +172,7 @@ body.public-standalone-page {
 
 .sidebar-brand-label {
   display: grid;
-  gap: 4px;
+  gap: 3px;
   line-height: 1.1;
 }
 
@@ -192,10 +192,10 @@ body.public-standalone-page {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 20px;
+  min-height: 17px;
   max-width: 100%;
   width: fit-content;
-  padding: 4px 6px;
+  padding: 3px 5px;
   border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   background: rgba(255, 255, 255, 0.08);
@@ -12489,7 +12489,7 @@ body.public-shell-page :where(
 
 body.public-shell-page .sidebar-brand-title {
   font-variation-settings: "wdth" 100;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.025em;
 }
 
