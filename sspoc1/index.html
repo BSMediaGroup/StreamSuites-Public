@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en" data-product="browser">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="description" content="StreamSuites landing page proof of concept — Option 1: Studio Command Center." />
+  <title>StreamSuites™ — Studio Command Center POC</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <div class="alpha-strip" data-alpha-strip>
+    <div class="shell alpha-strip__inner">
+      <div class="alpha-strip__copy">
+        <span class="status-pill status-pill--alpha">Closed Alpha</span>
+        <span>StreamSuites Studio and StudioApp are in active development.</span>
+        <a href="#alpha-boundaries">Review current boundaries</a>
+      </div>
+      <button class="icon-button alpha-strip__close" type="button" aria-label="Dismiss alpha notice" data-alpha-close>
+        <span aria-hidden="true">×</span>
+      </button>
+    </div>
+  </div>
+
+  <header class="site-header" data-site-header>
+    <div class="shell site-header__inner">
+      <a class="brand" href="#top" aria-label="StreamSuites home">
+        <img src="./assets/sswordmarktm.webp" alt="StreamSuites™" />
+      </a>
+
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" data-nav-toggle>
+        <span></span><span></span><span></span>
+        <span class="sr-only">Toggle navigation</span>
+      </button>
+
+      <nav id="primary-nav" class="primary-nav" aria-label="Primary" data-primary-nav>
+        <a href="#products">Products</a>
+        <a href="#architecture">How it connects</a>
+        <a href="#tools">Connected tools</a>
+        <a href="#about">About</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="text-link" href="https://streamsuites.app/home.html">Public dashboard</a>
+        <a class="button button--quiet button--small" href="https://creator.streamsuites.app/login/">Creator login</a>
+        <a class="button button--primary button--small" href="https://studio.streamsuites.app">Open Studio</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <section id="top" class="hero section-grid" aria-labelledby="hero-title">
+      <div class="hero-backdrop" aria-hidden="true">
+        <div class="hero-orbit hero-orbit--one"></div>
+        <div class="hero-orbit hero-orbit--two"></div>
+        <div class="hero-beam"></div>
+      </div>
+
+      <div class="shell hero__inner">
+        <div class="hero__copy reveal">
+          <p class="eyebrow"><span class="eyebrow__pulse"></span> A connected livestream production suite</p>
+          <h1 id="hero-title">Build the show.<br /><span>Run it your way.</span></h1>
+          <p class="hero__lede">
+            StreamSuites brings browser rooms, a native Windows production workspace, OBS integration,
+            and the audience tools around every live show into one coordinated product family.
+          </p>
+
+          <div class="hero-actions">
+            <a class="button button--primary button--large" href="https://studio.streamsuites.app" data-primary-product-cta>
+              <span data-primary-product-label>Open Browser Studio</span>
+              <span class="button__arrow" aria-hidden="true">↗</span>
+            </a>
+            <a class="button button--secondary button--large" href="https://streamsuites.app/downloads/studioapp/">
+              Explore StudioApp
+            </a>
+          </div>
+
+          <div class="hero-proof" aria-label="Product principles">
+            <span><i class="proof-dot proof-dot--live"></i> Runtime/Auth authority</span>
+            <span><i class="proof-dot proof-dot--blue"></i> Separate media paths</span>
+            <span><i class="proof-dot proof-dot--silver"></i> Honest Alpha states</span>
+          </div>
+        </div>
+
+        <div class="hero__visual reveal reveal--delay" aria-label="Interactive StreamSuites product preview">
+          <div class="product-switcher" role="tablist" aria-label="Choose product preview">
+            <button class="product-switcher__tab is-active" type="button" role="tab" aria-selected="true" data-product-tab="browser">
+              <span class="product-switcher__icon product-switcher__icon--browser" aria-hidden="true"></span>
+              <span><strong>Browser Studio</strong><small>Cloud workspace</small></span>
+            </button>
+            <button class="product-switcher__tab" type="button" role="tab" aria-selected="false" data-product-tab="native">
+              <span class="product-switcher__icon product-switcher__icon--native" aria-hidden="true"></span>
+              <span><strong>StudioApp</strong><small>Native Windows</small></span>
+            </button>
+            <button class="product-switcher__tab" type="button" role="tab" aria-selected="false" data-product-tab="obs">
+              <span class="product-switcher__icon product-switcher__icon--obs" aria-hidden="true"></span>
+              <span><strong>Studio for OBS</strong><small>Plugin workflow</small></span>
+            </button>
+          </div>
+
+          <div class="studio-device" data-studio-device>
+            <div class="studio-device__glow" aria-hidden="true"></div>
+            <div class="studio-window">
+              <div class="studio-window__topbar">
+                <div class="window-controls" aria-hidden="true"><i></i><i></i><i></i></div>
+                <div class="studio-window__identity">
+                  <span class="studio-mark" aria-hidden="true">S</span>
+                  <strong data-product-window-title>STREAMSUITES STUDIO</strong>
+                </div>
+                <div class="studio-window__status">
+                  <span class="off-air-dot"></span>
+                  <span>OFF AIR</span>
+                </div>
+              </div>
+
+              <div class="studio-workspace">
+                <aside class="studio-rail studio-rail--left" aria-hidden="true">
+                  <div class="rail-heading">Production</div>
+                  <button class="rail-item is-active" tabindex="-1"><span>01</span><b>Scenes</b></button>
+                  <button class="rail-item" tabindex="-1"><span>02</span><b>Sources</b></button>
+                  <button class="rail-item" tabindex="-1"><span>03</span><b>Guests</b></button>
+                  <button class="rail-item" tabindex="-1"><span>04</span><b>Destinations</b></button>
+                  <div class="rail-spacer"></div>
+                  <div class="rail-state"><i></i><span data-rail-state>Realtime ready</span></div>
+                </aside>
+
+                <div class="studio-center">
+                  <div class="stage-toolbar" aria-hidden="true">
+                    <span>PROGRAM</span>
+                    <div class="layout-pips"><i class="is-active"></i><i></i><i></i><i></i></div>
+                    <span class="stage-toolbar__room">ROOM SS-7KQ2</span>
+                  </div>
+
+                  <div class="program-stage" aria-hidden="true">
+                    <div class="program-stage__grid"></div>
+                    <div class="program-stage__safe-area"></div>
+                    <div class="show-title">
+                      <small>THE CREATOR DESK</small>
+                      <strong>LIVE PRODUCTION PREVIEW</strong>
+                    </div>
+                    <div class="participant participant--host">
+                      <div class="participant__image"><span>DC</span></div>
+                      <div class="participant__label"><strong>Daniel</strong><small>HOST</small></div>
+                    </div>
+                    <div class="participant participant--guest">
+                      <div class="participant__image"><span>GM</span></div>
+                      <div class="participant__label"><strong>Guest</strong><small>BACKSTAGE → STAGE</small></div>
+                    </div>
+                    <div class="lower-third">
+                      <span class="lower-third__mark">S</span>
+                      <div><strong>STREAMSUITES</strong><small>One room. Every production surface.</small></div>
+                    </div>
+                    <div class="live-chip"><i></i> PREVIEW</div>
+                  </div>
+
+                  <div class="audio-dock" aria-hidden="true">
+                    <div class="audio-channel"><span>MIC</span><div class="meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><b>-12.4</b></div>
+                    <div class="audio-channel"><span>DESKTOP</span><div class="meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><b>-18.1</b></div>
+                    <div class="audio-channel audio-channel--master"><span>MASTER</span><div class="meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><b>-9.8</b></div>
+                  </div>
+                </div>
+
+                <aside class="studio-rail studio-rail--right" aria-hidden="true">
+                  <div class="rail-heading">Inspector</div>
+                  <div class="inspector-card"><span>Layout</span><strong>Interview</strong><i></i></div>
+                  <div class="inspector-card"><span>Brand</span><strong>Graphite / Lime</strong><i></i></div>
+                  <div class="inspector-card"><span>Stage</span><strong>2 participants</strong><i></i></div>
+                  <div class="inspector-card"><span>Output</span><strong data-output-label>Not configured</strong><i></i></div>
+                  <div class="rail-spacer"></div>
+                  <button class="go-live" tabindex="-1"><span></span> GO LIVE</button>
+                </aside>
+              </div>
+            </div>
+
+            <div class="floating-signal floating-signal--one" aria-hidden="true">
+              <span class="floating-signal__icon">↗</span>
+              <div><small>DESTINATIONS</small><strong>3 ready</strong></div>
+            </div>
+            <div class="floating-signal floating-signal--two" aria-hidden="true">
+              <span class="floating-signal__icon">+</span>
+              <div><small>ROOM ACTIVITY</small><strong>Guest approved</strong></div>
+            </div>
+            <div class="floating-signal floating-signal--three" aria-hidden="true">
+              <span class="floating-signal__icon">◎</span>
+              <div><small data-product-architecture-label>MEDIA</small><strong data-product-architecture>Cloudflare Realtime</strong></div>
+            </div>
+          </div>
+
+          <div class="product-caption" aria-live="polite">
+            <div>
+              <span class="status-pill" data-product-status>Closed Alpha</span>
+              <strong data-product-caption-title>Browser Studio</strong>
+            </div>
+            <p data-product-caption-copy>Room-based production with guests, layouts, branding, and browser media.</p>
+          </div>
+        </div>
+      </div>
+
+      <a class="scroll-cue" href="#products" aria-label="Continue to products">
+        <span>Explore the suite</span><i aria-hidden="true"></i>
+      </a>
+    </section>
+
+    <section id="products" class="section section--products">
+      <div class="shell">
+        <div class="section-heading reveal">
+          <p class="eyebrow">The production core</p>
+          <h2>Three workflows. One StreamSuites system.</h2>
+          <p>Choose the production surface that fits the room. Identity, permissions, destinations, and shared state remain coordinated underneath.</p>
+        </div>
+
+        <div class="product-grid">
+          <article class="product-card product-card--browser reveal" data-product-card="browser">
+            <div class="product-card__number">01</div>
+            <div class="product-card__topline">
+              <span class="product-emblem product-emblem--browser" aria-hidden="true"></span>
+              <span class="status-pill status-pill--blue">Closed Alpha</span>
+            </div>
+            <h3>StreamSuites Studio</h3>
+            <p class="product-card__kicker">Browser production workspace</p>
+            <p>Create rooms, manage guests, compose the Stage, and prepare the show from any modern browser.</p>
+            <ul class="feature-list">
+              <li>Cloudflare Realtime media</li>
+              <li>Room and invitation workflows</li>
+              <li>Layouts, branding, and backstage</li>
+            </ul>
+            <div class="product-card__footer">
+              <button class="card-link" type="button" data-select-product="browser">Preview above <span>↑</span></button>
+              <a href="https://studio.streamsuites.app">Open Studio <span>↗</span></a>
+            </div>
+          </article>
+
+          <article class="product-card product-card--native reveal reveal--delay" data-product-card="native">
+            <div class="product-card__number">02</div>
+            <div class="product-card__topline">
+              <span class="product-emblem product-emblem--native" aria-hidden="true"></span>
+              <span class="status-pill status-pill--lime">Windows Alpha</span>
+            </div>
+            <h3>StreamSuites StudioApp</h3>
+            <p class="product-card__kicker">Native Windows production workspace</p>
+            <p>A native C# / WPF shell with a supervised C++ media engine for local capture, preview, audio, and output foundations.</p>
+            <ul class="feature-list">
+              <li>Native display capture and preview</li>
+              <li>Detachable production surfaces</li>
+              <li>Local audio and output foundations</li>
+            </ul>
+            <div class="product-card__footer">
+              <button class="card-link" type="button" data-select-product="native">Preview above <span>↑</span></button>
+              <a href="https://streamsuites.app/downloads/studioapp/">View StudioApp <span>↗</span></a>
+            </div>
+          </article>
+
+          <article class="product-card product-card--obs reveal reveal--delay-2" data-product-card="obs">
+            <div class="product-card__number">03</div>
+            <div class="product-card__topline">
+              <span class="product-emblem product-emblem--obs" aria-hidden="true"></span>
+              <span class="status-pill status-pill--silver">In development</span>
+            </div>
+            <h3>StreamSuites Studio for OBS</h3>
+            <p class="product-card__kicker">OBS plugin and integration</p>
+            <p>Bring StreamSuites-authenticated rooms, controls, events, overlays, and automation into an existing OBS workflow.</p>
+            <ul class="feature-list">
+              <li>OBS remains the media owner</li>
+              <li>Supported OBS interfaces only</li>
+              <li>No StudioApp engine duplication</li>
+            </ul>
+            <div class="product-card__footer">
+              <button class="card-link" type="button" data-select-product="obs">Preview above <span>↑</span></button>
+              <a href="https://streamsuites.app/downloads/obs-plugin/">View integration <span>↗</span></a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="architecture" class="section section--architecture">
+      <div class="shell architecture-layout">
+        <div class="architecture-copy reveal">
+          <p class="eyebrow">One authority. Separate media paths.</p>
+          <h2>Connected where it matters. Independent where it must be.</h2>
+          <p>
+            Runtime/Auth coordinates account identity, permissions, rooms, invitations, destinations, credentials,
+            automation, alerts, shared state, and canonical versioning. Each production surface keeps its own media path.
+          </p>
+          <div class="principle-list">
+            <div><span>01</span><p><strong>Shared control plane</strong><small>One authoritative source for identity and state.</small></p></div>
+            <div><span>02</span><p><strong>Product-owned media</strong><small>Browser, native, and OBS media do not pass through Python.</small></p></div>
+            <div><span>03</span><p><strong>Additive product family</strong><small>Each surface solves a distinct production workflow.</small></p></div>
+          </div>
+        </div>
+
+        <div class="authority-map reveal reveal--delay" aria-label="StreamSuites authority and media architecture diagram">
+          <div class="authority-map__grid" aria-hidden="true"></div>
+          <div class="authority-node authority-node--core">
+            <span class="authority-node__icon">S</span>
+            <small>SHARED AUTHORITY</small>
+            <strong>Runtime / Auth</strong>
+            <p>Identity · rooms · permissions · destinations · automation · state · versioning</p>
+          </div>
+
+          <div class="authority-branch authority-branch--browser">
+            <span class="branch-line"></span>
+            <div class="authority-node authority-node--surface">
+              <span class="authority-node__accent"></span>
+              <small>BROWSER MEDIA</small>
+              <strong>Studio</strong>
+              <p>Cloudflare Realtime</p>
+            </div>
+          </div>
+
+          <div class="authority-branch authority-branch--native">
+            <span class="branch-line"></span>
+            <div class="authority-node authority-node--surface">
+              <span class="authority-node__accent"></span>
+              <small>NATIVE MEDIA</small>
+              <strong>StudioApp</strong>
+              <p>Supervised C++ engine</p>
+            </div>
+          </div>
+
+          <div class="authority-branch authority-branch--obs">
+            <span class="branch-line"></span>
+            <div class="authority-node authority-node--surface">
+              <span class="authority-node__accent"></span>
+              <small>OBS MEDIA</small>
+              <strong>Studio for OBS</strong>
+              <p>OBS-owned pipeline</p>
+            </div>
+          </div>
+
+          <div class="map-legend">
+            <span><i class="legend-line legend-line--authority"></i> Authority / state</span>
+            <span><i class="legend-line legend-line--media"></i> Product media boundary</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tools" class="section section--tools">
+      <div class="shell">
+        <div class="section-heading section-heading--split reveal">
+          <div>
+            <p class="eyebrow">Connected creator tools</p>
+            <h2>The production is the center. Everything else connects around it.</h2>
+          </div>
+          <p>Automation and engagement remain first-class StreamSuites capabilities—now presented as modules that extend the Studio product family.</p>
+        </div>
+
+        <div class="bento-grid">
+          <article class="bento-card bento-card--wide bento-card--rooms reveal">
+            <div class="bento-card__icon" aria-hidden="true">⌁</div>
+            <span class="bento-card__index">01 / ROOMS</span>
+            <h3>Guests, rooms, and invitations</h3>
+            <p>Coordinate directors, cohosts, backstage guests, approvals, and room identity from Runtime/Auth-backed workflows.</p>
+            <div class="mini-room-list" aria-hidden="true">
+              <span><i class="avatar avatar--one">D</i><b>Director</b><small>On Stage</small></span>
+              <span><i class="avatar avatar--two">M</i><b>Guest Maya</b><small>Backstage</small></span>
+              <span><i class="avatar avatar--three">J</i><b>Guest Jordan</b><small>Requested</small></span>
+            </div>
+          </article>
+
+          <article class="bento-card bento-card--destinations reveal reveal--delay">
+            <div class="bento-card__icon" aria-hidden="true">↗</div>
+            <span class="bento-card__index">02 / OUTPUT</span>
+            <h3>Destinations</h3>
+            <p>Keep authorization and destination intent under one shared authority.</p>
+            <div class="destination-row" aria-hidden="true"><i>Y</i><i>T</i><i>R</i><i>K</i><i>+</i></div>
+          </article>
+
+          <article class="bento-card bento-card--chat reveal reveal--delay-2">
+            <div class="bento-card__icon" aria-hidden="true">••</div>
+            <span class="bento-card__index">03 / CHAT</span>
+            <h3>Live chat and automation</h3>
+            <p>Normalize audience events, run triggers, and surface relevant interactions to operators.</p>
+            <div class="chat-stack" aria-hidden="true">
+              <span><i></i><b>New member joined</b><small>Discord</small></span>
+              <span><i></i><b>Clip command triggered</b><small>Twitch</small></span>
+            </div>
+          </article>
+
+          <article class="bento-card bento-card--alerts reveal">
+            <div class="bento-card__icon" aria-hidden="true">!</div>
+            <span class="bento-card__index">04 / ALERTS</span>
+            <h3>Alerts and operator surfaces</h3>
+            <p>Backend-authored rules, notifications, delivery history, and native operator clients.</p>
+            <div class="alert-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          </article>
+
+          <article class="bento-card bento-card--engagement reveal reveal--delay">
+            <div class="bento-card__icon" aria-hidden="true">◈</div>
+            <span class="bento-card__index">05 / ENGAGEMENT</span>
+            <h3>Overlays, polls, wheels, and scoreboards</h3>
+            <p>Turn audience activity into visual, interactive show elements without making those tools the project’s primary identity.</p>
+            <div class="engagement-pills" aria-hidden="true"><span>Polls</span><span>Wheels</span><span>Tallies</span><span>Scoreboards</span></div>
+          </article>
+
+          <article class="bento-card bento-card--wide bento-card--media reveal reveal--delay-2">
+            <div class="bento-card__icon" aria-hidden="true">▶</div>
+            <span class="bento-card__index">06 / MEDIA</span>
+            <h3>Clips and public experiences</h3>
+            <p>Publish clips, public profiles, leaderboards, and community experiences from authoritative data and media artifacts.</p>
+            <div class="media-strip" aria-hidden="true">
+              <span style="--media-bg: linear-gradient(135deg, #1d2330, #7b2cff)"></span>
+              <span style="--media-bg: linear-gradient(135deg, #101927, #0eb6ff)"></span>
+              <span style="--media-bg: linear-gradient(135deg, #151923, #8cc736)"></span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--ecosystem">
+      <div class="shell ecosystem-layout">
+        <div class="ecosystem-visual reveal">
+          <div class="dashboard-browser">
+            <div class="dashboard-browser__bar"><i></i><i></i><i></i><span>creator.streamsuites.app</span></div>
+            <img src="./assets/creator-dashboard.webp" alt="StreamSuites creator dashboard interface" data-ecosystem-image />
+          </div>
+          <div class="dashboard-thumbnails" role="tablist" aria-label="Connected surface preview">
+            <button class="is-active" type="button" role="tab" aria-selected="true" data-surface-tab="creator" data-image="./assets/creator-dashboard.webp">
+              <span>Creator control</span><small>Settings · integrations · analytics</small>
+            </button>
+            <button type="button" role="tab" aria-selected="false" data-surface-tab="public" data-image="./assets/public-media.webp">
+              <span>Public experiences</span><small>Clips · media · community</small>
+            </button>
+          </div>
+        </div>
+
+        <div class="ecosystem-copy reveal reveal--delay">
+          <p class="eyebrow">Beyond the control room</p>
+          <h2>One product family, purpose-built surfaces.</h2>
+          <p>
+            Creator, Public, Admin, Developer, Docs, and FindMeHere remain focused clients of the same StreamSuites authority.
+            They support the production workflow without becoming parallel sources of truth.
+          </p>
+          <div class="surface-list">
+            <a href="https://creator.streamsuites.app"><span>Creator</span><small>Configuration and integrations</small><b>↗</b></a>
+            <a href="https://streamsuites.app/home.html"><span>Public</span><small>Profiles and public artifacts</small><b>↗</b></a>
+            <a href="https://admin.streamsuites.app"><span>Admin</span><small>Privileged operations through Runtime/Auth</small><b>↗</b></a>
+            <a href="https://docs.streamsuites.app"><span>Docs</span><small>Shipped reality and operator guidance</small><b>↗</b></a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="about" class="section section--about">
+      <div class="shell about-layout">
+        <div class="about-statement reveal">
+          <p class="eyebrow">What StreamSuites is becoming</p>
+          <h2>A complete production system—not a collection of disconnected utilities.</h2>
+        </div>
+        <div class="about-copy reveal reveal--delay">
+          <p>
+            StreamSuites began with livestream automation and engagement foundations. The project now places Studio and StudioApp at the center,
+            with those existing systems becoming connected capabilities around the production workflow.
+          </p>
+          <p>
+            The result is a deliberate product family: one shared authority, multiple purpose-built production surfaces, and a wider set of creator and audience tools that remain interoperable without collapsing into one monolithic application.
+          </p>
+        </div>
+      </div>
+
+      <div class="shell value-grid">
+        <article class="value-card reveal"><span>01</span><h3>Truthful state</h3><p>No surface claims to be live, connected, or ready until the underlying product confirms it.</p></article>
+        <article class="value-card reveal reveal--delay"><span>02</span><h3>Clear ownership</h3><p>Runtime/Auth owns canonical state; each production product owns its media execution.</p></article>
+        <article class="value-card reveal reveal--delay-2"><span>03</span><h3>Incremental capability</h3><p>Alpha features are presented as available, partial, or planned without blurring those boundaries.</p></article>
+      </div>
+    </section>
+
+    <section id="alpha-boundaries" class="section section--alpha">
+      <div class="shell alpha-panel reveal">
+        <div class="alpha-panel__mark" aria-hidden="true">α</div>
+        <div class="alpha-panel__copy">
+          <p class="eyebrow">Active Alpha development</p>
+          <h2>Preview the direction. Keep the claims precise.</h2>
+          <p>Browser Studio, StudioApp, and Studio for OBS are at different implementation stages. Product pages and Runtime/Auth remain authoritative for current access, capabilities, downloads, and release state.</p>
+        </div>
+        <div class="alpha-panel__actions">
+          <a class="button button--primary" href="https://studio.streamsuites.app">Open Browser Studio</a>
+          <a class="button button--secondary" href="https://streamsuites.app/downloads/studioapp/">View StudioApp</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell site-footer__top">
+      <div class="site-footer__brand">
+        <img src="./assets/sswordmarktm.webp" alt="StreamSuites™" />
+        <p>Connected livestream production for browser, Windows, and OBS workflows.</p>
+      </div>
+      <div class="site-footer__links">
+        <div><strong>Products</strong><a href="https://studio.streamsuites.app">Browser Studio</a><a href="https://streamsuites.app/downloads/studioapp/">StudioApp</a><a href="https://streamsuites.app/downloads/obs-plugin/">Studio for OBS</a></div>
+        <div><strong>Surfaces</strong><a href="https://creator.streamsuites.app">Creator</a><a href="https://streamsuites.app/home.html">Public</a><a href="https://admin.streamsuites.app">Admin</a></div>
+        <div><strong>Resources</strong><a href="https://docs.streamsuites.app">Documentation</a><a href="https://streamsuites.app/about.html">About</a><a href="https://streamsuites.app/support.html">Support</a></div>
+      </div>
+    </div>
+    <div class="shell site-footer__bottom">
+      <span>© 2026 Brainstream Media Group</span>
+      <span class="footer-status"><i></i> Runtime/Auth authority</span>
+      <span>StreamSuites™ · Alpha</span>
+    </div>
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>
