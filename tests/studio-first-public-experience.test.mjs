@@ -67,6 +67,9 @@ test("production landing is Studio-first and preserves the production access con
   assert.match(client, /querySelectorAll\("\[data-auth-trigger\]"\)/);
   assert.match(client, /setNavOpen\(false\), \{ capture: true \}/);
   assert.match(css, /\.auth-modal-backdrop\.is-open/);
+  assert.match(css, /\.ss-auth-access-gate__icon\s*\{[\s\S]*\/assets\/icons\/ui\/key\.svg/);
+  assert.match(css, /\.ss-auth-surface-links__summary-label\s*\{[\s\S]*font-size:\s*11px/);
+  assert.match(css, /@media \(max-width:\s*600px\)\s*\{[\s\S]*\.auth-modal-backdrop\s*\{[\s\S]*align-items:\s*center/);
   assert.match(css, /@media \(max-width:\s*720px\)/);
   assert.match(css, /@media \(prefers-reduced-motion:\s*reduce\)/);
 });

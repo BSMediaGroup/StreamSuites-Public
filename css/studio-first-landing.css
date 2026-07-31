@@ -2784,7 +2784,7 @@ html[data-product="browser"] .button--primary {
 .auth-modal {
   position: relative;
   width: min(560px, 100%);
-  max-height: 88vh;
+  max-height: calc(100vh - 40px);
   padding: 28px;
   overflow-x: hidden;
   overflow-y: auto;
@@ -2952,6 +2952,7 @@ html[data-product="browser"] .button--primary {
   margin-top: 15px;
   color: var(--landing-muted);
   font-size: 12px;
+  line-height: 1.5;
   text-align: center;
 }
 
@@ -3080,8 +3081,8 @@ html[data-product="browser"] .button--primary {
 .auth-legal {
   margin: 17px 0 0;
   color: var(--landing-muted);
-  font-size: 10px;
-  line-height: 1.5;
+  font-size: 11px;
+  line-height: 1.55;
 }
 
 .auth-legal a {
@@ -3131,8 +3132,8 @@ html[data-product="browser"] .button--primary {
 }
 
 .ss-auth-access-gate__icon {
-  -webkit-mask-image: url("/assets/icons/ui/info.svg");
-  mask-image: url("/assets/icons/ui/info.svg");
+  -webkit-mask-image: url("/assets/icons/ui/key.svg");
+  mask-image: url("/assets/icons/ui/key.svg");
 }
 
 .ss-auth-access-gate__form {
@@ -3181,7 +3182,7 @@ html[data-product="browser"] .button--primary {
 
 .ss-auth-surface-links__summary-label {
   font-family: var(--public-font-mono);
-  font-size: 8px;
+  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -3223,6 +3224,7 @@ html[data-product="browser"] .button--primary {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.02);
   color: var(--landing-text-2);
+  font-size: 12px;
   text-decoration: none;
 }
 
@@ -3290,7 +3292,7 @@ html[data-product="browser"] .button--primary {
 
 @media (max-width: 600px) {
   .auth-modal-backdrop {
-    align-items: end;
+    align-items: center;
     padding: 12px;
   }
 
