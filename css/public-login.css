@@ -410,3 +410,80 @@ body.ss-public-login {
     grid-template-columns: 1fr;
   }
 }
+
+/* Public auth presentation harmonization; endpoints and form contracts are unchanged. */
+body.ss-public-login {
+  background:
+    radial-gradient(760px 480px at 50% -8%, rgba(46, 142, 207, 0.16), transparent 66%),
+    linear-gradient(180deg, #030609, #08111a);
+}
+
+.ss-public-login__surface {
+  padding: clamp(18px, 4vw, 48px);
+}
+
+.ss-public-login__panel {
+  border-color: rgba(193, 216, 233, 0.16);
+  border-radius: 20px;
+  background:
+    radial-gradient(90% 80% at 100% 0%, rgba(69, 158, 219, 0.08), transparent 70%),
+    linear-gradient(180deg, rgba(13, 21, 31, 0.98), rgba(5, 9, 14, 0.99));
+  box-shadow: 0 36px 96px rgba(0, 0, 0, 0.56), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.ss-public-login__header {
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(195, 215, 232, 0.11);
+}
+
+.ss-public-login__title {
+  font-family: var(--public-font-display);
+  font-variation-settings: "wdth" 90;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.ss-public-login__tabs {
+  border-color: rgba(185, 211, 232, 0.16);
+  background: rgba(4, 9, 14, 0.76);
+}
+
+.ss-public-login__tab.is-active {
+  border-color: rgba(90, 183, 242, 0.36);
+  background: rgba(48, 141, 203, 0.18);
+  color: #e8f7ff;
+}
+
+.ss-public-login__oauth-button,
+.ss-public-login__form input,
+.ss-auth-access-gate {
+  border-color: rgba(185, 211, 232, 0.17);
+  background: rgba(5, 11, 17, 0.84);
+}
+
+.ss-public-login__oauth-button:hover,
+.ss-public-login__oauth-button:focus-visible {
+  border-color: rgba(96, 186, 244, 0.42);
+  background: rgba(27, 70, 99, 0.35);
+  transform: translateY(-1px);
+}
+
+.ss-public-login__submit {
+  border-color: rgba(101, 193, 249, 0.58);
+  background: linear-gradient(180deg, #5ebdf6, #2d7eb4);
+  color: #03101a;
+  font-weight: 700;
+  box-shadow: 0 14px 34px rgba(21, 105, 160, 0.23), inset 0 1px 0 rgba(255, 255, 255, 0.32);
+}
+
+.ss-public-login__submit:hover,
+.ss-public-login__submit:focus-visible {
+  box-shadow: 0 0 0 3px rgba(67, 164, 226, 0.16), 0 16px 38px rgba(16, 101, 157, 0.28);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ss-public-login__oauth-button:hover,
+  .ss-public-login__oauth-button:focus-visible {
+    transform: none;
+  }
+}

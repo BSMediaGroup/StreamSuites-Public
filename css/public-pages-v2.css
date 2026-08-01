@@ -1816,3 +1816,218 @@ textarea {
     transition: none;
   }
 }
+
+/* 2026-08 shared polish for standalone Public pages (the landing is not in this cascade). */
+:root {
+  --public-v2-shell-max: 1520px;
+  --public-v2-panel-bg:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.024), transparent 48%),
+    linear-gradient(180deg, rgba(13, 20, 29, 0.95), rgba(5, 9, 14, 0.97));
+  --public-v2-panel-border: rgba(196, 215, 232, 0.135);
+  --public-v2-text-soft: #bdcad5;
+  --public-v2-btn-primary-1: #5bb8f3;
+  --public-v2-btn-primary-2: #286d9f;
+  --public-v2-btn-secondary-1: #1c2d3c;
+  --public-v2-btn-secondary-2: #0d1822;
+  --public-v2-btn-muted-1: #19242f;
+  --public-v2-btn-muted-2: #0b1118;
+}
+
+body:not(.download-surface) {
+  background:
+    radial-gradient(980px 560px at 8% -12%, rgba(38, 129, 195, 0.145), transparent 64%),
+    radial-gradient(760px 440px at 94% -9%, rgba(106, 88, 201, 0.075), transparent 66%),
+    linear-gradient(175deg, #030609 0%, #060b11 50%, #0a1119 100%);
+}
+
+body:not(.download-surface) .public-bg {
+  background:
+    radial-gradient(980px 560px at 8% -12%, rgba(38, 129, 195, 0.145), transparent 64%),
+    radial-gradient(760px 440px at 94% -9%, rgba(106, 88, 201, 0.075), transparent 66%),
+    linear-gradient(175deg, #030609 0%, #060b11 50%, #0a1119 100%);
+}
+
+body:not(.download-surface) .public-bg::before {
+  opacity: 0.055;
+  background-size: 64px 64px;
+  mask-image: linear-gradient(to bottom, #000, transparent 78%);
+  -webkit-mask-image: linear-gradient(to bottom, #000, transparent 78%);
+}
+
+body:not(.download-surface) :where(.page-shell, .public-shell) {
+  width: min(var(--public-v2-shell-max), calc(100vw - clamp(28px, 5vw, 72px)));
+}
+
+body:not(.download-surface) .page-shell {
+  padding-top: clamp(22px, 3vw, 42px);
+}
+
+body:not(.download-surface) .public-shell {
+  padding-bottom: 112px;
+}
+
+body:not(.download-surface) :where(.public-topbar, .public-header) {
+  border-color: rgba(195, 215, 231, 0.12);
+  background: linear-gradient(180deg, rgba(10, 17, 25, 0.94), rgba(5, 9, 14, 0.96));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 15px 42px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(20px) saturate(118%);
+  -webkit-backdrop-filter: blur(20px) saturate(118%);
+}
+
+body:not(.download-surface) :where(.public-hero, .public-glass-panel) {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: var(--public-v2-panel-border);
+  border-radius: 21px;
+  padding: clamp(25px, 3.25vw, 48px);
+  background:
+    radial-gradient(90% 120% at 0% 0%, rgba(47, 139, 203, 0.12), transparent 62%),
+    radial-gradient(70% 120% at 100% 0%, rgba(107, 86, 199, 0.05), transparent 65%),
+    var(--public-v2-panel-bg);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.43), inset 0 1px 0 rgba(255, 255, 255, 0.055);
+}
+
+body:not(.download-surface) :where(.public-hero h1, .public-hero h2, .public-page-title) {
+  max-width: 18ch;
+  font-size: clamp(2rem, 4.6vw, 4.3rem);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+}
+
+body:not(.download-surface) :where(.public-hero p, .public-hero-copy > p) {
+  max-width: 68ch;
+  color: rgba(188, 203, 216, 0.82);
+  font-size: clamp(0.96rem, 1.2vw, 1.08rem);
+  line-height: 1.72;
+}
+
+body:not(.download-surface) :where(.public-stack, .public-columns, .public-grid) {
+  gap: clamp(18px, 2vw, 28px);
+}
+
+body:not(.download-surface) :where(.public-glass-card, .public-card, .feature-card, .detail-card, .info-card, .card, .ss-panel) {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: var(--public-v2-panel-border);
+  border-radius: 16px;
+  padding: clamp(18px, 2vw, 26px);
+  background: var(--public-v2-panel-bg);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+body:not(.download-surface) :where(.public-glass-card, .public-card, .feature-card, .detail-card, .info-card, .card, .ss-panel)::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: radial-gradient(75% 90% at 100% 0%, rgba(62, 153, 215, 0.06), transparent 72%);
+  content: "";
+  pointer-events: none;
+}
+
+body:not(.download-surface) :where(.public-glass-card, .public-card, .feature-card, .detail-card, .info-card, .card, .ss-panel):hover,
+body:not(.download-surface) :where(.public-glass-card, .public-card, .feature-card, .detail-card, .info-card, .card, .ss-panel):focus-within {
+  border-color: rgba(102, 188, 244, 0.27);
+  box-shadow: 0 30px 74px rgba(0, 0, 0, 0.43), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  transform: translateY(-2px);
+}
+
+body:not(.download-surface) :where(.section-heading, .public-section-header) {
+  gap: 18px;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(196, 215, 231, 0.1);
+}
+
+body:not(.download-surface) :where(.section-heading h2, .page-heading h2, .public-section-title) {
+  color: #f3f8fb;
+  font-size: clamp(1.18rem, 1.8vw, 1.55rem);
+  letter-spacing: -0.02em;
+}
+
+body:not(.download-surface) :where(input, select, textarea) {
+  border-color: rgba(184, 210, 231, 0.18);
+  background: rgba(4, 9, 14, 0.9);
+  color: #eff7fc;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+body:not(.download-surface) :where(input, select, textarea):focus {
+  border-color: rgba(89, 183, 244, 0.68);
+  box-shadow: 0 0 0 3px rgba(57, 151, 214, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+body:not(.download-surface) :where(table, .public-table) {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+body:not(.download-surface) :where(table, .public-table) tbody tr {
+  transition: background-color 150ms ease, box-shadow 150ms ease;
+}
+
+body:not(.download-surface) :where(table, .public-table) tbody tr:hover {
+  background: rgba(52, 140, 200, 0.07);
+  box-shadow: inset 3px 0 0 rgba(92, 183, 241, 0.5);
+}
+
+body:not(.download-surface) :where(dialog, [role="dialog"]) {
+  border-color: rgba(190, 214, 232, 0.18);
+  background:
+    radial-gradient(80% 100% at 100% 0%, rgba(59, 150, 211, 0.075), transparent 70%),
+    linear-gradient(180deg, rgba(12, 20, 29, 0.99), rgba(4, 8, 13, 0.99));
+  box-shadow: 0 38px 100px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.055);
+}
+
+body:not(.download-surface) dialog::backdrop {
+  background: rgba(1, 4, 7, 0.8);
+  backdrop-filter: blur(9px);
+}
+
+body:not(.download-surface) .public-shell > :not([hidden]),
+body:not(.download-surface) .page-shell > :not([hidden]) {
+  animation: public-page-enter 380ms cubic-bezier(0.16, 0.78, 0.24, 1) both;
+}
+
+@keyframes public-page-enter {
+  from {
+    opacity: 0;
+    filter: blur(3px);
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 720px) {
+  body:not(.download-surface) :where(.page-shell, .public-shell) {
+    width: min(100%, calc(100vw - 24px));
+  }
+
+  body:not(.download-surface) :where(.public-hero, .public-glass-panel) {
+    border-radius: 16px;
+    padding: 22px 19px;
+  }
+
+  body:not(.download-surface) :where(.public-hero h1, .public-hero h2, .public-page-title) {
+    max-width: none;
+    font-size: clamp(1.8rem, 11vw, 3rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not(.download-surface) .public-shell > :not([hidden]),
+  body:not(.download-surface) .page-shell > :not([hidden]) {
+    animation: none;
+  }
+
+  body:not(.download-surface) :where(.public-glass-card, .public-card, .feature-card, .detail-card, .info-card, .card, .ss-panel):hover,
+  body:not(.download-surface) :where(.public-glass-card, .public-card, .feature-card, .detail-card, .info-card, .card, .ss-panel):focus-within {
+    transform: none;
+  }
+}

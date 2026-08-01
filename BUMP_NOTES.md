@@ -6,6 +6,21 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-01 - Major Public application-surface polish
+
+#### Technical notes
+
+- Polished the existing Public application shell with a cooler near-black graphite/steel/blue palette, selective cyan-indigo and purple depth, a bounded 1540px content track, larger page/hero hierarchy, roomier section rhythm, less fragmented dashboard grids, stronger selected sidebar/filter states, layered cards, modal depth, and restrained route/card motion with reduced-motion fallbacks. Narrow viewports now normalize a stored expanded desktop sidebar to the compact icon rail without overwriting the desktop preference.
+- Harmonized standalone support, legal, informational, account, auth, requests, stats, resources, tools, donation, and related pages through the existing `public-pages-v2.css`, `public-login.css`, and `requests-auth.css` layers. Their HTML structure, form IDs, handlers, routes, copy, and server contracts remain unchanged.
+- Kept production `/` unchanged on its accepted independent `studio-first-landing.css` cascade. Explicitly excluded `.download-surface` from the new standalone overrides and did not change StudioApp/OBS/Extensions HTML, JavaScript, manifest/catalog data, Pages Functions, HMAC/cookie access gate, controlled redirect, download metadata, installer state, or specialized product layouts.
+- Extended the focused source regression to require the new shell/content/grid/selected-state, standalone-page, auth, and reduced-motion seams while asserting that the production landing does not load either application polish stylesheet.
+- Preserved all public routes, aliases, slugs, hashes, queries, deep links, filters, pagination, sort/view state, API calls, auth/session flows, Runtime/Auth ownership, live/profile/artifact/economy hydration, loading/empty/error states, canonical version/build authority, and deployment configuration. No file was created or removed, no version was bumped, and no deployment, commit, or push was performed.
+- Publication remains blocked on locating and reviewing genuine redistribution license text for the supplied Tektur binary; no license text was fabricated and the required family was not substituted.
+
+#### Human-readable notes
+
+The Public dashboard and supporting pages now have stronger hierarchy, more breathing room, and calmer premium depth while behaving exactly as before. The approved landing and the protected download experiences were deliberately left alone.
+
 ### 2026-07-31 - Studio-first Public experience
 
 #### Technical notes

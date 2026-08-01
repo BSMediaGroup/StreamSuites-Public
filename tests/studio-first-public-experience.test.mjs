@@ -199,12 +199,32 @@ test("functional shell connects to real product routes without changing route co
   assert.match(read("css/public-shell.css"), /body\.public-shell-page \.sidebar-brand-title\s*\{[\s\S]*font-weight:\s*700/);
   assert.match(read("css/public-shell.css"), /body\.public-shell-page \.sidebar-brand-subheading-text\s*\{[\s\S]*font-weight:\s*400/);
   assert.match(read("css/public-shell.css"), /body\.public-shell-page \.account-menu-overview-value\s*\{[\s\S]*font-family:\s*ui-monospace/);
+  assert.match(shell, /isMobileViewport\(\) && initialSidebarState === SIDEBAR_STATES\.expanded[\s\S]*\? SIDEBAR_STATES\.icon/);
   assert.match(pages, /title:\s*"Public Dashboard"/);
   assert.match(pages, /Runtime\/Auth-owned public state/);
   assert.doesNotMatch(pages, /Leaderboards", value: "Scaffold"/);
   assert.ok(exists("home.html"));
   assert.match(redirects, /\/downloads\/studioapp \/downloads\/studioapp\/index\.html 200/);
   assert.match(redirects, /\/downloads\/obs-plugin \/downloads\/obs-plugin\/index\.html 200/);
+});
+
+test("application and standalone Public surfaces use the restrained premium polish layers", () => {
+  const shellCss = read("css/public-shell.css");
+  const pagesCss = read("css/public-pages-v2.css");
+  const loginCss = read("css/public-login.css");
+  const requestAuthCss = read("css/requests-auth.css");
+
+  assert.match(shellCss, /2026-08 Creator\/Public polish/);
+  assert.match(shellCss, /\.public-content > \*\s*\{[\s\S]*max-width:\s*1540px/);
+  assert.match(shellCss, /\.home-action-grid\s*\{[\s\S]*min\(100%, 235px\)/);
+  assert.match(shellCss, /\.sidebar-link\.active\s*\{[\s\S]*inset 3px 0 0 #68c3ff/);
+  assert.match(shellCss, /\.public-main:has\(> \.public-lockout-banner:not\(\[hidden\]\)\) \.public-content/);
+  assert.match(shellCss, /@keyframes public-route-enter/);
+  assert.match(pagesCss, /body:not\(\.download-surface\) :where\(\.public-hero, \.public-glass-panel\)/);
+  assert.match(pagesCss, /@keyframes public-page-enter/);
+  assert.match(loginCss, /Public auth presentation harmonization/);
+  assert.match(requestAuthCss, /Requests auth follows the same cooler Public presentation/);
+  assert.doesNotMatch(read("index.html"), /public-shell\.css|public-pages-v2\.css/);
 });
 
 test("POC references remain intact and obsolete live landing CSS is retired", () => {

@@ -1833,10 +1833,14 @@
       storedSidebarState
       || autoSidebarStateOverride
       || (isMobileViewport() ? SIDEBAR_STATES.icon : SIDEBAR_STATES.expanded);
-    if (initialSidebarState !== SIDEBAR_STATES.hidden) {
-      lastVisibleSidebarState = initialSidebarState;
+    const responsiveInitialSidebarState =
+      isMobileViewport() && initialSidebarState === SIDEBAR_STATES.expanded
+        ? SIDEBAR_STATES.icon
+        : initialSidebarState;
+    if (responsiveInitialSidebarState !== SIDEBAR_STATES.hidden) {
+      lastVisibleSidebarState = responsiveInitialSidebarState;
     }
-    setSidebarState(initialSidebarState, false);
+    setSidebarState(responsiveInitialSidebarState, false);
     if (options.showLockoutBanner) {
       void loadPageBannerAccessState(true);
     }
