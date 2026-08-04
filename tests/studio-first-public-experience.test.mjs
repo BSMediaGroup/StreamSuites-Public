@@ -58,9 +58,9 @@ test("production landing is Studio-first and preserves the production access con
   assert.match(html, /\/js\/status-widget\.js/);
   assert.match(html, /\/js\/turnstile-inline\.js/);
   assert.match(html, /\/js\/studio-first-landing\.js/);
-  assert.match(html, /\/assets\/logos\/wmnew\.webp/);
-  assert.match(html, /\/assets\/logos\/ssmainlogosq\.webp/);
+  assert.match(html, /class="brand"[\s\S]*class="brand__mark" src="\/assets\/logos\/ssmainlogosq\.webp"[\s\S]*class="brand__wordmark" src="\/assets\/logos\/wmnew\.webp"/);
   assert.ok(exists("assets/logos/wmnew.webp"));
+  assert.ok(exists("assets/logos/ssmainlogosq.webp"));
   assert.ok(exists("assets/icons/ui/info.svg"));
   assert.ok(exists("assets/icons/ui/close.svg"));
   assert.match(html, /data-header-login-menu/);
@@ -85,6 +85,9 @@ test("production landing is Studio-first and preserves the production access con
   assert.match(css, /\.auth-modal-backdrop\.is-open/);
   assert.match(css, /\.ss-auth-access-gate__icon\s*\{[\s\S]*\/assets\/icons\/ui\/key\.svg/);
   assert.match(css, /\.ss-auth-surface-links__summary-label\s*\{[\s\S]*font-size:\s*11px/);
+  assert.match(css, /body\s*\{[\s\S]*margin:\s*0;[\s\S]*padding:\s*0;/);
+  assert.match(css, /\.brand__mark\s*\{[\s\S]*width:\s*34px;[\s\S]*height:\s*34px;/);
+  assert.match(css, /\.brand__wordmark[\s\S]*height:\s*24px;/);
   assert.match(css, /@media \(max-width:\s*600px\)\s*\{[\s\S]*\.auth-modal-backdrop\s*\{[\s\S]*align-items:\s*center/);
   assert.match(css, /@media \(max-width:\s*720px\)/);
   assert.match(css, /@media \(prefers-reduced-motion:\s*reduce\)/);
@@ -96,7 +99,7 @@ test("production landing preserves the approved POC hero, bento modules, and aut
 
   assert.match(html, /class="scroll-cue" href="#products"/);
   assert.match(html, /Explore the suite/);
-  assert.match(html, /\/css\/studio-first-landing\.css\?v=20260731-poc-fidelity/);
+  assert.match(html, /\/css\/studio-first-landing\.css\?v=20260805-header-brand-frame/);
   assert.match(css, /\.landing-hero h1 span\s*\{[\s\S]*linear-gradient\(95deg,[\s\S]*background-clip:\s*text/);
   assert.match(css, /\.scroll-cue i\s*\{[\s\S]*animation:\s*scrollCue/);
 

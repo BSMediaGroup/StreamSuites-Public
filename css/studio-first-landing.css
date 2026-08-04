@@ -59,6 +59,8 @@ html {
 }
 
 body {
+  margin: 0;
+  padding: 0;
   min-width: 320px;
   overflow-x: hidden;
   background:
@@ -296,19 +298,34 @@ button {
 .site-header__inner {
   min-height: var(--landing-header-height);
   display: grid;
-  grid-template-columns: minmax(190px, 0.9fr) auto minmax(340px, 1.2fr);
+  grid-template-columns: minmax(250px, 0.9fr) auto minmax(340px, 1.2fr);
   align-items: center;
   gap: 28px;
 }
 
 .brand {
-  width: min(215px, 100%);
+  width: max-content;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.brand img,
+.brand img {
+  display: block;
+  object-fit: contain;
+}
+
+.brand__mark {
+  width: 34px;
+  height: 34px;
+  flex: none;
+}
+
+.brand__wordmark,
 .site-footer__brand img {
   width: auto;
-  height: 28px;
+  height: 24px;
   object-fit: contain;
 }
 
@@ -2579,7 +2596,7 @@ html[data-product="browser"] .button--primary {
   }
 
   .site-header__inner {
-    grid-template-columns: 185px auto 1fr;
+    grid-template-columns: 250px auto 1fr;
     gap: 20px;
   }
 
@@ -2812,8 +2829,13 @@ html[data-product="browser"] .button--primary {
     gap: 5px;
   }
 
-  .brand img {
-    height: 24px;
+  .brand__mark {
+    width: 30px;
+    height: 30px;
+  }
+
+  .brand__wordmark {
+    height: 21px;
   }
 
   .landing-hero {

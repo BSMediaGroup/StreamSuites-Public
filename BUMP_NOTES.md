@@ -6,6 +6,18 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-05 - Public landing header identity and edge reset
+
+#### Technical notes
+
+- Prefixed the production landing header wordmark with the existing first-party `assets/logos/ssmainlogosq.webp` square mark, using separately scoped mark and wordmark sizing so the combined identity remains clear across desktop, tablet, and mobile header layouts.
+- Reset the live landing document body margin and padding to zero, removing the browser-default 8px outer inset so the access notices, header, hero, and remaining page frame reach the viewport edges as intended.
+- Revised only the landing stylesheet cache key and focused source assertions. Existing hero composition, routes, access/auth/session/Turnstile contracts, Runtime/Auth authority, status/version hydration, download surfaces, product data, and deployment configuration remain unchanged. No file was created or removed, no version was bumped, and no deployment, commit, or push was performed.
+
+#### Human-readable notes
+
+The main StreamSuites icon now leads the header wordmark, and the unintended dark gutter around the entire landing page is gone.
+
 ### 2026-08-01 - Major Public application-surface polish
 
 #### Technical notes
