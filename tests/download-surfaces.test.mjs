@@ -53,8 +53,11 @@ test("download routes use the approved Public typography and retain authoritativ
 test("download polish uses feature accents, supplied platform icons, and truthful coming-soon scaffolds", () => {
   const shared = read("css/download-surface.css");
   const studio = read("downloads/studioapp/index.html");
+  const studioCss = read("css/studioapp-download.css");
   const obs = read("downloads/obs-plugin/index.html");
+  const obsCss = read("css/obs-plugin-download.css");
   const extensions = read("downloads/studioapp/extensions/index.html");
+  const extensionsCss = read("css/studioapp-extensions.css");
 
   assert.match(shared, /\.download-hero h1[\s\S]*linear-gradient[\s\S]*background-clip:\s*text/);
   assert.match(shared, /url\("\/assets\/icons\/windows-0\.svg"\)/);
@@ -73,6 +76,14 @@ test("download polish uses feature accents, supplied platform icons, and truthfu
   assert.match(obs, /download-button--obs/);
   assert.match(obs, /minimum install storage are not yet published/i);
   assert.match(extensions, /There is no standalone directory installer/);
+  assert.match(studio, /class="studioapp-preview__title-icon" aria-hidden="true"/);
+  assert.doesNotMatch(studio, /studioapp-preview__title"><img[^>]+streamsuites-0\.svg/);
+  assert.match(studioCss, /\.studioapp-preview__title-icon\s*\{[\s\S]*color:\s*#b4ef5b;[\s\S]*icondiag-studioapp\.svg/);
+  assert.match(obs, /class="obs-preview__title-icon" aria-hidden="true"/);
+  assert.match(obsCss, /\.obs-preview__title-icon\s*\{[\s\S]*color:\s*#c2b3ff;[\s\S]*obs-0\.svg/);
+  assert.match(extensions, /class="extensions-preview__title-icon" aria-hidden="true"/);
+  assert.match(extensionsCss, /\.extensions-preview__title-icon\s*\{[\s\S]*color:\s*#b4ef5b;[\s\S]*icondiag-studioapp\.svg/);
+  [studio, obs, extensions].forEach((html) => assert.match(html, /\?v=20260806-diagram-title-icons/));
 });
 
 test("downloads index is searchable, routed, and links only to truthful product surfaces", () => {

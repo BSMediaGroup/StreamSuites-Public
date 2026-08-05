@@ -61,6 +61,22 @@ body.obs-plugin-download-page {
   color: #968ce6;
 }
 
+.obs-preview__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.obs-preview__title-icon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  background-color: currentColor;
+  color: #c2b3ff;
+  -webkit-mask: url("/assets/icons/obs-0.svg") center / contain no-repeat;
+  mask: url("/assets/icons/obs-0.svg") center / contain no-repeat;
+}
+
 .obs-preview__controls {
   display: flex;
   align-items: center;

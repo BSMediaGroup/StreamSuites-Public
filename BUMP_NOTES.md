@@ -6,6 +6,18 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-06 - Download hero mock-titlebar icon correction
+
+#### Technical notes
+
+- Replaced the StudioApp download diagram's raw black-rendering `streamsuites-0.svg` image with the exact `icondiag-studioapp.svg` current-color mask used by the native tab on the main landing hero, using the same `#b4ef5b` bright-lime state color.
+- Added the matching `obs-0.svg` mask and `#c2b3ff` active violet to the OBS download diagram titlebar, and added the StudioApp diagram mask in bright lime to the Extensions diagram titlebar. Revised only the three product-specific download stylesheet cache keys.
+- Preserved diagram layout/content, release and catalog states, routes, download controls, HMAC/cookie access gate, manifest validation, controlled redirect, Runtime/Auth authority, and the no-installer-in-Public boundary. No version was bumped and no deployment, commit, or push was performed.
+
+#### Human-readable notes
+
+The three download diagrams now carry the correct colored product mark in their mock titlebars instead of a black or missing icon.
+
 ### 2026-08-06 - Landing product-card icon parity
 
 #### Technical notes

@@ -78,10 +78,14 @@
   gap: 7px;
 }
 
-.studioapp-preview__title img {
+.studioapp-preview__title-icon {
   width: 17px;
   height: 17px;
-  object-fit: contain;
+  flex: 0 0 auto;
+  background-color: currentColor;
+  color: #b4ef5b;
+  -webkit-mask: url("/assets/icons/icondiag-studioapp.svg") center / contain no-repeat;
+  mask: url("/assets/icons/icondiag-studioapp.svg") center / contain no-repeat;
 }
 
 .studioapp-preview__titlebar strong {
