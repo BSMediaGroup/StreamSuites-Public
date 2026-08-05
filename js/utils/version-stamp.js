@@ -27,7 +27,7 @@
       });
 
       document.querySelectorAll(".footer-version").forEach((el) => {
-        const hasTooltip = !!el.closest(".footer-version-tooltip-container");
+        const hasTooltip = !!el.closest(".footer-version-tooltip-container") || el.classList.contains("standalone-version-badge");
         el.textContent = hasTooltip ? footerCompactLabel : footerLabel;
       });
 

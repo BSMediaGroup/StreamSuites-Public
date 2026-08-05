@@ -1,116 +1,97 @@
 <!DOCTYPE html>
-<!-- StreamSuites™ — Accessibility Statement -->
+<!-- StreamSuites™ — Accessibility information -->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Accessibility • StreamSuites™</title>
-  <meta name="description" content="Accessibility commitments for StreamSuites public pages and creator tools." />
+  <meta name="description" content="The accessibility principles, current practices, and known limitations of StreamSuites public surfaces." />
   <link rel="canonical" href="https://streamsuites.app/accessibility.html" />
   <meta property="og:title" content="Accessibility • StreamSuites™" />
-  <meta property="og:description" content="Accessibility commitments for StreamSuites public pages and creator tools." />
+  <meta property="og:description" content="The accessibility principles, current practices, and known limitations of StreamSuites public surfaces." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://streamsuites.app/accessibility.html" />
   <meta property="og:image" content="/assets/backgrounds/seoshare.jpg" />
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="/css/theme-dark.css" />
   <link rel="stylesheet" href="/css/components.css" />
-  <link rel="stylesheet" href="/css/public-pages.css" />
-  <link rel="stylesheet" href="/css/public-pages-v2.css" />
-  <link rel='stylesheet' href='/css/status-widget.css' />
+  <link rel="stylesheet" href="/css/studio-first-landing.css" />
+  <link rel="stylesheet" href="/css/standalone-pages.css" />
+  <link rel="stylesheet" href="/css/status-widget.css" />
 </head>
-<body>
-  <div class="public-bg" aria-hidden="true"></div>
-  <div class="public-surface">
-    <div class="public-shell">
-      <header class="public-topbar">
-        <a class="public-brand" href="/">
-          <img src="/assets/logos/logo.png" alt="StreamSuites" />
-          <div>
-            <h1>StreamSuites™</h1>
-            <p class="brand-subtitle">Public surface</p>
-          </div>
-        </a>
-        <div class="public-nav-wrapper">
-          <input type="checkbox" id="public-nav-toggle" class="nav-toggle" aria-label="Toggle navigation" />
-          <label class="hamburger" for="public-nav-toggle">
-            <span class="sr-only">Toggle navigation</span>
-            <svg viewBox="0 0 32 32" aria-hidden="true">
-              <path class="line line-top-bottom" d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22"></path>
-              <path class="line" d="M7 16 27 16"></path>
-            </svg>
-          </label>
-          <div class="public-nav">
-            <span class="version-pill version-badge">Loading version…</span>
-            <a href="/about.html">About</a>
-            <a href="/tools.html">Tools</a>
-            <a href="/support.html">Support</a>
-            <a href="/privacy.html">Privacy</a>
-            <a href="/changelog.html">Changelog</a>
-            <a href="/accessibility.html">Accessibility</a>
-          </div>
-        </div>
-      </header>
-
-      <section class="public-hero public-glass-panel">
-        <div class="section-heading">
-          <h2>Accessibility Statement</h2>
-          <span class="public-badge">Open access</span>
-        </div>
-        <p class="muted">StreamSuites aims to keep every public surface navigable, readable, and keyboard-friendly. Static layouts reduce motion and minimize script requirements.</p>
-      </section>
-
-      <section class="public-stack" aria-label="Accessibility commitments">
-        <article class="public-glass-card">
-          <h3>Standards</h3>
-          <p class="muted">We target WCAG 2.1 AA for contrast and navigation. Native elements, such as the roadmap progress bars, are preserved to keep semantics intact.</p>
-          <ul class="public-list">
-            <li>Focusable controls with visible states</li>
-            <li>Semantic headings and lists</li>
-            <li>Reduced reliance on animation</li>
-          </ul>
-        </article>
-
-        <article class="public-glass-card">
-          <h3>Feedback</h3>
-          <p class="muted">Contact us if you encounter accessibility barriers.</p>
-          <ul class="public-list">
-            <li>Email: <a href="mailto:access@stream.suites">access@stream.suites</a></li>
-            <li>Discord: <a href="https://discord.gg" target="_blank" rel="noreferrer">Community support</a></li>
-            <li>Dashboard users can open a support ticket from the admin view.</li>
-          </ul>
-        </article>
-
-        <article class="public-glass-card">
-          <h3>Roadmap </h3>
-          <p class="muted">Upcoming accessibility updates will be reflected in the public changelog, with emphasis on captions, transcripts, and keyboard fallbacks.</p>
-        </article>
-      </section>
-
-      <footer class="public-footer">
-        <div>
-          <span class="footer-version">Version</span>
-          <span class="footer-copyright">©</span>
-        </div>
-        <nav aria-label="Public footer navigation">
-          <a href="/about.html">About</a>
-          <a href="/tools.html">Tools</a>
-          <a href="/support.html">Support</a>
-          <a href="/donate.html">Donate</a>
-          <a href="/privacy.html">Privacy</a>
-          <a href="/changelog.html">Changelog</a>
-          <a href="/accessibility.html">Accessibility</a>
-        </nav>
-      </footer>
+<body class="standalone-page standalone-page--accessibility">
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <header class="site-header" data-site-header>
+    <div class="landing-shell site-header__inner">
+      <a class="brand" href="/" aria-label="StreamSuites home">
+        <img class="brand__mark" src="/assets/logos/ssmainlogosq.webp" alt="" width="44" height="44" />
+        <img class="brand__wordmark" src="/assets/logos/wmnew.webp" alt="StreamSuites" />
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="Open navigation" data-nav-toggle><span></span><span></span><span></span></button>
+      <nav class="primary-nav" id="primary-nav" aria-label="Primary navigation" data-primary-nav>
+        <a href="/about.html">About</a><a href="/support.html">Support</a><a href="/roadmap">Roadmap</a><a href="/donate.html">Donate</a><a href="/accessibility.html" aria-current="page">Accessibility</a><a class="standalone-mobile-only" href="/home.html">Public dashboard</a><a class="standalone-mobile-only" href="https://studio.streamsuites.app">Open Studio</a>
+      </nav>
+      <div class="header-actions"><a class="standalone-version-badge footer-version button button--quiet button--small" href="/roadmap">Loading version…</a><a class="button button--primary button--small" href="https://studio.streamsuites.app">Open Studio</a></div>
     </div>
-  </div>
+  </header>
 
-  <script src="/js/utils/versioning.js"></script>
-  <script src="/js/utils/version-stamp.js"></script>
-  <script src='/js/status-widget.js' defer></script>
+  <main class="standalone-main" id="main-content">
+    <div class="landing-shell">
+      <section class="standalone-hero" aria-labelledby="accessibility-title">
+        <div>
+          <p class="standalone-kicker">Access by design</p>
+          <h1 class="standalone-title" id="accessibility-title">Clear paths through every public surface.</h1>
+          <p class="standalone-lede">StreamSuites aims to keep its public experience readable, operable, and understandable across input methods, screen sizes, and motion preferences.</p>
+        </div>
+        <aside class="standalone-hero__aside" aria-label="Accessibility status">
+          <span class="status-chip status-chip--available">Active practice</span>
+          <p>Accessibility is an ongoing product responsibility. This page describes current design intentions and known limits; it is not a certification or formal conformance claim.</p>
+          <a class="button button--secondary button--small" href="/support.html">Report a barrier</a>
+        </aside>
+      </section>
+
+      <section class="standalone-section" aria-labelledby="principles-title">
+        <div class="standalone-section__head">
+          <div><p class="section-kicker">Current principles</p><h2 id="principles-title">Practical support, built into the interface.</h2></div>
+          <p>The public site uses native controls and clear content structure wherever possible. These practices are reviewed as individual surfaces change, while coverage across every StreamSuites product remains a work in progress.</p>
+        </div>
+        <div class="standalone-grid">
+          <article class="standalone-card standalone-card--half"><span class="card-index">01 / Keyboard</span><h3>Keyboard and focus</h3><p>Navigation, links, forms, expandable roadmap items, and primary actions are intended to remain reachable without a pointer. Visible focus rings identify the current control.</p><div class="accessibility-demo" aria-label="Example keyboard keys"><div><span class="keyboard-key">Tab</span> <span class="keyboard-key">Enter</span> <span class="keyboard-key">Esc</span></div></div></article>
+          <article class="standalone-card standalone-card--half"><span class="card-index">02 / Readability</span><h3>Contrast and typography</h3><p>Body copy uses Geist Sans at deliberate reading widths, Tektur is reserved for display hierarchy, and technical status text uses IBM Plex Mono. Muted text and controls are checked against the dark surfaces they occupy.</p></article>
+          <article class="standalone-card"><span class="card-index">03 / Motion</span><h3>Reduced motion</h3><p>Decorative reveals and progress transitions respond to the operating-system reduced-motion preference. Information remains present when animation is removed.</p></article>
+          <article class="standalone-card"><span class="card-index">04 / Reflow</span><h3>Responsive layouts</h3><p>Navigation, content grids, legal reading layouts, and controls reflow for narrow viewports without requiring horizontal page scrolling.</p></article>
+          <article class="standalone-card"><span class="card-index">05 / Semantics</span><h3>Meaningful structure</h3><p>Landmarks, ordered headings, labelled controls, status announcements, and native disclosure elements provide a stronger foundation for assistive technologies.</p></article>
+        </div>
+      </section>
+
+      <section class="standalone-section" aria-labelledby="limits-title">
+        <div class="standalone-panel limitation-panel">
+          <p class="section-kicker">Known limits</p>
+          <h2 id="limits-title">Honest about what is still being verified.</h2>
+          <ul class="standalone-list">
+            <li>StreamSuites has not published an independent accessibility audit or certification.</li>
+            <li>Coverage can vary between the public site, Browser Studio, native StudioApp, OBS integration, and third-party provider interfaces.</li>
+            <li>Discord, payment, status, authentication, media, and other embedded or external services retain their own accessibility behavior.</li>
+            <li>The assistive-technology and physical-device test matrix is not yet comprehensive.</li>
+          </ul>
+          <div class="standalone-callout" style="margin-top: 32px"><span class="standalone-callout__mark">Feedback</span><p>If something blocks access, describe the page, control, device, browser, and assistive technology involved through the <a href="/support.html">support hub</a> or email <a href="mailto:support@streamsuites.app">support@streamsuites.app</a>.</p></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="landing-shell site-footer__top">
+      <div class="site-footer__brand"><img src="/assets/logos/sswordmarktm.webp" alt="StreamSuites™" /><p>Connected livestream production for browser, Windows, and OBS workflows.</p></div>
+      <div class="site-footer__links">
+        <div><strong>Products</strong><a href="https://studio.streamsuites.app">Browser Studio</a><a href="/downloads/studioapp/">StudioApp</a><a href="/downloads/obs-plugin/">Studio for OBS</a></div>
+        <div><strong>Public</strong><a href="/home.html">Dashboard</a><a href="/community">Community</a><a href="/live">Live</a><a href="/clips">Clips</a></div>
+        <div><strong>Resources</strong><a href="/about.html">About</a><a href="/support.html">Support</a><a href="/roadmap">Roadmap</a><a href="https://streamsuites.statuspage.io/" target="_blank" rel="noopener noreferrer">Status</a></div>
+        <div><strong>Legal</strong><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="/accessibility.html">Accessibility</a></div>
+      </div>
+    </div>
+    <div class="landing-shell site-footer__bottom"><a class="footer-copyright" href="https://brainstream.media" target="_blank" rel="noopener noreferrer">© 2026 Brainstream Media Group</a><div class="footer-status" data-status-slot></div><span class="footer-version-tooltip-container"><a class="footer-version" href="/roadmap" aria-describedby="accessibility-version-tooltip">Loading version…</a><span class="footer-version-tooltip" id="accessibility-version-tooltip" role="tooltip"><span class="footer-version-tooltip-line" data-footer-version-tooltip="version">Loading version…</span><span class="footer-version-tooltip-line" data-footer-version-tooltip="build">Build …</span><a class="footer-version-tooltip-link" href="/roadmap">View roadmap</a></span></span></div>
+  </footer>
+  <script src="/js/utils/versioning.js"></script><script src="/js/utils/version-stamp.js"></script><script src="/js/status-widget.js" defer></script><script src="/js/studio-first-landing.js" defer></script>
 </body>
 </html>
-
-
-
-

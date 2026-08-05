@@ -1,5 +1,5 @@
 /* UI refinement: About page container simplification, title deduplication,
-   scope grouping, and hover glow alignment with Changelog roadmap */
+   scope grouping, and hover glow alignment with the public roadmap */
 /* ======================================================================
    StreamSuites — Public Pages (Clips & Polls)
    Standalone styling that reuses the dark palette and typography.
@@ -2108,67 +2108,6 @@ body.viz-expanded {
 
 .ss-legend-row + .ss-legend-row { margin-top: 6px; }
 
-.changelog-container { display: flex; flex-direction: column; gap: 12px; }
-
-.changelog-header-row {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.changelog-title {
-  margin: 0;
-  line-height: 1.1;
-}
-
-.changelog-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-
-  /* optical correction — REQUIRED */
-  transform: translateY(-1px);
-}
-
-.changelog-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  transform: translateY(-0.05em);
-}
-
-.changelog-entry .section-heading {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-}
-
-.changelog-body { display: grid; gap: 10px; }
-
-.changelog-tags-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  margin: 2px 0 4px;
-}
-
-.changelog-category h4 {
-  margin: 0 0 6px;
-  font-size: 0.95em;
-  letter-spacing: 0.02em;
-  color: var(--text-secondary);
-}
-
-.changelog-error .lede { color: #f7caca; }
-
-.ss-tag-version {
-  background: linear-gradient(90deg, #a855f7, #7c3aed);
-  color: #ffffff;
-  border-color: rgba(168, 85, 247, 0.6);
-}
 /* ======================================================================
    Public typography helpers
    ====================================================================== */

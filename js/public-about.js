@@ -1,5 +1,5 @@
 // UI refinement: About page container simplification, title deduplication,
-// scope grouping, and hover glow alignment with Changelog roadmap
+// scope grouping, and hover glow alignment with the public roadmap
 /* ======================================================================
    StreamSuites™ Public — About Page (Manifest-driven)
    Project: StreamSuites™

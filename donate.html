@@ -1,243 +1,61 @@
 <!DOCTYPE html>
-<!-- StreamSuites - Public Donation Page -->
+<!-- StreamSuites™ — One-time donation checkout -->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Support StreamSuites</title>
-  <meta name="description" content="Support StreamSuites with an optional one-time donation that directly funds reliability, performance, and creator features." />
+  <title>Donate • StreamSuites™</title>
+  <meta name="description" content="Make an optional one-time donation to support the ongoing development and operation of StreamSuites." />
   <link rel="canonical" href="https://streamsuites.app/donate.html" />
-  <meta property="og:title" content="Support StreamSuites" />
-  <meta property="og:description" content="Optional one-time donations that help StreamSuites ship faster for creators and viewers." />
+  <meta property="og:title" content="Donate • StreamSuites™" />
+  <meta property="og:description" content="Make an optional one-time donation to support StreamSuites." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://streamsuites.app/donate.html" />
   <meta property="og:image" content="/assets/backgrounds/seoshare.jpg" />
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="/css/theme-dark.css" />
   <link rel="stylesheet" href="/css/components.css" />
-  <link rel="stylesheet" href="/css/public-pages.css" />
-  <link rel="stylesheet" href="/css/public-pages-v2.css" />
-  <link rel="stylesheet" href="/css/donate.css" />
+  <link rel="stylesheet" href="/css/studio-first-landing.css" />
+  <link rel="stylesheet" href="/css/standalone-pages.css" />
   <link rel="stylesheet" href="/css/status-widget.css" />
 </head>
-<body class="donate-page">
-  <div class="public-bg" aria-hidden="true"></div>
-  <div class="public-surface">
-    <div class="public-shell">
-      <header class="public-topbar">
-        <a class="public-brand" href="/">
-          <img src="/assets/logos/logo.png" alt="StreamSuites" />
-          <div>
-            <h1>StreamSuites</h1>
-            <p class="brand-subtitle">Public surface</p>
-          </div>
-        </a>
-        <div class="public-nav-wrapper">
-          <input type="checkbox" id="public-nav-toggle" class="nav-toggle" aria-label="Toggle navigation" />
-          <label class="hamburger" for="public-nav-toggle">
-            <span class="sr-only">Toggle navigation</span>
-            <svg viewBox="0 0 32 32" aria-hidden="true">
-              <path class="line line-top-bottom" d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22"></path>
-              <path class="line" d="M7 16 27 16"></path>
-            </svg>
-          </label>
-          <div class="public-nav">
-            <span class="version-pill version-badge">Loading version...</span>
-            <a href="/about.html">About</a>
-            <a href="/tools.html">Tools</a>
-            <a href="/support.html">Support</a>
-            <a href="/privacy.html">Privacy</a>
-            <a href="/changelog.html">Changelog</a>
-            <a href="/accessibility.html">Accessibility</a>
-          </div>
-        </div>
-      </header>
+<body class="standalone-page standalone-page--donate">
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <header class="site-header" data-site-header><div class="landing-shell site-header__inner">
+    <a class="brand" href="/" aria-label="StreamSuites home"><img class="brand__mark" src="/assets/logos/ssmainlogosq.webp" alt="" width="44" height="44" /><img class="brand__wordmark" src="/assets/logos/wmnew.webp" alt="StreamSuites" /></a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="Open navigation" data-nav-toggle><span></span><span></span><span></span></button>
+    <nav class="primary-nav" id="primary-nav" aria-label="Primary navigation" data-primary-nav><a href="/about.html">About</a><a href="/support.html">Support</a><a href="/roadmap">Roadmap</a><a href="/donate.html" aria-current="page">Donate</a><a href="/accessibility.html">Accessibility</a><a class="standalone-mobile-only" href="/home.html">Public dashboard</a><a class="standalone-mobile-only" href="https://studio.streamsuites.app">Open Studio</a></nav>
+    <div class="header-actions"><a class="standalone-version-badge footer-version button button--quiet button--small" href="/roadmap">Loading version…</a><a class="button button--primary button--small" href="https://studio.streamsuites.app">Open Studio</a></div>
+  </div></header>
 
-      <section class="public-hero public-glass-panel donate-hero" aria-labelledby="donate-hero-title">
-        <div class="donate-hero-grid">
-          <div class="donate-hero-copy">
-            <div class="section-heading">
-              <h2 id="donate-hero-title">Fund Better Creator Workflows</h2>
-              <span class="public-badge">Community funded</span>
-            </div>
-            <p class="muted">Your donation helps StreamSuites deliver faster runtimes, more reliable public tooling, and better experiences for both creators and viewers.</p>
-            <p class="muted">Donations are directed to infrastructure, operational tooling, and feature development. Every contribution improves platform performance and shipping velocity.</p>
-            <div class="hero-actions donate-hero-actions">
-              <a class="cta-link ss-btn primary" href="#donate">Support the roadmap</a>
-              <a class="cta-link ss-btn secondary" href="#funding-goals">View funding goals</a>
-            </div>
-          </div>
-          <aside class="public-glass-card donate-hero-side" aria-label="Trust highlights">
-            <h3>What support unlocks</h3>
-            <ul class="public-list donate-bullet-list">
-              <li>Lower latency in realtime modules and overlays</li>
-              <li>Higher throughput for media exports and public assets</li>
-              <li>More reliable uptime monitoring and incident response</li>
-            </ul>
-            <p class="helper-text">Secure payments by Stripe. StreamSuites does not receive raw card details.</p>
-          </aside>
+  <main class="standalone-main" id="main-content">
+    <div class="landing-shell">
+      <section class="standalone-hero" aria-labelledby="donate-title">
+        <div><p class="standalone-kicker">Optional support</p><h1 class="standalone-title" id="donate-title">Help fund the work behind StreamSuites.</h1><p class="standalone-lede">A donation supports the ongoing development and operation of the project. It is always optional and does not unlock an account, plan, feature, or priority access.</p><div class="standalone-actions"><a class="button button--primary" href="#donate-checkout">Choose an amount</a><a class="button button--quiet" href="/roadmap">See the roadmap</a></div></div>
+        <aside class="standalone-hero__aside" aria-label="Donation boundary"><span class="status-chip status-chip--available">One-time checkout</span><p>The existing StreamSuites billing endpoint creates a one-time Stripe Checkout session. Recurring donations are not offered on this page.</p></aside>
+      </section>
+
+      <section class="standalone-section" aria-labelledby="checkout-title">
+        <div class="standalone-section__head"><div><p class="section-kicker">Secure checkout</p><h2 id="checkout-title">Choose what feels right.</h2></div><p>Select a suggested whole-dollar amount or enter your own. The page validates the amount, then hands payment collection to Stripe Checkout through the existing StreamSuites API flow.</p></div>
+        <div class="donate-layout">
+          <article class="standalone-panel donate-checkout" id="donate-checkout" aria-busy="false">
+            <h3>One-time donation</h3><p>Amounts are shown and submitted in US dollars. Choose a whole-dollar value of at least $1.</p>
+            <div class="donate-amounts" aria-label="Suggested donation amounts"><button class="donate-option" type="button" data-amount="5" aria-pressed="false">$5</button><button class="donate-option" type="button" data-amount="10" aria-pressed="false">$10</button><button class="donate-option" type="button" data-amount="25" aria-pressed="false">$25</button><button class="donate-option" type="button" data-amount="50" aria-pressed="false">$50</button><button class="donate-option" type="button" data-amount="100" aria-pressed="false">$100</button><button class="donate-option" type="button" data-amount="250" aria-pressed="false">$250</button></div>
+            <div class="form-field"><label for="donate-custom-amount">Custom whole-dollar amount</label><div class="donate-custom-row"><input id="donate-custom-amount" type="number" min="1" step="1" inputmode="numeric" autocomplete="off" placeholder="Enter an amount" aria-describedby="donate-amount-help" /><button class="button button--secondary donate-option" type="button" data-action="custom">Continue to Stripe</button></div><p class="form-help" id="donate-amount-help">Do not enter card details here. Payment details are collected on Stripe Checkout.</p></div>
+            <p class="donate-status" id="donate-status" role="status" aria-live="polite">Choose an amount to continue.</p>
+          </article>
+          <aside class="standalone-panel donate-assurance" aria-labelledby="assurance-title"><span class="status-chip status-chip--available">Stripe Checkout</span><h3 id="assurance-title" style="margin-top: 24px">A clear payment boundary.</h3><dl><div><dt>Payment handling</dt><dd>Card details are entered on Stripe Checkout, not this public page.</dd></div><div><dt>Donation type</dt><dd>A one-time payment. No recurring plan is created by this flow.</dd></div><div><dt>Access</dt><dd>Donations do not change StreamSuites account, role, tier, or permission state.</dd></div><div><dt>Need help?</dt><dd>Use the <a href="/support.html">support hub</a> without sharing payment credentials.</dd></div></dl></aside>
         </div>
       </section>
 
-      <section class="public-stack donate-primary-stack" aria-label="Donation checkout">
-        <article class="public-glass-card donate-card" id="donate">
-          <div class="section-heading">
-            <h3>Make a One-Time Donation</h3>
-            <span class="public-badge">Stripe checkout</span>
-          </div>
-          <p class="muted">Choose a suggested amount or enter a custom value. Donations are optional and never required to use StreamSuites.</p>
-          <div class="hero-actions donate-actions">
-            <button class="cta-link ss-btn primary donate-option" type="button" data-amount="5">$5</button>
-            <button class="cta-link ss-btn primary donate-option" type="button" data-amount="10">$10</button>
-            <button class="cta-link ss-btn primary donate-option" type="button" data-amount="25">$25</button>
-            <button class="cta-link ss-btn primary donate-option" type="button" data-amount="50">$50</button>
-            <button class="cta-link ss-btn primary donate-option" type="button" data-amount="100">$100</button>
-            <button class="cta-link ss-btn primary donate-option" type="button" data-amount="250">$250</button>
-          </div>
-          <div class="donate-custom">
-            <label for="donate-custom-amount">Custom amount (USD)</label>
-            <div class="donate-custom-row">
-              <input id="donate-custom-amount" type="number" min="1" step="1" inputmode="decimal" placeholder="Enter custom amount" />
-              <button class="cta-link ss-btn secondary donate-option" type="button" data-action="custom">Donate custom amount</button>
-            </div>
-          </div>
-          <p class="helper-text">Payments are securely processed by Stripe Checkout.</p>
-          <p class="helper-text donate-message-inline" id="donate-message-inline" role="status" aria-live="polite" hidden>Message will be attached once enabled.</p>
-          <p class="helper-text donate-error" role="alert" hidden>Sorry, we could not start checkout. Please try again in a moment.</p>
-        </article>
-
-        <article class="public-glass-card secure-payments-card" aria-label="Payment security">
-          <h3>Secure payments by Stripe</h3>
-          <p class="muted">Every donation is handled through Stripe Checkout with industry-standard payment security and fraud protections.</p>
-          <p class="helper-text">Transparency: funding goes to hosting, compute, storage, bandwidth, monitoring, and active product development.</p>
-        </article>
+      <section class="standalone-section" aria-labelledby="support-work-title">
+        <div class="standalone-section__head"><div><p class="section-kicker">What support means</p><h2 id="support-work-title">Backing the project, without invented promises.</h2></div><p>Contributions support the work required to build, operate, document, package, and test StreamSuites. Allocation varies with current project needs, and no individual donation is assigned to a claimed unit of infrastructure or feature delivery.</p></div>
+        <div class="standalone-grid"><article class="standalone-card standalone-card--wide"><span class="card-index">Build + operate</span><h3>Product and platform work</h3><p>Support can contribute to the ongoing engineering and operation behind the Runtime/Auth authority, public and creator-facing clients, Browser Studio, native StudioApp, OBS integration, and their supporting infrastructure.</p></article><article class="standalone-card"><span class="card-index">Always optional</span><h3>No paywall attached</h3><p>This is a donation path, not a subscription catalogue. Use of the project is governed by its actual account, access, and product availability—not by this contribution.</p></article></div>
       </section>
-
-      <section class="public-stack donate-impact-stack" aria-labelledby="impact-tiers-title">
-        <article class="public-glass-panel">
-          <div class="section-heading">
-            <h2 id="impact-tiers-title">Impact Tiers</h2>
-            <span class="public-badge">Creator + viewer outcomes</span>
-          </div>
-          <p class="muted">Suggested amounts show tangible impact on performance, reliability, and feature delivery across StreamSuites tools.</p>
-          <div class="impact-grid" id="impact-tiers-grid">
-            <article class="public-glass-card impact-card">
-              <p class="impact-amount">$5</p>
-              <h3>Realtime compute boost</h3>
-              <p class="muted">Helps offset burst compute used by realtime modules during active stream windows.</p>
-              <button class="cta-link ss-btn secondary impact-select" type="button" data-amount="5">Select $5</button>
-            </article>
-            <article class="public-glass-card impact-card">
-              <p class="impact-amount">$10</p>
-              <h3>Faster event handling</h3>
-              <p class="muted">Supports lower-latency event processing for audience interactions and stream overlays.</p>
-              <button class="cta-link ss-btn secondary impact-select" type="button" data-amount="10">Select $10</button>
-            </article>
-            <article class="public-glass-card impact-card">
-              <p class="impact-amount">$25</p>
-              <h3>Clip and asset retention</h3>
-              <p class="muted">Funds storage growth for clip archives and media assets used by public pages and runtimes.</p>
-              <button class="cta-link ss-btn secondary impact-select" type="button" data-amount="25">Select $25</button>
-            </article>
-            <article class="public-glass-card impact-card">
-              <p class="impact-amount">$50</p>
-              <h3>Export throughput</h3>
-              <p class="muted">Improves bandwidth availability for exports and asset delivery to viewers.</p>
-              <button class="cta-link ss-btn secondary impact-select" type="button" data-amount="50">Select $50</button>
-            </article>
-            <article class="public-glass-card impact-card">
-              <p class="impact-amount">$100</p>
-              <h3>Monitoring and reliability</h3>
-              <p class="muted">Extends uptime monitoring and incident tooling so creators can depend on stable operations.</p>
-              <button class="cta-link ss-btn secondary impact-select" type="button" data-amount="100">Select $100</button>
-            </article>
-            <article class="public-glass-card impact-card">
-              <p class="impact-amount">$250</p>
-              <h3>Feature acceleration</h3>
-              <p class="muted">Directly increases development velocity for roadmap features requested by the community.</p>
-              <button class="cta-link ss-btn secondary impact-select" type="button" data-amount="250">Select $250</button>
-            </article>
-          </div>
-        </article>
-      </section>
-
-      <section class="public-stack donate-goals-stack" id="funding-goals" aria-labelledby="funding-goals-title">
-        <article class="public-glass-panel">
-          <div class="section-heading">
-            <h2 id="funding-goals-title">Funding Goals</h2>
-            <span class="public-badge">Placeholder totals</span>
-          </div>
-          <p class="muted">These goals represent the next operational upgrades for faster and more reliable creator tooling.</p>
-          <p class="helper-text goal-placeholder-note">Totals are currently shown as placeholders; live totals will be enabled in a later Stripe phase.</p>
-          <div class="goals-grid" id="donation-goals-grid"></div>
-        </article>
-      </section>
-
-      <section class="public-stack donate-message-stack" aria-labelledby="donor-message-title">
-        <article class="public-glass-card donor-message-card">
-          <div class="section-heading">
-            <h3 id="donor-message-title">Leave a Message</h3>
-            <span class="public-badge">Coming soon</span>
-          </div>
-          <label for="donor-message">Message (optional)</label>
-          <textarea id="donor-message" name="donor-message" rows="5" maxlength="320" placeholder="Share what you want StreamSuites to improve next."></textarea>
-          <div class="donor-message-meta">
-            <p class="helper-text">Message support will be enabled in a later phase (Stripe metadata / dashboard).</p>
-            <p class="donor-message-count" id="donor-message-count" aria-live="polite">0 / 320</p>
-          </div>
-          <p class="helper-text donor-message-status" id="donor-message-status" role="status" aria-live="polite" hidden>Message draft saved locally.</p>
-        </article>
-      </section>
-
-      <section class="public-stack donate-trust-stack" aria-labelledby="faq-trust-title">
-        <article class="public-glass-card donate-trust-card">
-          <div class="section-heading">
-            <h3 id="faq-trust-title">Trust and Transparency</h3>
-            <span class="public-badge">FAQ</span>
-          </div>
-          <p class="muted">StreamSuites keeps public tools fast and free to access. Donations fund hosting capacity, platform tooling, and focused development cycles.</p>
-          <div class="faq-grid">
-            <article class="faq-item">
-              <h4>Are donations required?</h4>
-              <p class="muted">No. StreamSuites remains accessible without payment. Donations are optional support.</p>
-            </article>
-            <article class="faq-item">
-              <h4>Who processes payments?</h4>
-              <p class="muted">Stripe Checkout processes all donations, including payment security and transaction handling.</p>
-            </article>
-            <article class="faq-item">
-              <h4>Where does the money go?</h4>
-              <p class="muted">Funds are allocated to compute, storage, bandwidth, reliability tooling, and faster feature delivery.</p>
-            </article>
-          </div>
-        </article>
-      </section>
-
-      <footer class="public-footer">
-        <div>
-          <span class="footer-version">Version</span>
-          <span class="footer-copyright">(c)</span>
-        </div>
-        <nav aria-label="Public footer navigation">
-          <a href="/about.html">About</a>
-          <a href="/tools.html">Tools</a>
-          <a href="/support.html">Support</a>
-          <a href="/donate.html">Donate</a>
-          <a href="/privacy.html">Privacy</a>
-          <a href="/changelog.html">Changelog</a>
-          <a href="/accessibility.html">Accessibility</a>
-        </nav>
-      </footer>
     </div>
-  </div>
+  </main>
 
-  <script src="/js/utils/versioning.js"></script>
-  <script src="/js/utils/version-stamp.js"></script>
-  <script src="/js/public-donate.js"></script>
-  <script src="/js/status-widget.js" defer></script>
+  <footer class="site-footer"><div class="landing-shell site-footer__top"><div class="site-footer__brand"><img src="/assets/logos/sswordmarktm.webp" alt="StreamSuites™" /><p>Connected livestream production for browser, Windows, and OBS workflows.</p></div><div class="site-footer__links"><div><strong>Products</strong><a href="https://studio.streamsuites.app">Browser Studio</a><a href="/downloads/studioapp/">StudioApp</a><a href="/downloads/obs-plugin/">Studio for OBS</a></div><div><strong>Public</strong><a href="/home.html">Dashboard</a><a href="/community">Community</a><a href="/live">Live</a><a href="/clips">Clips</a></div><div><strong>Resources</strong><a href="/about.html">About</a><a href="/support.html">Support</a><a href="/roadmap">Roadmap</a><a href="https://streamsuites.statuspage.io/" target="_blank" rel="noopener noreferrer">Status</a></div><div><strong>Legal</strong><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="/accessibility.html">Accessibility</a></div></div></div><div class="landing-shell site-footer__bottom"><a class="footer-copyright" href="https://brainstream.media" target="_blank" rel="noopener noreferrer">© 2026 Brainstream Media Group</a><div class="footer-status" data-status-slot></div><span class="footer-version-tooltip-container"><a class="footer-version" href="/roadmap" aria-describedby="donate-version-tooltip">Loading version…</a><span class="footer-version-tooltip" id="donate-version-tooltip" role="tooltip"><span class="footer-version-tooltip-line" data-footer-version-tooltip="version">Loading version…</span><span class="footer-version-tooltip-line" data-footer-version-tooltip="build">Build …</span><a class="footer-version-tooltip-link" href="/roadmap">View roadmap</a></span></span></div></footer>
+  <script src="/js/utils/versioning.js"></script><script src="/js/utils/version-stamp.js"></script><script src="/js/status-widget.js" defer></script><script src="/js/studio-first-landing.js" defer></script><script src="/js/public-donate.js" defer></script>
 </body>
 </html>
-
-
-
-

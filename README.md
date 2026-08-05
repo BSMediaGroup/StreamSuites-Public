@@ -30,6 +30,7 @@ Canonical public StreamSuites surface deployed to Cloudflare Pages at `https://s
 
 - `css/public-fonts.css` is the local typography contract: Tektur for display headings, Geist Sans for body/UI copy, and IBM Plex Mono for version, status, system, code, and compact metadata. Every face uses `font-display: swap`; refreshed surfaces use `font-synthesis: none`; no external font request or JavaScript font loader is required.
 - `css/studio-first-landing.css` owns the cinematic landing layout, responsive product preview, gradient hero title and `Explore the suite` jump cue, six rich connected-tool bento modules, clean Runtime/Auth-to-product architecture map, ecosystem sections, Alpha messaging, footer, and consolidated production auth/access-modal presentation. Production `index.html` uses a bounded presentation revision on that stylesheet URL so a newly deployed document cannot reuse an earlier long-cached landing stylesheet. The product-preview tabs and their three matching product cards use the same first-party Web Studio, StudioApp, and OBS diagram marks at a shared 24px footprint; the mock-window badge uses `streamsuites-0.svg`; and the release card uses `alpha.svg` while retaining `beta.svg` for a future explicitly authorized Beta state. The angled mock window owns the tab/body seam and eases toward the viewer on pointer hover with a reduced-motion fallback. The landing header pairs the first-party square `assets/logos/ssmainlogosq.webp` mark directly before the `assets/logos/wmnew.webp` wordmark, and the document frame explicitly resets the browser-default body margin and padding so the surface reaches every viewport edge. The existing Creator Login control exposes Public, Studio, and Developer login destinations without adding Admin. The dismissible access notice uses the existing `info.svg` and `close.svg` UI assets. The login modal remains centered at desktop and mobile sizes, retains the complete OAuth, email/password, legal, account-switch, and expandable other-surface controls, and uses the original key icon for temporary bypass access.
+- `css/standalone-pages.css` extends that accepted landing token, typography, header, navigation, footer, focus, and reduced-motion contract across About, Donate, Support, Privacy, Roadmap, and Accessibility without changing the landing or download cascades. The retained pages use the exact landing mark-plus-wordmark treatment, normal-flow footer, bounded desktop gutters, and collapsible mobile navigation; page-specific composition remains scoped to the standalone body classes.
 - `css/theme-dark.css`, `css/public-pages-v2.css`, and `css/public-shell.css` carry the cooler near-black graphite/steel/blue identity, selective cyan-indigo and purple depth, typography roles, focus language, layered cards, forms, tables, dialogs, loading/empty/error treatment, responsive spacing, and reduced-motion behavior across support, legal, auth, account, Public Dashboard, gallery, profile, and feature routes. The functional shell now uses a bounded 1540px content track, larger hero and section hierarchy, less fragmented dashboard grids, clearer selected navigation/filter states, and restrained entrance/hover motion.
 - `js/studio-first-landing.js` owns keyboard-accessible product tabs, ecosystem preview selection, the dismissible Alpha notice, mobile navigation, sticky-header state, and IntersectionObserver-based reveals with reduced-motion fallback. It does not own auth, status, version, or access enforcement.
 - `css/download-surface.css` now gives the Downloads index, StudioApp, OBS, and Extensions routes the same graphite/steel foundation, feature-accent title gradients, legible dark-on-accent actions, supplied platform-icon masks, restrained entrance/hover motion, and reduced-motion/forced-colors fallbacks. Product-specific styles keep accent color to trim and diagram details rather than applying a whole-page color wash. The StudioApp and Extensions mock-window titlebars reuse the landing StudioApp diagram mark in lime, while the OBS mock-window titlebar reuses the landing OBS mark in violet; all three use current-color masks so intrinsic SVG fill cannot render black. Their real manifest/catalog clients, fail-closed gates, HMAC/cookie boundary, controlled redirect, extension schema, and route handling remain intact.
@@ -64,6 +65,10 @@ flowchart TD
 
 - `/` is the Studio Command Center landing with real product routes, truthful product states, a non-operational illustrative workspace, product-specific media ownership, connected Public capabilities, wider ecosystem links, and hydrated status/version metadata. Its original `/auth/access-state`, `/auth/session`, OAuth/email auth, Turnstile, access-code, lockout-banner, and creator-routing contracts remain in place. The landing and shared Public-shell login modals use the first-party square `assets/logos/ssmainlogosq.webp` brand mark.
 - `/about.html` is the full product story plus the existing manifest-driven technical record.
+- `/donate.html` preserves the existing one-time StreamSuites billing endpoint and Stripe Checkout handoff while presenting truthful integer amount validation, busy/error states, and payment/account boundaries. `/donate-success.html` and `/donate-cancel.html` remain the configured return surfaces.
+- `/support.html` presents verified documentation, status, email, and Discord pathways. Its future first-party ticket-centre form/history structure is explicitly disabled and performs no submission, upload, persistence, account lookup, or ticket-state work.
+- `/privacy.html` preserves the February 22, 2026 policy text and date in a long-form reading layout with a responsive section index and stable anchors. `/accessibility.html` describes current practices and limitations without claiming audit, certification, or formal conformance.
+- `/roadmap` is the canonical public programme roadmap. Eight conservative integer estimates replace the former implementation-entry inventory, while detailed release changelogs link to verified StreamSuites Docs routes.
 - `/downloads/` is the searchable parent download index. Its three checked-in records route to StudioApp, Studio for OBS, and Extensions and mirror only truthful static page status; Browser Studio is explicitly presented as a no-install external surface.
 - `/downloads/studioapp` is the canonical Windows StudioApp ALPHA landing page. Its same-origin `/api/downloads/studioapp/release` metadata seam remains visible while download access is locked, validates strict schema-v2 `product-manifest.json` with bounded schema-v1 fallback, treats independent StudioApp product version/build as primary and optional StreamSuites system compatibility as secondary, and never uses Runtime `version.json` as installer identity. Only an authorized short-lived session enables the separate controlled redirect; the static page and metadata response contain no raw installer URL.
 - The StudioApp page shows macOS and Linux as disabled Coming Soon release/requirements scaffolds with no version, build, date, package size, compatibility, or artifact claim. The Windows storage guidance references the manifest-hydrated installer size plus installation/update headroom and separate media storage instead of inventing an unsupported fixed minimum.
@@ -86,15 +91,17 @@ flowchart TD
 
 ### Route treatment for this milestone
 
-- Fully redesigned expressive surfaces: `/`, `/about.html`, and the presentation-only `404.html`.
+- Fully redesigned expressive surfaces: `/`, `/about.html`, `/donate.html`, `/support.html`, `/privacy.html`, `/roadmap`, `/accessibility.html`, and the presentation-only `404.html`. The accepted `/` and download implementations remain visually protected reference surfaces.
 - Visually harmonized functional surfaces: `/home`, clips, polls, wheels, tallies, scoreboards, leaderboards, games/economy, market exchange, `/live`, community pages, settings/my-data, and `/u` profiles through the shared `public-shell.css` and existing renderer code.
-- Visually harmonized quiet utility/information surfaces: login/auth pages, requests entry pages, support, changelog, resources, tools, stats, privacy, terms, accessibility, postmortem, and donation pages through the existing shared page styles.
+- Visually harmonized quiet utility/information surfaces: login/auth pages, requests entry pages, resources, stats, terms, and postmortem through the existing shared page styles. The obsolete rendered Tools page is removed; the former Changelog page is replaced by Roadmap.
 - Purpose-built download surfaces: `/downloads/`, `/downloads/studioapp/`, `/downloads/obs-plugin/`, and `/downloads/studioapp/extensions/`; their polished diagrams, search/catalog treatments, platform states, and feature trim share one download-specific system while preserving each route's real behavior.
 - Intentionally excluded from the general redesign: auth callback/bridge shims, overlay/browser-source surfaces, generated exports, functions/data artifacts, fixtures/samples, archived `index-v2.html` plus `css/aurora-landing-v2.css`, the `sspoc1` reference, and its preserved ZIP archives.
 
 ## Routing and Runtime Integration
 
 - Cloudflare Pages routing is handled by the root `_redirects` file plus Pages Functions under `functions/`.
+- Cloudflare Pages clean-URL handling serves the single `roadmap.html` surface at canonical `/roadmap`; `/roadmap/` normalizes to it. The retired `/changelog`, `/changelog/`, and `/changelog.html` routes redirect permanently to the canonical Docs changelog index at `https://docs.streamsuites.app/docs/changelog`; no second Changelog page is rendered.
+- The obsolete `/tools`, `/tools/`, and `/tools.html` routes redirect permanently to `/downloads/`. The singular `/download`, `/download/`, and `/download.html` compatibility routes use the same destination.
 - `/downloads` and its trailing-slash alias resolve to the searchable static parent index.
 - `/downloads/studioapp` and its trailing-slash alias resolve to the same static landing page; `/api/downloads/studioapp/*` owns access-state, unlock/end-session, locked-safe release metadata, and controlled-download behavior. `access-state` reports explicit configured/missing-variable state without exposing values, and arbitrary redirect parameters or stale version/build requests fail closed. The dismissible banner is presentation-only and never authorizes a download.
 - `/downloads/obs-plugin` and `/downloads/studioapp/extensions` resolve to their directory pages; normal directory routing serves the trailing-slash forms used by product navigation.
@@ -157,8 +164,11 @@ StreamSuites-Public/
 ├── _redirects
 ├── 404.html
 ├── about.html
+├── accessibility.html
 ├── auth-bridge.html
-├── changelog.html
+├── donate.html
+├── donate-cancel.html
+├── donate-success.html
 ├── economy.html
 ├── home.html
 ├── index.html
@@ -170,14 +180,15 @@ StreamSuites-Public/
 ├── market-exchange.html
 ├── media.html                  # Compatibility shim for old /media.html links
 ├── public-login.html
+├── privacy.html
 ├── README.md
+├── roadmap.html
 ├── wrangler.toml              # Pages runtime compatibility contract
 ├── requests-login.html
 ├── requests.html
 ├── leaderboards.html
 ├── stats.html
 ├── support.html
-├── tools.html
 ├── wheels.html
 ├── BUMP_NOTES.md
 ├── changelog/
@@ -273,6 +284,8 @@ StreamSuites-Public/
 │   ├── public-badge-ui.js
 │   ├── public-data-hub.js
 │   ├── public-pages-app.js
+│   ├── public-donate.js
+│   ├── public-roadmap.js
 │   ├── public-requests.js
 │   ├── public-shell.js
 │   ├── studio-first-landing.js
@@ -299,6 +312,7 @@ StreamSuites-Public/
 │   ├── studioapp-extensions.css
 │   ├── studioapp-download.css
 │   ├── studio-first-landing.css
+│   ├── standalone-pages.css
 │   └── status-widget.css
 ├── tests/
 │   ├── auth-surface-parity.test.mjs
@@ -308,6 +322,7 @@ StreamSuites-Public/
 │   ├── studioapp-download-gate.test.mjs
 │   ├── studioapp-extensions.test.mjs
 │   ├── studio-first-public-experience.test.mjs
+│   ├── standalone-public-pages.test.mjs
 │   └── wheels-authority.test.mjs
 ├── sspoc1/                    # Read-only visual/typography reference retained in place
 │   ├── index.html

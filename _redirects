@@ -1,6 +1,15 @@
 /requests https://console.streamsuites.app/feedback 302
 /requests/ https://console.streamsuites.app/feedback 302
 /requests.html https://console.streamsuites.app/feedback 302
+/download /downloads/ 301
+/download/ /downloads/ 301
+/download.html /downloads/ 301
+/changelog https://docs.streamsuites.app/docs/changelog 301
+/changelog/ https://docs.streamsuites.app/docs/changelog 301
+/changelog.html https://docs.streamsuites.app/docs/changelog 301
+/tools /downloads/ 301
+/tools/ /downloads/ 301
+/tools.html /downloads/ 301
 /live /live/index.html 200
 /live/ /live/index.html 200
 /community/leaderboard /leaderboards.html 200
