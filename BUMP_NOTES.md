@@ -6,6 +6,19 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-06 - Public landing product-diagram icon and depth correction
+
+#### Technical notes
+
+- Replaced the three CSS-drawn product-tab glyphs with the supplied first-party `icondiag-studioweb.svg`, `icondiag-studioapp.svg`, and existing `obs-0.svg` assets. They render as masks at the existing 24px size so inactive and product-active colors remain governed by the established tab state.
+- Replaced the mock-window titlebar `S` with `streamsuites-0.svg` inside the existing 19px rounded badge, and replaced the Alpha card's text character with `alpha.svg` at the existing green visual scale. The tracked `beta.svg` remains unused and reserved for a future explicitly authorized release-state change.
+- Corrected the preview seam by placing the angled device above the tab strip and overlapping it by two pixels. Added a bounded eased hover transform that relaxes the perspective and returns smoothly, with the existing reduced-motion contract preventing the hover transform. Increased the separation below the diagram by moving the `Explore the suite` cue 20px lower within the hero.
+- Updated the landing stylesheet cache key and focused source coverage. Product-tab behavior, keyboard navigation, hero copy, anchors, routes, access/auth/session/Turnstile contracts, Runtime/Auth authority, status/version hydration, protected downloads, and deployment configuration remain unchanged. No version was bumped and no deployment, commit, or push was performed.
+
+#### Human-readable notes
+
+The hero diagram now uses the correct StreamSuites product icons, its angled mock window sits cleanly above the tab seam and eases naturally on hover, the jump cue has more breathing room, and the Alpha card uses the refined brand symbol.
+
 ### 2026-08-05 - Public landing header identity and edge reset
 
 #### Technical notes

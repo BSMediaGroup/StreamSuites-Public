@@ -88,6 +88,23 @@ test("production landing is Studio-first and preserves the production access con
   assert.match(css, /body\s*\{[\s\S]*margin:\s*0;[\s\S]*padding:\s*0;/);
   assert.match(css, /\.brand__mark\s*\{[\s\S]*width:\s*34px;[\s\S]*height:\s*34px;/);
   assert.match(css, /\.brand__wordmark[\s\S]*height:\s*24px;/);
+  for (const icon of [
+    "icondiag-studioweb.svg",
+    "icondiag-studioapp.svg",
+    "obs-0.svg",
+    "streamsuites-0.svg",
+    "alpha.svg",
+  ]) {
+    assert.ok(exists(`assets/icons/${icon}`));
+    assert.match(css, new RegExp(icon.replace(".", "\\.")));
+  }
+  assert.match(html, /class="studio-mark" aria-hidden="true"><\/span>/);
+  assert.match(html, /class="alpha-panel__mark" aria-hidden="true"><\/div>/);
+  assert.match(css, /\.product-switcher\s*\{[\s\S]*z-index:\s*2/);
+  assert.match(css, /\.studio-device\s*\{[\s\S]*z-index:\s*4;[\s\S]*margin-top:\s*-2px/);
+  assert.match(css, /\.studio-window\s*\{[\s\S]*transition:[\s\S]*transform 560ms cubic-bezier/);
+  assert.match(css, /\.studio-device:hover \.studio-window\s*\{[\s\S]*rotateY\(-1\.15deg\)/);
+  assert.match(css, /\.scroll-cue\s*\{[\s\S]*bottom:\s*6px/);
   assert.match(css, /@media \(max-width:\s*600px\)\s*\{[\s\S]*\.auth-modal-backdrop\s*\{[\s\S]*align-items:\s*center/);
   assert.match(css, /@media \(max-width:\s*720px\)/);
   assert.match(css, /@media \(prefers-reduced-motion:\s*reduce\)/);
@@ -99,7 +116,7 @@ test("production landing preserves the approved POC hero, bento modules, and aut
 
   assert.match(html, /class="scroll-cue" href="#products"/);
   assert.match(html, /Explore the suite/);
-  assert.match(html, /\/css\/studio-first-landing\.css\?v=20260805-header-brand-frame/);
+  assert.match(html, /\/css\/studio-first-landing\.css\?v=20260806-diagram-icons/);
   assert.match(css, /\.landing-hero h1 span\s*\{[\s\S]*linear-gradient\(95deg,[\s\S]*background-clip:\s*text/);
   assert.match(css, /\.scroll-cue i\s*\{[\s\S]*animation:\s*scrollCue/);
 
