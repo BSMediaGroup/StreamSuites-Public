@@ -101,6 +101,11 @@ test("production landing is Studio-first and preserves the production access con
   assert.match(html, /class="studio-mark" aria-hidden="true"><\/span>/);
   assert.match(html, /class="alpha-panel__mark" aria-hidden="true"><\/div>/);
   assert.match(css, /\.product-switcher\s*\{[\s\S]*z-index:\s*2/);
+  assert.match(css, /\.product-emblem\s*\{[\s\S]*width:\s*24px;[\s\S]*height:\s*24px;[\s\S]*background-color:\s*currentColor;[\s\S]*mask-size:\s*contain/);
+  assert.match(css, /\.product-emblem--browser\s*\{[\s\S]*icondiag-studioweb\.svg/);
+  assert.match(css, /\.product-emblem--native\s*\{[\s\S]*icondiag-studioapp\.svg/);
+  assert.match(css, /\.product-emblem--obs\s*\{[\s\S]*obs-0\.svg/);
+  assert.doesNotMatch(css, /\.product-emblem--(?:browser|native|obs)::(?:before|after)/);
   assert.match(css, /\.studio-device\s*\{[\s\S]*z-index:\s*4;[\s\S]*margin-top:\s*-2px/);
   assert.match(css, /\.studio-window\s*\{[\s\S]*transition:[\s\S]*transform 560ms cubic-bezier/);
   assert.match(css, /\.studio-device:hover \.studio-window\s*\{[\s\S]*rotateY\(-1\.15deg\)/);
@@ -116,7 +121,7 @@ test("production landing preserves the approved POC hero, bento modules, and aut
 
   assert.match(html, /class="scroll-cue" href="#products"/);
   assert.match(html, /Explore the suite/);
-  assert.match(html, /\/css\/studio-first-landing\.css\?v=20260806-diagram-icons/);
+  assert.match(html, /\/css\/studio-first-landing\.css\?v=20260806-card-icons/);
   assert.match(css, /\.landing-hero h1 span\s*\{[\s\S]*linear-gradient\(95deg,[\s\S]*background-clip:\s*text/);
   assert.match(css, /\.scroll-cue i\s*\{[\s\S]*animation:\s*scrollCue/);
 

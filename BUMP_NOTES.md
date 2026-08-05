@@ -6,6 +6,31 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-06 - Landing product-card icon parity
+
+#### Technical notes
+
+- Replaced the three legacy CSS-drawn product-card emblems with the exact `icondiag-studioweb.svg`, `icondiag-studioapp.svg`, and `obs-0.svg` masks already used by their respective hero preview tabs. Cards retain their existing blue, lime, and violet feature colors while matching the tab icons at the same 24px footprint.
+- Removed only the superseded pseudo-element glyph geometry and revised the landing stylesheet cache key. Product cards, selection state, preview controls, routes, copy, anchors, access/auth/session contracts, Runtime/Auth authority, protected downloads, and deployment configuration remain unchanged. No version was bumped and no deployment, commit, or push was performed.
+
+#### Human-readable notes
+
+The three product cards now use the same recognizable Studio, StudioApp, and OBS symbols as the matching tabs in the hero diagram.
+
+### 2026-08-06 - Download center and product-page visual polish
+
+#### Technical notes
+
+- Added `/downloads/` as a searchable, responsive parent index for the existing StudioApp, Studio for OBS, and Extensions surfaces. The index uses the main StreamSuites favicon and square brand mark, provides a high-detail product-library diagram, preserves search state in the URL, and links only to real product pages; it contains no artifact, installer, package, or independent release registry.
+- Reworked the four download hero treatments around a neutral graphite/steel shell with product feature colors constrained to title gradients, trim, status, and local diagram glow. Added eased perspective/hover depth, restrained section entrances, responsive layouts, reduced-motion/forced-colors fallbacks, and a bounded stylesheet revision so a newly deployed document does not retain the prior cached presentation. Replaced the former sparse OBS identity lockup and Extensions status grid with richer, still non-operational workflow/catalog diagrams; no product behavior was removed.
+- Switched the StudioApp, OBS Plugin, and Extensions pages to the exact existing Browser Studio favicon. Added dark high-contrast text to bright primary controls and supplied `windows-0.svg`, `obs-0.svg`, `apple-0.svg`, and `linux-0.svg` as current-color button masks. Removed six stale preload hints for legacy Sui Generis/Recharge faces that these pages no longer use; actual approved Public typography continues to load through `public-fonts.css`.
+- Added disabled macOS and Linux StudioApp release/requirements sections with explicit Coming Soon state and no invented version, build, release date, package size, compatibility baseline, signature, or artifact link. Expanded Windows storage guidance using the authoritative manifest-hydrated installer size plus installation/update headroom and separate production-media storage; no unsupported fixed disk, RAM, CPU, GPU, or vendor minimum was introduced.
+- Added truthful compatibility/storage disclosures to the unreleased OBS and empty Extensions surfaces. Preserved the StudioApp Pages gate variables, HMAC cookie, locked-safe release metadata, strict manifest validation, release IDs, same-origin controlled redirect, no-installer-in-Public boundary, extension catalog schema and empty production catalog. No version was bumped and no deploy, commit, push, manifest, R2 object, Pages binding, or release data was changed.
+
+#### Human-readable notes
+
+The download family now has a polished searchable home, richer product diagrams, clearer platform actions, and consistent feature-color detailing. StudioApp visibly includes future macOS and Linux destinations without pretending either build exists, while the real Windows release flow remains protected and authoritative.
+
 ### 2026-08-06 - Public landing product-diagram icon and depth correction
 
 #### Technical notes

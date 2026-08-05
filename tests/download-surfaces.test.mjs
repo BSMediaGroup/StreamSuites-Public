@@ -10,6 +10,7 @@ const read = (relative) => fs.readFileSync(path.join(root, relative), "utf8");
 test("download routes use the approved Public typography and retain authoritative product marks", () => {
   const shared = read("css/download-surface.css");
   const fonts = read("css/public-fonts.css");
+  const index = read("downloads/index.html");
   const studio = read("downloads/studioapp/index.html");
   const obs = read("downloads/obs-plugin/index.html");
   const extensions = read("downloads/studioapp/extensions/index.html");
@@ -30,11 +31,15 @@ test("download routes use the approved Public typography and retain authoritativ
   assert.match(fonts, /font-family:\s*"Geist Sans"/);
   assert.match(fonts, /font-family:\s*"IBM Plex Mono"/);
   assert.doesNotMatch(shared, /SuiGeneris|Recharge/);
-  [studio, obs, extensions].forEach((html) => {
+  [index, studio, obs, extensions].forEach((html) => {
     assert.match(html, /\/css\/download-surface\.css/);
     assert.match(html, /aria-label="Studio downloads"/);
     assert.match(html, /prefers-reduced-motion|download-surface\.css/);
   });
+  assert.match(index, /<link rel="icon" href="\/favicon\.ico"/);
+  assert.match(index, /<img src="\/assets\/logos\/ssmainlogosq\.webp" alt="" width="52" height="52" \/>/);
+  [studio, obs, extensions].forEach((html) => assert.match(html, /<link rel="icon" href="\/assets\/icons\/studiofavicon\.ico"/));
+  [studio, obs, extensions].forEach((html) => assert.doesNotMatch(html, /SuiGeneris-Regular|Recharge-Bold/));
   assert.match(studio, /<img src="\/assets\/logos\/studiologo3\.webp" alt="" width="52" height="52" \/>/);
   assert.match(studio, /<img src="\/assets\/icons\/packboxicon-plugin\.webp" alt="StreamSuites Plugin Store" width="44" height="44" \/>/);
   assert.match(obs, /<img src="\/assets\/icons\/obs-white\.svg" alt="" width="52" height="52" \/>/);
@@ -43,6 +48,53 @@ test("download routes use the approved Public typography and retain authoritativ
   assert.match(extensions, /<img src="\/assets\/icons\/packboxicon-plugin\.webp" alt="StreamSuites Plugin Store" width="52" height="52" \/>/);
   assert.match(extensions, /<img src="\/assets\/logos\/studiologo3\.webp" alt="StreamSuites StudioApp" width="44" height="44" \/>/);
   assert.doesNotMatch(extensions, /<img src="\/assets\/logos\/studiologo3\.webp" alt="StreamSuites Plugin Store"/);
+});
+
+test("download polish uses feature accents, supplied platform icons, and truthful coming-soon scaffolds", () => {
+  const shared = read("css/download-surface.css");
+  const studio = read("downloads/studioapp/index.html");
+  const obs = read("downloads/obs-plugin/index.html");
+  const extensions = read("downloads/studioapp/extensions/index.html");
+
+  assert.match(shared, /\.download-hero h1[\s\S]*linear-gradient[\s\S]*background-clip:\s*text/);
+  assert.match(shared, /url\("\/assets\/icons\/windows-0\.svg"\)/);
+  assert.match(shared, /url\("\/assets\/icons\/obs-0\.svg"\)/);
+  assert.match(shared, /url\("\/assets\/icons\/apple-0\.svg"\)/);
+  assert.match(shared, /url\("\/assets\/icons\/linux-0\.svg"\)/);
+  assert.match(shared, /color:\s*var\(--download-primary-ink\)/);
+  assert.match(studio, /download-button--windows/);
+  assert.match(studio, /StudioApp for macOS/);
+  assert.match(studio, /download-button--apple[^>]*disabled/);
+  assert.match(studio, /StudioApp for Linux/);
+  assert.match(studio, /download-button--linux[^>]*disabled/);
+  assert.match(studio, /Free storage greater than the published installer size/);
+  assert.match(studio, /Minimum install storage is not yet published/);
+  assert.doesNotMatch(studio, /(?:macOS|Linux)[\s\S]{0,300}href="[^"]+\.(?:dmg|pkg|app|deb|rpm|AppImage)"/i);
+  assert.match(obs, /download-button--obs/);
+  assert.match(obs, /minimum install storage are not yet published/i);
+  assert.match(extensions, /There is no standalone directory installer/);
+});
+
+test("downloads index is searchable, routed, and links only to truthful product surfaces", () => {
+  const html = read("downloads/index.html");
+  const css = read("css/download-index.css");
+  const client = read("js/download-index.js");
+  const redirects = read("_redirects");
+
+  assert.match(html, /id="download-index-search"/);
+  assert.match(html, /id="download-index-count"[^>]*role="status" aria-live="polite"/);
+  assert.equal((html.match(/data-download-card/g) || []).length, 3);
+  assert.match(html, /href="\/downloads\/studioapp\/"/);
+  assert.match(html, /href="\/downloads\/obs-plugin\/"/);
+  assert.match(html, /href="\/downloads\/studioapp\/extensions\/"/);
+  assert.match(html, /Browser Studio stays in the browser/);
+  assert.doesNotMatch(html + client, /href="[^"]+\.(?:exe|zip|msi|dmg|pkg|deb|rpm)"/i);
+  assert.match(client, /URLSearchParams|searchParams/);
+  assert.match(client, /card\.hidden/);
+  assert.match(css, /\.download-index-visual/);
+  assert.match(css, /prefers-reduced-motion/);
+  assert.match(redirects, /\/downloads \/downloads\/index\.html 200/);
+  assert.match(redirects, /\/downloads\/ \/downloads\/index\.html 200/);
 });
 
 test("OBS route is a truthful unavailable product scaffold with required cross-links", () => {

@@ -12,11 +12,9 @@
   <meta property="og:url" content="https://streamsuites.app/downloads/studioapp/extensions/" />
   <link rel="canonical" href="https://streamsuites.app/downloads/studioapp/extensions/" />
   <title>StudioApp Extensions and Plugins | Planned Directory</title>
-  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-  <link rel="preload" href="/assets/fonts/SuiGeneris-Regular.otf" as="font" type="font/otf" crossorigin />
-  <link rel="preload" href="/assets/fonts/Recharge-Bold.otf" as="font" type="font/otf" crossorigin />
-  <link rel="stylesheet" href="/css/download-surface.css" />
-  <link rel="stylesheet" href="/css/studioapp-extensions.css" />
+  <link rel="icon" href="/assets/icons/studiofavicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="/css/download-surface.css?v=20260806-download-polish" />
+  <link rel="stylesheet" href="/css/studioapp-extensions.css?v=20260806-download-polish" />
   <script type="module" src="/js/studioapp-extensions.js"></script>
 </head>
 <body class="download-surface studioapp-extensions-page">
@@ -39,6 +37,7 @@
 
   <div class="download-product-nav-shell">
     <nav class="download-product-nav download-page-width" aria-label="Studio downloads">
+      <a href="/downloads/">Downloads</a>
       <a href="/downloads/studioapp/">StudioApp</a>
       <a href="/downloads/obs-plugin/">OBS Plugin</a>
       <a href="/downloads/studioapp/extensions/" aria-current="page">Extensions</a>
@@ -62,17 +61,30 @@
         </div>
       </div>
 
-      <aside class="download-panel extensions-hero__status" aria-labelledby="extensions-status-title">
-        <p class="download-eyebrow">Current status</p>
-        <h2 id="extensions-status-title">A functional shell with an empty catalog.</h2>
-        <p>Search, filtering, sorting, URL state, validation, loading, empty, unavailable, and error treatments are ready for a future authoritative catalog source.</p>
-        <div class="extensions-hero__status-grid">
-          <div><strong>Catalog</strong><span>Not yet open</span></div>
-          <div><strong>Installable items</strong><span>None</span></div>
-          <div><strong>StudioApp</strong><span>Works without extensions</span></div>
-          <div><strong>Future authority</strong><span>Runtime/Auth or its generated export</span></div>
+      <aside class="download-panel extensions-preview" aria-labelledby="extensions-status-title">
+        <div class="extensions-preview__titlebar"><span><i></i><i></i><i></i></span><strong>EXTENSION DIRECTORY</strong><small>CATALOG CLOSED</small></div>
+        <div class="extensions-preview__toolbar" aria-hidden="true"><span>Search extensions</span><i>TYPE: ALL</i><i>SORT: NAME</i></div>
+        <div class="extensions-preview__cards" aria-hidden="true">
+          <span><img src="/assets/icons/packboxicon-plugin.webp" alt="" /><i></i><i></i><small>AWAITING CATALOG</small></span>
+          <span><img src="/assets/icons/packboxicon-plugin.webp" alt="" /><i></i><i></i><small>AWAITING CATALOG</small></span>
+          <span><img src="/assets/icons/packboxicon-plugin.webp" alt="" /><i></i><i></i><small>AWAITING CATALOG</small></span>
+        </div>
+        <div class="extensions-preview__status">
+          <div><p class="download-eyebrow">Current status</p><h2 id="extensions-status-title">Ready for future authority.</h2></div>
+          <span><strong>0</strong> installable items</span>
         </div>
       </aside>
+    </section>
+
+    <section class="download-section download-section--tight download-page-width" aria-labelledby="extensions-requirements-title">
+      <div class="download-callout extensions-requirements">
+        <div>
+          <p class="download-eyebrow">System requirements</p>
+          <h2 id="extensions-requirements-title">Declared per extension, when the catalog opens.</h2>
+          <p>There is no standalone directory installer. Future listings must publish their compatible StudioApp range, supported platforms, package size, verification state, and any additional storage requirement. The empty catalog makes no compatibility or disk-space claim today.</p>
+        </div>
+        <span class="download-status-chip download-status-chip--pending">0 packages</span>
+      </div>
     </section>
 
     <section class="download-section extensions-catalog-section download-page-width" aria-labelledby="catalog-title">

@@ -13,13 +13,11 @@
   <meta property="og:image" content="https://streamsuites.app/assets/logos/studiologo3.webp" />
   <link rel="canonical" href="https://streamsuites.app/downloads/studioapp/" />
   <title>StreamSuites StudioApp for Windows | ALPHA Download</title>
-  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-  <link rel="preload" href="/assets/fonts/SuiGeneris-Regular.otf" as="font" type="font/otf" crossorigin />
-  <link rel="preload" href="/assets/fonts/Recharge-Bold.otf" as="font" type="font/otf" crossorigin />
+  <link rel="icon" href="/assets/icons/studiofavicon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="/css/theme-dark.css" />
   <link rel="stylesheet" href="/css/public-shell.css" />
-  <link rel="stylesheet" href="/css/download-surface.css" />
-  <link rel="stylesheet" href="/css/studioapp-download.css" />
+  <link rel="stylesheet" href="/css/download-surface.css?v=20260806-download-polish" />
+  <link rel="stylesheet" href="/css/studioapp-download.css?v=20260806-download-polish" />
   <script src="/js/studioapp-download.js" defer></script>
 </head>
 <body class="public-standalone-page download-surface studioapp-download-page">
@@ -42,6 +40,7 @@
 
   <div class="download-product-nav-shell">
     <nav class="download-product-nav download-page-width" aria-label="Studio downloads">
+      <a href="/downloads/">Downloads</a>
       <a href="/downloads/studioapp/" aria-current="page">StudioApp</a>
       <a href="/downloads/obs-plugin/">OBS Plugin</a>
       <a href="/downloads/studioapp/extensions/">Extensions</a>
@@ -77,7 +76,7 @@
           <span class="download-status-chip">Native WPF + C++</span>
         </div>
         <div class="download-actions">
-          <a id="studioapp-download-action" class="download-button download-button--primary" role="button" aria-disabled="true">Checking download access…</a>
+          <a id="studioapp-download-action" class="download-button download-button--primary download-button--windows" role="button" aria-disabled="true">Checking download access…</a>
           <a class="download-button download-button--secondary" href="https://studio.streamsuites.app">Open Browser Studio</a>
         </div>
         <p id="download-action-note" class="download-action-note">Checking StudioApp download access and the current ALPHA release…</p>
@@ -87,8 +86,10 @@
         <div class="studioapp-preview__window">
           <div class="studioapp-preview__titlebar">
             <span class="studioapp-preview__window-controls" aria-hidden="true"><span></span><span></span><span></span></span>
-            <strong>STREAMSUITES STUDIOAPP</strong>
+            <span class="studioapp-preview__title"><img src="/assets/icons/streamsuites-0.svg" alt="" /><strong>STREAMSUITES STUDIOAPP</strong></span>
+            <span class="studioapp-preview__air-state">OFF AIR</span>
           </div>
+          <div class="studioapp-preview__modebar" aria-hidden="true"><strong>STAGE</strong><span>AUDIO MIXER</span><span>DESTINATIONS</span></div>
           <div class="studioapp-preview__layout" aria-hidden="true">
             <div class="studioapp-preview__dock"><span>PRODUCTION</span><i></i><i></i><i></i></div>
             <div class="studioapp-preview__stage">
@@ -104,10 +105,18 @@
             <div class="studioapp-preview__rail"><span>ENGINE READY</span><strong>OFF AIR</strong></div>
           </div>
         </div>
+        <span class="studioapp-preview__float studioapp-preview__float--engine" aria-hidden="true"><small>MEDIA ENGINE</small><strong>SUPERVISED</strong></span>
+        <span class="studioapp-preview__float studioapp-preview__float--authority" aria-hidden="true"><small>CONTROL AUTHORITY</small><strong>RUNTIME/AUTH</strong></span>
       </div>
     </section>
 
-    <section class="studioapp-release-layout download-page-width" aria-label="Current release and requirements">
+    <section class="studioapp-platform-heading download-page-width" aria-labelledby="desktop-platforms-title">
+      <p class="download-eyebrow">Desktop releases</p>
+      <h2 id="desktop-platforms-title">Choose the platform built for your workspace.</h2>
+      <p>Windows is the only currently published StudioApp platform. macOS and Linux are visible as roadmap surfaces and remain unavailable until their requirements and artifacts are approved.</p>
+    </section>
+
+    <section class="studioapp-release-layout studioapp-release-layout--windows download-page-width" aria-label="Windows current release and requirements">
       <article id="studioapp-release-card" class="download-panel studioapp-release-card is-loading" aria-labelledby="release-title" aria-busy="true">
         <div class="studioapp-release-card__heading">
           <div>
@@ -134,7 +143,7 @@
         </div>
         <p id="copy-release-feedback" class="studioapp-copy-feedback" role="status" aria-live="polite"></p>
         <div class="studioapp-release-card__actions">
-          <a id="release-download-action" class="download-button download-button--primary" role="button" aria-disabled="true">Download unavailable</a>
+          <a id="release-download-action" class="download-button download-button--primary download-button--windows" role="button" aria-disabled="true">Download unavailable</a>
           <a id="release-notes-link" hidden>Read release notes</a>
           <button id="end-download-session" class="download-button download-button--secondary" type="button" hidden>End tester session</button>
         </div>
@@ -149,8 +158,86 @@
           <li>64-bit Windows installation</li>
           <li>Compatible display and Windows Graphics Capture support</li>
           <li>No Visual Studio or .NET SDK required by the self-contained installer</li>
+          <li>Free storage greater than the published installer size, with additional headroom for installation and managed updates</li>
+          <li>Separate free storage for recordings, replay media, and temporary production files when those workflows are used</li>
         </ul>
-        <p>Capture behavior varies by device, display topology, driver, and Windows configuration. No unsupported RAM, CPU, GPU, or vendor minimum is claimed.</p>
+        <p>The exact installer size is hydrated from the validated release manifest above. Capture behavior varies by device, display topology, driver, and Windows configuration; no unsupported RAM, CPU, GPU, fixed disk-space, or vendor minimum is claimed.</p>
+      </article>
+    </section>
+
+    <section class="studioapp-release-layout studioapp-release-layout--coming-soon download-page-width" aria-label="macOS coming soon release and requirements">
+      <article class="download-panel studioapp-release-card studioapp-release-card--coming-soon" aria-labelledby="macos-release-title">
+        <div class="studioapp-release-card__heading">
+          <div>
+            <p class="download-eyebrow">Planned desktop platform</p>
+            <h2 id="macos-release-title">StudioApp for macOS</h2>
+          </div>
+          <span class="download-status-chip">Coming soon</span>
+        </div>
+        <dl class="studioapp-release-facts">
+          <div><dt>StudioApp version</dt><dd>Not published</dd></div>
+          <div><dt>StudioApp build</dt><dd>Not published</dd></div>
+          <div><dt>System compatibility</dt><dd>Not established</dd></div>
+          <div><dt>System build</dt><dd>Not established</dd></div>
+          <div><dt>Platform</dt><dd>macOS</dd></div>
+          <div><dt>Installer size</dt><dd>Not published</dd></div>
+          <div><dt>Published</dt><dd>Not announced</dd></div>
+          <div><dt>Signature</dt><dd>Not applicable</dd></div>
+        </dl>
+        <p class="studioapp-release-summary">No macOS package or executable download is published. This placeholder does not announce a release date.</p>
+        <div class="studioapp-release-card__actions">
+          <button class="download-button download-button--coming-soon download-button--apple" type="button" disabled>Download for macOS — Coming soon</button>
+        </div>
+      </article>
+
+      <article class="download-panel studioapp-requirements-card studioapp-requirements-card--coming-soon" aria-labelledby="macos-requirements-title">
+        <p class="download-eyebrow">System requirements</p>
+        <h2 id="macos-requirements-title">macOS baseline pending</h2>
+        <ul class="download-list">
+          <li>Supported macOS versions are not yet published</li>
+          <li>Supported Apple hardware architecture is not yet announced</li>
+          <li>Minimum install storage is not yet published</li>
+          <li>Capture, device, and packaging compatibility remain unclaimed</li>
+        </ul>
+        <p>Requirements will be added only with an approved native macOS implementation and release artifact.</p>
+      </article>
+    </section>
+
+    <section class="studioapp-release-layout studioapp-release-layout--coming-soon download-page-width" aria-label="Linux coming soon release and requirements">
+      <article class="download-panel studioapp-release-card studioapp-release-card--coming-soon" aria-labelledby="linux-release-title">
+        <div class="studioapp-release-card__heading">
+          <div>
+            <p class="download-eyebrow">Planned desktop platform</p>
+            <h2 id="linux-release-title">StudioApp for Linux</h2>
+          </div>
+          <span class="download-status-chip">Coming soon</span>
+        </div>
+        <dl class="studioapp-release-facts">
+          <div><dt>StudioApp version</dt><dd>Not published</dd></div>
+          <div><dt>StudioApp build</dt><dd>Not published</dd></div>
+          <div><dt>System compatibility</dt><dd>Not established</dd></div>
+          <div><dt>System build</dt><dd>Not established</dd></div>
+          <div><dt>Platform</dt><dd>Linux</dd></div>
+          <div><dt>Package size</dt><dd>Not published</dd></div>
+          <div><dt>Published</dt><dd>Not announced</dd></div>
+          <div><dt>Signature</dt><dd>Not applicable</dd></div>
+        </dl>
+        <p class="studioapp-release-summary">No Linux package, distribution target, or executable download is published. This placeholder does not announce a release date.</p>
+        <div class="studioapp-release-card__actions">
+          <button class="download-button download-button--coming-soon download-button--linux" type="button" disabled>Download for Linux — Coming soon</button>
+        </div>
+      </article>
+
+      <article class="download-panel studioapp-requirements-card studioapp-requirements-card--coming-soon" aria-labelledby="linux-requirements-title">
+        <p class="download-eyebrow">System requirements</p>
+        <h2 id="linux-requirements-title">Linux baseline pending</h2>
+        <ul class="download-list">
+          <li>Supported distributions and versions are not yet published</li>
+          <li>Supported CPU architecture and package format are not yet announced</li>
+          <li>Minimum install storage is not yet published</li>
+          <li>Display server, capture, audio, and device compatibility remain unclaimed</li>
+        </ul>
+        <p>Requirements will be added only with an approved native Linux implementation and release artifact.</p>
       </article>
     </section>
 

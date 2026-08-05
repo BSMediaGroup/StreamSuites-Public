@@ -12,11 +12,9 @@
   <meta property="og:url" content="https://streamsuites.app/downloads/obs-plugin/" />
   <link rel="canonical" href="https://streamsuites.app/downloads/obs-plugin/" />
   <title>StreamSuites Studio for OBS | In Development</title>
-  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-  <link rel="preload" href="/assets/fonts/SuiGeneris-Regular.otf" as="font" type="font/otf" crossorigin />
-  <link rel="preload" href="/assets/fonts/Recharge-Bold.otf" as="font" type="font/otf" crossorigin />
-  <link rel="stylesheet" href="/css/download-surface.css" />
-  <link rel="stylesheet" href="/css/obs-plugin-download.css" />
+  <link rel="icon" href="/assets/icons/studiofavicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="/css/download-surface.css?v=20260806-download-polish" />
+  <link rel="stylesheet" href="/css/obs-plugin-download.css?v=20260806-download-polish" />
 </head>
 <body class="download-surface obs-plugin-download-page">
   <a class="download-skip-link" href="#main-content">Skip to content</a>
@@ -38,6 +36,7 @@
 
   <div class="download-product-nav-shell">
     <nav class="download-product-nav download-page-width" aria-label="Studio downloads">
+      <a href="/downloads/">Downloads</a>
       <a href="/downloads/studioapp/">StudioApp</a>
       <a href="/downloads/obs-plugin/" aria-current="page">OBS Plugin</a>
       <a href="/downloads/studioapp/extensions/">Extensions</a>
@@ -60,22 +59,40 @@
           <span class="download-status-chip">GPL-2.0-or-later</span>
         </div>
         <div class="download-actions">
-          <button class="download-button download-button--primary" type="button" disabled aria-describedby="obs-download-status">Download not yet available</button>
+          <button class="download-button download-button--primary download-button--obs" type="button" disabled aria-describedby="obs-download-status">Download not yet available</button>
           <a class="download-button download-button--secondary" href="/downloads/studioapp/">View StudioApp</a>
         </div>
         <p id="obs-download-status" class="download-action-note">No public OBS Plugin artifact, version, release date, or compatibility range is authorized on this page.</p>
       </div>
 
-      <div class="download-panel obs-hero-visual" aria-label="StreamSuites and OBS integration identity">
-        <div class="obs-hero-visual__lockup">
-          <div class="obs-hero-visual__icons" aria-hidden="true">
-            <img src="/assets/logos/studiologo3.webp" alt="" />
-            <span class="obs-hero-visual__connector"><i></i><i></i><i></i></span>
-            <img src="/assets/icons/obs-white.svg" alt="" />
+      <div class="download-panel obs-hero-visual" aria-label="Diagram showing Runtime/Auth-authorized StreamSuites control connected to an OBS-owned media pipeline">
+        <div class="obs-preview__window" aria-hidden="true">
+          <div class="obs-preview__titlebar">
+            <span class="obs-preview__controls"><i></i><i></i><i></i></span>
+            <strong>STREAMSUITES STUDIO FOR OBS</strong>
+            <span>DEVELOPMENT</span>
           </div>
-          <strong>STREAMSUITES STUDIO FOR OBS</strong>
-          <span>Runtime/Auth-authorized control. OBS-owned media pipeline.</span>
+          <div class="obs-preview__workspace">
+            <aside class="obs-preview__rail"><small>CONTROL PLANE</small><strong>Runtime/Auth</strong><span>ROOM</span><span>INVITE</span><span>SESSION</span></aside>
+            <div class="obs-preview__flow">
+              <div class="obs-preview__node obs-preview__node--stream"><img src="/assets/logos/studiologo3.webp" alt="" /><strong>Authorized ingress</strong><span>Scoped guest receiver</span></div>
+              <span class="obs-preview__connector"><i></i><i></i><i></i><i></i></span>
+              <div class="obs-preview__node obs-preview__node--obs"><img src="/assets/icons/obs-white.svg" alt="" /><strong>OBS-owned output</strong><span>Scenes · mix · encode</span></div>
+            </div>
+          </div>
+          <div class="obs-preview__status"><span><i></i> BOUNDED LOCAL BRIDGE</span><strong>NO DUPLICATE MEDIA ENGINE</strong></div>
         </div>
+      </div>
+    </section>
+
+    <section class="download-section download-section--tight download-page-width" aria-labelledby="obs-requirements-title">
+      <div class="download-callout obs-requirements">
+        <div>
+          <p class="download-eyebrow">System requirements</p>
+          <h2 id="obs-requirements-title">Compatibility baseline pending approval.</h2>
+          <p>No public artifact exists, so the supported OBS version, operating systems, package format, architecture, and minimum install storage are not yet published. Those details will appear with a verified package rather than being inferred from development source.</p>
+        </div>
+        <span class="download-status-chip download-status-chip--pending">Not yet published</span>
       </div>
     </section>
 
@@ -145,7 +162,7 @@
           <p>When a public artifact is authorized, this area can present verified package, signature, hash, compatibility, installation, and licensing details. It contains no hidden or inactive artifact URL today.</p>
         </div>
         <div class="download-actions">
-          <button class="download-button download-button--primary" type="button" disabled>Download not yet available</button>
+          <button class="download-button download-button--primary download-button--obs" type="button" disabled>Download not yet available</button>
         </div>
       </div>
     </section>

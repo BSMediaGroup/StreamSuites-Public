@@ -13,7 +13,9 @@
   --download-text-muted: #778190;
   --download-accent: #8cc736;
   --download-accent-hover: #a7e249;
+  --download-accent-bright: #b9ef62;
   --download-accent-subtle: rgba(140, 199, 54, 0.12);
+  --download-primary-ink: #071000;
   --download-success: #8fd14f;
   --download-warning: #f0b94c;
   --download-error: #f07178;
@@ -47,8 +49,8 @@ body.download-surface {
   margin: 0;
   overflow-x: clip;
   background:
-    radial-gradient(circle at 72% -16%, rgba(140, 199, 54, 0.1), transparent 34rem),
-    radial-gradient(circle at -8% 30%, rgba(99, 120, 151, 0.08), transparent 30rem),
+    radial-gradient(circle at 72% -16%, rgba(80, 168, 255, 0.075), transparent 34rem),
+    radial-gradient(circle at -8% 30%, rgba(99, 120, 151, 0.065), transparent 30rem),
     var(--download-page-bg);
   color: var(--download-text);
   font-family: var(--download-font-body);
@@ -396,7 +398,12 @@ body.download-surface.modal-open {
 .download-hero h1 {
   max-width: 700px;
   margin-bottom: 18px;
+  background: linear-gradient(95deg, #eef3f8 8%, var(--download-accent-bright) 52%, #9eacba 94%);
+  background-clip: text;
+  color: transparent;
   font-size: clamp(2.4rem, 4.4vw, 3.5rem);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .download-hero__summary {
@@ -427,6 +434,7 @@ body.download-surface.modal-open {
   min-height: 44px;
   align-items: center;
   justify-content: center;
+  gap: 9px;
   border: 1px solid var(--download-border);
   border-radius: var(--download-control-radius);
   padding: 0.55rem 1rem;
@@ -440,17 +448,56 @@ body.download-surface.modal-open {
   transform: translateY(-1px);
 }
 
-.download-button--primary {
+.download-surface .download-button--primary {
   border-color: var(--download-accent);
   background: var(--download-accent);
   box-shadow: var(--download-glow);
-  color: #071000;
+  color: var(--download-primary-ink);
+  -webkit-text-fill-color: currentColor;
 }
 
-.download-button--primary:hover:not(:disabled):not([aria-disabled="true"]),
-.download-button--primary:focus-visible {
+.download-surface .download-button--primary:hover:not(:disabled):not([aria-disabled="true"]),
+.download-surface .download-button--primary:focus-visible {
   border-color: var(--download-accent-hover);
   background: var(--download-accent-hover);
+  color: var(--download-primary-ink);
+}
+
+.download-button--windows::before,
+.download-button--obs::before,
+.download-button--apple::before,
+.download-button--linux::before {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  background: currentColor;
+  content: "";
+  mask: var(--download-button-icon) center / contain no-repeat;
+  -webkit-mask: var(--download-button-icon) center / contain no-repeat;
+}
+
+.download-button--windows {
+  --download-button-icon: url("/assets/icons/windows-0.svg");
+}
+
+.download-button--obs {
+  --download-button-icon: url("/assets/icons/obs-0.svg");
+}
+
+.download-button--apple {
+  --download-button-icon: url("/assets/icons/apple-0.svg");
+}
+
+.download-button--linux {
+  --download-button-icon: url("/assets/icons/linux-0.svg");
+}
+
+.download-surface .download-button--coming-soon {
+  border-color: rgba(153, 165, 179, 0.2);
+  background: #242a33;
+  box-shadow: none;
+  color: #a7b0bc;
+  -webkit-text-fill-color: currentColor;
 }
 
 .download-button--secondary {
@@ -489,6 +536,7 @@ body.download-surface.modal-open {
   background:
     linear-gradient(145deg, rgba(22, 27, 37, 0.95), rgba(13, 17, 24, 0.96));
   box-shadow: 0 22px 55px rgba(0, 0, 0, 0.2);
+  transition: border-color 240ms ease, box-shadow 320ms ease, transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .download-panel--padded {
@@ -585,7 +633,7 @@ body.download-surface.modal-open {
 }
 
 .download-callout {
-  border: 1px solid rgba(140, 199, 54, 0.22);
+  border: 1px solid color-mix(in srgb, var(--download-accent) 24%, transparent);
   border-radius: var(--download-card-radius);
   background: linear-gradient(120deg, var(--download-accent-subtle), rgba(17, 21, 29, 0.8) 58%);
   padding: clamp(24px, 4vw, 40px);
@@ -605,6 +653,39 @@ body.download-surface.modal-open {
   min-height: 250px;
   flex-direction: column;
   padding: 24px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .download-info-card:hover,
+  .download-product-family-card:hover {
+    border-color: color-mix(in srgb, var(--download-accent) 28%, var(--download-border));
+    box-shadow: 0 28px 66px rgba(0, 0, 0, 0.28);
+    transform: translateY(-3px);
+  }
+}
+
+.download-surface main > section {
+  animation: download-section-enter 680ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.download-surface main > section:nth-child(2) {
+  animation-delay: 70ms;
+}
+
+.download-surface main > section:nth-child(3) {
+  animation-delay: 120ms;
+}
+
+@keyframes download-section-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .download-product-family-card__brand {
@@ -831,5 +912,11 @@ body.download-surface.modal-open {
   .download-button--primary {
     background: ButtonFace;
     color: ButtonText;
+  }
+
+  .download-hero h1 {
+    background: none;
+    color: CanvasText;
+    -webkit-text-fill-color: CanvasText;
   }
 }
