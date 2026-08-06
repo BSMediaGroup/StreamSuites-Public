@@ -81,7 +81,7 @@ body.studioapp-extensions-page {
   height: 17px;
   flex: 0 0 auto;
   background-color: currentColor;
-  color: #b4ef5b;
+  color: var(--download-accent-bright);
   -webkit-mask: url("/assets/icons/icondiag-studioapp.svg") center / contain no-repeat;
   mask: url("/assets/icons/icondiag-studioapp.svg") center / contain no-repeat;
 }

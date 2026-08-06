@@ -87,12 +87,12 @@ test("download polish uses feature accents, supplied platform icons, and truthfu
   assert.doesNotMatch(studio, /studioapp-preview__title"><img[^>]+streamsuites-0\.svg/);
   assert.match(studioCss, /\.studioapp-preview__title-icon\s*\{[\s\S]*color:\s*#b4ef5b;[\s\S]*icondiag-studioapp\.svg/);
   assert.match(obs, /class="obs-preview__title-icon" aria-hidden="true"/);
-  assert.match(obsCss, /\.obs-preview__title-icon\s*\{[\s\S]*background:\s*url\("\/assets\/logos\/studiologo3\.png"\) center \/ contain no-repeat/);
+  assert.match(obsCss, /\.obs-preview__title-icon\s*\{[\s\S]*color:\s*var\(--download-accent-bright\);[\s\S]*icondiag-studioapp\.svg/);
   assert.doesNotMatch(obsCss, /\.obs-preview__title-icon\s*\{[\s\S]*?obs-0\.svg[\s\S]*?\}/);
   assert.match(extensions, /class="extensions-preview__title-icon" aria-hidden="true"/);
-  assert.match(extensionsCss, /\.extensions-preview__title-icon\s*\{[\s\S]*color:\s*#b4ef5b;[\s\S]*icondiag-studioapp\.svg/);
-  [studio, extensions].forEach((html) => assert.match(html, /\?v=20260806-diagram-title-icons/));
-  assert.match(obs, /\/css\/obs-plugin-download\.css\?v=20260806-studio-obs-icon/);
+  assert.match(extensionsCss, /\.extensions-preview__title-icon\s*\{[\s\S]*color:\s*var\(--download-accent-bright\);[\s\S]*icondiag-studioapp\.svg/);
+  assert.match(studio, /\/css\/studioapp-download\.css\?v=20260806-diagram-title-icons/);
+  [obs, extensions].forEach((html) => assert.match(html, /\?v=20260806-feature-title-icon/));
 });
 
 test("downloads index is searchable, routed, and links only to truthful product surfaces", () => {

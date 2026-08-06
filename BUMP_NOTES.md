@@ -6,6 +6,18 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-06 - Download diagram titlebar glyph parity
+
+#### Technical notes
+
+- Matched the OBS and Extensions hero-diagram mock titlebars to the already-correct StudioApp implementation by using the same `assets/icons/icondiag-studioapp.svg` current-color mask at the existing 17px geometry.
+- Preserved each surface's established feature palette through its own `--download-accent-bright` token: violet on OBS and blue on Extensions. StudioApp remains unchanged with its existing lime treatment. No diagram nodes, labels, layout, product header icons, controls, routes, or download behavior changed.
+- Revised only the OBS and Extensions stylesheet cache keys and updated the focused source assertions. `downloads/studioapp/index.html` and `css/studioapp-download.css` were not edited.
+
+#### Human-readable notes
+
+The three download diagrams now share the same mock-window title icon, with each product retaining its own identifying color.
+
 ### 2026-08-06 - Dedicated OBS extension identity correction
 
 #### Technical notes
