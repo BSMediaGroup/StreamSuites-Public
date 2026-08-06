@@ -6,6 +6,20 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-06 - Standalone-page content and visual correction
+
+#### Technical notes
+
+- Restored the donation page's six established suggested amounts and amount-specific impact explanations, five original funding-use areas, trust FAQ, and local donor-message draft preview inside the redesigned shell. The draft remains browser-local and is explicitly excluded from checkout; the only donation network action remains the existing one-time `{ amount, source: "public" }` Stripe-session request. Placeholder raised/target totals were not restored because they were not live billing data. This corrective milestone supersedes the earlier removal statement below while retaining it as historical record of the first pass.
+- Reduced standalone hero title bounds and excess hero offset, including the About hero override, without changing the Tektur display contract. Corrected the About primary story CTA by excluding it from the generic inline-link color rule so its intended dark text contrasts against the blue action surface.
+- Replaced the incorrect wordmark-only footer image on all eight standalone/return pages with the exact `ssmainlogosq.webp` plus `wmnew.webp` header lockup. The landing and download page cascades remain untouched.
+- Roadmap programme percentages now count once from zero to their authoritative integer as each row enters the viewport. Progress fills reveal to the same numeric value and use smooth hover/focus scale, glow, and sheen transitions; reduced-motion users receive immediate static values and no hover animation.
+- Validation: `git diff --check` passed apart from the repository's line-ending notices; changed JavaScript passed `node --check`; `node --test` passed 96/96. Wrangler 4.60.0 parsed 20 valid redirect rules and served the local Pages preview. Playwright checked all eight standalone/return routes at 1440×900 and 390×844 plus Donate at 1365×768: every route had zero horizontal overflow, footer-after-main flow, bounded 40–74.88px rendered hero text, and the exact two footer logo assets. Donate rendered six amount controls, six impact cards, five funding areas, and three FAQ entries; a typed local draft stayed out of the intercepted unchanged `{ amount: 25, source: "public" }` request. About computed dark `rgb(3, 17, 31)` text on the intended `rgb(80, 168, 255)` CTA. An offscreen Roadmap value remained `0%`, counted upward once after intersection, settled at `63%` with matching 63/0/100 ARIA and 63% fill geometry, kept `63%` through hover while the bar scale/glow/sheen changed, and rendered all eight final values immediately under reduced motion. Browser console output contained only the pre-existing local-preview analytics CORS failure.
+
+#### Human-readable notes
+
+The redesign now preserves the donation information people need to understand each suggested amount, keeps the page hierarchy readable instead of oversized, uses the right StreamSuites brand in both ends of the page, fixes the About action contrast, and gives Roadmap progress the intended polished motion without repeatedly restarting its counters.
+
 ### 2026-08-06 - Standalone public pages, Roadmap, and support-hub redesign
 
 #### Technical notes

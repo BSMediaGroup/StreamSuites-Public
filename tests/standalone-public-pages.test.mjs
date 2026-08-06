@@ -28,6 +28,8 @@ test("standalone pages use the canonical landing brand, shell, and mobile naviga
     assert.match(html, /data-nav-toggle/);
     assert.match(html, /data-primary-nav/);
     assert.match(html, /class="site-footer"/);
+    assert.match(html, /class="brand site-footer__brand-lockup"/);
+    assert.doesNotMatch(html, /\/assets\/logos\/sswordmarktm\.webp/);
     assert.match(html, /\/css\/studio-first-landing\.css/);
     assert.match(html, /\/css\/standalone-pages\.css/);
     assert.doesNotMatch(html, /\/assets\/logos\/logo\.png/);
@@ -72,6 +74,14 @@ test("roadmap is a concise programme snapshot with matching visible, width, and 
   assert.match(script, /aria-valuemax", "100"/);
   assert.match(script, /aria-valuenow", String\(item\.percent\)/);
   assert.match(script, /aria-valuetext", item\.percent \+ " percent"/);
+  assert.match(script, /IntersectionObserver/);
+  assert.match(script, /dataset\.targetPercent = String\(item\.percent\)/);
+  assert.match(script, /programme\.dataset\.progressVisible = "true"/);
+  assert.match(script, /prefersReducedMotion\(\)/);
+
+  const css = read("css/standalone-pages.css");
+  assert.match(css, /roadmap-program\[data-progress-visible="true"\]:hover \.roadmap-progress/);
+  assert.match(css, /roadmap-progress__fill::after/);
 });
 
 test("roadmap release cards link only to changelog routes present in StreamSuites Docs", () => {
@@ -91,7 +101,29 @@ test("donation checkout preserves the real one-time API contract and validates w
   assert.match(script, /JSON\.stringify\(\{ amount: amount, source: "public" \}\)/);
   assert.match(script, /Number\.isInteger\(amount\)/);
   assert.match(script, /window\.location\.assign\(payload\.checkout_url\)/);
+  for (const amount of [5, 10, 25, 50, 100, 250]) {
+    assert.match(html, new RegExp(`class="button button--quiet donate-impact-select"[^>]+data-amount="${amount}"`));
+  }
+  for (const heading of ["Realtime compute boost", "Faster event handling", "Clip and asset retention", "Export throughput", "Monitoring and reliability", "Feature acceleration"]) {
+    assert.match(html, new RegExp(heading));
+  }
+  for (const heading of ["Faster hosting and compute", "Clip and asset archive storage", "Bandwidth and export throughput", "Monitoring and incident tooling", "Development acceleration"]) {
+    assert.match(html, new RegExp(heading));
+  }
+  assert.match(html, /id="donor-message"/);
+  assert.match(script, /streamsuites_donor_message_draft/);
+  assert.match(html + script, /will not be sent with checkout/i);
   assert.doesNotMatch(html + script, /data-recurring|subscription-plan|fake ticket number/i);
+});
+
+test("standalone hero scale and About primary CTA retain deliberate contrast", () => {
+  const css = read("css/standalone-pages.css");
+  assert.match(css, /\.standalone-title\s*\{[^}]*font-size: clamp\(44px, 5vw, 76px\)/s);
+  assert.match(css, /\.standalone-page--about \.public-about-hero h1\s*\{[^}]*font-size: clamp\(46px, 5\.2vw, 78px\)/s);
+  assert.match(css, /:not\(\.public-story-button\)/);
+
+  const about = read("about.html");
+  assert.match(about, /class="public-story-button public-story-button--primary"/);
 });
 
 test("support ticket-centre preview is stable, disabled, and has no client submission path", () => {

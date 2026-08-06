@@ -19,6 +19,60 @@
     });
   }
 
+  function prefersReducedMotion() {
+    return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  function setVisiblePercent(label, value) {
+    label.textContent = value + "%";
+  }
+
+  function revealInitiative(programme) {
+    if (programme.dataset.progressVisible === "true") return;
+
+    var label = programme.querySelector(".roadmap-program__percent");
+    var target = label ? Number(label.dataset.targetPercent) : 0;
+    programme.dataset.progressVisible = "true";
+    if (!label || !Number.isInteger(target)) return;
+
+    if (prefersReducedMotion()) {
+      setVisiblePercent(label, target);
+      return;
+    }
+
+    var duration = 920;
+    var startedAt = null;
+    function tick(timestamp) {
+      if (startedAt === null) startedAt = timestamp;
+      var elapsed = Math.min(1, (timestamp - startedAt) / duration);
+      var eased = 1 - Math.pow(1 - elapsed, 3);
+      setVisiblePercent(label, Math.round(target * eased));
+      if (elapsed < 1) requestAnimationFrame(tick);
+      else setVisiblePercent(label, target);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function observeInitiatives(container) {
+    var programmes = Array.prototype.slice.call(container.querySelectorAll(".roadmap-program"));
+    if (prefersReducedMotion() || !("IntersectionObserver" in window)) {
+      programmes.forEach(revealInitiative);
+      return;
+    }
+
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        revealInitiative(entry.target);
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.24, rootMargin: "0px 0px -8% 0px" });
+
+    programmes.forEach(function (programme) {
+      observer.observe(programme);
+    });
+  }
+
   function renderInitiative(item, index) {
     var details = element("details", "roadmap-program");
     if (index === 0) details.open = true;
@@ -35,7 +89,8 @@
     titleCopy.append(title, phase);
     titleRow.append(icon, titleCopy);
 
-    var percent = element("span", "roadmap-program__percent", item.percent + "%");
+    var percent = element("span", "roadmap-program__percent", "0%");
+    percent.dataset.targetPercent = String(item.percent);
     percent.setAttribute("aria-label", item.percent + " percent complete");
 
     var progress = element("div", "roadmap-progress");
@@ -78,10 +133,8 @@
         fragment.appendChild(renderInitiative(item, index));
       });
       container.replaceChildren(fragment);
-
-      requestAnimationFrame(function () {
-        container.dataset.ready = "true";
-      });
+      container.removeAttribute("aria-live");
+      observeInitiatives(container);
     } catch (error) {
       var message = element("p", "roadmap-error", "The roadmap snapshot is unavailable right now. Release changelogs and the rest of this page remain accessible below.");
       message.setAttribute("role", "status");
