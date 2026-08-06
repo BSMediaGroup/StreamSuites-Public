@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="/css/theme-dark.css" />
   <link rel="stylesheet" href="/css/components.css" />
   <link rel="stylesheet" href="/css/studio-first-landing.css" />
-  <link rel="stylesheet" href="/css/standalone-pages.css" />
+  <link rel="stylesheet" href="/css/standalone-pages.css?v=20260807-discord-community" />
   <link rel="stylesheet" href="/css/status-widget.css" />
 </head>
 <body class="standalone-page standalone-page--support">
@@ -52,7 +52,47 @@
       <section class="standalone-section" aria-labelledby="community-title">
         <div class="support-spotlight">
           <div><p class="section-kicker">Available now</p><h2 id="community-title" style="font-family: var(--public-font-display); margin: 0; font-size: clamp(30px, 4vw, 54px); letter-spacing: -0.035em">Community support lives on Discord.</h2><p style="color: var(--landing-text-2); line-height: 1.7; margin: 24px 0">Open the verified support channel and provide the affected product, page or version, expected behavior, actual behavior, and safe reproduction steps. Do not include credentials, stream keys, tokens, cookies, or card data.</p><div class="standalone-actions"><a class="button button--primary" href="https://discord.com/channels/1449303974086967306/1449303975890260021" target="_blank" rel="noopener noreferrer">Go to support channel</a><a class="button button--quiet" href="mailto:admin@streamsuites.app">Contact administrator</a></div></div>
-          <div><div class="support-embed-frame" role="group" aria-label="StreamSuites Discord community preview"><iframe src="https://discord.com/widget?id=1449303974086967306&amp;theme=dark" title="StreamSuites Discord community widget" loading="lazy" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe></div></div>
+          <div class="support-spotlight__widget-wrap">
+            <section class="discord-community" data-discord-community-widget data-state="loading" aria-labelledby="discord-community-name" aria-busy="true">
+              <header class="discord-community__header">
+                <div class="discord-community__brand">
+                  <span class="discord-community__brand-mark" aria-hidden="true"><img src="/assets/icons/discord.svg" alt="" /></span>
+                  <span><small>Official community</small><strong id="discord-community-name" data-discord-server-name>StreamSuites™</strong></span>
+                </div>
+                <span class="discord-community__connection"><i aria-hidden="true"></i><span data-discord-connection>Connecting</span></span>
+              </header>
+
+              <div class="discord-community__overview">
+                <div><strong data-discord-presence>—</strong><span>members online</span></div>
+                <div><strong data-discord-channel-count>—</strong><span>visible voice channels</span></div>
+                <p data-discord-message role="status" aria-live="polite">Reading the live Discord community preview…</p>
+              </div>
+
+              <div class="discord-community__directory">
+                <section class="discord-community__panel" aria-labelledby="discord-channels-title">
+                  <div class="discord-community__panel-heading"><span aria-hidden="true">◉</span><h3 id="discord-channels-title">Voice spaces</h3></div>
+                  <ul class="discord-community__channels" data-discord-channels>
+                    <li class="discord-community__placeholder"><span></span><span>Loading visible channels</span></li>
+                  </ul>
+                </section>
+                <section class="discord-community__panel" aria-labelledby="discord-members-title">
+                  <div class="discord-community__panel-heading"><span aria-hidden="true">⌁</span><h3 id="discord-members-title">Online now</h3></div>
+                  <ul class="discord-community__members" data-discord-members>
+                    <li class="discord-community__placeholder"><span></span><span>Loading member presence</span></li>
+                  </ul>
+                </section>
+              </div>
+
+              <footer class="discord-community__footer">
+                <div><strong>Community support, live.</strong><span>Presence comes directly from Discord's public server widget.</span></div>
+                <div class="discord-community__actions">
+                  <button class="button button--quiet button--small discord-community__refresh" type="button" data-discord-refresh>Refresh</button>
+                  <a class="button button--quiet button--small" href="https://discord.com/channels/1449303974086967306/1449303975890260021" target="_blank" rel="noopener noreferrer">Support channel</a>
+                  <a class="button button--primary button--small discord-community__join" href="https://discord.com/invite/fv3CBc4g" target="_blank" rel="noopener noreferrer" data-discord-invite>Join server <span aria-hidden="true">↗</span></a>
+                </div>
+              </footer>
+            </section>
+          </div>
         </div>
       </section>
 
@@ -79,6 +119,6 @@
   </main>
 
   <footer class="site-footer"><div class="landing-shell site-footer__top"><div class="site-footer__brand"><a class="brand site-footer__brand-lockup" href="/" aria-label="StreamSuites home"><img class="brand__mark" src="/assets/logos/ssmainlogosq.webp" alt="" width="44" height="44" /><img class="brand__wordmark" src="/assets/logos/wmnew.webp" alt="StreamSuites" /></a><p>Connected livestream production for browser, Windows, and OBS workflows.</p></div><div class="site-footer__links"><div><strong>Products</strong><a href="https://studio.streamsuites.app">Browser Studio</a><a href="/downloads/studioapp/">StudioApp</a><a href="/downloads/obs-plugin/">Studio for OBS</a></div><div><strong>Public</strong><a href="/home.html">Dashboard</a><a href="/community">Community</a><a href="/live">Live</a><a href="/clips">Clips</a></div><div><strong>Resources</strong><a href="/about.html">About</a><a href="/support.html">Support</a><a href="/roadmap">Roadmap</a><a href="https://streamsuites.statuspage.io/" target="_blank" rel="noopener noreferrer">Status</a></div><div><strong>Legal</strong><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="/accessibility.html">Accessibility</a></div></div></div><div class="landing-shell site-footer__bottom"><a class="footer-copyright" href="https://brainstream.media" target="_blank" rel="noopener noreferrer">© 2026 Brainstream Media Group</a><div class="footer-status" data-status-slot></div><span class="footer-version-tooltip-container"><a class="footer-version" href="/version" aria-describedby="support-version-tooltip">Loading version…</a><span class="footer-version-tooltip" id="support-version-tooltip" role="tooltip"><span class="footer-version-tooltip-line" data-footer-version-tooltip="version">Loading version…</span><span class="footer-version-tooltip-line" data-footer-version-tooltip="build">Build …</span><a class="footer-version-tooltip-link" href="/version">View version details</a></span></span></div></footer>
-  <script src="/js/utils/versioning.js"></script><script src="/js/utils/version-stamp.js"></script><script src="/js/status-widget.js" defer></script><script src="/js/studio-first-landing.js" defer></script>
+  <script src="/js/utils/versioning.js"></script><script src="/js/utils/version-stamp.js"></script><script src="/js/status-widget.js" defer></script><script src="/js/support-discord-widget.js?v=20260807" defer></script><script src="/js/studio-first-landing.js" defer></script>
 </body>
 </html>

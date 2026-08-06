@@ -144,6 +144,29 @@ test("support ticket-centre preview is stable, disabled, and has no client submi
   assert.match(html, /https:\/\/discord\.com\/channels\/1449303974086967306\/1449303975890260021/);
 });
 
+test("support Discord community widget is first-party, read-only, resilient, and joinable", () => {
+  const html = read("support.html");
+  const script = read("js/support-discord-widget.js");
+  const css = read("css/standalone-pages.css");
+  assert.match(html, /data-discord-community-widget/);
+  assert.match(html, /data-discord-invite/);
+  assert.match(html, /https:\/\/discord\.com\/invite\/fv3CBc4g/);
+  assert.match(html, /\/js\/support-discord-widget\.js\?v=20260807/);
+  assert.doesNotMatch(html, /discord\.com\/widget\?|<iframe/);
+  assert.match(script, /GUILD_ID = "1449303974086967306"/);
+  assert.match(script, /https:\/\/discord\.com\/api\/guilds\/" \+ GUILD_ID \+ "\/widget\.json/);
+  assert.match(script, /method: "GET"/);
+  assert.match(script, /credentials: "omit"/);
+  assert.match(script, /payload\.instant_invite/);
+  assert.match(script, /discord\.com" \|\| url\.hostname === "www\.discord\.com" \|\| url\.hostname === "discord\.gg"/);
+  assert.match(script, /replaceChildren/);
+  assert.doesNotMatch(script, /innerHTML|insertAdjacentHTML|method:\s*"(?:POST|PUT|PATCH|DELETE)"/);
+  assert.match(css, /\.discord-community\s*\{/);
+  assert.match(css, /\.discord-community__join/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*discord-community__placeholder/);
+  assert.match(css, /@media \(forced-colors: active\)[\s\S]*\.discord-community/);
+});
+
 test("privacy policy date and section anchors remain intact", () => {
   const html = read("privacy.html");
   assert.match(html, /Last updated:<\/strong> February 22, 2026/);

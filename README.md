@@ -69,7 +69,7 @@ flowchart TD
 - `/` is the Studio Command Center landing with real product routes, truthful product states, a non-operational illustrative workspace, product-specific media ownership, connected Public capabilities, wider ecosystem links, and hydrated status/version metadata. Its original `/auth/access-state`, `/auth/session`, OAuth/email auth, Turnstile, access-code, lockout-banner, and creator-routing contracts remain in place. The landing and shared Public-shell login modals use the first-party square `assets/logos/ssmainlogosq.webp` brand mark.
 - `/about.html` is the full product story plus the existing manifest-driven technical record.
 - `/donate.html` preserves the existing one-time StreamSuites billing endpoint and Stripe Checkout handoff while presenting truthful integer amount validation, busy/error states, and payment/account boundaries. `/donate-success.html` and `/donate-cancel.html` remain the configured return surfaces.
-- `/support.html` presents verified documentation, status, email, and Discord pathways. Its future first-party ticket-centre form/history structure is explicitly disabled and performs no submission, upload, persistence, account lookup, or ticket-state work.
+- `/support.html` presents verified documentation, status, email, and Discord pathways. Its custom read-only Discord community card consumes Discord's enabled public guild-widget JSON directly, safely renders published presence and visible voice channels, preserves the verified support-channel deep link, and keeps a server-rendered Join action available even when live presence cannot load. Its future first-party ticket-centre form/history structure is explicitly disabled and performs no submission, upload, persistence, account lookup, or ticket-state work.
 - `/privacy.html` preserves the February 22, 2026 policy text and date in a long-form reading layout with a responsive section index and stable anchors. `/accessibility.html` describes current practices and limitations without claiming audit, certification, or formal conformance.
 - `/roadmap` is the canonical public programme roadmap. Eight conservative integer estimates replace the former implementation-entry inventory, while detailed release changelogs link to verified StreamSuites Docs routes.
 - `/version` is the canonical human-facing master version reference. It renders all 13 components currently returned by the authoritative public registry, keeps null/deferred/uninitialized states explicit, and falls back to a truthful unavailable state rather than stale or hardcoded version data. Copy actions produce readable diagnostic text rather than exposing raw JSON.
@@ -300,6 +300,7 @@ StreamSuites-Public/
 │   ├── studioapp-extensions.js
 │   ├── studioapp-download.js
 │   ├── status-widget.js
+│   ├── support-discord-widget.js
 │   ├── turnstile-inline.js
 │   └── utils/
 │       ├── about-data.js

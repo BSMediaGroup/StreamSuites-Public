@@ -6,6 +6,19 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-07 - Custom live Discord community widget
+
+#### Technical notes
+
+- Replaced the stock Discord iframe on `/support.html` with a first-party, progressively enhanced community presentation backed only by Discord's enabled public widget JSON for guild `1449303974086967306`. The client performs a bounded read-only GET, validates the expected guild and payload shape, renders text through DOM text nodes, restricts invite/avatar URLs to Discord-owned HTTPS hosts, and times out cleanly without adding a Public proxy, account state, Discord credential, or canonical community authority.
+- Added live server identity, presence count, visible voice-channel count and directory, member avatars/status, a manual refresh control, clear loading/live/unavailable states, and a prominent Join server action. The join action has the live-verified `https://discord.com/invite/fv3CBc4g` fallback in server-rendered HTML, while the existing verified support-channel deep link remains available independently of JavaScript or Discord presence availability.
+- Added a responsive graphite/blue/indigo card treatment using the existing Public typography, borders, buttons, focus language, restrained hover depth, reduced-motion behavior, forced-colors support, safe long-text handling, and single-column mobile reflow. Removed the obsolete iframe markup and iframe-only CSS; `js/support-discord-widget.js` is new and is listed in the README repository tree.
+- Validation: the live Discord widget endpoint returned HTTP 200 with the expected guild, invite, seven presences, and two visible voice channels. `node --check`, the focused standalone suite (10/10), and `git diff --check` passed. Wrangler and Playwright rendered the live widget at 1440×900 and 390×844; the manual refresh returned to `Live from Discord`, all seven avatars decoded, the Join server action retained the verified invite, and the mobile page had zero horizontal overflow. Browser console output contained only the existing local-preview analytics CORS failure, not a Discord-widget error.
+
+#### Human-readable notes
+
+The Support page now has a native StreamSuites Discord panel instead of Discord's generic embed. It shows the live community cleanly, restores an unmistakable Join server button, and still provides working support and join routes if the live preview is temporarily unavailable.
+
 ### 2026-08-06 - Download subnavigation active-border colors
 
 #### Technical notes
