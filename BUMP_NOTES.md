@@ -6,6 +6,17 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-06 - Download subnavigation active-border colors
+
+#### Technical notes
+
+- Corrected the active download-rail border on the Downloads index, OBS Plugin, and Extensions pages so it follows each page's existing feature palette instead of inheriting the shared StudioApp-green border. Downloads and Extensions now use blue; OBS uses violet.
+- Preserved the already-correct green StudioApp state by leaving `downloads/studioapp/index.html`, `css/studioapp-download.css`, and the shared green default unchanged. Revised only the three affected page-specific stylesheet cache keys; navigation markup, links, sticky behavior, focus treatment, routes, and download behavior are unchanged.
+
+#### Human-readable notes
+
+Each selected download tab now has a border that matches its own product color instead of every tab appearing green.
+
 ### 2026-08-06 - Download diagram titlebar glyph parity
 
 #### Technical notes

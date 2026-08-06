@@ -8,6 +8,10 @@ body.obs-plugin-download-page {
   --download-primary-ink: #0b0920;
 }
 
+body.obs-plugin-download-page .download-product-nav a[aria-current="page"] {
+  border-color: rgba(140, 124, 255, 0.38);
+}
+
 .obs-hero-visual {
   position: relative;
   display: grid;

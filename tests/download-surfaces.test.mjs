@@ -59,6 +59,8 @@ test("download routes use the approved Public typography and retain authoritativ
 
 test("download polish uses feature accents, supplied platform icons, and truthful coming-soon scaffolds", () => {
   const shared = read("css/download-surface.css");
+  const index = read("downloads/index.html");
+  const indexCss = read("css/download-index.css");
   const studio = read("downloads/studioapp/index.html");
   const studioCss = read("css/studioapp-download.css");
   const obs = read("downloads/obs-plugin/index.html");
@@ -72,6 +74,10 @@ test("download polish uses feature accents, supplied platform icons, and truthfu
   assert.match(shared, /url\("\/assets\/icons\/apple-0\.svg"\)/);
   assert.match(shared, /url\("\/assets\/icons\/linux-0\.svg"\)/);
   assert.match(shared, /color:\s*var\(--download-primary-ink\)/);
+  assert.match(shared, /\.download-product-nav a\[aria-current="page"\][\s\S]*border-color:\s*rgba\(140, 199, 54, 0\.34\)/);
+  assert.match(indexCss, /body\.download-index-page \.download-product-nav a\[aria-current="page"\][\s\S]*border-color:\s*rgba\(80, 168, 255, 0\.38\)/);
+  assert.match(obsCss, /body\.obs-plugin-download-page \.download-product-nav a\[aria-current="page"\][\s\S]*border-color:\s*rgba\(140, 124, 255, 0\.38\)/);
+  assert.match(extensionsCss, /body\.studioapp-extensions-page \.download-product-nav a\[aria-current="page"\][\s\S]*border-color:\s*rgba\(80, 168, 255, 0\.38\)/);
   assert.match(studio, /download-button--windows/);
   assert.match(studio, /StudioApp for macOS/);
   assert.match(studio, /download-button--apple[^>]*disabled/);
@@ -92,7 +98,7 @@ test("download polish uses feature accents, supplied platform icons, and truthfu
   assert.match(extensions, /class="extensions-preview__title-icon" aria-hidden="true"/);
   assert.match(extensionsCss, /\.extensions-preview__title-icon\s*\{[\s\S]*color:\s*var\(--download-accent-bright\);[\s\S]*icondiag-studioapp\.svg/);
   assert.match(studio, /\/css\/studioapp-download\.css\?v=20260806-diagram-title-icons/);
-  [obs, extensions].forEach((html) => assert.match(html, /\?v=20260806-feature-title-icon/));
+  [index, obs, extensions].forEach((html) => assert.match(html, /\?v=20260806-active-nav-color/));
 });
 
 test("downloads index is searchable, routed, and links only to truthful product surfaces", () => {

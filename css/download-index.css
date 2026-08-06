@@ -8,6 +8,10 @@ body.download-index-page {
   --download-primary-ink: #061522;
 }
 
+body.download-index-page .download-product-nav a[aria-current="page"] {
+  border-color: rgba(80, 168, 255, 0.38);
+}
+
 .downloads-index-hero {
   min-height: 590px;
 }

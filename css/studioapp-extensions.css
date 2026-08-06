@@ -8,6 +8,10 @@ body.studioapp-extensions-page {
   --download-primary-ink: #061321;
 }
 
+body.studioapp-extensions-page .download-product-nav a[aria-current="page"] {
+  border-color: rgba(80, 168, 255, 0.38);
+}
+
 .extensions-hero {
   min-height: 390px;
   grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1.1fr);
