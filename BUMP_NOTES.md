@@ -6,6 +6,18 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-06 - Dedicated OBS extension identity correction
+
+#### Technical notes
+
+- Superseded the earlier incorrect Studio-logo substitution on all five StreamSuites Studio for OBS product identities with the dedicated existing `assets/icons/icon-obsextension.webp` asset: the Downloads index diagram node and product card, StudioApp related-product card, OBS page hero identity, and Extensions related-product card.
+- Deliberately left the OBS page's complete hero diagram unchanged, including its mock-window titlebar, authorized-ingress mark, and `OBS-owned output` node. Download controls, routes, product state, manifest/catalog behavior, protected gates, Runtime/Auth authority, and unavailable OBS-package posture are unchanged.
+- Added a focused hash assertion for the exact dedicated asset and context assertions for every affected download surface. The earlier Bump Notes entry remains as historical record; this correction explicitly supersedes its mistaken product-identity asset choice.
+
+#### Human-readable notes
+
+Every download-page label or card representing the StreamSuites OBS extension now uses its dedicated OBS-extension icon. The technical diagram on the OBS page has not been changed.
+
 ### 2026-08-06 - Compact Version Reference hero navigation
 
 #### Technical notes
