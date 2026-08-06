@@ -121,7 +121,7 @@ test("production landing preserves the approved POC hero, bento modules, and aut
 
   assert.match(html, /class="scroll-cue" href="#products"/);
   assert.match(html, /Explore the suite/);
-  assert.match(html, /\/css\/studio-first-landing\.css\?v=20260806-card-icons/);
+  assert.match(html, /\/css\/studio-first-landing\.css\?v=20260806-footer-lockup/);
   assert.match(css, /\.landing-hero h1 span\s*\{[\s\S]*linear-gradient\(95deg,[\s\S]*background-clip:\s*text/);
   assert.match(css, /\.scroll-cue i\s*\{[\s\S]*animation:\s*scrollCue/);
 

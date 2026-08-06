@@ -16,7 +16,8 @@ const standalonePages = [
   "donate-cancel.html",
   "privacy.html",
   "roadmap.html",
-  "support.html"
+  "support.html",
+  "version.html"
 ];
 
 test("standalone pages use the canonical landing brand, shell, and mobile navigation contract", () => {
@@ -82,6 +83,8 @@ test("roadmap is a concise programme snapshot with matching visible, width, and 
   const css = read("css/standalone-pages.css");
   assert.match(css, /roadmap-program\[data-progress-visible="true"\]:hover \.roadmap-progress/);
   assert.match(css, /roadmap-progress__fill::after/);
+  assert.match(css, /\.roadmap-program::before/);
+  assert.match(css, /\.roadmap-program:hover::before/);
 });
 
 test("roadmap release cards link only to changelog routes present in StreamSuites Docs", () => {

@@ -504,7 +504,7 @@
 
     const tooltipContainer = create("span", "footer-version-tooltip-container");
     const versionLink = create("a", "footer-version", "Loading version…");
-    versionLink.href = "/roadmap";
+    versionLink.href = "/version";
     versionLink.setAttribute("aria-describedby", "footer-version-tooltip");
 
     const tooltip = create("div", "footer-version-tooltip");
@@ -515,8 +515,8 @@
     lineVersion.setAttribute("data-footer-version-tooltip", "version");
     const lineBuild = create("div", "footer-version-tooltip-line", "Build …");
     lineBuild.setAttribute("data-footer-version-tooltip", "build");
-    const changelogLink = create("a", "footer-version-tooltip-link", "View roadmap");
-    changelogLink.href = "/roadmap";
+    const changelogLink = create("a", "footer-version-tooltip-link", "View version details");
+    changelogLink.href = "/version";
 
     tooltip.append(lineVersion, lineBuild, changelogLink);
     tooltipContainer.append(versionLink, tooltip);

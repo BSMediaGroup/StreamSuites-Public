@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<!-- StreamSuites™ — Human-readable public version registry -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>Version Reference • StreamSuites™</title>
+  <meta name="description" content="A live, human-readable diagnostic view of the authoritative StreamSuites public version registry." />
+  <link rel="canonical" href="https://streamsuites.app/version" />
+  <meta property="og:title" content="Version Reference • StreamSuites™" />
+  <meta property="og:description" content="Live system, product, build, and compatibility information from the authoritative StreamSuites public version registry." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://streamsuites.app/version" />
+  <meta property="og:image" content="/assets/backgrounds/seoshare.jpg" />
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="/css/theme-dark.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/studio-first-landing.css?v=20260806-version" />
+  <link rel="stylesheet" href="/css/standalone-pages.css?v=20260806-version" />
+  <link rel="stylesheet" href="/css/version-page.css?v=20260806" />
+  <link rel="stylesheet" href="/css/status-widget.css" />
+</head>
+<body class="standalone-page standalone-page--version">
+  <a class="skip-link" href="#main-content">Skip to content</a>
+
+  <header class="site-header" data-site-header>
+    <div class="landing-shell site-header__inner">
+      <a class="brand" href="/" aria-label="StreamSuites home"><img class="brand__mark" src="/assets/logos/ssmainlogosq.webp" alt="" width="44" height="44" /><img class="brand__wordmark" src="/assets/logos/wmnew.webp" alt="StreamSuites" /></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="Open navigation" data-nav-toggle><span></span><span></span><span></span></button>
+      <nav class="primary-nav" id="primary-nav" aria-label="Primary navigation" data-primary-nav><a href="/about.html">About</a><a href="/support.html">Support</a><a href="/roadmap">Roadmap</a><a href="/donate.html">Donate</a><a href="/accessibility.html">Accessibility</a><a class="standalone-mobile-only" href="/home.html">Public dashboard</a><a class="standalone-mobile-only" href="https://studio.streamsuites.app">Open Studio</a></nav>
+      <div class="header-actions"><a class="standalone-version-badge footer-version button button--quiet button--small" href="/version" aria-current="page">Loading version…</a><a class="button button--primary button--small" href="https://studio.streamsuites.app">Open Studio</a></div>
+    </div>
+  </header>
+
+  <main class="standalone-main version-main" id="main-content">
+    <div class="landing-shell">
+      <section class="version-hero" aria-labelledby="version-title">
+        <div class="version-hero__copy">
+          <p class="standalone-kicker">Live ecosystem reference</p>
+          <h1 id="version-title">One clear view of every public version line.</h1>
+          <p class="version-hero__lede">A human-readable diagnostic surface for creators, viewers, support, and administrators. Every live value below is read from the canonical Runtime/Auth public version registry—not maintained by this page.</p>
+          <div class="version-hero__actions">
+            <button class="button button--primary version-copy-all" type="button" data-copy-manifest disabled>Copy complete reference</button>
+            <a class="button button--quiet" href="https://api.streamsuites.app/api/public/version-registry" target="_blank" rel="noopener noreferrer">Open source manifest <span aria-hidden="true">↗</span></a>
+          </div>
+          <p class="version-copy-status" data-copy-status role="status" aria-live="polite"></p>
+        </div>
+        <aside class="version-authority" aria-label="Registry authority and freshness">
+          <div class="version-authority__top"><span class="version-live-dot" aria-hidden="true"></span><span data-registry-state>Connecting to Runtime/Auth</span></div>
+          <dl>
+            <div><dt>System</dt><dd data-summary-version>Loading…</dd></div>
+            <div><dt>Ecosystem revision</dt><dd data-summary-revision>—</dd></div>
+            <div><dt>Latest build</dt><dd data-summary-build>—</dd></div>
+            <div><dt>Registry generated</dt><dd data-summary-generated>—</dd></div>
+          </dl>
+          <p>This presentation is read-only. Product and system authority remains in StreamSuites Runtime/Auth.</p>
+        </aside>
+      </section>
+
+      <section class="version-overview" aria-labelledby="overview-title">
+        <div class="version-section-heading">
+          <div><p class="section-kicker">Registry at a glance</p><h2 id="overview-title">Current ecosystem posture</h2></div>
+          <p>Semantic product versions, deployment-only clients, and deferred baselines are deliberately shown as different states.</p>
+        </div>
+        <div class="version-metrics" aria-live="polite">
+          <article><span class="version-metric__value" data-metric-components>—</span><span class="version-metric__label">Public components</span></article>
+          <article><span class="version-metric__value" data-metric-ready>—</span><span class="version-metric__label">Registry ready</span></article>
+          <article><span class="version-metric__value" data-metric-versioned>—</span><span class="version-metric__label">Semantic baselines</span></article>
+          <article><span class="version-metric__value" data-metric-pending>—</span><span class="version-metric__label">Deferred or uninitialized</span></article>
+        </div>
+        <div class="version-legend" aria-label="Version policy guide">
+          <div><span class="version-legend__mark version-legend__mark--system"></span><strong>System semantic</strong><p>The canonical connected-system version.</p></div>
+          <div><span class="version-legend__mark version-legend__mark--product"></span><strong>Independent product</strong><p>A separately approved product version line.</p></div>
+          <div><span class="version-legend__mark version-legend__mark--deployment"></span><strong>Deployment identity</strong><p>A client surface that follows system compatibility rather than inventing a product version.</p></div>
+          <div><span class="version-legend__mark version-legend__mark--deferred"></span><strong>Deferred baseline</strong><p>A real component whose product-semantic starting point is not yet approved.</p></div>
+        </div>
+      </section>
+
+      <section class="version-components" aria-labelledby="components-title">
+        <div class="version-section-heading version-section-heading--controls">
+          <div><p class="section-kicker">Component directory</p><h2 id="components-title">The complete public manifest, translated.</h2></div>
+          <div class="version-filter" role="search"><label for="version-search">Find a component</label><span><input id="version-search" type="search" inputmode="search" autocomplete="off" placeholder="Search name, ID, state…" disabled data-version-search /><kbd aria-hidden="true">/</kbd></span></div>
+        </div>
+        <div class="version-load-state" data-version-load-state role="status">
+          <span class="version-loader" aria-hidden="true"></span>
+          <div><strong>Reading the authoritative registry</strong><p>The component reference will appear here when Runtime/Auth responds.</p></div>
+        </div>
+        <div class="version-component-groups" data-version-components hidden></div>
+        <p class="version-empty" data-version-empty hidden>No component matches that search.</p>
+      </section>
+
+      <section class="version-companions" aria-labelledby="companions-title">
+        <div class="version-section-heading">
+          <div><p class="section-kicker">Local diagnostic companions</p><h2 id="companions-title">Details that only the installed app can know.</h2></div>
+          <p>The public registry describes approved ecosystem identity. Device, process, local build, connection, and log-path evidence remains local to the application that reports it.</p>
+        </div>
+        <article class="version-companion" data-companion-card>
+          <div class="version-component__head">
+            <div class="version-component__identity"><span class="version-component__icon"><img src="/assets/icons/icon-releasemanager.png" alt="" /></span><div><span class="version-component__eyebrow">Private administration utility</span><h3>StreamSuites Release Manager</h3><p>StudioApp release operations companion</p></div></div>
+            <button class="version-copy-button" type="button" data-copy-companion aria-label="Copy StreamSuites Release Manager diagnostic guidance"><span aria-hidden="true">⧉</span> Copy details</button>
+          </div>
+          <div class="version-companion__body">
+            <div><strong>Registry posture</strong><p>No separate public product version is projected. Use the live StudioApp and Runtime/System cards above for ecosystem compatibility context.</p></div>
+            <div><strong>Local About dialog adds</strong><p>StudioApp version/build, system version/build, source revision, and Release Manager assembly version from the executable in use.</p></div>
+            <div><strong>Operational boundary</strong><p>Private WPF orchestration utility for the repository’s version, build, test, installer, publishing, and verification scripts. It contains no media engine and is excluded from end-user StudioApp installers and payloads.</p></div>
+          </div>
+        </article>
+        <div class="version-local-grid">
+          <article><span class="version-local-grid__icon"><img src="/assets/logos/studiofavicon.webp" alt="" /></span><div><strong>StudioApp diagnostics</strong><p>Add the app’s product metadata source, system compatibility source, OS, process architecture, .NET runtime, Engine status/protocol, Runtime/Auth status/origin, and relevant logs from its Copy Diagnostics action.</p></div></article>
+          <article><span class="version-local-grid__icon"><img src="/assets/logos/ssmainlogosq.webp" alt="" /></span><div><strong>Alerts Client diagnostics</strong><p>Add binary and file versions, local profile, configured public registry source, refresh time and freshness, and any nonsecret last error from its About surface.</p></div></article>
+          <article><span class="version-local-grid__icon"><img src="/assets/logos/ssadminshldv2.webp" alt="" /></span><div><strong>Admin diagnostics</strong><p>The public Desktop Admin and Dashboard cards provide shareable compatibility posture. Privileged readiness, credentials, internal deployment evidence, and operator-only registry data are intentionally not exposed here.</p></div></article>
+        </div>
+        <div class="version-safety-note"><span aria-hidden="true">i</span><p><strong>Before sharing:</strong> review local application diagnostics for paths or environment detail. Never include cookies, credentials, OAuth tokens, stream keys, bypass codes, or private registry exports.</p></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="landing-shell site-footer__top">
+      <div class="site-footer__brand"><a class="brand site-footer__brand-lockup" href="/" aria-label="StreamSuites home"><img class="brand__mark" src="/assets/logos/ssmainlogosq.webp" alt="" width="44" height="44" /><img class="brand__wordmark" src="/assets/logos/wmnew.webp" alt="StreamSuites" /></a><p>Connected livestream production for browser, Windows, and OBS workflows.</p></div>
+      <div class="site-footer__links"><div><strong>Products</strong><a href="https://studio.streamsuites.app">Browser Studio</a><a href="/downloads/studioapp/">StudioApp</a><a href="/downloads/obs-plugin/">Studio for OBS</a></div><div><strong>Public</strong><a href="/home.html">Dashboard</a><a href="/community">Community</a><a href="/live">Live</a><a href="/clips">Clips</a></div><div><strong>Resources</strong><a href="/about.html">About</a><a href="/support.html">Support</a><a href="/roadmap">Roadmap</a><a href="/version" aria-current="page">Version reference</a><a href="https://streamsuites.statuspage.io/" target="_blank" rel="noopener noreferrer">Status</a></div><div><strong>Legal</strong><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="/accessibility.html">Accessibility</a></div></div>
+    </div>
+    <div class="landing-shell site-footer__bottom"><a class="footer-copyright" href="https://brainstream.media" target="_blank" rel="noopener noreferrer">© 2026 Brainstream Media Group</a><div class="footer-status" data-status-slot></div><span class="footer-version-tooltip-container"><a class="footer-version" href="/version" aria-current="page" aria-describedby="version-footer-tooltip">Loading version…</a><span class="footer-version-tooltip" id="version-footer-tooltip" role="tooltip"><span class="footer-version-tooltip-line" data-footer-version-tooltip="version">Loading version…</span><span class="footer-version-tooltip-line" data-footer-version-tooltip="build">Build …</span><a class="footer-version-tooltip-link" href="/version">View version details</a></span></span></div>
+  </footer>
+
+  <script src="/js/utils/versioning.js"></script>
+  <script src="/js/utils/version-stamp.js"></script>
+  <script src="/js/status-widget.js" defer></script>
+  <script src="/js/studio-first-landing.js" defer></script>
+  <script src="/js/public-version.js" defer></script>
+</body>
+</html>
