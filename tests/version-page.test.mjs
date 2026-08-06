@@ -13,8 +13,11 @@ test("version reference is a canonical standalone public surface with the exact 
   assert.match(html, /class="brand__wordmark" src="\/assets\/logos\/wmnew\.webp"/);
   assert.match(html, /class="brand site-footer__brand-lockup"/);
   assert.match(html, /data-copy-manifest/);
+  assert.match(html, /href="#components">Jump to components/);
+  assert.match(html, /class="version-components" id="components"/);
   assert.match(html, /data-version-components/);
   assert.match(html, /data-version-search/);
+  assert.match(html, /\/js\/public-version\.js\?v=20260806-system-aligned/);
   assert.match(html, /StreamSuites Release Manager/);
   assert.match(html, /\/assets\/icons\/icon-releasemanager\.png/);
   assert.ok(existsSync(new URL("../assets/icons/icon-releasemanager.png", import.meta.url)));
@@ -49,6 +52,9 @@ test("version reference renders and copies all public fields without fake local 
   ]) assert.match(script, new RegExp(field));
   assert.match(script, /navigator\.clipboard\.writeText/);
   assert.match(script, /document\.execCommand\("copy"\)/);
+  assert.match(script, /component\.version_policy === "deployment_identity_only"/);
+  assert.match(script, /cardVersionLabel\(component\)[\s\S]*manifest\.system_semantic_version/);
+  assert.match(script, /version-system-chip", "System aligned"/);
   assert.match(script, /data-copy-companion/);
   assert.match(script, /No separate public product version is projected/i);
   assert.doesNotMatch(script, /fake ticket|localStorage|sessionStorage|POST|PUT|PATCH|DELETE/);
@@ -59,6 +65,8 @@ test("version page presentation is responsive, focus-visible, and reduced-motion
   assert.match(css, /\.version-component::before/);
   assert.match(css, /\.version-component:hover::before/);
   assert.match(css, /\.version-copy-button:focus-visible/);
+  assert.match(css, /\.version-components\s*\{[\s\S]*scroll-margin-top:/);
+  assert.match(css, /\.version-system-chip\s*\{/);
   assert.match(css, /@media \(max-width: 600px\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(css, /\.version-component::before \{ display: none; \}/);

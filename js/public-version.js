@@ -17,7 +17,7 @@
     "developer-web": { group: "Public and account surfaces", order: 33, icon: "/assets/icons/developersurface.webp", note: "Developer-facing Runtime/Auth client" },
     "docs-web": { group: "Public and account surfaces", order: 34, icon: "/assets/icons/docsinfosurface.webp", note: "Shipped-reality documentation" },
     "members-web": { group: "Public and account surfaces", order: 35, icon: "/assets/icons/fmhver.webp", note: "FindMeHere member surface" },
-    "desktop-admin-winforms": { group: "Desktop and companion clients", order: 40, icon: "/assets/icons/studioappwindows.webp", note: "Privileged Windows administration product" },
+    "desktop-admin-winforms": { group: "Desktop and companion clients", order: 40, icon: "/assets/icons/adconwindows.webp", note: "Privileged Windows administration product" },
     "alerts-windows": { group: "Desktop and companion clients", order: 41, icon: "/assets/icons/ssalerts.webp", note: "Read-only registry-consuming alerts client" },
     "livechat-launcher": { group: "Desktop and companion clients", order: 42, icon: "/assets/icons/chatexticon.webp", note: "Browser launcher and bridge" }
   };
@@ -101,6 +101,14 @@
     if (component.semantic_version_status === "not_applicable") return "System-aligned client";
     if (component.semantic_version_status === "deferred") return "Baseline deferred";
     return "Not initialized";
+  }
+
+  function isSystemAligned(component) {
+    return component.version_policy === "deployment_identity_only";
+  }
+
+  function cardVersionLabel(component) {
+    return isSystemAligned(component) ? manifest.system_semantic_version : versionLabel(component);
   }
 
   function cardCopyText(component) {
@@ -208,7 +216,7 @@
     var present = presentationFor(component);
     var article = el("article", "version-component");
     article.dataset.componentId = component.component_id;
-    article.dataset.search = [component.display_name, component.component_id, component.version_policy, component.semantic_version_status, component.state, component.compatibility].join(" ").toLowerCase();
+    article.dataset.search = [component.display_name, component.component_id, component.version_policy, component.semantic_version_status, component.state, component.compatibility, isSystemAligned(component) ? "system aligned" : ""].join(" ").toLowerCase();
 
     var head = el("div", "version-component__head");
     var identity = el("div", "version-component__identity");
@@ -232,7 +240,10 @@
 
     var posture = el("div", "version-component__posture");
     var primary = el("div", "version-component__primary");
-    primary.append(el("span", "", "Product version"), el("strong", "", versionLabel(component)));
+    var versionLine = el("div", "version-component__version-line");
+    versionLine.append(el("strong", "", cardVersionLabel(component)));
+    if (isSystemAligned(component)) versionLine.append(el("span", "version-system-chip", "System aligned"));
+    primary.append(el("span", "", isSystemAligned(component) ? "System version" : "Product version"), versionLine);
     var state = el("span", "version-state version-state--" + text(component.state, "unknown"));
     state.append(el("i"), document.createTextNode(STATE_LABELS[component.state] || humanize(component.state)));
     posture.append(primary, state);

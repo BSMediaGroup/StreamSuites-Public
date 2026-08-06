@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="/css/components.css" />
   <link rel="stylesheet" href="/css/studio-first-landing.css?v=20260806-version" />
   <link rel="stylesheet" href="/css/standalone-pages.css?v=20260806-version" />
-  <link rel="stylesheet" href="/css/version-page.css?v=20260806" />
+  <link rel="stylesheet" href="/css/version-page.css?v=20260806-compact-hero" />
   <link rel="stylesheet" href="/css/status-widget.css" />
 </head>
 <body class="standalone-page standalone-page--version">
@@ -42,6 +42,7 @@
           <p class="version-hero__lede">A human-readable diagnostic surface for creators, viewers, support, and administrators. Every live value below is read from the canonical Runtime/Auth public version registry—not maintained by this page.</p>
           <div class="version-hero__actions">
             <button class="button button--primary version-copy-all" type="button" data-copy-manifest disabled>Copy complete reference</button>
+            <a class="button button--quiet version-jump-button" href="#components">Jump to components <span aria-hidden="true">↓</span></a>
             <a class="button button--quiet" href="https://api.streamsuites.app/api/public/version-registry" target="_blank" rel="noopener noreferrer">Open source manifest <span aria-hidden="true">↗</span></a>
           </div>
           <p class="version-copy-status" data-copy-status role="status" aria-live="polite"></p>
@@ -77,7 +78,7 @@
         </div>
       </section>
 
-      <section class="version-components" aria-labelledby="components-title">
+      <section class="version-components" id="components" aria-labelledby="components-title">
         <div class="version-section-heading version-section-heading--controls">
           <div><p class="section-kicker">Component directory</p><h2 id="components-title">The complete public manifest, translated.</h2></div>
           <div class="version-filter" role="search"><label for="version-search">Find a component</label><span><input id="version-search" type="search" inputmode="search" autocomplete="off" placeholder="Search name, ID, state…" disabled data-version-search /><kbd aria-hidden="true">/</kbd></span></div>
@@ -128,6 +129,6 @@
   <script src="/js/utils/version-stamp.js"></script>
   <script src="/js/status-widget.js" defer></script>
   <script src="/js/studio-first-landing.js" defer></script>
-  <script src="/js/public-version.js" defer></script>
+  <script src="/js/public-version.js?v=20260806-system-aligned" defer></script>
 </body>
 </html>

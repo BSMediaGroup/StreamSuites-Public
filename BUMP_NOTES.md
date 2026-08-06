@@ -6,6 +6,19 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-06 - Compact Version Reference hero navigation
+
+#### Technical notes
+
+- Tightened only the Version Reference hero's responsive outer padding, column gap, display scale, lede/action spacing, and registry-summary rhythm so the diagnostic entry surface occupies less vertical space without changing its content or live data bindings.
+- Added a progressively enhanced `Jump to components` anchor targeting the existing component directory, with a stable section ID and header-safe scroll offset. Registry hydration, filters, clipboard actions, Runtime/Auth authority, component rendering, routes, and the rest of the page layout remain unchanged.
+- Deployment-identity-only component cards now display the live manifest's system semantic version under an explicit `System version` label and pair it with a restrained `System aligned` chip. Their registry policy remains deployment identity only, their own semantic status remains not applicable, and no independent component version is invented or stored in Public. A bounded script revision ensures browsers receive this renderer update instead of retaining the earlier unversioned client.
+- Validation: `node --check js/public-version.js`, the focused 5/5 Version Reference tests, and `git diff --check` passed. Wrangler and Playwright verified a 444px desktop hero at 1365×768, a working `#components` jump with header-safe landing space, full-width mobile hero actions and zero overflow at 390×844, and six deployment-identity cards showing the live `0.5.4-alpha` system version with `System aligned` chips. The only console messages were the existing local-preview analytics CORS failures.
+
+#### Human-readable notes
+
+The Version Reference now reaches its technical content faster: the opening summary is more compact, and a new hero action jumps straight to the individual component directory. System-aligned web clients also show the system version they follow while remaining clearly distinguished from independently versioned products.
+
 ### 2026-08-06 - OBS extension icon consistency across Downloads
 
 #### Technical notes
