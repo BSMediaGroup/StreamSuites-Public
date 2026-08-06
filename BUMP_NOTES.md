@@ -6,6 +6,29 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-06 - OBS extension icon consistency across Downloads
+
+#### Technical notes
+
+- Replaced every StreamSuites Studio for OBS product-identity use on the Downloads index, StudioApp related-products section, OBS download hero and mock titlebar, and Extensions related-products section with the exact existing `assets/logos/studiologo3.png` asset. The generic OBS mark remains only on the diagram node that explicitly represents `OBS-owned output`, and `obs-0.svg` remains the platform-action mask for the OBS download control.
+- Revised only the OBS product stylesheet cache key and added focused asset-hash and context assertions. Download routes, product copy and status, StudioApp manifest hydration, protected access gate, HMAC/cookie behavior, controlled artifact redirect, Runtime/Auth authority, and unavailable OBS-package state are unchanged. No asset, file, version, release data, deployment, commit, or push was created or changed.
+
+#### Human-readable notes
+
+StreamSuites Studio for OBS now carries the requested Studio logo consistently wherever that extension is presented across the download pages, while the OBS logo still correctly identifies OBS itself.
+
+### 2026-08-06 - Roadmap card sheen stacking correction
+
+#### Technical notes
+
+- Corrected the Roadmap programme-card sheen from a negative stacking layer hidden behind each card surface to a visible, pointer-transparent overlay above the surface. Summary and expanded-detail content now establish the next stacking layer so headings, percentages, descriptions, controls, and progress bars remain crisp above the moving highlight.
+- Slightly strengthened the existing restrained highlight band without changing the independently animated progress bar. Hover and keyboard focus move the sheen across the complete card; reduced-motion continues to remove the card sheen and hover translation entirely.
+- Validation: the focused standalone suite passed 9/9 and `git diff --check` passed apart from repository line-ending notices. Wrangler served `/roadmap` at 1365×768; Playwright confirmed the overlay at stacking level 0, summary content at level 1, a full left-to-right transform change on pointer hover, the same visible transition on keyboard focus, zero horizontal overflow, and `display: none` for the overlay under reduced motion. The rendered hover screenshot visibly showed the highlight band above the card surface while the independent progress animation remained intact.
+
+#### Human-readable notes
+
+Roadmap programme cards now visibly receive the same subtle whole-card hover sheen as the Version Reference cards. The progress bar keeps its own separate animation.
+
 ### 2026-08-06 - Live master Version Reference and final public polish
 
 #### Technical notes

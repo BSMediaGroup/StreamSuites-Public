@@ -8,18 +8,18 @@
 
   var PRESENTATION = {
     "runtime-system": { group: "System authority", order: 10, icon: "/assets/logos/ssmainlogosq.webp", note: "Canonical system version and build authority" },
-    "studio-web": { group: "Production products", order: 20, icon: "/assets/icons/icondiag-studioweb.svg", note: "Browser-native production surface" },
-    "studio-windows": { group: "Production products", order: 21, icon: "/assets/logos/studiofavicon.webp", note: "Native Windows production application" },
-    "obs-plugin": { group: "Production products", order: 22, icon: "/assets/icons/obs-0.svg", note: "OBS integration with OBS-owned media" },
-    "public-web": { group: "Public and account surfaces", order: 30, icon: "/assets/icons/ui/ss-public.svg", note: "Read-only public presentation client" },
-    "creator-web": { group: "Public and account surfaces", order: 31, icon: "/assets/icons/ui/ss-creator.svg", note: "Creator-facing Runtime/Auth client" },
-    "dashboard-web": { group: "Public and account surfaces", order: 32, icon: "/assets/logos/ssadminshldv2.webp", note: "Administrative web client" },
-    "developer-web": { group: "Public and account surfaces", order: 33, icon: "/assets/icons/ui/ss-developer.svg", note: "Developer-facing Runtime/Auth client" },
-    "docs-web": { group: "Public and account surfaces", order: 34, icon: "/assets/logos/docscon3d.webp", note: "Shipped-reality documentation" },
-    "members-web": { group: "Public and account surfaces", order: 35, icon: "/assets/logos/fmhnewfavicon5.webp", note: "FindMeHere member surface" },
-    "desktop-admin-winforms": { group: "Desktop and companion clients", order: 40, icon: "/assets/logos/ssadminshldv2.webp", note: "Privileged Windows administration product" },
-    "alerts-windows": { group: "Desktop and companion clients", order: 41, icon: "/assets/logos/ssmainlogosq.webp", note: "Read-only registry-consuming alerts client" },
-    "livechat-launcher": { group: "Desktop and companion clients", order: 42, icon: "/assets/icons/browser-extension.svg", note: "Browser launcher and bridge" }
+    "studio-web": { group: "Production products", order: 20, icon: "/assets/logos/studiologo3.webp", note: "Browser-native production surface" },
+    "studio-windows": { group: "Production products", order: 21, icon: "/assets/icons/studioappwindows.webp", note: "Native Windows production application" },
+    "obs-plugin": { group: "Production products", order: 22, icon: "/assets/icons/icon-obsextension.webp", note: "OBS integration with OBS-owned media" },
+    "public-web": { group: "Public and account surfaces", order: 30, icon: "/assets/icons/publicsurface.webp", note: "Read-only public presentation client" },
+    "creator-web": { group: "Public and account surfaces", order: 31, icon: "/assets/icons/creatorsurface.webp", note: "Creator-facing Runtime/Auth client" },
+    "dashboard-web": { group: "Public and account surfaces", order: 32, icon: "/assets/icons/adcon.webp", note: "Administrative web client" },
+    "developer-web": { group: "Public and account surfaces", order: 33, icon: "/assets/icons/developersurface.webp", note: "Developer-facing Runtime/Auth client" },
+    "docs-web": { group: "Public and account surfaces", order: 34, icon: "/assets/icons/docsinfosurface.webp", note: "Shipped-reality documentation" },
+    "members-web": { group: "Public and account surfaces", order: 35, icon: "/assets/icons/fmhver.webp", note: "FindMeHere member surface" },
+    "desktop-admin-winforms": { group: "Desktop and companion clients", order: 40, icon: "/assets/icons/studioappwindows.webp", note: "Privileged Windows administration product" },
+    "alerts-windows": { group: "Desktop and companion clients", order: 41, icon: "/assets/icons/ssalerts.webp", note: "Read-only registry-consuming alerts client" },
+    "livechat-launcher": { group: "Desktop and companion clients", order: 42, icon: "/assets/icons/chatexticon.webp", note: "Browser launcher and bridge" }
   };
 
   var POLICY_LABELS = {

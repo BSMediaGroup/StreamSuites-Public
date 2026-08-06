@@ -85,6 +85,8 @@ test("roadmap is a concise programme snapshot with matching visible, width, and 
   assert.match(css, /roadmap-progress__fill::after/);
   assert.match(css, /\.roadmap-program::before/);
   assert.match(css, /\.roadmap-program:hover::before/);
+  assert.match(css, /\.roadmap-program::before\s*\{[^}]*z-index:\s*0/s);
+  assert.match(css, /\.roadmap-program summary\s*\{[^}]*z-index:\s*1/s);
 });
 
 test("roadmap release cards link only to changelog routes present in StreamSuites Docs", () => {

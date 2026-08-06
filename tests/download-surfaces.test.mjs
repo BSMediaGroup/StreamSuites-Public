@@ -18,11 +18,13 @@ test("download routes use the approved Public typography and retain authoritativ
   const bodyFontHash = crypto.createHash("sha256").update(fs.readFileSync(path.join(root, "assets/fonts/Geist-Regular.ttf"))).digest("hex");
   const monoFontHash = crypto.createHash("sha256").update(fs.readFileSync(path.join(root, "assets/fonts/mono/IBMPlexMono-Regular.ttf"))).digest("hex");
   const studioIconHash = crypto.createHash("sha256").update(fs.readFileSync(path.join(root, "assets/logos/studiologo3.webp"))).digest("hex");
+  const obsExtensionIconHash = crypto.createHash("sha256").update(fs.readFileSync(path.join(root, "assets/logos/studiologo3.png"))).digest("hex");
 
   assert.equal(displayFontHash, "1ff1792ecc4728cf011d31e43a53a5c97e82f5c7cc7b9f23af24b209106e962c");
   assert.equal(bodyFontHash, "cf1737280af17d036786e06d0eb49b2ce83fc303169a0a438c3f4b2f80ee8e06");
   assert.equal(monoFontHash, "ab08018ccd276b79fb2c636bb95b9c543598f9d50505fe92506fcb4dae7810cd");
   assert.equal(studioIconHash, "43c28a45fbabc4a710c4dad151ecd33952fa823c5a2e17d615343f1c6bf7a786");
+  assert.equal(obsExtensionIconHash, "5410fa9ec98158732a6ec38fb984aa1355a87b4a18515a9e55a29065da25aca5");
   assert.match(shared, /@import url\("\/css\/public-fonts\.css"\)/);
   assert.match(shared, /--download-font-body:\s*var\(--public-font-body\)/);
   assert.match(shared, /--download-font-display:\s*var\(--public-font-display\)/);
@@ -42,12 +44,17 @@ test("download routes use the approved Public typography and retain authoritativ
   [studio, obs, extensions].forEach((html) => assert.doesNotMatch(html, /SuiGeneris-Regular|Recharge-Bold/));
   assert.match(studio, /<img src="\/assets\/logos\/studiologo3\.webp" alt="" width="52" height="52" \/>/);
   assert.match(studio, /<img src="\/assets\/icons\/packboxicon-plugin\.webp" alt="StreamSuites Plugin Store" width="44" height="44" \/>/);
-  assert.match(obs, /<img src="\/assets\/icons\/obs-white\.svg" alt="" width="52" height="52" \/>/);
+  assert.match(obs, /<img src="\/assets\/logos\/studiologo3\.png" alt="" width="52" height="52" \/>/);
   assert.match(obs, /<img src="\/assets\/logos\/studiologo3\.webp" alt="" width="38" height="38" \/>/);
   assert.match(obs, /<img src="\/assets\/logos\/studiologo3\.webp" alt="" \/>/);
   assert.match(extensions, /<img src="\/assets\/icons\/packboxicon-plugin\.webp" alt="StreamSuites Plugin Store" width="52" height="52" \/>/);
   assert.match(extensions, /<img src="\/assets\/logos\/studiologo3\.webp" alt="StreamSuites StudioApp" width="44" height="44" \/>/);
   assert.doesNotMatch(extensions, /<img src="\/assets\/logos\/studiologo3\.webp" alt="StreamSuites Plugin Store"/);
+  assert.match(index, /download-index-visual__node--obs[\s\S]*?<img src="\/assets\/logos\/studiologo3\.png"/);
+  assert.match(index, /download-index-card--obs[\s\S]*?<img src="\/assets\/logos\/studiologo3\.png"/);
+  assert.match(studio, /<img src="\/assets\/logos\/studiologo3\.png" alt="" \/>[\s\S]*?<h3>StreamSuites Studio for OBS<\/h3>/);
+  assert.match(extensions, /<img src="\/assets\/logos\/studiologo3\.png" alt="" \/><div><h3>StreamSuites Studio for OBS<\/h3>/);
+  assert.match(obs, /obs-preview__node--obs"><img src="\/assets\/icons\/obs-white\.svg" alt="" \/><strong>OBS-owned output<\/strong>/);
 });
 
 test("download polish uses feature accents, supplied platform icons, and truthful coming-soon scaffolds", () => {
@@ -80,10 +87,12 @@ test("download polish uses feature accents, supplied platform icons, and truthfu
   assert.doesNotMatch(studio, /studioapp-preview__title"><img[^>]+streamsuites-0\.svg/);
   assert.match(studioCss, /\.studioapp-preview__title-icon\s*\{[\s\S]*color:\s*#b4ef5b;[\s\S]*icondiag-studioapp\.svg/);
   assert.match(obs, /class="obs-preview__title-icon" aria-hidden="true"/);
-  assert.match(obsCss, /\.obs-preview__title-icon\s*\{[\s\S]*color:\s*#c2b3ff;[\s\S]*obs-0\.svg/);
+  assert.match(obsCss, /\.obs-preview__title-icon\s*\{[\s\S]*background:\s*url\("\/assets\/logos\/studiologo3\.png"\) center \/ contain no-repeat/);
+  assert.doesNotMatch(obsCss, /\.obs-preview__title-icon\s*\{[\s\S]*?obs-0\.svg[\s\S]*?\}/);
   assert.match(extensions, /class="extensions-preview__title-icon" aria-hidden="true"/);
   assert.match(extensionsCss, /\.extensions-preview__title-icon\s*\{[\s\S]*color:\s*#b4ef5b;[\s\S]*icondiag-studioapp\.svg/);
-  [studio, obs, extensions].forEach((html) => assert.match(html, /\?v=20260806-diagram-title-icons/));
+  [studio, extensions].forEach((html) => assert.match(html, /\?v=20260806-diagram-title-icons/));
+  assert.match(obs, /\/css\/obs-plugin-download\.css\?v=20260806-studio-obs-icon/);
 });
 
 test("downloads index is searchable, routed, and links only to truthful product surfaces", () => {
