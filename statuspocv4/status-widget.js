@@ -2,9 +2,8 @@
   "use strict";
 
   const STATUS_PAGE_URL = "https://streamsuites.statuspage.io/";
-  const PRIMARY_STATUS_URL = "/status";
+  const PRIMARY_STATUS_URL = "https://streamsuites.app/status";
 
-  // Inline geometry is derived from /assets/icons/ui/plus.svg and /assets/icons/ui/cross.svg.
   const EXPAND_ICONS = Object.freeze({
     plus: {
       viewBox: "0 -960 960 960",
@@ -182,7 +181,7 @@
     }
 
     build() {
-      const root = element("div", "ss-status-widget ss-status-indicator");
+      const root = element("div", "ss-status-widget");
       root.id = "ss-status-indicator";
       root.dataset.state = "unknown";
       root.dataset.expanded = "false";
@@ -339,10 +338,7 @@
     }
 
     render(snapshot) {
-      if (!snapshot?.data) {
-        this.renderUnavailable(snapshot);
-        return;
-      }
+      if (!snapshot?.data) return;
       this.currentSnapshot = snapshot;
       const data = snapshot.data;
       const components = Array.isArray(data.components) ? data.components : [];
@@ -376,37 +372,13 @@
       }
     }
 
-    renderUnavailable(snapshot) {
-      this.root.dataset.state = "unknown";
-      this.root.dataset.stale = "false";
-      this.toggle.querySelector("[data-widget-summary-title]").textContent = "Status unavailable";
-      this.toggle.querySelector("[data-widget-summary-meta]").textContent = "Public feed unavailable";
-      this.panel.innerHTML = "";
-      const safeSnapshot = {
-        live: false,
-        stale: false,
-        checkedAt: snapshot?.checkedAt || new Date().toISOString(),
-        latencyMs: null,
-      };
-      this.panel.appendChild(this.createHeader({ status: { description: "Status unavailable" } }, safeSnapshot, STATE_META.unknown));
-      this.panel.appendChild(this.createStats([], [], [], safeSnapshot));
-      const scroll = element("div", "ss-status-widget__scroll");
-      const unavailable = element("section", "ss-status-widget__group");
-      unavailable.appendChild(element("p", "ss-status-widget__empty", "The read-only Atlassian Statuspage feed could not be reached. No local or fabricated operational state is substituted."));
-      scroll.appendChild(unavailable);
-      scroll.appendChild(this.createEventGroup("Active incidents", [], "incident"));
-      scroll.appendChild(this.createEventGroup("Scheduled maintenance", [], "maintenance"));
-      this.panel.appendChild(scroll);
-      this.panel.appendChild(this.createActions());
-    }
-
     createHeader(data, snapshot, meta) {
       const head = element("header", "ss-status-widget__head");
       const icon = element("span", "ss-status-widget__head-icon", meta.mark);
       icon.setAttribute("aria-hidden", "true");
       const copy = element("div", "ss-status-widget__head-copy");
       copy.append(
-        element("p", "", snapshot.live ? "Live Atlassian Statuspage" : snapshot.stale ? "Last successful public read" : "Public read unavailable"),
+        element("p", "", snapshot.live ? "Live Atlassian Statuspage" : snapshot.demo ? "POC preview state" : "Offline POC snapshot"),
         element("h2", "", data.status?.description || meta.label),
         element("span", "", `Checked ${formatRelative(snapshot.checkedAt)}${snapshot.latencyMs != null ? ` · ${snapshot.latencyMs} ms` : ""}`)
       );
@@ -420,7 +392,7 @@
 
     createStaleNotice(snapshot) {
       const notice = element("div", "ss-status-widget__stale");
-      notice.append(element("span", "", "!"), element("span", "", "Live refresh failed. Showing the last successful in-memory state."));
+      notice.append(element("span", "", "!"), element("span", "", `Live refresh failed. Showing the last known state${snapshot.error ? `: ${truncate(snapshot.error, 90)}` : "."}`));
       return notice;
     }
 
@@ -500,52 +472,19 @@
     }
   }
 
-  const loadModule = (src, id) => new Promise((resolve) => {
-    if (document.getElementById(id)) {
-      resolve();
-      return;
-    }
-    const script = document.createElement("script");
-    script.id = id;
-    script.src = src;
-    script.defer = true;
-    script.addEventListener("load", resolve, { once: true });
-    script.addEventListener("error", resolve, { once: true });
-    document.head.appendChild(script);
-  });
-
   const init = () => {
-    if (document.getElementById("ss-status-indicator")) return;
-    const inlineHost = document.querySelector('[data-status-slot][data-status-slot-mode="inline"]');
-    const host = inlineHost || document.createElement("div");
-    if (!inlineHost) {
-      host.setAttribute("data-status-widget-host", "");
-      document.body.appendChild(host);
-    }
+    const host = document.querySelector("[data-status-widget-host]") || document.body;
     const widget = new FullStatusWidget(host);
-    widget.root.dataset.layout = inlineHost ? "inline" : "floating";
-    const store = window.StreamSuitesStatusData;
-    if (store) {
-      store.subscribe((snapshot) => widget.render(snapshot));
-      store.start();
-    } else {
-      widget.renderUnavailable(null);
-    }
+    window.StreamSuitesStatusData?.subscribe((snapshot) => widget.render(snapshot));
+    const params = new URLSearchParams(window.location.search);
+    if (window.__STATUS_POC_WIDGET_OPEN__ === true || params.get("widget") === "open") widget.setExpanded(true);
     window.StreamSuitesFullStatusWidget = widget;
   };
 
-  const boot = async () => {
-    void loadModule("/js/public-page-visit.js", "ss-public-page-visit-module");
-    if (!window.StreamSuitesStatusData) {
-      await loadModule("/js/status-data.js", "ss-status-data-module");
-    }
-    init();
-  };
-
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", boot, { once: true });
+    document.addEventListener("DOMContentLoaded", init, { once: true });
   } else {
-    void boot();
+    init();
   }
 
   window.StreamSuitesStatusHelpers = Object.freeze({

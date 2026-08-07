@@ -144,6 +144,25 @@ test("support ticket-centre preview is stable, disabled, and has no client submi
   assert.match(html, /https:\/\/discord\.com\/channels\/1449303974086967306\/1449303975890260021/);
 });
 
+test("support pathways retain their destinations and use distinct feature icon treatments", () => {
+  const html = read("support.html");
+  const css = read("css/standalone-pages.css");
+  for (const name of ["start", "access", "diagnose", "payment", "report", "community"]) {
+    assert.match(html, new RegExp(`support-path--${name}`));
+  }
+  assert.equal((html.match(/support-path__icon/g) || []).length, 6);
+  for (const icon of ["bookpage", "shieldperson", "support", "donate", "cloudalert", "discord"]) {
+    assert.match(css, new RegExp(`/assets/icons/ui/${icon}\\.svg`));
+  }
+  assert.match(css, /\.support-path:hover::after/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.support-path::after/);
+  assert.match(html, /https:\/\/docs\.streamsuites\.app\/docs\/getting-started\/first-run/);
+  assert.match(html, /https:\/\/docs\.streamsuites\.app\/docs\/getting-started\/account-types/);
+  assert.match(html, /https:\/\/docs\.streamsuites\.app\/docs\/support\/troubleshooting/);
+  assert.match(html, /mailto:support@streamsuites\.app\?subject=Donation%20support/);
+  assert.match(html, /href="\/status">View platform status<\/a>/);
+});
+
 test("support Discord community widget is first-party, read-only, resilient, and joinable", () => {
   const html = read("support.html");
   const script = read("js/support-discord-widget.js");

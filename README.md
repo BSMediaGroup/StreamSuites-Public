@@ -7,6 +7,7 @@ Canonical public StreamSuites surface deployed to Cloudflare Pages at `https://s
 - Current Public milestone bucket: `0.5.4-alpha`; pending bucket: `0.5.5-alpha`. This redesign does not allocate or bump either value.
 - Runtime-displayed version/build labels are consumed at runtime from `https://admin.streamsuites.app/runtime/exports/version.json`.
 - `/version` is the human-readable diagnostic view of the canonical public `version-registry-public-v1` feed. It reads the feed through the existing same-origin `/api/public/*` Pages proxy and does not replace, cache, or become the authority for the source endpoint.
+- `/status` is the canonical branded service-health view. It and the existing-page floating widget consume Atlassian Statuspage public read endpoints only; Runtime/Auth status synchronization and Statuspage mutation authority are unchanged.
 - Runtime/Auth remains the canonical system-version authority. The checked-in Public mirror may lag the authoritative runtime export until the established publication workflow refreshes it.
 - This repo is not a canonical state authority. It renders authoritative runtime exports and Auth API responses.
 
@@ -34,6 +35,9 @@ Canonical public StreamSuites surface deployed to Cloudflare Pages at `https://s
 - `css/standalone-pages.css` extends that accepted landing token, typography, header, navigation, footer, focus, and reduced-motion contract across About, Donate, Support, Privacy, Roadmap, Accessibility, and the Version Reference without changing the download cascades. The retained pages use the exact landing mark-plus-wordmark treatment, normal-flow footer, bounded desktop gutters, and collapsible mobile navigation; page-specific composition remains scoped to the standalone body classes.
 - Standalone hero titles use a restrained bounded scale, and every standalone footer repeats the exact square-mark plus `wmnew.webp` wordmark lockup used by its header. The production landing footer now uses that exact lockup as well. Donate retains the six established suggested amounts, their impact explanations, five funding-use areas, trust guidance, and local-only donor-message preview while keeping Stripe Checkout as its only network action. Roadmap percentages count once as each programme enters view; progress bars and programme cards add restrained hover/focus sheen, with immediate static rendering under reduced motion.
 - `version.html`, `css/version-page.css`, and `js/public-version.js` provide a compact, polished technical presentation of all components returned by the live public registry, including semantic-policy distinctions, state, event summaries, compatibility posture, filtering, per-component copy, a complete human-readable copy action, and a direct jump from the diagnostic hero to the component directory. Deployment-identity clients visibly inherit the live system version with a `System aligned` chip rather than implying an independent product semantic line. The Release Manager is identified separately as a local diagnostic companion because Runtime/Auth deliberately does not project a separate Release Manager product version in the public feed; no private admin registry data, executable-local version, or fabricated fallback snapshot is placed in Public.
+- `status.html`, `css/status-page.css`, `js/status-data.js`, and `js/status-page.js` implement the approved comprehensive status center: overall posture, grouped health map, complete searchable/filterable component directory, active incidents, scheduled maintenance, recent public incident history, response latency, manual refresh, visible stale/unavailable states, mobile navigation, and reduced-motion behavior. `status.html` deliberately contains no widget host, widget stylesheet, widget controller, or automatic status slot.
+- `css/status-widget.css` and `js/status-widget.js` replace the earlier reduced impacted-component tooltip with the approved floating rounded-square signal, hover/focus summary chip, plus/cross control derived from the existing UI assets, and complete all-component detail panel. The signal clips its own pulse and the idle toggle has no rectangular backdrop blur. The widget uses RAF-bounded footer geometry and a 12px design clearance so it rises above the lowest visible footer, then returns to its normal safe-area offset. The standalone `/u` profile preserves its pre-existing explicit inline slimline-footer mount while receiving the same upgraded data and panel. Stale refreshes retain only the last successful in-memory read; a first-read failure is shown as unavailable, never operational.
+- Public page-visit analytics moved without contract changes from `js/status-widget.js` to `js/public-page-visit.js`. Existing pages still load it through the widget controller, while `/status` loads it directly so analytics remains independent of the explicit no-widget rule. The endpoint, payload, session marker, 30-second per-path dedupe, Beacon-first transport, fetch fallback, and secret-free behavior are preserved.
 - `css/theme-dark.css`, `css/public-pages-v2.css`, and `css/public-shell.css` carry the cooler near-black graphite/steel/blue identity, selective cyan-indigo and purple depth, typography roles, focus language, layered cards, forms, tables, dialogs, loading/empty/error treatment, responsive spacing, and reduced-motion behavior across support, legal, auth, account, Public Dashboard, gallery, profile, and feature routes. The functional shell now uses a bounded 1540px content track, larger hero and section hierarchy, less fragmented dashboard grids, clearer selected navigation/filter states, and restrained entrance/hover motion.
 - `js/studio-first-landing.js` owns keyboard-accessible product tabs, ecosystem preview selection, the dismissible Alpha notice, mobile navigation, sticky-header state, and IntersectionObserver-based reveals with reduced-motion fallback. It does not own auth, status, version, or access enforcement.
 - `css/download-surface.css` now gives the Downloads index, StudioApp, OBS, and Extensions routes the same graphite/steel foundation, feature-accent title gradients, legible dark-on-accent actions, supplied platform-icon masks, restrained entrance/hover motion, and reduced-motion/forced-colors fallbacks. Product-specific styles keep accent color to trim and diagram details rather than applying a whole-page color wash. The active download subnavigation border follows each surface's feature color—blue for Downloads, green for StudioApp, violet for OBS, and blue for Extensions. StreamSuites Studio for OBS product headers and cards across the download pages use the dedicated `assets/icons/icon-obsextension.webp` mark. All three product mock-window titlebars use the same `icondiag-studioapp.svg` glyph while retaining their page-specific feature colors: lime for StudioApp, violet for OBS, and blue for Extensions. The generic OBS glyph continues to identify OBS-owned output and platform-action semantics. Their real manifest/catalog clients, fail-closed gates, HMAC/cookie boundary, controlled redirect, extension schema, and route handling remain intact.
@@ -69,10 +73,11 @@ flowchart TD
 - `/` is the Studio Command Center landing with real product routes, truthful product states, a non-operational illustrative workspace, product-specific media ownership, connected Public capabilities, wider ecosystem links, and hydrated status/version metadata. Its original `/auth/access-state`, `/auth/session`, OAuth/email auth, Turnstile, access-code, lockout-banner, and creator-routing contracts remain in place. The landing and shared Public-shell login modals use the first-party square `assets/logos/ssmainlogosq.webp` brand mark.
 - `/about.html` is the full product story plus the existing manifest-driven technical record.
 - `/donate.html` preserves the existing one-time StreamSuites billing endpoint and Stripe Checkout handoff while presenting truthful integer amount validation, busy/error states, and payment/account boundaries. `/donate-success.html` and `/donate-cancel.html` remain the configured return surfaces.
-- `/support.html` presents verified documentation, status, email, and Discord pathways. Its custom read-only Discord community card consumes Discord's enabled public guild-widget JSON directly, safely renders published presence and visible voice channels, preserves the verified support-channel deep link, and keeps a server-rendered Join action available even when live presence cannot load. Its future first-party ticket-centre form/history structure is explicitly disabled and performs no submission, upload, persistence, account lookup, or ticket-state work.
+- `/support.html` presents verified documentation, account, troubleshooting, donation, incident, and Discord pathways as distinct feature-icon cards with scoped accent treatments and accessible reduced-motion behavior. Its custom read-only Discord community card consumes Discord's enabled public guild-widget JSON directly, safely renders published presence and visible voice channels, preserves the verified support-channel deep link, and keeps a server-rendered Join action available even when live presence cannot load. Its future first-party ticket-centre form/history structure is explicitly disabled and performs no submission, upload, persistence, account lookup, or ticket-state work.
 - `/privacy.html` preserves the February 22, 2026 policy text and date in a long-form reading layout with a responsive section index and stable anchors. `/accessibility.html` describes current practices and limitations without claiming audit, certification, or formal conformance.
 - `/roadmap` is the canonical public programme roadmap. Eight conservative integer estimates replace the former implementation-entry inventory, while detailed release changelogs link to verified StreamSuites Docs routes.
 - `/version` is the canonical human-facing master version reference. It renders all 13 components currently returned by the authoritative public registry, keeps null/deferred/uninitialized states explicit, and falls back to a truthful unavailable state rather than stale or hardcoded version data. Copy actions produce readable diagnostic text rather than exposing raw JSON.
+- `/status` is the primary StreamSuites human-facing service-health route. It preserves Atlassian as the public data source, hosted archive, and subscription destination while providing the complete branded component, incident, maintenance, history, freshness, and transparency presentation. The route follows the same extensionless Pages convention as `/version`; `status-check.html` remains a separate widget diagnostic surface.
 - `/downloads/` is the searchable parent download index. Its three checked-in records route to StudioApp, Studio for OBS, and Extensions and mirror only truthful static page status; Browser Studio is explicitly presented as a no-install external surface.
 - `/downloads/studioapp` is the canonical Windows StudioApp ALPHA landing page. Its same-origin `/api/downloads/studioapp/release` metadata seam remains visible while download access is locked, validates strict schema-v2 `product-manifest.json` with bounded schema-v1 fallback, treats independent StudioApp product version/build as primary and optional StreamSuites system compatibility as secondary, and never uses Runtime `version.json` as installer identity. Only an authorized short-lived session enables the separate controlled redirect; the static page and metadata response contain no raw installer URL.
 - The StudioApp page shows macOS and Linux as disabled Coming Soon release/requirements scaffolds with no version, build, date, package size, compatibility, or artifact claim. The Windows storage guidance references the manifest-hydrated installer size plus installation/update headroom and separate media storage instead of inventing an unsupported fixed minimum.
@@ -194,6 +199,7 @@ StreamSuites-Public/
 ├── leaderboards.html
 ├── stats.html
 ├── support.html
+├── status.html
 ├── version.html
 ├── wheels.html
 ├── BUMP_NOTES.md
@@ -290,12 +296,15 @@ StreamSuites-Public/
 │   ├── public-badge-ui.js
 │   ├── public-data-hub.js
 │   ├── public-pages-app.js
+│   ├── public-page-visit.js
 │   ├── public-donate.js
 │   ├── public-roadmap.js
 │   ├── public-version.js
 │   ├── public-requests.js
 │   ├── public-shell.js
 │   ├── studio-first-landing.js
+│   ├── status-data.js
+│   ├── status-page.js
 │   ├── public-toast.js
 │   ├── studioapp-extensions.js
 │   ├── studioapp-download.js
@@ -321,6 +330,7 @@ StreamSuites-Public/
 │   ├── studioapp-download.css
 │   ├── studio-first-landing.css
 │   ├── standalone-pages.css
+│   ├── status-page.css
 │   ├── version-page.css
 │   └── status-widget.css
 ├── tests/
@@ -332,6 +342,7 @@ StreamSuites-Public/
 │   ├── studioapp-extensions.test.mjs
 │   ├── studio-first-public-experience.test.mjs
 │   ├── standalone-public-pages.test.mjs
+│   ├── status-center.test.mjs
 │   ├── version-page.test.mjs
 │   └── wheels-authority.test.mjs
 ├── sspoc1/                    # Read-only visual/typography reference retained in place

@@ -1,0 +1,11 @@
+{
+  "status": "ok",
+  "timestamp": "2026-08-07T18:18:25.026289Z",
+  "checks": [
+    "Widget idle state uses only the square signal surface for blur/backdrop treatment.",
+    "Signal square clips internal pulse effects with overflow hidden and isolation.",
+    "Expand/collapse control uses inline SVG plus/cross icons derived from approved Public UI assets.",
+    "Footer avoidance logic preserved from previous approved revision.",
+    "Standalone build regenerated from modular source."
+  ]
+}

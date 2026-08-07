@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>System Status • StreamSuites™</title>
+  <meta name="description" content="Live StreamSuites service health, components, incidents, maintenance, and recent operational history." />
+  <link rel="canonical" href="https://streamsuites.app/status" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="widget.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+
+  <div class="page-ambient" aria-hidden="true">
+    <div class="page-ambient__grid"></div>
+    <div class="page-ambient__orb page-ambient__orb--blue"></div>
+    <div class="page-ambient__orb page-ambient__orb--violet"></div>
+    <div class="page-ambient__noise"></div>
+  </div>
+
+  <header class="site-header" data-site-header>
+    <div class="shell site-header__inner">
+      <a class="brand" href="https://streamsuites.app/" aria-label="StreamSuites home">
+        <span class="brand__fallback-mark" aria-hidden="true">S</span>
+        <span class="brand__fallback-wordmark">StreamSuites<span class="brand__tm">™</span></span>
+      </a>
+
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="Open navigation" data-nav-toggle>
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="primary-nav" id="primary-nav" aria-label="Primary navigation" data-primary-nav>
+        <a href="https://streamsuites.app/#products">Products</a>
+        <a href="https://streamsuites.app/#architecture">Architecture</a>
+        <a href="https://streamsuites.app/about.html">About</a>
+        <a href="https://streamsuites.app/support.html">Support</a>
+        <a class="is-current" href="#main-content" aria-current="page">Status</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="button button--quiet button--small" href="https://streamsuites.app/version">Version</a>
+        <a class="button button--primary button--small" href="https://studio.streamsuites.app">Open Studio</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="status-hero shell" aria-labelledby="status-title">
+      <div class="status-hero__copy reveal">
+        <p class="kicker"><span class="kicker__dot"></span>Live service health</p>
+        <h1 id="status-title">Know what’s working.<br /><span>Know what changed.</span></h1>
+        <p class="status-hero__lede">
+          A complete public view of StreamSuites service health, product surfaces, dependencies,
+          incidents, and scheduled maintenance—read directly from the public Atlassian Statuspage feed.
+        </p>
+        <div class="status-hero__actions">
+          <button class="button button--primary" type="button" data-refresh-status>
+            <span class="button__icon" aria-hidden="true">↻</span>
+            Refresh status
+          </button>
+          <a class="button button--quiet" href="#components">
+            See components <span aria-hidden="true">↓</span>
+          </a>
+          <a class="button button--quiet" href="https://streamsuites.statuspage.io/" target="_blank" rel="noopener noreferrer">
+            Atlassian hosted page <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+        <div class="status-source-line" aria-live="polite">
+          <span class="source-chip" data-source-chip data-state="loading"><span></span>Connecting</span>
+          <span data-last-checked>Waiting for status data…</span>
+        </div>
+      </div>
+
+      <aside class="system-pulse reveal" aria-label="Current StreamSuites system status">
+        <div class="system-pulse__topline">
+          <span class="system-pulse__eyebrow">Current system posture</span>
+          <span class="system-pulse__live" data-live-badge><span></span>LIVE</span>
+        </div>
+
+        <div class="system-pulse__core" data-overall-state="unknown">
+          <div class="system-pulse__rings" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="system-pulse__state-icon" aria-hidden="true">
+            <span class="system-pulse__state-mark">?</span>
+          </div>
+          <strong data-overall-description>Loading status…</strong>
+          <p data-overall-subtitle>Reading the public Statuspage summary.</p>
+        </div>
+
+        <div class="system-map" aria-label="Status groups">
+          <svg class="system-map__routes" viewBox="0 0 640 250" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="routeCore" x1="0" x2="1"><stop offset="0" stop-color="#65d8ff" stop-opacity="0"/><stop offset="0.5" stop-color="#65d8ff"/><stop offset="1" stop-color="#65d8ff" stop-opacity="0"/></linearGradient>
+              <linearGradient id="routeSurface" x1="0" x2="1"><stop offset="0" stop-color="#9c7cff" stop-opacity="0"/><stop offset="0.5" stop-color="#9c7cff"/><stop offset="1" stop-color="#9c7cff" stop-opacity="0"/></linearGradient>
+              <linearGradient id="routeEdge" x1="0" x2="1"><stop offset="0" stop-color="#5fe2b0" stop-opacity="0"/><stop offset="0.5" stop-color="#5fe2b0"/><stop offset="1" stop-color="#5fe2b0" stop-opacity="0"/></linearGradient>
+              <linearGradient id="routeDeps" x1="0" x2="1"><stop offset="0" stop-color="#f1bc62" stop-opacity="0"/><stop offset="0.5" stop-color="#f1bc62"/><stop offset="1" stop-color="#f1bc62" stop-opacity="0"/></linearGradient>
+            </defs>
+            <path d="M320 124 C250 82 190 54 116 48" class="system-map__route system-map__route--core" />
+            <path d="M320 124 C390 82 450 54 524 48" class="system-map__route system-map__route--surface" />
+            <path d="M320 124 C250 168 190 202 116 206" class="system-map__route system-map__route--edge" />
+            <path d="M320 124 C390 168 450 202 524 206" class="system-map__route system-map__route--deps" />
+          </svg>
+          <div class="system-map__hub" aria-hidden="true"><span>S</span></div>
+          <article class="system-map__node system-map__node--core" data-group-node="core">
+            <span class="system-map__node-dot"></span><strong>Core</strong><small data-group-summary="core">—</small>
+          </article>
+          <article class="system-map__node system-map__node--surface" data-group-node="surfaces">
+            <span class="system-map__node-dot"></span><strong>Surfaces</strong><small data-group-summary="surfaces">—</small>
+          </article>
+          <article class="system-map__node system-map__node--edge" data-group-node="edge">
+            <span class="system-map__node-dot"></span><strong>Delivery</strong><small data-group-summary="edge">—</small>
+          </article>
+          <article class="system-map__node system-map__node--deps" data-group-node="dependencies">
+            <span class="system-map__node-dot"></span><strong>Dependencies</strong><small data-group-summary="dependencies">—</small>
+          </article>
+        </div>
+
+        <div class="system-pulse__footer">
+          <span><strong data-hero-operational>—</strong> operational</span>
+          <span><strong data-hero-total>—</strong> total components</span>
+          <span><strong data-hero-latency>—</strong> API response</span>
+        </div>
+      </aside>
+    </section>
+
+    <section class="metrics-section shell reveal" aria-labelledby="overview-title">
+      <div class="section-heading section-heading--compact">
+        <div>
+          <p class="section-kicker">Status at a glance</p>
+          <h2 id="overview-title">The current operating picture.</h2>
+        </div>
+        <p>Every value is derived from the same public Statuspage payload used by the embedded widget.</p>
+      </div>
+      <div class="status-metrics" aria-live="polite">
+        <article class="status-metric status-metric--overall">
+          <span class="status-metric__icon" aria-hidden="true">●</span>
+          <span class="status-metric__value" data-metric-overall>—</span>
+          <span class="status-metric__label">Overall status</span>
+        </article>
+        <article>
+          <span class="status-metric__value" data-metric-operational>—</span>
+          <span class="status-metric__label">Operational components</span>
+        </article>
+        <article>
+          <span class="status-metric__value" data-metric-incidents>—</span>
+          <span class="status-metric__label">Active incidents</span>
+        </article>
+        <article>
+          <span class="status-metric__value" data-metric-maintenance>—</span>
+          <span class="status-metric__label">Maintenance windows</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="components-section shell" id="components" aria-labelledby="components-title">
+      <div class="section-heading reveal">
+        <div>
+          <p class="section-kicker">Component directory</p>
+          <h2 id="components-title">Every monitored component, in one place.</h2>
+        </div>
+        <p>Core services, product surfaces, delivery infrastructure, and external dependencies use the same status vocabulary and colour system.</p>
+      </div>
+
+      <div class="component-controls reveal">
+        <label class="component-search" for="component-search">
+          <span>Find a component</span>
+          <span class="component-search__field">
+            <input id="component-search" type="search" autocomplete="off" placeholder="Search services, surfaces, dependencies…" data-component-search />
+            <kbd aria-hidden="true">/</kbd>
+          </span>
+        </label>
+        <div class="status-filters" aria-label="Filter components by status" data-status-filters>
+          <button type="button" class="is-active" data-status-filter="all">All</button>
+          <button type="button" data-status-filter="operational">Operational</button>
+          <button type="button" data-status-filter="attention">Needs attention</button>
+        </div>
+      </div>
+
+      <div class="component-load-state reveal" data-component-load-state>
+        <span class="loader" aria-hidden="true"></span>
+        <div><strong>Reading component health</strong><p>The complete component directory will appear when the public Statuspage API responds.</p></div>
+      </div>
+      <div class="component-groups" data-component-groups hidden></div>
+      <p class="component-empty" data-component-empty hidden>No components match the current search and filter.</p>
+    </section>
+
+    <section class="operations-section shell" aria-labelledby="operations-title">
+      <div class="section-heading reveal">
+        <div>
+          <p class="section-kicker">Operational communication</p>
+          <h2 id="operations-title">Incidents and maintenance, without the noise.</h2>
+        </div>
+        <p>Active work appears first. Resolved incidents remain available as a concise history rather than disappearing from view.</p>
+      </div>
+
+      <div class="operations-grid">
+        <article class="operations-panel reveal">
+          <div class="operations-panel__header">
+            <div><span class="panel-icon panel-icon--incident" aria-hidden="true">!</span><div><p>Active incidents</p><h3 data-incident-heading>No active incidents</h3></div></div>
+            <span class="count-chip" data-incident-count>0</span>
+          </div>
+          <div class="operations-list" data-active-incidents></div>
+        </article>
+
+        <article class="operations-panel reveal">
+          <div class="operations-panel__header">
+            <div><span class="panel-icon panel-icon--maintenance" aria-hidden="true">◇</span><div><p>Scheduled maintenance</p><h3 data-maintenance-heading>No active windows</h3></div></div>
+            <span class="count-chip count-chip--blue" data-maintenance-count>0</span>
+          </div>
+          <div class="operations-list" data-maintenances></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="history-section shell" aria-labelledby="history-title">
+      <div class="section-heading reveal">
+        <div>
+          <p class="section-kicker">Recent history</p>
+          <h2 id="history-title">A transparent record of what changed.</h2>
+        </div>
+        <p>The public page shows recent resolved incidents from Atlassian Statuspage and links to the hosted archive for the complete record.</p>
+      </div>
+
+      <div class="history-layout">
+        <div class="history-timeline reveal" data-incident-history></div>
+        <aside class="history-aside reveal">
+          <span class="history-aside__signal" aria-hidden="true"></span>
+          <p class="section-kicker">Source of record</p>
+          <h3>Atlassian remains the incident-notification authority.</h3>
+          <p>This StreamSuites page is the primary presentation layer. Subscription management, hosted incident archives, RSS, and email/SMS notifications remain available through Atlassian Statuspage.</p>
+          <a class="button button--quiet" href="https://streamsuites.statuspage.io/" target="_blank" rel="noopener noreferrer">Open hosted status page <span aria-hidden="true">↗</span></a>
+        </aside>
+      </div>
+    </section>
+
+    <section class="transparency-section shell reveal" aria-labelledby="transparency-title">
+      <div class="transparency-card">
+        <div class="transparency-card__copy">
+          <p class="section-kicker">How this page works</p>
+          <h2 id="transparency-title">One public feed. Two consistent presentations.</h2>
+          <p>The full-page view and the reusable footer widget consume the same read-only Statuspage summary. The widget is no longer a reduced public-only variant: both Admin and Public can use the same detailed component, incident, and maintenance presentation.</p>
+        </div>
+        <dl class="transparency-card__facts">
+          <div><dt>Public API</dt><dd><code>/api/v2/summary.json</code></dd></div>
+          <div><dt>Refresh cadence</dt><dd>60 seconds</dd></div>
+          <div><dt>Interaction</dt><dd>Click, keyboard, Escape</dd></div>
+          <div><dt>Failure posture</dt><dd>Last known state + stale warning</dd></div>
+        </dl>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell site-footer__top">
+      <div class="site-footer__brand">
+        <a class="brand brand--footer" href="https://streamsuites.app/" aria-label="StreamSuites home">
+          <span class="brand__fallback-mark" aria-hidden="true">S</span>
+          <span class="brand__fallback-wordmark">StreamSuites<span class="brand__tm">™</span></span>
+        </a>
+        <p>Connected livestream production for browser, Windows, and OBS workflows.</p>
+      </div>
+      <div class="site-footer__links">
+        <div><strong>Products</strong><a href="https://studio.streamsuites.app">Browser Studio</a><a href="https://streamsuites.app/downloads/studioapp/">StudioApp</a><a href="https://streamsuites.app/downloads/obs-plugin/">Studio for OBS</a></div>
+        <div><strong>Public</strong><a href="https://streamsuites.app/home.html">Dashboard</a><a href="https://streamsuites.app/community">Community</a><a href="https://streamsuites.app/live">Live</a><a href="https://streamsuites.app/clips">Clips</a></div>
+        <div><strong>Resources</strong><a href="https://streamsuites.app/about.html">About</a><a href="https://streamsuites.app/support.html">Support</a><a href="https://streamsuites.app/version">Version</a><a href="#main-content" aria-current="page">Status</a></div>
+        <div><strong>External</strong><a href="https://streamsuites.statuspage.io/" target="_blank" rel="noopener noreferrer">Atlassian Statuspage</a><a href="https://streamsuites.statuspage.io/history" target="_blank" rel="noopener noreferrer">Incident history</a></div>
+      </div>
+    </div>
+    <div class="shell site-footer__bottom">
+      <a href="https://brainstream.media" target="_blank" rel="noopener noreferrer">© 2026 Brainstream Media Group</a>
+      <span>This POC uses the complete shared status widget below.</span>
+      <a href="https://streamsuites.app/version">Version reference</a>
+    </div>
+  </footer>
+
+  <div data-status-widget-host></div>
+
+  <script src="status-data.js"></script>
+  <script src="status-widget.js"></script>
+  <script src="status-page.js"></script>
+</body>
+</html>

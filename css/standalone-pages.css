@@ -373,13 +373,156 @@ body.standalone-page {
 
 /* Support hub and the deliberately non-functional ticket centre preview. */
 .support-path {
+  --support-path-accent: var(--landing-blue-bright);
+  --support-path-accent-rgb: 80, 168, 255;
+  --support-path-icon: url("/assets/icons/ui/support.svg");
   display: flex;
   flex-direction: column;
+  min-height: 292px;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--support-path-accent) 18%, var(--landing-line));
+  background:
+    radial-gradient(circle at 8% 0%, rgba(var(--support-path-accent-rgb), 0.1), transparent 38%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.025), transparent 48%),
+    var(--landing-surface);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.035),
+    0 18px 46px rgba(0, 0, 0, 0.12);
+  transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+
+.support-path::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: linear-gradient(180deg, transparent 6%, var(--support-path-accent) 48%, transparent 94%);
+  opacity: 0.72;
+  content: "";
+}
+
+.support-path::after {
+  position: absolute;
+  z-index: -1;
+  inset: -40% auto -40% -45%;
+  width: 42%;
+  transform: skewX(-18deg) translateX(-160%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.055), transparent);
+  content: "";
+  transition: transform 680ms cubic-bezier(0.2, 0.75, 0.2, 1);
+}
+
+.support-path:hover,
+.support-path:focus-within {
+  border-color: color-mix(in srgb, var(--support-path-accent) 46%, var(--landing-line));
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.055),
+    0 22px 52px rgba(0, 0, 0, 0.22),
+    0 0 34px rgba(var(--support-path-accent-rgb), 0.055);
+  transform: translateY(-4px);
+}
+
+.support-path:hover::after,
+.support-path:focus-within::after {
+  transform: skewX(-18deg) translateX(470%);
+}
+
+.support-path__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 34px;
+}
+
+.support-path__icon {
+  display: grid;
+  width: 50px;
+  height: 50px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--support-path-accent) 34%, var(--landing-line));
+  border-radius: 14px;
+  color: var(--support-path-accent);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.06), transparent 52%),
+    rgba(var(--support-path-accent-rgb), 0.085);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.04);
+  transition: border-color 220ms ease, background-color 220ms ease, transform 220ms ease;
+}
+
+.support-path__icon::before {
+  width: 26px;
+  height: 26px;
+  background: currentColor;
+  content: "";
+  -webkit-mask: var(--support-path-icon) center / contain no-repeat;
+  mask: var(--support-path-icon) center / contain no-repeat;
+}
+
+.support-path:hover .support-path__icon,
+.support-path:focus-within .support-path__icon {
+  border-color: color-mix(in srgb, var(--support-path-accent) 64%, var(--landing-line));
+  background-color: rgba(var(--support-path-accent-rgb), 0.13);
+  transform: translateY(-2px);
+}
+
+.support-path .card-index {
+  margin: 5px 0 0;
+  color: color-mix(in srgb, var(--support-path-accent) 72%, var(--landing-muted));
+  text-align: right;
+}
+
+.support-path__copy {
+  margin-bottom: 26px;
+}
+
+.support-path__copy h3 {
+  color: var(--landing-text-1);
+}
+
+.support-path__copy p {
+  margin: 14px 0 0;
 }
 
 .support-path .button {
   align-self: flex-start;
   margin-top: auto;
+  border-color: color-mix(in srgb, var(--support-path-accent) 28%, var(--landing-line-strong));
+}
+
+.support-path--start {
+  --support-path-icon: url("/assets/icons/ui/bookpage.svg");
+}
+
+.support-path--access {
+  --support-path-accent: #a99cff;
+  --support-path-accent-rgb: 169, 156, 255;
+  --support-path-icon: url("/assets/icons/ui/shieldperson.svg");
+}
+
+.support-path--diagnose {
+  --support-path-accent: #65d7ec;
+  --support-path-accent-rgb: 101, 215, 236;
+  --support-path-icon: url("/assets/icons/ui/support.svg");
+}
+
+.support-path--payment {
+  --support-path-accent: #f4bb64;
+  --support-path-accent-rgb: 244, 187, 100;
+  --support-path-icon: url("/assets/icons/ui/donate.svg");
+}
+
+.support-path--report {
+  --support-path-accent: #ff8278;
+  --support-path-accent-rgb: 255, 130, 120;
+  --support-path-icon: url("/assets/icons/ui/cloudalert.svg");
+}
+
+.support-path--community {
+  --support-path-accent: #8d98ff;
+  --support-path-accent-rgb: 141, 152, 255;
+  --support-path-icon: url("/assets/icons/ui/discord.svg");
 }
 
 .support-spotlight {
@@ -1735,6 +1878,15 @@ body.standalone-page {
     margin-bottom: 42px;
   }
 
+  .support-path {
+    min-height: 270px;
+    padding: 24px;
+  }
+
+  .support-path__top {
+    margin-bottom: 28px;
+  }
+
   .form-grid,
   .roadmap-program__detail,
   .privacy-index ol {
@@ -1875,7 +2027,9 @@ body.standalone-page {
   }
 
   .discord-community__channel,
-  .discord-community__member {
+  .discord-community__member,
+  .support-path__icon,
+  .support-path::after {
     transition: none;
   }
 
@@ -1905,6 +2059,15 @@ body.standalone-page {
   .standalone-card:hover,
   .donate-option:hover,
   .donate-impact-card:hover {
+    transform: none;
+  }
+
+  .support-path::after {
+    display: none;
+  }
+
+  .support-path:hover .support-path__icon,
+  .support-path:focus-within .support-path__icon {
     transform: none;
   }
 

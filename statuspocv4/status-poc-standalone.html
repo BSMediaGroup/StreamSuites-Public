@@ -1,0 +1,4171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>System Status • StreamSuites™</title>
+  <meta name="description" content="Live StreamSuites service health, components, incidents, maintenance, and recent operational history." />
+  <link rel="canonical" href="https://streamsuites.app/status" />
+  <style>
+@font-face {
+  font-family: "Tektur";
+  src: url("https://streamsuites.app/assets/fonts/Tektur-VariableFont_wdth,wght.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400 900;
+  font-stretch: 75% 100%;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Sans";
+  src: url("https://streamsuites.app/assets/fonts/Geist-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Sans";
+  src: url("https://streamsuites.app/assets/fonts/Geist-SemiBold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("https://streamsuites.app/assets/fonts/mono/IBMPlexMono-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("https://streamsuites.app/assets/fonts/mono/IBMPlexMono-Medium.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+  --font-display: "Tektur", "Arial Narrow", "Segoe UI", sans-serif;
+  --font-body: "Geist Sans", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "Cascadia Mono", Consolas, monospace;
+
+  --bg-0: #020509;
+  --bg-1: #050a10;
+  --bg-2: #08111a;
+  --panel: rgba(8, 15, 23, 0.82);
+  --panel-strong: rgba(9, 17, 26, 0.96);
+  --panel-soft: rgba(12, 22, 33, 0.58);
+  --line: rgba(151, 183, 219, 0.11);
+  --line-strong: rgba(169, 204, 240, 0.2);
+  --text: #f5f8fb;
+  --text-2: #c7d0da;
+  --muted: #8493a3;
+  --muted-2: #607080;
+
+  --blue: #58b7ff;
+  --blue-bright: #8fd3ff;
+  --violet: #9e7cff;
+  --green: #62dea2;
+  --amber: #f2b84b;
+  --orange: #ef8c57;
+  --red: #ff6464;
+  --maintenance: #78b9ff;
+  --unknown: #8a96a3;
+
+  --state-color: var(--unknown);
+  --shell: min(1240px, calc(100vw - 44px));
+  --header-height: 66px;
+  --radius-xl: 26px;
+  --radius-lg: 18px;
+  --radius-md: 13px;
+  --ease: cubic-bezier(0.22, 0.72, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--bg-0);
+}
+
+body {
+  min-width: 320px;
+  margin: 0;
+  overflow-x: hidden;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 14% 2%, rgba(55, 133, 220, 0.08), transparent 30%),
+    radial-gradient(circle at 84% 8%, rgba(126, 80, 255, 0.07), transparent 28%),
+    linear-gradient(180deg, #03070b 0%, #020509 42%, #04080d 100%);
+  font-family: var(--font-body);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  color: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  color: #fff;
+  background: rgba(88, 183, 255, 0.32);
+}
+
+.skip-link {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 9999;
+  padding: 10px 14px;
+  border-radius: 8px;
+  color: #fff;
+  background: #0d1822;
+  transform: translateY(-160%);
+  transition: transform 160ms ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.shell {
+  width: var(--shell);
+  margin-inline: auto;
+}
+
+.page-ambient,
+.page-ambient > * {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.page-ambient {
+  z-index: -1;
+  overflow: hidden;
+}
+
+.page-ambient__grid {
+  opacity: 0.24;
+  background-image:
+    linear-gradient(rgba(97, 158, 221, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(97, 158, 221, 0.04) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,.7) 34%, transparent 76%);
+}
+
+.page-ambient__orb {
+  width: 48vw;
+  height: 48vw;
+  margin: auto;
+  border-radius: 50%;
+  filter: blur(110px);
+  opacity: 0.12;
+  animation: ambientDrift 18s ease-in-out infinite alternate;
+}
+
+.page-ambient__orb--blue {
+  top: -40%;
+  right: 46%;
+  background: #147ef2;
+}
+
+.page-ambient__orb--violet {
+  top: -28%;
+  left: 54%;
+  background: #6832e7;
+  animation-delay: -7s;
+}
+
+.page-ambient__noise {
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.65'/%3E%3C/svg%3E");
+  mix-blend-mode: screen;
+}
+
+@keyframes ambientDrift {
+  from { transform: translate3d(-3%, -1%, 0) scale(0.94); }
+  to { transform: translate3d(4%, 3%, 0) scale(1.08); }
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid var(--line);
+  background: rgba(3, 7, 11, 0.72);
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+}
+
+.site-header::after {
+  position: absolute;
+  right: 12%;
+  bottom: -1px;
+  width: 28%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(88, 183, 255, 0.42), transparent);
+  content: "";
+}
+
+.site-header__inner {
+  min-height: var(--header-height);
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
+  align-items: center;
+  gap: 28px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  width: fit-content;
+  color: #fff;
+  text-decoration: none;
+}
+
+.brand__fallback-mark {
+  position: relative;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(174, 206, 240, 0.22);
+  border-radius: 10px;
+  color: #b9ddff;
+  background:
+    linear-gradient(145deg, rgba(96, 183, 255, 0.18), rgba(29, 52, 76, 0.18)),
+    #07111a;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.09),
+    0 10px 28px rgba(0,0,0,.28),
+    0 0 18px rgba(58, 151, 255, 0.08);
+  font: 650 20px/1 var(--font-display);
+}
+
+.brand__fallback-mark::before {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.16) 48%, transparent 65%);
+  transform: translateX(-120%);
+  transition: transform 500ms var(--ease);
+  content: "";
+}
+
+.brand:hover .brand__fallback-mark::before {
+  transform: translateX(120%);
+}
+
+.brand__fallback-wordmark {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.035em;
+}
+
+.brand__tm {
+  margin-left: 2px;
+  font-size: 8px;
+  vertical-align: top;
+}
+
+.primary-nav {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.primary-nav a {
+  position: relative;
+  padding: 8px 0;
+  color: #aeb9c6;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 160ms ease;
+}
+
+.primary-nav a::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background: var(--blue);
+  box-shadow: 0 0 10px rgba(88, 183, 255, .55);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 200ms var(--ease);
+  content: "";
+}
+
+.primary-nav a:hover,
+.primary-nav a:focus-visible,
+.primary-nav a.is-current {
+  color: #fff;
+}
+
+.primary-nav a:hover::after,
+.primary-nav a:focus-visible::after,
+.primary-nav a.is-current::after {
+  transform: scaleX(1);
+}
+
+.header-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.nav-toggle {
+  display: none;
+  width: 42px;
+  height: 42px;
+  padding: 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: rgba(255,255,255,.025);
+}
+
+.nav-toggle span {
+  display: block;
+  height: 1px;
+  margin: 5px 0;
+  background: #d8e1ea;
+}
+
+.button {
+  position: relative;
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  overflow: hidden;
+  padding: 0 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  color: var(--text);
+  background: rgba(11, 19, 28, 0.78);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 180ms var(--ease), border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+}
+
+.button::before {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 15%, rgba(255,255,255,.1) 48%, transparent 68%);
+  transform: translateX(-120%);
+  transition: transform 600ms var(--ease);
+  content: "";
+}
+
+.button:hover::before {
+  transform: translateX(120%);
+}
+
+.button:hover,
+.button:focus-visible {
+  border-color: rgba(137, 199, 255, .42);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.button:active {
+  transform: translateY(0);
+}
+
+.button--primary {
+  border-color: rgba(88, 183, 255, .5);
+  color: #02101c;
+  background: linear-gradient(135deg, #85d1ff, #4aa8f6);
+  box-shadow: 0 10px 28px rgba(43, 143, 232, .18), inset 0 1px 0 rgba(255,255,255,.52);
+}
+
+.button--primary:hover,
+.button--primary:focus-visible {
+  border-color: #b8e5ff;
+  box-shadow: 0 14px 38px rgba(43, 143, 232, .28), inset 0 1px 0 rgba(255,255,255,.65);
+}
+
+.button--quiet {
+  background: rgba(255,255,255,.025);
+}
+
+.button--small {
+  min-height: 38px;
+  padding: 0 14px;
+  font-size: 12px;
+}
+
+.button__icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.status-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, .92fr) minmax(500px, 1.08fr);
+  gap: clamp(46px, 6vw, 88px);
+  align-items: center;
+  min-height: calc(100vh - var(--header-height));
+  padding: clamp(70px, 9vw, 126px) 0 clamp(72px, 9vw, 126px);
+}
+
+.status-hero::before {
+  position: absolute;
+  top: 50%;
+  left: 51%;
+  width: min(880px, 70vw);
+  height: min(880px, 70vw);
+  border: 1px solid rgba(95, 168, 236, .07);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 80px rgba(74, 142, 207, .015),
+    0 0 0 160px rgba(74, 142, 207, .009);
+  transform: translate(-50%, -50%);
+  content: "";
+  pointer-events: none;
+}
+
+.kicker,
+.section-kicker,
+.standalone-kicker {
+  margin: 0 0 17px;
+  color: var(--blue-bright);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.kicker__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--blue);
+  box-shadow: 0 0 0 5px rgba(88,183,255,.09), 0 0 16px rgba(88,183,255,.55);
+}
+
+.status-hero h1 {
+  max-width: 680px;
+  margin: 0;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(54px, 6vw, 88px);
+  font-stretch: 88%;
+  font-weight: 650;
+  line-height: .94;
+  letter-spacing: -.065em;
+  text-wrap: balance;
+}
+
+.status-hero h1 span {
+  color: #9eb2c6;
+}
+
+.status-hero__lede {
+  max-width: 680px;
+  margin: 26px 0 0;
+  color: var(--text-2);
+  font-size: clamp(16px, 1.35vw, 19px);
+  line-height: 1.68;
+}
+
+.status-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.status-source-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-top: 20px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.source-chip {
+  display: inline-flex;
+  min-height: 26px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: #b9c6d4;
+  background: rgba(12, 21, 31, .68);
+}
+
+.source-chip > span,
+.system-pulse__live > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--unknown);
+  box-shadow: 0 0 10px currentColor;
+}
+
+.source-chip[data-state="live"] {
+  color: #83e9af;
+  border-color: rgba(98,222,162,.28);
+}
+
+.source-chip[data-state="live"] > span {
+  background: var(--green);
+}
+
+.source-chip[data-state="demo"] {
+  color: #ffd182;
+  border-color: rgba(242,184,75,.3);
+}
+
+.source-chip[data-state="demo"] > span {
+  background: var(--amber);
+}
+
+.system-pulse {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  padding: clamp(20px, 2.8vw, 32px);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(circle at 50% 44%, rgba(88,183,255,.11), transparent 31%),
+    radial-gradient(circle at 94% 0%, rgba(128,76,255,.08), transparent 29%),
+    linear-gradient(145deg, rgba(11, 20, 30, .94), rgba(5, 11, 17, .96));
+  box-shadow:
+    0 46px 110px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,255,255,.04);
+  isolation: isolate;
+}
+
+.system-pulse::before {
+  position: absolute;
+  top: 0;
+  left: 20%;
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--state-color), transparent);
+  box-shadow: 0 0 22px var(--state-color);
+  opacity: .72;
+  content: "";
+}
+
+.system-pulse::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: .2;
+  background-image:
+    linear-gradient(rgba(110, 174, 235, .06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(110, 174, 235, .06) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(circle at 50% 50%, black 0, transparent 72%);
+  content: "";
+}
+
+.system-pulse__topline,
+.system-pulse__footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  font-family: var(--font-mono);
+}
+
+.system-pulse__eyebrow {
+  color: var(--muted);
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.system-pulse__live {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 9px;
+  border: 1px solid rgba(98,222,162,.22);
+  border-radius: 999px;
+  color: #86eab2;
+  background: rgba(98,222,162,.06);
+  font-size: 8px;
+  letter-spacing: .12em;
+}
+
+.system-pulse__live > span {
+  background: var(--green);
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  50% { box-shadow: 0 0 0 5px rgba(98,222,162,.08), 0 0 17px rgba(98,222,162,.7); }
+}
+
+.system-pulse__core {
+  position: relative;
+  display: grid;
+  width: 218px;
+  height: 218px;
+  margin: 22px auto -4px;
+  place-items: center;
+  align-content: center;
+  text-align: center;
+}
+
+.system-pulse__rings,
+.system-pulse__rings span {
+  position: absolute;
+  inset: 0;
+  border: 1px solid color-mix(in srgb, var(--state-color) 24%, transparent);
+  border-radius: 50%;
+}
+
+.system-pulse__rings span:nth-child(1) {
+  inset: 22px;
+  border-color: color-mix(in srgb, var(--state-color) 34%, transparent);
+  animation: ringBreath 3.8s ease-in-out infinite;
+}
+
+.system-pulse__rings span:nth-child(2) {
+  inset: 48px;
+  border-color: color-mix(in srgb, var(--state-color) 48%, transparent);
+  animation: ringBreath 3.8s ease-in-out .7s infinite;
+}
+
+.system-pulse__rings span:nth-child(3) {
+  inset: 73px;
+  border-color: color-mix(in srgb, var(--state-color) 72%, transparent);
+  box-shadow: 0 0 40px color-mix(in srgb, var(--state-color) 15%, transparent);
+}
+
+@keyframes ringBreath {
+  0%,100% { transform: scale(.97); opacity: .44; }
+  50% { transform: scale(1.03); opacity: .88; }
+}
+
+.system-pulse__state-icon {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 12px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--state-color) 54%, transparent);
+  border-radius: 16px;
+  color: var(--state-color);
+  background: color-mix(in srgb, var(--state-color) 9%, rgba(6,13,19,.86));
+  box-shadow: 0 0 28px color-mix(in srgb, var(--state-color) 16%, transparent), inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+.system-pulse__state-mark {
+  font: 600 23px/1 var(--font-display);
+}
+
+.system-pulse__core strong {
+  position: relative;
+  z-index: 2;
+  max-width: 190px;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -.025em;
+}
+
+.system-pulse__core p {
+  position: relative;
+  z-index: 2;
+  max-width: 190px;
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.system-map {
+  position: relative;
+  height: 250px;
+  margin-top: -82px;
+}
+
+.system-map__routes {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.system-map__route {
+  fill: none;
+  stroke: rgba(123, 171, 216, .15);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 6;
+}
+
+.system-map__route::selection { background: transparent; }
+
+.system-map__hub {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid rgba(133, 199, 255, .38);
+  border-radius: 10px;
+  color: #9dd8ff;
+  background: #07131d;
+  box-shadow: 0 0 24px rgba(72, 165, 243, .18);
+  font: 600 15px/1 var(--font-display);
+  transform: translate(-50%, -50%);
+}
+
+.system-map__node {
+  position: absolute;
+  display: grid;
+  min-width: 128px;
+  gap: 3px;
+  padding: 11px 13px 11px 31px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(7, 14, 21, .86);
+  box-shadow: 0 15px 36px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+.system-map__node::before {
+  position: absolute;
+  top: 0;
+  left: 20%;
+  width: 60%;
+  height: 1px;
+  background: var(--node-color);
+  box-shadow: 0 0 13px var(--node-color);
+  opacity: .65;
+  content: "";
+}
+
+.system-map__node strong {
+  font-size: 12px;
+}
+
+.system-map__node small {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 8px;
+}
+
+.system-map__node-dot {
+  position: absolute;
+  top: 50%;
+  left: 13px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--node-color);
+  box-shadow: 0 0 12px var(--node-color);
+  transform: translateY(-50%);
+}
+
+.system-map__node--core { --node-color: #65d8ff; top: 12px; left: 12px; }
+.system-map__node--surface { --node-color: #9c7cff; top: 12px; right: 12px; }
+.system-map__node--edge { --node-color: #5fe2b0; bottom: 12px; left: 12px; }
+.system-map__node--deps { --node-color: #f1bc62; right: 12px; bottom: 12px; }
+
+.system-pulse__footer {
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 9px;
+  letter-spacing: .03em;
+}
+
+.system-pulse__footer strong {
+  color: #fff;
+  font-weight: 500;
+}
+
+main > section:not(.status-hero) {
+  position: relative;
+}
+
+.metrics-section,
+.components-section {
+  scroll-margin-top: calc(var(--header-height) + 18px);
+}
+
+.components-section,
+.operations-section,
+.history-section,
+.transparency-section {
+  padding: clamp(76px, 8vw, 116px) 0;
+  border-top: 1px solid var(--line);
+}
+
+.section-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, .7fr);
+  gap: clamp(34px, 6vw, 90px);
+  align-items: end;
+  margin-bottom: 38px;
+}
+
+.section-heading--compact {
+  margin-bottom: 30px;
+}
+
+.section-heading h2,
+.transparency-card h2 {
+  max-width: 800px;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(34px, 4.4vw, 58px);
+  font-stretch: 90%;
+  font-weight: 620;
+  line-height: 1;
+  letter-spacing: -.052em;
+  text-wrap: balance;
+}
+
+.section-heading > p {
+  max-width: 540px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.72;
+}
+
+.status-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: rgba(7, 13, 20, .74);
+  box-shadow: 0 28px 72px rgba(0,0,0,.16);
+}
+
+.status-metric {
+  position: relative;
+  min-width: 0;
+  padding: clamp(25px, 3vw, 38px);
+  transition: background-color 180ms ease;
+}
+
+.status-metric:hover {
+  background: rgba(255,255,255,.018);
+}
+
+.status-metric + .status-metric {
+  border-left: 1px solid var(--line);
+}
+
+.status-metric__value,
+.status-metric__label {
+  display: block;
+}
+
+.status-metric__value {
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(34px, 3.5vw, 50px);
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: -.052em;
+  overflow-wrap: anywhere;
+}
+
+.status-metric--overall .status-metric__value {
+  padding-right: 24px;
+  color: var(--state-color);
+  font-size: clamp(23px, 2.4vw, 34px);
+  line-height: 1.14;
+}
+
+.status-metric__label {
+  margin-top: 9px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.status-metric__icon {
+  position: absolute;
+  top: 28px;
+  right: 25px;
+  color: var(--state-color);
+  text-shadow: 0 0 18px var(--state-color);
+}
+
+.component-controls {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) auto;
+  gap: 20px;
+  align-items: end;
+  margin-bottom: 25px;
+}
+
+.component-search {
+  display: grid;
+  gap: 9px;
+  max-width: 580px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.component-search__field {
+  position: relative;
+}
+
+.component-search input {
+  width: 100%;
+  min-height: 50px;
+  padding: 0 54px 0 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 11px;
+  color: var(--text);
+  background: rgba(8, 15, 23, .86);
+  font: 14px var(--font-body);
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.component-search input:focus {
+  border-color: rgba(88,183,255,.58);
+  background: rgba(10, 18, 28, .98);
+  box-shadow: 0 0 0 3px rgba(88,183,255,.11);
+}
+
+.component-search kbd {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  min-width: 24px;
+  padding: 3px 6px;
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  color: var(--muted);
+  background: rgba(255,255,255,.035);
+  font: 10px var(--font-mono);
+  text-align: center;
+  transform: translateY(-50%);
+}
+
+.status-filters {
+  display: inline-flex;
+  gap: 5px;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(8, 15, 23, .66);
+}
+
+.status-filters button {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
+}
+
+.status-filters button:hover,
+.status-filters button:focus-visible,
+.status-filters button.is-active {
+  border-color: var(--line-strong);
+  color: #fff;
+  background: rgba(255,255,255,.05);
+  outline: none;
+}
+
+.component-load-state {
+  min-height: 190px;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  color: var(--text-2);
+  background: var(--panel);
+}
+
+.component-load-state strong {
+  color: #fff;
+}
+
+.component-load-state p {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.loader {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border: 2px solid rgba(255,255,255,.08);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 850ms linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.component-groups {
+  display: grid;
+  gap: 56px;
+}
+
+.component-group {
+  min-width: 0;
+}
+
+.component-group__heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: baseline;
+  margin-bottom: 17px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--line);
+}
+
+.component-group__heading h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(23px, 2.4vw, 31px);
+  font-weight: 600;
+  letter-spacing: -.035em;
+}
+
+.component-group__heading span {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.component-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.component-card {
+  --component-color: var(--unknown);
+  position: relative;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  overflow: hidden;
+  padding: 21px 22px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--component-color) 8%, transparent), transparent 38%),
+    rgba(8, 15, 23, .78);
+  box-shadow: 0 16px 48px rgba(0,0,0,.13), inset 0 1px 0 rgba(255,255,255,.025);
+  isolation: isolate;
+  transition: transform 260ms var(--ease), border-color 180ms ease, background-color 180ms ease, box-shadow 260ms ease;
+}
+
+.component-card::before {
+  position: absolute;
+  top: 0;
+  left: 13%;
+  width: 38%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--component-color), transparent);
+  box-shadow: 0 0 16px var(--component-color);
+  opacity: .55;
+  content: "";
+}
+
+.component-card::after {
+  position: absolute;
+  inset: -35% auto -35% -35%;
+  width: 26%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.07), transparent);
+  transform: skewX(-16deg) translateX(-240%);
+  transition: transform 700ms var(--ease);
+  content: "";
+}
+
+.component-card:hover {
+  border-color: color-mix(in srgb, var(--component-color) 34%, var(--line-strong));
+  box-shadow: 0 24px 64px rgba(0,0,0,.2), 0 0 34px color-mix(in srgb, var(--component-color) 6%, transparent);
+  transform: translateY(-3px);
+}
+
+.component-card:hover::after {
+  transform: skewX(-16deg) translateX(680%);
+}
+
+.component-card__identity {
+  display: flex;
+  min-width: 0;
+  gap: 14px;
+  align-items: center;
+}
+
+.component-card__icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--component-color) 34%, transparent);
+  border-radius: 12px;
+  color: var(--component-color);
+  background: color-mix(in srgb, var(--component-color) 8%, rgba(5,11,17,.88));
+  box-shadow: 0 0 22px color-mix(in srgb, var(--component-color) 8%, transparent);
+  font: 600 15px/1 var(--font-display);
+}
+
+.component-card h4 {
+  margin: 0;
+  overflow: hidden;
+  color: #eef4f9;
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.component-card p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.component-state {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--component-color) 30%, transparent);
+  border-radius: 999px;
+  color: var(--component-color);
+  background: color-mix(in srgb, var(--component-color) 7%, transparent);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.component-state::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+  content: "";
+}
+
+.component-empty {
+  padding: 34px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 14px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.operations-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.operations-panel {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  padding: clamp(22px, 3vw, 30px);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(88,183,255,.055), transparent 35%),
+    var(--panel);
+  box-shadow: 0 24px 72px rgba(0,0,0,.14);
+}
+
+.operations-panel::before {
+  position: absolute;
+  top: 0;
+  left: 14%;
+  width: 34%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(101,216,255,.65), transparent);
+  content: "";
+}
+
+.operations-panel__header,
+.operations-panel__header > div {
+  display: flex;
+  align-items: center;
+}
+
+.operations-panel__header {
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.operations-panel__header > div {
+  min-width: 0;
+  gap: 13px;
+}
+
+.operations-panel__header p {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.operations-panel__header h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -.025em;
+}
+
+.panel-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  place-items: center;
+  border: 1px solid rgba(242,184,75,.3);
+  border-radius: 12px;
+  color: var(--amber);
+  background: rgba(242,184,75,.07);
+  font: 600 16px/1 var(--font-mono);
+}
+
+.panel-icon--maintenance {
+  border-color: rgba(120,185,255,.3);
+  color: var(--maintenance);
+  background: rgba(120,185,255,.07);
+}
+
+.count-chip {
+  display: grid;
+  min-width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid rgba(242,184,75,.3);
+  border-radius: 999px;
+  color: var(--amber);
+  background: rgba(242,184,75,.07);
+  font: 500 10px/1 var(--font-mono);
+}
+
+.count-chip--blue {
+  border-color: rgba(120,185,255,.3);
+  color: var(--maintenance);
+  background: rgba(120,185,255,.07);
+}
+
+.operations-list {
+  display: grid;
+  gap: 0;
+  min-height: 170px;
+}
+
+.operation-empty {
+  display: grid;
+  min-height: 170px;
+  place-items: center;
+  color: var(--muted);
+  text-align: center;
+}
+
+.operation-empty__mark {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 13px;
+  place-items: center;
+  border: 1px solid rgba(98,222,162,.2);
+  border-radius: 50%;
+  color: var(--green);
+  background: rgba(98,222,162,.05);
+  box-shadow: 0 0 25px rgba(98,222,162,.08);
+  font: 500 18px/1 var(--font-mono);
+}
+
+.operation-empty strong {
+  display: block;
+  color: #dbe5ee;
+  font-size: 13px;
+}
+
+.operation-empty p {
+  max-width: 340px;
+  margin: 7px auto 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.operation-item {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.operation-item:last-child {
+  border-bottom: 0;
+}
+
+.operation-item__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.operation-item h4 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.operation-item__meta,
+.operation-item__body,
+.operation-item__time {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.operation-item__meta {
+  margin-top: 5px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.operation-item__body {
+  margin: 10px 0 0;
+}
+
+.operation-item__time {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 9px;
+}
+
+.history-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(330px, .75fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.history-timeline {
+  min-height: 340px;
+  padding: 10px 0 10px 32px;
+  border-left: 1px solid var(--line-strong);
+}
+
+.history-item {
+  position: relative;
+  padding: 0 0 34px 26px;
+}
+
+.history-item:last-child {
+  padding-bottom: 0;
+}
+
+.history-item::before {
+  position: absolute;
+  top: 4px;
+  left: -37px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--bg-0);
+  border-radius: 50%;
+  background: var(--history-color, var(--green));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--history-color, var(--green)) 14%, transparent), 0 0 14px color-mix(in srgb, var(--history-color, var(--green)) 35%, transparent);
+  content: "";
+}
+
+.history-item__date {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.history-item h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.history-item p {
+  max-width: 700px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.history-item__chip {
+  display: inline-flex;
+  margin-top: 11px;
+  padding: 5px 8px;
+  border: 1px solid color-mix(in srgb, var(--history-color, var(--green)) 25%, transparent);
+  border-radius: 999px;
+  color: var(--history-color, var(--green));
+  background: color-mix(in srgb, var(--history-color, var(--green)) 6%, transparent);
+  font: 500 8px/1 var(--font-mono);
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.history-aside {
+  position: sticky;
+  top: calc(var(--header-height) + 28px);
+  overflow: hidden;
+  padding: 28px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(158,124,255,.1), transparent 36%),
+    var(--panel-strong);
+  box-shadow: 0 30px 74px rgba(0,0,0,.2);
+}
+
+.history-aside__signal {
+  display: block;
+  width: 44px;
+  height: 4px;
+  margin-bottom: 24px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--blue), var(--violet));
+  box-shadow: 0 0 18px rgba(88,183,255,.42);
+}
+
+.history-aside h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(24px, 2.4vw, 34px);
+  font-weight: 600;
+  line-height: 1.06;
+  letter-spacing: -.04em;
+}
+
+.history-aside p:not(.section-kicker) {
+  margin: 16px 0 23px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.67;
+}
+
+.transparency-section {
+  padding-bottom: clamp(90px, 10vw, 150px);
+}
+
+.transparency-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(340px, .88fr);
+  gap: clamp(38px, 7vw, 110px);
+  overflow: hidden;
+  padding: clamp(34px, 5vw, 68px);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(circle at 0 100%, rgba(88,183,255,.09), transparent 32%),
+    radial-gradient(circle at 100% 0, rgba(158,124,255,.09), transparent 34%),
+    linear-gradient(145deg, rgba(10, 18, 27, .96), rgba(5, 11, 17, .98));
+  box-shadow: 0 40px 100px rgba(0,0,0,.24);
+}
+
+.transparency-card::before {
+  position: absolute;
+  top: 0;
+  left: 20%;
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--blue), var(--violet), transparent);
+  box-shadow: 0 0 26px rgba(88,183,255,.35);
+  content: "";
+}
+
+.transparency-card__copy > p:not(.section-kicker) {
+  max-width: 720px;
+  margin: 22px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.72;
+}
+
+.transparency-card__facts {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+
+.transparency-card__facts > div {
+  display: grid;
+  grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+  gap: 18px;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.transparency-card__facts > div:first-child {
+  border-top: 1px solid var(--line);
+}
+
+.transparency-card dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.transparency-card dd {
+  margin: 0;
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.transparency-card code {
+  color: #9dd8ff;
+  font: inherit;
+}
+
+.site-footer {
+  position: relative;
+  padding-top: 58px;
+  border-top: 1px solid var(--line);
+  background: rgba(2, 5, 8, .84);
+}
+
+.site-footer::before {
+  position: absolute;
+  top: -1px;
+  left: 10%;
+  width: 34%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(88,183,255,.55), transparent);
+  content: "";
+}
+
+.site-footer__top {
+  display: grid;
+  grid-template-columns: minmax(260px, .78fr) minmax(0, 1.22fr);
+  gap: clamp(50px, 8vw, 120px);
+  padding-bottom: 52px;
+}
+
+.brand--footer .brand__fallback-mark {
+  width: 42px;
+  height: 42px;
+}
+
+.site-footer__brand p {
+  max-width: 350px;
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.site-footer__links {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 28px;
+}
+
+.site-footer__links > div {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.site-footer__links strong {
+  margin-bottom: 4px;
+  color: #dfe7ee;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.site-footer__links a,
+.site-footer__bottom a,
+.site-footer__bottom span {
+  color: var(--muted);
+  font-size: 12px;
+  text-decoration: none;
+  transition: color 160ms ease;
+}
+
+.site-footer__links a:hover,
+.site-footer__links a:focus-visible,
+.site-footer__bottom a:hover,
+.site-footer__bottom a:focus-visible {
+  color: #fff;
+  outline: none;
+}
+
+.site-footer__bottom {
+  min-height: 54px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 20px;
+  align-items: center;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-mono);
+}
+
+.site-footer__bottom > *:nth-child(2) {
+  justify-self: center;
+}
+
+.site-footer__bottom > *:last-child {
+  justify-self: end;
+}
+
+.reveal {
+  opacity: 0;
+  filter: blur(6px);
+  transform: translateY(18px);
+  transition: opacity 620ms var(--ease), transform 720ms var(--ease), filter 620ms ease;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  filter: blur(0);
+  transform: translateY(0);
+}
+
+[data-overall-state="operational"] { --state-color: var(--green); }
+[data-overall-state="degraded"] { --state-color: var(--amber); }
+[data-overall-state="partial"] { --state-color: var(--orange); }
+[data-overall-state="major"],
+[data-overall-state="critical"] { --state-color: var(--red); }
+[data-overall-state="maintenance"] { --state-color: var(--maintenance); }
+[data-overall-state="unknown"] { --state-color: var(--unknown); }
+
+@media (max-width: 1080px) {
+  .site-header__inner {
+    grid-template-columns: 1fr auto;
+  }
+
+  .primary-nav {
+    display: none;
+  }
+
+  .status-hero {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    padding-top: 96px;
+  }
+
+  .status-hero__copy {
+    max-width: 850px;
+  }
+
+  .system-pulse {
+    width: min(760px, 100%);
+    margin-inline: auto;
+  }
+
+  .status-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .status-metric:nth-child(3) {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .status-metric:nth-child(4) {
+    border-top: 1px solid var(--line);
+  }
+
+  .history-layout,
+  .transparency-card,
+  .site-footer__top {
+    grid-template-columns: 1fr;
+  }
+
+  .history-aside {
+    position: relative;
+    top: auto;
+  }
+}
+
+@media (max-width: 820px) {
+  :root {
+    --shell: min(100% - 28px, 1240px);
+    --header-height: 66px;
+  }
+
+  .site-header__inner {
+    grid-template-columns: 1fr auto auto;
+    gap: 12px;
+  }
+
+  .header-actions .button--quiet {
+    display: none;
+  }
+
+  .nav-toggle {
+    display: block;
+    order: 2;
+  }
+
+  .header-actions {
+    order: 3;
+  }
+
+  .primary-nav {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 14px;
+    left: 14px;
+    display: grid;
+    gap: 2px;
+    padding: 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: 14px;
+    background: rgba(5, 11, 17, .98);
+    box-shadow: 0 30px 70px rgba(0,0,0,.45);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px);
+    transition: opacity 180ms ease, transform 180ms var(--ease);
+  }
+
+  .primary-nav.is-open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  .primary-nav a {
+    padding: 12px 14px;
+    border-radius: 9px;
+  }
+
+  .primary-nav a::after {
+    content: none;
+  }
+
+  .primary-nav a:hover,
+  .primary-nav a:focus-visible {
+    background: rgba(255,255,255,.045);
+  }
+
+  .section-heading,
+  .component-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .status-filters {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .component-grid,
+  .operations-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .site-footer__links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .site-footer__bottom {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding: 16px 0;
+    text-align: center;
+  }
+
+  .site-footer__bottom > *:last-child {
+    justify-self: center;
+  }
+}
+
+@media (max-width: 600px) {
+  :root {
+    --shell: calc(100% - 22px);
+  }
+
+  .brand__fallback-mark {
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
+  }
+
+  .brand__fallback-wordmark {
+    font-size: 18px;
+  }
+
+  .header-actions .button {
+    min-height: 36px;
+    padding: 0 11px;
+    font-size: 11px;
+  }
+
+  .status-hero {
+    gap: 42px;
+    padding: 68px 0 76px;
+  }
+
+  .status-hero h1 {
+    font-size: clamp(43px, 14vw, 64px);
+  }
+
+  .status-hero__lede {
+    font-size: 15px;
+  }
+
+  .status-hero__actions .button {
+    width: 100%;
+  }
+
+  .status-source-line {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .system-pulse {
+    padding: 18px 14px;
+    border-radius: 19px;
+  }
+
+  .system-pulse__core {
+    width: 190px;
+    height: 190px;
+  }
+
+  .system-map {
+    height: 310px;
+    margin-top: -52px;
+  }
+
+  .system-map__routes {
+    display: none;
+  }
+
+  .system-map__hub {
+    top: 50%;
+  }
+
+  .system-map__node {
+    min-width: calc(50% - 10px);
+    padding: 10px 10px 10px 28px;
+  }
+
+  .system-map__node--core { top: 12px; left: 0; }
+  .system-map__node--surface { top: 12px; right: 0; }
+  .system-map__node--edge { bottom: 12px; left: 0; }
+  .system-map__node--deps { right: 0; bottom: 12px; }
+
+  .system-pulse__footer {
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .status-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .status-metric + .status-metric,
+  .status-metric:nth-child(3) {
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+
+  .component-card {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .component-state {
+    width: fit-content;
+  }
+
+  .section-heading h2,
+  .transparency-card h2 {
+    font-size: clamp(32px, 10vw, 48px);
+  }
+
+  .transparency-card {
+    padding: 28px 22px;
+  }
+
+  .transparency-card__facts > div {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .transparency-card dd {
+    text-align: left;
+  }
+
+  .site-footer__links {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+  .reveal {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .button,
+  .component-card,
+  .system-pulse,
+  .operations-panel,
+  .transparency-card,
+  .history-aside {
+    border: 1px solid CanvasText;
+  }
+}
+
+</style>
+  <style>
+:root {
+  --widget-operational: #62dea2;
+  --widget-degraded: #f2b84b;
+  --widget-partial: #ef8c57;
+  --widget-major: #ff6464;
+  --widget-maintenance: #78b9ff;
+  --widget-unknown: #8a96a3;
+  --status-widget-base-bottom: max(18px, env(safe-area-inset-bottom));
+  --status-widget-footer-floor: 0px;
+  --status-widget-anchor-bottom: max(var(--status-widget-base-bottom), var(--status-widget-footer-floor));
+}
+
+.ss-status-widget-host {
+  --status-widget-anchor-bottom: max(var(--status-widget-base-bottom), var(--status-widget-footer-floor));
+  position: fixed;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: var(--status-widget-anchor-bottom);
+  z-index: 1500;
+  pointer-events: none;
+  transition: bottom 220ms cubic-bezier(.22,.72,.2,1);
+}
+
+[data-status-widget-host] {
+  --status-widget-anchor-bottom: max(var(--status-widget-base-bottom), var(--status-widget-footer-floor));
+  position: fixed;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: var(--status-widget-anchor-bottom);
+  z-index: 1500;
+  pointer-events: none;
+  transition: bottom 220ms cubic-bezier(.22,.72,.2,1);
+}
+
+.ss-status-widget-host[data-footer-avoiding="true"],
+[data-status-widget-host][data-footer-avoiding="true"] {
+  transition-duration: 280ms;
+}
+
+.ss-status-widget {
+  --widget-state: var(--widget-unknown);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: var(--font-body, system-ui, sans-serif);
+  font-synthesis: none;
+  pointer-events: auto;
+}
+
+.ss-status-widget[data-state="operational"] { --widget-state: var(--widget-operational); }
+.ss-status-widget[data-state="degraded"] { --widget-state: var(--widget-degraded); }
+.ss-status-widget[data-state="partial"] { --widget-state: var(--widget-partial); }
+.ss-status-widget[data-state="major"],
+.ss-status-widget[data-state="critical"] { --widget-state: var(--widget-major); }
+.ss-status-widget[data-state="maintenance"] { --widget-state: var(--widget-maintenance); }
+.ss-status-widget[data-state="unknown"] { --widget-state: var(--widget-unknown); }
+
+.ss-status-widget__toggle {
+  position: relative;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 28px;
+  gap: 10px;
+  align-items: center;
+  width: 50px;
+  min-width: 50px;
+  min-height: 48px;
+  padding: 7px 8px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  color: #eef5fb;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  cursor: pointer;
+  transition:
+    width 320ms cubic-bezier(.2,.82,.18,1),
+    transform 180ms cubic-bezier(.22,.72,.2,1),
+    border-color 220ms ease,
+    background-color 240ms ease,
+    box-shadow 240ms ease;
+}
+
+.ss-status-widget:hover .ss-status-widget__toggle,
+.ss-status-widget:focus-within .ss-status-widget__toggle,
+.ss-status-widget[data-expanded="true"] .ss-status-widget__toggle {
+  width: 258px;
+  border-color: color-mix(in srgb, var(--widget-state) 38%, rgba(159, 192, 224, .18));
+  background-color: rgba(6, 12, 18, .9);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  box-shadow:
+    0 20px 48px rgba(0,0,0,.42),
+    0 0 30px color-mix(in srgb, var(--widget-state) 8%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.055);
+}
+
+.ss-status-widget__toggle::before {
+  position: absolute;
+  top: 0;
+  left: 18%;
+  width: 52%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--widget-state), transparent);
+  box-shadow: 0 0 17px var(--widget-state);
+  opacity: 0;
+  transition: opacity 200ms ease;
+  content: "";
+}
+
+.ss-status-widget:hover .ss-status-widget__toggle::before,
+.ss-status-widget:focus-within .ss-status-widget__toggle::before,
+.ss-status-widget[data-expanded="true"] .ss-status-widget__toggle::before {
+  opacity: .7;
+}
+
+.ss-status-widget__toggle::after {
+  position: absolute;
+  inset: -60% auto -60% -25%;
+  width: 18%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.1), transparent);
+  transform: skewX(-18deg) translateX(-280%);
+  transition: transform 720ms cubic-bezier(.22,.72,.2,1);
+  content: "";
+}
+
+.ss-status-widget__toggle:hover,
+.ss-status-widget__toggle:focus-visible {
+  border-color: color-mix(in srgb, var(--widget-state) 60%, rgba(255,255,255,.12));
+  outline: none;
+  transform: translateY(-2px);
+  box-shadow:
+    0 24px 58px rgba(0,0,0,.48),
+    0 0 38px color-mix(in srgb, var(--widget-state) 12%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.07);
+}
+
+.ss-status-widget__toggle:hover::after {
+  transform: skewX(-18deg) translateX(780%);
+}
+
+.ss-status-widget__signal {
+  position: relative;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid color-mix(in srgb, var(--widget-state) 38%, transparent);
+  border-radius: 10px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--widget-state) 10%, rgba(13, 22, 31, .9)), rgba(4, 10, 15, .86));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.05),
+    0 0 0 1px color-mix(in srgb, var(--widget-state) 12%, transparent);
+  backdrop-filter: blur(16px) saturate(1.15);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+}
+
+.ss-status-widget__signal::before,
+.ss-status-widget__signal::after {
+  position: absolute;
+  border: 1px solid color-mix(in srgb, var(--widget-state) 30%, transparent);
+  border-radius: 50%;
+  content: "";
+}
+
+.ss-status-widget__signal::before {
+  width: 12px;
+  height: 12px;
+}
+
+.ss-status-widget__signal::after {
+  width: 22px;
+  height: 22px;
+  animation: widgetSignal 2.4s ease-out infinite;
+}
+
+.ss-status-widget__signal-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--widget-state);
+  box-shadow: 0 0 12px var(--widget-state);
+}
+
+@keyframes widgetSignal {
+  0% { opacity: .75; transform: scale(.72); }
+  75%,100% { opacity: 0; transform: scale(1.28); }
+}
+
+.ss-status-widget__summary {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  text-align: left;
+  opacity: 0;
+  transform: translateX(-7px);
+  transition: opacity 190ms ease 0ms, transform 260ms cubic-bezier(.2,.82,.18,1);
+}
+
+.ss-status-widget:hover .ss-status-widget__summary,
+.ss-status-widget:focus-within .ss-status-widget__summary,
+.ss-status-widget[data-expanded="true"] .ss-status-widget__summary {
+  opacity: 1;
+  transform: translateX(0);
+  transition-delay: 70ms, 30ms;
+}
+
+.ss-status-widget__summary strong {
+  overflow: hidden;
+  color: #f4f8fb;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ss-status-widget__summary span {
+  color: #8293a4;
+  font-family: var(--font-mono, monospace);
+  font-size: 8px;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+}
+
+.ss-status-widget__expand-control {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  justify-self: end;
+  border: 1px solid rgba(168, 199, 229, .14);
+  border-radius: 8px;
+  color: #8ea3b7;
+  background: rgba(255,255,255,.025);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+    opacity 170ms ease,
+    transform 230ms cubic-bezier(.2,.82,.18,1),
+    color 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+
+.ss-status-widget__expand-icon {
+  display: grid;
+  width: 14px;
+  height: 14px;
+  place-items: center;
+  color: currentColor;
+}
+
+.ss-status-widget__expand-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+  pointer-events: none;
+}
+
+.ss-status-widget:hover .ss-status-widget__expand-control,
+.ss-status-widget:focus-within .ss-status-widget__expand-control,
+.ss-status-widget[data-expanded="true"] .ss-status-widget__expand-control {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.ss-status-widget__toggle:hover .ss-status-widget__expand-control,
+.ss-status-widget__toggle:focus-visible .ss-status-widget__expand-control {
+  color: #dce8f2;
+  border-color: color-mix(in srgb, var(--widget-state) 32%, rgba(168, 199, 229, .18));
+  background: color-mix(in srgb, var(--widget-state) 5%, rgba(255,255,255,.03));
+}
+
+.ss-status-widget[data-expanded="true"] .ss-status-widget__expand-control {
+  color: #dce8f2;
+  border-color: rgba(168, 199, 229, .24);
+}
+
+
+
+.ss-status-widget__panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 12px);
+  width: min(470px, calc(100vw - 36px));
+  max-height: min(690px, calc(100vh - var(--status-widget-anchor-bottom) - 82px));
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--widget-state) 24%, rgba(159, 192, 224, .18));
+  border-radius: 20px;
+  color: #eaf0f5;
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--widget-state) 10%, transparent), transparent 34%),
+    linear-gradient(145deg, rgba(10, 18, 27, .98), rgba(5, 11, 17, .985));
+  box-shadow:
+    0 36px 100px rgba(0,0,0,.58),
+    0 0 48px color-mix(in srgb, var(--widget-state) 8%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.055);
+  backdrop-filter: blur(20px) saturate(1.25);
+  -webkit-backdrop-filter: blur(20px) saturate(1.25);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px) scale(.985);
+  transform-origin: right bottom;
+  transition: opacity 180ms ease, transform 220ms cubic-bezier(.22,.72,.2,1);
+}
+
+.ss-status-widget[data-expanded="true"] .ss-status-widget__panel {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.ss-status-widget__panel::before {
+  position: absolute;
+  top: 0;
+  left: 17%;
+  width: 56%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--widget-state), transparent);
+  box-shadow: 0 0 22px var(--widget-state);
+  opacity: .72;
+  content: "";
+}
+
+.ss-status-widget__head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 13px;
+  align-items: center;
+  padding: 18px 18px 15px;
+  border-bottom: 1px solid rgba(153, 184, 215, .1);
+}
+
+.ss-status-widget__head-icon {
+  display: grid;
+  width: 43px;
+  height: 43px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--widget-state) 36%, transparent);
+  border-radius: 12px;
+  color: var(--widget-state);
+  background: color-mix(in srgb, var(--widget-state) 8%, rgba(4,10,15,.88));
+  box-shadow: 0 0 24px color-mix(in srgb, var(--widget-state) 10%, transparent);
+  font: 600 17px/1 var(--font-display, sans-serif);
+}
+
+.ss-status-widget__head-copy {
+  min-width: 0;
+}
+
+.ss-status-widget__head-copy p {
+  margin: 0 0 4px;
+  color: #7f92a4;
+  font: 500 8px/1.2 var(--font-mono, monospace);
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.ss-status-widget__head-copy h2 {
+  margin: 0;
+  color: #fff;
+  font-family: var(--font-display, sans-serif);
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -.03em;
+}
+
+.ss-status-widget__head-copy span {
+  display: block;
+  margin-top: 5px;
+  overflow: hidden;
+  color: #9babb9;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ss-status-widget__close {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid rgba(163, 193, 221, .14);
+  border-radius: 9px;
+  color: #8fa0b0;
+  background: rgba(255,255,255,.025);
+  cursor: pointer;
+}
+
+.ss-status-widget__close:hover,
+.ss-status-widget__close:focus-visible {
+  border-color: rgba(163, 193, 221, .3);
+  color: #fff;
+  outline: none;
+}
+
+.ss-status-widget__stale {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  margin: 12px 18px 0;
+  padding: 9px 11px;
+  border: 1px solid rgba(242,184,75,.2);
+  border-radius: 9px;
+  color: #e4c27e;
+  background: rgba(242,184,75,.06);
+  font: 9px/1.45 var(--font-mono, monospace);
+}
+
+.ss-status-widget__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 15px 18px 0;
+  overflow: hidden;
+  border: 1px solid rgba(153, 184, 215, .1);
+  border-radius: 11px;
+  background: rgba(255,255,255,.014);
+}
+
+.ss-status-widget__stats > div {
+  min-width: 0;
+  padding: 11px 9px;
+  text-align: center;
+}
+
+.ss-status-widget__stats > div + div {
+  border-left: 1px solid rgba(153, 184, 215, .1);
+}
+
+.ss-status-widget__stats strong,
+.ss-status-widget__stats span {
+  display: block;
+}
+
+.ss-status-widget__stats strong {
+  color: #fff;
+  font: 600 18px/1 var(--font-display, sans-serif);
+}
+
+.ss-status-widget__stats span {
+  margin-top: 4px;
+  overflow: hidden;
+  color: #758698;
+  font: 7px/1.2 var(--font-mono, monospace);
+  letter-spacing: .06em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ss-status-widget__scroll {
+  max-height: min(430px, calc(100vh - 315px));
+  overflow: auto;
+  padding: 15px 18px 5px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(137, 166, 196, .28) transparent;
+}
+
+.ss-status-widget__scroll::-webkit-scrollbar {
+  width: 7px;
+}
+
+.ss-status-widget__scroll::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: rgba(137, 166, 196, .28);
+}
+
+.ss-status-widget__group {
+  margin-bottom: 16px;
+}
+
+.ss-status-widget__group-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+  margin-bottom: 7px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid rgba(153, 184, 215, .085);
+}
+
+.ss-status-widget__group-head h3 {
+  margin: 0;
+  color: #b7c4d0;
+  font: 500 8px/1.2 var(--font-mono, monospace);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.ss-status-widget__group-head span {
+  color: #66798b;
+  font: 8px/1.2 var(--font-mono, monospace);
+}
+
+.ss-status-widget__components {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ss-status-widget__component {
+  --component-state: var(--widget-unknown);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 29px;
+  padding: 4px 6px;
+  border-radius: 7px;
+  transition: background-color 150ms ease;
+}
+
+.ss-status-widget__component:hover {
+  background: rgba(255,255,255,.025);
+}
+
+.ss-status-widget__component[data-state="operational"] { --component-state: var(--widget-operational); }
+.ss-status-widget__component[data-state="degraded"] { --component-state: var(--widget-degraded); }
+.ss-status-widget__component[data-state="partial"] { --component-state: var(--widget-partial); }
+.ss-status-widget__component[data-state="major"],
+.ss-status-widget__component[data-state="critical"] { --component-state: var(--widget-major); }
+.ss-status-widget__component[data-state="maintenance"] { --component-state: var(--widget-maintenance); }
+
+.ss-status-widget__component-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--component-state);
+  box-shadow: 0 0 9px color-mix(in srgb, var(--component-state) 52%, transparent);
+}
+
+.ss-status-widget__component-name {
+  overflow: hidden;
+  color: #c7d2dc;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ss-status-widget__component-state {
+  color: var(--component-state);
+  font: 7px/1.2 var(--font-mono, monospace);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.ss-status-widget__event {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(153, 184, 215, .08);
+}
+
+.ss-status-widget__event:last-child {
+  border-bottom: 0;
+}
+
+.ss-status-widget__event h4 {
+  margin: 0;
+  color: #dbe4ec;
+  font-size: 10px;
+}
+
+.ss-status-widget__event p {
+  margin: 5px 0 0;
+  color: #8293a4;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.ss-status-widget__event-meta {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  color: #6f8192;
+  font: 7px/1.2 var(--font-mono, monospace);
+  text-transform: uppercase;
+}
+
+.ss-status-widget__empty {
+  padding: 10px 0;
+  color: #718394;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.ss-status-widget__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 12px 18px 16px;
+  border-top: 1px solid rgba(153, 184, 215, .1);
+}
+
+.ss-status-widget__action {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 11px;
+  border: 1px solid rgba(153, 184, 215, .16);
+  border-radius: 9px;
+  color: #b8c6d3;
+  background: rgba(255,255,255,.025);
+  font-size: 10px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease;
+}
+
+.ss-status-widget__action:hover,
+.ss-status-widget__action:focus-visible {
+  border-color: color-mix(in srgb, var(--widget-state) 40%, rgba(153, 184, 215, .18));
+  color: #fff;
+  background: rgba(255,255,255,.045);
+  outline: none;
+}
+
+.ss-status-widget__action--primary {
+  border-color: color-mix(in srgb, var(--widget-state) 34%, transparent);
+  color: color-mix(in srgb, var(--widget-state) 82%, #fff);
+  background: color-mix(in srgb, var(--widget-state) 7%, transparent);
+}
+
+@media (max-width: 600px) {
+  [data-status-widget-host],
+  .ss-status-widget-host {
+    --status-widget-base-bottom: max(10px, env(safe-area-inset-bottom));
+    right: 10px;
+    left: 10px;
+  }
+
+  .ss-status-widget {
+    align-items: flex-end;
+  }
+
+  .ss-status-widget__toggle {
+    align-self: flex-end;
+  }
+
+  .ss-status-widget__panel {
+    right: 0;
+    left: 0;
+    width: auto;
+    max-height: min(76vh, 680px);
+    border-radius: 18px;
+  }
+
+  .ss-status-widget__scroll {
+    max-height: calc(76vh - 265px);
+  }
+
+  .ss-status-widget__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ss-status-widget__stats > div:nth-child(3) {
+    border-top: 1px solid rgba(153, 184, 215, .1);
+    border-left: 0;
+  }
+
+  .ss-status-widget__stats > div:nth-child(4) {
+    border-top: 1px solid rgba(153, 184, 215, .1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-status-widget-host],
+  .ss-status-widget-host,
+  .ss-status-widget__toggle,
+  .ss-status-widget__summary,
+  .ss-status-widget__expand-control,
+  .ss-status-widget__panel {
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+
+  .ss-status-widget__signal::after {
+    animation: none;
+  }
+
+  .ss-status-widget__toggle::after {
+    display: none;
+  }
+}
+
+</style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+
+  <div class="page-ambient" aria-hidden="true">
+    <div class="page-ambient__grid"></div>
+    <div class="page-ambient__orb page-ambient__orb--blue"></div>
+    <div class="page-ambient__orb page-ambient__orb--violet"></div>
+    <div class="page-ambient__noise"></div>
+  </div>
+
+  <header class="site-header" data-site-header>
+    <div class="shell site-header__inner">
+      <a class="brand" href="https://streamsuites.app/" aria-label="StreamSuites home">
+        <span class="brand__fallback-mark" aria-hidden="true">S</span>
+        <span class="brand__fallback-wordmark">StreamSuites<span class="brand__tm">™</span></span>
+      </a>
+
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="Open navigation" data-nav-toggle>
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="primary-nav" id="primary-nav" aria-label="Primary navigation" data-primary-nav>
+        <a href="https://streamsuites.app/#products">Products</a>
+        <a href="https://streamsuites.app/#architecture">Architecture</a>
+        <a href="https://streamsuites.app/about.html">About</a>
+        <a href="https://streamsuites.app/support.html">Support</a>
+        <a class="is-current" href="#main-content" aria-current="page">Status</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="button button--quiet button--small" href="https://streamsuites.app/version">Version</a>
+        <a class="button button--primary button--small" href="https://studio.streamsuites.app">Open Studio</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="status-hero shell" aria-labelledby="status-title">
+      <div class="status-hero__copy reveal">
+        <p class="kicker"><span class="kicker__dot"></span>Live service health</p>
+        <h1 id="status-title">Know what’s working.<br /><span>Know what changed.</span></h1>
+        <p class="status-hero__lede">
+          A complete public view of StreamSuites service health, product surfaces, dependencies,
+          incidents, and scheduled maintenance—read directly from the public Atlassian Statuspage feed.
+        </p>
+        <div class="status-hero__actions">
+          <button class="button button--primary" type="button" data-refresh-status>
+            <span class="button__icon" aria-hidden="true">↻</span>
+            Refresh status
+          </button>
+          <a class="button button--quiet" href="#components">
+            See components <span aria-hidden="true">↓</span>
+          </a>
+          <a class="button button--quiet" href="https://streamsuites.statuspage.io/" target="_blank" rel="noopener noreferrer">
+            Atlassian hosted page <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+        <div class="status-source-line" aria-live="polite">
+          <span class="source-chip" data-source-chip data-state="loading"><span></span>Connecting</span>
+          <span data-last-checked>Waiting for status data…</span>
+        </div>
+      </div>
+
+      <aside class="system-pulse reveal" aria-label="Current StreamSuites system status">
+        <div class="system-pulse__topline">
+          <span class="system-pulse__eyebrow">Current system posture</span>
+          <span class="system-pulse__live" data-live-badge><span></span>LIVE</span>
+        </div>
+
+        <div class="system-pulse__core" data-overall-state="unknown">
+          <div class="system-pulse__rings" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="system-pulse__state-icon" aria-hidden="true">
+            <span class="system-pulse__state-mark">?</span>
+          </div>
+          <strong data-overall-description>Loading status…</strong>
+          <p data-overall-subtitle>Reading the public Statuspage summary.</p>
+        </div>
+
+        <div class="system-map" aria-label="Status groups">
+          <svg class="system-map__routes" viewBox="0 0 640 250" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="routeCore" x1="0" x2="1"><stop offset="0" stop-color="#65d8ff" stop-opacity="0"/><stop offset="0.5" stop-color="#65d8ff"/><stop offset="1" stop-color="#65d8ff" stop-opacity="0"/></linearGradient>
+              <linearGradient id="routeSurface" x1="0" x2="1"><stop offset="0" stop-color="#9c7cff" stop-opacity="0"/><stop offset="0.5" stop-color="#9c7cff"/><stop offset="1" stop-color="#9c7cff" stop-opacity="0"/></linearGradient>
+              <linearGradient id="routeEdge" x1="0" x2="1"><stop offset="0" stop-color="#5fe2b0" stop-opacity="0"/><stop offset="0.5" stop-color="#5fe2b0"/><stop offset="1" stop-color="#5fe2b0" stop-opacity="0"/></linearGradient>
+              <linearGradient id="routeDeps" x1="0" x2="1"><stop offset="0" stop-color="#f1bc62" stop-opacity="0"/><stop offset="0.5" stop-color="#f1bc62"/><stop offset="1" stop-color="#f1bc62" stop-opacity="0"/></linearGradient>
+            </defs>
+            <path d="M320 124 C250 82 190 54 116 48" class="system-map__route system-map__route--core" />
+            <path d="M320 124 C390 82 450 54 524 48" class="system-map__route system-map__route--surface" />
+            <path d="M320 124 C250 168 190 202 116 206" class="system-map__route system-map__route--edge" />
+            <path d="M320 124 C390 168 450 202 524 206" class="system-map__route system-map__route--deps" />
+          </svg>
+          <div class="system-map__hub" aria-hidden="true"><span>S</span></div>
+          <article class="system-map__node system-map__node--core" data-group-node="core">
+            <span class="system-map__node-dot"></span><strong>Core</strong><small data-group-summary="core">—</small>
+          </article>
+          <article class="system-map__node system-map__node--surface" data-group-node="surfaces">
+            <span class="system-map__node-dot"></span><strong>Surfaces</strong><small data-group-summary="surfaces">—</small>
+          </article>
+          <article class="system-map__node system-map__node--edge" data-group-node="edge">
+            <span class="system-map__node-dot"></span><strong>Delivery</strong><small data-group-summary="edge">—</small>
+          </article>
+          <article class="system-map__node system-map__node--deps" data-group-node="dependencies">
+            <span class="system-map__node-dot"></span><strong>Dependencies</strong><small data-group-summary="dependencies">—</small>
+          </article>
+        </div>
+
+        <div class="system-pulse__footer">
+          <span><strong data-hero-operational>—</strong> operational</span>
+          <span><strong data-hero-total>—</strong> total components</span>
+          <span><strong data-hero-latency>—</strong> API response</span>
+        </div>
+      </aside>
+    </section>
+
+    <section class="metrics-section shell reveal" aria-labelledby="overview-title">
+      <div class="section-heading section-heading--compact">
+        <div>
+          <p class="section-kicker">Status at a glance</p>
+          <h2 id="overview-title">The current operating picture.</h2>
+        </div>
+        <p>Every value is derived from the same public Statuspage payload used by the embedded widget.</p>
+      </div>
+      <div class="status-metrics" aria-live="polite">
+        <article class="status-metric status-metric--overall">
+          <span class="status-metric__icon" aria-hidden="true">●</span>
+          <span class="status-metric__value" data-metric-overall>—</span>
+          <span class="status-metric__label">Overall status</span>
+        </article>
+        <article>
+          <span class="status-metric__value" data-metric-operational>—</span>
+          <span class="status-metric__label">Operational components</span>
+        </article>
+        <article>
+          <span class="status-metric__value" data-metric-incidents>—</span>
+          <span class="status-metric__label">Active incidents</span>
+        </article>
+        <article>
+          <span class="status-metric__value" data-metric-maintenance>—</span>
+          <span class="status-metric__label">Maintenance windows</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="components-section shell" id="components" aria-labelledby="components-title">
+      <div class="section-heading reveal">
+        <div>
+          <p class="section-kicker">Component directory</p>
+          <h2 id="components-title">Every monitored component, in one place.</h2>
+        </div>
+        <p>Core services, product surfaces, delivery infrastructure, and external dependencies use the same status vocabulary and colour system.</p>
+      </div>
+
+      <div class="component-controls reveal">
+        <label class="component-search" for="component-search">
+          <span>Find a component</span>
+          <span class="component-search__field">
+            <input id="component-search" type="search" autocomplete="off" placeholder="Search services, surfaces, dependencies…" data-component-search />
+            <kbd aria-hidden="true">/</kbd>
+          </span>
+        </label>
+        <div class="status-filters" aria-label="Filter components by status" data-status-filters>
+          <button type="button" class="is-active" data-status-filter="all">All</button>
+          <button type="button" data-status-filter="operational">Operational</button>
+          <button type="button" data-status-filter="attention">Needs attention</button>
+        </div>
+      </div>
+
+      <div class="component-load-state reveal" data-component-load-state>
+        <span class="loader" aria-hidden="true"></span>
+        <div><strong>Reading component health</strong><p>The complete component directory will appear when the public Statuspage API responds.</p></div>
+      </div>
+      <div class="component-groups" data-component-groups hidden></div>
+      <p class="component-empty" data-component-empty hidden>No components match the current search and filter.</p>
+    </section>
+
+    <section class="operations-section shell" aria-labelledby="operations-title">
+      <div class="section-heading reveal">
+        <div>
+          <p class="section-kicker">Operational communication</p>
+          <h2 id="operations-title">Incidents and maintenance, without the noise.</h2>
+        </div>
+        <p>Active work appears first. Resolved incidents remain available as a concise history rather than disappearing from view.</p>
+      </div>
+
+      <div class="operations-grid">
+        <article class="operations-panel reveal">
+          <div class="operations-panel__header">
+            <div><span class="panel-icon panel-icon--incident" aria-hidden="true">!</span><div><p>Active incidents</p><h3 data-incident-heading>No active incidents</h3></div></div>
+            <span class="count-chip" data-incident-count>0</span>
+          </div>
+          <div class="operations-list" data-active-incidents></div>
+        </article>
+
+        <article class="operations-panel reveal">
+          <div class="operations-panel__header">
+            <div><span class="panel-icon panel-icon--maintenance" aria-hidden="true">◇</span><div><p>Scheduled maintenance</p><h3 data-maintenance-heading>No active windows</h3></div></div>
+            <span class="count-chip count-chip--blue" data-maintenance-count>0</span>
+          </div>
+          <div class="operations-list" data-maintenances></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="history-section shell" aria-labelledby="history-title">
+      <div class="section-heading reveal">
+        <div>
+          <p class="section-kicker">Recent history</p>
+          <h2 id="history-title">A transparent record of what changed.</h2>
+        </div>
+        <p>The public page shows recent resolved incidents from Atlassian Statuspage and links to the hosted archive for the complete record.</p>
+      </div>
+
+      <div class="history-layout">
+        <div class="history-timeline reveal" data-incident-history></div>
+        <aside class="history-aside reveal">
+          <span class="history-aside__signal" aria-hidden="true"></span>
+          <p class="section-kicker">Source of record</p>
+          <h3>Atlassian remains the incident-notification authority.</h3>
+          <p>This StreamSuites page is the primary presentation layer. Subscription management, hosted incident archives, RSS, and email/SMS notifications remain available through Atlassian Statuspage.</p>
+          <a class="button button--quiet" href="https://streamsuites.statuspage.io/" target="_blank" rel="noopener noreferrer">Open hosted status page <span aria-hidden="true">↗</span></a>
+        </aside>
+      </div>
+    </section>
+
+    <section class="transparency-section shell reveal" aria-labelledby="transparency-title">
+      <div class="transparency-card">
+        <div class="transparency-card__copy">
+          <p class="section-kicker">How this page works</p>
+          <h2 id="transparency-title">One public feed. Two consistent presentations.</h2>
+          <p>The full-page view and the reusable footer widget consume the same read-only Statuspage summary. The widget is no longer a reduced public-only variant: both Admin and Public can use the same detailed component, incident, and maintenance presentation.</p>
+        </div>
+        <dl class="transparency-card__facts">
+          <div><dt>Public API</dt><dd><code>/api/v2/summary.json</code></dd></div>
+          <div><dt>Refresh cadence</dt><dd>60 seconds</dd></div>
+          <div><dt>Interaction</dt><dd>Click, keyboard, Escape</dd></div>
+          <div><dt>Failure posture</dt><dd>Last known state + stale warning</dd></div>
+        </dl>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell site-footer__top">
+      <div class="site-footer__brand">
+        <a class="brand brand--footer" href="https://streamsuites.app/" aria-label="StreamSuites home">
+          <span class="brand__fallback-mark" aria-hidden="true">S</span>
+          <span class="brand__fallback-wordmark">StreamSuites<span class="brand__tm">™</span></span>
+        </a>
+        <p>Connected livestream production for browser, Windows, and OBS workflows.</p>
+      </div>
+      <div class="site-footer__links">
+        <div><strong>Products</strong><a href="https://studio.streamsuites.app">Browser Studio</a><a href="https://streamsuites.app/downloads/studioapp/">StudioApp</a><a href="https://streamsuites.app/downloads/obs-plugin/">Studio for OBS</a></div>
+        <div><strong>Public</strong><a href="https://streamsuites.app/home.html">Dashboard</a><a href="https://streamsuites.app/community">Community</a><a href="https://streamsuites.app/live">Live</a><a href="https://streamsuites.app/clips">Clips</a></div>
+        <div><strong>Resources</strong><a href="https://streamsuites.app/about.html">About</a><a href="https://streamsuites.app/support.html">Support</a><a href="https://streamsuites.app/version">Version</a><a href="#main-content" aria-current="page">Status</a></div>
+        <div><strong>External</strong><a href="https://streamsuites.statuspage.io/" target="_blank" rel="noopener noreferrer">Atlassian Statuspage</a><a href="https://streamsuites.statuspage.io/history" target="_blank" rel="noopener noreferrer">Incident history</a></div>
+      </div>
+    </div>
+    <div class="shell site-footer__bottom">
+      <a href="https://brainstream.media" target="_blank" rel="noopener noreferrer">© 2026 Brainstream Media Group</a>
+      <span>This POC uses the complete shared status widget below.</span>
+      <a href="https://streamsuites.app/version">Version reference</a>
+    </div>
+  </footer>
+
+  <div data-status-widget-host></div>
+
+  <script>
+(() => {
+  "use strict";
+
+  const API_BASE = "https://v0hwlmly3pd2.statuspage.io/api/v2";
+  const ENDPOINTS = Object.freeze({
+    summary: `${API_BASE}/summary.json`,
+    incidents: `${API_BASE}/incidents.json`,
+    maintenances: `${API_BASE}/scheduled-maintenances.json`,
+  });
+  const POLL_INTERVAL_MS = 60_000;
+  const REQUEST_TIMEOUT_MS = 8_000;
+
+  const nowIso = () => new Date().toISOString();
+
+  const fallbackComponents = [
+    { id: "runtime", name: "StreamSuites Runtime Engine", status: "operational", position: 1, category: "core" },
+    { id: "auth", name: "StreamSuites Auth API", status: "operational", position: 2, category: "core" },
+    { id: "login", name: "StreamSuites Login", status: "operational", position: 3, category: "core" },
+    { id: "automation", name: "Automation / Trigger Engine", status: "operational", position: 4, category: "core" },
+    { id: "telemetry", name: "Telemetry / Usage", status: "operational", position: 5, category: "core" },
+    { id: "public", name: "StreamSuites Public Pages", status: "operational", position: 10, category: "surfaces" },
+    { id: "creator", name: "StreamSuites Creator Dashboard", status: "operational", position: 11, category: "surfaces" },
+    { id: "admin", name: "StreamSuites Admin Dashboard", status: "operational", position: 12, category: "surfaces" },
+    { id: "studio", name: "StreamSuites Studio", status: "operational", position: 13, category: "surfaces" },
+    { id: "support", name: "StreamSuites Support Hub", status: "operational", position: 14, category: "surfaces" },
+    { id: "cf-syd", name: "Cloudflare Sydney, NSW, Australia", status: "operational", position: 20, category: "edge" },
+    { id: "cf-sjc", name: "Cloudflare San Jose, CA, United States", status: "operational", position: 21, category: "edge" },
+    { id: "cf-network", name: "Cloudflare Network", status: "operational", position: 22, category: "edge" },
+    { id: "github-pages", name: "GitHub Pages", status: "operational", position: 23, category: "edge" },
+    { id: "github-git", name: "GitHub Git Operations", status: "operational", position: 30, category: "dependencies" },
+    { id: "github-api", name: "GitHub API Requests", status: "operational", position: 31, category: "dependencies" },
+    { id: "github-actions", name: "GitHub Actions", status: "operational", position: 32, category: "dependencies" },
+    { id: "github-pr", name: "GitHub Pull Requests", status: "operational", position: 33, category: "dependencies" },
+    { id: "stripe-api", name: "Stripe API", status: "operational", position: 34, category: "dependencies" },
+    { id: "stripe-dashboard", name: "Stripe Dashboard", status: "operational", position: 35, category: "dependencies" },
+  ];
+
+  const createFallback = () => ({
+    page: {
+      id: "v0hwlmly3pd2",
+      name: "StreamSuites",
+      url: "https://streamsuites.statuspage.io/",
+      updated_at: nowIso(),
+    },
+    status: { indicator: "none", description: "All Systems Operational" },
+    components: fallbackComponents.map((component) => ({ ...component })),
+    incidents: [],
+    scheduled_maintenances: [],
+  });
+
+  const clone = (value) => JSON.parse(JSON.stringify(value));
+
+  const normalizeDemoMode = () => {
+    const params = new URLSearchParams(window.location.search);
+    const raw = String(window.__STATUS_POC_DEMO__ || params.get("demo") || "").trim().toLowerCase();
+    return ["operational", "degraded", "partial", "major", "maintenance"].includes(raw)
+      ? raw
+      : "";
+  };
+
+  const applyDemoMode = (summary, mode) => {
+    if (!mode || mode === "operational") return summary;
+    const next = clone(summary);
+    const target = next.components.find((component) => component.id === "auth") || next.components[0];
+    if (!target) return next;
+
+    if (mode === "degraded") {
+      target.status = "degraded_performance";
+      next.status = { indicator: "minor", description: "Degraded System Performance" };
+      next.incidents = [{
+        id: "demo-degraded",
+        name: "Elevated authentication latency",
+        impact: "minor",
+        status: "monitoring",
+        created_at: nowIso(),
+        updated_at: nowIso(),
+        incident_updates: [{ status: "monitoring", body: "Response times have recovered and the service is being monitored.", created_at: nowIso() }],
+      }];
+    } else if (mode === "partial") {
+      target.status = "partial_outage";
+      next.status = { indicator: "major", description: "Partial System Outage" };
+      next.incidents = [{
+        id: "demo-partial",
+        name: "Intermittent login failures",
+        impact: "major",
+        status: "identified",
+        created_at: nowIso(),
+        updated_at: nowIso(),
+        incident_updates: [{ status: "identified", body: "The affected path has been identified and mitigation is in progress.", created_at: nowIso() }],
+      }];
+    } else if (mode === "major") {
+      target.status = "major_outage";
+      const runtime = next.components.find((component) => component.id === "runtime");
+      if (runtime) runtime.status = "major_outage";
+      next.status = { indicator: "critical", description: "Major System Outage" };
+      next.incidents = [{
+        id: "demo-major",
+        name: "Runtime/Auth service disruption",
+        impact: "critical",
+        status: "investigating",
+        created_at: nowIso(),
+        updated_at: nowIso(),
+        incident_updates: [{ status: "investigating", body: "Operators are investigating a disruption affecting core StreamSuites services.", created_at: nowIso() }],
+      }];
+    } else if (mode === "maintenance") {
+      target.status = "under_maintenance";
+      next.status = { indicator: "minor", description: "Scheduled Maintenance" };
+      next.scheduled_maintenances = [{
+        id: "demo-maintenance",
+        name: "Runtime/Auth infrastructure maintenance",
+        status: "in_progress",
+        impact: "maintenance",
+        scheduled_for: nowIso(),
+        scheduled_until: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        incident_updates: [{ status: "in_progress", body: "A planned maintenance window is currently in progress.", created_at: nowIso() }],
+      }];
+    }
+    return next;
+  };
+
+  const fetchJson = async (url) => {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      const response = await fetch(url, {
+        signal: controller.signal,
+        cache: "no-store",
+        credentials: "omit",
+        headers: { Accept: "application/json" },
+      });
+      if (!response.ok) throw new Error(`Statuspage request failed (${response.status})`);
+      return await response.json();
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  };
+
+  const mergePayloads = (summaryPayload, incidentsPayload, maintenancePayload) => {
+    const summary = summaryPayload && typeof summaryPayload === "object" ? clone(summaryPayload) : createFallback();
+    if (Array.isArray(incidentsPayload?.incidents)) summary.incidents = incidentsPayload.incidents;
+    if (Array.isArray(maintenancePayload?.scheduled_maintenances)) {
+      summary.scheduled_maintenances = maintenancePayload.scheduled_maintenances;
+    }
+    return summary;
+  };
+
+  let currentSnapshot = null;
+  let inFlight = null;
+  let intervalId = 0;
+  const listeners = new Set();
+  const demoMode = normalizeDemoMode();
+
+  const emit = () => {
+    listeners.forEach((listener) => {
+      try { listener(currentSnapshot); } catch (error) { console.error("[Status POC] listener failed", error); }
+    });
+    window.dispatchEvent(new CustomEvent("streamsuites:status", { detail: currentSnapshot }));
+  };
+
+  const buildSnapshot = ({ data, live, stale, latencyMs, error }) => ({
+    data,
+    live,
+    stale,
+    demo: Boolean(demoMode),
+    demoMode: demoMode || null,
+    source: demoMode ? "poc-demo" : live ? "atlassian-statuspage" : "poc-fallback",
+    checkedAt: nowIso(),
+    latencyMs: Number.isFinite(latencyMs) ? latencyMs : null,
+    error: error ? String(error.message || error) : null,
+    endpoints: ENDPOINTS,
+  });
+
+  const refresh = async ({ force = false } = {}) => {
+    if (inFlight && !force) return inFlight;
+
+    if (demoMode) {
+      const data = applyDemoMode(createFallback(), demoMode);
+      currentSnapshot = buildSnapshot({ data, live: false, stale: false, latencyMs: 0, error: null });
+      emit();
+      return currentSnapshot;
+    }
+
+    const started = performance.now();
+    inFlight = Promise.allSettled([
+      fetchJson(ENDPOINTS.summary),
+      fetchJson(ENDPOINTS.incidents),
+      fetchJson(ENDPOINTS.maintenances),
+    ])
+      .then((results) => {
+        const summaryResult = results[0];
+        if (summaryResult.status !== "fulfilled") throw summaryResult.reason;
+        const data = mergePayloads(
+          summaryResult.value,
+          results[1].status === "fulfilled" ? results[1].value : null,
+          results[2].status === "fulfilled" ? results[2].value : null
+        );
+        currentSnapshot = buildSnapshot({
+          data,
+          live: true,
+          stale: false,
+          latencyMs: Math.max(0, Math.round(performance.now() - started)),
+          error: null,
+        });
+        emit();
+        return currentSnapshot;
+      })
+      .catch((error) => {
+        if (currentSnapshot?.data) {
+          currentSnapshot = buildSnapshot({
+            data: currentSnapshot.data,
+            live: currentSnapshot.live,
+            stale: true,
+            latencyMs: currentSnapshot.latencyMs,
+            error,
+          });
+        } else {
+          currentSnapshot = buildSnapshot({
+            data: createFallback(),
+            live: false,
+            stale: false,
+            latencyMs: null,
+            error,
+          });
+        }
+        emit();
+        return currentSnapshot;
+      })
+      .finally(() => { inFlight = null; });
+
+    return inFlight;
+  };
+
+  const subscribe = (listener) => {
+    if (typeof listener !== "function") return () => {};
+    listeners.add(listener);
+    if (currentSnapshot) listener(currentSnapshot);
+    return () => listeners.delete(listener);
+  };
+
+  const start = () => {
+    if (!intervalId && !demoMode) {
+      intervalId = window.setInterval(() => refresh(), POLL_INTERVAL_MS);
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") refresh();
+      });
+    }
+    return refresh();
+  };
+
+  const stop = () => {
+    if (intervalId) window.clearInterval(intervalId);
+    intervalId = 0;
+  };
+
+  window.StreamSuitesStatusData = Object.freeze({
+    ENDPOINTS,
+    POLL_INTERVAL_MS,
+    refresh,
+    subscribe,
+    start,
+    stop,
+    getSnapshot: () => currentSnapshot,
+  });
+})();
+
+</script>
+  <script>
+(() => {
+  "use strict";
+
+  const STATUS_PAGE_URL = "https://streamsuites.statuspage.io/";
+  const PRIMARY_STATUS_URL = "https://streamsuites.app/status";
+
+  const EXPAND_ICONS = Object.freeze({
+    plus: {
+      viewBox: "0 -960 960 960",
+      path: "M427.67-92v-335.67H92v-104.66h335.67v-336.34h104.66v336.34h336.34v104.66H532.33V-92H427.67Z",
+    },
+    cross: {
+      viewBox: "0 0 512 512",
+      path: "M141.077,418.667l-47.744,-47.744l114.295,-115.018l-114.295,-114.295l47.744,-47.743l115.018,114.295l114.295,-114.295l47.743,47.743l-114.295,114.295l114.295,115.018l-47.743,47.744l-114.295,-114.295l-115.018,114.295Z",
+    },
+  });
+
+  const STATE_META = Object.freeze({
+    operational: { label: "Operational", short: "Operational", mark: "✓" },
+    degraded: { label: "Degraded performance", short: "Degraded", mark: "!" },
+    partial: { label: "Partial outage", short: "Partial outage", mark: "!" },
+    major: { label: "Major outage", short: "Major outage", mark: "×" },
+    critical: { label: "Critical outage", short: "Critical", mark: "×" },
+    maintenance: { label: "Under maintenance", short: "Maintenance", mark: "◇" },
+    unknown: { label: "Status unavailable", short: "Unknown", mark: "?" },
+  });
+
+  const COMPONENT_META = Object.freeze({
+    operational: { state: "operational", label: "Operational" },
+    degraded_performance: { state: "degraded", label: "Degraded" },
+    partial_outage: { state: "partial", label: "Partial outage" },
+    major_outage: { state: "major", label: "Major outage" },
+    under_maintenance: { state: "maintenance", label: "Maintenance" },
+  });
+
+  const stateFromIndicator = (indicator, description = "") => {
+    const key = String(indicator || "").toLowerCase();
+    const text = String(description || "").toLowerCase();
+    if (text.includes("maintenance")) return "maintenance";
+    if (key === "none") return "operational";
+    if (key === "minor") return "degraded";
+    if (key === "major") return "partial";
+    if (key === "critical") return "critical";
+    return "unknown";
+  };
+
+  const normalizeComponent = (component) => {
+    const meta = COMPONENT_META[component?.status] || { state: "unknown", label: "Unknown" };
+    return { ...component, normalizedState: meta.state, statusLabel: meta.label };
+  };
+
+  const inferCategory = (component) => {
+    if (component?.category) return component.category;
+    const name = String(component?.name || "").toLowerCase();
+    if (/runtime|auth api|login|account session|automation|trigger|telemetry|usage/.test(name)) return "core";
+    if (/streamsuites/.test(name) && /dashboard|studio|public|support|docs|console|creator|admin|pages/.test(name)) return "surfaces";
+    if (/cloudflare|edge|network|cdn|pages/.test(name)) return "edge";
+    return "dependencies";
+  };
+
+  const GROUP_LABELS = Object.freeze({
+    core: "Core services",
+    surfaces: "Product surfaces",
+    edge: "Delivery & edge",
+    dependencies: "External dependencies",
+    other: "Other components",
+  });
+
+  const groupComponents = (components) => {
+    const normalized = (Array.isArray(components) ? components : [])
+      .filter((component) => !component?.group)
+      .map(normalizeComponent)
+      .sort((a, b) => {
+        const positionA = Number.isFinite(Number(a.position)) ? Number(a.position) : Number.MAX_SAFE_INTEGER;
+        const positionB = Number.isFinite(Number(b.position)) ? Number(b.position) : Number.MAX_SAFE_INTEGER;
+        if (positionA !== positionB) return positionA - positionB;
+        return String(a.name || "").localeCompare(String(b.name || ""));
+      });
+
+    const parentGroups = new Map(
+      (Array.isArray(components) ? components : [])
+        .filter((component) => component?.group && component?.id)
+        .map((component) => [component.id, component.name || "Component group"])
+    );
+    const groups = new Map();
+
+    normalized.forEach((component) => {
+      const groupId = component.group_id && parentGroups.has(component.group_id)
+        ? `statuspage:${component.group_id}`
+        : inferCategory(component) || "other";
+      const label = groupId.startsWith("statuspage:")
+        ? parentGroups.get(component.group_id)
+        : GROUP_LABELS[groupId] || GROUP_LABELS.other;
+      if (!groups.has(groupId)) groups.set(groupId, { id: groupId, label, components: [] });
+      groups.get(groupId).components.push(component);
+    });
+
+    const order = ["core", "surfaces", "edge", "dependencies", "other"];
+    return [...groups.values()].sort((a, b) => {
+      const indexA = order.indexOf(a.id);
+      const indexB = order.indexOf(b.id);
+      if (indexA !== -1 || indexB !== -1) {
+        return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
+      }
+      return a.label.localeCompare(b.label);
+    });
+  };
+
+  const unresolvedIncidents = (incidents) => (Array.isArray(incidents) ? incidents : [])
+    .filter((incident) => !["resolved", "postmortem"].includes(String(incident?.status || "").toLowerCase()));
+
+  const activeMaintenances = (maintenances) => (Array.isArray(maintenances) ? maintenances : [])
+    .filter((item) => !["completed"].includes(String(item?.status || "").toLowerCase()));
+
+  const latestUpdate = (event) => Array.isArray(event?.incident_updates) && event.incident_updates.length
+    ? event.incident_updates[0]
+    : null;
+
+  const truncate = (value, limit = 130) => {
+    const text = String(value || "").trim();
+    if (text.length <= limit) return text;
+    const slice = text.slice(0, limit);
+    const lastSpace = slice.lastIndexOf(" ");
+    return `${slice.slice(0, lastSpace > 65 ? lastSpace : limit)}…`;
+  };
+
+  const formatRelative = (value) => {
+    const ms = Date.parse(value || "");
+    if (!Number.isFinite(ms)) return "Time unavailable";
+    const delta = Date.now() - ms;
+    const abs = Math.abs(delta);
+    const units = [
+      ["day", 86_400_000],
+      ["hour", 3_600_000],
+      ["minute", 60_000],
+    ];
+    for (const [unit, size] of units) {
+      if (abs >= size) {
+        const amount = Math.round(delta / size);
+        return new Intl.RelativeTimeFormat(undefined, { numeric: "auto" }).format(-amount, unit);
+      }
+    }
+    return "Just now";
+  };
+
+  const element = (tag, className, text) => {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text != null) node.textContent = text;
+    return node;
+  };
+
+  const createExpandIcon = (kind = "plus") => {
+    const icon = EXPAND_ICONS[kind] || EXPAND_ICONS.plus;
+    const wrap = element("span", "ss-status-widget__expand-icon");
+    wrap.dataset.iconKind = kind;
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", icon.viewBox);
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("focusable", "false");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", icon.path);
+    path.setAttribute("fill", "currentColor");
+    svg.appendChild(path);
+    wrap.appendChild(svg);
+    return wrap;
+  };
+
+  class FullStatusWidget {
+    constructor(host) {
+      this.host = host || document.body;
+      this.root = null;
+      this.toggle = null;
+      this.panel = null;
+      this.expandIcon = null;
+      this.currentSnapshot = null;
+      this.expanded = false;
+      this.userCollapsedDuringAlert = false;
+      this.footerAvoidanceCleanup = null;
+      this.build();
+    }
+
+    build() {
+      const root = element("div", "ss-status-widget");
+      root.id = "ss-status-indicator";
+      root.dataset.state = "unknown";
+      root.dataset.expanded = "false";
+
+      const toggle = element("button", "ss-status-widget__toggle");
+      toggle.type = "button";
+      toggle.setAttribute("aria-expanded", "false");
+      toggle.setAttribute("aria-controls", "ss-status-widget-panel");
+      toggle.setAttribute("aria-label", "Open complete StreamSuites service status");
+
+      const signal = element("span", "ss-status-widget__signal");
+      signal.setAttribute("aria-hidden", "true");
+      signal.appendChild(element("span", "ss-status-widget__signal-dot"));
+
+      const summary = element("span", "ss-status-widget__summary");
+      const summaryTitle = element("strong", "", "Loading status…");
+      summaryTitle.dataset.widgetSummaryTitle = "";
+      const summaryMeta = element("span", "", "Connecting to Statuspage");
+      summaryMeta.dataset.widgetSummaryMeta = "";
+      summary.append(summaryTitle, summaryMeta);
+
+      const expandControl = element("span", "ss-status-widget__expand-control");
+      expandControl.setAttribute("aria-hidden", "true");
+      const expandIcon = createExpandIcon("plus");
+      expandControl.appendChild(expandIcon);
+      toggle.append(signal, summary, expandControl);
+
+      const panel = element("section", "ss-status-widget__panel");
+      panel.id = "ss-status-widget-panel";
+      panel.setAttribute("aria-label", "Detailed StreamSuites service status");
+      panel.setAttribute("aria-hidden", "true");
+
+      root.append(toggle, panel);
+      this.host.classList.add("ss-status-widget-host");
+      this.host.appendChild(root);
+      this.root = root;
+      this.toggle = toggle;
+      this.panel = panel;
+      this.expandIcon = expandIcon;
+      this.setupFooterAvoidance();
+      this.updateExpandIcon();
+
+      toggle.addEventListener("click", () => this.setExpanded(!this.expanded, { user: true }));
+      root.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && this.expanded) {
+          event.preventDefault();
+          this.setExpanded(false, { user: true });
+          toggle.focus();
+        }
+      });
+      document.addEventListener("pointerdown", (event) => {
+        if (!this.expanded || root.contains(event.target)) return;
+        this.setExpanded(false, { user: true });
+      });
+    }
+
+    setupFooterAvoidance() {
+      const host = this.host;
+      if (!(host instanceof HTMLElement)) return;
+
+      const findFooter = () => {
+        const candidates = [...document.querySelectorAll("footer, [role='contentinfo']")]
+          .filter((node) => node instanceof HTMLElement)
+          .filter((node) => {
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
+          });
+        if (!candidates.length) return null;
+        return candidates.reduce((lowest, candidate) => {
+          if (!lowest) return candidate;
+          return candidate.getBoundingClientRect().top > lowest.getBoundingClientRect().top ? candidate : lowest;
+        }, null);
+      };
+
+      let footer = findFooter();
+      let frame = 0;
+      let footerObserver = null;
+
+      const update = () => {
+        frame = 0;
+        if (!footer || !document.documentElement.contains(footer)) footer = findFooter();
+        if (!footer) {
+          host.style.setProperty("--status-widget-footer-floor", "0px");
+          host.dataset.footerAvoiding = "false";
+          return;
+        }
+
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+        const rect = footer.getBoundingClientRect();
+        const footerVisible = rect.top < viewportHeight && rect.bottom > 0;
+        const clearance = 12;
+
+        // The widget is fixed to the viewport. When the footer enters view,
+        // lift the widget so its bottom edge stays above the footer's top edge.
+        const requiredBottom = footerVisible
+          ? Math.max(0, Math.ceil(viewportHeight - rect.top + clearance))
+          : 0;
+        const maximumFloor = Math.max(0, viewportHeight - 84);
+        const floor = Math.min(maximumFloor, requiredBottom);
+
+        host.style.setProperty("--status-widget-footer-floor", `${floor}px`);
+        host.dataset.footerAvoiding = String(floor > 0);
+      };
+
+      const requestUpdate = () => {
+        if (frame) return;
+        frame = window.requestAnimationFrame(update);
+      };
+
+      if ("ResizeObserver" in window && footer) {
+        footerObserver = new ResizeObserver(requestUpdate);
+        footerObserver.observe(footer);
+      }
+
+      window.addEventListener("scroll", requestUpdate, { passive: true });
+      window.addEventListener("resize", requestUpdate, { passive: true });
+      window.addEventListener("orientationchange", requestUpdate, { passive: true });
+      requestUpdate();
+
+      this.footerAvoidanceCleanup = () => {
+        if (frame) window.cancelAnimationFrame(frame);
+        footerObserver?.disconnect();
+        window.removeEventListener("scroll", requestUpdate);
+        window.removeEventListener("resize", requestUpdate);
+        window.removeEventListener("orientationchange", requestUpdate);
+      };
+    }
+
+    updateExpandIcon() {
+      if (!(this.expandIcon instanceof HTMLElement)) return;
+      const kind = this.expanded ? "cross" : "plus";
+      if (this.expandIcon.dataset.iconKind === kind) return;
+      const icon = EXPAND_ICONS[kind] || EXPAND_ICONS.plus;
+      const svg = this.expandIcon.querySelector("svg");
+      const path = svg?.querySelector("path");
+      if (!svg || !path) return;
+      svg.setAttribute("viewBox", icon.viewBox);
+      path.setAttribute("d", icon.path);
+      this.expandIcon.dataset.iconKind = kind;
+    }
+
+    setExpanded(expanded, { user = false } = {}) {
+      this.expanded = Boolean(expanded);
+      this.root.dataset.expanded = String(this.expanded);
+      this.toggle.setAttribute("aria-expanded", String(this.expanded));
+      this.toggle.setAttribute("aria-label", this.expanded
+        ? "Collapse complete StreamSuites service status"
+        : "Open complete StreamSuites service status");
+      this.panel.setAttribute("aria-hidden", String(!this.expanded));
+      this.updateExpandIcon();
+      if (user && !this.expanded && ["major", "critical", "partial"].includes(this.root.dataset.state)) {
+        this.userCollapsedDuringAlert = true;
+      }
+    }
+
+    render(snapshot) {
+      if (!snapshot?.data) return;
+      this.currentSnapshot = snapshot;
+      const data = snapshot.data;
+      const components = Array.isArray(data.components) ? data.components : [];
+      const normalized = components.filter((component) => !component?.group).map(normalizeComponent);
+      const operational = normalized.filter((component) => component.normalizedState === "operational").length;
+      const incidents = unresolvedIncidents(data.incidents);
+      const maintenances = activeMaintenances(data.scheduled_maintenances);
+      const state = stateFromIndicator(data.status?.indicator, data.status?.description);
+      const meta = STATE_META[state] || STATE_META.unknown;
+
+      this.root.dataset.state = state;
+      this.root.dataset.stale = String(Boolean(snapshot.stale));
+      this.toggle.querySelector("[data-widget-summary-title]").textContent = data.status?.description || meta.label;
+      this.toggle.querySelector("[data-widget-summary-meta]").textContent = `${operational}/${normalized.length} components · ${formatRelative(snapshot.checkedAt)}`;
+      this.toggle.setAttribute("aria-label", `${data.status?.description || meta.label}. ${this.expanded ? "Collapse" : "Open"} complete service status.`);
+
+      this.panel.innerHTML = "";
+      this.panel.appendChild(this.createHeader(data, snapshot, meta));
+      if (snapshot.stale) this.panel.appendChild(this.createStaleNotice(snapshot));
+      this.panel.appendChild(this.createStats(normalized, incidents, maintenances, snapshot));
+
+      const scroll = element("div", "ss-status-widget__scroll");
+      groupComponents(components).forEach((group) => scroll.appendChild(this.createComponentGroup(group)));
+      scroll.appendChild(this.createEventGroup("Active incidents", incidents, "incident"));
+      scroll.appendChild(this.createEventGroup("Scheduled maintenance", maintenances, "maintenance"));
+      this.panel.appendChild(scroll);
+      this.panel.appendChild(this.createActions());
+
+      if (["major", "critical", "partial"].includes(state) && !this.userCollapsedDuringAlert) {
+        this.setExpanded(true);
+      }
+    }
+
+    createHeader(data, snapshot, meta) {
+      const head = element("header", "ss-status-widget__head");
+      const icon = element("span", "ss-status-widget__head-icon", meta.mark);
+      icon.setAttribute("aria-hidden", "true");
+      const copy = element("div", "ss-status-widget__head-copy");
+      copy.append(
+        element("p", "", snapshot.live ? "Live Atlassian Statuspage" : snapshot.demo ? "POC preview state" : "Offline POC snapshot"),
+        element("h2", "", data.status?.description || meta.label),
+        element("span", "", `Checked ${formatRelative(snapshot.checkedAt)}${snapshot.latencyMs != null ? ` · ${snapshot.latencyMs} ms` : ""}`)
+      );
+      const close = element("button", "ss-status-widget__close", "×");
+      close.type = "button";
+      close.setAttribute("aria-label", "Close status details");
+      close.addEventListener("click", () => this.setExpanded(false, { user: true }));
+      head.append(icon, copy, close);
+      return head;
+    }
+
+    createStaleNotice(snapshot) {
+      const notice = element("div", "ss-status-widget__stale");
+      notice.append(element("span", "", "!"), element("span", "", `Live refresh failed. Showing the last known state${snapshot.error ? `: ${truncate(snapshot.error, 90)}` : "."}`));
+      return notice;
+    }
+
+    createStats(components, incidents, maintenances, snapshot) {
+      const operational = components.filter((component) => component.normalizedState === "operational").length;
+      const attention = components.length - operational;
+      const stats = element("div", "ss-status-widget__stats");
+      [
+        [String(components.length), "Components"],
+        [String(attention), "Attention"],
+        [String(incidents.length), "Incidents"],
+        [snapshot.latencyMs == null ? "—" : `${snapshot.latencyMs}ms`, "Response"],
+      ].forEach(([value, label]) => {
+        const item = element("div");
+        item.append(element("strong", "", value), element("span", "", label));
+        stats.appendChild(item);
+      });
+      return stats;
+    }
+
+    createComponentGroup(group) {
+      const section = element("section", "ss-status-widget__group");
+      const heading = element("div", "ss-status-widget__group-head");
+      const operational = group.components.filter((component) => component.normalizedState === "operational").length;
+      heading.append(element("h3", "", group.label), element("span", "", `${operational}/${group.components.length} operational`));
+      const list = element("ul", "ss-status-widget__components");
+      group.components.forEach((component) => {
+        const item = element("li", "ss-status-widget__component");
+        item.dataset.state = component.normalizedState;
+        item.append(
+          element("span", "ss-status-widget__component-dot"),
+          element("span", "ss-status-widget__component-name", component.name || "Unnamed component"),
+          element("span", "ss-status-widget__component-state", component.statusLabel)
+        );
+        list.appendChild(item);
+      });
+      section.append(heading, list);
+      return section;
+    }
+
+    createEventGroup(title, items, kind) {
+      const section = element("section", "ss-status-widget__group");
+      const heading = element("div", "ss-status-widget__group-head");
+      heading.append(element("h3", "", title), element("span", "", String(items.length)));
+      section.appendChild(heading);
+
+      if (!items.length) {
+        section.appendChild(element("p", "ss-status-widget__empty", kind === "incident" ? "No active incidents reported." : "No active maintenance windows reported."));
+        return section;
+      }
+
+      items.slice(0, 4).forEach((item) => {
+        const update = latestUpdate(item);
+        const event = element("article", "ss-status-widget__event");
+        event.append(
+          element("h4", "", item.name || (kind === "incident" ? "Untitled incident" : "Scheduled maintenance")),
+          element("p", "", truncate(update?.body || "No additional detail is available.", 115))
+        );
+        const meta = element("div", "ss-status-widget__event-meta");
+        meta.append(element("span", "", String(item.status || "unknown").replaceAll("_", " ")), element("span", "", formatRelative(item.updated_at || update?.created_at || item.created_at)));
+        event.appendChild(meta);
+        section.appendChild(event);
+      });
+      return section;
+    }
+
+    createActions() {
+      const actions = element("div", "ss-status-widget__actions");
+      const primary = element("a", "ss-status-widget__action ss-status-widget__action--primary", "Full StreamSuites status");
+      primary.href = PRIMARY_STATUS_URL;
+      const external = element("a", "ss-status-widget__action", "Atlassian page ↗");
+      external.href = STATUS_PAGE_URL;
+      external.target = "_blank";
+      external.rel = "noopener noreferrer";
+      actions.append(primary, external);
+      return actions;
+    }
+  }
+
+  const init = () => {
+    const host = document.querySelector("[data-status-widget-host]") || document.body;
+    const widget = new FullStatusWidget(host);
+    window.StreamSuitesStatusData?.subscribe((snapshot) => widget.render(snapshot));
+    const params = new URLSearchParams(window.location.search);
+    if (window.__STATUS_POC_WIDGET_OPEN__ === true || params.get("widget") === "open") widget.setExpanded(true);
+    window.StreamSuitesFullStatusWidget = widget;
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init, { once: true });
+  } else {
+    init();
+  }
+
+  window.StreamSuitesStatusHelpers = Object.freeze({
+    STATE_META,
+    COMPONENT_META,
+    stateFromIndicator,
+    normalizeComponent,
+    groupComponents,
+    unresolvedIncidents,
+    activeMaintenances,
+    formatRelative,
+  });
+})();
+
+</script>
+  <script>
+(() => {
+  "use strict";
+
+  const helpers = window.StreamSuitesStatusHelpers;
+  const store = window.StreamSuitesStatusData;
+  if (!helpers || !store) return;
+
+  const {
+    STATE_META,
+    stateFromIndicator,
+    normalizeComponent,
+    groupComponents,
+    unresolvedIncidents,
+    activeMaintenances,
+    formatRelative,
+  } = helpers;
+
+  const STATUS_COLORS = Object.freeze({
+    operational: "#62dea2",
+    degraded: "#f2b84b",
+    partial: "#ef8c57",
+    major: "#ff6464",
+    critical: "#ff6464",
+    maintenance: "#78b9ff",
+    unknown: "#8a96a3",
+  });
+
+  const state = {
+    snapshot: null,
+    search: "",
+    filter: "all",
+  };
+
+  const select = (selector, root = document) => root.querySelector(selector);
+  const selectAll = (selector, root = document) => [...root.querySelectorAll(selector)];
+  const node = (tag, className, text) => {
+    const element = document.createElement(tag);
+    if (className) element.className = className;
+    if (text != null) element.textContent = text;
+    return element;
+  };
+
+  const formatAbsolute = (value, { includeTime = true } = {}) => {
+    const ms = Date.parse(value || "");
+    if (!Number.isFinite(ms)) return "Date unavailable";
+    return new Intl.DateTimeFormat(undefined, includeTime
+      ? { dateStyle: "medium", timeStyle: "short" }
+      : { dateStyle: "medium" }
+    ).format(new Date(ms));
+  };
+
+  const truncate = (value, limit = 220) => {
+    const text = String(value || "").trim();
+    if (!text) return "";
+    if (text.length <= limit) return text;
+    const slice = text.slice(0, limit);
+    const space = slice.lastIndexOf(" ");
+    return `${slice.slice(0, space > 100 ? space : limit)}…`;
+  };
+
+  const inferGroupKey = (group) => {
+    const id = String(group?.id || "");
+    if (["core", "surfaces", "edge", "dependencies"].includes(id)) return id;
+    const label = String(group?.label || "").toLowerCase();
+    if (/core|runtime|identity|auth/.test(label)) return "core";
+    if (/surface|product|client|application/.test(label)) return "surfaces";
+    if (/edge|delivery|network|cloudflare/.test(label)) return "edge";
+    return "dependencies";
+  };
+
+  const groupState = (components) => {
+    const ranks = { operational: 0, maintenance: 1, degraded: 2, partial: 3, major: 4, critical: 5, unknown: 6 };
+    return (components || [])
+      .map((component) => normalizeComponent(component).normalizedState)
+      .sort((a, b) => ranks[b] - ranks[a])[0] || "unknown";
+  };
+
+  const setText = (selector, value) => {
+    const element = select(selector);
+    if (element) element.textContent = value;
+  };
+
+  const renderHero = (snapshot) => {
+    const data = snapshot.data;
+    const components = (Array.isArray(data.components) ? data.components : []).filter((component) => !component?.group).map(normalizeComponent);
+    const operational = components.filter((component) => component.normalizedState === "operational").length;
+    const overallState = stateFromIndicator(data.status?.indicator, data.status?.description);
+    const meta = STATE_META[overallState] || STATE_META.unknown;
+    const core = select(".system-pulse__core");
+    const pulse = select(".system-pulse");
+
+    if (core) core.dataset.overallState = overallState;
+    if (pulse) pulse.style.setProperty("--state-color", STATUS_COLORS[overallState] || STATUS_COLORS.unknown);
+    document.documentElement.style.setProperty("--state-color", STATUS_COLORS[overallState] || STATUS_COLORS.unknown);
+
+    setText(".system-pulse__state-mark", meta.mark);
+    setText("[data-overall-description]", data.status?.description || meta.label);
+    setText("[data-overall-subtitle]", overallState === "operational"
+      ? "No active system-wide disruption is being reported."
+      : "Review the affected components and incident updates below.");
+    setText("[data-hero-operational]", String(operational));
+    setText("[data-hero-total]", String(components.length));
+    setText("[data-hero-latency]", snapshot.latencyMs == null ? "—" : `${snapshot.latencyMs} ms`);
+
+    const sourceChip = select("[data-source-chip]");
+    if (sourceChip) {
+      const sourceState = snapshot.live ? "live" : "demo";
+      sourceChip.dataset.state = sourceState;
+      const textNode = [...sourceChip.childNodes].find((item) => item.nodeType === Node.TEXT_NODE);
+      if (textNode) textNode.textContent = snapshot.live
+        ? " Atlassian Statuspage"
+        : snapshot.demo
+          ? " POC preview data"
+          : " Offline POC snapshot";
+    }
+    setText("[data-last-checked]", `Checked ${formatRelative(snapshot.checkedAt)}${snapshot.stale ? " · live refresh unavailable" : ""}`);
+
+    const liveBadge = select("[data-live-badge]");
+    if (liveBadge) {
+      liveBadge.innerHTML = `<span></span>${snapshot.live ? "LIVE" : snapshot.demo ? "POC" : "FALLBACK"}`;
+    }
+
+    const groups = groupComponents(data.components);
+    const aggregate = { core: [], surfaces: [], edge: [], dependencies: [] };
+    groups.forEach((group) => {
+      const key = inferGroupKey(group);
+      aggregate[key].push(...group.components);
+    });
+    Object.entries(aggregate).forEach(([key, items]) => {
+      const normalized = items.map(normalizeComponent);
+      const count = normalized.filter((component) => component.normalizedState === "operational").length;
+      const summary = select(`[data-group-summary="${key}"]`);
+      const nodeElement = select(`[data-group-node="${key}"]`);
+      if (summary) summary.textContent = normalized.length ? `${count}/${normalized.length} operational` : "No components";
+      if (nodeElement) nodeElement.dataset.state = groupState(normalized);
+    });
+  };
+
+  const renderMetrics = (snapshot) => {
+    const data = snapshot.data;
+    const components = (Array.isArray(data.components) ? data.components : []).filter((component) => !component?.group).map(normalizeComponent);
+    const operational = components.filter((component) => component.normalizedState === "operational").length;
+    const incidents = unresolvedIncidents(data.incidents);
+    const maintenances = activeMaintenances(data.scheduled_maintenances);
+    const overallState = stateFromIndicator(data.status?.indicator, data.status?.description);
+    const meta = STATE_META[overallState] || STATE_META.unknown;
+
+    setText("[data-metric-overall]", meta.short);
+    setText("[data-metric-operational]", `${operational}/${components.length}`);
+    setText("[data-metric-incidents]", String(incidents.length));
+    setText("[data-metric-maintenance]", String(maintenances.length));
+  };
+
+  const matchesFilter = (component) => {
+    const name = String(component.name || "").toLowerCase();
+    if (state.search && !name.includes(state.search)) return false;
+    if (state.filter === "operational") return component.normalizedState === "operational";
+    if (state.filter === "attention") return component.normalizedState !== "operational";
+    return true;
+  };
+
+  const componentInitial = (name) => {
+    const words = String(name || "").replace(/StreamSuites/gi, "").trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return "S";
+    return words.slice(0, 2).map((word) => word[0]).join("").toUpperCase();
+  };
+
+  const createComponentCard = (component) => {
+    const card = node("article", "component-card");
+    card.dataset.state = component.normalizedState;
+    card.style.setProperty("--component-color", STATUS_COLORS[component.normalizedState] || STATUS_COLORS.unknown);
+
+    const identity = node("div", "component-card__identity");
+    const icon = node("span", "component-card__icon", componentInitial(component.name));
+    icon.setAttribute("aria-hidden", "true");
+    const copy = node("div");
+    copy.append(node("h4", "", component.name || "Unnamed component"), node("p", "", `Component status · ${component.statusLabel}`));
+    identity.append(icon, copy);
+
+    const badge = node("span", "component-state", component.statusLabel);
+    card.append(identity, badge);
+    return card;
+  };
+
+  const renderComponents = (snapshot) => {
+    const loadState = select("[data-component-load-state]");
+    const groupsRoot = select("[data-component-groups]");
+    const empty = select("[data-component-empty]");
+    if (!groupsRoot) return;
+
+    const groups = groupComponents(snapshot.data.components);
+    groupsRoot.innerHTML = "";
+    let visibleCount = 0;
+
+    groups.forEach((group) => {
+      const visible = group.components.map(normalizeComponent).filter(matchesFilter);
+      if (!visible.length) return;
+      visibleCount += visible.length;
+
+      const section = node("section", "component-group reveal is-visible");
+      const heading = node("div", "component-group__heading");
+      const operational = visible.filter((component) => component.normalizedState === "operational").length;
+      heading.append(node("h3", "", group.label), node("span", "", `${operational}/${visible.length} operational`));
+      const grid = node("div", "component-grid");
+      visible.forEach((component) => grid.appendChild(createComponentCard(component)));
+      section.append(heading, grid);
+      groupsRoot.appendChild(section);
+    });
+
+    if (loadState) loadState.hidden = true;
+    groupsRoot.hidden = visibleCount === 0;
+    if (empty) empty.hidden = visibleCount !== 0;
+  };
+
+  const createEmptyOperation = (kind) => {
+    const wrapper = node("div", "operation-empty");
+    const inner = node("div");
+    inner.append(
+      node("span", "operation-empty__mark", "✓"),
+      node("strong", "", kind === "incident" ? "No active incidents" : "No active maintenance"),
+      node("p", "", kind === "incident"
+        ? "Atlassian Statuspage is not reporting an unresolved incident."
+        : "There are no active or upcoming maintenance windows in the loaded feed.")
+    );
+    wrapper.appendChild(inner);
+    return wrapper;
+  };
+
+  const createOperationItem = (item, kind) => {
+    const article = node("article", "operation-item");
+    const top = node("div", "operation-item__top");
+    const copy = node("div");
+    copy.append(
+      node("h4", "", item.name || (kind === "incident" ? "Untitled incident" : "Scheduled maintenance")),
+      node("div", "operation-item__meta", String(item.status || "Unknown").replaceAll("_", " "))
+    );
+    const timeValue = item.updated_at || item.scheduled_for || item.created_at;
+    top.append(copy, node("span", "operation-item__time", formatRelative(timeValue)));
+    article.appendChild(top);
+    const update = Array.isArray(item.incident_updates) ? item.incident_updates[0] : null;
+    const body = truncate(update?.body || "No additional update is available.", 240);
+    if (body) article.appendChild(node("p", "operation-item__body", body));
+    return article;
+  };
+
+  const renderOperations = (snapshot) => {
+    const incidents = unresolvedIncidents(snapshot.data.incidents);
+    const maintenances = activeMaintenances(snapshot.data.scheduled_maintenances);
+    const incidentRoot = select("[data-active-incidents]");
+    const maintenanceRoot = select("[data-maintenances]");
+
+    setText("[data-incident-count]", String(incidents.length));
+    setText("[data-maintenance-count]", String(maintenances.length));
+    setText("[data-incident-heading]", incidents.length ? `${incidents.length} active ${incidents.length === 1 ? "incident" : "incidents"}` : "No active incidents");
+    setText("[data-maintenance-heading]", maintenances.length ? `${maintenances.length} maintenance ${maintenances.length === 1 ? "window" : "windows"}` : "No active windows");
+
+    if (incidentRoot) {
+      incidentRoot.innerHTML = "";
+      if (!incidents.length) incidentRoot.appendChild(createEmptyOperation("incident"));
+      else incidents.forEach((incident) => incidentRoot.appendChild(createOperationItem(incident, "incident")));
+    }
+
+    if (maintenanceRoot) {
+      maintenanceRoot.innerHTML = "";
+      if (!maintenances.length) maintenanceRoot.appendChild(createEmptyOperation("maintenance"));
+      else maintenances.forEach((maintenance) => maintenanceRoot.appendChild(createOperationItem(maintenance, "maintenance")));
+    }
+  };
+
+  const impactState = (impact) => {
+    const key = String(impact || "").toLowerCase();
+    if (key === "critical") return "critical";
+    if (key === "major") return "partial";
+    if (key === "minor") return "degraded";
+    return "operational";
+  };
+
+  const renderHistory = (snapshot) => {
+    const root = select("[data-incident-history]");
+    if (!root) return;
+    const incidents = (Array.isArray(snapshot.data.incidents) ? snapshot.data.incidents : [])
+      .filter((incident) => ["resolved", "postmortem"].includes(String(incident?.status || "").toLowerCase()))
+      .sort((a, b) => Date.parse(b.resolved_at || b.updated_at || b.created_at || 0) - Date.parse(a.resolved_at || a.updated_at || a.created_at || 0))
+      .slice(0, 6);
+    root.innerHTML = "";
+
+    if (!incidents.length) {
+      const item = node("article", "history-item");
+      item.style.setProperty("--history-color", STATUS_COLORS.operational);
+      item.append(
+        node("span", "history-item__date", "Current loaded history"),
+        node("h3", "", "No resolved incidents in the loaded feed"),
+        node("p", "", "The public Statuspage response did not include a resolved incident record for this view. The hosted history remains linked for the complete archive."),
+        node("span", "history-item__chip", "Clear loaded history")
+      );
+      root.appendChild(item);
+      return;
+    }
+
+    incidents.forEach((incident) => {
+      const item = node("article", "history-item");
+      const stateName = impactState(incident.impact);
+      item.style.setProperty("--history-color", STATUS_COLORS[stateName]);
+      const update = Array.isArray(incident.incident_updates) ? incident.incident_updates[0] : null;
+      item.append(
+        node("span", "history-item__date", formatAbsolute(incident.resolved_at || incident.updated_at || incident.created_at)),
+        node("h3", "", incident.name || "Resolved incident"),
+        node("p", "", truncate(update?.body || "This incident was resolved.", 300)),
+        node("span", "history-item__chip", `${String(incident.impact || "none").replaceAll("_", " ")} · ${String(incident.status || "resolved").replaceAll("_", " ")}`)
+      );
+      root.appendChild(item);
+    });
+  };
+
+  const render = (snapshot) => {
+    if (!snapshot?.data) return;
+    state.snapshot = snapshot;
+    renderHero(snapshot);
+    renderMetrics(snapshot);
+    renderComponents(snapshot);
+    renderOperations(snapshot);
+    renderHistory(snapshot);
+  };
+
+  const initFilters = () => {
+    const search = select("[data-component-search]");
+    const filters = selectAll("[data-status-filter]");
+    search?.addEventListener("input", () => {
+      state.search = String(search.value || "").trim().toLowerCase();
+      if (state.snapshot) renderComponents(state.snapshot);
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "/" && !/input|textarea|select/i.test(document.activeElement?.tagName || "")) {
+        event.preventDefault();
+        search?.focus();
+      }
+    });
+    filters.forEach((button) => {
+      button.addEventListener("click", () => {
+        state.filter = button.dataset.statusFilter || "all";
+        filters.forEach((candidate) => candidate.classList.toggle("is-active", candidate === button));
+        if (state.snapshot) renderComponents(state.snapshot);
+      });
+    });
+  };
+
+  const initNavigation = () => {
+    const toggle = select("[data-nav-toggle]");
+    const nav = select("[data-primary-nav]");
+    if (!toggle || !nav) return;
+    const setOpen = (open) => {
+      nav.classList.toggle("is-open", open);
+      toggle.setAttribute("aria-expanded", String(open));
+    };
+    toggle.addEventListener("click", () => setOpen(toggle.getAttribute("aria-expanded") !== "true"));
+    nav.addEventListener("click", (event) => {
+      if (event.target.closest("a")) setOpen(false);
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && nav.classList.contains("is-open")) {
+        setOpen(false);
+        toggle.focus();
+      }
+    });
+  };
+
+  const initReveals = () => {
+    const items = selectAll(".reveal");
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) {
+      items.forEach((item) => item.classList.add("is-visible"));
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add("is-visible");
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: .12, rootMargin: "0px 0px -5% 0px" });
+    items.forEach((item) => observer.observe(item));
+  };
+
+  const initRefresh = () => {
+    const button = select("[data-refresh-status]");
+    button?.addEventListener("click", async () => {
+      button.disabled = true;
+      button.setAttribute("aria-busy", "true");
+      const original = button.innerHTML;
+      button.innerHTML = '<span class="button__icon" aria-hidden="true">↻</span>Refreshing…';
+      try { await store.refresh({ force: true }); }
+      finally {
+        button.disabled = false;
+        button.removeAttribute("aria-busy");
+        button.innerHTML = original;
+      }
+    });
+  };
+
+  const init = () => {
+    initNavigation();
+    initFilters();
+    initReveals();
+    initRefresh();
+    store.subscribe(render);
+    store.start();
+  };
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
+  else init();
+})();
+
+</script>
+</body>
+</html>

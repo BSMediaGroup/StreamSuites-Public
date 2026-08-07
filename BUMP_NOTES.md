@@ -6,6 +6,35 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-08 - Branded status center and complete Public status widget
+
+#### Technical notes
+
+- Added canonical `status.html` at `/status`, following the existing extensionless `/version` Pages convention. The page uses current `ssmainlogosq.webp` and `wmnew.webp` branding plus the local Tektur, Geist Sans, and IBM Plex Mono system, and presents overall posture, grouped health, operational/total/latency metrics, every Statuspage component, search, operational/attention filters, active incidents, scheduled maintenance, recent public incident history, and a read-only source/transparency section.
+- Added `js/status-data.js` as the shared read-only Public controller for Atlassian `summary.json`, `incidents.json`, and `scheduled-maintenances.json`. It uses `cache: no-store`, an 8-second request timeout, 60-second polling, visible-page refresh, manual forced refresh, response latency, last-successful in-memory stale retention, and a truthful unavailable first-read state. It contains no demo query, local persistence, fake component dataset, Manage API request, credential, or write method.
+- Added `css/status-page.css` and `js/status-page.js` as production adaptations of the approved `statuspocv4` reference. The hero action order is Refresh, See components, then Atlassian; the component target has sticky-header clearance; responsive navigation, focus treatment, ARIA live status, keyboard search/filter behavior, and reduced-motion handling are retained. `/status` does not load or instantiate the floating widget and has no widget host or automatic status slot.
+- Replaced the previous reduced Public tooltip with the approved floating 50px square signal, smooth hover/focus summary chip, and complete click-pinned panel showing all grouped components, active incidents, maintenance, freshness, response latency, stale warning, `/status` primary action, and Atlassian secondary action. The square signal owns `overflow: hidden`/isolation, while the idle toggle has transparent background and no outer backdrop blur, preventing the rejected rectangular haze. The standalone `/u` profile retains its existing explicit inline slimline-footer mount and receives the same upgraded panel rather than regressing that shell contract.
+- The chip reserves a stable right-side control and uses inline plus/cross geometry derived from `/assets/icons/ui/plus.svg` and `/assets/icons/ui/cross.svg`; Escape and outside click close the panel. Footer avoidance measures the real lowest visible footer or content-info region on RAF-bounded scroll/resize updates, applies a 12px target clearance with safe-area support, and constrains the panel height from the raised anchor.
+- Moved the existing page-visit reporter from `js/status-widget.js` into new `js/public-page-visit.js` without changing its analytics endpoint, payload fields, sessionStorage session marker, 30-second path dedupe, Beacon-first send, fetch fallback, or credential omission. Existing widget pages load the module automatically; `/status` loads it directly without loading the widget controller.
+- Changed primary StreamSuites Status links on the landing, standalone/footer, Support, and Version surfaces to `/status`. Explicit Atlassian hosted-page and incident-history links remain on `/status`. `status-check.html` retains its diagnostic role, and no Runtime/Auth, Statuspage synchronization, download gate, protected manifest, version, build, dependency, deployment, commit, or remote state changed.
+- Added `tests/status-center.test.mjs` and updated the existing Support assertion to cover canonical metadata and brand assets, widget absence on `/status`, public-read-only endpoints, no fake fallback or Manage API, all-component rendering, idle blur containment, pulse clipping, plus/cross geometry, footer avoidance, reduced motion, primary/external actions, existing widget inclusions, POC isolation, and primary status-link routing.
+
+#### Human-readable notes
+
+StreamSuites now has a branded, comprehensive service-health page at `/status`, while the existing Public surfaces use a richer but unobtrusive square status signal that expands only when asked and stays clear of footer content.
+
+### 2026-08-07 - Support pathway card presentation
+
+#### Technical notes
+
+- Upgraded the six existing `/support.html` pathway cards with distinct repository-owned feature-icon masks, pathway-specific restrained accents, clearer icon/index/title composition, stronger depth, and a scoped hover/focus sheen. The established documentation, email, status, and Discord destinations and all surrounding Support behavior remain unchanged.
+- Added compact mobile sizing and explicit reduced-motion handling for the new icon and sheen transitions. No new image assets, routes, integrations, or support capabilities were introduced.
+- Validation: focused standalone-page tests and real desktop/mobile rendering were run for this scoped presentation change; results are recorded in the implementation handoff.
+
+#### Human-readable notes
+
+The six Support pathways are now easier to scan and visually identify, with a dedicated feature icon and accent for each kind of help while preserving the same verified destinations.
+
 ### 2026-08-07 - Custom live Discord community widget
 
 #### Technical notes
