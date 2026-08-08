@@ -108,8 +108,9 @@ test("production landing is Studio-first and preserves the production access con
   assert.match(css, /\.product-emblem--obs\s*\{[\s\S]*obs-0\.svg/);
   assert.doesNotMatch(css, /\.product-emblem--(?:browser|native|obs)::(?:before|after)/);
   assert.match(css, /\.studio-device\s*\{[\s\S]*z-index:\s*4;[\s\S]*margin-top:\s*-2px/);
-  assert.match(css, /\.studio-window\s*\{[\s\S]*transition:[\s\S]*transform 560ms cubic-bezier/);
-  assert.match(css, /\.studio-device:hover \.studio-window\s*\{[\s\S]*rotateY\(-1\.15deg\)/);
+  assert.match(css, /\.studio-device\s*\{[\s\S]*perspective\(1600px\)[\s\S]*rotateY\(calc\(-3\.2deg \+ var\(--tilt-y\)\)\)[\s\S]*rotateX\(calc\(1\.4deg \+ var\(--tilt-x\)\)\)/);
+  assert.match(css, /\.studio-device:hover\s*\{[\s\S]*rotateY\(calc\(-1\.3deg \+ var\(--tilt-y\)\)\)[\s\S]*rotateX\(calc\(\.5deg \+ var\(--tilt-x\)\)\)/);
+  assert.match(css, /\.preview-state--studio \.studio-window,[\s\S]*\.studio-device:hover \.preview-state--studio \.studio-window\s*\{\s*transform:\s*none/);
   assert.match(css, /\.scroll-cue\s*\{[\s\S]*bottom:\s*6px/);
   assert.match(css, /@media \(max-width:\s*600px\)\s*\{[\s\S]*\.auth-modal-backdrop\s*\{[\s\S]*align-items:\s*center/);
   assert.match(css, /@media \(max-width:\s*720px\)/);
@@ -123,15 +124,19 @@ test("production landing preserves the approved POC hero, bento modules, and aut
 
   assert.match(html, /class="scroll-cue" href="#products"/);
   assert.match(html, /Explore the suite/);
-  assert.match(html, /\/css\/feature-edges\.css\?v=20260808-feature-edges/);
-  assert.match(html, /\/css\/studio-first-landing\.css\?v=20260808-hero-correction/);
+  assert.match(html, /\/css\/feature-edges\.css\?v=20260808-edge-persistence/);
+  assert.match(html, /\/css\/studio-first-landing\.css\?v=20260808-poc-hero-exact/);
   assert.match(css, /\.landing-hero h1 span\s*\{[\s\S]*linear-gradient\(95deg,[\s\S]*background-clip:\s*text/);
   assert.match(html, /class="hero__feature-line">Run it your way\.<\/span>/);
   assert.equal((html.match(/class="hero-aurora /g) || []).length, 2);
   assert.match(css, /\.hero-backdrop::before\s*\{[\s\S]*right:\s*auto;[\s\S]*left:\s*-12%;/);
   assert.match(css, /\.hero-horizon\s*\{[\s\S]*right:\s*auto;[\s\S]*left:\s*-8%;/);
   assert.match(css, /\.hero-constellation\s*\{[\s\S]*right:\s*auto;[\s\S]*left:\s*-1%;/);
-  assert.match(css, /\.landing-hero h1 \.hero__feature-line\s*\{[\s\S]*var\(--landing-blue-bright\)[\s\S]*var\(--landing-lime-bright\)[\s\S]*#c2b3ff[\s\S]*var\(--landing-gold-bright\)[\s\S]*animation:\s*heroFeatureGradient 11s/);
+  const featureLineRule = css.match(/\.landing-hero h1 \.hero__feature-line\s*\{[\s\S]*?\n\s*\}/)?.[0] || "";
+  assert.match(featureLineRule, /var\(--product-accent\)/);
+  assert.match(featureLineRule, /var\(--product-accent-bright\)/);
+  assert.match(featureLineRule, /animation:\s*heroFeatureGradient 10s/);
+  assert.doesNotMatch(featureLineRule, /landing-(?:blue|lime|gold)|#c2b3ff/);
   assert.match(css, /\.scroll-cue i\s*\{[\s\S]*animation:\s*scrollCue/);
   assert.match(html, /class="header-scroll-progress" aria-hidden="true"/);
   assert.match(css, /\.header-scroll-progress\s*\{[\s\S]*height:\s*3px;[\s\S]*pointer-events:\s*none/);
@@ -141,6 +146,13 @@ test("production landing preserves the approved POC hero, bento modules, and aut
   assert.match(client, /requestAnimationFrame/);
 
   assert.equal((html.match(/data-product-tab=/g) || []).length, 4);
+  assert.equal((html.match(/data-product-cycle-dot=/g) || []).length, 4);
+  assert.match(html, /data-product-cycle-toggle/);
+  assert.match(client, /const PRODUCT_CYCLE_DELAY = 5600/);
+  assert.match(client, /productCycleRequested = true/);
+  assert.match(client, /scheduleProductCycle/);
+  assert.match(client, /productCycleToggle\.disabled = reducedMotionQuery\.matches/);
+  assert.match(css, /@keyframes productPreviewEnter/);
   for (const product of ["browser", "native", "obs", "public"]) {
     assert.match(html, new RegExp(`data-product-tab="${product}"`));
     assert.match(client, new RegExp(`^\\s*${product}: \\{`, "m"));
@@ -175,8 +187,8 @@ test("production landing preserves the approved POC hero, bento modules, and aut
     assert.match(`${html}\n${css}\n${client}`, new RegExp(asset.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/^assets/, "\\/assets")));
   }
   assert.doesNotMatch(`${html}\n${css}\n${client}`, /file:\/\//i);
-  assert.match(html, /SHORRIN/);
-  assert.match(html, /TULLY/);
+  assert.match(html, />Shorrin</);
+  assert.match(html, />Tully</);
   assert.match(html, /BUBBLE BOB/);
   assert.match(html, /Is it true you guys invented Jimothy\?/);
   assert.match(client, /THIRD RAILIFY/);
@@ -190,9 +202,12 @@ test("production landing preserves the approved POC hero, bento modules, and aut
   assert.equal((html.match(/class="public-clip-card"/g) || []).length, 6);
   assert.match(css, /\.preview-state\s*\{[\s\S]*min-height:\s*var\(--hero-preview-height\)/);
   assert.match(client, /Math\.min\(window\.devicePixelRatio \|\| 1, 1\.5\)/);
-  assert.match(client, /const count = compact \? 22/);
-  assert.match(client, /const leftWeightedCount = Math\.ceil\(count \* 0\.68\)/);
-  assert.match(client, /this\.width \* \(0\.08 \+ Math\.random\(\) \* 0\.54\)/);
+  assert.match(client, /const count = compact \? 42/);
+  assert.match(client, /const leftWeightedCount = Math\.ceil\(count \* 0\.72\)/);
+  assert.match(client, /this\.width \* \(0\.03 \+ Math\.random\(\) \* 0\.62\)/);
+  assert.match(client, /particle\.accent \|\| particle\.radius > 1\.05/);
+  assert.match(client, /particle\.accent \? 5\.4 : 4\.4/);
+  assert.match(client, /const maxLinks = this\.width < 760 \? 30 : 96/);
   assert.match(client, /document\.hidden/);
 
   assert.equal((html.match(/data-product-card=/g) || []).length, 4);
@@ -203,9 +218,14 @@ test("production landing preserves the approved POC hero, bento modules, and aut
   assert.match(css, /\.product-card--public\s*\{[\s\S]*--card-accent:\s*var\(--landing-gold\)/);
   assert.match(css, /@media \(min-width:\s*1500px\)[\s\S]*grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/);
 
-  assert.match(html, /class="program-stage"[\s\S]*class="program-stage__output"[\s\S]*class="program-stage__mock-output-bg"[\s\S]*class="solo-streamer"/);
-  assert.match(css, /\.program-stage__output\s*\{[\s\S]*height:\s*100%;[\s\S]*overflow:\s*hidden;[\s\S]*border:\s*1px solid/);
-  assert.match(css, /\.solo-streamer\s*\{[\s\S]*inset:\s*0;/);
+  assert.match(html, /class="program-stage"[\s\S]*class="program-stage__grid"[\s\S]*class="program-stage__safe-area"[\s\S]*class="program-stage__mock-output-bg"[\s\S]*class="solo-streamer"/);
+  assert.doesNotMatch(html, /program-stage__output/);
+  assert.doesNotMatch(css, /\.program-stage__output/);
+  assert.match(css, /\.program-stage__mock-output-bg\s*\{[\s\S]*inset:\s*8%;[\s\S]*linear-gradient\(135deg, #03070c 0%, #070b12 38%, #090c14 61%, #02050a 100%\)/);
+  assert.match(css, /\.program-stage__safe-area\s*\{[\s\S]*inset:\s*8%;[\s\S]*border:\s*1px solid/);
+  assert.match(css, /\.solo-streamer\s*\{[\s\S]*inset:\s*8%;/);
+  assert.match(css, /\.participant\s*\{[\s\S]*top:\s*29%;[\s\S]*width:\s*33%;[\s\S]*height:\s*40%/);
+  assert.match(css, /\.lower-third\s*\{[\s\S]*right:\s*21%;[\s\S]*bottom:\s*10\.5%;[\s\S]*left:\s*21%/);
   assert.match(css, /\.floating-signal__heading\s*\{[\s\S]*grid-template-columns:\s*25px minmax\(0, 1fr\)/);
   assert.match(css, /\.floating-signal__heading strong\s*\{[\s\S]*white-space:\s*nowrap/);
   assert.match(css, /\.preview-state\.is-active > \.studio-window::before,[\s\S]*\.public-hero-preview::before[\s\S]*animation:\s*previewBorderGlint 13s/);
@@ -241,6 +261,14 @@ test("production landing preserves the approved POC hero, bento modules, and aut
   assert.match(html, /legend-line--media/);
   assert.match(css, /\.authority-map__grid\s*\{[\s\S]*background-size:\s*31px 31px/);
   assert.match(css, /\.authority-route__trace--halo\s*\{[\s\S]*stroke-width:\s*8/);
+  assert.match(css, /\.authority-map\[data-active-route="browser"\]\s*\{ --topology-active-color:\s*var\(--landing-blue-bright\); \}/);
+  assert.match(css, /\.authority-map\[data-active-route="native"\]\s*\{ --topology-active-color:\s*var\(--landing-lime-bright\); \}/);
+  assert.match(css, /\.authority-map\[data-active-route="obs"\]\s*\{ --topology-active-color:\s*#b8a6ff; \}/);
+  assert.match(css, /\.authority-map\[data-active-route="public"\]\s*\{ --topology-active-color:\s*var\(--landing-gold-bright\); \}/);
+  assert.match(css, /\.authority-map \.authority-node--core\s*\{[\s\S]*var\(--topology-active-color\)[\s\S]*transition:\s*border-color 880ms/);
+  assert.match(css, /@keyframes topologyCoreDispatch\s*\{[\s\S]*var\(--topology-active-color\) 9%[\s\S]*var\(--topology-active-color\) 18%/);
+  assert.match(css, /@media \(max-width: 720px\)\s*\{\s*\.studio-device,[\s\S]*\.floating-signal--destinations\s*\{\s*display:\s*none/);
+  assert.match(css, /\.authority-map \.authority-node--core \.authority-node__icon\s*\{[\s\S]*color:\s*var\(--topology-active-color\)/);
   assert.match(css, /@keyframes topologyRouteTrace/);
   assert.match(client, /const outward = route\.id === "browser" \|\| route\.id === "native"/);
   assert.match(client, /new IntersectionObserver/);

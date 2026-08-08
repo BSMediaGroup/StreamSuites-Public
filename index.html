@@ -13,8 +13,8 @@
   <meta name="description" content="StreamSuites connects Browser Studio, native StudioApp, StreamSuites Studio for OBS, and audience tools through one Runtime/Auth authority." />
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="/css/status-widget.css" />
-  <link rel="stylesheet" href="/css/feature-edges.css?v=20260808-feature-edges" />
-  <link rel="stylesheet" href="/css/studio-first-landing.css?v=20260808-hero-correction" />
+  <link rel="stylesheet" href="/css/feature-edges.css?v=20260808-edge-persistence" />
+  <link rel="stylesheet" href="/css/studio-first-landing.css?v=20260808-poc-hero-exact" />
 </head>
 
 <body>
@@ -196,17 +196,15 @@
                   <div class="studio-center">
                     <div class="stage-toolbar"><span>PROGRAM</span><div class="layout-pips"><i class="is-active"></i><i></i><i></i><i></i></div><span class="stage-toolbar__room">ROOM SS-7KQ2</span></div>
                     <div class="program-stage">
-                      <div class="program-stage__output">
-                        <div class="program-stage__mock-output-bg"></div>
-                        <div class="program-stage__grid"></div>
-                        <div class="program-stage__safe-area"></div>
-                        <div class="solo-streamer"><img src="/assets/placeholders/solostreamer1.webp" alt="" /></div>
-                        <div class="show-title"><small>THE CREATOR DESK</small><strong>ILLUSTRATIVE PREVIEW</strong></div>
-                        <div class="participant participant--host"><div class="participant__image"><img src="/assets/placeholders/livestreamer1.webp" alt="" /></div><div class="participant__label"><strong>SHORRIN</strong><small>HOST</small></div></div>
-                        <div class="participant participant--guest"><div class="participant__image"><img src="/assets/placeholders/livestreamer2.webp" alt="" /></div><div class="participant__label"><strong>TULLY</strong><small>BACKSTAGE → STAGE</small></div></div>
-                        <div class="lower-third"><span class="lower-third__mark lower-third__mark--avatar"><img src="/assets/placeholders/livecommenter1.webp" alt="" data-comment-avatar /></span><div><strong data-comment-name>BUBBLE BOB</strong><small data-comment-text>Is it true you guys invented Jimothy?</small></div></div>
-                        <div class="live-chip live-chip--live"><i></i> LIVE</div>
-                      </div>
+                      <div class="program-stage__grid"></div>
+                      <div class="program-stage__safe-area"></div>
+                      <div class="program-stage__mock-output-bg"></div>
+                      <div class="solo-streamer"><img src="/assets/placeholders/solostreamer1.webp" alt="" /></div>
+                      <div class="show-title"><small>THE CREATOR DESK</small><strong>ILLUSTRATIVE PREVIEW</strong></div>
+                      <div class="participant participant--host"><div class="participant__image"><img src="/assets/placeholders/livestreamer1.webp" alt="" /></div><div class="participant__label"><strong>Shorrin</strong><small>HOST</small></div></div>
+                      <div class="participant participant--guest"><div class="participant__image"><img src="/assets/placeholders/livestreamer2.webp" alt="" /></div><div class="participant__label"><strong>Tully</strong><small>BACKSTAGE → STAGE</small></div></div>
+                      <div class="lower-third"><span class="lower-third__mark lower-third__mark--avatar"><img src="/assets/placeholders/livecommenter1.webp" alt="" data-comment-avatar /></span><div><strong data-comment-name>BUBBLE BOB</strong><small data-comment-text>Is it true you guys invented Jimothy?</small></div></div>
+                      <div class="live-chip live-chip--live"><i></i> LIVE</div>
                     </div>
                     <div class="audio-dock audio-dock--stereo">
                       <div class="audio-channel audio-channel--stereo"><span>MIC</span><div class="stereo-meter"><div><em>L</em><div class="meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div><em>R</em><div class="meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div><b>-12.4</b></div>
@@ -297,6 +295,18 @@
               <strong data-product-caption-title>Browser Studio</strong>
             </div>
             <p data-product-caption-copy>Private rooms, guests, layouts, branding, and direct browser media. Broadcast output remains unimplemented.</p>
+            <div class="product-cycle-controls" role="group" aria-label="Automatic product preview controls" data-product-cycle-controls>
+              <div class="product-cycle-dots" aria-label="Choose product preview">
+                <button class="product-cycle-dot is-active" type="button" aria-label="Show Browser Studio" aria-current="true" data-product-cycle-dot="browser"></button>
+                <button class="product-cycle-dot" type="button" aria-label="Show StudioApp" data-product-cycle-dot="native"></button>
+                <button class="product-cycle-dot" type="button" aria-label="Show Studio for OBS" data-product-cycle-dot="obs"></button>
+                <button class="product-cycle-dot" type="button" aria-label="Show Public Shell" data-product-cycle-dot="public"></button>
+              </div>
+              <button class="product-cycle-toggle" type="button" aria-pressed="false" aria-label="Pause automatic product previews" title="Pause automatic product previews" data-product-cycle-toggle>
+                <span class="product-cycle-toggle__icon" aria-hidden="true"></span>
+                <span class="sr-only" data-product-cycle-toggle-label>Pause automatic product previews</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

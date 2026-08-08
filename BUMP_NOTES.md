@@ -6,6 +6,23 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-08 - POC-exact hero output and controlled product cycle correction
+
+#### Technical notes
+
+- Restored the Browser Studio and StudioApp main output area from the protected `pocv9` implementation instead of approximating it through an added wrapper. The production stage now uses the POC's direct child order, identical 8% output-background and safe-area insets, exact Browser participant/lower-third positions, exact StudioApp solo-output inset, and the POC dark output gradients. The full four-state device also uses the POC's default `perspective(1600px) rotateY(-3.2deg) rotateX(1.4deg)` attitude and gently straightens to `rotateY(-1.3deg) rotateX(0.5deg)` on hover.
+- Corrected `Run it your way.` to use one smoothly animated tonal gradient derived only from the selected product feature color. Switching Browser, StudioApp, OBS, or Public now crossfades the preview and moves the line through blue-only, lime-only, violet-only, or gold-only tones; the prior simultaneous multicolor treatment was removed from this headline.
+- Added a default-on 5.6-second four-product cycle with a compact four-dot switcher and an accessible play/pause button. Manual tab, card, or dot selection restarts the interval; explicit pause persists; hidden-document and offscreen-hero states suspend it; reduced motion disables autoplay and leaves a complete static selected state.
+- Strengthened the existing bounded particle canvas without introducing another renderer: desktop now uses 72–118 fine points and at most 96 links, mobile uses 42 points and at most 30 links, most points remain left weighted, and accent particles receive a soft halo pass. The particle canvas now paints above the grain veil, while preserving the DPR 1.5 cap plus hidden/offscreen suspension.
+- Made the central Runtime/Auth card, icon, ports, health point, and orbit ease over 880ms to the Browser blue, StudioApp lime, OBS violet, or Public gold of the route currently feeding it. Authority and media-boundary copy, node ownership, route geometry, and the one visible topology timer remain unchanged.
+- Hardened shared feature-edge painting with explicit header/footer anchoring, visibility, paint order, solid active-color backgrounds through the retained linear mask, and eased color transitions. The landing no longer turns `body` into an unintended vertical scroll container, so the sticky header and its active-product progress/edge color remain geometrically present and topmost after deep scrolling.
+- Updated focused source coverage for the POC-exact geometry and perspective, active-only headline tones, autoplay/dot/pause behavior, particle density and halo bounds, topology core color mapping, persistent feature-edge paint rules, cache revisions, and reduced-motion behavior. No route, auth/status/version, protected download gate, manifest, installer, authority, media, dependency, build, deployment, commit, or sibling-repository contract changed. No production files were created, removed, or renamed, and protected `pocv9` content was not modified.
+- Validation passed with `node --check js/studio-first-landing.js`, the focused corrective suite (11/11), the complete repository suite (113/113), and `git diff --check`. Local HTTP Playwright MCP proof covered the final Browser and StudioApp outputs, desktop architecture, narrow hero, exact output/safe-area alignment, perspective/hover state, 5.6-second automatic advance, explicit pause persistence, all four Runtime/Auth color states, reduced-motion static behavior, zero narrow-viewport overflow, and header/footer edge persistence across top, deep, returned, and footer scroll positions. The local server produced only the expected unavailable `/auth/access-state` response and analytics CORS failure; neither is production-service evidence. Four generated proof PNGs were retained in `output/playwright/` for review.
+
+#### Human-readable notes
+
+The hero now carries the depth and precision of the approved proof: the stage output is the protected POC composition, the whole device relaxes toward the viewer on hover, the headline follows one product color at a time, and the denser fine-particle field gives the opening more presence. The four product states advance gently by default but remain directly switchable and pausable. Lower on the page, Runtime/Auth visibly takes on the color of the product it is feeding, and the header/footer feature edge keeps its color after scrolling.
+
 ### 2026-08-08 - Landing hero atmosphere and cross-surface feature edges
 
 #### Technical notes

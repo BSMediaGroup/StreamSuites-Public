@@ -88,20 +88,25 @@ test("shared feature edges retain the Status geometry and page-aware accent toke
   assert.match(css, /body\.download-surface[\s\S]*--feature-edge-accent:\s*var\(--download-accent-bright/);
   assert.match(css, /\.site-header,[\s\S]*\.public-topbar,[\s\S]*\.download-topbar[\s\S]*::after\s*\{[\s\S]*right:\s*12%;[\s\S]*bottom:\s*-1px;[\s\S]*width:\s*28%;[\s\S]*height:\s*1px/);
   assert.match(css, /\.site-footer,[\s\S]*\.public-footer,[\s\S]*\.download-footer,[\s\S]*\.footer-bar,[\s\S]*\.profile-shell-footer,[\s\S]*\.not-found-footer[\s\S]*::before\s*\{[\s\S]*top:\s*-1px;[\s\S]*left:\s*10%;[\s\S]*width:\s*34%;[\s\S]*height:\s*1px/);
+  assert.match(css, /background-color:\s*var\(--feature-edge-accent\)/);
+  assert.match(css, /z-index:\s*20/);
+  assert.match(css, /visibility:\s*visible/);
+  assert.match(css, /mask-image:\s*linear-gradient\(90deg, transparent, #000 28%, #000 72%, transparent\)/);
+  assert.match(css, /transition:\s*background-color 520ms/);
   assert.match(css, /color-mix\(in srgb, var\(--feature-edge-accent\)/);
   assert.match(css, /pointer-events:\s*none/);
 });
 
 test("every inventoried human-facing route directly loads or inherits the shared edge stylesheet", () => {
   const theme = read("css/theme-dark.css");
-  assert.match(theme, /^@import url\("\/css\/public-fonts\.css"\);\r?\n@import url\("\/css\/feature-edges\.css\?v=20260808-feature-edges"\);/);
+  assert.match(theme, /^@import url\("\/css\/public-fonts\.css"\);\r?\n@import url\("\/css\/feature-edges\.css\?v=20260808-edge-persistence"\);/);
 
   for (const relativePath of sharedThemeRoutes) {
     assert.match(read(relativePath), /href="\/css\/theme-dark\.css"/, `${relativePath} must inherit feature edges`);
   }
 
   for (const relativePath of directFeatureRoutes) {
-    assert.match(read(relativePath), /href="\/css\/feature-edges\.css\?v=20260808-feature-edges"/, `${relativePath} must load feature edges`);
+    assert.match(read(relativePath), /href="\/css\/feature-edges\.css\?v=20260808-edge-persistence"/, `${relativePath} must load feature edges`);
   }
 
   assert.match(read("public-login.html"), /<body class="ss-public-login" data-feature-edges>/);

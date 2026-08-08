@@ -24,6 +24,11 @@
   const commentName = document.querySelector("[data-comment-name]");
   const commentText = document.querySelector("[data-comment-text]");
   const commentAvatar = document.querySelector("[data-comment-avatar]");
+  const productCycleControls = document.querySelector("[data-product-cycle-controls]");
+  const productCycleToggle = document.querySelector("[data-product-cycle-toggle]");
+  const productCycleToggleLabel = document.querySelector("[data-product-cycle-toggle-label]");
+  const productCycleDots = Array.from(document.querySelectorAll("[data-product-cycle-dot]"));
+  const heroVisual = document.querySelector(".hero__visual");
 
   const products = Object.freeze({
     browser: {
@@ -82,9 +87,19 @@
     },
   });
 
+  const productIds = Object.freeze(Object.keys(products));
+  const PRODUCT_CYCLE_DELAY = 5600;
+  let currentProductId = products[root.dataset.product] ? root.dataset.product : "browser";
+  let productCycleTimer = 0;
+  let productCycleRequested = true;
+  let productCycleVisible = true;
+
   const setProduct = (productId, { focusTab = false, scrollToHero = false } = {}) => {
     const product = products[productId];
     if (!product) return;
+
+    const previousProductId = currentProductId;
+    currentProductId = productId;
 
     root.dataset.product = productId;
     productTabs.forEach((tab) => {
@@ -100,6 +115,13 @@
       state.classList.toggle("is-active", active);
       state.setAttribute("aria-hidden", active ? "false" : "true");
       if (active) state.setAttribute("aria-labelledby", `product-tab-${productId}`);
+    });
+
+    productCycleDots.forEach((dot) => {
+      const active = dot.dataset.productCycleDot === productId;
+      dot.classList.toggle("is-active", active);
+      if (active) dot.setAttribute("aria-current", "true");
+      else dot.removeAttribute("aria-current");
     });
 
     productCards.forEach((card) => {
@@ -125,6 +147,16 @@
     if (commentText && product.commentText) commentText.textContent = product.commentText;
     if (commentAvatar && product.commentAvatar) commentAvatar.src = product.commentAvatar;
 
+    if (previousProductId !== productId && !reducedMotionQuery.matches) {
+      const activePreview = previewStates.find((state) => state.classList.contains("is-active"));
+      previewStates.forEach((state) => state.classList.remove("is-product-entering"));
+      if (activePreview) {
+        void activePreview.offsetWidth;
+        activePreview.classList.add("is-product-entering");
+        window.setTimeout(() => activePreview.classList.remove("is-product-entering"), 680);
+      }
+    }
+
     if (scrollToHero) {
       document.querySelector("#top")?.scrollIntoView({
         behavior: reducedMotionQuery.matches ? "auto" : "smooth",
@@ -133,8 +165,52 @@
     }
   };
 
+  const clearProductCycle = () => {
+    if (productCycleTimer) window.clearTimeout(productCycleTimer);
+    productCycleTimer = 0;
+  };
+
+  const productCycleCanRun = () =>
+    productCycleRequested &&
+    !reducedMotionQuery.matches &&
+    !document.hidden &&
+    productCycleVisible;
+
+  const updateProductCycleControls = () => {
+    if (!productCycleToggle) return;
+    const paused = !productCycleRequested || reducedMotionQuery.matches;
+    const label = reducedMotionQuery.matches
+      ? "Automatic product previews are disabled by reduced motion"
+      : paused
+        ? "Play automatic product previews"
+        : "Pause automatic product previews";
+    productCycleToggle.classList.toggle("is-paused", paused);
+    productCycleToggle.setAttribute("aria-pressed", paused ? "true" : "false");
+    productCycleToggle.setAttribute("aria-label", label);
+    productCycleToggle.title = label;
+    productCycleToggle.disabled = reducedMotionQuery.matches;
+    if (productCycleToggleLabel) productCycleToggleLabel.textContent = label;
+    productCycleControls?.classList.toggle("is-paused", paused);
+  };
+
+  const scheduleProductCycle = () => {
+    clearProductCycle();
+    if (!productCycleCanRun() || productIds.length < 2) return;
+    productCycleTimer = window.setTimeout(() => {
+      productCycleTimer = 0;
+      const currentIndex = Math.max(0, productIds.indexOf(currentProductId));
+      setProduct(productIds[(currentIndex + 1) % productIds.length]);
+      scheduleProductCycle();
+    }, PRODUCT_CYCLE_DELAY);
+  };
+
+  const activateProduct = (productId, options = {}) => {
+    setProduct(productId, options);
+    scheduleProductCycle();
+  };
+
   productTabs.forEach((tab, index) => {
-    tab.addEventListener("click", () => setProduct(tab.dataset.productTab));
+    tab.addEventListener("click", () => activateProduct(tab.dataset.productTab));
     tab.addEventListener("keydown", (event) => {
       if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
       event.preventDefault();
@@ -143,13 +219,36 @@
       if (event.key === "ArrowRight") nextIndex = (index + 1) % productTabs.length;
       if (event.key === "Home") nextIndex = 0;
       if (event.key === "End") nextIndex = productTabs.length - 1;
-      setProduct(productTabs[nextIndex].dataset.productTab, { focusTab: true });
+      activateProduct(productTabs[nextIndex].dataset.productTab, { focusTab: true });
     });
   });
 
+  productCycleDots.forEach((dot) => {
+    dot.addEventListener("click", () => activateProduct(dot.dataset.productCycleDot));
+  });
+
+  productCycleToggle?.addEventListener("click", () => {
+    productCycleRequested = !productCycleRequested;
+    updateProductCycleControls();
+    scheduleProductCycle();
+  });
+
+  if (heroVisual && "IntersectionObserver" in window) {
+    const productCycleObserver = new IntersectionObserver(
+      (entries) => {
+        productCycleVisible = entries.some((entry) => entry.isIntersecting);
+        scheduleProductCycle();
+      },
+      { threshold: 0.22 }
+    );
+    productCycleObserver.observe(heroVisual);
+  }
+
+  document.addEventListener("visibilitychange", scheduleProductCycle);
+
   productSelectButtons.forEach((button) => {
     button.addEventListener("click", () => {
-      setProduct(button.dataset.selectProduct, { scrollToHero: true });
+      activateProduct(button.dataset.selectProduct, { scrollToHero: true });
     });
   });
 
@@ -557,22 +656,22 @@
 
     seed() {
       const compact = this.width < 760;
-      const count = compact ? 22 : Math.round(clamp(this.width / 26, 40, 60));
-      const leftWeightedCount = Math.ceil(count * 0.68);
+      const count = compact ? 42 : Math.round(clamp(this.width / 14, 72, 118));
+      const leftWeightedCount = Math.ceil(count * 0.72);
       this.particles = Array.from({ length: count }, (_, index) => {
         const x =
           index < leftWeightedCount
-            ? this.width * (0.08 + Math.random() * 0.54)
-            : this.width * (0.58 + Math.random() * 0.38);
+            ? this.width * (0.03 + Math.random() * 0.62)
+            : this.width * (0.55 + Math.random() * 0.44);
         return {
           x,
-          y: Math.random() * this.height * 0.92,
-          radius: index % 11 === 0 ? 1.4 : Math.random() * 0.8 + 0.28,
-          alpha: Math.random() * 0.4 + 0.12,
-          speedX: (Math.random() - 0.5) * 0.04,
-          speedY: Math.random() * 0.03 + 0.006,
+          y: Math.random() * this.height * 0.96,
+          radius: index % 13 === 0 ? 1.45 : Math.random() * 0.72 + 0.22,
+          alpha: Math.random() * 0.43 + 0.22,
+          speedX: (Math.random() - 0.5) * 0.055,
+          speedY: Math.random() * 0.038 + 0.008,
           phase: Math.random() * Math.PI * 2,
-          accent: index % 9 === 0,
+          accent: index % 7 === 0,
         };
       });
     }
@@ -617,18 +716,18 @@
         });
       }
 
-      const maxLinks = this.width < 760 ? 18 : 52;
+      const maxLinks = this.width < 760 ? 30 : 96;
       let links = 0;
       for (let index = 0; index < this.particles.length && links < maxLinks; index += 1) {
         for (let peer = index + 1; peer < this.particles.length && links < maxLinks; peer += 1) {
           const first = this.particles[index];
           const second = this.particles[peer];
           const distance = Math.hypot(first.x - second.x, first.y - second.y);
-          if (distance > 90) continue;
+          if (distance > 108) continue;
           context.beginPath();
           context.moveTo(first.x, first.y);
           context.lineTo(second.x, second.y);
-          context.strokeStyle = `rgba(154, 174, 198, ${(1 - distance / 90) * 0.04})`;
+          context.strokeStyle = `rgba(154, 184, 214, ${(1 - distance / 108) * 0.065})`;
           context.lineWidth = 0.5;
           context.stroke();
           links += 1;
@@ -642,6 +741,13 @@
         context.fillStyle = particle.accent ? this.accent : "#dce8f4";
         context.globalAlpha = particle.alpha * twinkle;
         context.fill();
+        if (particle.accent || particle.radius > 1.05) {
+          context.beginPath();
+          context.arc(particle.x, particle.y, particle.radius * (particle.accent ? 5.4 : 4.4), 0, Math.PI * 2);
+          context.fillStyle = particle.accent ? this.accent : "#dce8f4";
+          context.globalAlpha = particle.alpha * (particle.accent ? 0.11 : 0.075);
+          context.fill();
+        }
       });
       context.restore();
       context.globalAlpha = 1;
@@ -674,6 +780,8 @@
       particleField?.start();
     }
     authorityTopology?.syncPreference();
+    updateProductCycleControls();
+    scheduleProductCycle();
   };
   reducedMotionQuery.addEventListener?.("change", syncMotionPreference);
 

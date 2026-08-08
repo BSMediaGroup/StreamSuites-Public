@@ -23,14 +23,37 @@ body.download-surface {
 }
 
 body:not(.status-page) :where(
+  .site-footer,
+  .public-footer,
   .download-footer,
-  .footer-bar
+  .footer-bar,
+  .profile-shell-footer,
+  .not-found-footer
 ),
 body[data-feature-edges]:not(.status-page) :where(
   .ss-public-login__header,
   .ss-requests-auth__header
 ) {
   position: relative;
+}
+
+body:not(.status-page) :where(
+  .site-header,
+  .public-topbar,
+  .download-topbar,
+  .site-footer,
+  .public-footer,
+  .download-footer,
+  .footer-bar,
+  .profile-shell-footer,
+  .not-found-footer
+),
+body[data-feature-edges]:not(.status-page) :where(
+  .ss-public-login__header,
+  .ss-requests-auth__header
+) {
+  isolation: isolate;
+  overflow: visible;
 }
 
 body:not(.status-page) :where(
@@ -47,14 +70,18 @@ body[data-feature-edges]:not(.status-page) :where(
   bottom: -1px;
   width: 28%;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, var(--feature-edge-accent) 48%, transparent),
-    transparent
-  );
+  z-index: 20;
+  display: block;
+  background-color: var(--feature-edge-accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--feature-edge-accent) 28%, transparent);
   content: "";
+  opacity: 0.72;
   pointer-events: none;
+  transform: translateZ(0);
+  transition: background-color 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease, opacity 220ms ease;
+  visibility: visible;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 28%, #000 72%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 28%, #000 72%, transparent);
 }
 
 body:not(.status-page) :where(
@@ -70,14 +97,18 @@ body:not(.status-page) :where(
   left: 10%;
   width: 34%;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, var(--feature-edge-accent) 55%, transparent),
-    transparent
-  );
+  z-index: 20;
+  display: block;
+  background-color: var(--feature-edge-accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--feature-edge-accent) 30%, transparent);
   content: "";
+  opacity: 0.76;
   pointer-events: none;
+  transform: translateZ(0);
+  transition: background-color 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease, opacity 220ms ease;
+  visibility: visible;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 28%, #000 72%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 28%, #000 72%, transparent);
 }
 
 @media (forced-colors: active) {
@@ -99,5 +130,8 @@ body:not(.status-page) :where(
     .not-found-footer
   )::before {
     background: CanvasText;
+    opacity: 1;
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 }
