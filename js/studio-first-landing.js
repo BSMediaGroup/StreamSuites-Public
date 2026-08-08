@@ -29,6 +29,8 @@
   const productCycleToggleLabel = document.querySelector("[data-product-cycle-toggle-label]");
   const productCycleDots = Array.from(document.querySelectorAll("[data-product-cycle-dot]"));
   const heroVisual = document.querySelector(".hero__visual");
+  const studioDevice = document.querySelector("[data-studio-device]");
+  const productCaption = document.querySelector(".product-caption");
 
   const products = Object.freeze({
     browser: {
@@ -88,17 +90,62 @@
   });
 
   const productIds = Object.freeze(Object.keys(products));
-  const PRODUCT_CYCLE_DELAY = 5600;
+  const PRODUCT_CYCLE_DELAY = 6000;
   let currentProductId = products[root.dataset.product] ? root.dataset.product : "browser";
   let productCycleTimer = 0;
   let productCycleRequested = true;
   let productCycleVisible = true;
+  let previewTransitionLayer = null;
+  let previewTransitionTimer = 0;
+  let previewEnterTimer = 0;
+
+  const removePreviewTransitionLayer = () => {
+    if (previewTransitionTimer) window.clearTimeout(previewTransitionTimer);
+    previewTransitionTimer = 0;
+    previewTransitionLayer?.remove();
+    previewTransitionLayer = null;
+  };
+
+  const createPreviewTransitionLayer = (productId) => {
+    if (!studioDevice || reducedMotionQuery.matches) return null;
+    const activePreview = previewStates.find((state) => state.classList.contains("is-active"));
+    if (!activePreview) return null;
+
+    removePreviewTransitionLayer();
+    const layer = activePreview.cloneNode(true);
+    layer.removeAttribute("id");
+    layer.removeAttribute("data-preview-state");
+    layer.removeAttribute("aria-labelledby");
+    layer.classList.remove("is-active", "is-product-entering");
+    layer.classList.add("preview-transition-layer");
+    layer.dataset.transitionProduct = productId;
+    layer.setAttribute("aria-hidden", "true");
+    layer.setAttribute("role", "presentation");
+    layer.inert = true;
+    layer.querySelectorAll("[id]").forEach((element) => element.removeAttribute("id"));
+    layer.querySelectorAll("[aria-live]").forEach((element) => element.removeAttribute("aria-live"));
+
+    const rootStyle = getComputedStyle(root);
+    ["--product-accent", "--product-accent-bright", "--product-glow"].forEach((property) => {
+      const value = rootStyle.getPropertyValue(property).trim();
+      if (value) layer.style.setProperty(property, value);
+    });
+
+    studioDevice.append(layer);
+    previewTransitionLayer = layer;
+    void layer.offsetWidth;
+    window.requestAnimationFrame(() => layer.classList.add("is-leaving"));
+    previewTransitionTimer = window.setTimeout(removePreviewTransitionLayer, 940);
+    return layer;
+  };
 
   const setProduct = (productId, { focusTab = false, scrollToHero = false } = {}) => {
     const product = products[productId];
     if (!product) return;
 
     const previousProductId = currentProductId;
+    const changingProduct = previousProductId !== productId;
+    if (changingProduct) createPreviewTransitionLayer(previousProductId);
     currentProductId = productId;
 
     root.dataset.product = productId;
@@ -147,14 +194,19 @@
     if (commentText && product.commentText) commentText.textContent = product.commentText;
     if (commentAvatar && product.commentAvatar) commentAvatar.src = product.commentAvatar;
 
-    if (previousProductId !== productId && !reducedMotionQuery.matches) {
+    if (changingProduct && !reducedMotionQuery.matches) {
       const activePreview = previewStates.find((state) => state.classList.contains("is-active"));
       previewStates.forEach((state) => state.classList.remove("is-product-entering"));
       if (activePreview) {
         void activePreview.offsetWidth;
         activePreview.classList.add("is-product-entering");
-        window.setTimeout(() => activePreview.classList.remove("is-product-entering"), 680);
+        if (previewEnterTimer) window.clearTimeout(previewEnterTimer);
+        previewEnterTimer = window.setTimeout(() => activePreview.classList.remove("is-product-entering"), 940);
       }
+      productCaption?.classList.remove("is-product-changing");
+      void productCaption?.offsetWidth;
+      productCaption?.classList.add("is-product-changing");
+      window.setTimeout(() => productCaption?.classList.remove("is-product-changing"), 760);
     }
 
     if (scrollToHero) {
@@ -405,7 +457,6 @@
 
   const clamp = (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, value));
   const hero = document.querySelector(".landing-hero");
-  const studioDevice = document.querySelector("[data-studio-device]");
   const resetHeroPointer = () => {
     root.style.setProperty("--pointer-x", "0");
     root.style.setProperty("--pointer-y", "0");
@@ -601,6 +652,7 @@
       this.canvas = canvas;
       this.context = canvas.getContext("2d", { alpha: true });
       this.particles = [];
+      this.signals = [];
       this.frame = 0;
       this.visible = !("IntersectionObserver" in window);
       this.running = false;
@@ -656,24 +708,37 @@
 
     seed() {
       const compact = this.width < 760;
-      const count = compact ? 42 : Math.round(clamp(this.width / 14, 72, 118));
-      const leftWeightedCount = Math.ceil(count * 0.72);
+      const count = compact ? 54 : Math.round(clamp(this.width / 9, 96, 156));
+      const leftWeightedCount = Math.ceil(count * 0.7);
       this.particles = Array.from({ length: count }, (_, index) => {
+        const depth = Math.random() * 0.72 + 0.28;
+        const beacon = index % 17 === 0;
+        const accent = beacon || index % 5 === 0;
         const x =
           index < leftWeightedCount
-            ? this.width * (0.03 + Math.random() * 0.62)
-            : this.width * (0.55 + Math.random() * 0.44);
+            ? this.width * (0.015 + Math.random() * 0.655)
+            : this.width * (0.58 + Math.random() * 0.405);
         return {
           x,
-          y: Math.random() * this.height * 0.96,
-          radius: index % 13 === 0 ? 1.45 : Math.random() * 0.72 + 0.22,
-          alpha: Math.random() * 0.43 + 0.22,
-          speedX: (Math.random() - 0.5) * 0.055,
-          speedY: Math.random() * 0.038 + 0.008,
+          y: this.height * (0.035 + Math.random() * 0.91),
+          depth,
+          radius: beacon ? 1.75 : accent ? Math.random() * 0.7 + 0.62 : Math.random() * 0.72 + 0.2,
+          alpha: beacon ? 0.76 : Math.random() * 0.42 + 0.24,
+          speedX: (Math.random() - 0.42) * 0.07 * depth,
+          speedY: (Math.random() * 0.042 + 0.007) * depth,
           phase: Math.random() * Math.PI * 2,
-          accent: index % 7 === 0,
+          accent,
+          beacon,
         };
       });
+      const signalCount = compact ? 2 : 5;
+      this.signals = Array.from({ length: signalCount }, (_, index) => ({
+        phase: (index / signalCount + Math.random() * 0.16) % 1,
+        speed: 0.000018 + Math.random() * 0.000018,
+        startY: this.height * (0.18 + index * (0.54 / Math.max(1, signalCount - 1))),
+        curve: this.height * ((index % 2 === 0 ? -1 : 1) * (0.05 + Math.random() * 0.08)),
+        alpha: 0.34 + Math.random() * 0.28,
+      }));
     }
 
     start() {
@@ -710,45 +775,103 @@
         this.particles.forEach((particle) => {
           particle.x += particle.speedX * multiplier;
           particle.y += particle.speedY * multiplier;
-          if (particle.x < -4) particle.x = this.width + 4;
-          if (particle.x > this.width + 4) particle.x = -4;
-          if (particle.y > this.height + 4) particle.y = -4;
+          if (particle.x < -12) particle.x = this.width + 12;
+          if (particle.x > this.width + 12) particle.x = -12;
+          if (particle.y > this.height + 12) particle.y = -12;
         });
       }
 
-      const maxLinks = this.width < 760 ? 30 : 96;
+      const positions = this.particles.map((particle) => ({
+        x: particle.x + Math.sin(time * 0.00023 * particle.depth + particle.phase) * 4.5 * particle.depth,
+        y: particle.y + Math.cos(time * 0.00019 * particle.depth + particle.phase) * 2.8 * particle.depth,
+      }));
+
+      context.globalCompositeOperation = "lighter";
+      const maxLinks = this.width < 760 ? 44 : 144;
       let links = 0;
       for (let index = 0; index < this.particles.length && links < maxLinks; index += 1) {
         for (let peer = index + 1; peer < this.particles.length && links < maxLinks; peer += 1) {
           const first = this.particles[index];
           const second = this.particles[peer];
-          const distance = Math.hypot(first.x - second.x, first.y - second.y);
-          if (distance > 108) continue;
+          const firstPosition = positions[index];
+          const secondPosition = positions[peer];
+          const distance = Math.hypot(firstPosition.x - secondPosition.x, firstPosition.y - secondPosition.y);
+          if (distance > 124) continue;
           context.beginPath();
-          context.moveTo(first.x, first.y);
-          context.lineTo(second.x, second.y);
-          context.strokeStyle = `rgba(154, 184, 214, ${(1 - distance / 108) * 0.065})`;
-          context.lineWidth = 0.5;
+          context.moveTo(firstPosition.x, firstPosition.y);
+          context.lineTo(secondPosition.x, secondPosition.y);
+          context.strokeStyle = first.accent || second.accent ? this.accent : "#b9cee1";
+          context.globalAlpha = (1 - distance / 124) * (first.accent || second.accent ? 0.11 : 0.068);
+          context.lineWidth = first.accent || second.accent ? 0.65 : 0.42;
           context.stroke();
           links += 1;
         }
       }
 
-      this.particles.forEach((particle) => {
-        const twinkle = staticFrame ? 0.8 : 0.62 + Math.sin(time * 0.0007 + particle.phase) * 0.28;
+      const signalPoint = (signal, progress) => {
+        const inverse = 1 - progress;
+        const startX = this.width * -0.05;
+        const controlX = this.width * 0.28;
+        const endX = this.width * 0.72;
+        const endY = signal.startY + signal.curve * 0.28;
+        return {
+          x: inverse * inverse * startX + 2 * inverse * progress * controlX + progress * progress * endX,
+          y: inverse * inverse * signal.startY + 2 * inverse * progress * (signal.startY + signal.curve) + progress * progress * endY,
+        };
+      };
+
+      this.signals.forEach((signal) => {
+        const progress = staticFrame ? signal.phase : (signal.phase + time * signal.speed) % 1;
+        const tail = signalPoint(signal, Math.max(0, progress - 0.055));
+        const point = signalPoint(signal, progress);
+        const glowRadius = this.width < 760 ? 7 : 11;
         context.beginPath();
-        context.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+        context.moveTo(tail.x, tail.y);
+        context.lineTo(point.x, point.y);
+        context.strokeStyle = this.accent;
+        context.lineWidth = 1;
+        context.globalAlpha = signal.alpha * Math.sin(Math.PI * progress);
+        context.stroke();
+        const glow = context.createRadialGradient(point.x, point.y, 0, point.x, point.y, glowRadius);
+        glow.addColorStop(0, "#ffffff");
+        glow.addColorStop(0.18, this.accent);
+        glow.addColorStop(1, "rgba(0,0,0,0)");
+        context.fillStyle = glow;
+        context.globalAlpha = signal.alpha * 0.62 * Math.sin(Math.PI * progress);
+        context.fillRect(point.x - glowRadius, point.y - glowRadius, glowRadius * 2, glowRadius * 2);
+      });
+
+      this.particles.forEach((particle, index) => {
+        const position = positions[index];
+        const twinkle = staticFrame ? 0.82 : 0.66 + Math.sin(time * (0.00052 + particle.depth * 0.00031) + particle.phase) * 0.34;
+        if (particle.accent || particle.beacon) {
+          const haloRadius = particle.beacon ? 18 : 8 + particle.depth * 4;
+          const halo = context.createRadialGradient(position.x, position.y, 0, position.x, position.y, haloRadius);
+          halo.addColorStop(0, particle.beacon ? "#ffffff" : this.accent);
+          halo.addColorStop(0.2, this.accent);
+          halo.addColorStop(1, "rgba(0,0,0,0)");
+          context.fillStyle = halo;
+          context.globalAlpha = particle.alpha * twinkle * (particle.beacon ? 0.42 : 0.22);
+          context.fillRect(position.x - haloRadius, position.y - haloRadius, haloRadius * 2, haloRadius * 2);
+        }
+        context.beginPath();
+        context.arc(position.x, position.y, particle.radius, 0, Math.PI * 2);
         context.fillStyle = particle.accent ? this.accent : "#dce8f4";
         context.globalAlpha = particle.alpha * twinkle;
         context.fill();
-        if (particle.accent || particle.radius > 1.05) {
+        if (particle.beacon) {
           context.beginPath();
-          context.arc(particle.x, particle.y, particle.radius * (particle.accent ? 5.4 : 4.4), 0, Math.PI * 2);
-          context.fillStyle = particle.accent ? this.accent : "#dce8f4";
-          context.globalAlpha = particle.alpha * (particle.accent ? 0.11 : 0.075);
-          context.fill();
+          context.moveTo(position.x - 4.5, position.y);
+          context.lineTo(position.x + 4.5, position.y);
+          context.moveTo(position.x, position.y - 4.5);
+          context.lineTo(position.x, position.y + 4.5);
+          context.strokeStyle = "#ffffff";
+          context.lineWidth = 0.55;
+          context.globalAlpha = particle.alpha * twinkle * 0.42;
+          context.stroke();
         }
       });
+      context.globalCompositeOperation = "source-over";
       context.restore();
       context.globalAlpha = 1;
     }

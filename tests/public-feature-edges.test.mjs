@@ -80,13 +80,13 @@ const excludedSpecialRoutes = [
   "stream_suites_public_leaderboards_poc.html",
 ];
 
-test("shared feature edges retain the Status geometry and page-aware accent token", () => {
+test("shared footer feature edges retain the Status footer geometry and page-aware accent token", () => {
   const css = read("css/feature-edges.css");
 
   assert.match(css, /--feature-edge-accent:\s*#76c3ff/);
   assert.match(css, /html\[data-product\][\s\S]*--feature-edge-accent:\s*var\(--product-accent-bright/);
   assert.match(css, /body\.download-surface[\s\S]*--feature-edge-accent:\s*var\(--download-accent-bright/);
-  assert.match(css, /\.site-header,[\s\S]*\.public-topbar,[\s\S]*\.download-topbar[\s\S]*::after\s*\{[\s\S]*right:\s*12%;[\s\S]*bottom:\s*-1px;[\s\S]*width:\s*28%;[\s\S]*height:\s*1px/);
+  assert.doesNotMatch(css, /\.site-header|\.public-topbar|\.download-topbar|\.profile-shell-header|\.not-found-header/);
   assert.match(css, /\.site-footer,[\s\S]*\.public-footer,[\s\S]*\.download-footer,[\s\S]*\.footer-bar,[\s\S]*\.profile-shell-footer,[\s\S]*\.not-found-footer[\s\S]*::before\s*\{[\s\S]*top:\s*-1px;[\s\S]*left:\s*10%;[\s\S]*width:\s*34%;[\s\S]*height:\s*1px/);
   assert.match(css, /background-color:\s*var\(--feature-edge-accent\)/);
   assert.match(css, /z-index:\s*20/);
@@ -97,16 +97,16 @@ test("shared feature edges retain the Status geometry and page-aware accent toke
   assert.match(css, /pointer-events:\s*none/);
 });
 
-test("every inventoried human-facing route directly loads or inherits the shared edge stylesheet", () => {
+test("every inventoried human-facing route directly loads or inherits the shared footer-edge stylesheet", () => {
   const theme = read("css/theme-dark.css");
-  assert.match(theme, /^@import url\("\/css\/public-fonts\.css"\);\r?\n@import url\("\/css\/feature-edges\.css\?v=20260808-edge-persistence"\);/);
+  assert.match(theme, /^@import url\("\/css\/public-fonts\.css"\);\r?\n@import url\("\/css\/feature-edges\.css\?v=20260809-footer-only"\);/);
 
   for (const relativePath of sharedThemeRoutes) {
     assert.match(read(relativePath), /href="\/css\/theme-dark\.css"/, `${relativePath} must inherit feature edges`);
   }
 
   for (const relativePath of directFeatureRoutes) {
-    assert.match(read(relativePath), /href="\/css\/feature-edges\.css\?v=20260808-edge-persistence"/, `${relativePath} must load feature edges`);
+    assert.match(read(relativePath), /href="\/css\/feature-edges\.css\?v=20260809-footer-only"/, `${relativePath} must load feature edges`);
   }
 
   assert.match(read("public-login.html"), /<body class="ss-public-login" data-feature-edges>/);
