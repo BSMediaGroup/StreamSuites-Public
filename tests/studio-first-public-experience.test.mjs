@@ -92,6 +92,7 @@ test("production landing is Studio-first and preserves the production access con
     "icondiag-studioweb.svg",
     "icondiag-studioapp.svg",
     "obs-0.svg",
+    "ui/clipcards.svg",
     "streamsuites-0.svg",
     "alpha.svg",
   ]) {
@@ -118,12 +119,72 @@ test("production landing is Studio-first and preserves the production access con
 test("production landing preserves the approved POC hero, bento modules, and authority map", () => {
   const html = read("index.html");
   const css = read("css/studio-first-landing.css");
+  const client = read("js/studio-first-landing.js");
 
   assert.match(html, /class="scroll-cue" href="#products"/);
   assert.match(html, /Explore the suite/);
-  assert.match(html, /\/css\/studio-first-landing\.css\?v=20260806-footer-lockup/);
+  assert.match(html, /\/css\/studio-first-landing\.css\?v=20260808-pocv9-motion/);
   assert.match(css, /\.landing-hero h1 span\s*\{[\s\S]*linear-gradient\(95deg,[\s\S]*background-clip:\s*text/);
   assert.match(css, /\.scroll-cue i\s*\{[\s\S]*animation:\s*scrollCue/);
+  assert.match(html, /class="header-scroll-progress" aria-hidden="true"/);
+  assert.match(css, /\.header-scroll-progress\s*\{[\s\S]*height:\s*3px;[\s\S]*pointer-events:\s*none/);
+  assert.match(css, /\[data-status-widget-host\]\[data-footer-avoiding="true"\]/);
+  assert.match(css, /transform:\s*scaleX\(var\(--scroll-progress\)\)/);
+  assert.match(client, /document\.documentElement\.scrollHeight - window\.innerHeight/);
+  assert.match(client, /requestAnimationFrame/);
+
+  assert.equal((html.match(/data-product-tab=/g) || []).length, 4);
+  for (const product of ["browser", "native", "obs", "public"]) {
+    assert.match(html, new RegExp(`data-product-tab="${product}"`));
+    assert.match(client, new RegExp(`^\\s*${product}: \\{`, "m"));
+  }
+  assert.equal((html.match(/data-preview-state=/g) || []).length, 3);
+  assert.match(html, /data-preview-state="studio"/);
+  assert.match(html, /data-preview-state="obs"/);
+  assert.match(html, /data-preview-state="public"/);
+  assert.match(client, /previewStates\.forEach/);
+  assert.match(client, /tab\.setAttribute\("aria-selected"/);
+  assert.match(client, /tab\.tabIndex = active \? 0 : -1/);
+  assert.match(client, /ctaHref:\s*"https:\/\/streamsuites\.app\/clips"/);
+
+  for (const asset of [
+    "assets/icons/icondiag-studioweb.svg",
+    "assets/icons/icondiag-studioapp.svg",
+    "assets/icons/obs-0.svg",
+    "assets/icons/ui/clipcards.svg",
+    "assets/icons/ui/scenes.svg",
+    "assets/icons/ui/media.svg",
+    "assets/icons/ui/community.svg",
+    "assets/icons/ui/destinations-filled.svg",
+    "assets/icons/ui/cast.svg",
+    "assets/icons/streamsuites-0.svg",
+    "assets/placeholders/livestreamer1.webp",
+    "assets/placeholders/livestreamer2.webp",
+    "assets/placeholders/solostreamer1.webp",
+    "assets/placeholders/livecommenter1.webp",
+    "assets/placeholders/livecommenter2.webp",
+  ]) {
+    assert.ok(exists(asset), `missing ${asset}`);
+    assert.match(`${html}\n${css}\n${client}`, new RegExp(asset.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/^assets/, "\\/assets")));
+  }
+  assert.doesNotMatch(`${html}\n${css}\n${client}`, /file:\/\//i);
+  assert.match(html, /SHORRIN/);
+  assert.match(html, /TULLY/);
+  assert.match(html, /BUBBLE BOB/);
+  assert.match(html, /Is it true you guys invented Jimothy\?/);
+  assert.match(client, /THIRD RAILIFY/);
+  assert.match(client, /Hey bro that's a pretty nice chair you have/);
+  assert.match(css, /html\[data-product="native"\] \.solo-streamer\s*\{\s*display:\s*block/);
+  assert.match(html, /Authorized ingress/);
+  assert.match(html, /OBS-owned output/);
+  assert.match(html, /NO DUPLICATE MEDIA ENGINE/);
+  assert.match(html, /ROOM<\/span><span>INVITE<\/span><span>SESSION/);
+  assert.match(html, /STREAMSUITES PUBLIC/);
+  assert.equal((html.match(/class="public-clip-card"/g) || []).length, 6);
+  assert.match(css, /\.preview-state\s*\{[\s\S]*min-height:\s*var\(--hero-preview-height\)/);
+  assert.match(client, /Math\.min\(window\.devicePixelRatio \|\| 1, 1\.5\)/);
+  assert.match(client, /const count = compact \? 22/);
+  assert.match(client, /document\.hidden/);
 
   assert.match(html, /class="bento-grid"/);
   for (const moduleClass of ["rooms", "destinations", "chat", "alerts", "engagement", "media"]) {
@@ -139,14 +200,27 @@ test("production landing preserves the approved POC hero, bento modules, and aut
   assert.doesNotMatch(html, /class="capability-grid"/);
 
   assert.match(html, /class="authority-map__grid"/);
-  assert.match(html, /class="authority-node__icon"[^>]*>S<\/span>/);
-  assert.equal((html.match(/class="authority-node__accent"/g) || []).length, 3);
-  assert.match(html, /authority-branch--browser[\s\S]*?branch-line[\s\S]*?authority-node--surface/);
+  assert.match(html, /class="authority-node__icon" aria-hidden="true"><\/span>/);
+  assert.equal((html.match(/data-topology-node=/g) || []).length, 5);
+  assert.equal((html.match(/data-topology-route=/g) || []).length, 4);
+  assert.equal((html.match(/authority-route__trace--halo/g) || []).length, 4);
+  assert.equal((html.match(/authority-route__trace--spark/g) || []).length, 4);
+  assert.equal((html.match(/authority-route__trace--packet/g) || []).length, 4);
+  assert.match(html, /authority-node--browser/);
+  assert.match(html, /authority-node--public/);
+  assert.match(html, /authority-node--native/);
+  assert.match(html, /authority-node--obs/);
+  assert.match(html, /Not a production media engine/);
   assert.match(html, /legend-line--authority/);
   assert.match(html, /legend-line--media/);
   assert.match(css, /\.authority-map__grid\s*\{[\s\S]*background-size:\s*31px 31px/);
-  assert.match(css, /\.authority-branch--native \.branch-line\s*\{[\s\S]*border-radius:\s*18px 0 0/);
-  assert.match(css, /\.authority-branch--obs \.branch-line\s*\{[\s\S]*border-radius:\s*0 18px 0 0/);
+  assert.match(css, /\.authority-route__trace--halo\s*\{[\s\S]*stroke-width:\s*8/);
+  assert.match(css, /@keyframes topologyRouteTrace/);
+  assert.match(client, /const outward = route\.id === "browser" \|\| route\.id === "native"/);
+  assert.match(client, /new IntersectionObserver/);
+  assert.match(client, /visibilitychange/);
+  assert.match(client, /Static authority topology/);
+  assert.match(css, /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*\.authority-route__trace/);
 });
 
 test("approved typography is centralized without external font requests", () => {

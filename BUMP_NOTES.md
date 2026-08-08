@@ -6,6 +6,22 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-08 - Approved POCV9 landing motion and authority topology
+
+#### Technical notes
+
+- Adapted the approved read-only `pocv9` landing treatment into the production `/` surface without editing the reference. The hero now has one bounded canvas particle field, a restrained signal horizon, grid, constellation, scan, and orbit layers, plus a 3px desktop/2px mobile sticky-header reading-progress signal that does not add layout height or accept pointer input.
+- Expanded the existing equal-footprint preview switcher to four keyboard-accessible states: Browser Studio keeps direct Cloudflare RealtimeKit media and the shared illustrative stage; StudioApp uses the same stage composition with its native Windows/WPF plus supervised C++ ownership and a solo-creator media example; Studio for OBS shows authorized Runtime/Auth ingress into a bounded bridge and an OBS-owned output pipeline without implying a duplicate engine; Public Shell shows a compact six-artifact downstream surface without assigning it media ownership.
+- Replaced the former three-branch architecture illustration with a five-node topology: Browser Studio and Public Shell above central Runtime/Auth, with native StudioApp and StreamSuites Studio for OBS below. Four matching curved side-port routes use synchronized base, draw, halo, spark, and packet geometry while retaining truthful identity, permission, room, invitation, destination, credential, alert, automation, export, shared-state, and version authority in Runtime/Auth and keeping all product media paths outside Python runtime.
+- Added restrained directional gradients to the existing primary actions, localized fine-pointer card glow/parallax, and product-aware preview accents without changing button dimensions, card structure, route destinations, header/footer composition, section order, or production copy outside the approved landing presentation.
+- Kept motion bounded and progressive: canvas DPR is capped at 1.5, particle/link counts are capped by viewport size, canvas and topology work stop when hidden or offscreen, route sequencing uses a single visible timer, and no dependency or font load was added. `prefers-reduced-motion` renders the complete interface immediately, leaves a static authority route visible, and disables canvas animation, route drawing, packets, sparks, parallax, reveal transitions, and decorative motion.
+- Added focused source coverage for the four tabs and preview panels, real repository-owned assets, Browser/StudioApp/OBS/Public ownership wording, particle limits and visibility handling, five topology nodes, four shared-geometry route layers, reduced-motion behavior, the bounded production cache revision, and the landing-scoped mobile footer guard. HTTP-served browser validation covered desktop, tablet, portrait phone, landscape phone, short-height desktop, keyboard tab control, mobile navigation, Alpha dismissal, auth-modal Escape handling, access-notice insertion, 50% progress state, equal preview footprints, reduced motion, horizontal-overflow checks, and the floating status control yielding while the mobile footer's own Status link is visible.
+- The original `/auth/access-state`, `/auth/session`, OAuth/email login, Turnstile, temporary access, lockout banner, creator routing, status/version hydration, analytics, protected download gates, manifests, routes, and Runtime/Auth authority contracts are unchanged. No version/build allocation, artifact, dependency, deployment, commit, or remote state changed. The unresolved Tektur redistribution-license publication blocker remains unchanged.
+
+#### Human-readable notes
+
+The landing page now feels alive without becoming noisy: its four product previews explain where production and public output actually live, the Runtime/Auth diagram makes the shared authority boundary easy to follow, and every animation becomes a complete static presentation for people who prefer reduced motion.
+
 ### 2026-08-08 - Status center dark-theme and alignment correction
 
 #### Technical notes

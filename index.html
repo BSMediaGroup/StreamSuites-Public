@@ -13,7 +13,7 @@
   <meta name="description" content="StreamSuites connects Browser Studio, native StudioApp, StreamSuites Studio for OBS, and audience tools through one Runtime/Auth authority." />
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="/css/status-widget.css" />
-  <link rel="stylesheet" href="/css/studio-first-landing.css?v=20260806-footer-lockup" />
+  <link rel="stylesheet" href="/css/studio-first-landing.css?v=20260808-pocv9-motion" />
 </head>
 
 <body>
@@ -48,6 +48,7 @@
   </div>
 
   <header class="site-header" data-site-header>
+    <div class="header-scroll-progress" aria-hidden="true"><i></i></div>
     <div class="landing-shell site-header__inner">
       <a class="brand" href="#top" aria-label="StreamSuites home">
         <img class="brand__mark" src="/assets/logos/ssmainlogosq.webp" alt="" aria-hidden="true" />
@@ -91,8 +92,31 @@
   <main id="main">
     <section id="top" class="landing-hero section-grid" aria-labelledby="hero-title">
       <div class="hero-backdrop" aria-hidden="true">
+        <canvas class="hero-particles" data-particle-canvas></canvas>
+        <div class="hero-signal-field">
+          <div class="hero-horizon">
+            <span class="hero-horizon__atmosphere"></span>
+            <span class="hero-horizon__rim"></span>
+            <span class="hero-horizon__core"></span>
+          </div>
+          <div class="hero-grid-plane"></div>
+          <div class="hero-constellation">
+            <svg viewBox="0 0 760 520" preserveAspectRatio="none" focusable="false" aria-hidden="true">
+              <path d="M40 392 C152 268 262 318 352 204 S548 120 720 190" />
+              <path d="M84 452 C210 342 324 382 418 286 S592 202 742 252" />
+              <path d="M162 116 C258 162 292 112 386 138 S560 92 682 126" />
+            </svg>
+            <i class="signal-node signal-node--one"></i>
+            <i class="signal-node signal-node--two"></i>
+            <i class="signal-node signal-node--three"></i>
+            <i class="signal-node signal-node--four"></i>
+            <i class="signal-node signal-node--five"></i>
+          </div>
+          <div class="hero-scan"></div>
+        </div>
         <div class="hero-orbit hero-orbit--one"></div>
         <div class="hero-orbit hero-orbit--two"></div>
+        <div class="hero-orbit hero-orbit--three"></div>
         <div class="hero-beam"></div>
       </div>
 
@@ -124,96 +148,141 @@
 
         <div class="hero__visual reveal reveal--delay" aria-label="Interactive StreamSuites product preview">
           <div class="product-switcher" role="tablist" aria-label="Choose product preview">
-            <button class="product-switcher__tab is-active" type="button" role="tab" aria-selected="true" data-product-tab="browser">
+            <button id="product-tab-browser" class="product-switcher__tab is-active" type="button" role="tab" aria-selected="true" aria-controls="product-preview-studio" data-product-tab="browser">
               <span class="product-switcher__icon product-switcher__icon--browser" aria-hidden="true"></span>
               <span><strong>Browser Studio</strong><small>Private cloud workspace</small></span>
             </button>
-            <button class="product-switcher__tab" type="button" role="tab" aria-selected="false" data-product-tab="native">
+            <button id="product-tab-native" class="product-switcher__tab" type="button" role="tab" aria-selected="false" aria-controls="product-preview-studio" tabindex="-1" data-product-tab="native">
               <span class="product-switcher__icon product-switcher__icon--native" aria-hidden="true"></span>
               <span><strong>StudioApp</strong><small>Native Windows</small></span>
             </button>
-            <button class="product-switcher__tab" type="button" role="tab" aria-selected="false" data-product-tab="obs">
+            <button id="product-tab-obs" class="product-switcher__tab" type="button" role="tab" aria-selected="false" aria-controls="product-preview-obs" tabindex="-1" data-product-tab="obs">
               <span class="product-switcher__icon product-switcher__icon--obs" aria-hidden="true"></span>
               <span><strong>Studio for OBS</strong><small>Plugin workflow</small></span>
             </button>
+            <button id="product-tab-public" class="product-switcher__tab" type="button" role="tab" aria-selected="false" aria-controls="product-preview-public" tabindex="-1" data-product-tab="public">
+              <span class="product-switcher__icon product-switcher__icon--public" aria-hidden="true"></span>
+              <span><strong>Public Shell</strong><small>Clips · public artifacts</small></span>
+            </button>
           </div>
 
-          <div class="studio-device">
+          <div class="studio-device" data-studio-device>
             <div class="studio-device__glow" aria-hidden="true"></div>
-            <div class="studio-window" aria-label="Illustrative production workspace">
-              <div class="studio-window__topbar">
-                <div class="window-controls" aria-hidden="true"><i></i><i></i><i></i></div>
-                <div class="studio-window__identity">
-                  <span class="studio-mark" aria-hidden="true"></span>
-                  <strong data-product-window-title>STREAMSUITES STUDIO</strong>
-                </div>
-                <div class="studio-window__status"><span class="off-air-dot"></span><span>OFF AIR</span></div>
-              </div>
-
-              <div class="studio-workspace" aria-hidden="true">
-                <aside class="studio-rail studio-rail--left">
-                  <div class="rail-heading">Production</div>
-                  <div class="rail-item is-active"><span>01</span><b>Scenes</b></div>
-                  <div class="rail-item"><span>02</span><b>Sources</b></div>
-                  <div class="rail-item"><span>03</span><b>Guests</b></div>
-                  <div class="rail-item"><span>04</span><b>Destinations</b></div>
-                  <div class="rail-spacer"></div>
-                  <div class="rail-state"><i></i><span data-rail-state>Private room ready</span></div>
-                </aside>
-
-                <div class="studio-center">
-                  <div class="stage-toolbar">
-                    <span>PROGRAM</span>
-                    <div class="layout-pips"><i class="is-active"></i><i></i><i></i><i></i></div>
-                    <span class="stage-toolbar__room">ROOM SS-7KQ2</span>
+            <div id="product-preview-studio" class="preview-state preview-state--studio is-active" role="tabpanel" aria-hidden="false" data-preview-state="studio">
+              <div class="studio-window" aria-label="Illustrative StreamSuites production workspace">
+                <div class="studio-window__topbar">
+                  <div class="window-controls" aria-hidden="true"><i></i><i></i><i></i></div>
+                  <div class="studio-window__identity">
+                    <span class="studio-mark" aria-hidden="true"></span>
+                    <strong data-product-window-title>STREAMSUITES STUDIO</strong>
                   </div>
-                  <div class="program-stage">
-                    <div class="program-stage__grid"></div>
-                    <div class="program-stage__safe-area"></div>
-                    <div class="show-title"><small>THE CREATOR DESK</small><strong>ILLUSTRATIVE PREVIEW</strong></div>
-                    <div class="participant participant--host">
-                      <div class="participant__image"><span>DC</span></div>
-                      <div class="participant__label"><strong>Director</strong><small>HOST</small></div>
-                    </div>
-                    <div class="participant participant--guest">
-                      <div class="participant__image"><span>GM</span></div>
-                      <div class="participant__label"><strong>Guest</strong><small>BACKSTAGE → STAGE</small></div>
-                    </div>
-                    <div class="lower-third">
-                      <span class="lower-third__mark">S</span>
-                      <div><strong>STREAMSUITES</strong><small>One authority. Purpose-built production surfaces.</small></div>
-                    </div>
-                    <div class="live-chip"><i></i> PREVIEW</div>
-                  </div>
-                  <div class="audio-dock">
-                    <div class="audio-channel"><span>MIC</span><div class="meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><b>-12.4</b></div>
-                    <div class="audio-channel"><span>DESKTOP</span><div class="meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><b>-18.1</b></div>
-                    <div class="audio-channel audio-channel--master"><span>MASTER</span><div class="meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><b>-9.8</b></div>
-                  </div>
+                  <div class="studio-window__status studio-window__status--live" aria-label="Illustrative live-now state"><span class="live-now-dot"></span><span>LIVE NOW</span></div>
                 </div>
 
-                <aside class="studio-rail studio-rail--right">
-                  <div class="rail-heading">Inspector</div>
-                  <div class="inspector-card"><span>Layout</span><strong>Interview</strong><i></i></div>
-                  <div class="inspector-card"><span>Stage</span><strong>2 participants</strong><i></i></div>
-                  <div class="inspector-card"><span>Output</span><strong data-output-label>OFF AIR</strong><i></i></div>
-                  <div class="rail-spacer"></div>
-                  <span class="go-live"><span></span> GO LIVE</span>
-                </aside>
+                <div class="studio-workspace" aria-hidden="true">
+                  <aside class="studio-rail studio-rail--left">
+                    <div class="rail-heading">Production</div>
+                    <div class="rail-item is-active"><span class="rail-item__icon rail-item__icon--scenes"></span><b>Scenes</b></div>
+                    <div class="rail-item"><span class="rail-item__icon rail-item__icon--sources"></span><b>Sources</b></div>
+                    <div class="rail-item"><span class="rail-item__icon rail-item__icon--guests"></span><b>Guests</b></div>
+                    <div class="rail-item"><span class="rail-item__icon rail-item__icon--destinations"></span><b>Destinations</b></div>
+                    <div class="rail-spacer"></div>
+                    <div class="rail-state"><i></i><span data-rail-state>Private room ready</span></div>
+                  </aside>
+
+                  <div class="studio-center">
+                    <div class="stage-toolbar"><span>PROGRAM</span><div class="layout-pips"><i class="is-active"></i><i></i><i></i><i></i></div><span class="stage-toolbar__room">ROOM SS-7KQ2</span></div>
+                    <div class="program-stage">
+                      <div class="program-stage__mock-output-bg"></div>
+                      <div class="program-stage__grid"></div>
+                      <div class="program-stage__safe-area"></div>
+                      <div class="solo-streamer"><img src="/assets/placeholders/solostreamer1.webp" alt="" /></div>
+                      <div class="show-title"><small>THE CREATOR DESK</small><strong>ILLUSTRATIVE PREVIEW</strong></div>
+                      <div class="participant participant--host"><div class="participant__image"><img src="/assets/placeholders/livestreamer1.webp" alt="" /></div><div class="participant__label"><strong>SHORRIN</strong><small>HOST</small></div></div>
+                      <div class="participant participant--guest"><div class="participant__image"><img src="/assets/placeholders/livestreamer2.webp" alt="" /></div><div class="participant__label"><strong>TULLY</strong><small>BACKSTAGE → STAGE</small></div></div>
+                      <div class="lower-third"><span class="lower-third__mark lower-third__mark--avatar"><img src="/assets/placeholders/livecommenter1.webp" alt="" data-comment-avatar /></span><div><strong data-comment-name>BUBBLE BOB</strong><small data-comment-text>Is it true you guys invented Jimothy?</small></div></div>
+                      <div class="live-chip live-chip--live"><i></i> LIVE</div>
+                    </div>
+                    <div class="audio-dock audio-dock--stereo">
+                      <div class="audio-channel audio-channel--stereo"><span>MIC</span><div class="stereo-meter"><div><em>L</em><div class="meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div><em>R</em><div class="meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div><b>-12.4</b></div>
+                      <div class="audio-channel audio-channel--stereo"><span>DESKTOP</span><div class="stereo-meter"><div><em>L</em><div class="meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div><em>R</em><div class="meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div><b>-18.1</b></div>
+                      <div class="audio-channel audio-channel--master audio-channel--stereo"><span>MASTER</span><div class="stereo-meter"><div><em>L</em><div class="meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div><em>R</em><div class="meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div><b>-9.8</b></div>
+                    </div>
+                  </div>
+
+                  <aside class="studio-rail studio-rail--right">
+                    <div class="rail-heading">Inspector</div>
+                    <div class="inspector-card"><span>Layout</span><strong data-layout-label>Interview</strong><i></i></div>
+                    <div class="inspector-card"><span>Stage</span><strong data-stage-label>2 participants</strong><i></i></div>
+                    <div class="inspector-card"><span>Output</span><strong data-output-label>LIVE NOW</strong><i></i></div>
+                    <div class="rail-spacer"></div>
+                    <span class="go-live go-live--active"><span></span> LIVE</span>
+                  </aside>
+                </div>
+              </div>
+
+              <div class="floating-signal floating-signal--one floating-signal--destinations" aria-hidden="true">
+                <div class="floating-signal__heading"><span class="floating-signal__icon floating-signal__icon--destinations"></span><div><small>DESTINATIONS</small><strong>Runtime-owned</strong></div></div>
+                <div class="destination-list">
+                  <span><img src="/assets/icons/rumble.svg" alt="" />Rumble<i></i></span>
+                  <span><img src="/assets/icons/youtube.svg" alt="" />YouTube<i></i></span>
+                  <span><img src="/assets/icons/twitch.svg" alt="" />Twitch<i></i></span>
+                  <span><img src="/assets/icons/twitter.svg" alt="" />Twitter / X<i></i></span>
+                  <span><img src="/assets/icons/kick.svg" alt="" />Kick<i></i></span>
+                </div>
+              </div>
+              <div class="floating-signal floating-signal--two" aria-hidden="true"><span class="floating-signal__icon floating-signal__icon--guests"></span><div><small>ROOM ACTIVITY</small><strong>Guest approved</strong></div></div>
+              <div class="floating-signal floating-signal--three" aria-hidden="true"><span class="floating-signal__icon floating-signal__icon--media" data-product-media-icon-shell></span><div><small data-product-architecture-label>BROWSER MEDIA</small><strong data-product-architecture>Cloudflare RealtimeKit</strong></div></div>
+            </div>
+
+            <div id="product-preview-obs" class="preview-state preview-state--obs" role="tabpanel" aria-hidden="true" data-preview-state="obs">
+              <div class="obs-hero-preview" aria-label="Illustrative bounded StreamSuites to OBS integration">
+                <div class="obs-preview__window">
+                  <div class="obs-preview__titlebar"><span class="obs-preview__controls"><i></i><i></i><i></i></span><span class="obs-preview__title"><span class="obs-preview__title-icon" aria-hidden="true"></span><strong>STREAMSUITES STUDIO FOR OBS</strong></span><span>DEVELOPMENT</span></div>
+                  <div class="obs-preview__workspace">
+                    <aside class="obs-preview__rail"><small>CONTROL PLANE</small><strong>Runtime/Auth</strong><span>ROOM</span><span>INVITE</span><span>SESSION</span></aside>
+                    <div class="obs-preview__flow">
+                      <div class="obs-preview__node obs-preview__node--stream"><img src="/assets/logos/studiologo3.webp" alt="" /><strong>Authorized ingress</strong><span>Scoped guest receiver</span></div>
+                      <span class="obs-preview__connector"><i></i><i></i><i></i><i></i></span>
+                      <div class="obs-preview__node obs-preview__node--obs"><img src="/assets/icons/obs-white.svg" alt="" /><strong>OBS-owned output</strong><span>Scenes · mix · encode</span></div>
+                    </div>
+                  </div>
+                  <div class="obs-preview__status"><span><i></i> BOUNDED LOCAL BRIDGE</span><strong>NO DUPLICATE MEDIA ENGINE</strong></div>
+                </div>
               </div>
             </div>
 
-            <div class="floating-signal floating-signal--one" aria-hidden="true">
-              <span class="floating-signal__icon">↗</span>
-              <div><small>DESTINATIONS</small><strong>Runtime-owned</strong></div>
-            </div>
-            <div class="floating-signal floating-signal--two" aria-hidden="true">
-              <span class="floating-signal__icon">+</span>
-              <div><small>ROOM ACTIVITY</small><strong>Guest approved</strong></div>
-            </div>
-            <div class="floating-signal floating-signal--three" aria-hidden="true">
-              <span class="floating-signal__icon">◎</span>
-              <div><small data-product-architecture-label>BROWSER MEDIA</small><strong data-product-architecture>Cloudflare RealtimeKit</strong></div>
+            <div id="product-preview-public" class="preview-state preview-state--public" role="tabpanel" aria-hidden="true" data-preview-state="public">
+              <div class="public-hero-preview" aria-label="Illustrative StreamSuites Public Clips shell">
+                <aside class="public-preview__sidebar">
+                  <div class="public-preview__brand"><span class="public-preview__brand-mark" aria-hidden="true"></span><div><strong>STREAMSUITES PUBLIC</strong><small>PUBLIC DASHBOARD</small></div></div>
+                  <small class="public-preview__group">DASHBOARD</small>
+                  <span><i class="public-preview__icon public-preview__icon--home"></i>Home</span>
+                  <span class="is-active"><i class="public-preview__icon public-preview__icon--clips"></i>Clips</span>
+                  <span><i class="public-preview__icon public-preview__icon--polls"></i>Polls</span>
+                  <span><i class="public-preview__icon public-preview__icon--wheels"></i>Wheels</span>
+                  <span><i class="public-preview__icon public-preview__icon--leaderboards"></i>Leaderboards</span>
+                  <span><i class="public-preview__icon public-preview__icon--tallies"></i>Tallies</span>
+                  <small class="public-preview__group public-preview__group--production">PRODUCTION</small>
+                  <span><i class="public-preview__icon public-preview__icon--browser"></i>Browser Studio</span>
+                  <span><i class="public-preview__icon public-preview__icon--native"></i>StudioApp</span>
+                  <span><i class="public-preview__icon public-preview__icon--obs"></i>Studio for OBS</span>
+                </aside>
+                <div class="public-preview__main">
+                  <div class="public-preview__topbar"><div><i class="public-preview__icon public-preview__icon--clips"></i><strong>Clips</strong></div><div class="public-preview__search"><i class="public-preview__icon public-preview__icon--search"></i>Search clips</div><span class="public-preview__account">PUBLIC</span></div>
+                  <div class="public-preview__content">
+                    <h3>Clips Gallery</h3>
+                    <div class="public-preview__grid">
+                      <article class="public-clip-card"><div class="public-clip-card__media public-clip-card__media--one"><span>00:57</span></div><div class="public-clip-card__body"><strong>Community highlight</strong><small>Public User · StreamSuites</small><p>A recent public artifact from the live community.</p><div><b>StreamSuites</b><i>Queued</i><em>140 views</em></div></div></article>
+                      <article class="public-clip-card"><div class="public-clip-card__media public-clip-card__media--two"><span>01:28</span></div><div class="public-clip-card__body"><strong>Creator desk recap</strong><small>Creator Desk · StreamSuites</small><p>A short production recap ready for public discovery.</p><div><b>Rumble</b><i>Published</i><em>1,520 views</em></div></div></article>
+                      <article class="public-clip-card"><div class="public-clip-card__media public-clip-card__media--three"><span>00:52</span></div><div class="public-clip-card__body"><strong>Overlay calibration</strong><small>Production Team · StreamSuites</small><p>Illustrative scoreboard and tally calibration.</p><div><b>Kick</b><i>Published</i><em>788 views</em></div></div></article>
+                      <article class="public-clip-card"><div class="public-clip-card__media public-clip-card__media--four"><span>00:41</span></div><div class="public-clip-card__body"><strong>Poll spotlight</strong><small>Community Team · StreamSuites</small><p>A public voting moment from a recent live interaction.</p><div><b>YouTube</b><i>Queued</i><em>412 views</em></div></div></article>
+                      <article class="public-clip-card"><div class="public-clip-card__media public-clip-card__media--five"><span>01:03</span></div><div class="public-clip-card__body"><strong>Wheel result reveal</strong><small>Operations Desk · StreamSuites</small><p>An illustrative wheel outcome with branded overlays.</p><div><b>Twitch</b><i>Published</i><em>932 views</em></div></div></article>
+                      <article class="public-clip-card"><div class="public-clip-card__media public-clip-card__media--six"><span>00:36</span></div><div class="public-clip-card__body"><strong>Leaderboard snapshot</strong><small>Analytics Team · StreamSuites</small><p>Public progression and leaderboard standings.</p><div><b>Rumble</b><i>Published</i><em>605 views</em></div></div></article>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -320,48 +389,86 @@
           </div>
         </div>
 
-        <div class="authority-map reveal reveal--delay" aria-label="StreamSuites authority and media architecture diagram">
+        <div class="authority-map reveal reveal--delay" aria-label="StreamSuites Runtime/Auth authority, product media, and public artifact architecture diagram" data-authority-map data-active-route="browser">
           <div class="authority-map__grid" aria-hidden="true"></div>
-          <div class="authority-node authority-node--core">
-            <span class="authority-node__icon" aria-hidden="true">S</span>
-            <small>SHARED AUTHORITY</small>
-            <strong>Runtime / Auth</strong>
-            <p>Identity · rooms · permissions · destinations · automation · state · versioning</p>
-          </div>
+          <div class="authority-map__depth" aria-hidden="true"></div>
+          <div class="authority-map__dust" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="authority-map__hud" aria-hidden="true"><span class="authority-map__mode"><i></i> CONTROL PLANE TOPOLOGY</span><span class="authority-map__cycle" data-topology-status>Authority → Browser Studio</span></div>
 
-          <div class="authority-branch authority-branch--browser">
-            <span class="branch-line"></span>
-            <div class="authority-node authority-node--surface">
-              <span class="authority-node__accent"></span>
-              <small>BROWSER MEDIA</small>
-              <strong>Studio</strong>
-              <p>Cloudflare RealtimeKit</p>
+          <svg class="authority-routes" viewBox="0 0 720 700" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            <g class="authority-route authority-route--browser" data-topology-route="browser">
+              <path class="authority-route__base" pathLength="100" d="M210 307 C130 299 122 228 218 200" />
+              <path class="authority-route__draw" pathLength="100" d="M210 307 C130 299 122 228 218 200" />
+              <path class="authority-route__trace authority-route__trace--halo" pathLength="100" d="M210 307 C130 299 122 228 218 200" />
+              <path class="authority-route__trace authority-route__trace--spark" pathLength="100" d="M210 307 C130 299 122 228 218 200" />
+              <path class="authority-route__trace authority-route__trace--packet" pathLength="100" d="M210 307 C130 299 122 228 218 200" />
+            </g>
+            <g class="authority-route authority-route--public" data-topology-route="public">
+              <path class="authority-route__base" pathLength="100" d="M510 307 C590 299 598 228 502 200" />
+              <path class="authority-route__draw" pathLength="100" d="M510 307 C590 299 598 228 502 200" />
+              <path class="authority-route__trace authority-route__trace--halo" pathLength="100" d="M510 307 C590 299 598 228 502 200" />
+              <path class="authority-route__trace authority-route__trace--spark" pathLength="100" d="M510 307 C590 299 598 228 502 200" />
+              <path class="authority-route__trace authority-route__trace--packet" pathLength="100" d="M510 307 C590 299 598 228 502 200" />
+            </g>
+            <g class="authority-route authority-route--obs" data-topology-route="obs">
+              <path class="authority-route__base" pathLength="100" d="M510 393 C590 401 598 472 502 500" />
+              <path class="authority-route__draw" pathLength="100" d="M510 393 C590 401 598 472 502 500" />
+              <path class="authority-route__trace authority-route__trace--halo" pathLength="100" d="M510 393 C590 401 598 472 502 500" />
+              <path class="authority-route__trace authority-route__trace--spark" pathLength="100" d="M510 393 C590 401 598 472 502 500" />
+              <path class="authority-route__trace authority-route__trace--packet" pathLength="100" d="M510 393 C590 401 598 472 502 500" />
+            </g>
+            <g class="authority-route authority-route--native" data-topology-route="native">
+              <path class="authority-route__base" pathLength="100" d="M210 393 C130 401 122 472 218 500" />
+              <path class="authority-route__draw" pathLength="100" d="M210 393 C130 401 122 472 218 500" />
+              <path class="authority-route__trace authority-route__trace--halo" pathLength="100" d="M210 393 C130 401 122 472 218 500" />
+              <path class="authority-route__trace authority-route__trace--spark" pathLength="100" d="M210 393 C130 401 122 472 218 500" />
+              <path class="authority-route__trace authority-route__trace--packet" pathLength="100" d="M210 393 C130 401 122 472 218 500" />
+            </g>
+          </svg>
+
+          <article class="authority-node authority-node--surface authority-node--browser" data-topology-node="browser">
+            <span class="authority-node__edge" aria-hidden="true"></span>
+            <div class="authority-node__header"><span class="authority-node__index">01 / BROWSER</span><span class="authority-node__ownership">MEDIA OWNER</span></div>
+            <small>BROWSER MEDIA</small><strong>Browser Studio</strong><p>Cloudflare RealtimeKit</p>
+            <div class="authority-node__footer"><span>Identity + state from Runtime/Auth</span><i aria-hidden="true"></i></div>
+          </article>
+
+          <article class="authority-node authority-node--surface authority-node--public" data-topology-node="public">
+            <span class="authority-node__edge" aria-hidden="true"></span>
+            <div class="authority-node__header"><span class="authority-node__index">02 / PUBLIC</span><span class="authority-node__ownership">DOWNSTREAM</span></div>
+            <small>AUTHORITY-BACKED</small><strong>Public Surfaces</strong><p>Clips · polls · profiles · artifacts</p>
+            <div class="authority-node__footer"><span>Not a production media engine</span><i aria-hidden="true"></i></div>
+          </article>
+
+          <article class="authority-node authority-node--core" data-topology-node="core">
+            <span class="authority-node__core-orbit" aria-hidden="true"></span>
+            <div class="authority-node__core-header">
+              <span class="authority-node__icon" aria-hidden="true"></span>
+              <div><small>SHARED AUTHORITY</small><strong>Runtime / Auth</strong></div>
+              <span class="authority-node__health"><i aria-hidden="true"></i> AUTHORITATIVE</span>
             </div>
-          </div>
+            <p>Canonical identity, permissions, rooms, destinations, credentials, automation, alerts, shared state, exports, and versioning.</p>
+            <div class="authority-services" aria-label="Runtime and Auth authority domains"><span>Identity</span><span>Rooms</span><span>Permissions</span><span>Destinations</span><span>Automation</span><span>Versioning</span></div>
+            <div class="authority-node__ports" aria-hidden="true"><i class="authority-port authority-port--browser"></i><i class="authority-port authority-port--native"></i><i class="authority-port authority-port--public"></i><i class="authority-port authority-port--obs"></i></div>
+          </article>
 
-          <div class="authority-branch authority-branch--native">
-            <span class="branch-line"></span>
-            <div class="authority-node authority-node--surface">
-              <span class="authority-node__accent"></span>
-              <small>NATIVE MEDIA</small>
-              <strong>StudioApp</strong>
-              <p>Supervised C++ engine</p>
-            </div>
-          </div>
+          <article class="authority-node authority-node--surface authority-node--native" data-topology-node="native">
+            <span class="authority-node__edge" aria-hidden="true"></span>
+            <div class="authority-node__header"><span class="authority-node__index">03 / WINDOWS</span><span class="authority-node__ownership">MEDIA OWNER</span></div>
+            <small>NATIVE MEDIA</small><strong>StudioApp</strong><p>Supervised C++ engine</p>
+            <div class="authority-node__footer"><span>Identity + state from Runtime/Auth</span><i aria-hidden="true"></i></div>
+          </article>
 
-          <div class="authority-branch authority-branch--obs">
-            <span class="branch-line"></span>
-            <div class="authority-node authority-node--surface">
-              <span class="authority-node__accent"></span>
-              <small>OBS MEDIA</small>
-              <strong>Studio for OBS</strong>
-              <p>OBS-owned pipeline</p>
-            </div>
-          </div>
+          <article class="authority-node authority-node--surface authority-node--obs" data-topology-node="obs">
+            <span class="authority-node__edge" aria-hidden="true"></span>
+            <div class="authority-node__header"><span class="authority-node__index">04 / OBS</span><span class="authority-node__ownership">MEDIA OWNER</span></div>
+            <small>OBS MEDIA</small><strong>Studio for OBS</strong><p>OBS-owned pipeline</p>
+            <div class="authority-node__footer"><span>Identity + state from Runtime/Auth</span><i aria-hidden="true"></i></div>
+          </article>
 
-          <div class="map-legend">
-            <span><i class="legend-line legend-line--authority"></i> Authority / state</span>
-            <span><i class="legend-line legend-line--media"></i> Product media boundary</span>
+          <div class="map-legend" aria-hidden="true">
+            <span><i class="legend-line legend-line--authority"></i> Runtime/Auth authority, state, and public artifacts</span>
+            <span><i class="legend-line legend-line--media"></i> Production media remains product-owned</span>
           </div>
         </div>
       </div>

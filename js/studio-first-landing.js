@@ -2,56 +2,83 @@
   "use strict";
 
   const root = document.documentElement;
+  const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const finePointerQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
   const productTabs = Array.from(document.querySelectorAll("[data-product-tab]"));
   const productCards = Array.from(document.querySelectorAll("[data-product-card]"));
   const productSelectButtons = Array.from(document.querySelectorAll("[data-select-product]"));
+  const previewStates = Array.from(document.querySelectorAll("[data-preview-state]"));
   const primaryCta = document.querySelector("[data-primary-product-cta]");
   const primaryCtaLabel = document.querySelector("[data-primary-product-label]");
   const windowTitle = document.querySelector("[data-product-window-title]");
   const railState = document.querySelector("[data-rail-state]");
   const outputLabel = document.querySelector("[data-output-label]");
+  const layoutLabel = document.querySelector("[data-layout-label]");
+  const stageLabel = document.querySelector("[data-stage-label]");
   const architectureLabel = document.querySelector("[data-product-architecture-label]");
   const architecture = document.querySelector("[data-product-architecture]");
+  const productMediaIconShell = document.querySelector("[data-product-media-icon-shell]");
   const productStatus = document.querySelector("[data-product-status]");
   const captionTitle = document.querySelector("[data-product-caption-title]");
   const captionCopy = document.querySelector("[data-product-caption-copy]");
+  const commentName = document.querySelector("[data-comment-name]");
+  const commentText = document.querySelector("[data-comment-text]");
+  const commentAvatar = document.querySelector("[data-comment-avatar]");
 
   const products = Object.freeze({
     browser: {
+      previewState: "studio",
       windowTitle: "STREAMSUITES STUDIO",
       railState: "Private room ready",
-      outputLabel: "OFF AIR",
+      outputLabel: "LIVE NOW",
+      layoutLabel: "Interview",
+      stageLabel: "2 participants",
       architectureLabel: "BROWSER MEDIA",
       architecture: "Cloudflare RealtimeKit",
+      mediaIcon: "/assets/icons/ui/cast.svg",
       status: "Closed access",
       captionTitle: "Browser Studio",
       captionCopy: "Private rooms, guests, layouts, branding, and direct browser media. Broadcast output remains unimplemented.",
       ctaLabel: "Open Browser Studio",
       ctaHref: "https://studio.streamsuites.app",
+      commentName: "BUBBLE BOB",
+      commentText: "Is it true you guys invented Jimothy?",
+      commentAvatar: "/assets/placeholders/livecommenter1.webp",
     },
     native: {
+      previewState: "studio",
       windowTitle: "STREAMSUITES STUDIOAPP",
       railState: "Engine supervised",
-      outputLabel: "Local output idle",
+      outputLabel: "LIVE NOW",
+      layoutLabel: "Solo",
+      stageLabel: "1 local source",
       architectureLabel: "NATIVE MEDIA",
       architecture: "Supervised C++ engine",
+      mediaIcon: "/assets/icons/ui/cast.svg",
       status: "Windows Alpha",
       captionTitle: "StudioApp",
       captionCopy: "Native capture, preview, audio, recording, replay, and one authorized custom RTMP/RTMPS output path.",
       ctaLabel: "View StudioApp",
       ctaHref: "/downloads/studioapp/",
+      commentName: "THIRD RAILIFY",
+      commentText: "Hey bro that's a pretty nice chair you have...",
+      commentAvatar: "/assets/placeholders/livecommenter2.webp",
     },
     obs: {
-      windowTitle: "STREAMSUITES STUDIO FOR OBS",
-      railState: "Receiver bridge",
-      outputLabel: "Owned by OBS",
-      architectureLabel: "OBS MEDIA",
-      architecture: "OBS-owned pipeline",
+      previewState: "obs",
       status: "In development",
       captionTitle: "Studio for OBS",
       captionCopy: "Room and guest receiver foundations for existing OBS workflows. OBS keeps capture, mixing, encoding, and output.",
       ctaLabel: "View OBS Integration",
       ctaHref: "/downloads/obs-plugin/",
+    },
+    public: {
+      previewState: "public",
+      status: "Public surfaces",
+      captionTitle: "Public Shell",
+      captionCopy: "Clips and other public artifacts are downstream Runtime/Auth-backed surfaces, not another production media engine.",
+      ctaLabel: "Explore Public Clips",
+      ctaHref: "https://streamsuites.app/clips",
     },
   });
 
@@ -68,24 +95,39 @@
       if (active && focusTab) tab.focus();
     });
 
+    previewStates.forEach((state) => {
+      const active = state.dataset.previewState === product.previewState;
+      state.classList.toggle("is-active", active);
+      state.setAttribute("aria-hidden", active ? "false" : "true");
+      if (active) state.setAttribute("aria-labelledby", `product-tab-${productId}`);
+    });
+
     productCards.forEach((card) => {
       card.classList.toggle("is-selected", card.dataset.productCard === productId);
     });
 
-    if (windowTitle) windowTitle.textContent = product.windowTitle;
-    if (railState) railState.textContent = product.railState;
-    if (outputLabel) outputLabel.textContent = product.outputLabel;
-    if (architectureLabel) architectureLabel.textContent = product.architectureLabel;
-    if (architecture) architecture.textContent = product.architecture;
+    if (windowTitle && product.windowTitle) windowTitle.textContent = product.windowTitle;
+    if (railState && product.railState) railState.textContent = product.railState;
+    if (outputLabel && product.outputLabel) outputLabel.textContent = product.outputLabel;
+    if (layoutLabel && product.layoutLabel) layoutLabel.textContent = product.layoutLabel;
+    if (stageLabel && product.stageLabel) stageLabel.textContent = product.stageLabel;
+    if (architectureLabel && product.architectureLabel) architectureLabel.textContent = product.architectureLabel;
+    if (architecture && product.architecture) architecture.textContent = product.architecture;
+    if (productMediaIconShell && product.mediaIcon) {
+      productMediaIconShell.style.setProperty("--icon-url", `url("${product.mediaIcon}")`);
+    }
     if (productStatus) productStatus.textContent = product.status;
     if (captionTitle) captionTitle.textContent = product.captionTitle;
     if (captionCopy) captionCopy.textContent = product.captionCopy;
     if (primaryCtaLabel) primaryCtaLabel.textContent = product.ctaLabel;
     if (primaryCta) primaryCta.href = product.ctaHref;
+    if (commentName && product.commentName) commentName.textContent = product.commentName;
+    if (commentText && product.commentText) commentText.textContent = product.commentText;
+    if (commentAvatar && product.commentAvatar) commentAvatar.src = product.commentAvatar;
 
     if (scrollToHero) {
       document.querySelector("#top")?.scrollIntoView({
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        behavior: reducedMotionQuery.matches ? "auto" : "smooth",
         block: "start",
       });
     }
@@ -151,10 +193,30 @@
     }
   });
 
+  const pendingFrameTasks = new Set();
+  let pendingFrame = 0;
+  const scheduleFrame = (callback) => {
+    pendingFrameTasks.add(callback);
+    if (pendingFrame) return;
+    pendingFrame = window.requestAnimationFrame(() => {
+      pendingFrame = 0;
+      const tasks = Array.from(pendingFrameTasks);
+      pendingFrameTasks.clear();
+      tasks.forEach((task) => task());
+    });
+  };
+
   const siteHeader = document.querySelector("[data-site-header]");
-  const updateHeader = () => siteHeader?.classList.toggle("is-scrolled", window.scrollY > 18);
-  window.addEventListener("scroll", updateHeader, { passive: true });
-  updateHeader();
+  const updateScrollState = () => {
+    siteHeader?.classList.toggle("is-scrolled", window.scrollY > 18);
+    const range = document.documentElement.scrollHeight - window.innerHeight;
+    const ratio = range <= 1 ? 1 : Math.min(1, Math.max(0, window.scrollY / range));
+    root.style.setProperty("--scroll-progress", ratio.toFixed(4));
+  };
+  const scheduleScrollState = () => scheduleFrame(updateScrollState);
+  window.addEventListener("scroll", scheduleScrollState, { passive: true });
+  window.addEventListener("resize", scheduleScrollState, { passive: true });
+  updateScrollState();
 
   const navToggle = document.querySelector("[data-nav-toggle]");
   const primaryNav = document.querySelector("[data-primary-nav]");
@@ -220,21 +282,396 @@
   });
 
   const revealItems = Array.from(document.querySelectorAll(".reveal"));
-  if ("IntersectionObserver" in window && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    const observer = new IntersectionObserver(
+  if ("IntersectionObserver" in window && !reducedMotionQuery.matches) {
+    const revealObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return;
           entry.target.classList.add("is-visible");
-          observer.unobserve(entry.target);
+          revealObserver.unobserve(entry.target);
         });
       },
       { threshold: 0.12, rootMargin: "0px 0px -40px" }
     );
-    revealItems.forEach((item) => observer.observe(item));
+    revealItems.forEach((item) => revealObserver.observe(item));
   } else {
     revealItems.forEach((item) => item.classList.add("is-visible"));
   }
 
-  setProduct("browser");
+  document.querySelectorAll(".product-grid, .bento-grid, .value-grid").forEach((group) => {
+    Array.from(group.querySelectorAll(":scope > .reveal")).forEach((item, index) => {
+      item.style.setProperty("--reveal-delay", `${Math.min(index, 6) * 80}ms`);
+    });
+  });
+
+  const clamp = (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, value));
+  const hero = document.querySelector(".landing-hero");
+  const studioDevice = document.querySelector("[data-studio-device]");
+  const resetHeroPointer = () => {
+    root.style.setProperty("--pointer-x", "0");
+    root.style.setProperty("--pointer-y", "0");
+    studioDevice?.style.setProperty("--tilt-x", "0deg");
+    studioDevice?.style.setProperty("--tilt-y", "0deg");
+  };
+
+  hero?.addEventListener(
+    "pointermove",
+    (event) => {
+      if (!finePointerQuery.matches || reducedMotionQuery.matches) return;
+      const bounds = hero.getBoundingClientRect();
+      const x = clamp(((event.clientX - bounds.left) / bounds.width) * 2 - 1, -1, 1);
+      const y = clamp(((event.clientY - bounds.top) / bounds.height) * 2 - 1, -1, 1);
+      scheduleFrame(() => {
+        root.style.setProperty("--pointer-x", x.toFixed(4));
+        root.style.setProperty("--pointer-y", y.toFixed(4));
+        studioDevice?.style.setProperty("--tilt-y", `${(x * 1.25).toFixed(3)}deg`);
+        studioDevice?.style.setProperty("--tilt-x", `${(-y * 0.72).toFixed(3)}deg`);
+      });
+    },
+    { passive: true }
+  );
+  hero?.addEventListener("pointerleave", resetHeroPointer, { passive: true });
+  finePointerQuery.addEventListener?.("change", resetHeroPointer);
+
+  const glowSurfaces = Array.from(
+    document.querySelectorAll(".product-card, .bento-card, .dashboard-browser, .value-card, .alpha-panel")
+  );
+  glowSurfaces.forEach((surface) => {
+    surface.classList.add("glow-surface");
+    surface.addEventListener(
+      "pointermove",
+      (event) => {
+        if (!finePointerQuery.matches || reducedMotionQuery.matches) return;
+        const bounds = surface.getBoundingClientRect();
+        const x = clamp(((event.clientX - bounds.left) / bounds.width) * 100, 0, 100);
+        const y = clamp(((event.clientY - bounds.top) / bounds.height) * 100, 0, 100);
+        scheduleFrame(() => {
+          surface.style.setProperty("--glow-x", `${x.toFixed(2)}%`);
+          surface.style.setProperty("--glow-y", `${y.toFixed(2)}%`);
+        });
+      },
+      { passive: true }
+    );
+  });
+
+  class AuthorityTopology {
+    constructor(map) {
+      this.map = map;
+      this.status = map.querySelector("[data-topology-status]");
+      this.svg = map.querySelector(".authority-routes");
+      this.core = map.querySelector('[data-topology-node="core"]');
+      this.routes = [
+        { id: "browser", label: "Authority → Browser Studio" },
+        { id: "public", label: "Authority → Public surfaces" },
+        { id: "obs", label: "Authority → Studio for OBS" },
+        { id: "native", label: "Authority → StudioApp" },
+      ];
+      this.nodes = new Map(
+        this.routes.map((route) => [route.id, map.querySelector(`[data-topology-node="${route.id}"]`)])
+      );
+      this.index = 0;
+      this.timer = 0;
+      this.pending = 0;
+      this.visible = !("IntersectionObserver" in window);
+      this.ready = false;
+      this.resizeObserver =
+        "ResizeObserver" in window ? new ResizeObserver(() => this.refreshRoutes()) : null;
+      this.observer =
+        "IntersectionObserver" in window
+          ? new IntersectionObserver(
+              (entries) => {
+                this.visible = entries.some((entry) => entry.isIntersecting);
+                if (this.visible) this.start();
+                else this.stop();
+              },
+              { threshold: 0.18, rootMargin: "0px 0px -8%" }
+            )
+          : null;
+
+      this.observer?.observe(map);
+      this.resizeObserver?.observe(map);
+      window.addEventListener("resize", () => scheduleFrame(() => this.refreshRoutes()), { passive: true });
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) this.stop();
+        else if (this.visible) this.start();
+      });
+      if (!this.observer) this.start();
+    }
+
+    refreshRoutes() {
+      if (!this.svg || !this.core) return;
+      const mapRect = this.map.getBoundingClientRect();
+      const width = Math.max(1, this.map.clientWidth);
+      const height = Math.max(1, this.map.clientHeight);
+      this.svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
+      const coreRect = this.core.getBoundingClientRect();
+      const coreLeft = coreRect.left - mapRect.left;
+      const coreTop = coreRect.top - mapRect.top;
+      const coreRight = coreLeft + coreRect.width;
+      const startPoint = (id) => {
+        if (id === "browser") return { x: coreLeft, y: coreTop + coreRect.height * 0.3 };
+        if (id === "native") return { x: coreLeft, y: coreTop + coreRect.height * 0.7 };
+        if (id === "public") return { x: coreRight, y: coreTop + coreRect.height * 0.3 };
+        return { x: coreRight, y: coreTop + coreRect.height * 0.7 };
+      };
+      const targetPoint = (id, node) => {
+        if (!node) return { x: width / 2, y: height / 2 };
+        const rect = node.getBoundingClientRect();
+        const left = rect.left - mapRect.left;
+        const top = rect.top - mapRect.top;
+        return {
+          x: left + rect.width * 0.5,
+          y: id === "browser" || id === "public" ? top + rect.height : top,
+        };
+      };
+
+      this.routes.forEach((route) => {
+        const start = startPoint(route.id);
+        const end = targetPoint(route.id, this.nodes.get(route.id));
+        const outward = route.id === "browser" || route.id === "native" ? -Math.min(96, width * 0.14) : Math.min(96, width * 0.14);
+        const d = `M${start.x.toFixed(1)} ${start.y.toFixed(1)} C${(start.x + outward).toFixed(1)} ${start.y.toFixed(1)} ${end.x.toFixed(1)} ${start.y.toFixed(1)} ${end.x.toFixed(1)} ${end.y.toFixed(1)}`;
+        this.map
+          .querySelectorAll(`[data-topology-route="${route.id}"] path`)
+          .forEach((path) => path.setAttribute("d", d));
+      });
+    }
+
+    prepare() {
+      if (this.ready) return;
+      this.ready = true;
+      this.map.classList.add("is-topology-ready");
+      scheduleFrame(() => this.refreshRoutes());
+      window.setTimeout(() => this.refreshRoutes(), 500);
+    }
+
+    activate(route) {
+      this.map.classList.remove("is-topology-running");
+      this.map.dataset.activeRoute = route.id;
+      if (this.status) this.status.textContent = route.label;
+      void this.map.offsetWidth;
+      this.map.classList.add("is-topology-running");
+    }
+
+    cycle() {
+      const route = this.routes[this.index % this.routes.length];
+      this.activate(route);
+      this.index = (this.index + 1) % this.routes.length;
+    }
+
+    start() {
+      this.prepare();
+      if (reducedMotionQuery.matches || document.hidden || !this.visible || this.timer || this.pending) {
+        if (reducedMotionQuery.matches) {
+          this.map.classList.remove("is-topology-running");
+          this.map.dataset.activeRoute = "browser";
+          if (this.status) this.status.textContent = "Static authority topology";
+        }
+        return;
+      }
+      this.pending = window.setTimeout(() => {
+        this.pending = 0;
+        if (!this.visible || document.hidden || reducedMotionQuery.matches) return;
+        this.cycle();
+        this.timer = window.setInterval(() => this.cycle(), 3200);
+      }, this.map.classList.contains("has-cycled") ? 0 : 700);
+      this.map.classList.add("has-cycled");
+    }
+
+    stop() {
+      if (this.pending) window.clearTimeout(this.pending);
+      if (this.timer) window.clearInterval(this.timer);
+      this.pending = 0;
+      this.timer = 0;
+      this.map.classList.remove("is-topology-running");
+    }
+
+    syncPreference() {
+      this.stop();
+      if (reducedMotionQuery.matches) {
+        this.map.dataset.activeRoute = "browser";
+        if (this.status) this.status.textContent = "Static authority topology";
+        return;
+      }
+      if (this.visible) this.start();
+    }
+  }
+
+  class ParticleField {
+    constructor(canvas) {
+      this.canvas = canvas;
+      this.context = canvas.getContext("2d", { alpha: true });
+      this.particles = [];
+      this.frame = 0;
+      this.visible = !("IntersectionObserver" in window);
+      this.running = false;
+      this.lastTime = 0;
+      this.width = 0;
+      this.height = 0;
+      this.dpr = 1;
+      this.accent = "#76c3ff";
+      this.resizeObserver = "ResizeObserver" in window ? new ResizeObserver(() => this.resize()) : null;
+      this.intersectionObserver =
+        "IntersectionObserver" in window
+          ? new IntersectionObserver(
+              (entries) => {
+                this.visible = entries.some((entry) => entry.isIntersecting);
+                if (this.visible) this.start();
+                else this.stop();
+              },
+              { threshold: 0.01 }
+            )
+          : null;
+      this.resizeObserver?.observe(canvas);
+      this.intersectionObserver?.observe(canvas);
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) this.stop();
+        else if (this.visible) this.start();
+      });
+      this.resize();
+      this.refreshAccent();
+      if (reducedMotionQuery.matches) this.drawStatic();
+      else if (!this.intersectionObserver) this.start();
+    }
+
+    refreshAccent() {
+      const computed = getComputedStyle(root).getPropertyValue("--product-accent-bright").trim();
+      if (computed) this.accent = computed;
+    }
+
+    resize() {
+      const bounds = this.canvas.getBoundingClientRect();
+      const nextWidth = Math.max(1, Math.round(bounds.width));
+      const nextHeight = Math.max(1, Math.round(bounds.height));
+      const nextDpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      if (nextWidth === this.width && nextHeight === this.height && nextDpr === this.dpr) return;
+      this.width = nextWidth;
+      this.height = nextHeight;
+      this.dpr = nextDpr;
+      this.canvas.width = Math.round(this.width * this.dpr);
+      this.canvas.height = Math.round(this.height * this.dpr);
+      this.context.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+      this.seed();
+      if (reducedMotionQuery.matches) this.drawStatic();
+    }
+
+    seed() {
+      const compact = this.width < 760;
+      const count = compact ? 22 : Math.round(clamp(this.width / 26, 40, 60));
+      this.particles = Array.from({ length: count }, (_, index) => ({
+        x: Math.random() * this.width,
+        y: Math.random() * this.height * 0.92,
+        radius: index % 11 === 0 ? 1.4 : Math.random() * 0.8 + 0.28,
+        alpha: Math.random() * 0.4 + 0.12,
+        speedX: (Math.random() - 0.5) * 0.04,
+        speedY: Math.random() * 0.03 + 0.006,
+        phase: Math.random() * Math.PI * 2,
+        accent: index % 9 === 0,
+      }));
+    }
+
+    start() {
+      if (this.running || reducedMotionQuery.matches || document.hidden || !this.visible) return;
+      this.running = true;
+      this.lastTime = performance.now();
+      this.frame = window.requestAnimationFrame((time) => this.tick(time));
+    }
+
+    stop() {
+      this.running = false;
+      if (this.frame) window.cancelAnimationFrame(this.frame);
+      this.frame = 0;
+    }
+
+    tick(time) {
+      if (!this.running) return;
+      const delta = Math.min(32, time - this.lastTime || 16.7);
+      this.lastTime = time;
+      this.draw(time, delta);
+      this.frame = window.requestAnimationFrame((nextTime) => this.tick(nextTime));
+    }
+
+    drawStatic() {
+      this.draw(0, 0, true);
+    }
+
+    draw(time, delta, staticFrame = false) {
+      const context = this.context;
+      context.clearRect(0, 0, this.width, this.height);
+      context.save();
+      if (!staticFrame) {
+        const multiplier = delta / 16.7;
+        this.particles.forEach((particle) => {
+          particle.x += particle.speedX * multiplier;
+          particle.y += particle.speedY * multiplier;
+          if (particle.x < -4) particle.x = this.width + 4;
+          if (particle.x > this.width + 4) particle.x = -4;
+          if (particle.y > this.height + 4) particle.y = -4;
+        });
+      }
+
+      const maxLinks = this.width < 760 ? 18 : 52;
+      let links = 0;
+      for (let index = 0; index < this.particles.length && links < maxLinks; index += 1) {
+        for (let peer = index + 1; peer < this.particles.length && links < maxLinks; peer += 1) {
+          const first = this.particles[index];
+          const second = this.particles[peer];
+          const distance = Math.hypot(first.x - second.x, first.y - second.y);
+          if (distance > 90) continue;
+          context.beginPath();
+          context.moveTo(first.x, first.y);
+          context.lineTo(second.x, second.y);
+          context.strokeStyle = `rgba(154, 174, 198, ${(1 - distance / 90) * 0.04})`;
+          context.lineWidth = 0.5;
+          context.stroke();
+          links += 1;
+        }
+      }
+
+      this.particles.forEach((particle) => {
+        const twinkle = staticFrame ? 0.8 : 0.62 + Math.sin(time * 0.0007 + particle.phase) * 0.28;
+        context.beginPath();
+        context.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+        context.fillStyle = particle.accent ? this.accent : "#dce8f4";
+        context.globalAlpha = particle.alpha * twinkle;
+        context.fill();
+      });
+      context.restore();
+      context.globalAlpha = 1;
+    }
+  }
+
+  const topologyMap = document.querySelector("[data-authority-map]");
+  const authorityTopology = topologyMap ? new AuthorityTopology(topologyMap) : null;
+  const particleCanvas = document.querySelector("[data-particle-canvas]");
+  const particleField = particleCanvas ? new ParticleField(particleCanvas) : null;
+
+  const productObserver = new MutationObserver((mutations) => {
+    if (!mutations.some((mutation) => mutation.attributeName === "data-product")) return;
+    particleField?.refreshAccent();
+    if (reducedMotionQuery.matches) particleField?.drawStatic();
+    hero?.classList.remove("is-product-changing");
+    window.requestAnimationFrame(() => {
+      hero?.classList.add("is-product-changing");
+      window.setTimeout(() => hero?.classList.remove("is-product-changing"), 680);
+    });
+  });
+  productObserver.observe(root, { attributes: true, attributeFilter: ["data-product"] });
+
+  const syncMotionPreference = () => {
+    if (reducedMotionQuery.matches) {
+      resetHeroPointer();
+      particleField?.stop();
+      particleField?.drawStatic();
+    } else {
+      particleField?.start();
+    }
+    authorityTopology?.syncPreference();
+  };
+  reducedMotionQuery.addEventListener?.("change", syncMotionPreference);
+
+  const initialPreview = new URLSearchParams(window.location.search).get("preview");
+  setProduct(products[initialPreview] ? initialPreview : "browser");
+  root.classList.add("motion-ready");
+  syncMotionPreference();
 })();
