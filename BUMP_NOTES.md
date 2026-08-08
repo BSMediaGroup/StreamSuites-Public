@@ -6,6 +6,19 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-08 - Status center dark-theme and alignment correction
+
+#### Technical notes
+
+- Repaired the status-page stylesheet region that had been replaced by a literal truncation placeholder. That corruption removed the intended metric signal, component-toolbar, search-field, keyboard-hint, and filter-button rules, causing browser-native controls and broken layout. The invalid placeholder was removed and the stylesheet is now longer because the complete dark-theme rules are present again.
+- Applied a consistent post-hero layout system across the overview, component directory, incident/maintenance, history, and transparency sections: heading copy now sits in a deliberate bordered detail rail; all four overview records use the same card class, height, padding, value baseline, label baseline, and dividers; component cards have stable minimum heights; and control surfaces use explicit graphite backgrounds, restrained blue active/focus states, visible keyboard focus, dark search affordances, and equal-height targets.
+- Narrow layouts now collapse the heading rail cleanly, stack the metric card into one column, use two balanced filter controls plus a full-width attention control on phones, and retain zero horizontal overflow. Component search/filter behavior, Statuspage reads, IDs, routes, header/footer structure, widget isolation, Runtime/Auth authority, version, protected download contracts, and deployment state are unchanged.
+- Added a focused source regression for the four metric-card classes, explicit dark control presentation, focus treatment, aligned metric layout, and absence of truncation placeholders.
+
+#### Human-readable notes
+
+The status page now looks and behaves like one intentional dark interface: the search and filters are properly themed, the overview rail is evenly aligned, and every lower section follows the same spacing and information hierarchy on desktop, tablet, and phone.
+
 ### 2026-08-08 - Branded status center and complete Public status widget
 
 #### Technical notes

@@ -32,6 +32,21 @@ test("canonical status page uses the approved production brand and omits the flo
   assert.match(pageScript, /open \? "Close navigation" : "Open navigation"/);
 });
 
+test("status overview and component controls retain the polished dark layout contract", () => {
+  const html = read("status.html");
+  const css = read("css/status-page.css");
+  const metricCards = html.match(/<article class="status-metric(?: status-metric--overall)?">/g) || [];
+
+  assert.equal(metricCards.length, 4);
+  assert.match(css, /:root\s*\{[\s\S]*?color-scheme:\s*dark;/);
+  assert.match(css, /\.status-metric\s*\{[\s\S]*?display:\s*flex;[\s\S]*?min-height:\s*154px;/);
+  assert.match(css, /\.component-controls\s*\{[\s\S]*?grid-template-columns:\s*minmax\(320px, 1fr\) auto;[\s\S]*?background:/);
+  assert.match(css, /\.component-search input\s*\{[\s\S]*?appearance:\s*none;[\s\S]*?background:\s*#07101a;/);
+  assert.match(css, /\.status-filters button\s*\{[\s\S]*?min-height:\s*48px;[\s\S]*?appearance:\s*none;/);
+  assert.match(css, /\.status-filters button:focus-visible\s*\{[\s\S]*?box-shadow:/);
+  assert.doesNotMatch(css, /tokens truncated|truncation placeholder/i);
+});
+
 test("status controller is read-only, bounded, stale-safe, and has no demo or fake operational fallback", () => {
   const script = read("js/status-data.js");
   assert.match(script, /v0hwlmly3pd2\.statuspage\.io\/api\/v2/);
