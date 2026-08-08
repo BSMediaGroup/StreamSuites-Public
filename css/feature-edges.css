@@ -1,0 +1,103 @@
+/* Shared StreamSuites feature-edge language.
+   Status keeps its original page-owned implementation; production pages
+   inherit these same geometries through their existing shared stylesheets. */
+
+:root {
+  --feature-edge-accent: #76c3ff;
+}
+
+html[data-product] {
+  --feature-edge-accent: var(--product-accent-bright, #76c3ff);
+}
+
+body.public-shell-page {
+  --feature-edge-accent: var(--ps-link-primary, #9ad1ff);
+}
+
+body.standalone-page {
+  --feature-edge-accent: var(--product-accent-bright, #76c3ff);
+}
+
+body.download-surface {
+  --feature-edge-accent: var(--download-accent-bright, #76c3ff);
+}
+
+body:not(.status-page) :where(
+  .download-footer,
+  .footer-bar
+),
+body[data-feature-edges]:not(.status-page) :where(
+  .ss-public-login__header,
+  .ss-requests-auth__header
+) {
+  position: relative;
+}
+
+body:not(.status-page) :where(
+  .site-header,
+  .public-topbar,
+  .download-topbar
+)::after,
+body[data-feature-edges]:not(.status-page) :where(
+  .ss-public-login__header,
+  .ss-requests-auth__header
+)::after {
+  position: absolute;
+  right: 12%;
+  bottom: -1px;
+  width: 28%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--feature-edge-accent) 48%, transparent),
+    transparent
+  );
+  content: "";
+  pointer-events: none;
+}
+
+body:not(.status-page) :where(
+  .site-footer,
+  .public-footer,
+  .download-footer,
+  .footer-bar,
+  .profile-shell-footer,
+  .not-found-footer
+)::before {
+  position: absolute;
+  top: -1px;
+  left: 10%;
+  width: 34%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--feature-edge-accent) 55%, transparent),
+    transparent
+  );
+  content: "";
+  pointer-events: none;
+}
+
+@media (forced-colors: active) {
+  body:not(.status-page) :where(
+    .site-header,
+    .public-topbar,
+    .download-topbar
+  )::after,
+  body[data-feature-edges]:not(.status-page) :where(
+    .ss-public-login__header,
+    .ss-requests-auth__header
+  )::after,
+  body:not(.status-page) :where(
+    .site-footer,
+    .public-footer,
+    .download-footer,
+    .footer-bar,
+    .profile-shell-footer,
+    .not-found-footer
+  )::before {
+    background: CanvasText;
+  }
+}

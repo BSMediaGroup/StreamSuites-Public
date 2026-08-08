@@ -13,7 +13,8 @@
   <meta name="description" content="StreamSuites connects Browser Studio, native StudioApp, StreamSuites Studio for OBS, and audience tools through one Runtime/Auth authority." />
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="/css/status-widget.css" />
-  <link rel="stylesheet" href="/css/studio-first-landing.css?v=20260808-pocv9-motion" />
+  <link rel="stylesheet" href="/css/feature-edges.css?v=20260808-feature-edges" />
+  <link rel="stylesheet" href="/css/studio-first-landing.css?v=20260808-hero-correction" />
 </head>
 
 <body>
@@ -93,6 +94,8 @@
     <section id="top" class="landing-hero section-grid" aria-labelledby="hero-title">
       <div class="hero-backdrop" aria-hidden="true">
         <canvas class="hero-particles" data-particle-canvas></canvas>
+        <div class="hero-aurora hero-aurora--primary"></div>
+        <div class="hero-aurora hero-aurora--secondary"></div>
         <div class="hero-signal-field">
           <div class="hero-horizon">
             <span class="hero-horizon__atmosphere"></span>
@@ -123,7 +126,7 @@
       <div class="landing-shell hero__inner">
         <div class="hero__copy reveal">
           <p class="eyebrow"><span class="eyebrow__pulse"></span> A connected livestream production suite</p>
-          <h1 id="hero-title">Build the show.<br /><span>Run it your way.</span></h1>
+          <h1 id="hero-title">Build the show.<br /><span class="hero__feature-line">Run it your way.</span></h1>
           <p class="hero__lede">
             StreamSuites connects a private browser Studio, a native Windows production workspace,
             an OBS integration path, and the audience tools around every live show.
@@ -193,15 +196,17 @@
                   <div class="studio-center">
                     <div class="stage-toolbar"><span>PROGRAM</span><div class="layout-pips"><i class="is-active"></i><i></i><i></i><i></i></div><span class="stage-toolbar__room">ROOM SS-7KQ2</span></div>
                     <div class="program-stage">
-                      <div class="program-stage__mock-output-bg"></div>
-                      <div class="program-stage__grid"></div>
-                      <div class="program-stage__safe-area"></div>
-                      <div class="solo-streamer"><img src="/assets/placeholders/solostreamer1.webp" alt="" /></div>
-                      <div class="show-title"><small>THE CREATOR DESK</small><strong>ILLUSTRATIVE PREVIEW</strong></div>
-                      <div class="participant participant--host"><div class="participant__image"><img src="/assets/placeholders/livestreamer1.webp" alt="" /></div><div class="participant__label"><strong>SHORRIN</strong><small>HOST</small></div></div>
-                      <div class="participant participant--guest"><div class="participant__image"><img src="/assets/placeholders/livestreamer2.webp" alt="" /></div><div class="participant__label"><strong>TULLY</strong><small>BACKSTAGE → STAGE</small></div></div>
-                      <div class="lower-third"><span class="lower-third__mark lower-third__mark--avatar"><img src="/assets/placeholders/livecommenter1.webp" alt="" data-comment-avatar /></span><div><strong data-comment-name>BUBBLE BOB</strong><small data-comment-text>Is it true you guys invented Jimothy?</small></div></div>
-                      <div class="live-chip live-chip--live"><i></i> LIVE</div>
+                      <div class="program-stage__output">
+                        <div class="program-stage__mock-output-bg"></div>
+                        <div class="program-stage__grid"></div>
+                        <div class="program-stage__safe-area"></div>
+                        <div class="solo-streamer"><img src="/assets/placeholders/solostreamer1.webp" alt="" /></div>
+                        <div class="show-title"><small>THE CREATOR DESK</small><strong>ILLUSTRATIVE PREVIEW</strong></div>
+                        <div class="participant participant--host"><div class="participant__image"><img src="/assets/placeholders/livestreamer1.webp" alt="" /></div><div class="participant__label"><strong>SHORRIN</strong><small>HOST</small></div></div>
+                        <div class="participant participant--guest"><div class="participant__image"><img src="/assets/placeholders/livestreamer2.webp" alt="" /></div><div class="participant__label"><strong>TULLY</strong><small>BACKSTAGE → STAGE</small></div></div>
+                        <div class="lower-third"><span class="lower-third__mark lower-third__mark--avatar"><img src="/assets/placeholders/livecommenter1.webp" alt="" data-comment-avatar /></span><div><strong data-comment-name>BUBBLE BOB</strong><small data-comment-text>Is it true you guys invented Jimothy?</small></div></div>
+                        <div class="live-chip live-chip--live"><i></i> LIVE</div>
+                      </div>
                     </div>
                     <div class="audio-dock audio-dock--stereo">
                       <div class="audio-channel audio-channel--stereo"><span>MIC</span><div class="stereo-meter"><div><em>L</em><div class="meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div><em>R</em><div class="meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div><b>-12.4</b></div>
@@ -305,7 +310,7 @@
       <div class="landing-shell">
         <div class="section-heading reveal">
           <p class="eyebrow">The production core</p>
-          <h2>Three workflows. One StreamSuites system.</h2>
+          <h2>Four connected surfaces. One StreamSuites system.</h2>
           <p>Choose the production surface that fits the room. Identity, permissions, rooms, destinations, and shared state remain coordinated underneath.</p>
         </div>
 
@@ -367,6 +372,26 @@
             <div class="product-card__footer">
               <button class="card-link" type="button" data-select-product="obs">Preview above <span>↑</span></button>
               <a href="/downloads/obs-plugin/">View integration <span>↗</span></a>
+            </div>
+          </article>
+
+          <article class="product-card product-card--public reveal reveal--delay-2" data-product-card="public">
+            <div class="product-card__number">04</div>
+            <div class="product-card__topline">
+              <span class="product-emblem product-emblem--public" aria-hidden="true"></span>
+              <span class="status-pill status-pill--gold">Public surfaces</span>
+            </div>
+            <h3>StreamSuites Public</h3>
+            <p class="product-card__kicker">Audience-facing artifacts</p>
+            <p>Runtime/Auth-backed surfaces for the clips, interactions, profiles, and progression that live around a show.</p>
+            <ul class="feature-list">
+              <li>Clips, polls, wheels, tallies, and scoreboards</li>
+              <li>Profiles, leaderboards, economy, and progression</li>
+              <li>Downstream presentation—not a production media engine</li>
+            </ul>
+            <div class="product-card__footer">
+              <button class="card-link" type="button" data-select-product="public">Preview above <span>↑</span></button>
+              <a href="/clips">Explore Public <span>↗</span></a>
             </div>
           </article>
         </div>

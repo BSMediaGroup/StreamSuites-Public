@@ -123,8 +123,15 @@ test("production landing preserves the approved POC hero, bento modules, and aut
 
   assert.match(html, /class="scroll-cue" href="#products"/);
   assert.match(html, /Explore the suite/);
-  assert.match(html, /\/css\/studio-first-landing\.css\?v=20260808-pocv9-motion/);
+  assert.match(html, /\/css\/feature-edges\.css\?v=20260808-feature-edges/);
+  assert.match(html, /\/css\/studio-first-landing\.css\?v=20260808-hero-correction/);
   assert.match(css, /\.landing-hero h1 span\s*\{[\s\S]*linear-gradient\(95deg,[\s\S]*background-clip:\s*text/);
+  assert.match(html, /class="hero__feature-line">Run it your way\.<\/span>/);
+  assert.equal((html.match(/class="hero-aurora /g) || []).length, 2);
+  assert.match(css, /\.hero-backdrop::before\s*\{[\s\S]*right:\s*auto;[\s\S]*left:\s*-12%;/);
+  assert.match(css, /\.hero-horizon\s*\{[\s\S]*right:\s*auto;[\s\S]*left:\s*-8%;/);
+  assert.match(css, /\.hero-constellation\s*\{[\s\S]*right:\s*auto;[\s\S]*left:\s*-1%;/);
+  assert.match(css, /\.landing-hero h1 \.hero__feature-line\s*\{[\s\S]*var\(--landing-blue-bright\)[\s\S]*var\(--landing-lime-bright\)[\s\S]*#c2b3ff[\s\S]*var\(--landing-gold-bright\)[\s\S]*animation:\s*heroFeatureGradient 11s/);
   assert.match(css, /\.scroll-cue i\s*\{[\s\S]*animation:\s*scrollCue/);
   assert.match(html, /class="header-scroll-progress" aria-hidden="true"/);
   assert.match(css, /\.header-scroll-progress\s*\{[\s\S]*height:\s*3px;[\s\S]*pointer-events:\s*none/);
@@ -184,7 +191,26 @@ test("production landing preserves the approved POC hero, bento modules, and aut
   assert.match(css, /\.preview-state\s*\{[\s\S]*min-height:\s*var\(--hero-preview-height\)/);
   assert.match(client, /Math\.min\(window\.devicePixelRatio \|\| 1, 1\.5\)/);
   assert.match(client, /const count = compact \? 22/);
+  assert.match(client, /const leftWeightedCount = Math\.ceil\(count \* 0\.68\)/);
+  assert.match(client, /this\.width \* \(0\.08 \+ Math\.random\(\) \* 0\.54\)/);
   assert.match(client, /document\.hidden/);
+
+  assert.equal((html.match(/data-product-card=/g) || []).length, 4);
+  assert.match(html, /data-product-card="public"[\s\S]*class="product-card__number">04<[\s\S]*StreamSuites Public[\s\S]*Audience-facing artifacts/);
+  assert.match(html, /Clips, polls, wheels, tallies, and scoreboards/);
+  assert.match(html, /Profiles, leaderboards, economy, and progression/);
+  assert.match(html, /href="\/clips">Explore Public/);
+  assert.match(css, /\.product-card--public\s*\{[\s\S]*--card-accent:\s*var\(--landing-gold\)/);
+  assert.match(css, /@media \(min-width:\s*1500px\)[\s\S]*grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/);
+
+  assert.match(html, /class="program-stage"[\s\S]*class="program-stage__output"[\s\S]*class="program-stage__mock-output-bg"[\s\S]*class="solo-streamer"/);
+  assert.match(css, /\.program-stage__output\s*\{[\s\S]*height:\s*100%;[\s\S]*overflow:\s*hidden;[\s\S]*border:\s*1px solid/);
+  assert.match(css, /\.solo-streamer\s*\{[\s\S]*inset:\s*0;/);
+  assert.match(css, /\.floating-signal__heading\s*\{[\s\S]*grid-template-columns:\s*25px minmax\(0, 1fr\)/);
+  assert.match(css, /\.floating-signal__heading strong\s*\{[\s\S]*white-space:\s*nowrap/);
+  assert.match(css, /\.preview-state\.is-active > \.studio-window::before,[\s\S]*\.public-hero-preview::before[\s\S]*animation:\s*previewBorderGlint 13s/);
+  assert.match(css, /\.preview-state:not\(\.is-active\),[\s\S]*animation-play-state:\s*paused !important/);
+  assert.match(css, /@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*\.hero__feature-line,[\s\S]*\.preview-state\.is-active,[\s\S]*\.floating-signal[\s\S]*animation:\s*none !important/);
 
   assert.match(html, /class="bento-grid"/);
   for (const moduleClass of ["rooms", "destinations", "chat", "alerts", "engagement", "media"]) {

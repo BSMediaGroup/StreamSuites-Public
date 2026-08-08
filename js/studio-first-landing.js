@@ -324,8 +324,8 @@
       scheduleFrame(() => {
         root.style.setProperty("--pointer-x", x.toFixed(4));
         root.style.setProperty("--pointer-y", y.toFixed(4));
-        studioDevice?.style.setProperty("--tilt-y", `${(x * 1.25).toFixed(3)}deg`);
-        studioDevice?.style.setProperty("--tilt-x", `${(-y * 0.72).toFixed(3)}deg`);
+        studioDevice?.style.setProperty("--tilt-y", `${(x * 0.55).toFixed(3)}deg`);
+        studioDevice?.style.setProperty("--tilt-x", `${(-y * 0.34).toFixed(3)}deg`);
       });
     },
     { passive: true }
@@ -558,16 +558,23 @@
     seed() {
       const compact = this.width < 760;
       const count = compact ? 22 : Math.round(clamp(this.width / 26, 40, 60));
-      this.particles = Array.from({ length: count }, (_, index) => ({
-        x: Math.random() * this.width,
-        y: Math.random() * this.height * 0.92,
-        radius: index % 11 === 0 ? 1.4 : Math.random() * 0.8 + 0.28,
-        alpha: Math.random() * 0.4 + 0.12,
-        speedX: (Math.random() - 0.5) * 0.04,
-        speedY: Math.random() * 0.03 + 0.006,
-        phase: Math.random() * Math.PI * 2,
-        accent: index % 9 === 0,
-      }));
+      const leftWeightedCount = Math.ceil(count * 0.68);
+      this.particles = Array.from({ length: count }, (_, index) => {
+        const x =
+          index < leftWeightedCount
+            ? this.width * (0.08 + Math.random() * 0.54)
+            : this.width * (0.58 + Math.random() * 0.38);
+        return {
+          x,
+          y: Math.random() * this.height * 0.92,
+          radius: index % 11 === 0 ? 1.4 : Math.random() * 0.8 + 0.28,
+          alpha: Math.random() * 0.4 + 0.12,
+          speedX: (Math.random() - 0.5) * 0.04,
+          speedY: Math.random() * 0.03 + 0.006,
+          phase: Math.random() * Math.PI * 2,
+          accent: index % 9 === 0,
+        };
+      });
     }
 
     start() {

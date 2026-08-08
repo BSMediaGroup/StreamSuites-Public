@@ -6,6 +6,21 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-08 - Landing hero atmosphere and cross-surface feature edges
+
+#### Technical notes
+
+- Rebalanced the production landing hero around a left-weighted blue atmosphere with two broad aurora layers, a restrained horizon/grid/constellation field, and stronger but still slow ambient movement, plus a product-aware blue/lime/violet/gold gradient on the existing `Run it your way.` line. The single bounded canvas remains the particle renderer; its seeded distribution now favors the illuminated left field while preserving the existing DPR cap, visibility pause, and intersection pause.
+- Reconstructed each preview inside a clipping inner output frame and limited new drift, border glint, top-edge light, and signal motion to the selected preview. StudioApp's solo-creator still is now contained edge to edge, the Browser Studio people/assets remain unchanged, and the Destinations card uses a fixed icon/text grid so `Runtime-owned` stays intact at supported widths and 125% scale.
+- Expanded the existing product family section from three to four truthful cards by adding StreamSuites Public as the downstream audience surface, with `/clips` as its existing route. The grid presents four equal columns on wide desktop, two columns through desktop/tablet widths, and one column on phones without changing the surrounding section order or product ownership boundaries.
+- Added one shared, token-driven 1px header/footer feature edge across human-facing Public shells. Landing pages use the selected product accent; StudioApp downloads use lime, OBS downloads use violet, and the remaining Public/standalone surfaces use blue. The Status center retains its existing exact pseudo-element pair and does not load the shared treatment, preventing a duplicate line. Login entry pages opt in; callbacks, the auth bridge, redirects, diagnostic/archive pages, and all read-only POCs remain excluded.
+- Kept motion progressive and restrained. `prefers-reduced-motion` disables the new hero, headline, preview, and edge animation while retaining the complete static composition; no image, font, dependency, route, auth, download, manifest, version, build, deployment, or sibling-repository contract changed. The protected `pocv9` files remain byte-for-byte unchanged, and no files were removed.
+- Validation passed with `node --check js/studio-first-landing.js`, the focused corrective tests (11/11), the complete repository suite (113/113), and `git diff --check`. HTTP-served browser proof covered 390x844, 430x932, 768x1024, 1024x768, 1366x768, 1600x1000, 1920x1080, 844x390, 1600x640, and a 1.25 device-scale pass: all had zero horizontal overflow, the intended 1/2/4-column product grid, contained preview output and destination copy, correct product edge colors, active-only motion, reduced-motion static rendering, and canvas visibility/intersection pause and resume. Local static preview produced the expected unavailable `/auth/access-state` and analytics/CORS noise; those were not treated as production API evidence.
+
+#### Human-readable notes
+
+The landing now opens with a calmer, brighter StreamSuites atmosphere that pulls the eye toward the message, keeps the product demos crisp, and makes all four connected surfaces easier to understand. A fine product-colored line now carries that same visual language through the public site without changing how any page, login, download, or status route works.
+
 ### 2026-08-08 - Approved POCV9 landing motion and authority topology
 
 #### Technical notes
