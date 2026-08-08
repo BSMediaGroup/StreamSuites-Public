@@ -74,7 +74,11 @@ test("production landing is Studio-first and preserves the production access con
   assert.match(client, /ArrowRight/);
   assert.match(client, /prefers-reduced-motion:\s*reduce/);
   assert.match(client, /IntersectionObserver/);
-  assert.match(client, /sessionStorage/);
+  assert.match(client, /sessionStorage\.removeItem\(LEGACY_ALPHA_NOTICE_KEY\)/);
+  assert.doesNotMatch(client, /sessionStorage\.(?:getItem|setItem)\(ALPHA_NOTICE_KEY/);
+  assert.match(html, /sessionStorage\.removeItem\(LEGACY_DISMISS_KEY\)/);
+  assert.doesNotMatch(html, /sessionStorage\.(?:getItem|setItem)\(DISMISS_KEY/);
+  assert.match(html, /<script src="\/js\/studio-first-landing\.js\?v=20260809-banner-stage-interval" defer><\/script>/);
   assert.match(client, /querySelectorAll\("\[data-auth-trigger\]"\)/);
   assert.match(client, /setNavOpen\(false\), \{ capture: true \}/);
   assert.match(client, /pointerenter/);
@@ -125,7 +129,7 @@ test("production landing preserves the approved POC hero, bento modules, and aut
   assert.match(html, /class="scroll-cue" href="#products"/);
   assert.match(html, /Explore the suite/);
   assert.match(html, /\/css\/feature-edges\.css\?v=20260809-footer-only/);
-  assert.match(html, /\/css\/studio-first-landing\.css\?v=20260809-dimensional-gradient/);
+  assert.match(html, /\/css\/studio-first-landing\.css\?v=20260809-banner-stage-tone/);
   assert.match(css, /\.landing-hero h1 span\s*\{[\s\S]*linear-gradient\(95deg,[\s\S]*background-clip:\s*text/);
   assert.match(html, /class="hero__feature-line">Run it your way\.<\/span>/);
   assert.equal((html.match(/class="hero-aurora /g) || []).length, 2);
@@ -157,7 +161,7 @@ test("production landing preserves the approved POC hero, bento modules, and aut
   assert.equal((html.match(/data-product-tab=/g) || []).length, 4);
   assert.equal((html.match(/data-product-cycle-dot=/g) || []).length, 4);
   assert.match(html, /data-product-cycle-toggle/);
-  assert.match(client, /const PRODUCT_CYCLE_DELAY = 6000/);
+  assert.match(client, /const PRODUCT_CYCLE_DELAY = 10000/);
   assert.match(client, /productCycleRequested = true/);
   assert.match(client, /scheduleProductCycle/);
   assert.match(client, /productCycleToggle\.disabled = reducedMotionQuery\.matches/);
@@ -245,7 +249,10 @@ test("production landing preserves the approved POC hero, bento modules, and aut
   assert.match(html, /class="program-stage"[\s\S]*class="program-stage__grid"[\s\S]*class="program-stage__safe-area"[\s\S]*class="program-stage__mock-output-bg"[\s\S]*class="solo-streamer"/);
   assert.doesNotMatch(html, /program-stage__output/);
   assert.doesNotMatch(css, /\.program-stage__output/);
-  assert.match(css, /\.program-stage__mock-output-bg\s*\{[\s\S]*inset:\s*8%;[\s\S]*linear-gradient\(135deg, #03070c 0%, #070b12 38%, #090c14 61%, #02050a 100%\)/);
+  assert.match(css, /\.program-stage\s*\{[\s\S]*linear-gradient\(180deg, #020306 0%, #010204 56%, #000103 100%\)/);
+  assert.match(css, /\.program-stage::after\s*\{[\s\S]*var\(--product-accent\) 5%[\s\S]*opacity:\s*0\.18/);
+  assert.match(css, /\.program-stage__mock-output-bg\s*\{[\s\S]*inset:\s*8%;[\s\S]*linear-gradient\(135deg, #050b12 0%, #090e17 38%, #0b0f19 61%, #03070d 100%\);[\s\S]*filter:\s*brightness\(1\.15\)/);
+  assert.match(css, /\.program-stage__grid\s*\{[\s\S]*opacity:\s*0\.12/);
   assert.match(css, /\.program-stage__safe-area\s*\{[\s\S]*inset:\s*8%;[\s\S]*border:\s*1px solid/);
   assert.match(css, /\.solo-streamer\s*\{[\s\S]*inset:\s*8%;/);
   assert.match(css, /\.participant\s*\{[\s\S]*top:\s*29%;[\s\S]*width:\s*33%;[\s\S]*height:\s*40%/);

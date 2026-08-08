@@ -90,7 +90,7 @@
   });
 
   const productIds = Object.freeze(Object.keys(products));
-  const PRODUCT_CYCLE_DELAY = 6000;
+  const PRODUCT_CYCLE_DELAY = 10000;
   let currentProductId = products[root.dataset.product] ? root.dataset.product : "browser";
   let productCycleTimer = 0;
   let productCycleRequested = true;
@@ -327,21 +327,16 @@
     });
   });
 
-  const ALPHA_NOTICE_KEY = "streamsuites.public.alphaNotice.dismissed";
+  const LEGACY_ALPHA_NOTICE_KEY = "streamsuites.public.alphaNotice.dismissed";
   const alphaStrip = document.querySelector("[data-alpha-strip]");
   const alphaClose = document.querySelector("[data-alpha-close]");
   try {
-    alphaStrip?.classList.toggle("is-dismissed", window.sessionStorage.getItem(ALPHA_NOTICE_KEY) === "true");
+    window.sessionStorage.removeItem(LEGACY_ALPHA_NOTICE_KEY);
   } catch (_error) {
-    // The notice remains visible when session storage is unavailable.
+    // Legacy dismissal cleanup is best effort; the notice remains visible.
   }
   alphaClose?.addEventListener("click", () => {
     alphaStrip?.classList.add("is-dismissed");
-    try {
-      window.sessionStorage.setItem(ALPHA_NOTICE_KEY, "true");
-    } catch (_error) {
-      // Dismissal still applies for the current document.
-    }
   });
 
   const pendingFrameTasks = new Set();
