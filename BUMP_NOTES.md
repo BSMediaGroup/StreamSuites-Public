@@ -6,6 +6,20 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-09 - Final Status Center component and graph polish
+
+#### Technical notes
+
+- Refined the locked four-group/21-child directory without changing the hero, route, dark typography system, group taxonomy, official incident/maintenance logic, or Atlassian authority. Group headers now carry restrained per-group accents, concise roles, operational totals, monitored/deferred/external coverage, and attention counts without rendering parent records as cards.
+- Aligned compact component cards around consistent icon frames, long-name-safe identity blocks, official state badges, exact official/direct/vendor/manual source labels, coverage chips, check/latency metadata, stable footers, focus treatment, and polished expanded selection. Existing local product, internal, and vendor assets remain mapped; the fallback is a generic local current-color icon, never an initial letter or redrawn third-party logo.
+- Rebuilt the expanded detail hierarchy around a clear official-versus-direct summary rail, aligned ownership/coverage/availability/check facts, close affordance, intentional deferred/manual and provider-managed explanations, stale direct-observation handling, and a fresh-only reconciliation warning that preserves both values without changing official state in the browser.
+- Polished real-history-only 24H/7D/30D graphs with selected controls, keyboard-focusable point labels/tooltips, screen-reader summaries, axes, latest measured latency, state-band and gap legends, sparse-history messaging, and segmented lines across missing periods. No sample is interpolated, randomized, backfilled, or replaced with a zero; Studio Room Readiness remains a deliberate deferred state without an empty graph.
+- Added focused source regressions for group summaries, exact source labels, aligned icon/card/detail structure, sparse and missing-history behavior, non-interpolation gaps, keyboard expansion, graph accessibility, discrepancy staleness, widget exclusion on `/status`, unchanged widget inclusion elsewhere, and reduced motion. No files, dependencies, routes, component IDs, version/build metadata, Worker source, Runtime/Auth state, or deployment configuration were added, removed, or changed in this Public repository.
+
+#### Human-readable notes
+
+The Status Center’s component directory now reads like one finished operating view: groups explain their role and coverage at a glance, compact cards line up cleanly, expanded details separate official status from direct evidence, and graphs stay honest when history is sparse or missing. The floating status widget remains unchanged everywhere except `/status`, where it is still intentionally absent.
+
 ### 2026-08-09 - Public Status Center diagnostics and component-directory polish
 
 #### Technical notes

@@ -58,6 +58,14 @@
   });
   const IMPLEMENTED_COMPONENTS = new Set(["3qsdkc52dgt5", "q7435t6bd41x", "94cn19vph28j", "tb383cr2p92n", "0xm0hsy3byjj", "zx07yy34tyvl", "rdb3pmbvr4bv", "5wm11qq4b7w9", "jnd29jsl8w7b", "8x9n41kfjtc8", "p00vypwhfhx3"]);
   const VENDOR_COMPONENTS = new Set(["n1lw27451j6d", "5qbjrf4hq5nn", "gd23vgnp3n89"]);
+  const GROUP_PRESENTATION = Object.freeze({
+    production: { accent: "#58b7ff", role: "Creation products and their connected production services." },
+    core: { accent: "#9c7cff", role: "Identity, rooms, APIs, automation, and notification authority." },
+    web: { accent: "#5fe2b0", role: "Audience, creator, admin, developer, documentation, and distribution surfaces." },
+    surfaces: { accent: "#5fe2b0", role: "Public and operator-facing product surfaces." },
+    edge: { accent: "#5fe2b0", role: "Delivery and edge services." },
+    dependencies: { accent: "#f1bc62", role: "External delivery, email, payment, and Git operations." },
+  });
 
   const select = (selector, root = document) => root.querySelector(selector);
   const selectAll = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -181,10 +189,14 @@
     setText("[data-metric-incidents]", String(incidents.length));
     setText("[data-metric-maintenance]", String(maintenances.length));
     const coreMetric = snapshot.diagnostics?.metrics?.core_api_response_time;
+    const coreBuckets = coreMetric?.history?.["24h"]?.buckets || [];
+    const measured = coreBuckets.map((bucket) => bucket?.latency_ms).filter(Number.isFinite);
+    const trendDelta = measured.length > 1 ? measured[measured.length - 1] - measured[0] : null;
+    const trend = trendDelta == null ? "trend forming" : Math.abs(trendDelta) < 2 ? "steady" : `${trendDelta > 0 ? "↑" : "↓"} ${Math.abs(trendDelta)} ms`;
     setText("[data-diagnostic-core-value]", coreMetric?.value_ms == null ? "Awaiting measured data" : `${coreMetric.value_ms} ms`);
     setText("[data-diagnostic-core-meta]", coreMetric?.value_ms == null
       ? "No real watchdog latency sample is available."
-      : `${coreMetric.history?.["24h"]?.sample_count || 0} observed samples · ${snapshot.diagnosticsStale ? "stale" : "fresh"}`);
+      : `${coreMetric.history?.["24h"]?.sample_count || 0} observed samples · ${snapshot.diagnosticsStale ? "stale" : "fresh"} · ${trend}`);
     setText("[data-diagnostic-room-value]", "Deferred");
     const diagnosticSource = select("[data-diagnostic-source]");
     if (diagnosticSource) {
@@ -233,6 +245,7 @@
     panel.innerHTML = "";
     const ranges = ["24h", "7d", "30d"];
     const available = ranges.filter((key) => (diagnostic?.history?.[key]?.buckets || []).length);
+    const toolbar = node("div", "component-graph__toolbar");
     const controls = node("div", "component-graph__controls");
     controls.setAttribute("aria-label", "Watchdog history range");
     const activeRange = available.includes(requestedRange) ? requestedRange : available[0];
@@ -248,16 +261,27 @@
       });
       controls.appendChild(button);
     });
-    panel.appendChild(controls);
+    toolbar.appendChild(controls);
+    panel.appendChild(toolbar);
     if (!activeRange) {
-      panel.appendChild(node("p", "component-graph__empty", "Historical direct diagnostics will begin when real watchdog observations are available."));
+      const empty = node("div", "component-graph__empty");
+      empty.append(node("strong", "", "No real history yet"), node("p", "", "Historical direct diagnostics will begin when watchdog observations are available. Nothing is interpolated or backfilled."));
+      panel.appendChild(empty);
       return;
     }
     const range = diagnostic.history[activeRange];
     const buckets = range.buckets;
     const summary = node("p", "component-graph__summary");
     summary.textContent = `${activeRange.toUpperCase()} watchdog-observed availability: ${range.availability_percent == null ? "Unavailable" : `${range.availability_percent}%`}. ${range.sample_count || 0} samples.`;
+    summary.setAttribute("role", "status");
     panel.appendChild(summary);
+
+    const latestLatency = [...buckets].reverse().find((bucket) => Number.isFinite(bucket?.latency_ms));
+    const currentValue = node("div", "component-graph__current");
+    currentValue.append(node("span", "", "Latest measured latency"), node("strong", "", latestLatency ? `${latestLatency.latency_ms} ms` : "Unavailable"));
+    toolbar.appendChild(currentValue);
+    panel.classList.toggle("is-sparse", (range.sample_count || 0) < 3);
+    if ((range.sample_count || 0) < 3) panel.appendChild(node("p", "component-graph__sparse", "Sparse real history · the graph shows only received samples and leaves missing periods open."));
 
     const width = 720;
     const height = 154;
@@ -274,6 +298,22 @@
     const maxLatency = Math.max(1, ...latencyValues);
     const yFor = (value) => 96 - (Number(value) / maxLatency) * 72;
     const expectedGap = activeRange === "24h" ? 600000 : 172800000;
+
+    [24, 60, 96].forEach((y, index) => {
+      const gridLine = document.createElementNS(svg.namespaceURI, "line");
+      gridLine.setAttribute("x1", "12");
+      gridLine.setAttribute("x2", String(width - 12));
+      gridLine.setAttribute("y1", String(y));
+      gridLine.setAttribute("y2", String(y));
+      gridLine.setAttribute("class", "component-graph__gridline");
+      svg.appendChild(gridLine);
+      const label = document.createElementNS(svg.namespaceURI, "text");
+      label.setAttribute("x", "14");
+      label.setAttribute("y", String(y - 5));
+      label.setAttribute("class", "component-graph__axis-label");
+      label.textContent = index === 0 ? `${maxLatency} ms` : index === 2 ? "0 ms" : "latency";
+      svg.appendChild(label);
+    });
 
     buckets.forEach((bucket, index) => {
       const rect = document.createElementNS(svg.namespaceURI, "rect");
@@ -306,6 +346,9 @@
         circle.setAttribute("cy", String(point.y));
         circle.setAttribute("r", "3");
         circle.setAttribute("class", "component-graph__point");
+        circle.setAttribute("tabindex", "0");
+        circle.setAttribute("role", "img");
+        circle.setAttribute("aria-label", `${formatAbsolute(point.at)} · ${point.latency} milliseconds`);
         const title = document.createElementNS(svg.namespaceURI, "title");
         title.textContent = `${formatAbsolute(point.at)} · ${point.latency} ms`;
         circle.appendChild(title);
@@ -326,8 +369,22 @@
       previousTime = timestamp;
     });
     flushSegment();
+    const startLabel = document.createElementNS(svg.namespaceURI, "text");
+    startLabel.setAttribute("x", "12");
+    startLabel.setAttribute("y", "151");
+    startLabel.setAttribute("class", "component-graph__axis-label");
+    startLabel.textContent = formatAbsolute(buckets[0]?.at, { includeTime: false });
+    const endLabel = document.createElementNS(svg.namespaceURI, "text");
+    endLabel.setAttribute("x", String(width - 12));
+    endLabel.setAttribute("y", "151");
+    endLabel.setAttribute("text-anchor", "end");
+    endLabel.setAttribute("class", "component-graph__axis-label");
+    endLabel.textContent = formatAbsolute(buckets[buckets.length - 1]?.at, { includeTime: false });
+    svg.append(startLabel, endLabel);
     panel.appendChild(svg);
-    panel.appendChild(node("p", "component-graph__legend", "Latency points · state-coloured availability band · gaps mean no observation"));
+    const legend = node("div", "component-graph__legend");
+    legend.append(node("span", "component-graph__legend-latency", "Latency samples"), node("span", "component-graph__legend-state", "Observed state band"), node("span", "component-graph__legend-gap", "Gap = no observation"));
+    panel.appendChild(legend);
   };
 
   const createComponentCard = (component, snapshot) => {
@@ -346,6 +403,11 @@
     const image = document.createElement("img");
     image.src = presentation.icon;
     image.alt = "";
+    image.addEventListener("error", () => {
+      if (icon.dataset.fallback === "true") return;
+      icon.dataset.fallback = "true";
+      image.src = "/assets/icons/ui/pageinfo.svg";
+    });
     icon.appendChild(image);
     const copy = node("div");
     const heading = node("h4", "", component.name || "Unnamed component");
@@ -353,15 +415,22 @@
     copy.append(heading, node("p", "", diagnostic?.description || presentation.description));
     identity.append(icon, copy);
 
-    const badge = node("span", "component-state", component.statusLabel);
+    const badge = node("span", "component-state", `Official · ${component.statusLabel}`);
     const top = node("div", "component-card__top");
     top.append(identity, badge);
     const chips = node("div", "component-card__chips");
-    const ownerChip = node("span", "component-chip", chipLabel(source.owner));
+    const officialChip = node("span", "component-chip", "Official status — Atlassian");
+    officialChip.dataset.kind = "official";
+    const ownerLabel = source.owner === "watchdog"
+      ? "Direct observation — StreamSuites Watchdog"
+      : source.owner === "atlassian_third_party"
+        ? "External provider — Atlassian integration"
+        : "Manual / deferred monitor";
+    const ownerChip = node("span", "component-chip", ownerLabel);
     ownerChip.dataset.kind = source.owner || "unknown";
     const coverageChip = node("span", "component-chip", chipLabel(source.coverage));
     coverageChip.dataset.kind = source.coverage || "unknown";
-    chips.append(ownerChip, coverageChip);
+    chips.append(officialChip, ownerChip, coverageChip);
 
     const directObservationStale = Boolean(snapshot.diagnosticsStale || diagnostic?.direct_stale);
     const facts = node("div", "component-card__facts");
@@ -375,7 +444,7 @@
     const directState = diagnostic?.direct_state ? normalizeComponent({ status: diagnostic.direct_state }).normalizedState : null;
     const discrepancy = Boolean(diagnostic && !directObservationStale && directState && directState !== "unknown" && directState !== component.normalizedState);
     if (discrepancy) {
-      const warning = node("p", "component-discrepancy", "Monitor discrepancy · official and direct observations differ; reconciliation may be pending.");
+      const warning = node("p", "component-discrepancy", `Reconciliation pending · official is ${component.statusLabel}; fresh direct observation is ${chipLabel(diagnostic.direct_state)}.`);
       warning.setAttribute("role", "status");
       card.append(top, chips, facts, warning);
     } else {
@@ -389,6 +458,12 @@
     const details = node("div", "component-card__details");
     details.id = `${cardId}-details`;
     details.hidden = true;
+    const detailSummary = node("div", "component-detail-rail__summary");
+    const officialSummary = node("div", "component-detail-rail__source");
+    officialSummary.append(node("span", "", "Official status — Atlassian"), node("strong", "", component.statusLabel), node("small", "", `Updated ${formatRelative(component.updated_at)}`));
+    const directSummary = node("div", "component-detail-rail__source");
+    directSummary.append(node("span", "", source.owner === "watchdog" ? "Direct observation — StreamSuites Watchdog" : ownerLabel), node("strong", "", diagnostic?.direct_state ? chipLabel(diagnostic.direct_state) : source.coverage === "deferred" ? "Deferred" : source.coverage === "vendor_managed" ? "Provider managed" : "Unavailable"), node("small", "", diagnostic?.last_checked ? `${directObservationStale ? "Stale" : "Fresh"} · checked ${formatRelative(diagnostic.last_checked)}` : "No local check available"));
+    detailSummary.append(officialSummary, directSummary);
     const detailList = node("dl", "component-details-grid");
     detailList.append(
       detailItem("Official source", "Atlassian Statuspage"),
@@ -405,7 +480,7 @@
       detailItem("Last success", diagnostic?.last_success ? formatAbsolute(diagnostic.last_success) : "Unavailable"),
       detailItem("Last failure", diagnostic?.last_failure ? formatAbsolute(diagnostic.last_failure) : "Unavailable")
     );
-    details.appendChild(detailList);
+    details.append(detailSummary, detailList);
     if (source.coverage === "deferred") {
       details.appendChild(node("p", "component-empty-state", "Automated monitoring is not active for this component. Official Statuspage state is currently maintained manually. Historical direct diagnostics will begin when monitoring is enabled."));
     } else if (source.coverage === "vendor_managed") {
@@ -417,15 +492,22 @@
     }
     const incident = unresolvedIncidents(snapshot.data.incidents).find((item) => (item.components || []).some((entry) => entry.id === component.id));
     if (incident) details.appendChild(node("p", "component-incident", `Associated incident · ${incident.name || "Active incident"}`));
-    card.append(toggle, details);
+    const footer = node("div", "component-card__footer");
+    footer.appendChild(toggle);
+    card.append(footer, details);
     const setExpanded = (expanded) => {
       card.classList.toggle("is-expanded", expanded);
       details.hidden = !expanded;
       toggle.setAttribute("aria-expanded", String(expanded));
-      toggle.textContent = expanded ? "Hide diagnostics" : "View diagnostics";
+      toggle.textContent = expanded ? "Close diagnostics ↑" : "View diagnostics ↓";
       if (expanded) state.expanded.add(component.id); else state.expanded.delete(component.id);
     };
     toggle.addEventListener("click", () => setExpanded(toggle.getAttribute("aria-expanded") !== "true"));
+    toggle.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape" || toggle.getAttribute("aria-expanded") !== "true") return;
+      setExpanded(false);
+      toggle.focus();
+    });
     setExpanded(state.expanded.has(component.id));
     return card;
   };
@@ -445,10 +527,28 @@
       if (!visible.length) return;
       visibleCount += visible.length;
 
+      const groupKey = inferGroupKey(group);
+      const groupPresentation = GROUP_PRESENTATION[groupKey] || GROUP_PRESENTATION.dependencies;
       const section = node("section", "component-group reveal is-visible");
+      section.dataset.group = groupKey;
+      section.style.setProperty("--group-accent", groupPresentation.accent);
       const heading = node("div", "component-group__heading");
-      const operational = visible.filter((component) => component.normalizedState === "operational").length;
-      heading.append(node("h3", "", group.label), node("span", "", `${operational}/${visible.length} operational`));
+      const normalizedAll = group.components.map(normalizeComponent);
+      const operational = normalizedAll.filter((component) => component.normalizedState === "operational").length;
+      const attention = normalizedAll.length - operational;
+      const coverage = normalizedAll.map((component) => diagnosticFor(component, snapshot) || fallbackCoverage(component.id));
+      const monitored = coverage.filter((item) => item.coverage === "implemented").length;
+      const deferred = coverage.filter((item) => item.coverage === "deferred").length;
+      const vendor = coverage.filter((item) => item.coverage === "vendor_managed").length;
+      const copy = node("div", "component-group__copy");
+      copy.append(node("span", "component-group__eyebrow", `${operational}/${normalizedAll.length} operational`), node("h3", "", group.label), node("p", "", groupPresentation.role));
+      const counts = node("div", "component-group__counts");
+      [["Monitored", monitored, "monitored"], ["Deferred", deferred, "deferred"], ["External", vendor, "vendor"], ["Attention", attention, "attention"]].forEach(([label, value, kind]) => {
+        const count = node("span", "", `${label} ${value}`);
+        count.dataset.kind = kind;
+        counts.appendChild(count);
+      });
+      heading.append(copy, counts);
       const grid = node("div", "component-grid");
       visible.forEach((component) => grid.appendChild(createComponentCard(component, snapshot)));
       section.append(heading, grid);

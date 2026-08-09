@@ -100,15 +100,45 @@ test("component cards use meaningful icons, truthful source states, expansion, a
   assert.match(page, /state\.graphRanges/);
   assert.match(page, /\["24h", "7d", "30d"\]/);
   assert.match(page, /role", "img"/);
+  assert.match(page, /tabindex", "0"/);
+  assert.match(page, /aria-label", `\$\{formatAbsolute\(point\.at\)\}/);
   assert.match(page, /Watchdog-observed availability|watchdog-observed availability/);
   assert.match(page, /if \(!activeRange\)/);
+  assert.match(page, /Sparse real history/);
+  assert.match(page, /Nothing is interpolated or backfilled/);
+  assert.match(page, /flushSegment\(\)/);
+  assert.match(page, /timestamp - previousTime > expectedGap/);
   assert.match(page, /Managed by an Atlassian third-party integration/);
   assert.match(page, /Automated monitoring is not active/);
-  assert.match(page, /Monitor discrepancy/);
+  assert.match(page, /Reconciliation pending/);
+  assert.match(page, /!directObservationStale/);
+  assert.match(page, /event\.key !== "Escape"/);
   assert.match(html, /Atlassian-only operation/);
   assert.match(html, /Studio Room Readiness/);
   assert.match(css, /\.component-card\.is-expanded/);
+  assert.match(css, /\.component-card\s*\{[\s\S]*?min-height:\s*248px;/);
+  assert.match(css, /\.component-detail-rail__summary/);
+  assert.match(css, /\.component-graph__axis-label/);
+  assert.match(css, /\.component-graph__point:focus/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+});
+
+test("group summaries and source labels expose the locked monitoring taxonomy", () => {
+  const page = read("js/status-page.js");
+  const css = read("css/status-page.css");
+  assert.match(page, /const GROUP_PRESENTATION = Object\.freeze/);
+  assert.match(page, /Creation products and their connected production services/);
+  assert.match(page, /Identity, rooms, APIs, automation, and notification authority/);
+  assert.match(page, /Audience, creator, admin, developer, documentation, and distribution surfaces/);
+  assert.match(page, /External delivery, email, payment, and Git operations/);
+  for (const label of ["Monitored", "Deferred", "External", "Attention"]) assert.match(page, new RegExp(`\\["${label}"`));
+  assert.match(page, /Official status — Atlassian/);
+  assert.match(page, /Direct observation — StreamSuites Watchdog/);
+  assert.match(page, /External provider — Atlassian integration/);
+  assert.match(page, /Manual \/ deferred monitor/);
+  assert.match(css, /\.component-group__counts/);
+  assert.match(css, /--group-accent/);
+  assert.match(css, /\.component-card__footer/);
 });
 
 test("all newly referenced status icons exist locally", () => {
