@@ -218,6 +218,20 @@ test("missing intervals split smooth curves instead of implying measurements", (
   assert.equal(explicitGap.gaps[0].reason, "missing_measurement");
 });
 
+test("observability rail creates flat markers only for missing internal buckets", () => {
+  const helpers = loadChartHelpers();
+  const model = helpers.buildChartModel([
+    observation(0, 80),
+    observation(5, null, "operational", null),
+    observation(15, 95),
+  ], "24h");
+  const markers = helpers.internalMissingRailMarkers(model);
+  assert.equal(markers.length, 1);
+  assert.equal(markers[0].time, Date.parse(observation(10, 0).at));
+  assert.ok(markers[0].x > model.observations[1].x && markers[0].x < model.observations[2].x);
+  assert.equal(helpers.internalMissingRailMarkers(helpers.buildChartModel([observation(0, 80), observation(5, 95)], "24h")).length, 0);
+});
+
 test("five-minute normalization tolerates timestamp jitter and reports plotted bucket counts", () => {
   const helpers = loadChartHelpers();
   const interval = 300000;
@@ -287,6 +301,12 @@ test("premium SVG treatment remains dependency-free, range-accessible, and reduc
   assert.match(page, /path\.getTotalLength\(\)/);
   assert.match(page, /--chart-draw-length/);
   assert.match(page, /is-chart-primed/);
+  assert.match(page, /IntersectionObserver/);
+  assert.match(page, /visiblePixels < Math\.min\(160, bounds\.height \* \.22\)/);
+  assert.match(page, /if \(options\.transition === "range"\) queueChartEntrance\(panel\)/);
+  assert.match(page, /internalMissingRailMarkers\(model\)/);
+  assert.match(page, /component-graph__state-bar--missing/);
+  assert.match(page, /Flat grey markers = missing internal observations/);
   assert.match(page, /component-graph__point is-current/);
   assert.match(page, /component-graph__crosshair/);
   assert.match(page, /component-graph__tooltip/);
@@ -311,6 +331,10 @@ test("premium SVG treatment remains dependency-free, range-accessible, and reduc
   assert.match(css, /\.component-graph__gap-bridge\s*\{[\s\S]*?stroke-dasharray:/);
   assert.match(css, /\.component-graph__line\s*\{[\s\S]*?stroke-dasharray:\s*none/);
   assert.match(css, /stroke-dashoffset 2050ms/);
+  assert.match(css, /component-graph__state-bar[\s\S]*?transition:[^;]*opacity 720ms[^;]*transform 880ms/);
+  assert.match(css, /component-graph__rail-stop--top[^{]*\{[^}]*stop-opacity:\s*\.98/);
+  assert.match(css, /component-graph__rail-stop--bottom[^{]*\{[^}]*stop-opacity:\s*\.58/);
+  assert.match(css, /component-graph__state-bar--missing/);
   assert.match(css, /\.component-graph__stop--fill-top[^\n]*stop-opacity:\s*\.34/);
   assert.match(css, /\.component-graph__stop--fill-tail[^\n]*stop-opacity:\s*\.11/);
   assert.match(css, /chart-tip-settle/);
@@ -360,7 +384,7 @@ test("incident and maintenance empty states use the local tick while real-event 
   assert.match(html, /data-operation-panel="incident"/);
   assert.match(html, /data-operation-panel="maintenance"/);
   assert.match(css, /\.operation-empty__mark::before[\s\S]*?\/assets\/icons\/ui\/tick\.svg/);
-  assert.match(css, /\.panel-icon--incident::before[\s\S]*?transform:\s*translateY\(1\.5px\)/);
+  assert.match(css, /\.panel-icon--incident::before[\s\S]*?position:\s*absolute;[\s\S]*?inset:\s*0;[\s\S]*?margin:\s*auto;[\s\S]*?transform:\s*translate\(\.6px, -1\.2px\)/);
   assert.match(page, /else incidents\.forEach\(\(incident\) => incidentRoot\.appendChild\(createOperationItem\(incident, "incident"\)\)\)/);
   assert.match(page, /else maintenances\.forEach\(\(maintenance\) => maintenanceRoot\.appendChild\(createOperationItem\(maintenance, "maintenance"\)\)\)/);
   assert.match(page, /item\.incident_updates/);

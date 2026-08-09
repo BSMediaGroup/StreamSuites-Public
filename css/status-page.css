@@ -1997,13 +1997,26 @@ main > section:not(.status-hero) {
 .component-graph__stop--fill-tail { stop-color: var(--chart-line-end); stop-opacity: .11; }
 .component-graph__stop--fill-bottom { stop-color: var(--chart-line-end); stop-opacity: .015; }
 
-.component-graph__state-bar { opacity: .78; vector-effect: non-scaling-stroke; }
-.component-graph__state-bar[data-state="operational"] { fill: var(--chart-state-operational); }
-.component-graph__state-bar[data-state="degraded"] { fill: var(--chart-state-degraded); }
-.component-graph__state-bar[data-state="partial"] { fill: var(--chart-state-partial); }
-.component-graph__state-bar[data-state="major"] { fill: var(--chart-state-major); }
-.component-graph__state-bar[data-state="maintenance"] { fill: var(--chart-state-maintenance); }
-.component-graph__state-bar[data-state="unknown"] { fill: var(--chart-state-unknown); }
+.component-graph__state-bar {
+  opacity: .78;
+  stroke: rgba(225,241,255,.08);
+  stroke-width: .45;
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  vector-effect: non-scaling-stroke;
+}
+.component-graph__state-bar--missing { opacity: .72; stroke: rgba(181,198,218,.12); }
+.component-graph__rail-stop--top { stop-opacity: .98; }
+.component-graph__rail-stop--mid { stop-opacity: .84; }
+.component-graph__rail-stop--bottom { stop-opacity: .58; }
+.component-graph__rail-stop[data-state="operational"] { stop-color: var(--chart-state-operational); }
+.component-graph__rail-stop[data-state="degraded"] { stop-color: var(--chart-state-degraded); }
+.component-graph__rail-stop[data-state="partial"] { stop-color: var(--chart-state-partial); }
+.component-graph__rail-stop[data-state="major"] { stop-color: var(--chart-state-major); }
+.component-graph__rail-stop[data-state="maintenance"] { stop-color: var(--chart-state-maintenance); }
+.component-graph__rail-stop[data-state="unknown"] { stop-color: var(--chart-state-unknown); }
+.component-graph__rail-stop[data-state="missing"] { stop-color: color-mix(in srgb, var(--status-chart-gap) 82%, #d4deea); }
+.component-graph__rail-stop--bottom[data-state="missing"] { stop-opacity: .3; }
 
 .component-graph__area {
   opacity: 1;
@@ -2096,6 +2109,7 @@ main > section:not(.status-hero) {
 .component-graph__legend span::before { display: inline-block; width: 12px; height: 2px; margin: 0 6px 2px 0; border-radius: 999px; background: linear-gradient(90deg, var(--chart-line-start), var(--chart-line-end)); content: ""; }
 .component-graph__legend-state::before { height: 6px !important; background: linear-gradient(90deg, var(--green), var(--amber), var(--orange), var(--red), var(--maintenance)) !important; }
 .component-graph__legend-unobserved::before { height: 6px !important; border: 1px solid rgba(128,145,165,.18); background: rgba(128,145,165,.075) !important; }
+.component-graph__legend-missing::before { height: 5px !important; border: 1px solid rgba(154,172,193,.14); background: linear-gradient(180deg, rgba(154,172,193,.62), rgba(100,116,135,.28)) !important; }
 .component-graph__legend-gap::before { height: 0 !important; border: 0 !important; border-top: 1px dashed var(--status-chart-gap) !important; background: transparent !important; }
 .component-graph__empty { display: grid; min-height: 160px; place-content: center; gap: 7px; margin-top: 14px; padding: 18px; border: 1px dashed var(--line-strong); border-radius: 10px; color: var(--muted); background: rgba(255,255,255,.015); text-align: center; }
 .component-graph__empty strong { color: var(--text-2); font-size: 13px; }
@@ -2103,7 +2117,8 @@ main > section:not(.status-hero) {
 
 .component-graph:is(.is-chart-primed, .is-chart-entering):not(.is-chart-visible) .component-graph__plot { opacity: 0; transform: translateY(4px); }
 .component-graph:is(.is-chart-primed, .is-chart-entering):not(.is-chart-visible) .component-graph__area { opacity: 0; transform: scaleY(0); }
-.component-graph:is(.is-chart-primed, .is-chart-entering):not(.is-chart-visible) .component-graph__line { stroke-dashoffset: var(--chart-draw-length, 0); }
+.component-graph:is(.is-chart-primed, .is-chart-entering):not(.is-chart-visible) .component-graph__line { stroke-dasharray: var(--chart-draw-length, none); stroke-dashoffset: var(--chart-draw-length, 0); }
+.component-graph:is(.is-chart-primed, .is-chart-entering):not(.is-chart-visible) .component-graph__state-bar { opacity: 0; transform: scaleY(.14); }
 .component-graph:is(.is-chart-primed, .is-chart-entering):not(.is-chart-visible) .component-graph__gap-bridge,
 .component-graph:is(.is-chart-primed, .is-chart-entering):not(.is-chart-visible) .component-graph__gap-band,
 .component-graph:is(.is-chart-primed, .is-chart-entering):not(.is-chart-visible) .component-graph__gap-label { opacity: 0; }
@@ -2113,6 +2128,7 @@ main > section:not(.status-hero) {
 .component-graph.is-chart-entering .component-graph__plot { transition: opacity 280ms ease, transform 280ms var(--ease); }
 .component-graph.is-chart-entering .component-graph__area { transition: opacity 1350ms var(--ease) 140ms, transform 1350ms var(--ease) 140ms; }
 .component-graph.is-chart-entering .component-graph__line { stroke-dasharray: var(--chart-draw-length, none); transition: stroke-dashoffset 2050ms cubic-bezier(.22,.76,.2,1) 260ms; }
+.component-graph.is-chart-entering .component-graph__state-bar { transition: opacity 720ms ease, transform 880ms cubic-bezier(.2,.78,.18,1); transition-delay: calc(170ms + var(--rail-reveal-delay, 0ms)); }
 .component-graph.is-chart-entering .component-graph__gap-bridge,
 .component-graph.is-chart-entering .component-graph__gap-band,
 .component-graph.is-chart-entering .component-graph__gap-label { transition: opacity 430ms ease 1720ms; }
@@ -2235,6 +2251,7 @@ main > section:not(.status-hero) {
 }
 
 .panel-icon {
+  position: relative;
   display: grid;
   width: 42px;
   height: 42px;
@@ -2259,13 +2276,15 @@ main > section:not(.status-hero) {
 }
 
 .operations-panel[data-operation-panel="incident"][data-empty="true"] .panel-icon--incident::before {
-  display: block;
+  position: absolute;
+  inset: 0;
   width: 19px;
   height: 19px;
+  margin: auto;
   background: currentColor;
   -webkit-mask: url("/assets/icons/ui/tick.svg") center / contain no-repeat;
   mask: url("/assets/icons/ui/tick.svg") center / contain no-repeat;
-  transform: translateY(1.5px);
+  transform: translate(.6px, -1.2px);
   content: "";
 }
 
@@ -3061,6 +3080,8 @@ main > section:not(.status-hero) {
   .component-graph__tip,
   .component-graph__legend,
   .component-graph__plot { opacity: 1 !important; transform: none !important; }
+  .component-graph__state-bar { opacity: .78 !important; transform: none !important; }
+  .component-graph__state-bar--missing { opacity: .72 !important; }
   .component-graph__tip { animation: none !important; }
   .component-graph__gap-bridge { opacity: .72 !important; }
   .component-graph__gap-band { opacity: 1 !important; }

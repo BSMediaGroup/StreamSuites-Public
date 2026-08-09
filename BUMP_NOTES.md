@@ -6,6 +6,21 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-10 - In-view graph motion, observability rail, and incident tick correction
+
+#### Technical notes
+
+- Reproduced the deployed Core API expansion in a real browser and measured the motion against viewport geometry. The chart draw began while the plot was still more than 800px below a 720px viewport; by the time even its top edge arrived, the area was already roughly three-quarters revealed and the line draw was well underway. The graph now primes invisibly while off-screen and uses a bounded `IntersectionObserver` threshold to start its measured area, line, rail, gap, and current-point sequence only once a meaningful portion of the plot is actually visible.
+- Corrected the line-prime boundary so the exact measured SVG path length is applied before paint without an inline dash offset overriding the transition. Every 24H/7D/30D selection now counts as a new chart load: the outgoing range still fades briefly, the new real geometry is rebuilt, and its full in-view entrance sequence replays. Reduced motion continues to bypass every draw/grow transition and renders final geometry immediately.
+- Polished the observed-availability rail with restrained per-state `userSpaceOnUse` vertical gradients, fine inset strokes, and a bounded baseline-up reveal. Genuine internal missing buckets now receive short, flat grey gradient markers at the exact expected bucket positions. These markers derive only from internal gaps, exclude any explicit observed bucket, remain unmeasured, and are never generated for selected-range time before history began.
+- Re-measured the exact local `assets/icons/ui/tick.svg` artwork rather than aligning only its CSS mask box. Although its bounds are geometrically centred, its asymmetric visual centroid sits left and below centre. The compact Active Incidents tick is now absolutely centred inside the 42px rounded square and receives the corresponding small right/up optical correction; the full healthy empty-state tick and all real incident rendering remain unchanged.
+- Extended focused status coverage for internal-only missing rail markers, gradient rail primitives, in-view entrance gating, range replay, reduced-motion final state, and the new measurable tick-centering contract. Advanced only the bounded `/status` stylesheet/controller presentation cache key so the corrected assets are not confused with the prior deployed rendering; no file, dependency, Runtime/Auth source, API, component ID, route, canonical version/build value, Cloudflare configuration, Atlassian configuration, or deployment was added, removed, or changed.
+- Validation passed all 24 focused Status Center tests and all 131 direct Public Node tests, JavaScript syntax, HTML parsing, exact-case asset checks, and `git diff --check`. Playwright validation against the live accumulated diagnostic response proved the off-screen prime remained at full path offset and zero area/rail opacity until the graph entered view, then measured both live SVG line segments drawing to zero while the area and rail rose. Clearly labelled intercepted 7D and 30D history scenarios separately proved both range switches replayed their measured lines from full offset to zero; reduced motion rendered the switched range immediately with no dash, transform, or partial opacity. The live 24H rail rendered 57 flat markers inside its genuine internal gap and none in the leading unavailable-history span, while the tick pseudo-element measured absolute zero insets, automatic centring margins, and the intended `0.6px / -1.2px` optical correction. Browser checks at 390x844, 844x390, and 1600x1000 retained exact document widths with the graph visibly mid-draw and the same centred tick geometry.
+
+#### Human-readable notes
+
+Status graphs now wait until you can actually see them before smoothly drawing in, and changing the time range replays that entrance instead of merely swapping the finished graph. The observability rail has more dimensional state bars plus honest flat grey markers only where checks are missing, and the Active Incidents tick now sits in the true visual centre of its rounded square.
+
 ### 2026-08-10 - Live-history graph source and rendering correction
 
 #### Technical notes

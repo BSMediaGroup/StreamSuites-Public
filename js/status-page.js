@@ -384,6 +384,25 @@
     };
   };
 
+  const internalMissingRailMarkers = (model) => {
+    if (!model?.gaps?.length) return [];
+    const observedTimes = new Set(model.observations.map((observation) => observation.time));
+    const plotWidth = CHART_VIEW.right - CHART_VIEW.left;
+    return model.gaps.flatMap((gap) => {
+      const markers = [];
+      for (let time = gap.from.time + model.rangeMeta.intervalMs; time < gap.to.time; time += model.rangeMeta.intervalMs) {
+        if (observedTimes.has(time)) continue;
+        const ratio = (time - model.startTime) / model.rangeMeta.durationMs;
+        markers.push({
+          time,
+          x: CHART_VIEW.left + Math.max(0, Math.min(1, ratio)) * plotWidth,
+          gap,
+        });
+      }
+      return markers;
+    });
+  };
+
   const smoothChartPath = (points) => {
     if (!points.length) return "";
     if (points.length === 1) return `M${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;
@@ -434,33 +453,110 @@
   };
   const chartFrame = (callback) => (window.requestAnimationFrame || ((next) => window.setTimeout(next, 0)))(callback);
 
-  const activateChartEntrance = (panel) => {
+  const cancelChartEntrance = (panel) => {
+    panel._chartEntranceObserver?.disconnect();
+    panel._chartEntranceObserver = null;
+    if (panel._chartEntranceTimer) window.clearTimeout(panel._chartEntranceTimer);
+    panel._chartEntranceTimer = null;
+    panel.dataset.chartEntranceToken = String(Number(panel.dataset.chartEntranceToken || 0) + 1);
+    delete panel.dataset.chartEntranceStarted;
     panel.classList.remove("is-chart-primed", "is-chart-entering", "is-chart-visible");
+    selectAll(".component-graph__line", panel).forEach((path) => {
+      path.style.removeProperty("--chart-draw-length");
+      path.style.removeProperty("stroke-dasharray");
+      path.style.removeProperty("stroke-dashoffset");
+    });
+  };
+
+  const primeChartEntrance = (panel) => {
+    cancelChartEntrance(panel);
+    const token = panel.dataset.chartEntranceToken;
     if (chartMotionReduced()) {
       panel.dataset.chartMotion = "reduced";
       panel.classList.add("is-chart-visible");
-      return;
+      return null;
     }
     panel.dataset.chartMotion = "animated";
     selectAll(".component-graph__line", panel).forEach((path) => {
       const length = Math.max(1, path.getTotalLength());
       path.style.setProperty("--chart-draw-length", `${length}px`);
+      path.style.strokeDasharray = `${length}px`;
+    });
+    const railBars = selectAll(".component-graph__state-bar", panel);
+    railBars.forEach((bar, index) => {
+      const progress = railBars.length <= 1 ? 0 : index / (railBars.length - 1);
+      bar.style.setProperty("--rail-reveal-delay", `${Math.round(progress * 320)}ms`);
     });
     panel.classList.add("is-chart-primed");
+    return token;
+  };
+
+  const startChartEntrance = (panel, token) => {
+    if (!token || panel.dataset.chartEntranceToken !== token) return;
+    if (panel.dataset.chartEntranceStarted === token) return;
+    panel.dataset.chartEntranceStarted = token;
+    panel._chartEntranceObserver?.disconnect();
+    panel._chartEntranceObserver = null;
     chartFrame(() => {
+      if (panel.dataset.chartEntranceToken !== token) return;
       panel.classList.add("is-chart-entering");
-      panel.classList.remove("is-chart-primed");
-      chartFrame(() => panel.classList.add("is-chart-visible"));
+      chartFrame(() => {
+        if (panel.dataset.chartEntranceToken !== token) return;
+        panel.classList.remove("is-chart-primed");
+        panel.classList.add("is-chart-visible");
+      });
     });
-    window.setTimeout(() => {
+    panel._chartEntranceTimer = window.setTimeout(() => {
+      if (panel.dataset.chartEntranceToken !== token) return;
       panel.classList.remove("is-chart-primed", "is-chart-entering");
-      selectAll(".component-graph__line", panel).forEach((path) => path.style.removeProperty("--chart-draw-length"));
-    }, 2900);
+      selectAll(".component-graph__line", panel).forEach((path) => {
+        path.style.removeProperty("--chart-draw-length");
+        path.style.removeProperty("stroke-dasharray");
+        path.style.removeProperty("stroke-dashoffset");
+      });
+      panel._chartEntranceTimer = null;
+    }, 3100);
+  };
+
+  const queueChartEntrance = (panel) => {
+    const prepare = () => {
+      if (!panel.isConnected) {
+        chartFrame(prepare);
+        return;
+      }
+      const token = primeChartEntrance(panel);
+      if (!token) return;
+      const plot = select(".component-graph__plot", panel);
+      if (!plot) return;
+      const startWhenVisible = () => {
+        if (panel.dataset.chartEntranceToken !== token) return;
+        const bounds = plot.getBoundingClientRect();
+        const viewportTop = window.innerHeight * .08;
+        const viewportBottom = window.innerHeight * .92;
+        const visiblePixels = Math.max(0, Math.min(bounds.bottom, viewportBottom) - Math.max(bounds.top, viewportTop));
+        if (visiblePixels < Math.min(160, bounds.height * .22)) return;
+        startChartEntrance(panel, token);
+      };
+      startWhenVisible();
+      if (panel.dataset.chartEntranceStarted === token) return;
+      if (!("IntersectionObserver" in window)) {
+        startChartEntrance(panel, token);
+        return;
+      }
+      panel._chartEntranceObserver = new IntersectionObserver(startWhenVisible, {
+        rootMargin: "-8% 0px -8% 0px",
+        threshold: [.16, .3],
+      });
+      panel._chartEntranceObserver.observe(plot);
+    };
+    if (panel.isConnected) prepare();
+    else chartFrame(prepare);
   };
 
   window.StreamSuitesStatusChartHelpers = Object.freeze({
     buildChartModel,
     formatGapDuration,
+    internalMissingRailMarkers,
     nearestChartObservation,
     normalizeBucketTimestamp,
     observedStateKey,
@@ -478,6 +574,7 @@
   };
 
   const renderHistoryGraph = (panel, diagnostic, requestedRange, options = {}) => {
+    cancelChartEntrance(panel);
     panel.innerHTML = "";
     panel.classList.remove("is-range-leaving", "is-range-entering", "is-range-visible");
     const ranges = ["24h", "7d", "30d"];
@@ -675,6 +772,29 @@
 
     const stateY = model.graphType === "latency" ? CHART_VIEW.stateY : 90;
     const stateHeight = model.graphType === "latency" ? CHART_VIEW.stateHeight : 38;
+    const missingRailHeight = Math.max(4, Math.round(stateHeight * .28));
+    const missingRailY = stateY + stateHeight - missingRailHeight;
+    const railGradientIds = new Map();
+    const addRailGradient = (railState, y1, y2) => {
+      const id = `${definitionId}-rail-${railState}`;
+      const gradient = svgNode("linearGradient");
+      gradient.id = id;
+      gradient.setAttribute("gradientUnits", "userSpaceOnUse");
+      gradient.setAttribute("x1", String(CHART_VIEW.left));
+      gradient.setAttribute("x2", String(CHART_VIEW.left));
+      gradient.setAttribute("y1", String(y1));
+      gradient.setAttribute("y2", String(y2));
+      [["0%", "top"], ["52%", "mid"], ["100%", "bottom"]].forEach(([offset, position]) => {
+        const stop = svgNode("stop", `component-graph__rail-stop component-graph__rail-stop--${position}`);
+        stop.setAttribute("offset", offset);
+        stop.setAttribute("data-state", railState);
+        gradient.appendChild(stop);
+      });
+      defs.appendChild(gradient);
+      railGradientIds.set(railState, id);
+    };
+    ["operational", "degraded", "partial", "major", "maintenance", "unknown"].forEach((railState) => addRailGradient(railState, stateY, stateY + stateHeight));
+    addRailGradient("missing", missingRailY, missingRailY + missingRailHeight);
     if (model.graphType === "latency") {
       const availabilityTrack = svgNode("rect", "component-graph__availability-track");
       availabilityTrack.setAttribute("x", String(CHART_VIEW.left));
@@ -725,6 +845,22 @@
         svg.appendChild(label);
       }
     });
+    const missingMarkers = internalMissingRailMarkers(model);
+    missingMarkers.forEach((marker) => {
+      const bar = svgNode("rect", "component-graph__state-bar component-graph__state-bar--missing");
+      bar.setAttribute("x", String(Math.max(CHART_VIEW.left, Math.min(CHART_VIEW.right - model.stateBandWidth, marker.x - model.stateBandWidth / 2))));
+      bar.setAttribute("y", String(missingRailY));
+      bar.setAttribute("width", String(model.stateBandWidth));
+      bar.setAttribute("height", String(missingRailHeight));
+      bar.setAttribute("rx", String(Math.min(2.4, missingRailHeight / 2)));
+      bar.setAttribute("data-state", "missing");
+      bar.setAttribute("data-unmeasured", "true");
+      bar.style.fill = `url(#${railGradientIds.get("missing")})`;
+      const title = svgNode("title");
+      title.textContent = `${formatAbsolute(new Date(marker.time).toISOString())} · no watchdog observation`;
+      bar.appendChild(title);
+      svg.appendChild(bar);
+    });
     model.observations.forEach((observation) => {
       const bar = svgNode("rect", "component-graph__state-bar");
       bar.setAttribute("x", String(Math.max(CHART_VIEW.left, Math.min(CHART_VIEW.right - model.stateBandWidth, observation.x - model.stateBandWidth / 2))));
@@ -733,6 +869,7 @@
       bar.setAttribute("height", String(stateHeight));
       bar.setAttribute("rx", model.graphType === "latency" ? "2" : "5");
       bar.setAttribute("data-state", observation.state);
+      bar.style.fill = `url(#${railGradientIds.get(observation.state) || railGradientIds.get("unknown")})`;
       const title = svgNode("title");
       title.textContent = `${formatAbsolute(observation.at)} · ${OBSERVED_STATE_LABELS[observation.state]}${observation.availability == null ? "" : ` · ${observation.availability}% available`}`;
       bar.appendChild(title);
@@ -864,6 +1001,7 @@
     const legend = node("div", "component-graph__legend");
     if (model.graphType === "latency") legend.appendChild(node("span", "component-graph__legend-latency", "Measured latency"));
     legend.appendChild(node("span", "component-graph__legend-state", "Observed availability rail"));
+    if (missingMarkers.length) legend.appendChild(node("span", "component-graph__legend-missing", "Flat grey markers = missing internal observations"));
     if (model.leadingGap || model.gaps.length) legend.appendChild(node("span", "component-graph__legend-unobserved", "Shaded span = no observations"));
     if (model.gaps.length) legend.appendChild(node("span", "component-graph__legend-gap", "Dashed bridge = internal unmeasured interval"));
     panel.appendChild(legend);
@@ -875,6 +1013,7 @@
       }));
       window.setTimeout(() => panel.classList.remove("is-range-entering", "is-range-visible"), 430);
     } else panel.removeAttribute("aria-busy");
+    if (options.transition === "range") queueChartEntrance(panel);
     if (options.focusRange) select(`button[data-graph-range="${options.focusRange}"]`, controls)?.focus({ preventScroll: true });
   };
 
@@ -1003,7 +1142,7 @@
         state.expanded.add(component.id);
         if (graph && !state.graphEntrances.has(component.id)) {
           state.graphEntrances.add(component.id);
-          activateChartEntrance(graph);
+          queueChartEntrance(graph);
         }
       } else state.expanded.delete(component.id);
     };
