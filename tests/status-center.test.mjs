@@ -129,7 +129,7 @@ test("component cards use meaningful icons, truthful source states, expansion, a
   assert.match(page, /History is still accumulating/);
   assert.match(page, /Nothing is interpolated or backfilled/);
   assert.match(page, /flushSegment\(\)/);
-  assert.match(page, /observation\.time - previousTime > rangeMeta\.maxGapMs/);
+  assert.match(page, /observation\.time - previousMeasured\.time > rangeMeta\.maxGapMs/);
   assert.match(page, /Managed through Atlassian's provider integration/);
   assert.match(page, /Automated monitoring is deferred/);
   assert.match(page, /Reconciliation pending/);
@@ -156,8 +156,14 @@ test("chart model preserves only real observations, explicit nulls, and measured
   assert.equal(model.observations.length, buckets.length);
   assert.deepEqual(Array.from(model.latencyPoints, (point) => point.latency), [120, 0]);
   assert.deepEqual(Array.from(model.segments, (segment) => segment.length), [1, 1]);
+  assert.equal(model.gaps.length, 1);
+  assert.equal(model.gaps[0].reason, "missing_measurement");
   assert.equal(model.observations[1].latency, null);
   assert.equal(model.observations[1].availability, 0);
+  const measuredValues = Array.from(model.latencyPoints, (point) => point.latency);
+  assert.equal(Math.min(...measuredValues), 0);
+  assert.equal(Math.max(...measuredValues), 120);
+  assert.equal(measuredValues.reduce((total, value) => total + value, 0) / measuredValues.length, 60);
 });
 
 test("24H, 7D, and 30D models retain exact selected time domains", () => {
@@ -184,10 +190,46 @@ test("single and two-point latency history stays sparse without manufactured geo
 
 test("missing intervals split smooth curves instead of implying measurements", () => {
   const helpers = loadChartHelpers();
+  const adjacent = helpers.buildChartModel([observation(0, 80), observation(5, 95)], "24h");
+  assert.deepEqual(Array.from(adjacent.segments, (segment) => segment.length), [2]);
+  assert.equal(adjacent.gaps.length, 0);
   const timestampGap = helpers.buildChartModel([observation(0, 80), observation(10, 95)], "24h");
   assert.deepEqual(Array.from(timestampGap.segments, (segment) => segment.length), [1, 1]);
+  assert.equal(timestampGap.gaps.length, 1);
+  assert.equal(timestampGap.gaps[0].missingBucketCount, 1);
+  assert.equal(timestampGap.gaps[0].reason, "missing_interval");
   const explicitGap = helpers.buildChartModel([observation(0, 80), observation(5, null), observation(10, 95)], "24h");
   assert.deepEqual(Array.from(explicitGap.segments, (segment) => segment.length), [1, 1]);
+  assert.equal(explicitGap.gaps.length, 1);
+  assert.equal(explicitGap.gaps[0].reason, "missing_measurement");
+});
+
+test("five-minute normalization tolerates timestamp jitter and reports plotted bucket counts", () => {
+  const helpers = loadChartHelpers();
+  const interval = 300000;
+  assert.equal(
+    helpers.normalizeBucketTimestamp("2026-08-09T00:09:59.999Z", interval),
+    Date.parse("2026-08-09T00:05:00.000Z")
+  );
+  const model = helpers.buildChartModel([
+    { ...observation(0, 80), at: "2026-08-09T00:00:02.000Z" },
+    { ...observation(5, 84), at: "2026-08-09T00:05:59.000Z" },
+    { ...observation(5, 86), at: "2026-08-09T00:05:12.000Z" },
+  ], "24h");
+  assert.equal(model.plottedBucketCount, 2);
+  assert.equal(model.plottedMeasurementCount, 2);
+  assert.equal(model.segments.length, 1);
+  assert.equal(model.gaps.length, 0);
+});
+
+test("latest measured point after a genuine gap remains real and is the gap destination", () => {
+  const helpers = loadChartHelpers();
+  const model = helpers.buildChartModel([observation(0, 80), observation(5, 84), observation(20, 91)], "24h");
+  const latest = model.latencyPoints.at(-1);
+  assert.equal(latest.latency, 91);
+  assert.equal(model.gaps.length, 1);
+  assert.equal(model.gaps[0].to, latest);
+  assert.match(helpers.formatGapDuration(model.gaps[0].durationMs), /minutes|hour/);
 });
 
 test("state-only history never manufactures a latency series", () => {
@@ -218,6 +260,15 @@ test("premium SVG treatment remains dependency-free, range-accessible, and reduc
   assert.match(page, /createElementNS\("http:\/\/www\.w3\.org\/2000\/svg", tag\)/);
   assert.match(page, /linearGradient/);
   assert.match(page, /component-graph__area/);
+  assert.match(page, /component-graph__gap-band/);
+  assert.match(page, /component-graph__gap-bridge/);
+  assert.match(page, /bridge\.setAttribute\("data-unmeasured", "true"\)/);
+  assert.match(page, /No observations are included in this bridge/);
+  const measuredSegmentRenderer = page.indexOf("model.segments.forEach((sourceSegment)");
+  const gapBridgeRenderer = page.indexOf("model.gaps.forEach((gap) =>", measuredSegmentRenderer);
+  assert.ok(measuredSegmentRenderer >= 0 && gapBridgeRenderer > measuredSegmentRenderer);
+  assert.match(page.slice(measuredSegmentRenderer, gapBridgeRenderer), /component-graph__area/);
+  assert.doesNotMatch(page.slice(gapBridgeRenderer), /component-graph__gap-bridge[\s\S]*?component-graph__area/);
   assert.match(page, /pathLength", "1"/);
   assert.match(page, /component-graph__point is-current/);
   assert.match(page, /component-graph__crosshair/);
@@ -232,10 +283,65 @@ test("premium SVG treatment remains dependency-free, range-accessible, and reduc
   assert.match(page, /Range min/);
   assert.match(page, /Observed average/);
   assert.match(page, /Range max/);
+  assert.match(page, /Plotted buckets/);
+  assert.match(page, /Latency buckets/);
+  assert.match(page, /Raw observations/);
+  assert.match(page, /Missing intervals/);
+  assert.match(page, /areaGradient\.setAttribute\("x1", String\(CHART_VIEW\.left\)\)[\s\S]*?areaGradient\.setAttribute\("x2", String\(CHART_VIEW\.left\)\)[\s\S]*?areaGradient\.setAttribute\("y1", String\(CHART_VIEW\.top\)\)[\s\S]*?areaGradient\.setAttribute\("y2", String\(CHART_VIEW\.bottom\)\)/);
+  assert.match(css, /--status-chart-gap:\s*#8091a5/);
+  assert.match(css, /\.component-graph__gap-bridge\s*\{[\s\S]*?stroke-dasharray:/);
   assert.match(css, /stroke-dasharray:\s*1/);
   assert.match(css, /chart-tip-settle/);
   assert.match(css, /\.component-graph__area \{ opacity: 1 !important; transform: none !important; \}/);
   assert.doesNotMatch(`${page}\n${html}`, /Chart\.js|\bd3\.|ApexCharts|ECharts|Highcharts|Recharts/);
+});
+
+test("hero diagram uses production SVG assets and sequential semantic routes", () => {
+  const html = read("status.html");
+  const page = read("js/status-page.js");
+  const css = read("css/status-page.css");
+  assert.match(html, /system-map__hub[\s\S]*?\/assets\/icons\/streamsuites-0\.svg/);
+  assert.match(css, /system-pulse__state-mark\[data-state="operational"\][\s\S]*?\/assets\/icons\/ui\/tick\.svg/);
+  assert.equal((html.match(/data-group-node=/g) || []).length, 4);
+  for (const route of ["products", "core", "web", "dependencies"]) {
+    assert.match(html, new RegExp(`data-route="${route}"`));
+    assert.match(html, new RegExp(`data-route-signal="${route}"`));
+  }
+  assert.match(css, /@keyframes systemRouteTrace/);
+  assert.match(css, /system-map__packet/);
+  assert.match(css, /prefers-reduced-motion:[\s\S]*?system-map__packet/);
+  assert.match(css, /system-map__node--products \{ --node-color: #6f9dff/);
+  assert.match(css, /system-map__node--core \{ --node-color: #51d4e8/);
+  assert.match(css, /system-map__node--web \{ --node-color: #987cff/);
+  assert.doesNotMatch(html, /system-map__hub[^>]*>\s*<span>S<\/span>/);
+  assert.doesNotMatch(`${html}\n${page}`, /operation-empty__mark", "✓"|system-pulse__state-mark">✓/);
+});
+
+test("status header reuses canonical Public version hydration without a hardcoded version", () => {
+  const status = read("status.html");
+  for (const pageName of ["support.html", "privacy.html", "status.html"]) {
+    const html = read(pageName);
+    assert.match(html, /standalone-version-badge footer-version button button--quiet button--small/);
+    assert.match(html, /\/js\/utils\/versioning\.js/);
+    assert.match(html, /\/js\/utils\/version-stamp\.js/);
+  }
+  assert.match(status, /href="\/version">Loading version…<\/a>/);
+  assert.doesNotMatch(status, /v0\.5\.4-alpha|v\d+\.\d+\.\d+-alpha/);
+  assert.match(read("js/utils/version-stamp.js"), /formatDisplayVersion\(info\)/);
+  assert.match(read("js/utils/versioning.js"), /UNAVAILABLE_LABEL\s*=\s*"Version unavailable"/);
+});
+
+test("incident and maintenance empty states use the local tick while real-event rendering remains", () => {
+  const html = read("status.html");
+  const page = read("js/status-page.js");
+  const css = read("css/status-page.css");
+  assert.match(html, /data-operation-panel="incident"/);
+  assert.match(html, /data-operation-panel="maintenance"/);
+  assert.match(css, /\.operation-empty__mark::before[\s\S]*?\/assets\/icons\/ui\/tick\.svg/);
+  assert.match(page, /else incidents\.forEach\(\(incident\) => incidentRoot\.appendChild\(createOperationItem\(incident, "incident"\)\)\)/);
+  assert.match(page, /else maintenances\.forEach\(\(maintenance\) => maintenanceRoot\.appendChild\(createOperationItem\(maintenance, "maintenance"\)\)\)/);
+  assert.match(page, /item\.incident_updates/);
+  assert.match(page, /item\.scheduled_for/);
 });
 
 test("group summaries and source labels expose the locked monitoring taxonomy", () => {
@@ -281,6 +387,18 @@ test("public widget implements the approved idle, hover, detailed, and footer-aw
   assert.match(script, /ResizeObserver/);
   assert.match(script, /public-page-visit\.js/);
   assert.match(script, /status-data\.js/);
+  assert.match(script, /Atlassian custom metrics/);
+  assert.match(script, /Core API response time/);
+  assert.match(script, /Studio Room Readiness/);
+  assert.match(script, /core_api_response_time/);
+  assert.match(script, /studio_room_readiness/);
+  assert.match(script, /Awaiting a measured Core API observation/);
+  assert.match(script, /Number\(coreValue\) >= 0/);
+  assert.match(script, /No genuine Studio room readiness observation is available/);
+  assert.match(script, /Sanitized Runtime\/Auth projection/);
+  assert.match(css, /\.ss-status-widget__metrics-grid/);
+  assert.match(css, /\.ss-status-widget__metric\[data-state="deferred"\]/);
+  assert.doesNotMatch(script, /manage\.statuspage|api[_-]?key|method:\s*["'](?:POST|PUT|PATCH|DELETE)/i);
   assert.doesNotMatch(script, /\?demo=|__STATUS_POC/);
 
   assert.match(css, /\.ss-status-widget__toggle\s*\{[\s\S]*?width:\s*50px;[\s\S]*?background:\s*transparent;[\s\S]*?backdrop-filter:\s*none;/);

@@ -365,6 +365,7 @@
       this.panel.appendChild(this.createStats(normalized, incidents, maintenances, snapshot));
 
       const scroll = element("div", "ss-status-widget__scroll");
+      scroll.appendChild(this.createMetrics(snapshot));
       groupComponents(components).forEach((group) => scroll.appendChild(this.createComponentGroup(group)));
       scroll.appendChild(this.createEventGroup("Active incidents", incidents, "incident"));
       scroll.appendChild(this.createEventGroup("Scheduled maintenance", maintenances, "maintenance"));
@@ -391,6 +392,7 @@
       this.panel.appendChild(this.createHeader({ status: { description: "Status unavailable" } }, safeSnapshot, STATE_META.unknown));
       this.panel.appendChild(this.createStats([], [], [], safeSnapshot));
       const scroll = element("div", "ss-status-widget__scroll");
+      scroll.appendChild(this.createMetrics(snapshot));
       const unavailable = element("section", "ss-status-widget__group");
       unavailable.appendChild(element("p", "ss-status-widget__empty", "The read-only Atlassian Statuspage feed could not be reached. No local or fabricated operational state is substituted."));
       scroll.appendChild(unavailable);
@@ -432,13 +434,62 @@
         [String(components.length), "Components"],
         [String(attention), "Attention"],
         [String(incidents.length), "Incidents"],
-        [snapshot.latencyMs == null ? "—" : `${snapshot.latencyMs}ms`, "Response"],
+        [snapshot.latencyMs == null ? "—" : `${snapshot.latencyMs}ms`, "Feed latency"],
       ].forEach(([value, label]) => {
         const item = element("div");
         item.append(element("strong", "", value), element("span", "", label));
         stats.appendChild(item);
       });
       return stats;
+    }
+
+    createMetrics(snapshot) {
+      const diagnostics = snapshot?.diagnostics;
+      const metrics = diagnostics?.metrics;
+      const core = metrics?.core_api_response_time;
+      const studio = metrics?.studio_room_readiness;
+      const stale = Boolean(snapshot?.diagnosticsStale || (diagnostics && !snapshot?.diagnosticsLive));
+      const coreValue = core?.value_ms;
+      const coreObserved = core?.state === "observed" && coreValue != null && Number.isFinite(Number(coreValue)) && Number(coreValue) >= 0;
+      const studioValue = studio?.value;
+      const studioObserved = studio?.state === "observed" && studioValue != null && Number.isFinite(Number(studioValue));
+      const studioDeferred = studio?.state === "deferred";
+
+      const section = element("section", "ss-status-widget__group ss-status-widget__metrics");
+      const heading = element("div", "ss-status-widget__group-head");
+      heading.append(element("h3", "", "Atlassian custom metrics"), element("span", "", "2 metrics"));
+      const source = element("p", "ss-status-widget__metrics-source", "Sanitized Runtime/Auth projection · read only");
+      const grid = element("div", "ss-status-widget__metrics-grid");
+
+      const createCard = ({ key, title, value, state, detail }) => {
+        const card = element("article", "ss-status-widget__metric");
+        card.dataset.metric = key;
+        card.dataset.state = state;
+        const head = element("div", "ss-status-widget__metric-head");
+        head.append(element("h4", "", title), element("span", "ss-status-widget__metric-state", state === "observed" ? "Observed" : state === "stale" ? "Stale reading" : state === "deferred" ? "Deferred" : "Unavailable"));
+        card.append(head, element("strong", "ss-status-widget__metric-value", value), element("p", "ss-status-widget__metric-detail", detail));
+        return card;
+      };
+
+      grid.append(
+        createCard({
+          key: "core-api-response-time",
+          title: "Core API response time",
+          value: coreObserved ? `${Math.round(Number(coreValue))} ms` : "Unavailable",
+          state: coreObserved ? (stale ? "stale" : "observed") : "unavailable",
+          detail: coreObserved ? `Measured ${formatRelative(core.last_checked)}.` : core?.state === "awaiting_measured_data" ? "Awaiting a measured Core API observation." : "No measured Core API value is available.",
+        }),
+        createCard({
+          key: "studio-room-readiness",
+          title: "Studio Room Readiness",
+          value: studioDeferred ? "Deferred" : studioObserved ? String(studioValue) : "Unavailable",
+          state: studioDeferred ? "deferred" : studioObserved ? (stale ? "stale" : "observed") : "unavailable",
+          detail: studioDeferred ? truncate(studio.reason || "A genuine Studio room readiness transaction is not available yet.", 170) : studioObserved ? "Latest measured readiness value." : "No genuine Studio room readiness observation is available.",
+        })
+      );
+
+      section.append(heading, source, grid);
+      return section;
     }
 
     createComponentGroup(group) {

@@ -13,7 +13,7 @@
   <meta property="og:image" content="/assets/backgrounds/seoshare.jpg" />
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <link rel="canonical" href="https://streamsuites.app/status" />
-  <link rel="stylesheet" href="/css/status-page.css?v=20260809-status-diagnostics" />
+  <link rel="stylesheet" href="/css/status-page.css?v=20260809-status-presentation-polish" />
 </head>
 <body class="status-page" data-page="status">
   <a class="skip-link" href="#main-content">Skip to content</a>
@@ -44,7 +44,7 @@
       </nav>
 
       <div class="header-actions">
-        <a class="button button--quiet button--small" href="/version">Version</a>
+        <a class="standalone-version-badge footer-version button button--quiet button--small" href="/version">Loading version…</a>
         <a class="button button--primary button--small" href="https://studio.streamsuites.app">Open Studio</a>
       </div>
     </div>
@@ -52,9 +52,12 @@
 
   <main id="main-content">
     <section class="status-hero shell" aria-labelledby="status-title">
+      <div class="status-hero__atmosphere" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
       <div class="status-hero__copy reveal">
         <p class="kicker"><span class="kicker__dot"></span>Live service health</p>
-        <h1 id="status-title">Know what’s working.<br /><span>Know what changed.</span></h1>
+        <h1 id="status-title">Know what’s working.<br /><span class="status-hero__feature-line">Know what changed.</span></h1>
         <p class="status-hero__lede">
           A complete public view of StreamSuites service health, product surfaces, dependencies,
           incidents, and scheduled maintenance—officially sourced from Atlassian Statuspage, with optional independent diagnostics.
@@ -88,36 +91,50 @@
             <span></span><span></span><span></span>
           </div>
           <div class="system-pulse__state-icon" aria-hidden="true">
-            <span class="system-pulse__state-mark">?</span>
+            <span class="system-pulse__state-mark" data-state="unknown">?</span>
           </div>
           <strong data-overall-description>Loading status…</strong>
           <p data-overall-subtitle>Reading the public Statuspage summary.</p>
         </div>
 
-        <div class="system-map" aria-label="Status groups">
+        <div class="system-map" role="group" aria-label="StreamSuites authority hub connected to four status groups">
           <svg class="system-map__routes" viewBox="0 0 640 250" preserveAspectRatio="none" aria-hidden="true">
-            <defs>
-              <linearGradient id="routeCore" x1="0" x2="1"><stop offset="0" stop-color="#65d8ff" stop-opacity="0"/><stop offset="0.5" stop-color="#65d8ff"/><stop offset="1" stop-color="#65d8ff" stop-opacity="0"/></linearGradient>
-              <linearGradient id="routeSurface" x1="0" x2="1"><stop offset="0" stop-color="#9c7cff" stop-opacity="0"/><stop offset="0.5" stop-color="#9c7cff"/><stop offset="1" stop-color="#9c7cff" stop-opacity="0"/></linearGradient>
-              <linearGradient id="routeEdge" x1="0" x2="1"><stop offset="0" stop-color="#5fe2b0" stop-opacity="0"/><stop offset="0.5" stop-color="#5fe2b0"/><stop offset="1" stop-color="#5fe2b0" stop-opacity="0"/></linearGradient>
-              <linearGradient id="routeDeps" x1="0" x2="1"><stop offset="0" stop-color="#f1bc62" stop-opacity="0"/><stop offset="0.5" stop-color="#f1bc62"/><stop offset="1" stop-color="#f1bc62" stop-opacity="0"/></linearGradient>
-            </defs>
-            <path d="M320 124 C250 82 190 54 116 48" class="system-map__route system-map__route--core" />
-            <path d="M320 124 C390 82 450 54 524 48" class="system-map__route system-map__route--surface" />
-            <path d="M320 124 C250 168 190 202 116 206" class="system-map__route system-map__route--edge" />
-            <path d="M320 124 C390 168 450 202 524 206" class="system-map__route system-map__route--deps" />
+            <path d="M320 124 C250 82 190 54 116 48" class="system-map__route system-map__route--products" data-route="products" />
+            <path d="M320 124 C390 82 450 54 524 48" class="system-map__route system-map__route--core" data-route="core" />
+            <path d="M320 124 C250 168 190 202 116 206" class="system-map__route system-map__route--web" data-route="web" />
+            <path d="M320 124 C390 168 450 202 524 206" class="system-map__route system-map__route--dependencies" data-route="dependencies" />
+            <path pathLength="1" d="M320 124 C250 82 190 54 116 48" class="system-map__signal system-map__signal--products" data-route-signal="products" />
+            <path pathLength="1" d="M320 124 C390 82 450 54 524 48" class="system-map__signal system-map__signal--core" data-route-signal="core" />
+            <path pathLength="1" d="M320 124 C250 168 190 202 116 206" class="system-map__signal system-map__signal--web" data-route-signal="web" />
+            <path pathLength="1" d="M320 124 C390 168 450 202 524 206" class="system-map__signal system-map__signal--dependencies" data-route-signal="dependencies" />
+            <circle class="system-map__packet system-map__packet--products" r="3">
+              <animateMotion dur="16s" repeatCount="indefinite" path="M320 124 C250 82 190 54 116 48" keyPoints="0;1;1;1" keyTimes="0;.18;.22;1" />
+              <animate attributeName="opacity" dur="16s" repeatCount="indefinite" values="0;1;0;0" keyTimes="0;.08;.22;1" />
+            </circle>
+            <circle class="system-map__packet system-map__packet--core" r="3">
+              <animateMotion dur="16s" repeatCount="indefinite" path="M320 124 C390 82 450 54 524 48" keyPoints="0;0;1;1;1" keyTimes="0;.24;.42;.46;1" />
+              <animate attributeName="opacity" dur="16s" repeatCount="indefinite" values="0;0;1;0;0" keyTimes="0;.24;.32;.46;1" />
+            </circle>
+            <circle class="system-map__packet system-map__packet--web" r="3">
+              <animateMotion dur="16s" repeatCount="indefinite" path="M320 124 C250 168 190 202 116 206" keyPoints="0;0;1;1;1" keyTimes="0;.49;.67;.71;1" />
+              <animate attributeName="opacity" dur="16s" repeatCount="indefinite" values="0;0;1;0;0" keyTimes="0;.49;.57;.71;1" />
+            </circle>
+            <circle class="system-map__packet system-map__packet--dependencies" r="3">
+              <animateMotion dur="16s" repeatCount="indefinite" path="M320 124 C390 168 450 202 524 206" keyPoints="0;0;1;1;1" keyTimes="0;.74;.92;.96;1" />
+              <animate attributeName="opacity" dur="16s" repeatCount="indefinite" values="0;0;1;0;0" keyTimes="0;.74;.82;.96;1" />
+            </circle>
           </svg>
-          <div class="system-map__hub" aria-hidden="true"><span>S</span></div>
-          <article class="system-map__node system-map__node--core" data-group-node="production">
+          <div class="system-map__hub" aria-hidden="true"><img src="/assets/icons/streamsuites-0.svg" alt="" /></div>
+          <article class="system-map__node system-map__node--products" data-group-node="production">
             <span class="system-map__node-dot"></span><strong>Products</strong><small data-group-summary="production">—</small>
           </article>
-          <article class="system-map__node system-map__node--surface" data-group-node="core">
+          <article class="system-map__node system-map__node--core" data-group-node="core">
             <span class="system-map__node-dot"></span><strong>Core</strong><small data-group-summary="core">—</small>
           </article>
-          <article class="system-map__node system-map__node--edge" data-group-node="web">
+          <article class="system-map__node system-map__node--web" data-group-node="web">
             <span class="system-map__node-dot"></span><strong>Web</strong><small data-group-summary="web">—</small>
           </article>
-          <article class="system-map__node system-map__node--deps" data-group-node="dependencies">
+          <article class="system-map__node system-map__node--dependencies" data-group-node="dependencies">
             <span class="system-map__node-dot"></span><strong>Dependencies</strong><small data-group-summary="dependencies">—</small>
           </article>
         </div>
@@ -214,7 +231,7 @@
       </div>
 
       <div class="operations-grid">
-        <article class="operations-panel reveal">
+        <article class="operations-panel reveal" data-operation-panel="incident">
           <div class="operations-panel__header">
             <div><span class="panel-icon panel-icon--incident" aria-hidden="true">!</span><div><p>Active incidents</p><h3 data-incident-heading>No active incidents</h3></div></div>
             <span class="count-chip" data-incident-count>0</span>
@@ -222,7 +239,7 @@
           <div class="operations-list" data-active-incidents></div>
         </article>
 
-        <article class="operations-panel reveal">
+        <article class="operations-panel reveal" data-operation-panel="maintenance">
           <div class="operations-panel__header">
             <div><span class="panel-icon panel-icon--maintenance" aria-hidden="true">◇</span><div><p>Scheduled maintenance</p><h3 data-maintenance-heading>No active windows</h3></div></div>
             <span class="count-chip count-chip--blue" data-maintenance-count>0</span>
@@ -293,8 +310,10 @@
     </div>
   </footer>
 
+  <script src="/js/utils/versioning.js"></script>
+  <script src="/js/utils/version-stamp.js"></script>
   <script src="/js/public-page-visit.js" defer></script>
   <script src="/js/status-data.js?v=20260809-status-diagnostics" defer></script>
-  <script src="/js/status-page.js?v=20260809-status-diagnostics" defer></script>
+  <script src="/js/status-page.js?v=20260809-status-presentation-polish" defer></script>
 </body>
 </html>

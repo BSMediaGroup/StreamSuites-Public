@@ -6,6 +6,37 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-09 - Expanded widget custom-metric parity
+
+#### Technical notes
+
+- Added a dedicated two-card Atlassian custom-metrics section to the existing fully expanded status widget on Public pages while preserving the intentional no-widget boundary on `/status` itself. Core API response time renders only a finite measured Runtime/Auth diagnostic value, and Studio Room Readiness retains its explicit deferred state and genuine-transaction reason.
+- The metrics use the existing sanitized `GET /api/public/status/diagnostics` projection already fetched by `js/status-data.js`; the widget does not call the Statuspage Manage API or expose an API key. Missing or stale diagnostics never replace Atlassian's official state and render as labelled unavailable or stale readings instead of fabricated readiness.
+- Renamed the existing widget request timing label from `Response` to `Feed latency` so it cannot be mistaken for the new measured Core API metric. Added responsive two-card/one-card styling and focused source assertions for both fixed metric keys, observed/deferred/unavailable semantics, and the read-only boundary. No route, component ID, version/build value, dependency, deployment configuration, or file was added or removed.
+
+#### Human-readable notes
+
+The fully expanded Public status widget now includes Core API response time and Studio Room Readiness. The first shows a real measured value when available; the second remains honestly deferred until StreamSuites has a genuine room-readiness transaction.
+
+### 2026-08-09 - Comprehensive Status Center presentation correction
+
+#### Technical notes
+
+- Diagnosed the visible 24H graph disconnections against the Runtime/Auth public-history schema and representative accumulated diagnostics. The normal five-minute sequence was being plotted correctly, while the live Core API history contained one genuine missing observation interval; the renderer now normalizes bucket timestamps, deduplicates normalized buckets, preserves adjacent measurements as one curve, and keeps explicit or timestamp-derived gaps outside measured segments instead of concealing them.
+- Made genuine missing periods intentional and truthful with a faint accessible `No observations` band plus a neutral steel dashed bridge between the surrounding real points. Measured curves and measured area fills stop at each gap; the bridge carries no measured glow or area and is excluded from latency, availability, minimum, average, and maximum calculations. A latest real point after a gap remains the explicit bridge destination.
+- Replaced the ambiguous `Real samples` presentation with separate plotted-bucket, latency-bucket, raw-observation, and missing-interval values. The 24H label names five-minute buckets, while 7D/30D name daily aggregate buckets, so a large raw probe count no longer implies that every probe is drawn as a graph point.
+- Corrected each measured area definition to an explicit `userSpaceOnUse` vertical gradient with equal `x1`/`x2`, chart-top `y1`, chart-baseline `y2`, restrained accent opacity near the measured curve, and transparency at the baseline. Refined the current point to a smaller connected marker with a restrained halo and kept the right edge free of a broad cyan wash.
+- Shortened each group spine to a header-local accent rail, returned component-card borders to neutral graphite, and limited group colour to subtle corner, icon, hover, and expanded-state cues while retaining semantic state colour for health badges. This preserves four distinct group identities without competing with component-level state.
+- Upgraded the existing hero system diagram in place with quieter base routes, sequential semantic traces, bounded moving packets, restrained node response, slower hub energy, and the real `assets/icons/streamsuites-0.svg` central mark. The operational hero indicator and healthy incident/maintenance empty states now use the exact local `assets/icons/ui/tick.svg` mask instead of text or Unicode checkmarks.
+- Added a slow steel/cyan/pale/violet gradient to the existing hero feature line and enriched the existing blue-black hero canvas with bounded arcs, grid depth, particles, and vignette layers without moving or restructuring the hero. Reduced motion stops the feature, atmosphere, ring, route, packet, and graph choreography while retaining the complete final visual state.
+- Reused the established standalone Public `js/utils/versioning.js` and `js/utils/version-stamp.js` hydration path for the `/status` header control. It now displays the canonical current system version when available and preserves the existing `Version unavailable` fallback; no version or build value is hardcoded or changed.
+- Refined the existing Active Incidents and Scheduled Maintenance panels with clearer hierarchy, calmer semantic framing, consistent empty-state icon treatment, and responsive balance. Their Atlassian-backed non-empty item creation and incident-update rendering paths remain unchanged.
+- Extended focused regression coverage for normalized buckets, five-minute tolerance, adjacent versus missing intervals, one/two-point history, selected-range domains, unmeasured bridge semantics, segment-only area fills, vertical gradient geometry, latest-point provenance, raw-versus-plotted labels, reduced motion, hero SVG assets and semantic routes, canonical version hydration, healthy empty states, real event paths, four groups, 21 children, and the explicit no-widget/no-chart-dependency boundary.
+
+#### Human-readable notes
+
+The Status Center received a comprehensive refinement of its analytics, system-posture visualization, hierarchy, and operational empty states. Graphs now explain the difference between observations and plotted buckets, show genuine missing time as deliberately unmeasured, fade their real data vertically, and keep the latest measurement restrained; the hero, component directory, version control, and incident/maintenance panels now feel like one premium system without changing which source is authoritative or inventing data.
+
 ### 2026-08-09 - Premium expandable status analytics graphs
 
 #### Technical notes

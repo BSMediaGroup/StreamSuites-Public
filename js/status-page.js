@@ -36,14 +36,14 @@
 
   const COMPONENT_PRESENTATION = Object.freeze({
     "3qsdkc52dgt5": { icon: "/assets/icons/icondiag-studioweb.svg", description: "Browser-based studio shell and production workspace." },
-    "b6k38lrqx93f": { icon: "/assets/icons/ui/mobilecast.svg", description: "Realtime media and guest connection readiness." },
+    "b6k38lrqx93f": { icon: "/assets/icons/ui/cast.svg", description: "Realtime media and guest connection readiness." },
     "q7435t6bd41x": { icon: "/assets/icons/icondiag-studioapp.svg", description: "Native StudioApp access to connected Runtime services." },
     "4fp296vdg5w7": { icon: "/assets/icons/ui/tvlive.svg", description: "Streaming destination readiness and secure credential delivery." },
     "94cn19vph28j": { icon: "/assets/icons/obs-0.svg", description: "Studio for OBS connected service boundary." },
     "tb383cr2p92n": { icon: "/assets/icons/ui/shieldlock.svg", description: "Authentication, account authority, and managed sessions." },
     "4vrh4mg9l4hn": { icon: "/assets/icons/ui/meetingroom.svg", description: "Studio rooms, participants, and room-scoped invitations." },
     "0xm0hsy3byjj": { icon: "/assets/icons/ui/storage.svg", description: "Public APIs, published exports, and the canonical version registry." },
-    "3xjjgpbydbbf": { icon: "/assets/icons/ui/zapmagnet.svg", description: "Creator-scoped automation and trigger execution." },
+    "3xjjgpbydbbf": { icon: "/assets/icons/ui/zap.svg", description: "Creator-scoped automation and trigger execution." },
     "qbczblv2hgv8": { icon: "/assets/icons/ui/status-bell.svg", description: "Alert evaluation and notification delivery." },
     "6ww27z4z9vj8": { icon: "/assets/icons/ui/chatnotif.svg", description: "Platform integrations and live-chat services." },
     "zx07yy34tyvl": { icon: "/assets/icons/ui/ss-public.svg", description: "Public website and this Status Center." },
@@ -52,7 +52,7 @@
     "jnd29jsl8w7b": { icon: "/assets/icons/ui/ss-admin.svg", description: "Administrative dashboard and operations surfaces." },
     "8x9n41kfjtc8": { icon: "/assets/icons/ui/ss-developer.svg", description: "Developer console and shipped-reality documentation." },
     "p00vypwhfhx3": { icon: "/assets/icons/ui/download.svg", description: "Fail-closed downloads and update distribution." },
-    "n1lw27451j6d": { icon: "/assets/icons/ui/status-cloud.svg", description: "Cloudflare-managed Pages delivery state." },
+    "n1lw27451j6d": { icon: "/assets/icons/cloudflare-0.svg", description: "Cloudflare-managed Pages delivery state." },
     "8zfbmn6ynv99": { icon: "/assets/icons/ui/status-envelope.svg", description: "Transactional email delivery." },
     "5qbjrf4hq5nn": { icon: "/assets/icons/stripeicon-0.svg", description: "Stripe-managed payment API state." },
     "gd23vgnp3n89": { icon: "/assets/icons/github-0.svg", description: "GitHub-managed Git operations state." },
@@ -137,7 +137,11 @@
     if (pulse) pulse.style.setProperty("--state-color", STATUS_COLORS[overallState] || STATUS_COLORS.unknown);
     document.documentElement.style.setProperty("--state-color", STATUS_COLORS[overallState] || STATUS_COLORS.unknown);
 
-    setText(".system-pulse__state-mark", meta.mark);
+    const stateMark = select(".system-pulse__state-mark");
+    if (stateMark) {
+      stateMark.dataset.state = overallState;
+      stateMark.textContent = overallState === "operational" ? "" : meta.mark;
+    }
     setText("[data-overall-description]", data.status?.description || meta.label);
     setText("[data-overall-subtitle]", overallState === "operational"
       ? "No active system-wide disruption is being reported."
@@ -198,7 +202,7 @@
     setText("[data-diagnostic-core-value]", coreMetric?.value_ms == null ? "Awaiting measured data" : `${coreMetric.value_ms} ms`);
     setText("[data-diagnostic-core-meta]", coreMetric?.value_ms == null
       ? "No real watchdog latency sample is available."
-      : `${coreMetric.history?.["24h"]?.sample_count || 0} observed samples · ${snapshot.diagnosticsStale ? "stale" : "fresh"} · ${trend}`);
+      : `${coreBuckets.length} plotted five-minute buckets from ${coreMetric.history?.["24h"]?.sample_count || 0} raw probe observations · ${snapshot.diagnosticsStale ? "stale" : "fresh"} · ${trend}`);
     setText("[data-diagnostic-room-value]", "Deferred");
     const diagnosticSource = select("[data-diagnostic-source]");
     if (diagnosticSource) {
@@ -244,9 +248,9 @@
   };
 
   const CHART_RANGE_META = Object.freeze({
-    "24h": { durationMs: 86400000, intervalMs: 300000, maxGapMs: 450000, tickCount: 5 },
-    "7d": { durationMs: 604800000, intervalMs: 86400000, maxGapMs: 129600000, tickCount: 5 },
-    "30d": { durationMs: 2592000000, intervalMs: 86400000, maxGapMs: 129600000, tickCount: 6 },
+    "24h": { durationMs: 86400000, intervalMs: 300000, gapToleranceMs: 150000, maxGapMs: 450000, tickCount: 5, bucketLabel: "five-minute buckets" },
+    "7d": { durationMs: 604800000, intervalMs: 86400000, gapToleranceMs: 43200000, maxGapMs: 129600000, tickCount: 5, bucketLabel: "daily aggregate buckets" },
+    "30d": { durationMs: 2592000000, intervalMs: 86400000, gapToleranceMs: 43200000, maxGapMs: 129600000, tickCount: 6, bucketLabel: "daily aggregate buckets" },
   });
   const CHART_VIEW = Object.freeze({ width: 760, height: 270, left: 58, right: 742, top: 34, bottom: 176, stateY: 202, stateHeight: 18, axisY: 258 });
   const OBSERVED_STATE_LABELS = Object.freeze({
@@ -269,21 +273,37 @@
     return "unknown";
   };
 
+  const normalizeBucketTimestamp = (value, intervalMs) => {
+    const parsed = Date.parse(value || "");
+    if (!Number.isFinite(parsed)) return null;
+    return Math.floor(parsed / intervalMs) * intervalMs;
+  };
+
+  const formatGapDuration = (durationMs) => {
+    const minutes = Math.max(1, Math.round(durationMs / 60000));
+    if (minutes < 60) return `${minutes} minutes`;
+    const hours = Math.floor(minutes / 60);
+    const remainder = minutes % 60;
+    return remainder ? `${hours} hours ${remainder} minutes` : `${hours} ${hours === 1 ? "hour" : "hours"}`;
+  };
+
   const buildChartModel = (buckets, rangeKey) => {
     const rangeMeta = CHART_RANGE_META[rangeKey] || CHART_RANGE_META["24h"];
-    const observations = (Array.isArray(buckets) ? buckets : []).map((bucket) => {
-      const time = Date.parse(bucket?.at || "");
+    const parsedObservations = (Array.isArray(buckets) ? buckets : []).map((bucket) => {
+      const time = normalizeBucketTimestamp(bucket?.at, rangeMeta.intervalMs);
       return {
         source: bucket,
-        at: bucket?.at,
+        at: Number.isFinite(time) ? new Date(time).toISOString() : bucket?.at,
         time,
         latency: Number.isFinite(bucket?.latency_ms) ? Number(bucket.latency_ms) : null,
         availability: Number.isFinite(bucket?.availability_percent) ? Number(bucket.availability_percent) : null,
         state: observedStateKey(bucket?.state),
       };
     }).filter((observation) => Number.isFinite(observation.time)).sort((a, b) => a.time - b.time);
-    const endTime = observations.at(-1)?.time || 0;
+    const deduplicated = [...new Map(parsedObservations.map((observation) => [observation.time, observation])).values()];
+    const endTime = deduplicated.at(-1)?.time || 0;
     const startTime = endTime - rangeMeta.durationMs;
+    const observations = deduplicated.filter((observation) => observation.time >= startTime && observation.time <= endTime);
     const plotWidth = CHART_VIEW.right - CHART_VIEW.left;
     observations.forEach((observation) => {
       const ratio = (observation.time - startTime) / rangeMeta.durationMs;
@@ -298,8 +318,10 @@
     const domainMin = observedMin == null ? null : Math.max(0, observedMin - padding);
     const domainMax = observedMax == null ? null : Math.max(domainMin + 1, observedMax + padding);
     const segments = [];
+    const gaps = [];
     let segment = [];
-    let previousTime = null;
+    let previousMeasured = null;
+    let explicitUnmeasured = false;
     const flushSegment = () => {
       if (segment.length) segments.push(segment);
       segment = [];
@@ -307,12 +329,24 @@
     observations.forEach((observation) => {
       if (observation.latency === null) {
         flushSegment();
-        previousTime = observation.time;
+        explicitUnmeasured = true;
         return;
       }
-      if (previousTime != null && observation.time - previousTime > rangeMeta.maxGapMs) flushSegment();
+      const timestampGap = previousMeasured && observation.time - previousMeasured.time > rangeMeta.maxGapMs;
+      if (previousMeasured && (explicitUnmeasured || timestampGap)) {
+        flushSegment();
+        const durationMs = observation.time - previousMeasured.time;
+        gaps.push({
+          from: previousMeasured,
+          to: observation,
+          durationMs,
+          missingBucketCount: Math.max(1, Math.round(durationMs / rangeMeta.intervalMs) - 1),
+          reason: explicitUnmeasured ? "missing_measurement" : "missing_interval",
+        });
+      }
       segment.push(observation);
-      previousTime = observation.time;
+      previousMeasured = observation;
+      explicitUnmeasured = false;
     });
     flushSegment();
     return {
@@ -321,12 +355,15 @@
       observations,
       latencyPoints,
       segments,
+      gaps,
       startTime,
       endTime,
       domainMin,
       domainMax,
       graphType: latencyPoints.length ? "latency" : "state",
-      stateBandWidth: Math.max(2, plotWidth * (rangeMeta.intervalMs / rangeMeta.durationMs) * .72),
+      plottedBucketCount: observations.length,
+      plottedMeasurementCount: latencyPoints.length,
+      stateBandWidth: Math.max(2.4, plotWidth * (rangeMeta.intervalMs / rangeMeta.durationMs) * .86),
     };
   };
 
@@ -395,7 +432,9 @@
 
   window.StreamSuitesStatusChartHelpers = Object.freeze({
     buildChartModel,
+    formatGapDuration,
     nearestChartObservation,
+    normalizeBucketTimestamp,
     observedStateKey,
     smoothChartPath,
     tooltipDataForObservation,
@@ -476,7 +515,9 @@
     }
     panel.dataset.chartType = model.graphType;
     const summary = node("p", "component-graph__summary");
-    summary.textContent = `${activeRange.toUpperCase()} watchdog-observed availability: ${range.availability_percent == null ? "Unavailable" : `${range.availability_percent}%`}. ${range.sample_count ?? 0} real samples; missing intervals remain open.`;
+    const rawObservationCount = Number.isFinite(range.sample_count) ? Number(range.sample_count) : 0;
+    const gapLabel = `${model.gaps.length} unmeasured ${model.gaps.length === 1 ? "interval" : "intervals"}`;
+    summary.textContent = `${activeRange.toUpperCase()} watchdog-observed availability: ${range.availability_percent == null ? "Unavailable" : `${range.availability_percent}%`}. ${model.plottedBucketCount} plotted ${model.rangeMeta.bucketLabel} from ${rawObservationCount} raw probe observations; ${gapLabel}.`;
     summary.setAttribute("role", "status");
     panel.appendChild(summary);
 
@@ -496,7 +537,10 @@
       item.append(node("span", "", label), node("strong", "", value));
       metrics.appendChild(item);
     };
-    appendMetric("Real samples", String(range.sample_count ?? 0));
+    appendMetric("Plotted buckets", String(model.plottedBucketCount));
+    appendMetric("Latency buckets", String(model.plottedMeasurementCount));
+    appendMetric("Raw observations", String(rawObservationCount));
+    appendMetric("Missing intervals", String(model.gaps.length));
     appendMetric("Availability", range.availability_percent == null ? "Unavailable" : `${range.availability_percent}%`);
     appendMetric("Freshness", options.stale ? "Stale" : "Current projection");
     if (options.isCoreApi) appendMetric("Last success", diagnostic.last_success ? formatAbsolute(diagnostic.last_success) : "Unavailable");
@@ -512,14 +556,14 @@
     }
     toolbar.appendChild(metrics);
     panel.classList.toggle("is-sparse", model.observations.length < 3 || (model.graphType === "latency" && model.latencyPoints.length < 3));
-    if (panel.classList.contains("is-sparse")) panel.appendChild(node("p", "component-graph__sparse", `History is still accumulating · ${model.observations.length} received ${model.observations.length === 1 ? "bucket" : "buckets"}; no missing period is connected or backfilled.`));
+    if (panel.classList.contains("is-sparse")) panel.appendChild(node("p", "component-graph__sparse", `History is still accumulating · ${model.observations.length} plotted ${model.observations.length === 1 ? "bucket" : "buckets"}; unmeasured time is identified separately and never included in the statistics.`));
 
     const svg = svgNode("svg", "component-graph__svg");
     svg.setAttribute("viewBox", `0 0 ${CHART_VIEW.width} ${CHART_VIEW.height}`);
     svg.setAttribute("role", "img");
     svg.setAttribute("aria-label", summary.textContent);
     const description = svgNode("desc");
-    description.textContent = `${model.observations.length} watchdog-observed buckets. ${model.latencyPoints.length} contain measured latency. Missing intervals are not connected.`;
+    description.textContent = `${model.plottedBucketCount} watchdog-observed buckets. ${model.plottedMeasurementCount} contain measured latency. ${model.gaps.length} unmeasured intervals use neutral dashed bridges with no measured fill.`;
     svg.appendChild(description);
     const definitionId = `status-chart-${String(diagnostic.component_id || "component").replace(/[^a-z0-9_-]/gi, "")}-${++chartSequence}`;
     const defs = svgNode("defs");
@@ -536,9 +580,11 @@
     const areaGradient = svgNode("linearGradient");
     areaGradient.id = `${definitionId}-area`;
     areaGradient.setAttribute("gradientUnits", "userSpaceOnUse");
+    areaGradient.setAttribute("x1", String(CHART_VIEW.left));
+    areaGradient.setAttribute("x2", String(CHART_VIEW.left));
     areaGradient.setAttribute("y1", String(CHART_VIEW.top));
     areaGradient.setAttribute("y2", String(CHART_VIEW.bottom));
-    [["0%", "component-graph__stop component-graph__stop--fill-top"], ["72%", "component-graph__stop component-graph__stop--fill-low"], ["100%", "component-graph__stop component-graph__stop--fill-bottom"]].forEach(([offset, className]) => {
+    [["0%", "component-graph__stop component-graph__stop--fill-top"], ["58%", "component-graph__stop component-graph__stop--fill-low"], ["100%", "component-graph__stop component-graph__stop--fill-bottom"]].forEach(([offset, className]) => {
       const stop = svgNode("stop", className);
       stop.setAttribute("offset", offset);
       areaGradient.appendChild(stop);
@@ -598,9 +644,34 @@
 
     const stateY = model.graphType === "latency" ? CHART_VIEW.stateY : 90;
     const stateHeight = model.graphType === "latency" ? CHART_VIEW.stateHeight : 38;
+    if (model.graphType === "latency") {
+      const availabilityTrack = svgNode("rect", "component-graph__availability-track");
+      availabilityTrack.setAttribute("x", String(CHART_VIEW.left));
+      availabilityTrack.setAttribute("y", String(stateY - 3));
+      availabilityTrack.setAttribute("width", String(plotWidth));
+      availabilityTrack.setAttribute("height", String(stateHeight + 6));
+      availabilityTrack.setAttribute("rx", "5");
+      const availabilityLabel = svgNode("text", "component-graph__axis-label component-graph__axis-label--availability");
+      availabilityLabel.setAttribute("x", String(CHART_VIEW.left));
+      availabilityLabel.setAttribute("y", String(stateY - 10));
+      availabilityLabel.textContent = "OBSERVED AVAILABILITY";
+      svg.append(availabilityTrack, availabilityLabel);
+    }
+    model.gaps.forEach((gap) => {
+      const band = svgNode("rect", "component-graph__gap-band");
+      band.setAttribute("x", String(gap.from.x));
+      band.setAttribute("y", String(CHART_VIEW.top));
+      band.setAttribute("width", String(Math.max(1, gap.to.x - gap.from.x)));
+      band.setAttribute("height", String(CHART_VIEW.bottom - CHART_VIEW.top));
+      band.setAttribute("data-unmeasured", "true");
+      const title = svgNode("title");
+      title.textContent = `No observations for ${formatGapDuration(gap.durationMs)} between ${formatAbsolute(gap.from.at)} and ${formatAbsolute(gap.to.at)}.`;
+      band.appendChild(title);
+      svg.appendChild(band);
+    });
     model.observations.forEach((observation) => {
       const bar = svgNode("rect", "component-graph__state-bar");
-      bar.setAttribute("x", String(Math.min(CHART_VIEW.right - model.stateBandWidth, observation.x - model.stateBandWidth / 2)));
+      bar.setAttribute("x", String(Math.max(CHART_VIEW.left, Math.min(CHART_VIEW.right - model.stateBandWidth, observation.x - model.stateBandWidth / 2))));
       bar.setAttribute("y", String(stateY));
       bar.setAttribute("width", String(model.stateBandWidth));
       bar.setAttribute("height", String(stateHeight));
@@ -630,6 +701,17 @@
           svg.appendChild(path);
         }
       });
+      model.gaps.forEach((gap) => {
+        const bridge = svgNode("path", "component-graph__gap-bridge");
+        bridge.setAttribute("d", `M${gap.from.x.toFixed(2)} ${yFor(gap.from.latency).toFixed(2)} L${gap.to.x.toFixed(2)} ${yFor(gap.to.latency).toFixed(2)}`);
+        bridge.setAttribute("data-unmeasured", "true");
+        bridge.setAttribute("role", "img");
+        bridge.setAttribute("aria-label", `Unmeasured interval lasting ${formatGapDuration(gap.durationMs)}. No observations are included in this bridge.`);
+        const title = svgNode("title");
+        title.textContent = `No observations · ${formatAbsolute(gap.from.at)} to ${formatAbsolute(gap.to.at)} · ${gap.missingBucketCount} expected buckets missing.`;
+        bridge.appendChild(title);
+        svg.appendChild(bridge);
+      });
       const showAllLatencyPoints = model.latencyPoints.length <= 18;
       model.latencyPoints.forEach((point) => {
         const isCurrent = point === latestLatency;
@@ -637,7 +719,7 @@
         const circle = svgNode("circle", `component-graph__point${isCurrent ? " is-current" : ""}`);
         circle.setAttribute("cx", String(point.x));
         circle.setAttribute("cy", String(yFor(point.latency)));
-        circle.setAttribute("r", isCurrent ? "4.2" : "2.1");
+        circle.setAttribute("r", isCurrent ? "3.2" : "2.1");
         if (isCurrent) {
           circle.setAttribute("tabindex", "0");
           circle.setAttribute("role", "img");
@@ -648,7 +730,7 @@
           const tip = svgNode("circle", "component-graph__tip");
           tip.setAttribute("cx", String(point.x));
           tip.setAttribute("cy", String(yFor(point.latency)));
-          tip.setAttribute("r", "8");
+          tip.setAttribute("r", "7");
           svg.appendChild(tip);
         }
       });
@@ -726,7 +808,7 @@
 
     const legend = node("div", "component-graph__legend");
     if (model.graphType === "latency") legend.appendChild(node("span", "component-graph__legend-latency", "Measured latency"));
-    legend.append(node("span", "component-graph__legend-state", "Observed state history"), node("span", "component-graph__legend-gap", "Open space = no observation"));
+    legend.append(node("span", "component-graph__legend-state", "Observed availability rail"), node("span", "component-graph__legend-gap", "Dashed bridge = unmeasured interval"));
     panel.appendChild(legend);
     if (options.transition === "range" && !chartMotionReduced()) {
       panel.classList.add("is-range-entering");
@@ -827,7 +909,8 @@
       detailItem("24H availability", diagnostic?.history?.["24h"]?.availability_percent == null ? "Unavailable" : `${diagnostic.history["24h"].availability_percent}%`),
       detailItem("7D availability", diagnostic?.history?.["7d"]?.availability_percent == null ? "Unavailable" : `${diagnostic.history["7d"].availability_percent}%`),
       detailItem("30D availability", diagnostic?.history?.["30d"]?.availability_percent == null ? "Unavailable" : `${diagnostic.history["30d"].availability_percent}%`),
-      detailItem("30D observations", String(diagnostic?.history?.["30d"]?.sample_count || 0)),
+      detailItem("30D plotted buckets", String(diagnostic?.history?.["30d"]?.buckets?.length || 0)),
+      detailItem("30D raw observations", String(diagnostic?.history?.["30d"]?.sample_count || 0)),
       detailItem("Recent latency", diagnostic?.latency_ms == null ? "Unavailable" : `${diagnostic.latency_ms} ms`),
       detailItem("Last success", diagnostic?.last_success ? formatAbsolute(diagnostic.last_success) : "Unavailable"),
       detailItem("Last failure", diagnostic?.last_failure ? formatAbsolute(diagnostic.last_failure) : "Unavailable")
@@ -928,8 +1011,10 @@
   const createEmptyOperation = (kind) => {
     const wrapper = node("div", "operation-empty");
     const inner = node("div");
+    const mark = node("span", "operation-empty__mark");
+    mark.setAttribute("aria-hidden", "true");
     inner.append(
-      node("span", "operation-empty__mark", "✓"),
+      mark,
       node("strong", "", kind === "incident" ? "No active incidents" : "No active maintenance"),
       node("p", "", kind === "incident"
         ? "Atlassian Statuspage is not reporting an unresolved incident."
@@ -966,6 +1051,11 @@
     setText("[data-maintenance-count]", String(maintenances.length));
     setText("[data-incident-heading]", incidents.length ? `${incidents.length} active ${incidents.length === 1 ? "incident" : "incidents"}` : "No active incidents");
     setText("[data-maintenance-heading]", maintenances.length ? `${maintenances.length} maintenance ${maintenances.length === 1 ? "window" : "windows"}` : "No active windows");
+
+    const incidentPanel = incidentRoot?.closest(".operations-panel");
+    const maintenancePanel = maintenanceRoot?.closest(".operations-panel");
+    if (incidentPanel) incidentPanel.dataset.empty = String(!incidents.length);
+    if (maintenancePanel) maintenancePanel.dataset.empty = String(!maintenances.length);
 
     if (incidentRoot) {
       incidentRoot.innerHTML = "";
