@@ -1002,6 +1002,7 @@ main > section:not(.status-hero) {
 }
 
 .metrics-section,
+.system-availability,
 .components-section {
   scroll-margin-top: calc(var(--header-height) + 18px);
 }
@@ -1190,6 +1191,223 @@ main > section:not(.status-hero) {
 
 .diagnostic-source[data-state="live"] { color: var(--green); }
 .diagnostic-source[data-state="stale"] { color: var(--amber); }
+
+.system-availability {
+  padding: 0 0 clamp(82px, 9vw, 128px);
+}
+
+.system-availability__frame {
+  position: relative;
+  overflow: visible;
+  padding: clamp(24px, 4vw, 44px);
+  border: 1px solid rgba(144, 190, 228, .2);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(circle at 10% 0%, rgba(68, 170, 238, .1), transparent 30%),
+    radial-gradient(circle at 96% 10%, rgba(143, 105, 248, .1), transparent 34%),
+    linear-gradient(145deg, rgba(8, 17, 26, .96), rgba(3, 9, 15, .98));
+  box-shadow: 0 38px 96px rgba(0,0,0,.27), inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+.system-availability__frame::before {
+  position: absolute;
+  top: 0;
+  left: 8%;
+  width: 46%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--blue), var(--violet), transparent);
+  box-shadow: 0 0 24px rgba(88,183,255,.34);
+  content: "";
+}
+
+.system-availability__header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 30px;
+  align-items: start;
+}
+
+.system-availability__header h2 {
+  margin: 7px 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(34px, 4.6vw, 58px);
+  font-weight: 620;
+  line-height: 1;
+  letter-spacing: -.05em;
+}
+
+.system-availability__lede {
+  max-width: 680px;
+  margin: 15px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.system-availability__actions {
+  display: grid;
+  justify-items: end;
+  gap: 11px;
+}
+
+.system-availability__source,
+.system-availability__contract {
+  color: #8fcff6;
+  font: 8px/1.4 var(--font-mono);
+  letter-spacing: .075em;
+  text-transform: uppercase;
+}
+
+.system-availability__content {
+  margin-top: 28px;
+}
+
+.system-availability__awaiting {
+  display: flex;
+  min-height: 310px;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 28px;
+  border: 1px dashed rgba(144, 183, 217, .2);
+  border-radius: 16px;
+  color: var(--muted);
+  background: rgba(3, 9, 15, .62);
+  text-align: left;
+}
+
+.system-availability__awaiting strong,
+.system-availability__awaiting p {
+  display: block;
+}
+
+.system-availability__awaiting strong {
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+.system-availability__awaiting p {
+  max-width: 560px;
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.58;
+}
+
+.system-availability__metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(4, 10, 16, .75);
+}
+
+.system-availability__metric {
+  display: grid;
+  min-width: 0;
+  min-height: 106px;
+  align-content: center;
+  gap: 8px;
+  padding: 18px;
+}
+
+.system-availability__metric + .system-availability__metric {
+  border-left: 1px solid var(--line);
+}
+
+.system-availability__metric span {
+  color: var(--muted);
+  font: 8px/1.35 var(--font-mono);
+  letter-spacing: .065em;
+  text-transform: uppercase;
+}
+
+.system-availability__metric strong {
+  min-width: 0;
+  color: #f3f8fc;
+  font: 600 clamp(18px, 2vw, 27px)/1.06 var(--font-display);
+  letter-spacing: -.035em;
+  overflow-wrap: anywhere;
+}
+
+.system-availability__metric[data-kind="state"] strong {
+  color: var(--overall-state-color, var(--unknown));
+}
+
+.system-availability__metric[data-kind="coverage"][data-low-coverage="true"] {
+  background: linear-gradient(135deg, rgba(242,184,75,.09), transparent);
+}
+
+.system-availability__metric[data-kind="coverage"][data-low-coverage="true"] strong {
+  color: var(--amber);
+}
+
+.system-availability__duration-rail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px 18px;
+  margin: 13px 0 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  color: var(--muted);
+  background: rgba(4, 10, 16, .54);
+  font: 8px/1.5 var(--font-mono);
+}
+
+.system-availability__duration-rail strong {
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+.overall-availability-graph {
+  --chart-line-start: #4ddaf0;
+  --chart-line-mid: #62bfff;
+  --chart-line-end: #aa86ff;
+  margin-top: 14px;
+  padding: clamp(18px, 2.4vw, 27px);
+  border-color: rgba(125, 182, 225, .19);
+}
+
+.overall-availability-graph .component-graph__heading span {
+  color: #8dcaee;
+}
+
+.overall-availability-graph .component-graph__summary {
+  max-width: 920px;
+}
+
+.overall-availability-graph .component-graph__axis-label--y {
+  font-size: 8px;
+}
+
+.overall-availability-graph .component-graph__area {
+  opacity: .92;
+}
+
+.overall-availability-graph .component-graph__line {
+  stroke-linecap: butt;
+  stroke-linejoin: round;
+}
+
+.overall-availability-graph .component-graph__state-bar {
+  stroke: rgba(255,255,255,.065);
+}
+
+.overall-availability-graph__context {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px 18px;
+  margin-top: 11px;
+  color: var(--muted);
+  font: 8px/1.5 var(--font-mono);
+}
+
+.overall-availability-graph__context strong {
+  color: #a9cbe1;
+  font-weight: 500;
+}
 
 .component-controls {
   display: grid;
@@ -1656,10 +1874,31 @@ main > section:not(.status-hero) {
   animation: detail-reveal 220ms var(--ease) both;
 }
 
+.component-detail-rail__header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+}
+
 .component-detail-rail__summary {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+.system-availability__content.is-overall-ready .system-availability__metric {
+  animation: overall-metric-settle 360ms var(--ease) both;
+}
+
+.system-availability__content.is-overall-ready .system-availability__metric:nth-child(2) { animation-delay: 35ms; }
+.system-availability__content.is-overall-ready .system-availability__metric:nth-child(3) { animation-delay: 70ms; }
+.system-availability__content.is-overall-ready .system-availability__metric:nth-child(4) { animation-delay: 105ms; }
+.system-availability__content.is-overall-ready .system-availability__metric:nth-child(5) { animation-delay: 140ms; }
+
+@keyframes overall-metric-settle {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .component-detail-rail__source {
@@ -2740,6 +2979,19 @@ main > section:not(.status-hero) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .system-availability__metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .system-availability__metric:nth-child(4) {
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+
+  .system-availability__metric:nth-child(5) {
+    border-top: 1px solid var(--line);
+  }
+
   .status-metric:nth-child(3) {
     border-left: 0;
     border-top: 1px solid var(--line);
@@ -2826,6 +3078,14 @@ main > section:not(.status-hero) {
   .section-heading,
   .component-controls {
     grid-template-columns: 1fr;
+  }
+
+  .system-availability__header {
+    grid-template-columns: 1fr;
+  }
+
+  .system-availability__actions {
+    justify-items: start;
   }
 
   .section-heading {
@@ -2982,6 +3242,30 @@ main > section:not(.status-hero) {
     grid-template-columns: 1fr;
   }
 
+  .system-availability__frame {
+    padding: 22px 14px;
+    border-radius: 19px;
+  }
+
+  .system-availability__metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .system-availability__metric {
+    min-height: 88px;
+  }
+
+  .system-availability__metric + .system-availability__metric,
+  .system-availability__metric:nth-child(4),
+  .system-availability__metric:nth-child(5) {
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+
+  .overall-availability-graph {
+    padding: 14px;
+  }
+
   .status-metric {
     min-height: 124px;
   }
@@ -2999,6 +3283,7 @@ main > section:not(.status-hero) {
 
   .component-card__top,
   .diagnostic-overview,
+  .component-detail-rail__header,
   .component-details-grid,
   .component-detail-rail__summary {
     grid-template-columns: 1fr;
@@ -3024,6 +3309,7 @@ main > section:not(.status-hero) {
   .component-graph__line { stroke-width: 1.9; }
   .component-graph__legend { display: grid; }
   .component-intentional-state { padding: 16px; }
+  .component-detail-rail__header .report-menu { justify-self: end; }
 
   .diagnostic-source { grid-column: auto; }
 
@@ -3088,6 +3374,7 @@ main > section:not(.status-hero) {
   .component-graph__tip { animation: none !important; }
   .component-graph__gap-bridge { opacity: .72 !important; }
   .component-graph__gap-band { opacity: 1 !important; }
+  .system-availability__metric { animation: none !important; }
   .status-hero__feature-line,
   .system-pulse__rings span,
   .system-map__hub,

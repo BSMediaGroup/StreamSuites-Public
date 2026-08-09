@@ -6,6 +6,19 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-10 - Overall availability, 5H analytics, and operational status reports
+
+#### Technical notes
+
+- Added the Runtime-owned `overall-availability-v1` critical-path feature graph to `/status`, including exact 5H/24H/7D/30D range consumption, coverage, downtime, degraded/maintenance/unknown/pre-monitoring durations, current critical-path counts, stepped availability geometry, and the canonical state rail. Atlassian remains the official current-state and incident authority; no critical IDs, aggregation policy, 5H buckets, uptime, or missing history are synthesized in Public.
+- Extended real watchdog-history selectors for component analytics and the Core API overview to 5H while retaining the existing graph gap semantics, in-view/range-replay choreography, keyboard controls, reduced-motion final state, deferred/manual behavior, vendor-managed behavior, and explicit compatibility messaging for an older public projection.
+- Added one reusable accessible report menu/modal and the presentation-neutral allowlisted `streamsuites-status-report-v1` model for complete and component scopes. JSON uses formatted Blob downloads; PNG uses local fonts/assets and bounded 1600x2200 Canvas pages with deterministic numbered pagination and real graphs; PDF uses a same-origin HTML/SVG print document and the browser Save as PDF flow. All formats keep Atlassian and watchdog data separate, preserve partial-source and association-unavailable states, include provenance, and exclude private/process/local-path fields.
+- Added focused overall/report model and renderer coverage, 5H compatibility cases, filename/security checks, report CSS, README tree/status documentation, and bounded presentation cache keys. No dependency, lockfile, route, component ID, canonical version/build value, Runtime/Auth file, Statuspage configuration, Cloudflare configuration, deployment, or widget boundary changed.
+
+#### Human-readable notes
+
+The Status Center now shows a canonical watchdog-observed overall availability view alongside 5H component analytics. You can also download full or component operational reports as polished paginated PNGs, browser-generated vector PDFs, or structured JSON, with official Atlassian status and independent watchdog evidence clearly separated throughout.
+
 ### 2026-08-10 - Status graph trailing-edge animation repair
 
 #### Technical notes

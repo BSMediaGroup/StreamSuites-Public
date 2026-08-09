@@ -1,0 +1,521 @@
+/* StreamSuites Status Center report menus and shared report-options lightbox. */
+
+.report-menu {
+  position: relative;
+  z-index: 8;
+  display: inline-flex;
+}
+
+.report-menu__trigger {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 16px;
+  border: 1px solid rgba(118, 190, 242, .28);
+  border-radius: 11px;
+  color: #eaf7ff;
+  background:
+    linear-gradient(135deg, rgba(79, 173, 237, .13), rgba(137, 105, 236, .08)),
+    rgba(6, 13, 21, .9);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.045), 0 14px 34px rgba(0,0,0,.18);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .065em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 190ms ease, background 190ms ease, transform 190ms var(--ease);
+}
+
+.report-menu__trigger > span {
+  font-size: 13px;
+  line-height: 1;
+  transition: transform 190ms var(--ease);
+}
+
+.report-menu:hover .report-menu__trigger,
+.report-menu:focus-within .report-menu__trigger,
+.report-menu.is-open .report-menu__trigger {
+  border-color: rgba(118, 203, 255, .52);
+  background:
+    linear-gradient(135deg, rgba(79, 173, 237, .2), rgba(137, 105, 236, .12)),
+    rgba(7, 16, 25, .96);
+}
+
+.report-menu:hover .report-menu__trigger > span,
+.report-menu:focus-within .report-menu__trigger > span,
+.report-menu.is-open .report-menu__trigger > span {
+  transform: rotate(180deg);
+}
+
+.report-menu__options {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  width: 248px;
+  gap: 5px;
+  padding: 8px;
+  border: 1px solid rgba(151, 194, 231, .22);
+  border-radius: 13px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(122, 91, 239, .11), transparent 44%),
+    rgba(5, 11, 18, .985);
+  box-shadow: 0 26px 70px rgba(0,0,0,.48), inset 0 1px 0 rgba(255,255,255,.035);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-7px) scale(.985);
+  transform-origin: top right;
+  transition: opacity 190ms ease, transform 210ms var(--ease), visibility 190ms ease;
+}
+
+.report-menu:hover .report-menu__options,
+.report-menu:focus-within .report-menu__options,
+.report-menu.is-open .report-menu__options {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.report-menu__options button {
+  display: grid;
+  width: 100%;
+  gap: 4px;
+  padding: 12px 13px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: #edf6fc;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 170ms ease, background 170ms ease, transform 170ms var(--ease);
+}
+
+.report-menu__options button:hover,
+.report-menu__options button:focus-visible {
+  border-color: rgba(103, 193, 249, .25);
+  outline: none;
+  background: linear-gradient(90deg, rgba(80, 183, 247, .1), rgba(154, 121, 255, .06));
+  transform: translateX(2px);
+}
+
+.report-menu__options span {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -.015em;
+}
+
+.report-menu__options small {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.report-menu--component .report-menu__trigger {
+  min-height: 36px;
+  padding-inline: 13px;
+  border-color: rgba(151, 183, 219, .18);
+  color: #bcd1e1;
+  background: rgba(7, 14, 22, .76);
+  box-shadow: none;
+}
+
+.report-menu--component .report-menu__options {
+  top: calc(100% + 6px);
+  width: 192px;
+}
+
+.report-menu--component .report-menu__options button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 11px;
+}
+
+.report-menu--component .report-menu__options small {
+  display: none;
+}
+
+.report-modal-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  overflow-y: auto;
+  place-items: center;
+  padding: 26px;
+  background: rgba(1, 4, 8, .78);
+  backdrop-filter: blur(18px) saturate(.84);
+  opacity: 0;
+  transition: opacity 190ms ease;
+}
+
+.report-modal-backdrop.is-open {
+  opacity: 1;
+}
+
+body.report-modal-open {
+  overflow: hidden;
+}
+
+.report-modal {
+  position: relative;
+  width: min(720px, 100%);
+  max-height: min(860px, calc(100vh - 52px));
+  overflow: auto;
+  padding: clamp(25px, 4vw, 42px);
+  border: 1px solid rgba(155, 198, 234, .23);
+  border-radius: 22px;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(142, 104, 255, .13), transparent 35%),
+    radial-gradient(circle at 0 0, rgba(72, 177, 239, .1), transparent 32%),
+    linear-gradient(145deg, rgba(9, 18, 27, .995), rgba(4, 9, 15, .995));
+  box-shadow: 0 42px 120px rgba(0,0,0,.62), inset 0 1px 0 rgba(255,255,255,.045);
+  transform: translateY(12px) scale(.985);
+  transition: transform 220ms var(--ease);
+}
+
+.report-modal-backdrop.is-open .report-modal {
+  transform: translateY(0) scale(1);
+}
+
+.report-modal::before {
+  position: absolute;
+  top: 0;
+  left: 12%;
+  width: 48%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--blue), var(--violet), transparent);
+  box-shadow: 0 0 22px rgba(88,183,255,.34);
+  content: "";
+}
+
+.report-modal__close {
+  position: absolute;
+  z-index: 2;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  color: var(--muted);
+  background: rgba(8, 15, 23, .86);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.report-modal__close:hover,
+.report-modal__close:focus-visible {
+  border-color: rgba(113, 198, 251, .45);
+  color: #fff;
+  outline: none;
+}
+
+.report-modal__header {
+  padding-right: 44px;
+}
+
+.report-modal__header h2 {
+  margin: 8px 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 5vw, 42px);
+  font-weight: 600;
+  letter-spacing: -.04em;
+}
+
+.report-modal__header > p:last-child {
+  max-width: 600px;
+  margin: 13px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.62;
+}
+
+.report-modal__summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(150px, .65fr);
+  gap: 1px;
+  overflow: hidden;
+  margin-top: 25px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--line);
+}
+
+.report-modal__summary > div {
+  display: grid;
+  gap: 7px;
+  padding: 15px 16px;
+  background: rgba(7, 14, 22, .94);
+}
+
+.report-modal__summary span,
+.report-modal__component-includes > span {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.report-modal__summary strong {
+  min-width: 0;
+  color: #ecf5fb;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.report-modal fieldset {
+  min-width: 0;
+  margin: 23px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.report-modal legend {
+  margin-bottom: 11px;
+  color: #d9e5ee;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .075em;
+  text-transform: uppercase;
+}
+
+.report-modal__ranges > div {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.report-modal__ranges label,
+.report-modal__sections label {
+  position: relative;
+  cursor: pointer;
+}
+
+.report-modal__ranges input,
+.report-modal__sections input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.report-modal__ranges span {
+  display: grid;
+  min-height: 43px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--muted);
+  background: rgba(5, 11, 18, .74);
+  font: 500 9px/1 var(--font-mono);
+  letter-spacing: .07em;
+}
+
+.report-modal__ranges input:checked + span {
+  border-color: rgba(88,183,255,.48);
+  color: #fff;
+  background: linear-gradient(135deg, rgba(88,183,255,.15), rgba(158,124,255,.1));
+  box-shadow: inset 0 0 0 1px rgba(88,183,255,.06);
+}
+
+.report-modal__ranges input:focus-visible + span,
+.report-modal__sections input:focus-visible + span {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.report-modal__ranges input:disabled + span {
+  opacity: .38;
+  cursor: not-allowed;
+}
+
+.report-modal__section-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.report-modal__sections label > span {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--text-2);
+  background: rgba(5, 11, 18, .64);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.report-modal__sections label > span::before {
+  display: grid;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  place-items: center;
+  border: 1px solid rgba(141, 179, 211, .3);
+  border-radius: 5px;
+  color: #031019;
+  content: "";
+}
+
+.report-modal__sections input:checked + span::before {
+  border-color: var(--blue);
+  background: linear-gradient(135deg, var(--blue), #91d8ff);
+  content: "✓";
+  font: 700 11px/1 var(--font-body);
+}
+
+.report-modal__component-includes,
+.report-modal__provenance {
+  margin-top: 20px;
+  padding: 15px 16px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: rgba(6, 13, 20, .62);
+}
+
+.report-modal__component-includes p,
+.report-modal__provenance p {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.report-modal__provenance strong {
+  color: #bcd7e9;
+  font-size: 11px;
+}
+
+.report-modal__feedback {
+  min-height: 20px;
+  margin: 14px 0 0;
+  color: #9ecce8;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.report-modal__feedback[data-state="error"] {
+  color: #ff9999;
+}
+
+.report-modal__feedback[data-state="success"] {
+  color: var(--green);
+}
+
+.report-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 5px;
+}
+
+.report-modal__actions .button {
+  min-width: 134px;
+}
+
+.report-modal[aria-busy="true"] .report-modal__close,
+.report-modal[aria-busy="true"] [data-report-modal-cancel] {
+  opacity: .45;
+  pointer-events: none;
+}
+
+@media (max-width: 600px) {
+  .report-menu--page,
+  .report-menu--page .report-menu__trigger {
+    width: 100%;
+  }
+
+  .report-menu--page .report-menu__options {
+    right: auto;
+    left: 0;
+    width: min(100%, 290px);
+    transform-origin: top left;
+  }
+
+  .report-menu--component .report-menu__options {
+    right: 0;
+    left: auto;
+  }
+
+  .report-modal-backdrop {
+    align-items: end;
+    padding: 10px;
+  }
+
+  .report-modal {
+    width: 100%;
+    max-height: calc(100vh - 20px);
+    padding: 25px 18px 20px;
+    border-radius: 18px;
+  }
+
+  .report-modal__summary,
+  .report-modal__section-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .report-modal__ranges > div {
+    gap: 5px;
+  }
+
+  .report-modal__actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .report-modal__actions [data-report-generate] {
+    grid-row: 1;
+  }
+
+  .report-modal__actions .button {
+    width: 100%;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .report-menu:not(.is-open) .report-menu__options {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .report-menu__trigger,
+  .report-menu__trigger > span,
+  .report-menu__options,
+  .report-menu__options button,
+  .report-modal-backdrop,
+  .report-modal {
+    transition-duration: .01ms !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .report-menu__trigger,
+  .report-menu__options,
+  .report-modal,
+  .report-modal__ranges span,
+  .report-modal__sections label > span {
+    border: 1px solid CanvasText;
+  }
+}

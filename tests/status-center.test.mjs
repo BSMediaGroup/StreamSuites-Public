@@ -49,7 +49,9 @@ test("canonical status page uses the approved production brand and omits the flo
   assert.match(html, /\/assets\/logos\/ssmainlogosq\.webp/);
   assert.match(html, /\/assets\/logos\/wmnew\.webp/);
   assert.match(html, /\/css\/status-page\.css/);
+  assert.match(html, /\/css\/status-report\.css/);
   assert.match(html, /\/js\/status-data\.js/);
+  assert.match(html, /\/js\/status-report\.js/);
   assert.match(html, /\/js\/status-page\.js/);
   assert.doesNotMatch(html, /status-widget\.css|status-widget\.js|ss-status-indicator|data-status-slot|data-status-widget-host/);
 
@@ -133,7 +135,7 @@ test("component cards use meaningful icons, truthful source states, expansion, a
   assert.match(page, /aria-expanded/);
   assert.match(page, /state\.graphRanges/);
   assert.match(page, /state\.graphEntrances/);
-  assert.match(page, /\["24h", "7d", "30d"\]/);
+  assert.match(page, /\["5h", "24h", "7d", "30d"\]/);
   assert.match(page, /role", "img"/);
   assert.match(page, /tabindex", "0"/);
   assert.match(page, /aria-label", `\$\{formatAbsolute\(point\.at\)\} · \$\{point\.latency\} milliseconds/);
@@ -151,7 +153,7 @@ test("component cards use meaningful icons, truthful source states, expansion, a
   assert.match(html, /Atlassian-only operation/);
   assert.match(html, /Studio Room Readiness/);
   assert.match(html, /data-diagnostic-core-history[^>]*aria-controls="component-tb383cr2p92n-details"/);
-  assert.match(page, /View 24H \/ 7D \/ 30D history/);
+  assert.match(page, /View 5H \/ 24H \/ 7D \/ 30D history/);
   assert.match(page, /initMetricHistory/);
   assert.match(css, /\.component-card\.is-expanded/);
   assert.match(css, /\.component-card\s*\{[\s\S]*?min-height:\s*248px;/);
@@ -182,10 +184,10 @@ test("chart model preserves only real observations, explicit nulls, and measured
   assert.equal(measuredValues.reduce((total, value) => total + value, 0) / measuredValues.length, 60);
 });
 
-test("24H, 7D, and 30D models retain exact selected time domains", () => {
+test("5H, 24H, 7D, and 30D models retain exact selected time domains", () => {
   const helpers = loadChartHelpers();
   const buckets = [observation(0, 100), observation(5, 110)];
-  for (const [range, duration] of [["24h", 86400000], ["7d", 604800000], ["30d", 2592000000]]) {
+  for (const [range, duration] of [["5h", 18000000], ["24h", 86400000], ["7d", 604800000], ["30d", 2592000000]]) {
     const model = helpers.buildChartModel(buckets, range);
     assert.equal(model.endTime - model.startTime, duration, range);
     assert.equal(model.rangeKey, range);
@@ -354,6 +356,78 @@ test("premium SVG treatment remains dependency-free, range-accessible, and reduc
   assert.match(css, /chart-tip-settle/);
   assert.match(css, /\.component-graph__area \{ opacity: 1 !important; transform: none !important; \}/);
   assert.doesNotMatch(`${page}\n${html}`, /Chart\.js|\bd3\.|ApexCharts|ECharts|Highcharts|Recharts/);
+});
+
+test("overall availability consumes Runtime's canonical contract without duplicating policy", () => {
+  const page = read("js/status-page.js");
+  const html = read("status.html");
+  const css = read("css/status-page.css");
+  const overallRenderer = page.slice(page.indexOf("const buildOverallChartModel"), page.indexOf("const renderHistoryGraph"));
+  assert.match(html, /data-overall-availability/);
+  assert.match(html, /System availability/);
+  assert.match(html, /Watchdog-observed critical-path availability|Watchdog-observed critical paths/i);
+  assert.match(page, /diagnostics\?\.overall_availability/);
+  assert.match(page, /overall\?\.contract_version === "overall-availability-v1"/);
+  assert.match(page, /critical_path_availability_timeline/);
+  assert.match(page, /state_timeline/);
+  assert.match(page, /stepChartPath/);
+  assert.match(page, /before_overall_monitoring_began_seconds/);
+  assert.match(page, /Awaiting updated watchdog diagnostics/);
+  assert.match(page, /No overall series or 5H history is synthesized/);
+  assert.doesNotMatch(overallRenderer, /tb383cr2p92n|0xm0hsy3byjj|zx07yy34tyvl|3qsdkc52dgt5|q7435t6bd41x|94cn19vph28j/);
+  assert.match(css, /\.overall-availability-graph/);
+  assert.match(css, /\.system-availability__metrics/);
+  assert.match(css, /overall-metric-settle/);
+});
+
+test("overall chart model preserves exact Runtime percentages, missing values, and pre-history", () => {
+  const helpers = loadChartHelpers();
+  const start = "2026-08-10T00:00:00.000Z";
+  const end = "2026-08-10T05:00:00.000Z";
+  const range = {
+    requested_start: start,
+    requested_end: end,
+    timeline_resolution_seconds: 300,
+    state_timeline: [
+      { at: "2026-08-10T04:45:00.000Z", state: "operational", source_bucket_count: 1, observed_bucket_count: 1 },
+      { at: "2026-08-10T04:50:00.000Z", state: "unknown", source_bucket_count: 1, observed_bucket_count: 0 },
+      { at: "2026-08-10T04:55:00.000Z", state: "partial_outage", source_bucket_count: 1, observed_bucket_count: 1 },
+    ],
+    critical_path_availability_timeline: [
+      { at: "2026-08-10T04:45:00.000Z", critical_path_availability_percent: 100, available_path_observations: 6, unavailable_path_observations: 0, maintenance_path_observations: 0, unknown_path_observations: 0 },
+      { at: "2026-08-10T04:50:00.000Z", critical_path_availability_percent: null, available_path_observations: 0, unavailable_path_observations: 0, maintenance_path_observations: 0, unknown_path_observations: 6 },
+      { at: "2026-08-10T04:55:00.000Z", critical_path_availability_percent: 83.333, available_path_observations: 5, unavailable_path_observations: 1, maintenance_path_observations: 0, unknown_path_observations: 0 },
+    ],
+  };
+  const model = helpers.buildOverallChartModel({ ranges: { "5h": range } }, "5h");
+  assert.equal(model.rangeKey, "5h");
+  assert.deepEqual(Array.from(model.observations, (item) => item.value), [100, null, 83.333]);
+  assert.deepEqual(JSON.parse(JSON.stringify(model.segments.map((segment) => segment.map((item) => item.value)))), [[100], [83.333]]);
+  assert.equal(model.stateObservations[1].state, "unknown");
+  assert.ok(model.prehistory);
+  assert.equal(model.prehistory.fromTime, Date.parse(start));
+  assert.equal(model.prehistory.toTime, Date.parse("2026-08-10T04:45:00.000Z"));
+  assert.match(helpers.stepChartPath([{ x: 1, value: 100 }, { x: 2, value: 83.333 }], (value) => 100 - value), /^M1\.00 0\.00 H2\.00 V16\.67$/);
+});
+
+test("status report menus and one reusable modal expose full and component formats accessibly", () => {
+  const html = read("status.html");
+  const page = read("js/status-page.js");
+  const report = read("js/status-report.js");
+  const reportCss = read("css/status-report.css");
+  assert.equal((html.match(/data-report-modal(?:\s|>)/g) || []).length, 1);
+  assert.match(html, /Generate report/);
+  for (const format of ["png", "pdf", "json"]) assert.match(html, new RegExp(`data-report-format="${format}"`));
+  assert.match(html, /aria-modal="true"/);
+  assert.match(html, /name="status-report-range" value="5h"/);
+  assert.match(page, /StreamSuitesStatusReport\?\.createFormatMenu/);
+  assert.match(report, /scopeType\s*=\s*"component"/);
+  assert.match(report, /event\.key === "Escape"/);
+  assert.match(report, /event\.key !== "Tab"/);
+  assert.match(report, /state\.previousFocus/);
+  assert.match(report, /Preparing report|Building report/);
+  assert.match(reportCss, /@media \(max-width: 600px\)/);
+  assert.match(reportCss, /@media \(prefers-reduced-motion: reduce\)/);
 });
 
 test("hero diagram uses production SVG assets and sequential semantic routes", () => {

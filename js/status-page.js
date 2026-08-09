@@ -32,6 +32,7 @@
     expanded: new Set(),
     graphRanges: new Map(),
     graphEntrances: new Set(),
+    overallRange: "24h",
   };
 
   const COMPONENT_PRESENTATION = Object.freeze({
@@ -195,18 +196,18 @@
     setText("[data-metric-incidents]", String(incidents.length));
     setText("[data-metric-maintenance]", String(maintenances.length));
     const coreMetric = snapshot.diagnostics?.metrics?.core_api_response_time;
-    const coreBuckets = coreMetric?.history?.["24h"]?.buckets || [];
+    const coreBuckets = coreMetric?.history?.["5h"]?.buckets || coreMetric?.history?.["24h"]?.buckets || [];
     const measured = coreBuckets.map((bucket) => bucket?.latency_ms).filter(Number.isFinite);
     const trendDelta = measured.length > 1 ? measured[measured.length - 1] - measured[0] : null;
     const trend = trendDelta == null ? "trend forming" : Math.abs(trendDelta) < 2 ? "steady" : `${trendDelta > 0 ? "↑" : "↓"} ${Math.abs(trendDelta)} ms`;
     setText("[data-diagnostic-core-value]", coreMetric?.value_ms == null ? "Awaiting measured data" : `${coreMetric.value_ms} ms`);
     setText("[data-diagnostic-core-meta]", coreMetric?.value_ms == null
       ? "No real watchdog latency sample is available."
-      : `${coreBuckets.length} plotted five-minute buckets from ${coreMetric.history?.["24h"]?.sample_count || 0} raw probe observations · ${snapshot.diagnosticsStale ? "stale" : "fresh"} · ${trend}`);
+      : `${coreBuckets.length} plotted five-minute buckets from ${coreMetric.history?.["5h"]?.sample_count ?? coreMetric.history?.["24h"]?.sample_count ?? 0} raw probe observations · ${snapshot.diagnosticsStale ? "stale" : "fresh"} · ${trend}`);
     const coreHistoryButton = select("[data-diagnostic-core-history]");
     if (coreHistoryButton) {
       coreHistoryButton.disabled = coreBuckets.length === 0;
-      coreHistoryButton.textContent = coreBuckets.length ? "View 24H / 7D / 30D history ↓" : "History unavailable";
+      coreHistoryButton.textContent = coreBuckets.length ? "View 5H / 24H / 7D / 30D history ↓" : "History unavailable";
     }
     setText("[data-diagnostic-room-value]", "Deferred");
     const diagnosticSource = select("[data-diagnostic-source]");
@@ -253,6 +254,7 @@
   };
 
   const CHART_RANGE_META = Object.freeze({
+    "5h": { durationMs: 18000000, intervalMs: 300000, gapToleranceMs: 150000, maxGapMs: 450000, tickCount: 6, bucketLabel: "five-minute buckets" },
     "24h": { durationMs: 86400000, intervalMs: 300000, gapToleranceMs: 150000, maxGapMs: 450000, tickCount: 5, bucketLabel: "five-minute buckets" },
     "7d": { durationMs: 604800000, intervalMs: 86400000, gapToleranceMs: 43200000, maxGapMs: 129600000, tickCount: 5, bucketLabel: "daily aggregate buckets" },
     "30d": { durationMs: 2592000000, intervalMs: 86400000, gapToleranceMs: 43200000, maxGapMs: 129600000, tickCount: 6, bucketLabel: "daily aggregate buckets" },
@@ -382,6 +384,103 @@
       plottedMeasurementCount: latencyPoints.length,
       stateBandWidth: Math.max(2.4, plotWidth * (rangeMeta.intervalMs / rangeMeta.durationMs) * .86),
     };
+  };
+
+  const buildOverallChartModel = (overall, rangeKey) => {
+    const range = overall?.ranges?.[rangeKey];
+    if (!range || typeof range !== "object") return null;
+    const rangeMeta = CHART_RANGE_META[rangeKey] || CHART_RANGE_META["24h"];
+    const requestedStart = Date.parse(range.requested_start || "");
+    const requestedEnd = Date.parse(range.requested_end || "");
+    const timelineTimes = [
+      ...(Array.isArray(range.critical_path_availability_timeline) ? range.critical_path_availability_timeline : []),
+      ...(Array.isArray(range.state_timeline) ? range.state_timeline : []),
+    ].map((item) => Date.parse(item?.at || "")).filter(Number.isFinite);
+    const endTime = Number.isFinite(requestedEnd) ? requestedEnd : timelineTimes.at(-1) || 0;
+    const startTime = Number.isFinite(requestedStart) ? requestedStart : endTime - rangeMeta.durationMs;
+    const durationMs = Math.max(1, endTime - startTime);
+    const plotWidth = CHART_VIEW.right - CHART_VIEW.left;
+    const xForTime = (time) => CHART_VIEW.left + Math.max(0, Math.min(1, (time - startTime) / durationMs)) * plotWidth;
+    const stateByTime = new Map((Array.isArray(range.state_timeline) ? range.state_timeline : [])
+      .map((item) => [Date.parse(item?.at || ""), item])
+      .filter(([time]) => Number.isFinite(time)));
+    const observations = (Array.isArray(range.critical_path_availability_timeline) ? range.critical_path_availability_timeline : [])
+      .map((item) => {
+        const time = Date.parse(item?.at || "");
+        const value = Number.isFinite(item?.critical_path_availability_percent) ? Number(item.critical_path_availability_percent) : null;
+        const stateItem = stateByTime.get(time) || null;
+        return {
+          source: item,
+          at: item?.at,
+          time,
+          x: Number.isFinite(time) ? xForTime(time) : null,
+          value,
+          state: observedStateKey(stateItem?.state),
+          available: Number.isFinite(item?.available_path_observations) ? Number(item.available_path_observations) : null,
+          unavailable: Number.isFinite(item?.unavailable_path_observations) ? Number(item.unavailable_path_observations) : null,
+          maintenance: Number.isFinite(item?.maintenance_path_observations) ? Number(item.maintenance_path_observations) : null,
+          unknown: Number.isFinite(item?.unknown_path_observations) ? Number(item.unknown_path_observations) : null,
+        };
+      })
+      .filter((item) => Number.isFinite(item.time) && item.time >= startTime && item.time <= endTime)
+      .sort((a, b) => a.time - b.time);
+    const stateObservations = (Array.isArray(range.state_timeline) ? range.state_timeline : [])
+      .map((item) => {
+        const time = Date.parse(item?.at || "");
+        return {
+          source: item,
+          at: item?.at,
+          time,
+          x: Number.isFinite(time) ? xForTime(time) : null,
+          state: observedStateKey(item?.state),
+          sourceBucketCount: Number.isFinite(item?.source_bucket_count) ? Number(item.source_bucket_count) : null,
+          observedBucketCount: Number.isFinite(item?.observed_bucket_count) ? Number(item.observed_bucket_count) : null,
+        };
+      })
+      .filter((item) => Number.isFinite(item.time) && item.time >= startTime && item.time <= endTime)
+      .sort((a, b) => a.time - b.time);
+    const resolutionMs = Math.max(1, Number(range.timeline_resolution_seconds || rangeMeta.intervalMs / 1000) * 1000);
+    const segments = [];
+    let segment = [];
+    observations.forEach((observation) => {
+      const previous = segment.at(-1);
+      if (observation.value === null || (previous && observation.time - previous.time > resolutionMs * 1.5)) {
+        if (segment.length) segments.push(segment);
+        segment = [];
+        return;
+      }
+      segment.push(observation);
+    });
+    if (segment.length) segments.push(segment);
+    const firstObservedTime = Math.min(
+      ...[observations[0]?.time, stateObservations[0]?.time].filter(Number.isFinite)
+    );
+    const prehistory = Number.isFinite(firstObservedTime) && firstObservedTime > startTime
+      ? { fromTime: startTime, toTime: firstObservedTime, fromX: CHART_VIEW.left, toX: xForTime(firstObservedTime), durationMs: firstObservedTime - startTime }
+      : null;
+    return {
+      range,
+      rangeKey,
+      rangeMeta,
+      observations,
+      stateObservations,
+      segments,
+      prehistory,
+      startTime,
+      endTime,
+      durationMs,
+      resolutionMs,
+      stateBandWidth: Math.max(2.4, plotWidth * (resolutionMs / durationMs) * .9),
+    };
+  };
+
+  const stepChartPath = (points, yFor) => {
+    if (!points.length) return "";
+    let path = `M${points[0].x.toFixed(2)} ${yFor(points[0].value).toFixed(2)}`;
+    points.slice(1).forEach((point) => {
+      path += ` H${point.x.toFixed(2)} V${yFor(point.value).toFixed(2)}`;
+    });
+    return path;
   };
 
   const internalMissingRailMarkers = (model) => {
@@ -540,12 +639,14 @@
 
   window.StreamSuitesStatusChartHelpers = Object.freeze({
     buildChartModel,
+    buildOverallChartModel,
     formatGapDuration,
     internalMissingRailMarkers,
     nearestChartObservation,
     normalizeBucketTimestamp,
     observedStateKey,
     smoothChartPath,
+    stepChartPath,
     tooltipDataForObservation,
   });
 
@@ -558,11 +659,428 @@
     return wrapper;
   };
 
+  const formatOverallDuration = (seconds) => {
+    if (!Number.isFinite(seconds)) return "Unavailable";
+    const totalMinutes = Math.max(0, Math.round(Number(seconds) / 60));
+    if (totalMinutes < 60) return `${totalMinutes}m`;
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    if (hours < 24) return minutes ? `${hours}h ${minutes}m` : `${hours}h`;
+    const days = Math.floor(hours / 24);
+    const remainingHours = hours % 24;
+    return remainingHours ? `${days}d ${remainingHours}h` : `${days}d`;
+  };
+
+  const formatOverallPercent = (value) => Number.isFinite(value)
+    ? `${new Intl.NumberFormat(undefined, { maximumFractionDigits: 3 }).format(Number(value))}%`
+    : "Unavailable";
+
+  const renderOverallAvailability = (snapshot) => {
+    const root = select("[data-overall-availability]");
+    const content = select("[data-overall-availability-content]");
+    if (!root || !content) return;
+    const overall = snapshot?.diagnostics?.overall_availability;
+    const validContract = overall?.contract_version === "overall-availability-v1" && overall?.ranges && typeof overall.ranges === "object";
+    if (!validContract) {
+      content.classList.remove("is-overall-ready");
+      content.innerHTML = "";
+      const awaiting = node("div", "system-availability__awaiting");
+      const copy = node("div");
+      copy.append(
+        node("strong", "", "Awaiting updated watchdog diagnostics"),
+        node("p", "", "The loaded public projection does not yet contain Runtime’s overall-availability-v1 history. No overall series or 5H history is synthesized in the browser.")
+      );
+      awaiting.append(node("span", "loader"), copy);
+      content.appendChild(awaiting);
+      return;
+    }
+
+    const rangeOrder = ["5h", "24h", "7d", "30d"];
+    const supportedRanges = Array.isArray(overall.supported_ranges) ? overall.supported_ranges : [];
+    if (!supportedRanges.includes(state.overallRange) || !overall.ranges[state.overallRange]) {
+      state.overallRange = supportedRanges.includes("24h") ? "24h" : supportedRanges.find((key) => rangeOrder.includes(key)) || "24h";
+    }
+    const activeRange = state.overallRange;
+    const range = overall.ranges[activeRange];
+    const model = buildOverallChartModel(overall, activeRange);
+    content.innerHTML = "";
+    content.classList.add("is-overall-ready");
+    window.StreamSuitesStatusReport?.setCurrentOverallRange?.(activeRange);
+
+    const current = overall.current || {};
+    const metrics = node("div", "system-availability__metrics");
+    const metric = (label, value, kind) => {
+      const item = node("div", "system-availability__metric");
+      if (kind) item.dataset.kind = kind;
+      item.append(node("span", "", label), node("strong", "", value));
+      metrics.appendChild(item);
+      return item;
+    };
+    metric("Watchdog-observed availability", formatOverallPercent(range?.watchdog_observed_availability_percent), "availability");
+    metric("Observed downtime", formatOverallDuration(range?.downtime_seconds), "downtime");
+    const coverageMetric = metric("Observation coverage", formatOverallPercent(range?.observation_coverage_percent), "coverage");
+    if (Number.isFinite(range?.observation_coverage_percent) && Number(range.observation_coverage_percent) < 100) {
+      coverageMetric.dataset.lowCoverage = "true";
+      coverageMetric.title = "The selected range contains incomplete direct-observation coverage.";
+    }
+    const availableCount = Number.isFinite(current.available_path_count) ? Number(current.available_path_count) : null;
+    const eligibleCount = Number.isFinite(current.total_eligible_path_count) ? Number(current.total_eligible_path_count) : null;
+    metric("Current critical paths available", availableCount == null || eligibleCount == null ? "Unavailable" : `${availableCount}/${eligibleCount}`, "paths");
+    const currentState = observedStateKey(current.watchdog_overall_state);
+    const stateMetric = metric("Watchdog-derived state", current.state_label || OBSERVED_STATE_LABELS[currentState], "state");
+    stateMetric.style.setProperty("--overall-state-color", STATUS_COLORS[currentState] || STATUS_COLORS.unknown);
+    content.appendChild(metrics);
+
+    const durationRail = node("div", "system-availability__duration-rail");
+    [
+      ["Degraded", range?.degraded_seconds],
+      ["Maintenance", range?.maintenance_seconds],
+      ["Unknown after monitoring began", range?.unknown_seconds],
+      ["Before overall monitoring began", range?.before_overall_monitoring_began_seconds],
+    ].forEach(([label, value]) => {
+      const item = node("span");
+      item.append(`${label} · `, node("strong", "", formatOverallDuration(value)));
+      durationRail.appendChild(item);
+    });
+    content.appendChild(durationRail);
+
+    const panel = node("div", "component-graph overall-availability-graph");
+    panel.dataset.chartType = "overall";
+    const header = node("div", "component-graph__header");
+    const heading = node("div", "component-graph__heading");
+    heading.append(node("span", "", "Direct observation · canonical Runtime contract"), node("h5", "", "Critical-path availability"));
+    const currentValue = node("div", "component-graph__current");
+    currentValue.append(
+      node("span", "", "Current critical paths"),
+      node("strong", "", formatOverallPercent(current.critical_path_availability_percent)),
+      node("small", "", `${current.bucket_at ? formatAbsolute(current.bucket_at) : "Observation unavailable"} · ${snapshot?.diagnosticsStale ? "stale diagnostics" : "latest received"}`)
+    );
+    header.append(heading, currentValue);
+    panel.appendChild(header);
+    const toolbar = node("div", "component-graph__toolbar");
+    const controls = node("div", "component-graph__controls");
+    controls.setAttribute("aria-label", "Overall availability history range");
+    controls.setAttribute("role", "group");
+    rangeOrder.forEach((key) => {
+      const button = node("button", key === activeRange ? "is-active" : "", key.toUpperCase());
+      button.type = "button";
+      button.dataset.overallRange = key;
+      button.disabled = !supportedRanges.includes(key) || !overall.ranges[key];
+      button.setAttribute("aria-pressed", String(key === activeRange));
+      button.addEventListener("click", () => {
+        if (key === activeRange || button.disabled) return;
+        state.overallRange = key;
+        panel.classList.add("is-range-leaving");
+        panel.setAttribute("aria-busy", "true");
+        const applyRange = () => {
+          renderOverallAvailability(snapshot);
+          select(`button[data-overall-range="${key}"]`, content)?.focus({ preventScroll: true });
+        };
+        if (chartMotionReduced()) applyRange();
+        else window.setTimeout(applyRange, 130);
+      });
+      controls.appendChild(button);
+    });
+    controls.addEventListener("keydown", (event) => {
+      if (!event.target.matches("button[data-overall-range]")) return;
+      const enabled = [...controls.querySelectorAll("button:not(:disabled)")];
+      const currentIndex = enabled.indexOf(event.target);
+      let next = null;
+      if (event.key === "ArrowRight" || event.key === "ArrowDown") next = enabled[(currentIndex + 1) % enabled.length];
+      if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = enabled[(currentIndex - 1 + enabled.length) % enabled.length];
+      if (event.key === "Home") next = enabled[0];
+      if (event.key === "End") next = enabled.at(-1);
+      if (!next) return;
+      event.preventDefault();
+      next.click();
+    });
+    toolbar.appendChild(controls);
+    panel.appendChild(toolbar);
+
+    const summary = node("p", "component-graph__summary");
+    const observed = Number.isFinite(range?.observed_buckets) ? Number(range.observed_buckets) : 0;
+    const expected = Number.isFinite(range?.expected_buckets) ? Number(range.expected_buckets) : 0;
+    summary.textContent = `${activeRange.toUpperCase()} watchdog-observed availability: ${formatOverallPercent(range?.watchdog_observed_availability_percent)}. Coverage: ${formatOverallPercent(range?.observation_coverage_percent)} across ${observed}/${expected} expected observation buckets. Pre-monitoring time is excluded; genuine unknown time after monitoring began remains explicit.`;
+    summary.setAttribute("role", "status");
+    panel.appendChild(summary);
+
+    if (!model || (!model.observations.length && !model.stateObservations.length)) {
+      const empty = node("div", "component-graph__empty");
+      empty.append(node("strong", "", "Awaiting overall observations"), node("p", "", "Runtime supplied the canonical contract, but the selected range contains no overall timeline. No browser-derived replacement is shown."));
+      panel.appendChild(empty);
+      content.appendChild(panel);
+      return;
+    }
+
+    const svg = svgNode("svg", "component-graph__svg");
+    svg.setAttribute("viewBox", `0 0 ${CHART_VIEW.width} ${CHART_VIEW.height}`);
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", summary.textContent);
+    const description = svgNode("desc");
+    description.textContent = `${activeRange.toUpperCase()} critical-path availability from Runtime’s overall-availability-v1 timeline, followed by a textual overall-state rail. Missing values break the stepped series; time before monitoring began is unavailable rather than unknown.`;
+    svg.appendChild(description);
+    const definitionId = `overall-availability-${activeRange}-${++chartSequence}`;
+    const defs = svgNode("defs");
+    const lineGradient = svgNode("linearGradient");
+    lineGradient.id = `${definitionId}-line`;
+    lineGradient.setAttribute("gradientUnits", "userSpaceOnUse");
+    lineGradient.setAttribute("x1", String(CHART_VIEW.left));
+    lineGradient.setAttribute("x2", String(CHART_VIEW.right));
+    [["0%", "component-graph__stop component-graph__stop--start"], ["58%", "component-graph__stop component-graph__stop--mid"], ["100%", "component-graph__stop component-graph__stop--end"]].forEach(([offset, className]) => {
+      const stop = svgNode("stop", className);
+      stop.setAttribute("offset", offset);
+      lineGradient.appendChild(stop);
+    });
+    const areaGradient = svgNode("linearGradient");
+    areaGradient.id = `${definitionId}-area`;
+    areaGradient.setAttribute("gradientUnits", "userSpaceOnUse");
+    areaGradient.setAttribute("x1", String(CHART_VIEW.left));
+    areaGradient.setAttribute("x2", String(CHART_VIEW.left));
+    areaGradient.setAttribute("y1", String(CHART_VIEW.top));
+    areaGradient.setAttribute("y2", String(CHART_VIEW.bottom));
+    [["0%", "component-graph__stop component-graph__stop--fill-top"], ["58%", "component-graph__stop component-graph__stop--fill-low"], ["84%", "component-graph__stop component-graph__stop--fill-tail"], ["100%", "component-graph__stop component-graph__stop--fill-bottom"]].forEach(([offset, className]) => {
+      const stop = svgNode("stop", className);
+      stop.setAttribute("offset", offset);
+      areaGradient.appendChild(stop);
+    });
+    const revealGradient = svgNode("linearGradient");
+    revealGradient.id = `${definitionId}-reveal-gradient`;
+    revealGradient.setAttribute("x1", "0%");
+    revealGradient.setAttribute("x2", "100%");
+    [["0%", "1"], ["92%", "1"], ["100%", "0"]].forEach(([offset, opacity]) => {
+      const stop = svgNode("stop");
+      stop.setAttribute("offset", offset);
+      stop.setAttribute("stop-color", "white");
+      stop.setAttribute("stop-opacity", opacity);
+      revealGradient.appendChild(stop);
+    });
+    const revealMask = svgNode("mask");
+    revealMask.id = `${definitionId}-reveal-mask`;
+    revealMask.setAttribute("maskUnits", "userSpaceOnUse");
+    const reveal = svgNode("rect", "component-graph__line-reveal");
+    reveal.setAttribute("x", String(CHART_VIEW.left - 64));
+    reveal.setAttribute("y", String(CHART_VIEW.top - 24));
+    reveal.setAttribute("width", String(CHART_VIEW.right - CHART_VIEW.left + 160));
+    reveal.setAttribute("height", String(CHART_VIEW.bottom - CHART_VIEW.top + 48));
+    reveal.setAttribute("fill", `url(#${revealGradient.id})`);
+    revealMask.appendChild(reveal);
+    defs.append(lineGradient, areaGradient, revealGradient, revealMask);
+    svg.appendChild(defs);
+
+    const yFor = (value) => CHART_VIEW.bottom - (Math.max(0, Math.min(100, Number(value))) / 100) * (CHART_VIEW.bottom - CHART_VIEW.top);
+    [100, 75, 50, 25, 0].forEach((value) => {
+      const y = yFor(value);
+      const gridLine = svgNode("line", "component-graph__gridline");
+      gridLine.setAttribute("x1", String(CHART_VIEW.left));
+      gridLine.setAttribute("x2", String(CHART_VIEW.right));
+      gridLine.setAttribute("y1", String(y));
+      gridLine.setAttribute("y2", String(y));
+      const label = svgNode("text", "component-graph__axis-label component-graph__axis-label--y");
+      label.setAttribute("x", String(CHART_VIEW.left - 9));
+      label.setAttribute("y", String(y + 3));
+      label.setAttribute("text-anchor", "end");
+      label.textContent = `${value}%`;
+      svg.append(gridLine, label);
+    });
+    const xAxisLabels = node("div", "component-graph__x-axis");
+    for (let index = 0; index < model.rangeMeta.tickCount; index += 1) {
+      const ratio = index / (model.rangeMeta.tickCount - 1);
+      const x = CHART_VIEW.left + ratio * (CHART_VIEW.right - CHART_VIEW.left);
+      const tickTime = model.startTime + ratio * model.durationMs;
+      const line = svgNode("line", "component-graph__gridline component-graph__gridline--vertical");
+      line.setAttribute("x1", String(x));
+      line.setAttribute("x2", String(x));
+      line.setAttribute("y1", String(CHART_VIEW.top));
+      line.setAttribute("y2", String(CHART_VIEW.stateY + CHART_VIEW.stateHeight));
+      svg.appendChild(line);
+      const label = node("span", "", activeRange === "5h" || activeRange === "24h"
+        ? new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(tickTime)
+        : new Intl.DateTimeFormat(undefined, activeRange === "7d" ? { weekday: "short", day: "numeric" } : { month: "short", day: "numeric" }).format(tickTime));
+      xAxisLabels.appendChild(label);
+    }
+    const railTrack = svgNode("rect", "component-graph__availability-track");
+    railTrack.setAttribute("x", String(CHART_VIEW.left));
+    railTrack.setAttribute("y", String(CHART_VIEW.stateY - 3));
+    railTrack.setAttribute("width", String(CHART_VIEW.right - CHART_VIEW.left));
+    railTrack.setAttribute("height", String(CHART_VIEW.stateHeight + 6));
+    railTrack.setAttribute("rx", "5");
+    const railLabel = svgNode("text", "component-graph__axis-label component-graph__axis-label--availability");
+    railLabel.setAttribute("x", String(CHART_VIEW.left));
+    railLabel.setAttribute("y", String(CHART_VIEW.stateY - 10));
+    railLabel.textContent = "WATCHDOG-DERIVED OVERALL STATE";
+    svg.append(railTrack, railLabel);
+
+    const railGradients = new Map();
+    ["operational", "degraded", "partial", "major", "maintenance", "unknown"].forEach((railState) => {
+      const gradient = svgNode("linearGradient");
+      gradient.id = `${definitionId}-rail-${railState}`;
+      gradient.setAttribute("gradientUnits", "userSpaceOnUse");
+      gradient.setAttribute("x1", String(CHART_VIEW.left));
+      gradient.setAttribute("x2", String(CHART_VIEW.left));
+      gradient.setAttribute("y1", String(CHART_VIEW.stateY));
+      gradient.setAttribute("y2", String(CHART_VIEW.stateY + CHART_VIEW.stateHeight));
+      [["0%", "top"], ["52%", "mid"], ["100%", "bottom"]].forEach(([offset, position]) => {
+        const stop = svgNode("stop", `component-graph__rail-stop component-graph__rail-stop--${position}`);
+        stop.setAttribute("offset", offset);
+        stop.setAttribute("data-state", railState);
+        gradient.appendChild(stop);
+      });
+      railGradients.set(railState, gradient.id);
+      defs.appendChild(gradient);
+    });
+
+    if (model.prehistory) {
+      const band = svgNode("rect", "component-graph__gap-band");
+      band.setAttribute("x", String(model.prehistory.fromX));
+      band.setAttribute("y", String(CHART_VIEW.top));
+      band.setAttribute("width", String(Math.max(1, model.prehistory.toX - model.prehistory.fromX)));
+      band.setAttribute("height", String(CHART_VIEW.bottom - CHART_VIEW.top));
+      band.setAttribute("data-gap-kind", "leading");
+      const title = svgNode("title");
+      title.textContent = `No overall monitoring history is available for the first ${formatGapDuration(model.prehistory.durationMs)} of this selected range.`;
+      band.appendChild(title);
+      svg.appendChild(band);
+    }
+    model.observations.filter((item) => item.value === null).forEach((item) => {
+      const band = svgNode("rect", "component-graph__gap-band");
+      band.setAttribute("x", String(Math.max(CHART_VIEW.left, item.x - model.stateBandWidth / 2)));
+      band.setAttribute("y", String(CHART_VIEW.top));
+      band.setAttribute("width", String(model.stateBandWidth));
+      band.setAttribute("height", String(CHART_VIEW.bottom - CHART_VIEW.top));
+      band.setAttribute("data-gap-kind", "internal");
+      const title = svgNode("title");
+      title.textContent = `${formatAbsolute(item.at)} · critical-path availability unavailable`;
+      band.appendChild(title);
+      svg.appendChild(band);
+    });
+    model.stateObservations.forEach((item) => {
+      const bar = svgNode("rect", "component-graph__state-bar");
+      bar.setAttribute("x", String(Math.max(CHART_VIEW.left, Math.min(CHART_VIEW.right - model.stateBandWidth, item.x - model.stateBandWidth / 2))));
+      bar.setAttribute("y", String(CHART_VIEW.stateY));
+      bar.setAttribute("width", String(model.stateBandWidth));
+      bar.setAttribute("height", String(CHART_VIEW.stateHeight));
+      bar.setAttribute("rx", "2");
+      bar.setAttribute("data-state", item.state);
+      bar.style.fill = `url(#${railGradients.get(item.state) || railGradients.get("unknown")})`;
+      const title = svgNode("title");
+      title.textContent = `${formatAbsolute(item.at)} · ${OBSERVED_STATE_LABELS[item.state]}`;
+      bar.appendChild(title);
+      svg.appendChild(bar);
+    });
+    model.segments.forEach((segment) => {
+      const pathData = stepChartPath(segment, yFor);
+      if (segment.length >= 2) {
+        const area = svgNode("path", "component-graph__area");
+        area.setAttribute("d", `${pathData} L${segment.at(-1).x.toFixed(2)} ${CHART_VIEW.bottom} L${segment[0].x.toFixed(2)} ${CHART_VIEW.bottom} Z`);
+        area.setAttribute("fill", `url(#${areaGradient.id})`);
+        svg.appendChild(area);
+        const path = svgNode("path", "component-graph__line");
+        path.setAttribute("d", pathData);
+        path.setAttribute("stroke", `url(#${lineGradient.id})`);
+        path.setAttribute("mask", `url(#${revealMask.id})`);
+        svg.appendChild(path);
+      }
+    });
+    const latest = [...model.observations].reverse().find((item) => item.value !== null) || null;
+    if (latest) {
+      const point = svgNode("circle", "component-graph__point is-current");
+      point.setAttribute("cx", String(latest.x));
+      point.setAttribute("cy", String(yFor(latest.value)));
+      point.setAttribute("r", "3.4");
+      point.setAttribute("tabindex", "0");
+      point.setAttribute("role", "img");
+      point.setAttribute("aria-label", `${formatAbsolute(latest.at)} · ${formatOverallPercent(latest.value)} critical paths available · ${OBSERVED_STATE_LABELS[latest.state]}`);
+      svg.appendChild(point);
+      const tip = svgNode("circle", "component-graph__tip");
+      tip.setAttribute("cx", String(latest.x));
+      tip.setAttribute("cy", String(yFor(latest.value)));
+      tip.setAttribute("r", "7");
+      svg.appendChild(tip);
+    }
+
+    const crosshair = svgNode("line", "component-graph__crosshair");
+    crosshair.setAttribute("y1", String(CHART_VIEW.top));
+    crosshair.setAttribute("y2", String(CHART_VIEW.stateY + CHART_VIEW.stateHeight));
+    const hoverPoint = svgNode("circle", "component-graph__hover-point");
+    hoverPoint.setAttribute("r", "4.4");
+    svg.append(crosshair, hoverPoint);
+    const plot = node("div", "component-graph__plot");
+    const tooltip = node("div", "component-graph__tooltip");
+    tooltip.hidden = true;
+    tooltip.setAttribute("aria-hidden", "true");
+    const tooltipTime = node("span");
+    const tooltipValue = node("strong");
+    const tooltipMeta = node("small");
+    tooltip.append(tooltipTime, tooltipValue, tooltipMeta);
+    plot.append(svg, tooltip);
+    panel.append(plot, xAxisLabels);
+    const tooltipObservations = model.observations;
+    const showTooltip = (observation) => {
+      if (!observation) return;
+      tooltipTime.textContent = formatAbsolute(observation.at);
+      tooltipValue.textContent = observation.value == null ? "Availability unavailable" : `${formatOverallPercent(observation.value)} critical paths available`;
+      const counts = [
+        ["available", observation.available], ["unavailable", observation.unavailable],
+        ["maintenance", observation.maintenance], ["unknown", observation.unknown],
+      ].filter(([, value]) => value != null).map(([label, value]) => `${value} ${label}`).join(" · ");
+      tooltipMeta.textContent = `${OBSERVED_STATE_LABELS[observation.state]}${counts ? ` · ${counts} path observations` : ""}`;
+      crosshair.setAttribute("x1", String(observation.x));
+      crosshair.setAttribute("x2", String(observation.x));
+      hoverPoint.setAttribute("cx", String(observation.x));
+      hoverPoint.setAttribute("cy", String(yFor(observation.value == null ? 0 : observation.value)));
+      hoverPoint.setAttribute("data-state", observation.state);
+      tooltip.hidden = false;
+      tooltip.setAttribute("aria-hidden", "false");
+      crosshair.classList.add("is-visible");
+      hoverPoint.classList.add("is-visible");
+      const bounds = plot.getBoundingClientRect();
+      const tooltipWidth = Math.min(tooltip.offsetWidth || 230, Math.max(120, bounds.width - 16));
+      const tooltipHeight = tooltip.offsetHeight || 82;
+      const rawLeft = (observation.x / CHART_VIEW.width) * bounds.width;
+      const rawTop = (yFor(observation.value == null ? 0 : observation.value) / CHART_VIEW.height) * bounds.height - tooltipHeight - 12;
+      tooltip.style.left = `${Math.max(8, Math.min(bounds.width - tooltipWidth - 8, rawLeft - tooltipWidth / 2))}px`;
+      tooltip.style.top = `${Math.max(8, Math.min(bounds.height - tooltipHeight - 8, rawTop))}px`;
+    };
+    const hideTooltip = () => {
+      tooltip.hidden = true;
+      tooltip.setAttribute("aria-hidden", "true");
+      crosshair.classList.remove("is-visible");
+      hoverPoint.classList.remove("is-visible");
+    };
+    if (window.matchMedia?.("(hover: hover) and (pointer: fine)")?.matches) {
+      plot.addEventListener("pointermove", (event) => {
+        const bounds = plot.getBoundingClientRect();
+        const x = ((event.clientX - bounds.left) / Math.max(1, bounds.width)) * CHART_VIEW.width;
+        showTooltip(nearestChartObservation(tooltipObservations, x));
+      });
+      plot.addEventListener("pointerleave", hideTooltip);
+    }
+    const currentPoint = select(".component-graph__point.is-current", svg);
+    currentPoint?.addEventListener("focus", () => showTooltip(latest));
+    currentPoint?.addEventListener("blur", hideTooltip);
+    const legend = node("div", "component-graph__legend");
+    legend.append(
+      node("span", "component-graph__legend-latency", "Critical-path availability · stepped"),
+      node("span", "component-graph__legend-state", "Overall state rail · labels available on inspection"),
+      node("span", "component-graph__legend-unobserved", "Shaded span · unavailable history, not an outage")
+    );
+    panel.appendChild(legend);
+    const context = node("div", "overall-availability-graph__context");
+    const criticalCount = Number.isFinite(current.critical_component_count) ? Number(current.critical_component_count) : overall.critical_components?.length;
+    context.append(
+      node("span", "", `${overall.contract_version} · ${criticalCount || "Runtime-defined"} critical services · ${overall.bucket_size_seconds || 300}-second observation buckets`),
+      node("strong", "", `Selected ${activeRange.toUpperCase()} · source ${overall.source || "watchdog observations"}`)
+    );
+    panel.appendChild(context);
+    content.appendChild(panel);
+    queueChartEntrance(panel);
+  };
+
   const renderHistoryGraph = (panel, diagnostic, requestedRange, options = {}) => {
     cancelChartEntrance(panel);
     panel.innerHTML = "";
     panel.classList.remove("is-range-leaving", "is-range-entering", "is-range-visible");
-    const ranges = ["24h", "7d", "30d"];
+    const ranges = ["5h", "24h", "7d", "30d"];
     const available = ranges.filter((key) => (diagnostic?.history?.[key]?.buckets || []).length);
     const activeRange = available.includes(requestedRange) ? requestedRange : available[0];
     const heading = node("div", "component-graph__heading");
@@ -774,7 +1292,7 @@
       gridLine.setAttribute("y2", String(model.graphType === "latency" ? CHART_VIEW.stateY + CHART_VIEW.stateHeight : 132));
       const tickTime = model.startTime + ratio * model.rangeMeta.durationMs;
       const label = node("span");
-      label.textContent = activeRange === "24h"
+      label.textContent = activeRange === "5h" || activeRange === "24h"
         ? new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(tickTime)
         : new Intl.DateTimeFormat(undefined, activeRange === "7d" ? { weekday: "short", day: "numeric" } : { month: "short", day: "numeric" }).format(tickTime);
       xAxisLabels.appendChild(label);
@@ -1114,6 +1632,7 @@
       detailItem("Coverage", chipLabel(source.coverage)),
       detailItem("Last checked", diagnostic?.last_checked ? formatAbsolute(diagnostic.last_checked) : "Unavailable"),
       detailItem("Direct state", diagnostic?.direct_state ? chipLabel(diagnostic.direct_state) : "Unavailable"),
+      detailItem("5H availability", diagnostic?.history?.["5h"]?.availability_percent == null ? "Unavailable" : `${diagnostic.history["5h"].availability_percent}%`),
       detailItem("24H availability", diagnostic?.history?.["24h"]?.availability_percent == null ? "Unavailable" : `${diagnostic.history["24h"].availability_percent}%`),
       detailItem("7D availability", diagnostic?.history?.["7d"]?.availability_percent == null ? "Unavailable" : `${diagnostic.history["7d"].availability_percent}%`),
       detailItem("30D availability", diagnostic?.history?.["30d"]?.availability_percent == null ? "Unavailable" : `${diagnostic.history["30d"].availability_percent}%`),
@@ -1123,7 +1642,16 @@
       detailItem("Last success", diagnostic?.last_success ? formatAbsolute(diagnostic.last_success) : "Unavailable"),
       detailItem("Last failure", diagnostic?.last_failure ? formatAbsolute(diagnostic.last_failure) : "Unavailable")
     );
-    details.append(detailSummary, detailList);
+    const detailHeader = node("div", "component-detail-rail__header");
+    detailHeader.appendChild(detailSummary);
+    const reportMenu = window.StreamSuitesStatusReport?.createFormatMenu?.({
+      scopeType: "component",
+      componentId: component.id,
+      componentName: component.name || "Component",
+      getRange: () => state.graphRanges.get(component.id) || "24h",
+    });
+    if (reportMenu) detailHeader.appendChild(reportMenu);
+    details.append(detailHeader, detailList);
     let graph = null;
     if (source.coverage === "deferred") {
       details.appendChild(component.id === "b6k38lrqx93f"
@@ -1371,6 +1899,7 @@
 
   const render = (snapshot) => {
     state.snapshot = snapshot;
+    renderOverallAvailability(snapshot || {});
     if (!snapshot?.data) {
       renderUnavailable(snapshot);
       return;

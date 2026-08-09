@@ -13,7 +13,8 @@
   <meta property="og:image" content="/assets/backgrounds/seoshare.jpg" />
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <link rel="canonical" href="https://streamsuites.app/status" />
-  <link rel="stylesheet" href="/css/status-page.css?v=20260810-status-motion-clip" />
+  <link rel="stylesheet" href="/css/status-page.css?v=20260810-status-reports" />
+  <link rel="stylesheet" href="/css/status-report.css?v=20260810-status-reports" />
 </head>
 <body class="status-page" data-page="status">
   <a class="skip-link" href="#main-content">Skip to content</a>
@@ -190,6 +191,43 @@
       </div>
     </section>
 
+    <section class="system-availability shell reveal" aria-labelledby="availability-title" data-overall-availability>
+      <div class="system-availability__frame">
+        <div class="system-availability__header">
+          <div>
+            <p class="section-kicker">Watchdog-observed critical paths</p>
+            <h2 id="availability-title">System availability</h2>
+            <p class="system-availability__lede">A direct-observation view of Runtime’s canonical critical-path contract. Atlassian remains the official current-state and incident authority.</p>
+          </div>
+          <div class="system-availability__actions">
+            <span class="system-availability__source">Direct observation · StreamSuites Watchdog</span>
+            <div class="report-menu report-menu--page" data-report-menu data-report-scope="full">
+              <button class="report-menu__trigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="status-report-formats" data-report-menu-trigger>
+                Generate report <span aria-hidden="true">⌄</span>
+              </button>
+              <div class="report-menu__options" id="status-report-formats" role="menu" aria-label="Status report formats" data-report-menu-options>
+                <button type="button" role="menuitem" data-report-format="png">
+                  <span>PNG Report</span><small>Polished visual report</small>
+                </button>
+                <button type="button" role="menuitem" data-report-format="pdf">
+                  <span>PDF Report</span><small>Vector print report</small>
+                </button>
+                <button type="button" role="menuitem" data-report-format="json">
+                  <span>JSON Data</span><small>Machine-readable data</small>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="system-availability__content" data-overall-availability-content aria-live="polite">
+          <div class="system-availability__awaiting">
+            <span class="loader" aria-hidden="true"></span>
+            <div><strong>Reading overall availability</strong><p>Waiting for the Runtime-owned overall-availability-v1 projection.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="components-section shell" id="components" aria-labelledby="components-title">
       <div class="section-heading reveal">
         <div>
@@ -289,6 +327,55 @@
     </section>
   </main>
 
+  <div class="report-modal-backdrop" data-report-modal hidden>
+    <section class="report-modal" role="dialog" aria-modal="true" aria-labelledby="status-report-modal-title" aria-describedby="status-report-modal-description" tabindex="-1">
+      <button class="report-modal__close" type="button" aria-label="Close report options" data-report-modal-close><span aria-hidden="true">×</span></button>
+      <header class="report-modal__header">
+        <p class="section-kicker">Operational export</p>
+        <h2 id="status-report-modal-title" data-report-modal-title>Generate status report</h2>
+        <p id="status-report-modal-description" data-report-modal-description>Choose the time window, then generate a source-attributed report from the currently loaded public data.</p>
+      </header>
+      <div class="report-modal__summary" aria-label="Selected report scope and format">
+        <div><span>Scope</span><strong data-report-scope-label>Complete StreamSuites status</strong></div>
+        <div><span>Format</span><strong data-report-format-label>PNG Report</strong></div>
+      </div>
+      <fieldset class="report-modal__ranges">
+        <legend>Time window</legend>
+        <div role="radiogroup" aria-label="Report time window">
+          <label><input type="radio" name="status-report-range" value="5h" /><span>5H</span></label>
+          <label><input type="radio" name="status-report-range" value="24h" checked /><span>24H</span></label>
+          <label><input type="radio" name="status-report-range" value="7d" /><span>7D</span></label>
+          <label><input type="radio" name="status-report-range" value="30d" /><span>30D</span></label>
+        </div>
+      </fieldset>
+      <fieldset class="report-modal__sections" data-report-full-sections>
+        <legend>Include in complete report</legend>
+        <div class="report-modal__section-grid">
+          <label><input type="checkbox" value="overall" checked /><span>Overall availability</span></label>
+          <label><input type="checkbox" value="metrics" checked /><span>Custom metrics</span></label>
+          <label><input type="checkbox" value="components" checked /><span>All component groups and real graphs</span></label>
+          <label><input type="checkbox" value="incidents" checked /><span>Active incidents</span></label>
+          <label><input type="checkbox" value="maintenance" checked /><span>Scheduled maintenance</span></label>
+        </div>
+      </fieldset>
+      <div class="report-modal__component-includes" data-report-component-includes hidden>
+        <span>Included</span>
+        <p>Official and direct state remain separate. Real history, gaps, availability, latency, applicable incidents or maintenance, and the component’s monitoring boundary are included when present.</p>
+      </div>
+      <div class="report-modal__provenance">
+        <strong>Source provenance is always included.</strong>
+        <p>Official service state and incidents: Atlassian Statuspage · Independent observations: StreamSuites Status Watchdog.</p>
+        <p data-report-png-note hidden>Long PNG reports are split into consistently numbered files rather than cropped.</p>
+        <p data-report-pdf-note hidden>PDF opens the browser print dialog so you can select Save as PDF.</p>
+      </div>
+      <p class="report-modal__feedback" role="status" aria-live="polite" data-report-feedback></p>
+      <div class="report-modal__actions">
+        <button class="button button--quiet" type="button" data-report-modal-cancel>Cancel</button>
+        <button class="button button--primary" type="button" data-report-generate>Generate report</button>
+      </div>
+    </section>
+  </div>
+
   <footer class="site-footer">
     <div class="shell site-footer__top">
       <div class="site-footer__brand">
@@ -315,6 +402,7 @@
   <script src="/js/utils/version-stamp.js"></script>
   <script src="/js/public-page-visit.js" defer></script>
   <script src="/js/status-data.js?v=20260809-status-diagnostics" defer></script>
-  <script src="/js/status-page.js?v=20260810-status-motion-clip" defer></script>
+  <script src="/js/status-report.js?v=20260810-status-reports" defer></script>
+  <script src="/js/status-page.js?v=20260810-status-reports" defer></script>
 </body>
 </html>
