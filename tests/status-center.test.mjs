@@ -29,6 +29,19 @@ const observation = (minute, latency_ms, state = "operational", availability_per
   sample_count: 1,
 });
 
+test("chart line entrance uses a responsive feather mask without dash cleanup", () => {
+  const page = read("js/status-page.js");
+  const css = read("css/status-page.css");
+  assert.match(page, /component-graph__line-reveal/);
+  assert.match(page, /line-reveal-mask/);
+  assert.match(page, /lineRevealMask\.setAttribute\("maskUnits", "userSpaceOnUse"\)/);
+  assert.match(page, /\[\["0%", "1"\], \["92%", "1"\], \["100%", "0"\]\]/);
+  assert.match(page, /path\.setAttribute\("mask", `url\(#\$\{lineRevealMask\.id\}\)`\)/);
+  assert.doesNotMatch(page, /getTotalLength|strokeDasharray|stroke-dashoffset/);
+  assert.match(css, /component-graph__line-reveal[\s\S]*?transform-box:\s*fill-box/);
+  assert.match(css, /component-graph__line-reveal[^}]*transition:\s*transform 1640ms/);
+});
+
 test("canonical status page uses the approved production brand and omits the floating widget", () => {
   const html = read("status.html");
   const pageScript = read("js/status-page.js");
@@ -298,8 +311,8 @@ test("premium SVG treatment remains dependency-free, range-accessible, and reduc
   assert.ok(measuredSegmentRenderer >= 0 && gapBridgeRenderer > measuredSegmentRenderer);
   assert.match(page.slice(measuredSegmentRenderer, gapBridgeRenderer), /component-graph__area/);
   assert.doesNotMatch(page.slice(gapBridgeRenderer), /component-graph__gap-bridge[\s\S]*?component-graph__area/);
-  assert.match(page, /path\.getTotalLength\(\)/);
-  assert.match(page, /--chart-draw-length/);
+  assert.match(page, /lineRevealMask\.setAttribute\("maskUnits", "userSpaceOnUse"\)/);
+  assert.match(page, /component-graph__line-reveal/);
   assert.match(page, /is-chart-primed/);
   assert.match(page, /IntersectionObserver/);
   assert.match(page, /visiblePixels < Math\.min\(160, bounds\.height \* \.22\)/);
@@ -329,9 +342,10 @@ test("premium SVG treatment remains dependency-free, range-accessible, and reduc
   assert.match(page, /areaGradient\.setAttribute\("x1", String\(CHART_VIEW\.left\)\)[\s\S]*?areaGradient\.setAttribute\("x2", String\(CHART_VIEW\.left\)\)[\s\S]*?areaGradient\.setAttribute\("y1", String\(CHART_VIEW\.top\)\)[\s\S]*?areaGradient\.setAttribute\("y2", String\(CHART_VIEW\.bottom\)\)/);
   assert.match(css, /--status-chart-gap:\s*#8091a5/);
   assert.match(css, /\.component-graph__gap-bridge\s*\{[\s\S]*?stroke-dasharray:/);
-  assert.match(css, /\.component-graph__line\s*\{[\s\S]*?stroke-dasharray:\s*none/);
-  assert.match(css, /stroke-dashoffset 2050ms/);
-  assert.match(css, /component-graph__state-bar[\s\S]*?transition:[^;]*opacity 720ms[^;]*transform 880ms/);
+  assert.match(css, /\.component-graph__line\s*\{[\s\S]*?vector-effect:\s*non-scaling-stroke/);
+  assert.match(css, /component-graph__line-reveal[^}]*transition:\s*transform 1640ms/);
+  assert.match(css, /component-graph__area[\s\S]*?opacity 300ms[^;]*1880ms[^;]*transform 300ms[^;]*1880ms/);
+  assert.match(css, /component-graph__state-bar[\s\S]*?transition:[^;]*opacity 576ms[^;]*transform 704ms/);
   assert.match(css, /component-graph__rail-stop--top[^{]*\{[^}]*stop-opacity:\s*\.98/);
   assert.match(css, /component-graph__rail-stop--bottom[^{]*\{[^}]*stop-opacity:\s*\.58/);
   assert.match(css, /component-graph__state-bar--missing/);

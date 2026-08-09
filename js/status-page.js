@@ -461,11 +461,6 @@
     panel.dataset.chartEntranceToken = String(Number(panel.dataset.chartEntranceToken || 0) + 1);
     delete panel.dataset.chartEntranceStarted;
     panel.classList.remove("is-chart-primed", "is-chart-entering", "is-chart-visible");
-    selectAll(".component-graph__line", panel).forEach((path) => {
-      path.style.removeProperty("--chart-draw-length");
-      path.style.removeProperty("stroke-dasharray");
-      path.style.removeProperty("stroke-dashoffset");
-    });
   };
 
   const primeChartEntrance = (panel) => {
@@ -477,15 +472,10 @@
       return null;
     }
     panel.dataset.chartMotion = "animated";
-    selectAll(".component-graph__line", panel).forEach((path) => {
-      const length = Math.max(1, path.getTotalLength());
-      path.style.setProperty("--chart-draw-length", `${length}px`);
-      path.style.strokeDasharray = `${length}px`;
-    });
     const railBars = selectAll(".component-graph__state-bar", panel);
     railBars.forEach((bar, index) => {
       const progress = railBars.length <= 1 ? 0 : index / (railBars.length - 1);
-      bar.style.setProperty("--rail-reveal-delay", `${Math.round(progress * 320)}ms`);
+      bar.style.setProperty("--rail-reveal-delay", `${Math.round(progress * 256)}ms`);
     });
     panel.classList.add("is-chart-primed");
     return token;
@@ -509,13 +499,8 @@
     panel._chartEntranceTimer = window.setTimeout(() => {
       if (panel.dataset.chartEntranceToken !== token) return;
       panel.classList.remove("is-chart-primed", "is-chart-entering");
-      selectAll(".component-graph__line", panel).forEach((path) => {
-        path.style.removeProperty("--chart-draw-length");
-        path.style.removeProperty("stroke-dasharray");
-        path.style.removeProperty("stroke-dashoffset");
-      });
       panel._chartEntranceTimer = null;
-    }, 3100);
+    }, 2480);
   };
 
   const queueChartEntrance = (panel) => {
@@ -717,7 +702,33 @@
       stop.setAttribute("offset", offset);
       areaGradient.appendChild(stop);
     });
-    defs.append(lineGradient, areaGradient);
+    const lineRevealGradient = svgNode("linearGradient");
+    lineRevealGradient.id = `${definitionId}-line-reveal-gradient`;
+    lineRevealGradient.setAttribute("x1", "0%");
+    lineRevealGradient.setAttribute("x2", "100%");
+    [["0%", "1"], ["92%", "1"], ["100%", "0"]].forEach(([offset, opacity]) => {
+      const stop = svgNode("stop");
+      stop.setAttribute("offset", offset);
+      stop.setAttribute("stop-color", "white");
+      stop.setAttribute("stop-opacity", opacity);
+      lineRevealGradient.appendChild(stop);
+    });
+    const lineRevealMask = svgNode("mask");
+    lineRevealMask.id = `${definitionId}-line-reveal-mask`;
+    lineRevealMask.setAttribute("maskUnits", "userSpaceOnUse");
+    lineRevealMask.setAttribute("mask-type", "luminance");
+    lineRevealMask.setAttribute("x", String(CHART_VIEW.left - 64));
+    lineRevealMask.setAttribute("y", String(CHART_VIEW.top - 24));
+    lineRevealMask.setAttribute("width", String(CHART_VIEW.right - CHART_VIEW.left + 160));
+    lineRevealMask.setAttribute("height", String(CHART_VIEW.bottom - CHART_VIEW.top + 48));
+    const lineReveal = svgNode("rect", "component-graph__line-reveal");
+    lineReveal.setAttribute("x", String(CHART_VIEW.left - 64));
+    lineReveal.setAttribute("y", String(CHART_VIEW.top - 24));
+    lineReveal.setAttribute("width", String(CHART_VIEW.right - CHART_VIEW.left + 160));
+    lineReveal.setAttribute("height", String(CHART_VIEW.bottom - CHART_VIEW.top + 48));
+    lineReveal.setAttribute("fill", `url(#${lineRevealGradient.id})`);
+    lineRevealMask.appendChild(lineReveal);
+    defs.append(lineGradient, areaGradient, lineRevealGradient, lineRevealMask);
     svg.appendChild(defs);
 
     const plotWidth = CHART_VIEW.right - CHART_VIEW.left;
@@ -890,6 +901,7 @@
           const path = svgNode("path", "component-graph__line");
           path.setAttribute("d", pathData);
           path.setAttribute("stroke", `url(#${definitionId}-line)`);
+          path.setAttribute("mask", `url(#${lineRevealMask.id})`);
           svg.appendChild(path);
         }
       });

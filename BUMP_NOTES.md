@@ -6,6 +6,20 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-10 - Status graph trailing-edge animation repair
+
+#### Technical notes
+
+- Reproduced the remaining trailing-section defect frame by frame in a headed Chromium session, then reproduced it again on a 24H-to-7D toggle. `getTotalLength()` reports SVG user-space units, but the entrance code appended CSS `px`; once the responsive viewBox scaled to the on-screen graph, the dash covered only part of the measured path. Timer cleanup then removed the undersized dash and made the missing last section snap into view. The full-width area fill exposed that missing trailing geometry before cleanup, making the defect more obvious.
+- Cleanup-boundary screenshots proved that both unitless dash values and rendered-length dash sampling still left a small terminal downstroke difference under Chromium's non-scaling-stroke pipeline. The final repair therefore removes dash clipping from the entrance entirely. Every measured line now uses a `userSpaceOnUse` SVG mask with a feathered leading edge, 64 units of left reserve, and enough right-side reserve for the gradient to become fully opaque beyond the latest point. The mask moves left-to-right in viewBox space, remains complete after entrance, and has no cleanup mutation capable of snapping missing line geometry into view.
+- Reduced the measured line duration from 2050ms to 1640ms and proportionally reduced the plot, observability rail, gap, legend, current-point, and tip choreography. The fill begins only after the 1840ms line transition has completed, and the complete entrance settles at roughly 2.2 seconds with a bounded 2480ms cleanup. Range changes retain their outgoing fade and replay the repaired entrance against newly calculated real geometry; reduced motion still renders the final un-clipped composition immediately.
+- Advanced only the bounded `/status` stylesheet/controller presentation cache key and added focused coverage for the responsive mask geometry, feather stops, explicit absence of dash cleanup, new line/fill timing, and shortened rail motion. No dependency, file, route, API, component ID, canonical version/build value, Runtime/Auth source, Atlassian configuration, Cloudflare configuration, deployment, or monitoring data was added, removed, or changed.
+- Validation passed all 25 focused Status Center tests and all 132 direct Public Node tests, JavaScript syntax, `git diff --check`, and headed Chromium rendering with zero final console errors. A clearly labelled deterministic diagnostics fixture exercised the exact long 24H terminal-spike shape plus a 24H-to-7D-to-24H replay because the deployed diagnostics projection was unavailable during the run. Frame captures proved the 844-unit mask travelled from `translateX(-100%)` to `none`, the fill stayed at zero until the line completed, and line-isolated plot captures immediately before and after entrance-class cleanup produced byte-identical 163,986-byte PNGs. A 390x844 animated run retained a 390px viewport with 383px document/body widths, while reduced motion returned `chartMotion=reduced`, a complete mask, full area opacity, and no transform. The local headed browser, deterministic routes, screenshots, and temporary HTTP server were removed after validation; no deployed Pages or Worker claim is made.
+
+#### Human-readable notes
+
+The status graph now draws its line cleanly through the final section before the gradient fill settles underneath it. The last point no longer clips or snaps into place, and the complete entrance runs about 20% faster on both first view and every time-range change.
+
 ### 2026-08-10 - In-view graph motion, observability rail, and incident tick correction
 
 #### Technical notes
