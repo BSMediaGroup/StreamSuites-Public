@@ -137,6 +137,9 @@ test("component cards use meaningful icons, truthful source states, expansion, a
   assert.match(page, /event\.key !== "Escape"/);
   assert.match(html, /Atlassian-only operation/);
   assert.match(html, /Studio Room Readiness/);
+  assert.match(html, /data-diagnostic-core-history[^>]*aria-controls="component-tb383cr2p92n-details"/);
+  assert.match(page, /View 24H \/ 7D \/ 30D history/);
+  assert.match(page, /initMetricHistory/);
   assert.match(css, /\.component-card\.is-expanded/);
   assert.match(css, /\.component-card\s*\{[\s\S]*?min-height:\s*248px;/);
   assert.match(css, /\.component-detail-rail__summary/);
@@ -174,6 +177,17 @@ test("24H, 7D, and 30D models retain exact selected time domains", () => {
     assert.equal(model.endTime - model.startTime, duration, range);
     assert.equal(model.rangeKey, range);
   }
+});
+
+test("selected-range time before the first real bucket is exposed as unavailable history", () => {
+  const helpers = loadChartHelpers();
+  const model = helpers.buildChartModel([observation(0, 100), observation(5, 110)], "24h");
+  assert.ok(model.leadingGap);
+  assert.equal(model.leadingGap.kind, "leading");
+  assert.equal(model.leadingGap.fromTime, model.startTime);
+  assert.equal(model.leadingGap.to, model.observations[0]);
+  assert.equal(model.leadingGap.toX, model.observations[0].x);
+  assert.ok(model.leadingGap.durationMs > 23 * 60 * 60 * 1000);
 });
 
 test("single and two-point latency history stays sparse without manufactured geometry", () => {
@@ -261,6 +275,7 @@ test("premium SVG treatment remains dependency-free, range-accessible, and reduc
   assert.match(page, /linearGradient/);
   assert.match(page, /component-graph__area/);
   assert.match(page, /component-graph__gap-band/);
+  assert.match(page, /component-graph__gap-label/);
   assert.match(page, /component-graph__gap-bridge/);
   assert.match(page, /bridge\.setAttribute\("data-unmeasured", "true"\)/);
   assert.match(page, /No observations are included in this bridge/);
@@ -269,7 +284,9 @@ test("premium SVG treatment remains dependency-free, range-accessible, and reduc
   assert.ok(measuredSegmentRenderer >= 0 && gapBridgeRenderer > measuredSegmentRenderer);
   assert.match(page.slice(measuredSegmentRenderer, gapBridgeRenderer), /component-graph__area/);
   assert.doesNotMatch(page.slice(gapBridgeRenderer), /component-graph__gap-bridge[\s\S]*?component-graph__area/);
-  assert.match(page, /pathLength", "1"/);
+  assert.match(page, /path\.getTotalLength\(\)/);
+  assert.match(page, /--chart-draw-length/);
+  assert.match(page, /is-chart-primed/);
   assert.match(page, /component-graph__point is-current/);
   assert.match(page, /component-graph__crosshair/);
   assert.match(page, /component-graph__tooltip/);
@@ -280,6 +297,8 @@ test("premium SVG treatment remains dependency-free, range-accessible, and reduc
   assert.match(page, /chartMotionReduced\(\)/);
   assert.match(page, /panel\.dataset\.chartMotion = "reduced"/);
   assert.match(page, /Core API response time/);
+  assert.match(page, /CORE_API_COMPONENT_ID\s*=\s*"tb383cr2p92n"/);
+  assert.doesNotMatch(page, /CORE_API_COMPONENT_ID\s*=\s*"0xm0hsy3byjj"/);
   assert.match(page, /Range min/);
   assert.match(page, /Observed average/);
   assert.match(page, /Range max/);
@@ -290,7 +309,10 @@ test("premium SVG treatment remains dependency-free, range-accessible, and reduc
   assert.match(page, /areaGradient\.setAttribute\("x1", String\(CHART_VIEW\.left\)\)[\s\S]*?areaGradient\.setAttribute\("x2", String\(CHART_VIEW\.left\)\)[\s\S]*?areaGradient\.setAttribute\("y1", String\(CHART_VIEW\.top\)\)[\s\S]*?areaGradient\.setAttribute\("y2", String\(CHART_VIEW\.bottom\)\)/);
   assert.match(css, /--status-chart-gap:\s*#8091a5/);
   assert.match(css, /\.component-graph__gap-bridge\s*\{[\s\S]*?stroke-dasharray:/);
-  assert.match(css, /stroke-dasharray:\s*1/);
+  assert.match(css, /\.component-graph__line\s*\{[\s\S]*?stroke-dasharray:\s*none/);
+  assert.match(css, /stroke-dashoffset 2050ms/);
+  assert.match(css, /\.component-graph__stop--fill-top[^\n]*stop-opacity:\s*\.34/);
+  assert.match(css, /\.component-graph__stop--fill-tail[^\n]*stop-opacity:\s*\.11/);
   assert.match(css, /chart-tip-settle/);
   assert.match(css, /\.component-graph__area \{ opacity: 1 !important; transform: none !important; \}/);
   assert.doesNotMatch(`${page}\n${html}`, /Chart\.js|\bd3\.|ApexCharts|ECharts|Highcharts|Recharts/);
@@ -338,6 +360,7 @@ test("incident and maintenance empty states use the local tick while real-event 
   assert.match(html, /data-operation-panel="incident"/);
   assert.match(html, /data-operation-panel="maintenance"/);
   assert.match(css, /\.operation-empty__mark::before[\s\S]*?\/assets\/icons\/ui\/tick\.svg/);
+  assert.match(css, /\.panel-icon--incident::before[\s\S]*?transform:\s*translateY\(1\.5px\)/);
   assert.match(page, /else incidents\.forEach\(\(incident\) => incidentRoot\.appendChild\(createOperationItem\(incident, "incident"\)\)\)/);
   assert.match(page, /else maintenances\.forEach\(\(maintenance\) => maintenanceRoot\.appendChild\(createOperationItem\(maintenance, "maintenance"\)\)\)/);
   assert.match(page, /item\.incident_updates/);
@@ -359,6 +382,12 @@ test("group summaries and source labels expose the locked monitoring taxonomy", 
   assert.match(page, /Manual \/ deferred monitor/);
   assert.match(css, /\.component-group__counts/);
   assert.match(css, /--group-accent/);
+  const cardSurface = css.slice(css.indexOf(".component-card {"), css.indexOf(".component-card__top"));
+  assert.doesNotMatch(cardSurface, /--group-accent/);
+  assert.match(cardSurface, /border:\s*1px solid var\(--line\)/);
+  assert.match(cardSurface, /background:\s*rgba\(8, 15, 23, \.78\)/);
+  const graphSurface = css.slice(css.indexOf(".component-graph {"), css.indexOf(".component-state {"));
+  assert.doesNotMatch(graphSurface, /--group-accent/);
   assert.match(css, /\.component-card__footer/);
 });
 
@@ -395,6 +424,8 @@ test("public widget implements the approved idle, hover, detailed, and footer-aw
   assert.match(script, /Awaiting a measured Core API observation/);
   assert.match(script, /Number\(coreValue\) >= 0/);
   assert.match(script, /No genuine Studio room readiness observation is available/);
+  assert.match(script, /Historical ranges are available in the Status Center/);
+  assert.match(script, /Historical data begins only after that transaction exists/);
   assert.match(script, /Sanitized Runtime\/Auth projection/);
   assert.match(css, /\.ss-status-widget__metrics-grid/);
   assert.match(css, /\.ss-status-widget__metric\[data-state="deferred"\]/);

@@ -67,7 +67,7 @@
     edge: { accent: "#987cff", role: "Delivery and edge services." },
     dependencies: { accent: "#f1bc62", role: "External delivery, email, payment, and Git operations." },
   });
-  const CORE_API_COMPONENT_ID = "0xm0hsy3byjj";
+  const CORE_API_COMPONENT_ID = "tb383cr2p92n";
 
   const select = (selector, root = document) => root.querySelector(selector);
   const selectAll = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -203,6 +203,11 @@
     setText("[data-diagnostic-core-meta]", coreMetric?.value_ms == null
       ? "No real watchdog latency sample is available."
       : `${coreBuckets.length} plotted five-minute buckets from ${coreMetric.history?.["24h"]?.sample_count || 0} raw probe observations · ${snapshot.diagnosticsStale ? "stale" : "fresh"} · ${trend}`);
+    const coreHistoryButton = select("[data-diagnostic-core-history]");
+    if (coreHistoryButton) {
+      coreHistoryButton.disabled = coreBuckets.length === 0;
+      coreHistoryButton.textContent = coreBuckets.length ? "View 24H / 7D / 30D history ↓" : "History unavailable";
+    }
     setText("[data-diagnostic-room-value]", "Deferred");
     const diagnosticSource = select("[data-diagnostic-source]");
     if (diagnosticSource) {
@@ -319,6 +324,17 @@
     const domainMax = observedMax == null ? null : Math.max(domainMin + 1, observedMax + padding);
     const segments = [];
     const gaps = [];
+    const firstObservation = observations[0] || null;
+    const leadingGap = firstObservation && firstObservation.time - startTime > rangeMeta.maxGapMs
+      ? {
+          kind: "leading",
+          fromTime: startTime,
+          to: firstObservation,
+          durationMs: firstObservation.time - startTime,
+          fromX: CHART_VIEW.left,
+          toX: firstObservation.x,
+        }
+      : null;
     let segment = [];
     let previousMeasured = null;
     let explicitUnmeasured = false;
@@ -356,6 +372,7 @@
       latencyPoints,
       segments,
       gaps,
+      leadingGap,
       startTime,
       endTime,
       domainMin,
@@ -418,16 +435,27 @@
   const chartFrame = (callback) => (window.requestAnimationFrame || ((next) => window.setTimeout(next, 0)))(callback);
 
   const activateChartEntrance = (panel) => {
-    panel.classList.remove("is-chart-entering", "is-chart-visible");
+    panel.classList.remove("is-chart-primed", "is-chart-entering", "is-chart-visible");
     if (chartMotionReduced()) {
       panel.dataset.chartMotion = "reduced";
       panel.classList.add("is-chart-visible");
       return;
     }
     panel.dataset.chartMotion = "animated";
-    panel.classList.add("is-chart-entering");
-    chartFrame(() => chartFrame(() => panel.classList.add("is-chart-visible")));
-    window.setTimeout(() => panel.classList.remove("is-chart-entering"), 1050);
+    selectAll(".component-graph__line", panel).forEach((path) => {
+      const length = Math.max(1, path.getTotalLength());
+      path.style.setProperty("--chart-draw-length", `${length}px`);
+    });
+    panel.classList.add("is-chart-primed");
+    chartFrame(() => {
+      panel.classList.add("is-chart-entering");
+      panel.classList.remove("is-chart-primed");
+      chartFrame(() => panel.classList.add("is-chart-visible"));
+    });
+    window.setTimeout(() => {
+      panel.classList.remove("is-chart-primed", "is-chart-entering");
+      selectAll(".component-graph__line", panel).forEach((path) => path.style.removeProperty("--chart-draw-length"));
+    }, 2900);
   };
 
   window.StreamSuitesStatusChartHelpers = Object.freeze({
@@ -456,7 +484,7 @@
     const available = ranges.filter((key) => (diagnostic?.history?.[key]?.buckets || []).length);
     const activeRange = available.includes(requestedRange) ? requestedRange : available[0];
     const heading = node("div", "component-graph__heading");
-    heading.append(node("span", "", options.isCoreApi ? "Primary latency signal" : "Direct analytics"), node("h5", "", options.isCoreApi ? "Core API response time" : `${options.componentName || "Component"} history`));
+    heading.append(node("span", "", options.isCoreApi ? "Atlassian custom metric" : "Direct analytics"), node("h5", "", options.isCoreApi ? "Core API response time" : `${options.componentName || "Component"} history`));
     const header = node("div", "component-graph__header");
     header.appendChild(heading);
     panel.appendChild(header);
@@ -516,8 +544,11 @@
     panel.dataset.chartType = model.graphType;
     const summary = node("p", "component-graph__summary");
     const rawObservationCount = Number.isFinite(range.sample_count) ? Number(range.sample_count) : 0;
-    const gapLabel = `${model.gaps.length} unmeasured ${model.gaps.length === 1 ? "interval" : "intervals"}`;
-    summary.textContent = `${activeRange.toUpperCase()} watchdog-observed availability: ${range.availability_percent == null ? "Unavailable" : `${range.availability_percent}%`}. ${model.plottedBucketCount} plotted ${model.rangeMeta.bucketLabel} from ${rawObservationCount} raw probe observations; ${gapLabel}.`;
+    const gapLabel = `${model.gaps.length} internal unmeasured ${model.gaps.length === 1 ? "interval" : "intervals"}`;
+    const leadingHistoryLabel = model.leadingGap
+      ? ` Earlier selected-range time predates the available history by ${formatGapDuration(model.leadingGap.durationMs)}.`
+      : "";
+    summary.textContent = `${activeRange.toUpperCase()} watchdog-observed availability: ${range.availability_percent == null ? "Unavailable" : `${range.availability_percent}%`}. ${model.plottedBucketCount} plotted ${model.rangeMeta.bucketLabel} from ${rawObservationCount} raw probe observations; ${gapLabel}.${leadingHistoryLabel}`;
     summary.setAttribute("role", "status");
     panel.appendChild(summary);
 
@@ -563,7 +594,7 @@
     svg.setAttribute("role", "img");
     svg.setAttribute("aria-label", summary.textContent);
     const description = svgNode("desc");
-    description.textContent = `${model.plottedBucketCount} watchdog-observed buckets. ${model.plottedMeasurementCount} contain measured latency. ${model.gaps.length} unmeasured intervals use neutral dashed bridges with no measured fill.`;
+    description.textContent = `${model.plottedBucketCount} watchdog-observed buckets. ${model.plottedMeasurementCount} contain measured latency. ${model.gaps.length} internal unmeasured intervals use neutral dashed bridges with no measured fill.${model.leadingGap ? ` The first ${formatGapDuration(model.leadingGap.durationMs)} of the selected range has no available history.` : ""}`;
     svg.appendChild(description);
     const definitionId = `status-chart-${String(diagnostic.component_id || "component").replace(/[^a-z0-9_-]/gi, "")}-${++chartSequence}`;
     const defs = svgNode("defs");
@@ -584,7 +615,7 @@
     areaGradient.setAttribute("x2", String(CHART_VIEW.left));
     areaGradient.setAttribute("y1", String(CHART_VIEW.top));
     areaGradient.setAttribute("y2", String(CHART_VIEW.bottom));
-    [["0%", "component-graph__stop component-graph__stop--fill-top"], ["58%", "component-graph__stop component-graph__stop--fill-low"], ["100%", "component-graph__stop component-graph__stop--fill-bottom"]].forEach(([offset, className]) => {
+    [["0%", "component-graph__stop component-graph__stop--fill-top"], ["58%", "component-graph__stop component-graph__stop--fill-low"], ["84%", "component-graph__stop component-graph__stop--fill-tail"], ["100%", "component-graph__stop component-graph__stop--fill-bottom"]].forEach(([offset, className]) => {
       const stop = svgNode("stop", className);
       stop.setAttribute("offset", offset);
       areaGradient.appendChild(stop);
@@ -657,17 +688,42 @@
       availabilityLabel.textContent = "OBSERVED AVAILABILITY";
       svg.append(availabilityTrack, availabilityLabel);
     }
-    model.gaps.forEach((gap) => {
+    const unobservedBands = [
+      ...(model.leadingGap ? [{
+        ...model.leadingGap,
+        label: `No earlier history · ${formatGapDuration(model.leadingGap.durationMs)}`,
+        title: `No watchdog history is available from ${formatAbsolute(new Date(model.leadingGap.fromTime).toISOString())} until the first observation at ${formatAbsolute(model.leadingGap.to.at)}.`,
+      }] : []),
+      ...model.gaps.map((gap) => ({
+        ...gap,
+        kind: "internal",
+        fromX: gap.from.x,
+        toX: gap.to.x,
+        label: `No observations · ${formatGapDuration(gap.durationMs)}`,
+        title: `No observations for ${formatGapDuration(gap.durationMs)} between ${formatAbsolute(gap.from.at)} and ${formatAbsolute(gap.to.at)}.`,
+      })),
+    ];
+    unobservedBands.forEach((gap) => {
       const band = svgNode("rect", "component-graph__gap-band");
-      band.setAttribute("x", String(gap.from.x));
+      band.setAttribute("x", String(gap.fromX));
       band.setAttribute("y", String(CHART_VIEW.top));
-      band.setAttribute("width", String(Math.max(1, gap.to.x - gap.from.x)));
+      band.setAttribute("width", String(Math.max(1, gap.toX - gap.fromX)));
       band.setAttribute("height", String(CHART_VIEW.bottom - CHART_VIEW.top));
       band.setAttribute("data-unmeasured", "true");
+      band.setAttribute("data-gap-kind", gap.kind);
       const title = svgNode("title");
-      title.textContent = `No observations for ${formatGapDuration(gap.durationMs)} between ${formatAbsolute(gap.from.at)} and ${formatAbsolute(gap.to.at)}.`;
+      title.textContent = gap.title;
       band.appendChild(title);
       svg.appendChild(band);
+      if (gap.toX - gap.fromX >= 82) {
+        const label = svgNode("text", "component-graph__gap-label");
+        label.setAttribute("x", String((gap.fromX + gap.toX) / 2));
+        label.setAttribute("y", String(CHART_VIEW.top + 15));
+        label.setAttribute("text-anchor", "middle");
+        label.setAttribute("data-gap-kind", gap.kind);
+        label.textContent = gap.label;
+        svg.appendChild(label);
+      }
     });
     model.observations.forEach((observation) => {
       const bar = svgNode("rect", "component-graph__state-bar");
@@ -696,7 +752,6 @@
         if (segment.length >= 2) {
           const path = svgNode("path", "component-graph__line");
           path.setAttribute("d", pathData);
-          path.setAttribute("pathLength", "1");
           path.setAttribute("stroke", `url(#${definitionId}-line)`);
           svg.appendChild(path);
         }
@@ -808,7 +863,9 @@
 
     const legend = node("div", "component-graph__legend");
     if (model.graphType === "latency") legend.appendChild(node("span", "component-graph__legend-latency", "Measured latency"));
-    legend.append(node("span", "component-graph__legend-state", "Observed availability rail"), node("span", "component-graph__legend-gap", "Dashed bridge = unmeasured interval"));
+    legend.appendChild(node("span", "component-graph__legend-state", "Observed availability rail"));
+    if (model.leadingGap || model.gaps.length) legend.appendChild(node("span", "component-graph__legend-unobserved", "Shaded span = no observations"));
+    if (model.gaps.length) legend.appendChild(node("span", "component-graph__legend-gap", "Dashed bridge = internal unmeasured interval"));
     panel.appendChild(legend);
     if (options.transition === "range" && !chartMotionReduced()) {
       panel.classList.add("is-range-entering");
@@ -1249,11 +1306,29 @@
     });
   };
 
+  const initMetricHistory = () => {
+    const button = select("[data-diagnostic-core-history]");
+    button?.addEventListener("click", () => {
+      if (!state.snapshot) return;
+      state.search = "";
+      state.filter = "all";
+      const search = select("[data-component-search]");
+      if (search) search.value = "";
+      selectAll("[data-status-filter]").forEach((filter) => filter.classList.toggle("is-active", filter.dataset.statusFilter === "all"));
+      renderComponents(state.snapshot);
+      const card = select(`[data-component-id="${CORE_API_COMPONENT_ID}"]`);
+      const toggle = card ? select(".component-card__toggle", card) : null;
+      if (toggle?.getAttribute("aria-expanded") !== "true") toggle?.click();
+      card?.scrollIntoView({ behavior: chartMotionReduced() ? "auto" : "smooth", block: "start" });
+    });
+  };
+
   const init = () => {
     initNavigation();
     initFilters();
     initReveals();
     initRefresh();
+    initMetricHistory();
     store.subscribe(render);
     store.start();
   };

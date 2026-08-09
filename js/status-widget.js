@@ -477,14 +477,14 @@
           title: "Core API response time",
           value: coreObserved ? `${Math.round(Number(coreValue))} ms` : "Unavailable",
           state: coreObserved ? (stale ? "stale" : "observed") : "unavailable",
-          detail: coreObserved ? `Measured ${formatRelative(core.last_checked)}.` : core?.state === "awaiting_measured_data" ? "Awaiting a measured Core API observation." : "No measured Core API value is available.",
+          detail: coreObserved ? `Measured ${formatRelative(core.last_checked)}. Historical ranges are available in the Status Center.` : core?.state === "awaiting_measured_data" ? "Awaiting a measured Core API observation." : "No measured Core API value is available.",
         }),
         createCard({
           key: "studio-room-readiness",
           title: "Studio Room Readiness",
           value: studioDeferred ? "Deferred" : studioObserved ? String(studioValue) : "Unavailable",
           state: studioDeferred ? "deferred" : studioObserved ? (stale ? "stale" : "observed") : "unavailable",
-          detail: studioDeferred ? truncate(studio.reason || "A genuine Studio room readiness transaction is not available yet.", 170) : studioObserved ? "Latest measured readiness value." : "No genuine Studio room readiness observation is available.",
+          detail: studioDeferred ? truncate(`${studio.reason || "A genuine Studio room readiness transaction is not available yet."} Historical data begins only after that transaction exists.`, 210) : studioObserved ? "Latest measured readiness value." : "No genuine Studio room readiness observation is available.",
         })
       );
 
