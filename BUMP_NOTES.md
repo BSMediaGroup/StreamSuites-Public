@@ -6,6 +6,23 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-09 - Premium expandable status analytics graphs
+
+#### Technical notes
+
+- Replaced the basic straight-segment component-history presentation with a dependency-free native SVG/CSS/JavaScript analytics renderer while retaining the existing `/status` cards, ranges, IDs, endpoints, official/direct source hierarchy, and real-watchdog-history-only contract. No Chart.js, D3, ApexCharts, ECharts, Highcharts, Recharts, package, lockfile, route, Runtime/Auth source, Statuspage topology, widget source, version, or build metadata changed.
+- Added dynamically scaled latency graphs with monotone cubic curves only between adjacent real measurements, restrained group-aware cyan/blue/violet gradient strokes, translucent baseline area fills for three-or-more-point real segments, professional steel-blue grids/axes, compact latest/freshness/availability/sample summaries, and real selected-range min/observed-average/max values only when at least three measured buckets exist. The Core API response-time card receives the full metric rail, selected-range change, current point, last successful observation, and graph freshness without invented quality thresholds.
+- Added a first-expansion sequence that reveals the frame quickly, grows each real area from its baseline, draws each SVG line through `stroke-dasharray`/`stroke-dashoffset`, settles the current point, and runs one restrained final-tip glow. Dense mature histories keep their smooth line and current point instead of painting a dot on every bucket; sparse histories retain every actual point. Missing timestamp intervals and explicit null-latency buckets split both line and fill segments, and zero remains a measured value rather than a fallback.
+- Added controlled 24H/7D/30D range transitions with a short outgoing fade, recalculated geometry, a short incoming settle, preserved `aria-pressed` state, restored focus, and Arrow/Home/End keyboard navigation. Range changes hold chart depth to avoid layout jumps and do not replay the longer initial draw sequence.
+- Added fine-pointer nearest-observation inspection with a restrained vertical guide, emphasized real observation, in-bounds tooltip, exact timestamp, measured latency when present, state label, and watchdog availability. The visible latest-value callout remains the primary mobile/touch presentation, while only the current observation is keyboard-focusable so mature histories do not create hundreds of tab stops.
+- Added a dedicated state-history renderer for real watchdog observations that have no meaningful latency. Its continuous low-profile micro-bars use operational, degraded, partial, major, maintenance, and unknown colours without manufacturing a response-time series. Deferred/manual cards use an intentional monitoring-boundary panel; Atlassian third-party cards use a provider-owned panel; both retain official state and render no fake watchdog graph. Studio Room Readiness still says `Deferred` and explicitly explains that no genuine Studio/room/media-readiness transaction exists.
+- Refined graph depth, group accents, summary rail, responsive density, mobile axis labels, tooltip containment, state legend, and sparse-history treatment. `History is still accumulating` includes received bucket count, one point remains a point, two points may use only their real direct connection, and missing periods remain open. Reduced motion bypasses area growth, line draw, moving/glowing tip, and range choreography and renders the final graph immediately.
+- Extended focused regression coverage for real-observation preservation, null-versus-measured-zero handling, one/two-point geometry, explicit and timestamp-derived gaps, exact 24H/7D/30D domains, state-only history, real tooltip provenance, gradient/area/current-point primitives, selected-range accessibility, reduced-motion bypass, deferred/vendor no-graph states, widget exclusion on `/status`, and the no-chart-dependency boundary.
+
+#### Human-readable notes
+
+Component diagnostics now present accumulated watchdog history through a significantly more polished analytics-style experience: smooth restrained curves, real area depth, clear current values, responsive inspection, purposeful status timelines, and honest sparse or missing-data states. The upgrade adds visual quality without inventing history or changing which source is authoritative.
+
 ### 2026-08-09 - Final Status Center component and graph polish
 
 #### Technical notes

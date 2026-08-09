@@ -30,6 +30,21 @@
   --maintenance: #78b9ff;
   --unknown: #8a96a3;
 
+  --chart-grid: rgba(126, 168, 210, .105);
+  --chart-grid-vertical: rgba(126, 168, 210, .055);
+  --chart-axis: #718399;
+  --chart-frame: rgba(132, 174, 218, .16);
+  --chart-surface: rgba(3, 9, 15, .94);
+  --chart-tooltip: rgba(6, 13, 21, .97);
+  --chart-crosshair: rgba(171, 211, 247, .42);
+  --chart-glow: rgba(105, 196, 255, .22);
+  --chart-state-operational: var(--green);
+  --chart-state-degraded: var(--amber);
+  --chart-state-partial: var(--orange);
+  --chart-state-major: var(--red);
+  --chart-state-maintenance: var(--maintenance);
+  --chart-state-unknown: var(--unknown);
+
   --state-color: var(--unknown);
   --shell: min(1240px, calc(100vw - 44px));
   --header-height: 66px;
@@ -1499,7 +1514,6 @@ main > section:not(.status-hero) {
   overflow-wrap: anywhere;
 }
 
-.component-empty-state,
 .component-incident {
   padding: 14px;
   border: 1px dashed var(--line-strong);
@@ -1510,86 +1524,367 @@ main > section:not(.status-hero) {
   text-transform: none !important;
 }
 
-.component-empty-state::before {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  margin-right: 9px;
+.component-intentional-state {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  padding: 19px;
+  border: 1px solid var(--line-strong);
+  border-radius: 13px;
+  background:
+    radial-gradient(circle at 96% 4%, color-mix(in srgb, var(--component-color) 9%, transparent), transparent 42%),
+    linear-gradient(135deg, rgba(255,255,255,.025), rgba(0,0,0,.14));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 18px 44px rgba(0,0,0,.14);
+}
+
+.component-intentional-state[data-kind="provider"] { --intentional-color: #d8ad65; }
+.component-intentional-state[data-kind="deferred"] { --intentional-color: #8fa1b4; }
+
+.component-intentional-state__signal {
+  width: 11px;
+  height: 11px;
+  margin-top: 5px;
+  border: 2px solid color-mix(in srgb, var(--intentional-color) 72%, #fff);
   border-radius: 50%;
-  background: var(--component-color);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--component-color) 40%, transparent);
-  content: "";
+  background: color-mix(in srgb, var(--intentional-color) 20%, transparent);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--intentional-color) 7%, transparent), 0 0 18px color-mix(in srgb, var(--intentional-color) 18%, transparent);
+}
+
+.component-intentional-state__copy {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+
+.component-intentional-state__copy span,
+.component-intentional-state__copy small {
+  color: var(--intentional-color);
+  font: 8px/1.45 var(--font-mono);
+  letter-spacing: .075em;
+  text-transform: uppercase;
+}
+
+.component-intentional-state__copy strong {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.component-intentional-state__copy p {
+  margin: 0;
+  color: var(--text-2);
+  font: 11px/1.62 var(--font-body);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.component-intentional-state__copy small {
+  color: var(--muted);
+  letter-spacing: .025em;
+  text-transform: none;
 }
 
 .component-graph {
+  --chart-line-start: color-mix(in srgb, var(--group-accent, var(--blue)) 78%, var(--blue));
+  --chart-line-mid: color-mix(in srgb, var(--group-accent, var(--blue-bright)) 38%, var(--blue-bright));
+  --chart-line-end: color-mix(in srgb, var(--group-accent, var(--violet)) 52%, var(--violet));
   min-width: 0;
+  min-height: 438px;
+  position: relative;
   overflow: hidden;
-  padding: 15px;
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;
-  background: #060d14;
+  padding: 20px;
+  border: 1px solid var(--chart-frame);
+  border-radius: 15px;
+  background:
+    linear-gradient(var(--chart-grid-vertical) 1px, transparent 1px),
+    linear-gradient(90deg, var(--chart-grid-vertical) 1px, transparent 1px),
+    radial-gradient(circle at 96% 2%, color-mix(in srgb, var(--group-accent, var(--blue)) 11%, transparent), transparent 31%),
+    linear-gradient(148deg, rgba(255,255,255,.025), transparent 37%),
+    var(--chart-surface);
+  background-size: 34px 34px, 34px 34px, auto, auto, auto;
+  box-shadow: 0 28px 70px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.05), inset 0 0 44px rgba(0,0,0,.18);
+  isolation: isolate;
+}
+
+.component-graph[data-chart-type="state"] { min-height: 408px; }
+
+.component-graph::before {
+  position: absolute;
+  z-index: -1;
+  top: -80px;
+  right: -90px;
+  width: 260px;
+  height: 220px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--group-accent, var(--blue)) 7%, transparent);
+  filter: blur(42px);
+  content: "";
+}
+
+.component-graph::after {
+  position: absolute;
+  top: 0;
+  right: 8%;
+  left: 8%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--group-accent, var(--blue)) 44%, transparent), transparent);
+  content: "";
+}
+
+.component-graph > * { position: relative; z-index: 1; }
+
+.component-graph__header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: start;
+}
+
+.component-graph__heading {
+  display: grid;
+  gap: 5px;
+}
+
+.component-graph__heading span {
+  color: var(--group-accent, var(--blue-bright));
+  font: 8px/1.3 var(--font-mono);
+  letter-spacing: .105em;
+  text-transform: uppercase;
+}
+
+.component-graph__heading h5 {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: clamp(17px, 2vw, 22px);
+  font-weight: 600;
+  letter-spacing: -.025em;
 }
 
 .component-graph__toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 16px;
+  align-items: stretch;
+  margin-top: 16px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid rgba(151,183,219,.08);
 }
 
 .component-graph__controls {
   display: flex;
-  gap: 6px;
-  margin-bottom: 0;
+  align-items: center;
+  align-self: start;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid rgba(151,183,219,.1);
+  border-radius: 10px;
+  background: rgba(0,0,0,.2);
 }
 
 .component-graph__controls button {
-  min-width: 48px;
-  min-height: 32px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  min-width: 50px;
+  min-height: 31px;
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: 7px;
   color: var(--muted);
-  background: rgba(255,255,255,.02);
+  background: transparent;
   font: 9px var(--font-mono);
   cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
 }
 
 .component-graph__controls button.is-active {
-  border-color: rgba(88,183,255,.45);
+  border-color: color-mix(in srgb, var(--group-accent, var(--blue)) 34%, transparent);
   color: #fff;
-  background: rgba(88,183,255,.1);
-  box-shadow: inset 0 -2px 0 var(--blue-bright);
+  background: color-mix(in srgb, var(--group-accent, var(--blue)) 12%, transparent);
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--group-accent, var(--blue)) 65%, transparent), 0 0 16px color-mix(in srgb, var(--group-accent, var(--blue)) 7%, transparent);
 }
 
-.component-graph__controls button:focus-visible { outline: 2px solid var(--blue-bright); outline-offset: 2px; }
+.component-graph__controls button:hover:not(:disabled) { color: var(--text); background: rgba(255,255,255,.035); }
+.component-graph__controls button:focus-visible { outline: 2px solid var(--group-accent, var(--blue-bright)); outline-offset: 2px; }
 .component-graph__controls button:disabled { opacity: .35; cursor: not-allowed; }
+
 .component-graph__current {
   display: grid;
+  min-width: 205px;
   justify-items: end;
-  gap: 3px;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--group-accent, var(--blue)) 20%, var(--chart-frame));
+  border-radius: 10px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--group-accent, var(--blue)) 8%, transparent), rgba(0,0,0,.18));
 }
-.component-graph__current span { color: var(--muted); font: 8px var(--font-mono); letter-spacing: .05em; text-transform: uppercase; }
-.component-graph__current strong { color: var(--text); font: 600 15px var(--font-mono); }
-.component-graph__summary { margin-top: 15px !important; color: var(--text-2) !important; text-transform: none !important; }
-.component-graph__sparse { padding: 9px 11px; border-left: 2px solid var(--amber); color: #f0cf8a !important; background: rgba(242,184,75,.045); line-height: 1.55 !important; text-transform: none !important; }
-.component-graph__svg { display: block; width: 100%; min-width: 0; margin-top: 9px; overflow: visible; }
-.component-graph__gridline { stroke: rgba(255,255,255,.065); stroke-width: 1; vector-effect: non-scaling-stroke; }
-.component-graph__axis-label { fill: #6f7c89; font: 8px var(--font-mono); letter-spacing: .03em; }
-.component-graph__svg rect[data-state="operational"] { fill: var(--green); }
-.component-graph__svg rect[data-state="degraded_performance"] { fill: var(--amber); }
-.component-graph__svg rect[data-state="partial_outage"] { fill: var(--orange); }
-.component-graph__svg rect[data-state="major_outage"] { fill: var(--red); }
-.component-graph__svg rect[data-state="unknown"] { fill: var(--unknown); }
-.component-graph__line { fill: none; stroke: var(--blue-bright); stroke-width: 2; vector-effect: non-scaling-stroke; }
-.component-graph__point { fill: #08121d; stroke: var(--blue-bright); stroke-width: 2; vector-effect: non-scaling-stroke; }
-.component-graph__point:focus { outline: none; fill: var(--blue-bright); stroke: #fff; }
-.component-graph__legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 10px; color: var(--muted) !important; font: 8px/1.5 var(--font-mono); text-transform: none !important; }
-.component-graph__legend span::before { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--blue-bright); content: ""; }
-.component-graph__legend-state::before { background: var(--green) !important; }
-.component-graph__legend-gap::before { border: 1px dashed var(--muted); background: transparent !important; }
-.component-graph__empty { display: grid; gap: 7px; margin-top: 14px; padding: 18px; border: 1px dashed var(--line-strong); border-radius: 10px; color: var(--muted); background: rgba(255,255,255,.015); }
+.component-graph__current span { color: var(--muted); font: 8px var(--font-mono); letter-spacing: .065em; text-transform: uppercase; }
+.component-graph__current strong { color: var(--text); font: 600 18px var(--font-mono); letter-spacing: -.025em; }
+.component-graph__current small { color: var(--muted); font: 8px/1.35 var(--font-mono); text-align: right; }
+
+.component-graph__metrics {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.component-graph__metric {
+  display: grid;
+  min-width: 104px;
+  align-content: center;
+  gap: 3px;
+  padding: 7px 9px;
+  border-left: 1px solid rgba(151,183,219,.1);
+}
+
+.component-graph__metric span { color: var(--muted); font: 7px/1.25 var(--font-mono); letter-spacing: .055em; text-transform: uppercase; }
+.component-graph__metric strong { color: var(--text-2); font: 500 10px/1.35 var(--font-mono); overflow-wrap: anywhere; }
+.component-graph__summary { margin: 11px 0 0 !important; color: var(--text-2) !important; font-size: 8px !important; line-height: 1.55 !important; letter-spacing: .02em !important; text-transform: none !important; }
+.component-graph__sparse { margin-top: 10px !important; padding: 8px 11px; border-left: 2px solid var(--amber); color: #f0cf8a !important; background: linear-gradient(90deg, rgba(242,184,75,.055), transparent); line-height: 1.55 !important; text-transform: none !important; }
+
+.component-graph__plot {
+  position: relative;
+  min-width: 0;
+  margin-top: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(132,174,218,.08);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(9,18,28,.58), rgba(3,8,13,.16));
+}
+
+.component-graph__svg { display: block; width: 100%; min-width: 0; overflow: visible; }
+.component-graph__x-axis {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 2.4% 7px 7.6%;
+  color: var(--chart-axis);
+  font: 8px/1.3 var(--font-mono);
+  letter-spacing: .025em;
+  white-space: nowrap;
+}
+.component-graph__gridline { stroke: var(--chart-grid); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.component-graph__gridline--vertical { stroke: var(--chart-grid-vertical); stroke-dasharray: 2 7; }
+.component-graph__axis-label { fill: var(--chart-axis); font: 9px var(--font-mono); letter-spacing: .025em; }
+.component-graph__axis-label--state { fill: color-mix(in srgb, var(--group-accent, var(--blue)) 58%, var(--chart-axis)); font-size: 8px; letter-spacing: .08em; }
+.component-graph__state-track { fill: rgba(111,143,177,.045); stroke: rgba(132,174,218,.095); stroke-width: 1; vector-effect: non-scaling-stroke; }
+
+.component-graph__stop--start { stop-color: var(--chart-line-start); }
+.component-graph__stop--mid { stop-color: var(--chart-line-mid); }
+.component-graph__stop--end { stop-color: var(--chart-line-end); }
+.component-graph__stop--fill-top { stop-color: var(--chart-line-mid); stop-opacity: .23; }
+.component-graph__stop--fill-low { stop-color: var(--chart-line-end); stop-opacity: .045; }
+.component-graph__stop--fill-bottom { stop-color: var(--chart-line-end); stop-opacity: 0; }
+
+.component-graph__state-bar { opacity: .82; vector-effect: non-scaling-stroke; }
+.component-graph__state-bar[data-state="operational"] { fill: var(--chart-state-operational); }
+.component-graph__state-bar[data-state="degraded"] { fill: var(--chart-state-degraded); }
+.component-graph__state-bar[data-state="partial"] { fill: var(--chart-state-partial); }
+.component-graph__state-bar[data-state="major"] { fill: var(--chart-state-major); }
+.component-graph__state-bar[data-state="maintenance"] { fill: var(--chart-state-maintenance); }
+.component-graph__state-bar[data-state="unknown"] { fill: var(--chart-state-unknown); }
+
+.component-graph__area {
+  opacity: 1;
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+
+.component-graph__line {
+  fill: none;
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  filter: drop-shadow(0 0 3px var(--chart-glow));
+  vector-effect: non-scaling-stroke;
+}
+
+.component-graph__point {
+  fill: var(--chart-surface);
+  stroke: var(--chart-line-mid);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+}
+
+.component-graph__point:not(.is-current) { opacity: .5; }
+.component-graph__point.is-current { fill: var(--chart-line-mid); stroke: #ecf8ff; stroke-width: 1.8; filter: drop-shadow(0 0 5px var(--chart-glow)); }
+.component-graph__point--state[data-state="operational"] { fill: var(--chart-state-operational); }
+.component-graph__point--state[data-state="degraded"] { fill: var(--chart-state-degraded); }
+.component-graph__point--state[data-state="partial"] { fill: var(--chart-state-partial); }
+.component-graph__point--state[data-state="major"] { fill: var(--chart-state-major); }
+.component-graph__point--state[data-state="maintenance"] { fill: var(--chart-state-maintenance); }
+.component-graph__point--state[data-state="unknown"] { fill: var(--chart-state-unknown); }
+.component-graph__point:focus { outline: none; stroke: #fff; stroke-width: 2.6; }
+.component-graph__tip { fill: none; stroke: var(--chart-line-mid); stroke-width: 1; opacity: .24; vector-effect: non-scaling-stroke; }
+
+.component-graph__crosshair,
+.component-graph__hover-point { opacity: 0; pointer-events: none; transition: opacity 100ms ease; }
+.component-graph__crosshair { stroke: var(--chart-crosshair); stroke-width: 1; stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; }
+.component-graph__hover-point { fill: var(--chart-line-mid); stroke: #fff; stroke-width: 1.5; filter: drop-shadow(0 0 5px var(--chart-glow)); vector-effect: non-scaling-stroke; }
+.component-graph__crosshair.is-visible,
+.component-graph__hover-point.is-visible { opacity: 1; }
+.component-graph__hover-point[data-state="operational"] { fill: var(--chart-state-operational); }
+.component-graph__hover-point[data-state="degraded"] { fill: var(--chart-state-degraded); }
+.component-graph__hover-point[data-state="partial"] { fill: var(--chart-state-partial); }
+.component-graph__hover-point[data-state="major"] { fill: var(--chart-state-major); }
+.component-graph__hover-point[data-state="maintenance"] { fill: var(--chart-state-maintenance); }
+.component-graph__hover-point[data-state="unknown"] { fill: var(--chart-state-unknown); }
+
+.component-graph__tooltip {
+  position: absolute;
+  z-index: 4;
+  display: grid;
+  width: max-content;
+  max-width: min(220px, calc(100% - 16px));
+  gap: 4px;
+  padding: 9px 10px;
+  border: 1px solid color-mix(in srgb, var(--group-accent, var(--blue)) 25%, var(--chart-frame));
+  border-radius: 9px;
+  background: var(--chart-tooltip);
+  box-shadow: 0 14px 34px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.045);
+  pointer-events: none;
+}
+
+.component-graph__tooltip[hidden] { display: none; }
+.component-graph__tooltip span { color: var(--muted); font: 8px/1.35 var(--font-mono); }
+.component-graph__tooltip strong { color: var(--text); font: 600 13px/1.3 var(--font-mono); }
+.component-graph__tooltip small { color: var(--text-2); font: 9px/1.45 var(--font-body); }
+
+.component-graph__legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 9px; color: var(--muted) !important; font: 8px/1.5 var(--font-mono); text-transform: none !important; }
+.component-graph__legend span::before { display: inline-block; width: 12px; height: 2px; margin: 0 6px 2px 0; border-radius: 999px; background: linear-gradient(90deg, var(--chart-line-start), var(--chart-line-end)); content: ""; }
+.component-graph__legend-state::before { height: 6px !important; background: linear-gradient(90deg, var(--green), var(--amber), var(--orange), var(--red), var(--maintenance)) !important; }
+.component-graph__legend-gap::before { height: 6px !important; border: 1px dashed var(--muted); background: transparent !important; }
+.component-graph__empty { display: grid; min-height: 160px; place-content: center; gap: 7px; margin-top: 14px; padding: 18px; border: 1px dashed var(--line-strong); border-radius: 10px; color: var(--muted); background: rgba(255,255,255,.015); text-align: center; }
 .component-graph__empty strong { color: var(--text-2); font-size: 13px; }
 .component-graph__empty p { margin: 0; color: var(--muted) !important; line-height: 1.55 !important; text-transform: none !important; }
+
+.component-graph.is-chart-entering:not(.is-chart-visible) .component-graph__plot { opacity: 0; transform: translateY(4px); }
+.component-graph.is-chart-entering:not(.is-chart-visible) .component-graph__area { opacity: 0; transform: scaleY(0); }
+.component-graph.is-chart-entering:not(.is-chart-visible) .component-graph__line { stroke-dashoffset: 1; }
+.component-graph.is-chart-entering:not(.is-chart-visible) .component-graph__point.is-current,
+.component-graph.is-chart-entering:not(.is-chart-visible) .component-graph__tip,
+.component-graph.is-chart-entering:not(.is-chart-visible) .component-graph__legend { opacity: 0; }
+.component-graph.is-chart-entering .component-graph__plot { transition: opacity 170ms ease, transform 170ms var(--ease); }
+.component-graph.is-chart-entering .component-graph__area { transition: opacity 520ms var(--ease) 70ms, transform 520ms var(--ease) 70ms; }
+.component-graph.is-chart-entering .component-graph__line { transition: stroke-dashoffset 760ms cubic-bezier(.22,.76,.2,1) 100ms; }
+.component-graph.is-chart-entering .component-graph__point.is-current { transition: opacity 180ms ease 780ms; }
+.component-graph.is-chart-entering .component-graph__legend { transition: opacity 180ms ease 720ms; }
+.component-graph.is-chart-entering.is-chart-visible .component-graph__tip { animation: chart-tip-settle 260ms ease-out 760ms both; }
+
+@keyframes chart-tip-settle {
+  0% { opacity: 0; transform: scale(.55); transform-origin: center; }
+  55% { opacity: .42; }
+  100% { opacity: .24; transform: scale(1); transform-origin: center; }
+}
+
+.component-graph.is-range-leaving > * { opacity: 0; transform: translateY(2px); transition: opacity 130ms ease, transform 130ms ease; }
+.component-graph.is-range-entering:not(.is-range-visible) > * { opacity: 0; transform: translateY(3px); }
+.component-graph.is-range-entering:not(.is-range-visible) .component-graph__line { stroke-dashoffset: .14; }
+.component-graph.is-range-entering > * { transition: opacity 230ms var(--ease), transform 230ms var(--ease); }
+.component-graph.is-range-entering .component-graph__line { transition: stroke-dashoffset 270ms var(--ease); }
 
 .component-state {
   display: inline-flex;
@@ -2408,9 +2703,22 @@ main > section:not(.status-hero) {
   .component-card { min-height: 0; }
   .component-card__footer { justify-content: stretch; }
   .component-card__toggle { width: 100%; }
-  .component-graph__toolbar { align-items: stretch; flex-direction: column; }
-  .component-graph__current { justify-items: start; }
+  .component-card.is-expanded { padding-right: 14px; padding-left: 14px; }
+  .component-graph { min-height: 0; padding: 14px; }
+  .component-graph__header,
+  .component-graph__toolbar { grid-template-columns: 1fr; }
+  .component-graph__current { width: 100%; min-width: 0; justify-items: start; }
+  .component-graph__current small { text-align: left; }
+  .component-graph__controls { width: 100%; }
+  .component-graph__controls button { min-width: 0; flex: 1; }
+  .component-graph__metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); justify-content: stretch; }
+  .component-graph__metric { min-width: 0; border-left: 0; border-bottom: 1px solid rgba(151,183,219,.08); }
+  .component-graph__axis-label--y { display: none; }
+  .component-graph__x-axis { padding-right: 3%; padding-left: 8%; }
+  .component-graph__x-axis span:not(:first-child):not(:last-child) { display: none; }
+  .component-graph__line { stroke-width: 1.9; }
   .component-graph__legend { display: grid; }
+  .component-intentional-state { padding: 16px; }
 
   .diagnostic-source { grid-column: auto; }
 
@@ -2464,6 +2772,19 @@ main > section:not(.status-hero) {
     filter: none;
     transform: none;
   }
+  .component-graph__area { opacity: 1 !important; transform: none !important; }
+  .component-graph__line { stroke-dashoffset: 0 !important; }
+  .component-graph__point,
+  .component-graph__tip,
+  .component-graph__legend,
+  .component-graph__plot { opacity: 1 !important; transform: none !important; }
+  .component-graph__tip { animation: none !important; }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .component-graph__tooltip,
+  .component-graph__crosshair,
+  .component-graph__hover-point { display: none !important; }
 }
 
 @media (forced-colors: active) {

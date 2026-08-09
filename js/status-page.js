@@ -31,6 +31,7 @@
     filter: "all",
     expanded: new Set(),
     graphRanges: new Map(),
+    graphEntrances: new Set(),
   };
 
   const COMPONENT_PRESENTATION = Object.freeze({
@@ -59,13 +60,14 @@
   const IMPLEMENTED_COMPONENTS = new Set(["3qsdkc52dgt5", "q7435t6bd41x", "94cn19vph28j", "tb383cr2p92n", "0xm0hsy3byjj", "zx07yy34tyvl", "rdb3pmbvr4bv", "5wm11qq4b7w9", "jnd29jsl8w7b", "8x9n41kfjtc8", "p00vypwhfhx3"]);
   const VENDOR_COMPONENTS = new Set(["n1lw27451j6d", "5qbjrf4hq5nn", "gd23vgnp3n89"]);
   const GROUP_PRESENTATION = Object.freeze({
-    production: { accent: "#58b7ff", role: "Creation products and their connected production services." },
-    core: { accent: "#9c7cff", role: "Identity, rooms, APIs, automation, and notification authority." },
-    web: { accent: "#5fe2b0", role: "Audience, creator, admin, developer, documentation, and distribution surfaces." },
-    surfaces: { accent: "#5fe2b0", role: "Public and operator-facing product surfaces." },
-    edge: { accent: "#5fe2b0", role: "Delivery and edge services." },
+    production: { accent: "#6f9dff", role: "Creation products and their connected production services." },
+    core: { accent: "#51d4e8", role: "Identity, rooms, APIs, automation, and notification authority." },
+    web: { accent: "#987cff", role: "Audience, creator, admin, developer, documentation, and distribution surfaces." },
+    surfaces: { accent: "#987cff", role: "Public and operator-facing product surfaces." },
+    edge: { accent: "#987cff", role: "Delivery and edge services." },
     dependencies: { accent: "#f1bc62", role: "External delivery, email, payment, and Git operations." },
   });
+  const CORE_API_COMPONENT_ID = "0xm0hsy3byjj";
 
   const select = (selector, root = document) => root.querySelector(selector);
   const selectAll = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -241,14 +243,188 @@
     return wrapper;
   };
 
-  const renderHistoryGraph = (panel, diagnostic, requestedRange) => {
+  const CHART_RANGE_META = Object.freeze({
+    "24h": { durationMs: 86400000, intervalMs: 300000, maxGapMs: 450000, tickCount: 5 },
+    "7d": { durationMs: 604800000, intervalMs: 86400000, maxGapMs: 129600000, tickCount: 5 },
+    "30d": { durationMs: 2592000000, intervalMs: 86400000, maxGapMs: 129600000, tickCount: 6 },
+  });
+  const CHART_VIEW = Object.freeze({ width: 760, height: 270, left: 58, right: 742, top: 34, bottom: 176, stateY: 202, stateHeight: 18, axisY: 258 });
+  const OBSERVED_STATE_LABELS = Object.freeze({
+    operational: "Operational",
+    degraded: "Degraded performance",
+    partial: "Partial outage",
+    major: "Major outage",
+    maintenance: "Maintenance",
+    unknown: "Unknown",
+  });
+  let chartSequence = 0;
+
+  const observedStateKey = (value) => {
+    const normalized = String(value || "unknown").toLowerCase();
+    if (normalized === "operational") return "operational";
+    if (normalized.includes("degraded")) return "degraded";
+    if (normalized.includes("partial")) return "partial";
+    if (normalized.includes("major") || normalized.includes("critical")) return "major";
+    if (normalized.includes("maintenance")) return "maintenance";
+    return "unknown";
+  };
+
+  const buildChartModel = (buckets, rangeKey) => {
+    const rangeMeta = CHART_RANGE_META[rangeKey] || CHART_RANGE_META["24h"];
+    const observations = (Array.isArray(buckets) ? buckets : []).map((bucket) => {
+      const time = Date.parse(bucket?.at || "");
+      return {
+        source: bucket,
+        at: bucket?.at,
+        time,
+        latency: Number.isFinite(bucket?.latency_ms) ? Number(bucket.latency_ms) : null,
+        availability: Number.isFinite(bucket?.availability_percent) ? Number(bucket.availability_percent) : null,
+        state: observedStateKey(bucket?.state),
+      };
+    }).filter((observation) => Number.isFinite(observation.time)).sort((a, b) => a.time - b.time);
+    const endTime = observations.at(-1)?.time || 0;
+    const startTime = endTime - rangeMeta.durationMs;
+    const plotWidth = CHART_VIEW.right - CHART_VIEW.left;
+    observations.forEach((observation) => {
+      const ratio = (observation.time - startTime) / rangeMeta.durationMs;
+      observation.x = CHART_VIEW.left + Math.max(0, Math.min(1, ratio)) * plotWidth;
+    });
+    const latencyPoints = observations.filter((observation) => observation.latency !== null);
+    const latencyValues = latencyPoints.map((observation) => observation.latency);
+    const observedMin = latencyValues.length ? Math.min(...latencyValues) : null;
+    const observedMax = latencyValues.length ? Math.max(...latencyValues) : null;
+    const spread = observedMin == null ? 0 : observedMax - observedMin;
+    const padding = observedMax == null ? 0 : Math.max(3, spread * .2, observedMax * .045);
+    const domainMin = observedMin == null ? null : Math.max(0, observedMin - padding);
+    const domainMax = observedMax == null ? null : Math.max(domainMin + 1, observedMax + padding);
+    const segments = [];
+    let segment = [];
+    let previousTime = null;
+    const flushSegment = () => {
+      if (segment.length) segments.push(segment);
+      segment = [];
+    };
+    observations.forEach((observation) => {
+      if (observation.latency === null) {
+        flushSegment();
+        previousTime = observation.time;
+        return;
+      }
+      if (previousTime != null && observation.time - previousTime > rangeMeta.maxGapMs) flushSegment();
+      segment.push(observation);
+      previousTime = observation.time;
+    });
+    flushSegment();
+    return {
+      rangeKey,
+      rangeMeta,
+      observations,
+      latencyPoints,
+      segments,
+      startTime,
+      endTime,
+      domainMin,
+      domainMax,
+      graphType: latencyPoints.length ? "latency" : "state",
+      stateBandWidth: Math.max(2, plotWidth * (rangeMeta.intervalMs / rangeMeta.durationMs) * .72),
+    };
+  };
+
+  const smoothChartPath = (points) => {
+    if (!points.length) return "";
+    if (points.length === 1) return `M${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;
+    if (points.length === 2) return `M${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)} L${points[1].x.toFixed(2)} ${points[1].y.toFixed(2)}`;
+    const slopes = points.slice(0, -1).map((point, index) => (points[index + 1].y - point.y) / Math.max(.001, points[index + 1].x - point.x));
+    const tangents = points.map((point, index) => {
+      if (index === 0) return slopes[0];
+      if (index === points.length - 1) return slopes.at(-1);
+      return slopes[index - 1] * slopes[index] <= 0 ? 0 : (slopes[index - 1] + slopes[index]) / 2;
+    });
+    slopes.forEach((slope, index) => {
+      if (slope === 0) {
+        tangents[index] = 0;
+        tangents[index + 1] = 0;
+        return;
+      }
+      const a = tangents[index] / slope;
+      const b = tangents[index + 1] / slope;
+      const magnitude = Math.hypot(a, b);
+      if (magnitude <= 3) return;
+      const scale = 3 / magnitude;
+      tangents[index] = scale * a * slope;
+      tangents[index + 1] = scale * b * slope;
+    });
+    let path = `M${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;
+    points.slice(0, -1).forEach((point, index) => {
+      const next = points[index + 1];
+      const distance = next.x - point.x;
+      path += ` C${(point.x + distance / 3).toFixed(2)} ${(point.y + tangents[index] * distance / 3).toFixed(2)} ${(next.x - distance / 3).toFixed(2)} ${(next.y - tangents[index + 1] * distance / 3).toFixed(2)} ${next.x.toFixed(2)} ${next.y.toFixed(2)}`;
+    });
+    return path;
+  };
+
+  const nearestChartObservation = (observations, x) => observations.reduce((nearest, observation) => (
+    !nearest || Math.abs(observation.x - x) < Math.abs(nearest.x - x) ? observation : nearest
+  ), null);
+  const tooltipDataForObservation = (observation) => ({
+    at: observation?.at || "",
+    state: OBSERVED_STATE_LABELS[observation?.state] || OBSERVED_STATE_LABELS.unknown,
+    latency: observation?.latency ?? null,
+    availability: observation?.availability ?? null,
+  });
+  const chartMotionReduced = () => window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
+  const svgNode = (tag, className) => {
+    const element = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    if (className) element.setAttribute("class", className);
+    return element;
+  };
+  const chartFrame = (callback) => (window.requestAnimationFrame || ((next) => window.setTimeout(next, 0)))(callback);
+
+  const activateChartEntrance = (panel) => {
+    panel.classList.remove("is-chart-entering", "is-chart-visible");
+    if (chartMotionReduced()) {
+      panel.dataset.chartMotion = "reduced";
+      panel.classList.add("is-chart-visible");
+      return;
+    }
+    panel.dataset.chartMotion = "animated";
+    panel.classList.add("is-chart-entering");
+    chartFrame(() => chartFrame(() => panel.classList.add("is-chart-visible")));
+    window.setTimeout(() => panel.classList.remove("is-chart-entering"), 1050);
+  };
+
+  window.StreamSuitesStatusChartHelpers = Object.freeze({
+    buildChartModel,
+    nearestChartObservation,
+    observedStateKey,
+    smoothChartPath,
+    tooltipDataForObservation,
+  });
+
+  const createIntentionalState = (kind, title, description, source) => {
+    const wrapper = node("div", "component-intentional-state");
+    wrapper.dataset.kind = kind;
+    const copy = node("div", "component-intentional-state__copy");
+    copy.append(node("span", "", kind === "provider" ? "Provider-owned state" : "Intentional monitoring boundary"), node("strong", "", title), node("p", "", description), node("small", "", source));
+    wrapper.append(node("span", "component-intentional-state__signal"), copy);
+    return wrapper;
+  };
+
+  const renderHistoryGraph = (panel, diagnostic, requestedRange, options = {}) => {
     panel.innerHTML = "";
+    panel.classList.remove("is-range-leaving", "is-range-entering", "is-range-visible");
     const ranges = ["24h", "7d", "30d"];
     const available = ranges.filter((key) => (diagnostic?.history?.[key]?.buckets || []).length);
+    const activeRange = available.includes(requestedRange) ? requestedRange : available[0];
+    const heading = node("div", "component-graph__heading");
+    heading.append(node("span", "", options.isCoreApi ? "Primary latency signal" : "Direct analytics"), node("h5", "", options.isCoreApi ? "Core API response time" : `${options.componentName || "Component"} history`));
+    const header = node("div", "component-graph__header");
+    header.appendChild(heading);
+    panel.appendChild(header);
     const toolbar = node("div", "component-graph__toolbar");
     const controls = node("div", "component-graph__controls");
     controls.setAttribute("aria-label", "Watchdog history range");
-    const activeRange = available.includes(requestedRange) ? requestedRange : available[0];
+    controls.setAttribute("role", "group");
     ranges.forEach((key) => {
       const button = node("button", key === activeRange ? "is-active" : "", key.toUpperCase());
       button.type = "button";
@@ -256,10 +432,30 @@
       button.disabled = !available.includes(key);
       button.setAttribute("aria-pressed", String(key === activeRange));
       button.addEventListener("click", () => {
+        if (key === activeRange) return;
         state.graphRanges.set(diagnostic.component_id, key);
-        renderHistoryGraph(panel, diagnostic, key);
+        const applyRange = () => renderHistoryGraph(panel, diagnostic, key, { ...options, transition: "range", focusRange: key });
+        if (chartMotionReduced()) applyRange();
+        else {
+          panel.classList.add("is-range-leaving");
+          panel.setAttribute("aria-busy", "true");
+          window.setTimeout(applyRange, 130);
+        }
       });
       controls.appendChild(button);
+    });
+    controls.addEventListener("keydown", (event) => {
+      if (!event.target.matches("button[data-graph-range]")) return;
+      const enabled = [...controls.querySelectorAll("button:not(:disabled)")];
+      const current = enabled.indexOf(event.target);
+      let next = null;
+      if (event.key === "ArrowRight" || event.key === "ArrowDown") next = enabled[(current + 1) % enabled.length];
+      if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = enabled[(current - 1 + enabled.length) % enabled.length];
+      if (event.key === "Home") next = enabled[0];
+      if (event.key === "End") next = enabled.at(-1);
+      if (!next) return;
+      event.preventDefault();
+      next.click();
     });
     toolbar.appendChild(controls);
     panel.appendChild(toolbar);
@@ -271,120 +467,276 @@
     }
     const range = diagnostic.history[activeRange];
     const buckets = range.buckets;
+    const model = buildChartModel(buckets, activeRange);
+    if (!model.observations.length) {
+      const empty = node("div", "component-graph__empty");
+      empty.append(node("strong", "", "No readable observations"), node("p", "", "The selected range contains no timestamped watchdog observations. No substitute history is drawn."));
+      panel.appendChild(empty);
+      return;
+    }
+    panel.dataset.chartType = model.graphType;
     const summary = node("p", "component-graph__summary");
-    summary.textContent = `${activeRange.toUpperCase()} watchdog-observed availability: ${range.availability_percent == null ? "Unavailable" : `${range.availability_percent}%`}. ${range.sample_count || 0} samples.`;
+    summary.textContent = `${activeRange.toUpperCase()} watchdog-observed availability: ${range.availability_percent == null ? "Unavailable" : `${range.availability_percent}%`}. ${range.sample_count ?? 0} real samples; missing intervals remain open.`;
     summary.setAttribute("role", "status");
     panel.appendChild(summary);
 
-    const latestLatency = [...buckets].reverse().find((bucket) => Number.isFinite(bucket?.latency_ms));
+    const latestObservation = model.observations.at(-1);
+    const latestLatency = model.latencyPoints.at(-1);
     const currentValue = node("div", "component-graph__current");
-    currentValue.append(node("span", "", "Latest measured latency"), node("strong", "", latestLatency ? `${latestLatency.latency_ms} ms` : "Unavailable"));
-    toolbar.appendChild(currentValue);
-    panel.classList.toggle("is-sparse", (range.sample_count || 0) < 3);
-    if ((range.sample_count || 0) < 3) panel.appendChild(node("p", "component-graph__sparse", "Sparse real history · the graph shows only received samples and leaves missing periods open."));
+    currentValue.append(
+      node("span", "", latestLatency ? "Latest measured latency" : "Latest observed state"),
+      node("strong", "", latestLatency ? `${latestLatency.latency} ms` : OBSERVED_STATE_LABELS[latestObservation.state]),
+      node("small", "", `${formatAbsolute((latestLatency || latestObservation).at)} · ${options.stale ? "stale diagnostics" : "latest received"}`)
+    );
+    header.appendChild(currentValue);
 
-    const width = 720;
-    const height = 154;
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    const metrics = node("div", "component-graph__metrics");
+    const appendMetric = (label, value) => {
+      const item = node("div", "component-graph__metric");
+      item.append(node("span", "", label), node("strong", "", value));
+      metrics.appendChild(item);
+    };
+    appendMetric("Real samples", String(range.sample_count ?? 0));
+    appendMetric("Availability", range.availability_percent == null ? "Unavailable" : `${range.availability_percent}%`);
+    appendMetric("Freshness", options.stale ? "Stale" : "Current projection");
+    if (options.isCoreApi) appendMetric("Last success", diagnostic.last_success ? formatAbsolute(diagnostic.last_success) : "Unavailable");
+    const latencyValues = model.latencyPoints.map((point) => point.latency);
+    if (latencyValues.length >= 3) {
+      appendMetric("Range min", `${Math.min(...latencyValues)} ms`);
+      appendMetric("Observed average", `${Math.round(latencyValues.reduce((sum, value) => sum + value, 0) / latencyValues.length)} ms`);
+      appendMetric("Range max", `${Math.max(...latencyValues)} ms`);
+    }
+    if (options.isCoreApi && latencyValues.length >= 2) {
+      const delta = latencyValues.at(-1) - latencyValues[0];
+      appendMetric("Range change", `${delta > 0 ? "+" : ""}${delta} ms`);
+    }
+    toolbar.appendChild(metrics);
+    panel.classList.toggle("is-sparse", model.observations.length < 3 || (model.graphType === "latency" && model.latencyPoints.length < 3));
+    if (panel.classList.contains("is-sparse")) panel.appendChild(node("p", "component-graph__sparse", `History is still accumulating · ${model.observations.length} received ${model.observations.length === 1 ? "bucket" : "buckets"}; no missing period is connected or backfilled.`));
+
+    const svg = svgNode("svg", "component-graph__svg");
+    svg.setAttribute("viewBox", `0 0 ${CHART_VIEW.width} ${CHART_VIEW.height}`);
     svg.setAttribute("role", "img");
     svg.setAttribute("aria-label", summary.textContent);
-    svg.classList.add("component-graph__svg");
-    const timestamps = buckets.map((bucket) => Date.parse(bucket.at)).filter(Number.isFinite);
-    const start = Math.min(...timestamps);
-    const end = Math.max(...timestamps, start + 1);
-    const xFor = (value) => 12 + ((Date.parse(value) - start) / Math.max(1, end - start)) * (width - 24);
-    const latencyValues = buckets.map((bucket) => bucket.latency_ms).filter((value) => Number.isFinite(value));
-    const maxLatency = Math.max(1, ...latencyValues);
-    const yFor = (value) => 96 - (Number(value) / maxLatency) * 72;
-    const expectedGap = activeRange === "24h" ? 600000 : 172800000;
-
-    [24, 60, 96].forEach((y, index) => {
-      const gridLine = document.createElementNS(svg.namespaceURI, "line");
-      gridLine.setAttribute("x1", "12");
-      gridLine.setAttribute("x2", String(width - 12));
-      gridLine.setAttribute("y1", String(y));
-      gridLine.setAttribute("y2", String(y));
-      gridLine.setAttribute("class", "component-graph__gridline");
-      svg.appendChild(gridLine);
-      const label = document.createElementNS(svg.namespaceURI, "text");
-      label.setAttribute("x", "14");
-      label.setAttribute("y", String(y - 5));
-      label.setAttribute("class", "component-graph__axis-label");
-      label.textContent = index === 0 ? `${maxLatency} ms` : index === 2 ? "0 ms" : "latency";
-      svg.appendChild(label);
+    const description = svgNode("desc");
+    description.textContent = `${model.observations.length} watchdog-observed buckets. ${model.latencyPoints.length} contain measured latency. Missing intervals are not connected.`;
+    svg.appendChild(description);
+    const definitionId = `status-chart-${String(diagnostic.component_id || "component").replace(/[^a-z0-9_-]/gi, "")}-${++chartSequence}`;
+    const defs = svgNode("defs");
+    const lineGradient = svgNode("linearGradient");
+    lineGradient.id = `${definitionId}-line`;
+    lineGradient.setAttribute("gradientUnits", "userSpaceOnUse");
+    lineGradient.setAttribute("x1", String(CHART_VIEW.left));
+    lineGradient.setAttribute("x2", String(CHART_VIEW.right));
+    [["0%", "component-graph__stop component-graph__stop--start"], ["58%", "component-graph__stop component-graph__stop--mid"], ["100%", "component-graph__stop component-graph__stop--end"]].forEach(([offset, className]) => {
+      const stop = svgNode("stop", className);
+      stop.setAttribute("offset", offset);
+      lineGradient.appendChild(stop);
     });
-
-    buckets.forEach((bucket, index) => {
-      const rect = document.createElementNS(svg.namespaceURI, "rect");
-      const x = xFor(bucket.at);
-      const nextX = buckets[index + 1] ? xFor(buckets[index + 1].at) : x + 4;
-      rect.setAttribute("x", String(x));
-      rect.setAttribute("y", "118");
-      rect.setAttribute("width", String(Math.max(3, nextX - x - 1)));
-      rect.setAttribute("height", "14");
-      rect.setAttribute("rx", "2");
-      rect.setAttribute("data-state", bucket.state || "unknown");
-      const title = document.createElementNS(svg.namespaceURI, "title");
-      title.textContent = `${formatAbsolute(bucket.at)} · ${bucket.availability_percent == null ? "availability unavailable" : `${bucket.availability_percent}% available`}`;
-      rect.appendChild(title);
-      svg.appendChild(rect);
+    const areaGradient = svgNode("linearGradient");
+    areaGradient.id = `${definitionId}-area`;
+    areaGradient.setAttribute("gradientUnits", "userSpaceOnUse");
+    areaGradient.setAttribute("y1", String(CHART_VIEW.top));
+    areaGradient.setAttribute("y2", String(CHART_VIEW.bottom));
+    [["0%", "component-graph__stop component-graph__stop--fill-top"], ["72%", "component-graph__stop component-graph__stop--fill-low"], ["100%", "component-graph__stop component-graph__stop--fill-bottom"]].forEach(([offset, className]) => {
+      const stop = svgNode("stop", className);
+      stop.setAttribute("offset", offset);
+      areaGradient.appendChild(stop);
     });
+    defs.append(lineGradient, areaGradient);
+    svg.appendChild(defs);
 
-    let segment = [];
-    const flushSegment = () => {
-      if (!segment.length) return;
-      if (segment.length > 1) {
-        const path = document.createElementNS(svg.namespaceURI, "path");
-        path.setAttribute("d", segment.map((point, index) => `${index ? "L" : "M"}${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(" "));
-        path.setAttribute("class", "component-graph__line");
-        svg.appendChild(path);
-      }
-      segment.forEach((point) => {
-        const circle = document.createElementNS(svg.namespaceURI, "circle");
-        circle.setAttribute("cx", String(point.x));
-        circle.setAttribute("cy", String(point.y));
-        circle.setAttribute("r", "3");
-        circle.setAttribute("class", "component-graph__point");
-        circle.setAttribute("tabindex", "0");
-        circle.setAttribute("role", "img");
-        circle.setAttribute("aria-label", `${formatAbsolute(point.at)} · ${point.latency} milliseconds`);
-        const title = document.createElementNS(svg.namespaceURI, "title");
-        title.textContent = `${formatAbsolute(point.at)} · ${point.latency} ms`;
-        circle.appendChild(title);
-        svg.appendChild(circle);
+    const plotWidth = CHART_VIEW.right - CHART_VIEW.left;
+    const yFor = (value) => CHART_VIEW.bottom - ((value - model.domainMin) / Math.max(1, model.domainMax - model.domainMin)) * (CHART_VIEW.bottom - CHART_VIEW.top);
+    if (model.graphType === "latency") {
+      [0, 1 / 3, 2 / 3, 1].forEach((ratio) => {
+        const y = CHART_VIEW.top + ratio * (CHART_VIEW.bottom - CHART_VIEW.top);
+        const gridLine = svgNode("line", "component-graph__gridline");
+        gridLine.setAttribute("x1", String(CHART_VIEW.left));
+        gridLine.setAttribute("x2", String(CHART_VIEW.right));
+        gridLine.setAttribute("y1", String(y));
+        gridLine.setAttribute("y2", String(y));
+        const label = svgNode("text", "component-graph__axis-label component-graph__axis-label--y");
+        label.setAttribute("x", String(CHART_VIEW.left - 9));
+        label.setAttribute("y", String(y + 3));
+        label.setAttribute("text-anchor", "end");
+        label.textContent = `${Math.round(model.domainMax - ratio * (model.domainMax - model.domainMin))} ms`;
+        svg.append(gridLine, label);
       });
-      segment = [];
-    };
-    let previousTime = null;
-    buckets.forEach((bucket) => {
-      const timestamp = Date.parse(bucket.at);
-      if (!Number.isFinite(bucket.latency_ms)) {
-        flushSegment();
-        previousTime = timestamp;
-        return;
-      }
-      if (previousTime != null && timestamp - previousTime > expectedGap) flushSegment();
-      segment.push({ x: xFor(bucket.at), y: yFor(bucket.latency_ms), at: bucket.at, latency: bucket.latency_ms });
-      previousTime = timestamp;
+    } else {
+      const stateLabel = svgNode("text", "component-graph__axis-label component-graph__axis-label--state");
+      stateLabel.setAttribute("x", String(CHART_VIEW.left));
+      stateLabel.setAttribute("y", "72");
+      stateLabel.textContent = "WATCHDOG-OBSERVED COMPONENT STATE";
+      const track = svgNode("rect", "component-graph__state-track");
+      track.setAttribute("x", String(CHART_VIEW.left));
+      track.setAttribute("y", "86");
+      track.setAttribute("width", String(plotWidth));
+      track.setAttribute("height", "46");
+      track.setAttribute("rx", "9");
+      svg.append(stateLabel, track);
+    }
+
+    const xTickCount = model.rangeMeta.tickCount;
+    const xAxisLabels = node("div", "component-graph__x-axis");
+    for (let index = 0; index < xTickCount; index += 1) {
+      const ratio = index / (xTickCount - 1);
+      const x = CHART_VIEW.left + ratio * plotWidth;
+      const gridLine = svgNode("line", "component-graph__gridline component-graph__gridline--vertical");
+      gridLine.setAttribute("x1", String(x));
+      gridLine.setAttribute("x2", String(x));
+      gridLine.setAttribute("y1", String(model.graphType === "latency" ? CHART_VIEW.top : 86));
+      gridLine.setAttribute("y2", String(model.graphType === "latency" ? CHART_VIEW.stateY + CHART_VIEW.stateHeight : 132));
+      const tickTime = model.startTime + ratio * model.rangeMeta.durationMs;
+      const label = node("span");
+      label.textContent = activeRange === "24h"
+        ? new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(tickTime)
+        : new Intl.DateTimeFormat(undefined, activeRange === "7d" ? { weekday: "short", day: "numeric" } : { month: "short", day: "numeric" }).format(tickTime);
+      xAxisLabels.appendChild(label);
+      svg.appendChild(gridLine);
+    }
+
+    const stateY = model.graphType === "latency" ? CHART_VIEW.stateY : 90;
+    const stateHeight = model.graphType === "latency" ? CHART_VIEW.stateHeight : 38;
+    model.observations.forEach((observation) => {
+      const bar = svgNode("rect", "component-graph__state-bar");
+      bar.setAttribute("x", String(Math.min(CHART_VIEW.right - model.stateBandWidth, observation.x - model.stateBandWidth / 2)));
+      bar.setAttribute("y", String(stateY));
+      bar.setAttribute("width", String(model.stateBandWidth));
+      bar.setAttribute("height", String(stateHeight));
+      bar.setAttribute("rx", model.graphType === "latency" ? "2" : "5");
+      bar.setAttribute("data-state", observation.state);
+      const title = svgNode("title");
+      title.textContent = `${formatAbsolute(observation.at)} · ${OBSERVED_STATE_LABELS[observation.state]}${observation.availability == null ? "" : ` · ${observation.availability}% available`}`;
+      bar.appendChild(title);
+      svg.appendChild(bar);
     });
-    flushSegment();
-    const startLabel = document.createElementNS(svg.namespaceURI, "text");
-    startLabel.setAttribute("x", "12");
-    startLabel.setAttribute("y", "151");
-    startLabel.setAttribute("class", "component-graph__axis-label");
-    startLabel.textContent = formatAbsolute(buckets[0]?.at, { includeTime: false });
-    const endLabel = document.createElementNS(svg.namespaceURI, "text");
-    endLabel.setAttribute("x", String(width - 12));
-    endLabel.setAttribute("y", "151");
-    endLabel.setAttribute("text-anchor", "end");
-    endLabel.setAttribute("class", "component-graph__axis-label");
-    endLabel.textContent = formatAbsolute(buckets[buckets.length - 1]?.at, { includeTime: false });
-    svg.append(startLabel, endLabel);
-    panel.appendChild(svg);
+
+    if (model.graphType === "latency") {
+      model.segments.forEach((sourceSegment) => {
+        const segment = sourceSegment.map((point) => ({ ...point, y: yFor(point.latency) }));
+        const pathData = smoothChartPath(segment);
+        if (segment.length >= 3) {
+          const area = svgNode("path", "component-graph__area");
+          area.setAttribute("d", `${pathData} L${segment.at(-1).x.toFixed(2)} ${CHART_VIEW.bottom} L${segment[0].x.toFixed(2)} ${CHART_VIEW.bottom} Z`);
+          area.setAttribute("fill", `url(#${definitionId}-area)`);
+          svg.appendChild(area);
+        }
+        if (segment.length >= 2) {
+          const path = svgNode("path", "component-graph__line");
+          path.setAttribute("d", pathData);
+          path.setAttribute("pathLength", "1");
+          path.setAttribute("stroke", `url(#${definitionId}-line)`);
+          svg.appendChild(path);
+        }
+      });
+      const showAllLatencyPoints = model.latencyPoints.length <= 18;
+      model.latencyPoints.forEach((point) => {
+        const isCurrent = point === latestLatency;
+        if (!isCurrent && !showAllLatencyPoints) return;
+        const circle = svgNode("circle", `component-graph__point${isCurrent ? " is-current" : ""}`);
+        circle.setAttribute("cx", String(point.x));
+        circle.setAttribute("cy", String(yFor(point.latency)));
+        circle.setAttribute("r", isCurrent ? "4.2" : "2.1");
+        if (isCurrent) {
+          circle.setAttribute("tabindex", "0");
+          circle.setAttribute("role", "img");
+          circle.setAttribute("aria-label", `${formatAbsolute(point.at)} · ${point.latency} milliseconds · ${OBSERVED_STATE_LABELS[point.state]}`);
+        } else circle.setAttribute("aria-hidden", "true");
+        svg.appendChild(circle);
+        if (isCurrent) {
+          const tip = svgNode("circle", "component-graph__tip");
+          tip.setAttribute("cx", String(point.x));
+          tip.setAttribute("cy", String(yFor(point.latency)));
+          tip.setAttribute("r", "8");
+          svg.appendChild(tip);
+        }
+      });
+    } else {
+      const latestMarker = svgNode("circle", "component-graph__point is-current component-graph__point--state");
+      latestMarker.setAttribute("cx", String(latestObservation.x));
+      latestMarker.setAttribute("cy", String(stateY + stateHeight / 2));
+      latestMarker.setAttribute("r", "4.2");
+      latestMarker.setAttribute("data-state", latestObservation.state);
+      latestMarker.setAttribute("tabindex", "0");
+      latestMarker.setAttribute("role", "img");
+      latestMarker.setAttribute("aria-label", `${formatAbsolute(latestObservation.at)} · ${OBSERVED_STATE_LABELS[latestObservation.state]}`);
+      svg.appendChild(latestMarker);
+    }
+
+    const crosshair = svgNode("line", "component-graph__crosshair");
+    crosshair.setAttribute("y1", String(model.graphType === "latency" ? CHART_VIEW.top : 78));
+    crosshair.setAttribute("y2", String(model.graphType === "latency" ? CHART_VIEW.stateY + CHART_VIEW.stateHeight : 140));
+    const hoverPoint = svgNode("circle", "component-graph__hover-point");
+    hoverPoint.setAttribute("r", "4.4");
+    svg.append(crosshair, hoverPoint);
+
+    const plot = node("div", "component-graph__plot");
+    const tooltip = node("div", "component-graph__tooltip");
+    tooltip.hidden = true;
+    tooltip.setAttribute("aria-hidden", "true");
+    const tooltipTime = node("span");
+    const tooltipValue = node("strong");
+    const tooltipMeta = node("small");
+    tooltip.append(tooltipTime, tooltipValue, tooltipMeta);
+    plot.append(svg, tooltip);
+    panel.append(plot, xAxisLabels);
+
+    const pointY = (observation) => observation.latency === null ? stateY + stateHeight / 2 : yFor(observation.latency);
+    const showTooltip = (observation) => {
+      if (!observation) return;
+      const data = tooltipDataForObservation(observation);
+      tooltipTime.textContent = formatAbsolute(data.at);
+      tooltipValue.textContent = data.latency == null ? data.state : `${data.latency} ms`;
+      tooltipMeta.textContent = `${data.state}${data.availability == null ? " · availability unavailable" : ` · ${data.availability}% available`}`;
+      crosshair.setAttribute("x1", String(observation.x));
+      crosshair.setAttribute("x2", String(observation.x));
+      hoverPoint.setAttribute("cx", String(observation.x));
+      hoverPoint.setAttribute("cy", String(pointY(observation)));
+      hoverPoint.setAttribute("data-state", observation.state);
+      tooltip.hidden = false;
+      tooltip.setAttribute("aria-hidden", "false");
+      crosshair.classList.add("is-visible");
+      hoverPoint.classList.add("is-visible");
+      const bounds = plot.getBoundingClientRect();
+      const tooltipWidth = Math.min(tooltip.offsetWidth || 196, Math.max(120, bounds.width - 16));
+      const tooltipHeight = tooltip.offsetHeight || 76;
+      const rawLeft = (observation.x / CHART_VIEW.width) * bounds.width;
+      const rawTop = (pointY(observation) / CHART_VIEW.height) * bounds.height - tooltipHeight - 12;
+      tooltip.style.left = `${Math.max(8, Math.min(bounds.width - tooltipWidth - 8, rawLeft - tooltipWidth / 2))}px`;
+      tooltip.style.top = `${Math.max(8, Math.min(bounds.height - tooltipHeight - 8, rawTop))}px`;
+    };
+    const hideTooltip = () => {
+      tooltip.hidden = true;
+      tooltip.setAttribute("aria-hidden", "true");
+      crosshair.classList.remove("is-visible");
+      hoverPoint.classList.remove("is-visible");
+    };
+    if (window.matchMedia?.("(hover: hover) and (pointer: fine)")?.matches) {
+      plot.addEventListener("pointermove", (event) => {
+        const bounds = plot.getBoundingClientRect();
+        const x = ((event.clientX - bounds.left) / Math.max(1, bounds.width)) * CHART_VIEW.width;
+        showTooltip(nearestChartObservation(model.observations, x));
+      });
+      plot.addEventListener("pointerleave", hideTooltip);
+    }
+    const currentPoint = select(".component-graph__point.is-current", svg);
+    currentPoint?.addEventListener("focus", () => showTooltip(latestLatency || latestObservation));
+    currentPoint?.addEventListener("blur", hideTooltip);
+
     const legend = node("div", "component-graph__legend");
-    legend.append(node("span", "component-graph__legend-latency", "Latency samples"), node("span", "component-graph__legend-state", "Observed state band"), node("span", "component-graph__legend-gap", "Gap = no observation"));
+    if (model.graphType === "latency") legend.appendChild(node("span", "component-graph__legend-latency", "Measured latency"));
+    legend.append(node("span", "component-graph__legend-state", "Observed state history"), node("span", "component-graph__legend-gap", "Open space = no observation"));
     panel.appendChild(legend);
+    if (options.transition === "range" && !chartMotionReduced()) {
+      panel.classList.add("is-range-entering");
+      chartFrame(() => chartFrame(() => {
+        panel.classList.add("is-range-visible");
+        panel.removeAttribute("aria-busy");
+      }));
+      window.setTimeout(() => panel.classList.remove("is-range-entering", "is-range-visible"), 430);
+    } else panel.removeAttribute("aria-busy");
+    if (options.focusRange) select(`button[data-graph-range="${options.focusRange}"]`, controls)?.focus({ preventScroll: true });
   };
 
   const createComponentCard = (component, snapshot) => {
@@ -481,13 +833,20 @@
       detailItem("Last failure", diagnostic?.last_failure ? formatAbsolute(diagnostic.last_failure) : "Unavailable")
     );
     details.append(detailSummary, detailList);
+    let graph = null;
     if (source.coverage === "deferred") {
-      details.appendChild(node("p", "component-empty-state", "Automated monitoring is not active for this component. Official Statuspage state is currently maintained manually. Historical direct diagnostics will begin when monitoring is enabled."));
+      details.appendChild(component.id === "b6k38lrqx93f"
+        ? createIntentionalState("deferred", "Studio Room Readiness remains deferred", "A genuine end-to-end Studio, room, and media-readiness transaction is not yet implemented. No watchdog-observed graph is shown.", "Official current state remains available from Atlassian Statuspage.")
+        : createIntentionalState("deferred", "Automated monitoring is deferred", "No watchdog-observed history exists for this manual monitoring boundary, so no empty or synthetic graph is rendered.", "Official current state remains available from Atlassian Statuspage."));
     } else if (source.coverage === "vendor_managed") {
-      details.appendChild(node("p", "component-empty-state", "Managed by an Atlassian third-party integration. No local uptime graph is produced."));
+      details.appendChild(createIntentionalState("provider", "Managed through Atlassian's provider integration", "StreamSuites does not independently publish synthetic uptime or a local watchdog graph for this provider-owned component.", "Official provider state remains available from Atlassian Statuspage."));
     } else {
-      const graph = node("div", "component-graph");
-      renderHistoryGraph(graph, diagnostic || { component_id: component.id, history: {} }, state.graphRanges.get(component.id) || "24h");
+      graph = node("div", "component-graph");
+      renderHistoryGraph(graph, diagnostic || { component_id: component.id, history: {} }, state.graphRanges.get(component.id) || "24h", {
+        componentName: component.name,
+        isCoreApi: component.id === CORE_API_COMPONENT_ID,
+        stale: directObservationStale,
+      });
       details.appendChild(graph);
     }
     const incident = unresolvedIncidents(snapshot.data.incidents).find((item) => (item.components || []).some((entry) => entry.id === component.id));
@@ -500,7 +859,13 @@
       details.hidden = !expanded;
       toggle.setAttribute("aria-expanded", String(expanded));
       toggle.textContent = expanded ? "Close diagnostics ↑" : "View diagnostics ↓";
-      if (expanded) state.expanded.add(component.id); else state.expanded.delete(component.id);
+      if (expanded) {
+        state.expanded.add(component.id);
+        if (graph && !state.graphEntrances.has(component.id)) {
+          state.graphEntrances.add(component.id);
+          activateChartEntrance(graph);
+        }
+      } else state.expanded.delete(component.id);
     };
     toggle.addEventListener("click", () => setExpanded(toggle.getAttribute("aria-expanded") !== "true"));
     toggle.addEventListener("keydown", (event) => {

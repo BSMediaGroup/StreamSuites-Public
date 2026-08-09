@@ -7,6 +7,27 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), "utf8");
+const loadChartHelpers = () => {
+  const context = {
+    window: {
+      StreamSuitesStatusHelpers: {},
+      StreamSuitesStatusData: {},
+      matchMedia: () => ({ matches: false }),
+    },
+    document: { readyState: "loading", addEventListener() {} },
+    console,
+    Intl,
+  };
+  vm.runInNewContext(read("js/status-page.js"), context);
+  return context.window.StreamSuitesStatusChartHelpers;
+};
+const observation = (minute, latency_ms, state = "operational", availability_percent = 100) => ({
+  at: new Date(Date.UTC(2026, 7, 9, 0, minute)).toISOString(),
+  latency_ms,
+  state,
+  availability_percent,
+  sample_count: 1,
+});
 
 test("canonical status page uses the approved production brand and omits the floating widget", () => {
   const html = read("status.html");
@@ -98,18 +119,19 @@ test("component cards use meaningful icons, truthful source states, expansion, a
   assert.doesNotMatch(page, /componentInitial/);
   assert.match(page, /aria-expanded/);
   assert.match(page, /state\.graphRanges/);
+  assert.match(page, /state\.graphEntrances/);
   assert.match(page, /\["24h", "7d", "30d"\]/);
   assert.match(page, /role", "img"/);
   assert.match(page, /tabindex", "0"/);
-  assert.match(page, /aria-label", `\$\{formatAbsolute\(point\.at\)\}/);
+  assert.match(page, /aria-label", `\$\{formatAbsolute\(point\.at\)\} · \$\{point\.latency\} milliseconds/);
   assert.match(page, /Watchdog-observed availability|watchdog-observed availability/);
   assert.match(page, /if \(!activeRange\)/);
-  assert.match(page, /Sparse real history/);
+  assert.match(page, /History is still accumulating/);
   assert.match(page, /Nothing is interpolated or backfilled/);
   assert.match(page, /flushSegment\(\)/);
-  assert.match(page, /timestamp - previousTime > expectedGap/);
-  assert.match(page, /Managed by an Atlassian third-party integration/);
-  assert.match(page, /Automated monitoring is not active/);
+  assert.match(page, /observation\.time - previousTime > rangeMeta\.maxGapMs/);
+  assert.match(page, /Managed through Atlassian's provider integration/);
+  assert.match(page, /Automated monitoring is deferred/);
   assert.match(page, /Reconciliation pending/);
   assert.match(page, /!directObservationStale/);
   assert.match(page, /event\.key !== "Escape"/);
@@ -121,6 +143,99 @@ test("component cards use meaningful icons, truthful source states, expansion, a
   assert.match(css, /\.component-graph__axis-label/);
   assert.match(css, /\.component-graph__point:focus/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+});
+
+test("chart model preserves only real observations, explicit nulls, and measured zero values", () => {
+  const helpers = loadChartHelpers();
+  const buckets = [
+    observation(0, 120),
+    observation(5, null, "major_outage", 0),
+    observation(10, 0),
+  ];
+  const model = helpers.buildChartModel(buckets, "24h");
+  assert.equal(model.observations.length, buckets.length);
+  assert.deepEqual(Array.from(model.latencyPoints, (point) => point.latency), [120, 0]);
+  assert.deepEqual(Array.from(model.segments, (segment) => segment.length), [1, 1]);
+  assert.equal(model.observations[1].latency, null);
+  assert.equal(model.observations[1].availability, 0);
+});
+
+test("24H, 7D, and 30D models retain exact selected time domains", () => {
+  const helpers = loadChartHelpers();
+  const buckets = [observation(0, 100), observation(5, 110)];
+  for (const [range, duration] of [["24h", 86400000], ["7d", 604800000], ["30d", 2592000000]]) {
+    const model = helpers.buildChartModel(buckets, range);
+    assert.equal(model.endTime - model.startTime, duration, range);
+    assert.equal(model.rangeKey, range);
+  }
+});
+
+test("single and two-point latency history stays sparse without manufactured geometry", () => {
+  const helpers = loadChartHelpers();
+  const single = helpers.buildChartModel([observation(0, 84)], "24h");
+  assert.equal(single.latencyPoints.length, 1);
+  assert.equal(single.segments[0].length, 1);
+  assert.match(helpers.smoothChartPath([{ x: 10, y: 20 }]), /^M10\.00 20\.00$/);
+  const two = helpers.buildChartModel([observation(0, 84), observation(5, 92)], "24h");
+  assert.equal(two.segments[0].length, 2);
+  assert.match(helpers.smoothChartPath([{ x: 10, y: 20 }, { x: 30, y: 12 }]), / L30\.00 12\.00$/);
+  assert.doesNotMatch(helpers.smoothChartPath([{ x: 10, y: 20 }, { x: 30, y: 12 }]), / C/);
+});
+
+test("missing intervals split smooth curves instead of implying measurements", () => {
+  const helpers = loadChartHelpers();
+  const timestampGap = helpers.buildChartModel([observation(0, 80), observation(10, 95)], "24h");
+  assert.deepEqual(Array.from(timestampGap.segments, (segment) => segment.length), [1, 1]);
+  const explicitGap = helpers.buildChartModel([observation(0, 80), observation(5, null), observation(10, 95)], "24h");
+  assert.deepEqual(Array.from(explicitGap.segments, (segment) => segment.length), [1, 1]);
+});
+
+test("state-only history never manufactures a latency series", () => {
+  const helpers = loadChartHelpers();
+  const model = helpers.buildChartModel([observation(0, null), observation(5, null, "degraded_performance", 50)], "24h");
+  assert.equal(model.graphType, "state");
+  assert.equal(model.latencyPoints.length, 0);
+  assert.equal(model.observations.length, 2);
+  assert.equal(helpers.observedStateKey("scheduled_maintenance"), "maintenance");
+});
+
+test("nearest-point tooltip data is copied from a real observation", () => {
+  const helpers = loadChartHelpers();
+  const model = helpers.buildChartModel([observation(0, 80), observation(5, null, "partial_outage", 0), observation(10, 95)], "24h");
+  const source = model.observations[1];
+  const nearest = helpers.nearestChartObservation(model.observations, source.x);
+  const tooltip = helpers.tooltipDataForObservation(nearest);
+  assert.equal(tooltip.at, source.at);
+  assert.equal(tooltip.latency, null);
+  assert.equal(tooltip.availability, 0);
+  assert.equal(tooltip.state, "Partial outage");
+});
+
+test("premium SVG treatment remains dependency-free, range-accessible, and reduced-motion safe", () => {
+  const page = read("js/status-page.js");
+  const css = read("css/status-page.css");
+  const html = read("status.html");
+  assert.match(page, /createElementNS\("http:\/\/www\.w3\.org\/2000\/svg", tag\)/);
+  assert.match(page, /linearGradient/);
+  assert.match(page, /component-graph__area/);
+  assert.match(page, /pathLength", "1"/);
+  assert.match(page, /component-graph__point is-current/);
+  assert.match(page, /component-graph__crosshair/);
+  assert.match(page, /component-graph__tooltip/);
+  assert.match(page, /nearestChartObservation\(model\.observations, x\)/);
+  assert.match(page, /is-range-leaving/);
+  assert.match(page, /aria-pressed/);
+  assert.match(page, /ArrowRight|ArrowLeft/);
+  assert.match(page, /chartMotionReduced\(\)/);
+  assert.match(page, /panel\.dataset\.chartMotion = "reduced"/);
+  assert.match(page, /Core API response time/);
+  assert.match(page, /Range min/);
+  assert.match(page, /Observed average/);
+  assert.match(page, /Range max/);
+  assert.match(css, /stroke-dasharray:\s*1/);
+  assert.match(css, /chart-tip-settle/);
+  assert.match(css, /\.component-graph__area \{ opacity: 1 !important; transform: none !important; \}/);
+  assert.doesNotMatch(`${page}\n${html}`, /Chart\.js|\bd3\.|ApexCharts|ECharts|Highcharts|Recharts/);
 });
 
 test("group summaries and source labels expose the locked monitoring taxonomy", () => {
