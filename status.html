@@ -13,7 +13,7 @@
   <meta property="og:image" content="/assets/backgrounds/seoshare.jpg" />
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <link rel="canonical" href="https://streamsuites.app/status" />
-  <link rel="stylesheet" href="/css/status-page.css?v=20260808-status-center" />
+  <link rel="stylesheet" href="/css/status-page.css?v=20260809-status-diagnostics" />
 </head>
 <body class="status-page" data-page="status">
   <a class="skip-link" href="#main-content">Skip to content</a>
@@ -57,7 +57,7 @@
         <h1 id="status-title">Know what’s working.<br /><span>Know what changed.</span></h1>
         <p class="status-hero__lede">
           A complete public view of StreamSuites service health, product surfaces, dependencies,
-          incidents, and scheduled maintenance—read directly from the public Atlassian Statuspage feed.
+          incidents, and scheduled maintenance—officially sourced from Atlassian Statuspage, with optional independent diagnostics.
         </p>
         <div class="status-hero__actions">
           <button class="button button--primary" type="button" data-refresh-status>
@@ -108,14 +108,14 @@
             <path d="M320 124 C390 168 450 202 524 206" class="system-map__route system-map__route--deps" />
           </svg>
           <div class="system-map__hub" aria-hidden="true"><span>S</span></div>
-          <article class="system-map__node system-map__node--core" data-group-node="core">
+          <article class="system-map__node system-map__node--core" data-group-node="production">
+            <span class="system-map__node-dot"></span><strong>Products</strong><small data-group-summary="production">—</small>
+          </article>
+          <article class="system-map__node system-map__node--surface" data-group-node="core">
             <span class="system-map__node-dot"></span><strong>Core</strong><small data-group-summary="core">—</small>
           </article>
-          <article class="system-map__node system-map__node--surface" data-group-node="surfaces">
-            <span class="system-map__node-dot"></span><strong>Surfaces</strong><small data-group-summary="surfaces">—</small>
-          </article>
-          <article class="system-map__node system-map__node--edge" data-group-node="edge">
-            <span class="system-map__node-dot"></span><strong>Delivery</strong><small data-group-summary="edge">—</small>
+          <article class="system-map__node system-map__node--edge" data-group-node="web">
+            <span class="system-map__node-dot"></span><strong>Web</strong><small data-group-summary="web">—</small>
           </article>
           <article class="system-map__node system-map__node--deps" data-group-node="dependencies">
             <span class="system-map__node-dot"></span><strong>Dependencies</strong><small data-group-summary="dependencies">—</small>
@@ -136,7 +136,7 @@
           <p class="section-kicker">Status at a glance</p>
           <h2 id="overview-title">The current operating picture.</h2>
         </div>
-        <p>Every value is derived from the same public Statuspage payload used by the embedded widget.</p>
+        <p>Official state comes from Atlassian. Independent observations appear only when Runtime/Auth can provide a fresh, sanitized watchdog projection.</p>
       </div>
       <div class="status-metrics" aria-live="polite">
         <article class="status-metric status-metric--overall">
@@ -157,6 +157,19 @@
           <span class="status-metric__label">Maintenance windows</span>
         </article>
       </div>
+      <div class="diagnostic-overview" aria-live="polite">
+        <article>
+          <span>Core API response time</span>
+          <strong data-diagnostic-core-value>Awaiting measured data</strong>
+          <small data-diagnostic-core-meta>No real watchdog latency sample is available.</small>
+        </article>
+        <article>
+          <span>Studio Room Readiness</span>
+          <strong data-diagnostic-room-value>Deferred</strong>
+          <small>No genuine room transaction exists; homepage latency is not used as a substitute.</small>
+        </article>
+        <span class="diagnostic-source" data-diagnostic-source data-state="loading">Connecting to independent diagnostics</span>
+      </div>
     </section>
 
     <section class="components-section shell" id="components" aria-labelledby="components-title">
@@ -165,7 +178,7 @@
           <p class="section-kicker">Component directory</p>
           <h2 id="components-title">Every monitored component, in one place.</h2>
         </div>
-        <p>Core services, product surfaces, delivery infrastructure, and external dependencies use the same status vocabulary and colour system.</p>
+        <p>All four official groups and 21 child components show source ownership, monitor coverage, and expandable direct-observation detail without replacing Atlassian’s official state.</p>
       </div>
 
       <div class="component-controls reveal">
@@ -244,11 +257,12 @@
       <div class="transparency-card">
         <div class="transparency-card__copy">
           <p class="section-kicker">How this page works</p>
-          <h2 id="transparency-title">One public feed. Two consistent presentations.</h2>
-          <p>The full-page view and the reusable footer widget consume the same read-only Statuspage summary. The widget is no longer a reduced public-only variant: both Admin and Public can use the same detailed component, incident, and maintenance presentation.</p>
+          <h2 id="transparency-title">Official status first. Independent evidence second.</h2>
+          <p>The full-page view keeps Atlassian Statuspage as the incident and current-state authority. When available, a read-only Runtime/Auth projection adds bounded watchdog observations; unavailable or stale diagnostics never prevent Atlassian-only operation. The floating widget remains intentionally absent from this route.</p>
         </div>
         <dl class="transparency-card__facts">
-          <div><dt>Public API</dt><dd><code>/api/v2/summary.json</code></dd></div>
+          <div><dt>Official API</dt><dd><code>/api/v2/summary.json</code></dd></div>
+          <div><dt>Direct diagnostics</dt><dd><code>/api/public/status/diagnostics</code></dd></div>
           <div><dt>Refresh cadence</dt><dd>60 seconds</dd></div>
           <div><dt>Interaction</dt><dd>Click, keyboard, Escape</dd></div>
           <div><dt>Failure posture</dt><dd>Last known state + stale warning</dd></div>
@@ -274,13 +288,13 @@
     </div>
     <div class="shell site-footer__bottom">
       <a href="https://brainstream.media" target="_blank" rel="noopener noreferrer">© 2026 Brainstream Media Group</a>
-      <span>Status data is presented read-only from Atlassian.</span>
+      <span>Official status is read-only from Atlassian; direct diagnostics are secondary.</span>
       <a href="/version">Version reference</a>
     </div>
   </footer>
 
   <script src="/js/public-page-visit.js" defer></script>
-  <script src="/js/status-data.js" defer></script>
-  <script src="/js/status-page.js" defer></script>
+  <script src="/js/status-data.js?v=20260809-status-diagnostics" defer></script>
+  <script src="/js/status-page.js?v=20260809-status-diagnostics" defer></script>
 </body>
 </html>

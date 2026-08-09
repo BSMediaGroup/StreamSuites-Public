@@ -6,6 +6,23 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-09 - Public Status Center diagnostics and component-directory polish
+
+#### Technical notes
+
+- Upgraded the existing `/status` component directory without replacing its hero, header, typography, section order, incidents, maintenance, history, transparency, or dark visual language. The locked four-group/21-child topology now has explicit group ordering, excludes group records from cards, and retains Atlassian as the official state and incident authority.
+- Added optional reads from Runtime/Auth `GET /api/public/status/diagnostics`. Missing or stale diagnostics degrade to clear Atlassian-only operation; direct observations remain secondary, and a fresh official/direct disagreement produces a restrained reconciliation warning without changing either signal in the browser.
+- Replaced initial-letter tiles with meaningful local feature icons. Existing product/vendor assets are reused for Studio, StudioApp, OBS, Creator, Admin, Developer, Stripe, and GitHub; three generic current-color bell/cloud/envelope SVGs were added where no suitable local generic asset existed. No external logo was approximated.
+- Added source, ownership, coverage, freshness, official/direct timestamps, latency, and expandable details. Implemented components can show only real 24H/7D/30D watchdog history through dependency-free accessible SVG latency points and state bands; missing samples remain gaps. Deferred/manual and Atlassian vendor-managed cards explain their coverage and never render fake uptime.
+- Added a real Core API latency summary with awaiting-data behavior and kept Studio Room Readiness explicitly deferred because homepage latency is not a room transaction substitute. Graph range controls disable unavailable ranges, expansion uses native keyboard-operable buttons, screen-reader summaries accompany charts, and reduced motion collapses transitions to an immediate static state.
+- Removed the component card’s prior full-surface animated sheen because this milestone explicitly calls for restrained motion; hover elevation, focus treatment, details reveal, and graph presentation remain. The stylesheet is longer overall because diagnostics, responsive, and accessibility states were added.
+- Preserved the approved floating widget byte-for-byte and kept `/status` free of widget CSS, script, host, and slot references. Added focused coverage for the final taxonomy, icon files, official/direct hierarchy, optional diagnostics, deferred/vendor behavior, discrepancy state, real-history-only graphs, range controls, expansion, accessibility, reduced motion, and the no-widget boundary.
+- No version/build metadata, route, Auth contract, download gate, Worker/Cloudflare configuration, deployment, commit, push, or sibling repository outside the coordinated Runtime/Auth root changed.
+
+#### Human-readable notes
+
+The Status Center now explains what is official, what the independent watchdog directly observed, and what is not monitored yet. Components have recognizable icons and calm expandable evidence instead of letter tiles or made-up uptime, while the approved floating widget remains unchanged everywhere else and absent from `/status`.
+
 ### 2026-08-09 - Cinematic hero atmosphere and transition polish
 
 #### Technical notes

@@ -4,10 +4,12 @@
   if (window.StreamSuitesStatusData && window.StreamSuitesStatusHelpers) return;
 
   const API_BASE = "https://v0hwlmly3pd2.statuspage.io/api/v2";
+  const DIAGNOSTICS_URL = "https://api.streamsuites.app/api/public/status/diagnostics";
   const ENDPOINTS = Object.freeze({
     summary: `${API_BASE}/summary.json`,
     incidents: `${API_BASE}/incidents.json`,
     maintenances: `${API_BASE}/scheduled-maintenances.json`,
+    diagnostics: DIAGNOSTICS_URL,
   });
   const POLL_INTERVAL_MS = 60000;
   const REQUEST_TIMEOUT_MS = 8000;
@@ -61,6 +63,12 @@
     dependencies: "External dependencies",
     other: "Other components",
   });
+  const LOCKED_GROUP_ORDER = Object.freeze({
+    "statuspage:h70vntnsh3v9": 0,
+    "statuspage:z1wlqnyx91nl": 1,
+    "statuspage:mrlp0c2t3vlb": 2,
+    "statuspage:n8hrjx9krwgt": 3,
+  });
 
   const groupComponents = (components) => {
     const source = Array.isArray(components) ? components : [];
@@ -92,6 +100,9 @@
 
     const order = ["core", "surfaces", "edge", "dependencies", "other"];
     return [...groups.values()].sort((a, b) => {
+      const aLocked = LOCKED_GROUP_ORDER[a.id];
+      const bLocked = LOCKED_GROUP_ORDER[b.id];
+      if (aLocked != null || bLocked != null) return (aLocked ?? 999) - (bLocked ?? 999);
       const aIndex = order.indexOf(a.id);
       const bIndex = order.indexOf(b.id);
       if (aIndex !== -1 || bIndex !== -1) {
@@ -136,6 +147,7 @@
   const listeners = new Set();
   let currentSnapshot = null;
   let lastSuccessfulData = null;
+  let lastSuccessfulDiagnostics = null;
   let lastSuccessfulLatency = null;
   let inFlight = null;
   let intervalId = 0;
@@ -188,6 +200,7 @@
       fetchJson(ENDPOINTS.summary),
       fetchJson(ENDPOINTS.incidents),
       fetchJson(ENDPOINTS.maintenances),
+      fetchJson(ENDPOINTS.diagnostics),
     ]).then((results) => {
       if (results[0].status !== "fulfilled") throw results[0].reason;
       const data = mergePayloads(
@@ -198,8 +211,17 @@
       const latencyMs = Math.max(0, Math.round(performance.now() - started));
       lastSuccessfulData = data;
       lastSuccessfulLatency = latencyMs;
+      const diagnosticsResponse = results[3].status === "fulfilled" ? results[3].value : null;
+      const diagnostics = diagnosticsResponse?.available && diagnosticsResponse?.diagnostics
+        ? diagnosticsResponse.diagnostics
+        : null;
+      if (diagnostics) lastSuccessfulDiagnostics = diagnostics;
       currentSnapshot = {
         data,
+        diagnostics,
+        diagnosticsStale: Boolean(diagnosticsResponse?.stale),
+        diagnosticsLive: Boolean(diagnostics && !diagnosticsResponse?.stale),
+        diagnosticsError: diagnostics ? null : "Independent diagnostics unavailable.",
         live: true,
         stale: false,
         checkedAt: nowIso(),
@@ -212,6 +234,10 @@
     }).catch((error) => {
       currentSnapshot = {
         data: lastSuccessfulData,
+        diagnostics: lastSuccessfulDiagnostics,
+        diagnosticsStale: Boolean(lastSuccessfulDiagnostics),
+        diagnosticsLive: false,
+        diagnosticsError: "Independent diagnostics unavailable.",
         live: false,
         stale: Boolean(lastSuccessfulData),
         checkedAt: nowIso(),

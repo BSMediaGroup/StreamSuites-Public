@@ -29,7 +29,35 @@
     snapshot: null,
     search: "",
     filter: "all",
+    expanded: new Set(),
+    graphRanges: new Map(),
   };
+
+  const COMPONENT_PRESENTATION = Object.freeze({
+    "3qsdkc52dgt5": { icon: "/assets/icons/icondiag-studioweb.svg", description: "Browser-based studio shell and production workspace." },
+    "b6k38lrqx93f": { icon: "/assets/icons/ui/mobilecast.svg", description: "Realtime media and guest connection readiness." },
+    "q7435t6bd41x": { icon: "/assets/icons/icondiag-studioapp.svg", description: "Native StudioApp access to connected Runtime services." },
+    "4fp296vdg5w7": { icon: "/assets/icons/ui/tvlive.svg", description: "Streaming destination readiness and secure credential delivery." },
+    "94cn19vph28j": { icon: "/assets/icons/obs-0.svg", description: "Studio for OBS connected service boundary." },
+    "tb383cr2p92n": { icon: "/assets/icons/ui/shieldlock.svg", description: "Authentication, account authority, and managed sessions." },
+    "4vrh4mg9l4hn": { icon: "/assets/icons/ui/meetingroom.svg", description: "Studio rooms, participants, and room-scoped invitations." },
+    "0xm0hsy3byjj": { icon: "/assets/icons/ui/storage.svg", description: "Public APIs, published exports, and the canonical version registry." },
+    "3xjjgpbydbbf": { icon: "/assets/icons/ui/zapmagnet.svg", description: "Creator-scoped automation and trigger execution." },
+    "qbczblv2hgv8": { icon: "/assets/icons/ui/status-bell.svg", description: "Alert evaluation and notification delivery." },
+    "6ww27z4z9vj8": { icon: "/assets/icons/ui/chatnotif.svg", description: "Platform integrations and live-chat services." },
+    "zx07yy34tyvl": { icon: "/assets/icons/ui/ss-public.svg", description: "Public website and this Status Center." },
+    "rdb3pmbvr4bv": { icon: "/assets/icons/ui/photostackflower.svg", description: "Public profiles, community discovery, and artifacts." },
+    "5wm11qq4b7w9": { icon: "/assets/icons/ui/ss-creator.svg", description: "Creator-facing dashboard and control surfaces." },
+    "jnd29jsl8w7b": { icon: "/assets/icons/ui/ss-admin.svg", description: "Administrative dashboard and operations surfaces." },
+    "8x9n41kfjtc8": { icon: "/assets/icons/ui/ss-developer.svg", description: "Developer console and shipped-reality documentation." },
+    "p00vypwhfhx3": { icon: "/assets/icons/ui/download.svg", description: "Fail-closed downloads and update distribution." },
+    "n1lw27451j6d": { icon: "/assets/icons/ui/status-cloud.svg", description: "Cloudflare-managed Pages delivery state." },
+    "8zfbmn6ynv99": { icon: "/assets/icons/ui/status-envelope.svg", description: "Transactional email delivery." },
+    "5qbjrf4hq5nn": { icon: "/assets/icons/stripeicon-0.svg", description: "Stripe-managed payment API state." },
+    "gd23vgnp3n89": { icon: "/assets/icons/github-0.svg", description: "GitHub-managed Git operations state." },
+  });
+  const IMPLEMENTED_COMPONENTS = new Set(["3qsdkc52dgt5", "q7435t6bd41x", "94cn19vph28j", "tb383cr2p92n", "0xm0hsy3byjj", "zx07yy34tyvl", "rdb3pmbvr4bv", "5wm11qq4b7w9", "jnd29jsl8w7b", "8x9n41kfjtc8", "p00vypwhfhx3"]);
+  const VENDOR_COMPONENTS = new Set(["n1lw27451j6d", "5qbjrf4hq5nn", "gd23vgnp3n89"]);
 
   const select = (selector, root = document) => root.querySelector(selector);
   const selectAll = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -60,9 +88,15 @@
 
   const inferGroupKey = (group) => {
     const id = String(group?.id || "");
+    if (id === "statuspage:h70vntnsh3v9") return "production";
+    if (id === "statuspage:z1wlqnyx91nl") return "core";
+    if (id === "statuspage:mrlp0c2t3vlb") return "web";
+    if (id === "statuspage:n8hrjx9krwgt") return "dependencies";
     if (["core", "surfaces", "edge", "dependencies"].includes(id)) return id;
     const label = String(group?.label || "").toLowerCase();
     if (/core|runtime|identity|auth/.test(label)) return "core";
+    if (/production product/.test(label)) return "production";
+    if (/web|audience/.test(label)) return "web";
     if (/surface|product|client|application/.test(label)) return "surfaces";
     if (/edge|delivery|network|cloudflare/.test(label)) return "edge";
     return "dependencies";
@@ -118,7 +152,7 @@
     }
 
     const groups = groupComponents(data.components);
-    const aggregate = { core: [], surfaces: [], edge: [], dependencies: [] };
+    const aggregate = { production: [], core: [], web: [], dependencies: [] };
     groups.forEach((group) => {
       const key = inferGroupKey(group);
       aggregate[key].push(...group.components);
@@ -146,6 +180,17 @@
     setText("[data-metric-operational]", `${operational}/${components.length}`);
     setText("[data-metric-incidents]", String(incidents.length));
     setText("[data-metric-maintenance]", String(maintenances.length));
+    const coreMetric = snapshot.diagnostics?.metrics?.core_api_response_time;
+    setText("[data-diagnostic-core-value]", coreMetric?.value_ms == null ? "Awaiting measured data" : `${coreMetric.value_ms} ms`);
+    setText("[data-diagnostic-core-meta]", coreMetric?.value_ms == null
+      ? "No real watchdog latency sample is available."
+      : `${coreMetric.history?.["24h"]?.sample_count || 0} observed samples · ${snapshot.diagnosticsStale ? "stale" : "fresh"}`);
+    setText("[data-diagnostic-room-value]", "Deferred");
+    const diagnosticSource = select("[data-diagnostic-source]");
+    if (diagnosticSource) {
+      diagnosticSource.dataset.state = snapshot.diagnosticsLive ? "live" : snapshot.diagnostics ? "stale" : "unavailable";
+      diagnosticSource.textContent = snapshot.diagnosticsLive ? "Independent diagnostics connected" : snapshot.diagnostics ? "Independent diagnostics stale" : "Atlassian-only mode";
+    }
   };
 
   const matchesFilter = (component) => {
@@ -156,26 +201,232 @@
     return true;
   };
 
-  const componentInitial = (name) => {
-    const words = String(name || "").replace(/StreamSuites/gi, "").trim().split(/\s+/).filter(Boolean);
-    if (!words.length) return "S";
-    return words.slice(0, 2).map((word) => word[0]).join("").toUpperCase();
+  const diagnosticFor = (component, snapshot) => snapshot.diagnostics?.components?.[component.id] ||
+    Object.values(snapshot.diagnostics?.components || {}).find((item) => item?.component_id === component.id) || null;
+
+  const fallbackCoverage = (componentId) => VENDOR_COMPONENTS.has(componentId)
+    ? { owner: "atlassian_third_party", coverage: "vendor_managed", monitor_mode: "external_provider" }
+    : IMPLEMENTED_COMPONENTS.has(componentId)
+      ? { owner: "watchdog", coverage: "implemented", monitor_mode: "external_black_box" }
+      : { owner: "manual_deferred", coverage: "deferred", monitor_mode: "deferred" };
+
+  const chipLabel = (value) => ({
+    watchdog: "Independent watchdog",
+    atlassian_third_party: "Atlassian integration",
+    manual_deferred: "Manual / deferred",
+    implemented: "Automated coverage",
+    vendor_managed: "Vendor managed",
+    deferred: "Monitoring deferred",
+    external_black_box: "External black box",
+    safe_authority_boundary: "Safe authority boundary",
+    direct_diagnostic: "Direct diagnostic",
+    external_provider: "External provider",
+  })[value] || String(value || "Unavailable").replaceAll("_", " ");
+
+  const detailItem = (label, value) => {
+    const wrapper = node("div", "component-detail");
+    wrapper.append(node("dt", "", label), node("dd", "", value || "Unavailable"));
+    return wrapper;
   };
 
-  const createComponentCard = (component) => {
+  const renderHistoryGraph = (panel, diagnostic, requestedRange) => {
+    panel.innerHTML = "";
+    const ranges = ["24h", "7d", "30d"];
+    const available = ranges.filter((key) => (diagnostic?.history?.[key]?.buckets || []).length);
+    const controls = node("div", "component-graph__controls");
+    controls.setAttribute("aria-label", "Watchdog history range");
+    const activeRange = available.includes(requestedRange) ? requestedRange : available[0];
+    ranges.forEach((key) => {
+      const button = node("button", key === activeRange ? "is-active" : "", key.toUpperCase());
+      button.type = "button";
+      button.dataset.graphRange = key;
+      button.disabled = !available.includes(key);
+      button.setAttribute("aria-pressed", String(key === activeRange));
+      button.addEventListener("click", () => {
+        state.graphRanges.set(diagnostic.component_id, key);
+        renderHistoryGraph(panel, diagnostic, key);
+      });
+      controls.appendChild(button);
+    });
+    panel.appendChild(controls);
+    if (!activeRange) {
+      panel.appendChild(node("p", "component-graph__empty", "Historical direct diagnostics will begin when real watchdog observations are available."));
+      return;
+    }
+    const range = diagnostic.history[activeRange];
+    const buckets = range.buckets;
+    const summary = node("p", "component-graph__summary");
+    summary.textContent = `${activeRange.toUpperCase()} watchdog-observed availability: ${range.availability_percent == null ? "Unavailable" : `${range.availability_percent}%`}. ${range.sample_count || 0} samples.`;
+    panel.appendChild(summary);
+
+    const width = 720;
+    const height = 154;
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", summary.textContent);
+    svg.classList.add("component-graph__svg");
+    const timestamps = buckets.map((bucket) => Date.parse(bucket.at)).filter(Number.isFinite);
+    const start = Math.min(...timestamps);
+    const end = Math.max(...timestamps, start + 1);
+    const xFor = (value) => 12 + ((Date.parse(value) - start) / Math.max(1, end - start)) * (width - 24);
+    const latencyValues = buckets.map((bucket) => bucket.latency_ms).filter((value) => Number.isFinite(value));
+    const maxLatency = Math.max(1, ...latencyValues);
+    const yFor = (value) => 96 - (Number(value) / maxLatency) * 72;
+    const expectedGap = activeRange === "24h" ? 600000 : 172800000;
+
+    buckets.forEach((bucket, index) => {
+      const rect = document.createElementNS(svg.namespaceURI, "rect");
+      const x = xFor(bucket.at);
+      const nextX = buckets[index + 1] ? xFor(buckets[index + 1].at) : x + 4;
+      rect.setAttribute("x", String(x));
+      rect.setAttribute("y", "118");
+      rect.setAttribute("width", String(Math.max(3, nextX - x - 1)));
+      rect.setAttribute("height", "14");
+      rect.setAttribute("rx", "2");
+      rect.setAttribute("data-state", bucket.state || "unknown");
+      const title = document.createElementNS(svg.namespaceURI, "title");
+      title.textContent = `${formatAbsolute(bucket.at)} · ${bucket.availability_percent == null ? "availability unavailable" : `${bucket.availability_percent}% available`}`;
+      rect.appendChild(title);
+      svg.appendChild(rect);
+    });
+
+    let segment = [];
+    const flushSegment = () => {
+      if (!segment.length) return;
+      if (segment.length > 1) {
+        const path = document.createElementNS(svg.namespaceURI, "path");
+        path.setAttribute("d", segment.map((point, index) => `${index ? "L" : "M"}${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(" "));
+        path.setAttribute("class", "component-graph__line");
+        svg.appendChild(path);
+      }
+      segment.forEach((point) => {
+        const circle = document.createElementNS(svg.namespaceURI, "circle");
+        circle.setAttribute("cx", String(point.x));
+        circle.setAttribute("cy", String(point.y));
+        circle.setAttribute("r", "3");
+        circle.setAttribute("class", "component-graph__point");
+        const title = document.createElementNS(svg.namespaceURI, "title");
+        title.textContent = `${formatAbsolute(point.at)} · ${point.latency} ms`;
+        circle.appendChild(title);
+        svg.appendChild(circle);
+      });
+      segment = [];
+    };
+    let previousTime = null;
+    buckets.forEach((bucket) => {
+      const timestamp = Date.parse(bucket.at);
+      if (!Number.isFinite(bucket.latency_ms)) {
+        flushSegment();
+        previousTime = timestamp;
+        return;
+      }
+      if (previousTime != null && timestamp - previousTime > expectedGap) flushSegment();
+      segment.push({ x: xFor(bucket.at), y: yFor(bucket.latency_ms), at: bucket.at, latency: bucket.latency_ms });
+      previousTime = timestamp;
+    });
+    flushSegment();
+    panel.appendChild(svg);
+    panel.appendChild(node("p", "component-graph__legend", "Latency points · state-coloured availability band · gaps mean no observation"));
+  };
+
+  const createComponentCard = (component, snapshot) => {
     const card = node("article", "component-card");
     card.dataset.state = component.normalizedState;
+    card.dataset.componentId = component.id || "";
     card.style.setProperty("--component-color", STATUS_COLORS[component.normalizedState] || STATUS_COLORS.unknown);
+    const presentation = COMPONENT_PRESENTATION[component.id] || { icon: "/assets/icons/ui/pageinfo.svg", description: "Statuspage component." };
+    const diagnostic = diagnosticFor(component, snapshot);
+    const source = diagnostic || fallbackCoverage(component.id);
+    const cardId = `component-${String(component.id || "unknown").replace(/[^a-z0-9_-]/gi, "")}`;
 
     const identity = node("div", "component-card__identity");
-    const icon = node("span", "component-card__icon", componentInitial(component.name));
+    const icon = node("span", "component-card__icon");
     icon.setAttribute("aria-hidden", "true");
+    const image = document.createElement("img");
+    image.src = presentation.icon;
+    image.alt = "";
+    icon.appendChild(image);
     const copy = node("div");
-    copy.append(node("h4", "", component.name || "Unnamed component"), node("p", "", `Component status · ${component.statusLabel}`));
+    const heading = node("h4", "", component.name || "Unnamed component");
+    heading.id = `${cardId}-title`;
+    copy.append(heading, node("p", "", diagnostic?.description || presentation.description));
     identity.append(icon, copy);
 
     const badge = node("span", "component-state", component.statusLabel);
-    card.append(identity, badge);
+    const top = node("div", "component-card__top");
+    top.append(identity, badge);
+    const chips = node("div", "component-card__chips");
+    const ownerChip = node("span", "component-chip", chipLabel(source.owner));
+    ownerChip.dataset.kind = source.owner || "unknown";
+    const coverageChip = node("span", "component-chip", chipLabel(source.coverage));
+    coverageChip.dataset.kind = source.coverage || "unknown";
+    chips.append(ownerChip, coverageChip);
+
+    const directObservationStale = Boolean(snapshot.diagnosticsStale || diagnostic?.direct_stale);
+    const facts = node("div", "component-card__facts");
+    facts.append(
+      node("span", "", `Official update · ${formatRelative(component.updated_at)}`),
+      node("span", "", diagnostic?.last_checked ? `Direct check · ${formatRelative(diagnostic.last_checked)}` : "Direct check · unavailable"),
+      node("span", "", diagnostic?.last_checked ? `Direct observation · ${directObservationStale ? "stale" : "fresh"}` : "Direct observation · unavailable")
+    );
+    if (diagnostic?.latency_ms != null) facts.appendChild(node("span", "component-card__latency", `${diagnostic.latency_ms} ms`));
+
+    const directState = diagnostic?.direct_state ? normalizeComponent({ status: diagnostic.direct_state }).normalizedState : null;
+    const discrepancy = Boolean(diagnostic && !directObservationStale && directState && directState !== "unknown" && directState !== component.normalizedState);
+    if (discrepancy) {
+      const warning = node("p", "component-discrepancy", "Monitor discrepancy · official and direct observations differ; reconciliation may be pending.");
+      warning.setAttribute("role", "status");
+      card.append(top, chips, facts, warning);
+    } else {
+      card.append(top, chips, facts);
+    }
+
+    const toggle = node("button", "component-card__toggle", "View diagnostics");
+    toggle.type = "button";
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.setAttribute("aria-controls", `${cardId}-details`);
+    const details = node("div", "component-card__details");
+    details.id = `${cardId}-details`;
+    details.hidden = true;
+    const detailList = node("dl", "component-details-grid");
+    detailList.append(
+      detailItem("Official source", "Atlassian Statuspage"),
+      detailItem("Direct source", source.owner === "watchdog" ? chipLabel(source.monitor_mode) : chipLabel(source.owner)),
+      detailItem("Ownership", chipLabel(source.owner)),
+      detailItem("Coverage", chipLabel(source.coverage)),
+      detailItem("Last checked", diagnostic?.last_checked ? formatAbsolute(diagnostic.last_checked) : "Unavailable"),
+      detailItem("Direct state", diagnostic?.direct_state ? chipLabel(diagnostic.direct_state) : "Unavailable"),
+      detailItem("24H availability", diagnostic?.history?.["24h"]?.availability_percent == null ? "Unavailable" : `${diagnostic.history["24h"].availability_percent}%`),
+      detailItem("7D availability", diagnostic?.history?.["7d"]?.availability_percent == null ? "Unavailable" : `${diagnostic.history["7d"].availability_percent}%`),
+      detailItem("30D availability", diagnostic?.history?.["30d"]?.availability_percent == null ? "Unavailable" : `${diagnostic.history["30d"].availability_percent}%`),
+      detailItem("30D observations", String(diagnostic?.history?.["30d"]?.sample_count || 0)),
+      detailItem("Recent latency", diagnostic?.latency_ms == null ? "Unavailable" : `${diagnostic.latency_ms} ms`),
+      detailItem("Last success", diagnostic?.last_success ? formatAbsolute(diagnostic.last_success) : "Unavailable"),
+      detailItem("Last failure", diagnostic?.last_failure ? formatAbsolute(diagnostic.last_failure) : "Unavailable")
+    );
+    details.appendChild(detailList);
+    if (source.coverage === "deferred") {
+      details.appendChild(node("p", "component-empty-state", "Automated monitoring is not active for this component. Official Statuspage state is currently maintained manually. Historical direct diagnostics will begin when monitoring is enabled."));
+    } else if (source.coverage === "vendor_managed") {
+      details.appendChild(node("p", "component-empty-state", "Managed by an Atlassian third-party integration. No local uptime graph is produced."));
+    } else {
+      const graph = node("div", "component-graph");
+      renderHistoryGraph(graph, diagnostic || { component_id: component.id, history: {} }, state.graphRanges.get(component.id) || "24h");
+      details.appendChild(graph);
+    }
+    const incident = unresolvedIncidents(snapshot.data.incidents).find((item) => (item.components || []).some((entry) => entry.id === component.id));
+    if (incident) details.appendChild(node("p", "component-incident", `Associated incident · ${incident.name || "Active incident"}`));
+    card.append(toggle, details);
+    const setExpanded = (expanded) => {
+      card.classList.toggle("is-expanded", expanded);
+      details.hidden = !expanded;
+      toggle.setAttribute("aria-expanded", String(expanded));
+      toggle.textContent = expanded ? "Hide diagnostics" : "View diagnostics";
+      if (expanded) state.expanded.add(component.id); else state.expanded.delete(component.id);
+    };
+    toggle.addEventListener("click", () => setExpanded(toggle.getAttribute("aria-expanded") !== "true"));
+    setExpanded(state.expanded.has(component.id));
     return card;
   };
 
@@ -199,7 +450,7 @@
       const operational = visible.filter((component) => component.normalizedState === "operational").length;
       heading.append(node("h3", "", group.label), node("span", "", `${operational}/${visible.length} operational`));
       const grid = node("div", "component-grid");
-      visible.forEach((component) => grid.appendChild(createComponentCard(component)));
+      visible.forEach((component) => grid.appendChild(createComponentCard(component, snapshot)));
       section.append(heading, grid);
       groupsRoot.appendChild(section);
     });

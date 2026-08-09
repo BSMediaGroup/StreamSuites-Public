@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
+import vm from "node:vm";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -56,10 +57,65 @@ test("status controller is read-only, bounded, stale-safe, and has no demo or fa
   assert.match(script, /cache:\s*"no-store"/);
   assert.match(script, /REQUEST_TIMEOUT_MS\s*=\s*8000/);
   assert.match(script, /POLL_INTERVAL_MS\s*=\s*60000/);
+  assert.match(script, /api\/public\/status\/diagnostics/);
+  assert.match(script, /diagnosticsLive/);
+  assert.match(read("js/status-page.js"), /Atlassian-only mode/);
   assert.match(script, /lastSuccessfulData/);
   assert.match(script, /visibilitychange/);
   assert.doesNotMatch(script, /localStorage|\?demo=|fallbackComponents|createFallback|api\/v2\/components\/[^"'`]*\.(?:json|put|post)/i);
   assert.doesNotMatch(script, /api[_-]?key|manage\.statuspage|method:\s*["'](?:POST|PUT|PATCH|DELETE)/i);
+});
+
+test("final locked topology renders four groups and 21 child components without group cards", () => {
+  const source = read("js/status-data.js");
+  const context = { window: {}, document: {}, console, performance: { now: () => 0 }, AbortController, fetch: async () => ({ ok: true, json: async () => ({}) }), CustomEvent: class {} };
+  vm.runInNewContext(source, context);
+  const groups = [
+    ["h70vntnsh3v9", "Production Products"], ["z1wlqnyx91nl", "Core Platform"],
+    ["mrlp0c2t3vlb", "Web & Audience Surfaces"], ["n8hrjx9krwgt", "External Dependencies"],
+  ];
+  const childIds = [
+    "3qsdkc52dgt5", "b6k38lrqx93f", "q7435t6bd41x", "4fp296vdg5w7", "94cn19vph28j",
+    "tb383cr2p92n", "4vrh4mg9l4hn", "0xm0hsy3byjj", "3xjjgpbydbbf", "qbczblv2hgv8", "6ww27z4z9vj8",
+    "zx07yy34tyvl", "rdb3pmbvr4bv", "5wm11qq4b7w9", "jnd29jsl8w7b", "8x9n41kfjtc8", "p00vypwhfhx3",
+    "n1lw27451j6d", "8zfbmn6ynv99", "5qbjrf4hq5nn", "gd23vgnp3n89",
+  ];
+  const components = groups.map(([id, name], position) => ({ id, name, group: true, position }));
+  childIds.forEach((id, position) => components.push({ id, name: `Component ${position + 1}`, group: false, group_id: groups[Math.floor(position / 6)]?.[0] || groups[3][0], status: "operational", position }));
+  const grouped = context.window.StreamSuitesStatusHelpers.groupComponents(components);
+  assert.equal(grouped.length, 4);
+  assert.equal(grouped.reduce((count, group) => count + group.components.length, 0), 21);
+  assert.equal(Array.from(grouped, (group) => group.label).join("|"), groups.map((group) => group[1]).join("|"));
+  assert.equal(grouped.some((group) => group.components.some((component) => component.group)), false);
+});
+
+test("component cards use meaningful icons, truthful source states, expansion, and real-history-only graphs", () => {
+  const page = read("js/status-page.js");
+  const html = read("status.html");
+  const css = read("css/status-page.css");
+  const iconEntries = page.match(/"[a-z0-9]{12}": \{ icon:/g) || [];
+  assert.equal(iconEntries.length, 21);
+  assert.doesNotMatch(page, /componentInitial/);
+  assert.match(page, /aria-expanded/);
+  assert.match(page, /state\.graphRanges/);
+  assert.match(page, /\["24h", "7d", "30d"\]/);
+  assert.match(page, /role", "img"/);
+  assert.match(page, /Watchdog-observed availability|watchdog-observed availability/);
+  assert.match(page, /if \(!activeRange\)/);
+  assert.match(page, /Managed by an Atlassian third-party integration/);
+  assert.match(page, /Automated monitoring is not active/);
+  assert.match(page, /Monitor discrepancy/);
+  assert.match(html, /Atlassian-only operation/);
+  assert.match(html, /Studio Room Readiness/);
+  assert.match(css, /\.component-card\.is-expanded/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+});
+
+test("all newly referenced status icons exist locally", () => {
+  const page = read("js/status-page.js");
+  const iconPaths = [...page.matchAll(/icon: "(\/assets\/icons\/[^"]+)"/g)].map((match) => match[1]);
+  assert.equal(iconPaths.length, 22);
+  for (const iconPath of iconPaths) assert.ok(fs.existsSync(path.join(root, iconPath.slice(1))), iconPath);
 });
 
 test("public widget implements the approved idle, hover, detailed, and footer-aware states", () => {
