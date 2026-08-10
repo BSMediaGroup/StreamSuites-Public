@@ -1311,7 +1311,6 @@
     menu.addEventListener("pointerleave", () => {
       if (window.matchMedia?.("(hover: hover) and (pointer: fine)")?.matches && !menu.contains(document.activeElement)) setOpen(false);
     });
-    menu.addEventListener("focusin", () => setOpen(true));
     menu.addEventListener("focusout", () => window.setTimeout(() => {
       if (!menu.contains(document.activeElement)) setOpen(false);
     }, 0));
@@ -1363,7 +1362,7 @@
     trigger.setAttribute("aria-expanded", "false");
     trigger.setAttribute("aria-controls", id);
     trigger.dataset.reportMenuTrigger = "";
-    trigger.append("Export ", (() => { const mark = document.createElement("span"); mark.setAttribute("aria-hidden", "true"); mark.textContent = "⌄"; return mark; })());
+    trigger.append("Export ", (() => { const mark = document.createElement("span"); mark.className = "report-menu__chevron"; mark.setAttribute("aria-hidden", "true"); return mark; })());
     const options = document.createElement("div");
     options.className = "report-menu__options";
     options.id = id;

@@ -421,13 +421,43 @@ test("status report menus and one reusable modal expose full and component forma
   assert.match(html, /aria-modal="true"/);
   assert.match(html, /name="status-report-range" value="5h"/);
   assert.match(page, /StreamSuitesStatusReport\?\.createFormatMenu/);
+  assert.match(page, /if \(reportMenu\) footer\.appendChild\(reportMenu\);\s*footer\.appendChild\(toggle\);/);
+  assert.doesNotMatch(page, /detailHeader\.appendChild\(reportMenu\)/);
   assert.match(report, /scopeType\s*=\s*"component"/);
+  assert.match(report, /mark\.className = "report-menu__chevron"/);
   assert.match(report, /event\.key === "Escape"/);
   assert.match(report, /event\.key !== "Tab"/);
   assert.match(report, /state\.previousFocus/);
+  assert.doesNotMatch(report, /menu\.addEventListener\("focusin", \(\) => setOpen\(true\)\)/);
   assert.match(report, /Preparing report|Building report/);
   assert.match(reportCss, /@media \(max-width: 600px\)/);
   assert.match(reportCss, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(reportCss, /\.report-menu__chevron::before[\s\S]*?border-right:[\s\S]*?border-bottom:/);
+  assert.match(reportCss, /\.report-menu--component \.report-menu__options[\s\S]*?bottom: calc\(100% \+ 6px\)/);
+  assert.match(reportCss, /\.component-card__footer \.report-menu--component \.report-menu__options \{[\s\S]*?right: auto;[\s\S]*?left: 0;[\s\S]*?transform-origin: bottom left;/);
+  assert.match(reportCss, /\.report-modal[\s\S]*?scrollbar-width: thin;[\s\S]*?scrollbar-color:/);
+  assert.match(reportCss, /\.report-modal::-webkit-scrollbar \{[\s\S]*?width: 6px;/);
+});
+
+test("official non-operational states tint the hero, diagram, component frame, and component glyph", () => {
+  const page = read("js/status-page.js");
+  const css = read("css/status-page.css");
+  assert.match(page, /const overallState = stateFromIndicator\(data\.status\?\.indicator, data\.status\?\.description\)/);
+  assert.match(page, /hero\.dataset\.state = overallState/);
+  assert.match(page, /document\.body\.dataset\.statusState = overallState/);
+  assert.match(page, /maintenance: "#a78bfa"/);
+  assert.match(page, /icon\.style\.setProperty\("--component-icon", `url\("\$\{presentation\.icon\}"\)`\)/);
+  for (const state of ["degraded", "partial", "major", "critical", "maintenance", "unknown"]) {
+    assert.match(css, new RegExp(`data-status-state="${state}"`));
+  }
+  assert.match(css, /\.status-page\[data-status-state\]:not\(\[data-status-state="operational"\]\) \.page-ambient__orb--blue/);
+  assert.match(css, /\.status-hero\[data-state\]:not\(\[data-state="operational"\]\) \.status-hero__feature-line/);
+  assert.match(css, /\.status-hero\[data-state\]:not\(\[data-state="operational"\]\) \.status-hero__feature-line \{[\s\S]*?background-image: linear-gradient/);
+  assert.match(css, /\.status-hero\[data-state\]:not\(\[data-state="operational"\]\) \.system-pulse/);
+  assert.match(css, /\.status-hero\[data-state\]:not\(\[data-state="operational"\]\) \.system-map__node/);
+  assert.match(css, /\.component-card:not\(\[data-state="operational"\]\) \{[\s\S]*?border-color:[\s\S]*?radial-gradient/);
+  assert.match(css, /\.component-card\.is-expanded:not\(\[data-state="operational"\]\)/);
+  assert.match(css, /\.component-card:not\(\[data-state="operational"\]\) \.component-card__icon::before[\s\S]*?background: var\(--component-color\)[\s\S]*?mask: var\(--component-icon\)/);
 });
 
 test("hero diagram uses production SVG assets and sequential semantic routes", () => {

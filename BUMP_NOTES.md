@@ -6,6 +6,19 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-10 - Status-aware hero, component tinting, and report-control polish
+
+#### Technical notes
+
+- Bound the existing official Atlassian overall state to scoped hero presentation attributes. Normal operations retain the approved blue-black atmosphere, steel/cyan/pale/violet feature-line gradient, multicolour system diagram, and neutral operational component surfaces unchanged. Degraded, partial-outage, major/critical-outage, maintenance, and unavailable states now recolour the animated ambient orbs, hero atmosphere, feature-text gradient, pulse frame, rings, routes, nodes, and authority hub with the matching gold, orange, red, violet, or steel state colour; optional watchdog posture still does not override official hero state.
+- Extended the existing per-component semantic colour to the complete non-operational card border, surface gradient, top rail, glow, expanded frame, icon container, and a current-colour mask of the exact mapped local icon. Operational cards continue to use the prior neutral surface and original light icon rendering. Maintenance changed from the normal-operation-adjacent blue to a distinct violet semantic treatment; no icon asset, component ID, source, coverage, or status normalization was replaced.
+- Relocated each existing component report menu from the expanded detail header into the persistent footer immediately beside View/Close diagnostics, making the same single menu available in both collapsed and expanded states. The footer menu opens upward inside the clipped card, aligns inward on narrow screens, and no longer lets trigger focus pre-open then invert the first click. Its text `⌄` glyph was replaced by a bordered CSS chevron that rotates with open state, and the shared report modal/backdrop now use 6px dark Chromium scrollbars plus the platform `thin` scrollbar contract. No report format, schema, allowlist, range, modal, or export generator was duplicated or changed.
+- Added focused source assertions for official-state hero scoping, operational exclusions, semantic card/icon masks, persistent report placement, the shaped chevron, inward dropdown, and dark slim modal scrollbars. Advanced only the bounded `/status` stylesheet/controller presentation cache key. No file, dependency, route, Runtime/Auth source, Statuspage configuration, Cloudflare configuration, component ID, canonical version/build value, deployment, or widget boundary was added, removed, or changed. The CSS is longer because the requested semantic states are additive; the JavaScript is effectively the same size apart from state bindings, the icon-mask source, and report-menu relocation.
+
+#### Human-readable notes
+
+Status problems now look like status problems: affected cards tint their full frame and icon, and the hero shifts from its normal blue presentation to gold, orange, red, violet, or steel when the official system posture changes. Export now stays beside the diagnostics button whether a card is open or closed, with a clearer arrow and a slimmer dark report-window scrollbar.
+
 ### 2026-08-10 - Overall availability, 5H analytics, and operational status reports
 
 #### Technical notes

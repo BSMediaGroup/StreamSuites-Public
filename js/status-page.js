@@ -21,7 +21,7 @@
     partial: "#ef8c57",
     major: "#ff6464",
     critical: "#ff6464",
-    maintenance: "#78b9ff",
+    maintenance: "#a78bfa",
     unknown: "#8a96a3",
   });
 
@@ -133,9 +133,12 @@
     const meta = STATE_META[overallState] || STATE_META.unknown;
     const core = select(".system-pulse__core");
     const pulse = select(".system-pulse");
+    const hero = select(".status-hero");
 
     if (core) core.dataset.overallState = overallState;
     if (pulse) pulse.style.setProperty("--state-color", STATUS_COLORS[overallState] || STATUS_COLORS.unknown);
+    if (hero) hero.dataset.state = overallState;
+    document.body.dataset.statusState = overallState;
     document.documentElement.style.setProperty("--state-color", STATUS_COLORS[overallState] || STATUS_COLORS.unknown);
 
     const stateMark = select(".system-pulse__state-mark");
@@ -1560,6 +1563,7 @@
     const identity = node("div", "component-card__identity");
     const icon = node("span", "component-card__icon");
     icon.setAttribute("aria-hidden", "true");
+    icon.style.setProperty("--component-icon", `url("${presentation.icon}")`);
     const image = document.createElement("img");
     image.src = presentation.icon;
     image.alt = "";
@@ -1567,6 +1571,7 @@
       if (icon.dataset.fallback === "true") return;
       icon.dataset.fallback = "true";
       image.src = "/assets/icons/ui/pageinfo.svg";
+      icon.style.setProperty("--component-icon", 'url("/assets/icons/ui/pageinfo.svg")');
     });
     icon.appendChild(image);
     const copy = node("div");
@@ -1650,7 +1655,6 @@
       componentName: component.name || "Component",
       getRange: () => state.graphRanges.get(component.id) || "24h",
     });
-    if (reportMenu) detailHeader.appendChild(reportMenu);
     details.append(detailHeader, detailList);
     let graph = null;
     if (source.coverage === "deferred") {
@@ -1671,6 +1675,7 @@
     const incident = unresolvedIncidents(snapshot.data.incidents).find((item) => (item.components || []).some((entry) => entry.id === component.id));
     if (incident) details.appendChild(node("p", "component-incident", `Associated incident · ${incident.name || "Active incident"}`));
     const footer = node("div", "component-card__footer");
+    if (reportMenu) footer.appendChild(reportMenu);
     footer.appendChild(toggle);
     card.append(footer, details);
     const setExpanded = (expanded) => {
