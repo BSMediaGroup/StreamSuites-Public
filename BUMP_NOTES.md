@@ -6,6 +6,20 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-11 - Landing-only feature-colour cycle boundary
+
+#### Technical notes
+
+- Reproduced the deployed defect across `/version`, `/donate`, `/roadmap`, `/support`, `/about`, `/accessibility`, and `/privacy`: each standalone document incorrectly gained `data-product="browser"` on load, then advanced to `native` after the shared controller’s ten-second timer, changing primary-button and accent tokens from blue to lime despite having no product switcher.
+- Gated product initialization and automatic cycling in `js/studio-first-landing.js` behind the real main-landing contract: an existing root `data-product` marker, multiple product tabs, and the cycle-control group. Shared standalone navigation, reveal, header, footer, and reduced-motion behavior remain active. The landing still advances Browser to StudioApp after ten seconds; standalone pages retain their default Public-blue tokens and never receive a product state. The seven affected standalone documents use one bounded script revision so existing four-hour browser caches cannot retain the cycling controller after deployment.
+- Audited `/health` separately. It does not load the landing controller, never receives `data-product`, and its primary button remained the same blue treatment across the timing boundary. Its semantic health-state colours remain intact because they communicate authoritative operational/degraded/outage/maintenance/unknown state rather than product feature selection.
+- Added focused source coverage for the landing-only opt-in, every standalone page’s lack of product-cycle markup, and the existing `/health` separation. No route, API, data contract, dependency, visual framework, canonical version/build value, deployment configuration, or Runtime/Auth file changed.
+- Validation passed JavaScript syntax, all 28 focused standalone/landing/health tests, all 154 direct Public Node tests, and `git diff --check`. A real-browser live baseline proved the seven affected deployed standalone pages changed Browser blue to StudioApp lime after 10.6 seconds while `/health` stayed independent. The corrected local pages were then observed concurrently for 10.8 seconds: all eight requested routes retained identical computed accent and primary-button values with no `data-product`, while the main landing still advanced `browser` to `native`. Donate, Roadmap, Support, About, Accessibility, Privacy, and Health produced zero console errors; Version and the landing emitted only expected local-static-server 404 diagnostics for unavailable Runtime/Auth/API proxy routes, not controller or rendering errors. No deployment was performed.
+
+#### Human-readable notes
+
+The main landing page still rotates through Browser Studio, StudioApp, Studio for OBS, and Public every ten seconds. Version, Donate, Roadmap, Support, About, Accessibility, Privacy, and Health now stay on their own default colours instead of inheriting that product showcase loop.
+
 ### 2026-08-10 - Public system health and observability surface
 
 #### Technical notes

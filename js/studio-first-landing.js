@@ -31,6 +31,7 @@
   const heroVisual = document.querySelector(".hero__visual");
   const studioDevice = document.querySelector("[data-studio-device]");
   const productCaption = document.querySelector(".product-caption");
+  const isProductLanding = root.hasAttribute("data-product") && productTabs.length > 1 && Boolean(productCycleControls);
 
   const products = Object.freeze({
     browser: {
@@ -223,6 +224,7 @@
   };
 
   const productCycleCanRun = () =>
+    isProductLanding &&
     productCycleRequested &&
     !reducedMotionQuery.matches &&
     !document.hidden &&
@@ -903,8 +905,10 @@
   };
   reducedMotionQuery.addEventListener?.("change", syncMotionPreference);
 
-  const initialPreview = new URLSearchParams(window.location.search).get("preview");
-  setProduct(products[initialPreview] ? initialPreview : "browser");
+  if (isProductLanding) {
+    const initialPreview = new URLSearchParams(window.location.search).get("preview");
+    setProduct(products[initialPreview] ? initialPreview : "browser");
+  }
   root.classList.add("motion-ready");
   syncMotionPreference();
 })();

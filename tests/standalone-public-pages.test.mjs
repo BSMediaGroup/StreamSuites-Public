@@ -20,6 +20,16 @@ const standalonePages = [
   "version.html"
 ];
 
+const fixedFeatureColorPages = [
+  "about.html",
+  "accessibility.html",
+  "donate.html",
+  "privacy.html",
+  "roadmap.html",
+  "support.html",
+  "version.html"
+];
+
 test("standalone pages use the canonical landing brand, shell, and mobile navigation contract", () => {
   for (const path of standalonePages) {
     const html = read(path);
@@ -35,6 +45,31 @@ test("standalone pages use the canonical landing brand, shell, and mobile naviga
     assert.match(html, /\/css\/standalone-pages\.css/);
     assert.doesNotMatch(html, /\/assets\/logos\/logo\.png/);
   }
+
+  for (const path of fixedFeatureColorPages) {
+    assert.match(read(path), /\/js\/studio-first-landing\.js\?v=20260811-landing-only-color-cycle/);
+  }
+});
+
+test("the ten-second product feature-color cycle remains exclusive to the main landing", () => {
+  const client = read("js/studio-first-landing.js");
+  const landing = read("index.html");
+  const health = read("health.html");
+
+  assert.match(client, /const isProductLanding = root\.hasAttribute\("data-product"\) && productTabs\.length > 1 && Boolean\(productCycleControls\)/);
+  assert.match(client, /const productCycleCanRun = \(\) =>\s*isProductLanding &&/);
+  assert.match(client, /if \(isProductLanding\) \{\s*const initialPreview[\s\S]*setProduct\(products\[initialPreview\] \? initialPreview : "browser"\);\s*\}/);
+  assert.match(landing, /<html[^>]+data-product="browser"/);
+  assert.match(landing, /data-product-cycle-controls/);
+
+  for (const path of standalonePages) {
+    const html = read(path);
+    assert.doesNotMatch(html, /<html[^>]+data-product=/, `${path} must not opt into landing feature colors`);
+    assert.doesNotMatch(html, /data-product-cycle-controls/, `${path} must not own the product cycle`);
+  }
+
+  assert.doesNotMatch(health, /studio-first-landing\.js|data-product=|data-product-cycle-controls/);
+  assert.match(health, /class="button button--primary"/);
 });
 
 test("obsolete rendered Tools and Changelog pages are removed and compatibility redirects are bounded", () => {
