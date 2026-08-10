@@ -6,6 +6,19 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-10 - Public system health and observability surface
+
+#### Technical notes
+
+- Added the canonical `/health` page as a dependency-free HTML/CSS/SVG/JavaScript observability console. It includes a Runtime-authoritative overall posture, measured/attention/unknown counts, a public-safe nine-node product topology, all 21 diagnostics components grouped by the existing taxonomy, freshness and Core API response characteristics, a real-bucket 5H/24H/7D/30D heatmap, explicit external/upstream separation, and concise methodology. Stable section anchors, responsive reflow, keyboard labels, forced-colour support, and reduced-motion fallbacks are included.
+- Reused the existing unauthenticated, read-only `/api/public/status/diagnostics` projection and Runtime’s canonical `overall-availability-v1` state instead of adding a Public-owned state model or new API. Requests are same-origin, credential-free, visibility-aware, bounded by an eight-second timeout, and limited to a 60-second cadence. Loading, stale, malformed, unavailable, unmeasured, and no-history states remain non-operational; latency summaries and heatmap cells derive only from finite retained watchdog samples.
+- Kept `/status` as the Atlassian-backed user-impact, incident, maintenance, archive, and subscription surface, adding only restrained reciprocal `/health` links in its hero and footer. Added focused contract/presentation/security tests and README route/tree documentation. No dependency, framework, Pages Function, Runtime/Auth file, Statuspage configuration, canonical version/build value, deployment configuration, or widget authority changed.
+- Validation passed all 152 direct Public Node tests, JavaScript syntax, `git diff --check`, and 33 focused Runtime/Auth diagnostics/watchdog/statuspage tests. Local Cloudflare Pages routing returned HTTP 200 for `/`, `/health`, `/status`, and `/version`; headed Chromium rendered the fresh 21-component projection with four groups and 12 historical rows, truthful loading/stale/503 and degraded scenarios, zero final console errors in the isolated normal-data session, no document overflow at 1920x1080, 1440x900, 768x1024, or 390x844, internally scrollable heatmap history, and static ring/path treatment under reduced motion. The sanitized live projection audit found no private IP, local hostname, Windows path, token/key/cookie/tunnel/trace/database-path field, or dynamic HTML sink; its four uses of `credential` are the deliberate public component identifier, display name, and description, not credential values. No deployed Pages or Worker claim is made.
+
+#### Human-readable notes
+
+StreamSuites now has a dedicated System Health page for understanding how measured services are operating. It pairs an interactive topology and designed component matrix with honest freshness, response, dependency, and real-history views, while the existing Status Center remains the place to understand incidents and user impact.
+
 ### 2026-08-10 - Status-aware hero, component tinting, and report-control polish
 
 #### Technical notes

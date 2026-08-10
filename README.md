@@ -8,6 +8,7 @@ Canonical public StreamSuites surface deployed to Cloudflare Pages at `https://s
 - Runtime-displayed version/build labels are consumed at runtime from `https://admin.streamsuites.app/runtime/exports/version.json`.
 - `/version` is the human-readable diagnostic view of the canonical public `version-registry-public-v1` feed. It reads the feed through the existing same-origin `/api/public/*` Pages proxy and does not replace, cache, or become the authority for the source endpoint.
 - `/status` is the canonical branded service-health view. Atlassian Statuspage public reads remain its official state/incident source. The floating widget uses the same official feed for state and incidents, and its fully expanded view additionally presents only the two configured Atlassian custom metrics from the sanitized Runtime/Auth public watchdog projection: measured Core API response time and explicitly deferred Studio Room Readiness. Core API historical ranges are the real Authentication, Accounts & Sessions watchdog history selected by Runtime/Auth and are expandable from the Status overview; Studio Room Readiness has no history until a genuine end-to-end transaction exists. The public contract does not currently define a canonical overall-system downtime history, so Public shows Atlassian’s current overall posture but does not manufacture an aggregate uptime graph from partial, deferred, and provider-managed component coverage. Missing diagnostics degrade to unavailable metric cards without changing official state. Runtime/Auth status synchronization and Statuspage mutation authority are unchanged.
+- `/health` is the complementary public observability surface: it explains how measured StreamSuites paths are operating, while `/status` remains the place for user impact, incidents, maintenance, and subscriptions. Health consumes only Runtime/Auth’s same-origin sanitized `status-watchdog-public-v1` diagnostics and canonical `overall-availability-v1` current posture. Stale, absent, deferred, and provider-managed observations remain explicitly unknown; latency and 5H/24H/7D/30D heatmap cells render only when real watchdog buckets exist.
 - Runtime/Auth remains the canonical system-version authority. The checked-in Public mirror may lag the authoritative runtime export until the established publication workflow refreshes it.
 - This repo is not a canonical state authority. It renders authoritative runtime exports and Auth API responses.
 
@@ -86,6 +87,7 @@ flowchart TD
 - `/roadmap` is the canonical public programme roadmap. Eight conservative integer estimates replace the former implementation-entry inventory, while detailed release changelogs link to verified StreamSuites Docs routes.
 - `/version` is the canonical human-facing master version reference. It renders all 13 components currently returned by the authoritative public registry, keeps null/deferred/uninitialized states explicit, and falls back to a truthful unavailable state rather than stale or hardcoded version data. Copy actions produce readable diagnostic text rather than exposing raw JSON.
 - `/status` is the primary StreamSuites human-facing service-health route. It preserves Atlassian as the public data source, hosted archive, and subscription destination while providing the complete branded component, incident, maintenance, history, freshness, and transparency presentation. The route follows the same extensionless Pages convention as `/version`; `status-check.html` remains a separate widget diagnostic surface.
+- `/health` is the technical sibling of `/status`. Its Runtime-authoritative overview, public-safe topology, grouped component matrix, freshness and current-response views, external-dependency boundary, and real-sample heatmap are presentation-only; it does not probe infrastructure or derive a competing canonical state in the browser.
 - `/downloads/` is the searchable parent download index. Its three checked-in records route to StudioApp, Studio for OBS, and Extensions and mirror only truthful static page status; Browser Studio is explicitly presented as a no-install external surface.
 - `/downloads/studioapp` is the canonical Windows StudioApp ALPHA landing page. Its same-origin `/api/downloads/studioapp/release` metadata seam remains visible while download access is locked, validates strict schema-v2 `product-manifest.json` with bounded schema-v1 fallback, treats independent StudioApp product version/build as primary and optional StreamSuites system compatibility as secondary, and never uses Runtime `version.json` as installer identity. Only an authorized short-lived session enables the separate controlled redirect; the static page and metadata response contain no raw installer URL.
 - The StudioApp page shows macOS and Linux as disabled Coming Soon release/requirements scaffolds with no version, build, date, package size, compatibility, or artifact claim. The Windows storage guidance references the manifest-hydrated installer size plus installation/update headroom and separate media storage instead of inventing an unsupported fixed minimum.
@@ -136,6 +138,7 @@ The latest corrective MCP evidence is retained under `output/playwright/` as `la
 - Cloudflare Pages routing is handled by the root `_redirects` file plus Pages Functions under `functions/`.
 - Cloudflare Pages clean-URL handling serves the single `roadmap.html` surface at canonical `/roadmap`; `/roadmap/` normalizes to it. The retired `/changelog`, `/changelog/`, and `/changelog.html` routes redirect permanently to the canonical Docs changelog index at `https://docs.streamsuites.app/docs/changelog`; no second Changelog page is rendered.
 - Cloudflare Pages clean-URL handling serves `version.html` at canonical `/version`. Its browser client reads `/api/public/version-registry` through the existing allowlisted `/api/public/*` Pages proxy, which forwards to Runtime/Auth without changing ownership or exposing the private administrative registry export.
+- Cloudflare Pages clean-URL handling also serves `health.html` at canonical `/health`. The page reads the existing unauthenticated, read-only `/api/public/status/diagnostics` contract through the same-origin proxy at a conservative 60-second cadence; it performs no private browser probes and never treats a failed or stale read as healthy.
 - The obsolete `/tools`, `/tools/`, and `/tools.html` routes redirect permanently to `/downloads/`. The singular `/download`, `/download/`, and `/download.html` compatibility routes use the same destination.
 - `/downloads` and its trailing-slash alias resolve to the searchable static parent index.
 - `/downloads/studioapp` and its trailing-slash alias resolve to the same static landing page; `/api/downloads/studioapp/*` owns access-state, unlock/end-session, locked-safe release metadata, and controlled-download behavior. `access-state` reports explicit configured/missing-variable state without exposing values, and arbitrary redirect parameters or stale version/build requests fail closed. The dismissible banner is presentation-only and never authorizes a download.
@@ -205,6 +208,7 @@ StreamSuites-Public/
 ├── donate-cancel.html
 ├── donate-success.html
 ├── economy.html
+├── health.html
 ├── home.html
 ├── index.html
 ├── index-v2.html
@@ -324,6 +328,7 @@ StreamSuites-Public/
 │   └── wheels.json
 ├── js/
 │   ├── download-index.js
+│   ├── health-page.js
 │   ├── public-badge-ui.js
 │   ├── public-data-hub.js
 │   ├── public-pages-app.js
@@ -352,6 +357,7 @@ StreamSuites-Public/
 │   ├── download-index.css
 │   ├── download-surface.css
 │   ├── feature-edges.css
+│   ├── health-page.css
 │   ├── public-fonts.css
 │   ├── obs-plugin-download.css
 │   ├── public-login.css
@@ -370,6 +376,7 @@ StreamSuites-Public/
 ├── tests/
 │   ├── auth-surface-parity.test.mjs
 │   ├── download-surfaces.test.mjs
+│   ├── health-page.test.mjs
 │   ├── live-status-authority.test.mjs
 │   ├── public-authority-wiring.test.mjs
 │   ├── public-feature-edges.test.mjs
