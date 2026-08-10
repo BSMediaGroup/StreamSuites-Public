@@ -530,6 +530,10 @@ html[data-product="browser"] .button--primary {
   color: #02101d;
 }
 
+.site-header .header-actions .button--primary {
+  color: #02101d;
+}
+
 .button--primary:hover,
 .button--primary:focus-visible {
   border-color: var(--product-accent-bright);

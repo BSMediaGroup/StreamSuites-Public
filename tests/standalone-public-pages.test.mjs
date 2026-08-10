@@ -48,7 +48,18 @@ test("standalone pages use the canonical landing brand, shell, and mobile naviga
 
   for (const path of fixedFeatureColorPages) {
     assert.match(read(path), /\/js\/studio-first-landing\.js\?v=20260811-landing-only-color-cycle/);
+    assert.match(read(path), /\/css\/studio-first-landing\.css\?v=20260811-header-cta/);
   }
+});
+
+test("public header Open Studio buttons retain their dark foreground", () => {
+  const landingStyles = read("css/studio-first-landing.css");
+  const statusStyles = read("css/status-page.css");
+  const health = read("health.html");
+
+  assert.match(landingStyles, /\.site-header \.header-actions \.button--primary \{\s*color: #02101d;\s*\}/);
+  assert.match(statusStyles, /\.site-header \.header-actions \.button--primary \{\s*color: #02101c;\s*\}/);
+  assert.match(health, /\/css\/status-page\.css\?v=20260811-header-cta/);
 });
 
 test("the ten-second product feature-color cycle remains exclusive to the main landing", () => {
