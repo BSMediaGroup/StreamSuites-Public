@@ -136,12 +136,28 @@ test("history and latency helpers preserve only real bounded observations", () =
 test("topology, component matrix, freshness, latency, and heatmap retain premium responsive contracts", () => {
   const html = read("health.html");
   const css = read("css/health-page.css");
+  const script = read("js/health-page.js");
   assert.equal((html.match(/data-component-key=/g) || []).length, 9);
   assert.equal((html.match(/data-route-to=/g) || []).length, 8);
+  assert.equal((html.match(/class="health-route__base"/g) || []).length, 8);
+  assert.equal((html.match(/class="health-route__glow"/g) || []).length, 8);
+  assert.equal((html.match(/class="health-route__signal"/g) || []).length, 8);
+  assert.equal((html.match(/class="health-route__packet"/g) || []).length, 8);
+  assert.match(html, /class="health-node health-node--runtime"[\s\S]*?<img src="\/assets\/icons\/streamsuites-0\.svg"/);
+  assert.match(html, /Core \/ authority/);
+  assert.match(html, /Studio surfaces \/ clients/);
+  assert.match(html, /Public \/ web surfaces/);
   assert.match(html, /This is not a media-path diagram/);
-  assert.match(css, /\.health-topology\s*\{[\s\S]*?min-height:\s*680px/);
+  assert.match(css, /\.health-topology__routes \.health-route__base[\s\S]*?stroke-width:\s*2/);
+  assert.match(css, /\.health-topology__routes \.health-route__signal[\s\S]*?stroke-width:\s*2\.5/);
+  assert.match(css, /\.health-topology\.has-active-route \.health-route\.is-active/);
+  assert.match(script, /setActiveTopologyRoute/);
   assert.match(css, /\.health-component-grid\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2/);
+  assert.match(css, /\.health-component-card__microhistory/);
+  assert.match(script, /COMPONENT_ICONS/);
   assert.match(css, /\.health-heatmap__cell\[data-state="operational"\]/);
+  assert.match(script, /--bucket-slots/);
+  assert.match(script, /watchdog_observed_availability_percent/);
   assert.match(css, /@media \(max-width:\s*1080px\)/);
   assert.match(css, /@media \(max-width:\s*820px\)/);
   assert.match(css, /@media \(max-width:\s*600px\)/);
@@ -166,4 +182,14 @@ test("status and health cross-link without changing the Status Center authority 
   assert.match(status, /Official status first\. Independent evidence second\./);
   assert.match(health, /Health explains operation\. Status explains impact\./);
   assert.match(health, /href="\/status"[^>]*>Service status &amp; incidents/);
+});
+
+test("external dependencies retain explicit upstream presentation and missing history never becomes a healthy segment", () => {
+  const script = read("js/health-page.js");
+  const css = read("css/health-page.css");
+  assert.match(script, /external_dependencies:[\s\S]*?eyebrow:\s*"External \/ upstream"/);
+  assert.match(script, /coverage === "vendor_managed"[\s\S]*?state:\s*"unknown"/);
+  assert.match(css, /\.health-component-group\[data-group="external_dependencies"\]/);
+  assert.match(css, /repeating-linear-gradient\(90deg, rgba\(130,148,168/);
+  assert.doesNotMatch(script, /missing[^\n]{0,100}(?:operational|#62dea2)|gap[^\n]{0,100}(?:operational|#62dea2)/i);
 });

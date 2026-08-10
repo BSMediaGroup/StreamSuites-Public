@@ -14,7 +14,7 @@
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <link rel="canonical" href="https://streamsuites.app/health" />
   <link rel="stylesheet" href="/css/status-page.css?v=20260810-health-foundation" />
-  <link rel="stylesheet" href="/css/health-page.css?v=20260810-health-observability" />
+  <link rel="stylesheet" href="/css/health-page.css?v=20260810-health-observability-redesign" />
 </head>
 <body class="health-page" data-page="health" data-health-state="unknown">
   <a class="skip-link" href="#main-content">Skip to content</a>
@@ -54,11 +54,11 @@
         <span></span><span></span><span></span><span></span><span></span><span></span>
       </div>
       <div class="health-hero__copy reveal">
-        <p class="kicker"><span class="kicker__dot"></span>System health</p>
-        <h1 id="health-title">See how the system<br /><span>is operating.</span></h1>
+        <p class="kicker"><span class="kicker__dot"></span>Runtime-authoritative observability</p>
+        <h1 id="health-title">See the system.<br /><span>Read the signal.</span></h1>
         <p class="health-hero__lede">
-          Public-safe observability from the StreamSuites Runtime authority—measured component health,
-          data freshness, response characteristics, topology, and only the history that actually exists.
+          A technical view of StreamSuites operation: measured component health, observation freshness,
+          response characteristics, architecture, and only the watchdog history that actually exists.
         </p>
         <div class="health-hero__actions">
           <button class="button button--primary" type="button" data-refresh-health>
@@ -68,22 +68,22 @@
           <a class="button button--quiet" href="/status">Service status &amp; incidents <span aria-hidden="true">↗</span></a>
           <a class="button button--quiet" href="#topology">Explore topology <span aria-hidden="true">↓</span></a>
         </div>
-        <div class="health-source-line" role="status" aria-live="polite">
+        <div class="health-source-line" role="status" aria-live="polite" aria-label="Authoritative observation freshness">
           <span class="health-source-chip" data-health-source data-state="loading"><span></span>Connecting to Runtime/Auth</span>
-          <span data-health-updated>Waiting for an authoritative observation…</span>
+          <span class="health-source-line__timestamp"><small>Authoritative timestamp</small><strong data-health-updated>Waiting for an authoritative observation…</strong></span>
         </div>
       </div>
 
       <aside class="health-orbit reveal" aria-label="Authoritative system health overview" data-health-orbit>
         <div class="health-orbit__header">
-          <span>Runtime observation</span>
-          <span class="health-orbit__cadence">60s refresh</span>
+          <span><small>System telemetry</small><strong>Runtime observation</strong></span>
+          <span class="health-orbit__cadence"><i></i>60s visibility-aware refresh</span>
         </div>
         <div class="health-orbit__stage" data-state="unknown">
           <div class="health-orbit__rings" aria-hidden="true"><span></span><span></span><span></span></div>
           <div class="health-orbit__core">
             <span class="health-orbit__mark" data-health-mark aria-hidden="true">?</span>
-            <small>Overall health</small>
+            <small>Current system health</small>
             <strong data-health-overall>Connecting</strong>
           </div>
           <span class="health-orbit__satellite health-orbit__satellite--one" aria-hidden="true"></span>
@@ -97,6 +97,7 @@
           <div><dt>Attention</dt><dd data-health-attention>—</dd></div>
           <div><dt>Unknown</dt><dd data-health-unknown>—</dd></div>
         </dl>
+        <div class="health-orbit__footer"><span>Runtime/Auth remains the source of truth</span><a href="/status">Impact &amp; incidents <span aria-hidden="true">↗</span></a></div>
       </aside>
     </section>
 
@@ -111,65 +112,121 @@
 
     <section class="health-section health-section--topology shell" id="topology" aria-labelledby="topology-title">
       <div class="health-section__heading reveal">
-        <div><p class="section-kicker">Authoritative topology</p><h2 id="topology-title">One authority. Observable paths.</h2></div>
+        <div><p class="section-kicker">Authoritative topology</p><h2 id="topology-title">One nucleus. Every observable path.</h2></div>
         <p>Public-safe control and state relationships grounded in the shipped product boundaries. This is not a media-path diagram: Browser Studio, StudioApp, and OBS retain their own media ownership.</p>
       </div>
 
       <div class="health-topology reveal" data-health-topology>
-        <div class="health-topology__hud" aria-hidden="true">
-          <span><i></i> PUBLIC OBSERVABILITY MAP</span>
-          <span data-topology-observation>Awaiting observation</span>
-        </div>
-        <svg class="health-topology__routes" viewBox="0 0 1120 620" role="img" aria-labelledby="topology-svg-title topology-svg-description" preserveAspectRatio="none">
-          <title id="topology-svg-title">StreamSuites Runtime/Auth health topology</title>
-          <desc id="topology-svg-description">Runtime Authority connects to authentication, product clients, and public web surfaces. Route colours reflect each target component's direct watchdog observation.</desc>
-          <g fill="none" pathLength="1">
-            <path d="M550 300 C410 300 330 150 190 150" data-route-to="authentication_accounts_sessions" />
-            <path d="M550 300 C720 250 760 90 925 90" data-route-to="browser_studio" />
-            <path d="M550 300 C750 300 775 255 950 255" data-route-to="studioapp_connected_services" />
-            <path d="M550 300 C720 360 760 425 925 425" data-route-to="studio_for_obs_connected_services" />
-            <path d="M550 300 C410 360 340 480 180 480" data-route-to="public_website_status_center" />
-            <path d="M550 300 C490 430 450 530 365 560" data-route-to="creator_dashboard" />
-            <path d="M550 300 C550 440 550 525 550 575" data-route-to="admin_dashboard" />
-            <path d="M550 300 C610 430 660 530 750 560" data-route-to="developer_console_documentation" />
-          </g>
-        </svg>
+        <header class="health-topology__header">
+          <span class="health-topology__mode"><i></i>PUBLIC OBSERVABILITY MAP</span>
+          <span class="health-topology__observation" data-topology-observation>Awaiting observation</span>
+        </header>
+        <div class="health-topology__canvas">
+          <svg class="health-topology__routes" viewBox="0 0 1180 760" role="img" aria-labelledby="topology-svg-title topology-svg-description" preserveAspectRatio="none">
+            <title id="topology-svg-title">StreamSuites Runtime/Auth health topology</title>
+            <desc id="topology-svg-description">Runtime Authority is the central source of truth connected to authentication, production clients, and public web surfaces. Layered route colours reflect each target component's direct watchdog observation.</desc>
+            <g class="health-route" data-route-to="authentication_accounts_sessions" style="--route-delay:-.8s">
+              <path class="health-route__base" pathLength="100" d="M430 330 C372 330 350 305 310 305" />
+              <path class="health-route__glow" pathLength="100" d="M430 330 C372 330 350 305 310 305" />
+              <path class="health-route__signal" pathLength="100" d="M430 330 C372 330 350 305 310 305" />
+              <circle class="health-route__packet" r="3.6"><animateMotion dur="7.4s" begin="-.8s" repeatCount="indefinite" path="M430 330 C372 330 350 305 310 305" /></circle>
+            </g>
+            <g class="health-route" data-route-to="browser_studio" style="--route-delay:-2.2s">
+              <path class="health-route__base" pathLength="100" d="M750 292 C810 258 818 155 860 155" />
+              <path class="health-route__glow" pathLength="100" d="M750 292 C810 258 818 155 860 155" />
+              <path class="health-route__signal" pathLength="100" d="M750 292 C810 258 818 155 860 155" />
+              <circle class="health-route__packet" r="3.6"><animateMotion dur="7.4s" begin="-2.2s" repeatCount="indefinite" path="M750 292 C810 258 818 155 860 155" /></circle>
+            </g>
+            <g class="health-route" data-route-to="studioapp_connected_services" style="--route-delay:-3.6s">
+              <path class="health-route__base" pathLength="100" d="M750 330 C810 330 820 315 860 315" />
+              <path class="health-route__glow" pathLength="100" d="M750 330 C810 330 820 315 860 315" />
+              <path class="health-route__signal" pathLength="100" d="M750 330 C810 330 820 315 860 315" />
+              <circle class="health-route__packet" r="3.6"><animateMotion dur="7.4s" begin="-3.6s" repeatCount="indefinite" path="M750 330 C810 330 820 315 860 315" /></circle>
+            </g>
+            <g class="health-route" data-route-to="studio_for_obs_connected_services" style="--route-delay:-5s">
+              <path class="health-route__base" pathLength="100" d="M750 370 C810 402 820 475 860 475" />
+              <path class="health-route__glow" pathLength="100" d="M750 370 C810 402 820 475 860 475" />
+              <path class="health-route__signal" pathLength="100" d="M750 370 C810 402 820 475 860 475" />
+              <circle class="health-route__packet" r="3.6"><animateMotion dur="7.4s" begin="-5s" repeatCount="indefinite" path="M750 370 C810 402 820 475 860 475" /></circle>
+            </g>
+            <g class="health-route" data-route-to="public_website_status_center" style="--route-delay:-1.5s">
+              <path class="health-route__base" pathLength="100" d="M500 410 C420 492 270 518 190 600" />
+              <path class="health-route__glow" pathLength="100" d="M500 410 C420 492 270 518 190 600" />
+              <path class="health-route__signal" pathLength="100" d="M500 410 C420 492 270 518 190 600" />
+              <circle class="health-route__packet" r="3.6"><animateMotion dur="7.4s" begin="-1.5s" repeatCount="indefinite" path="M500 410 C420 492 270 518 190 600" /></circle>
+            </g>
+            <g class="health-route" data-route-to="creator_dashboard" style="--route-delay:-2.9s">
+              <path class="health-route__base" pathLength="100" d="M550 410 C512 494 460 530 440 600" />
+              <path class="health-route__glow" pathLength="100" d="M550 410 C512 494 460 530 440 600" />
+              <path class="health-route__signal" pathLength="100" d="M550 410 C512 494 460 530 440 600" />
+              <circle class="health-route__packet" r="3.6"><animateMotion dur="7.4s" begin="-2.9s" repeatCount="indefinite" path="M550 410 C512 494 460 530 440 600" /></circle>
+            </g>
+            <g class="health-route" data-route-to="admin_dashboard" style="--route-delay:-4.3s">
+              <path class="health-route__base" pathLength="100" d="M620 410 C622 498 678 532 700 600" />
+              <path class="health-route__glow" pathLength="100" d="M620 410 C622 498 678 532 700 600" />
+              <path class="health-route__signal" pathLength="100" d="M620 410 C622 498 678 532 700 600" />
+              <circle class="health-route__packet" r="3.6"><animateMotion dur="7.4s" begin="-4.3s" repeatCount="indefinite" path="M620 410 C622 498 678 532 700 600" /></circle>
+            </g>
+            <g class="health-route" data-route-to="developer_console_documentation" style="--route-delay:-5.7s">
+              <path class="health-route__base" pathLength="100" d="M680 410 C752 494 880 520 960 600" />
+              <path class="health-route__glow" pathLength="100" d="M680 410 C752 494 880 520 960 600" />
+              <path class="health-route__signal" pathLength="100" d="M680 410 C752 494 880 520 960 600" />
+              <circle class="health-route__packet" r="3.6"><animateMotion dur="7.4s" begin="-5.7s" repeatCount="indefinite" path="M680 410 C752 494 880 520 960 600" /></circle>
+            </g>
+          </svg>
 
-        <article class="health-node health-node--auth" tabindex="0" data-component-key="authentication_accounts_sessions" data-state="unknown">
-          <span class="health-node__icon" aria-hidden="true">A</span><div><small>CORE AUTHORITY</small><strong>Authentication &amp; Sessions</strong><span data-node-state>Unknown</span></div>
-        </article>
-        <article class="health-node health-node--runtime" tabindex="0" data-component-key="public_apis_exports_version_registry" data-state="unknown">
-          <span class="health-node__icon health-node__icon--runtime" aria-hidden="true">SS</span><div><small>SOURCE OF TRUTH</small><strong>Runtime Authority</strong><span data-node-state>Unknown</span></div>
-        </article>
-        <article class="health-node health-node--browser" tabindex="0" data-component-key="browser_studio" data-state="unknown">
-          <span class="health-node__icon health-node__icon--browser" aria-hidden="true"></span><div><small>PRODUCT SURFACE</small><strong>Browser Studio</strong><span data-node-state>Unknown</span></div>
-        </article>
-        <article class="health-node health-node--studioapp" tabindex="0" data-component-key="studioapp_connected_services" data-state="unknown">
-          <span class="health-node__icon health-node__icon--studioapp" aria-hidden="true"></span><div><small>NATIVE CLIENT</small><strong>StudioApp</strong><span data-node-state>Unknown</span></div>
-        </article>
-        <article class="health-node health-node--obs" tabindex="0" data-component-key="studio_for_obs_connected_services" data-state="unknown">
-          <span class="health-node__icon health-node__icon--obs" aria-hidden="true"></span><div><small>OBS INTEGRATION</small><strong>Studio for OBS</strong><span data-node-state>Unknown</span></div>
-        </article>
-        <article class="health-node health-node--public" tabindex="0" data-component-key="public_website_status_center" data-state="unknown">
-          <span class="health-node__icon health-node__icon--public" aria-hidden="true"></span><div><small>PUBLIC SURFACE</small><strong>Public &amp; Status</strong><span data-node-state>Unknown</span></div>
-        </article>
-        <article class="health-node health-node--creator health-node--compact" tabindex="0" data-component-key="creator_dashboard" data-state="unknown">
-          <div><small>WEB SURFACE</small><strong>Creator</strong><span data-node-state>Unknown</span></div>
-        </article>
-        <article class="health-node health-node--admin health-node--compact" tabindex="0" data-component-key="admin_dashboard" data-state="unknown">
-          <div><small>WEB SURFACE</small><strong>Admin</strong><span data-node-state>Unknown</span></div>
-        </article>
-        <article class="health-node health-node--developer health-node--compact" tabindex="0" data-component-key="developer_console_documentation" data-state="unknown">
-          <div><small>WEB SURFACE</small><strong>Developer &amp; Docs</strong><span data-node-state>Unknown</span></div>
-        </article>
+          <span class="health-topology__zone health-topology__zone--core"><i></i>Core / authority</span>
+          <article class="health-node health-node--runtime" tabindex="0" data-component-key="public_apis_exports_version_registry" data-state="unknown">
+            <span class="health-node__core-field" aria-hidden="true"></span>
+            <div class="health-node__runtime-head">
+              <span class="health-node__icon health-node__icon--runtime" aria-hidden="true"><img src="/assets/icons/streamsuites-0.svg" alt="" /></span>
+              <div><small>CANONICAL SOURCE OF TRUTH</small><strong>Runtime Authority</strong></div>
+              <span class="health-node__state" data-node-state>Unknown</span>
+            </div>
+            <p>Public APIs, exports, and the version registry anchor every downstream observation.</p>
+            <div class="health-node__services" aria-label="Runtime Authority public domains"><span>APIs</span><span>Exports</span><span>Version registry</span></div>
+          </article>
 
-        <div class="health-topology__legend" aria-label="Topology state legend">
-          <span data-state="operational"><i></i>Operational</span><span data-state="degraded"><i></i>Degraded</span><span data-state="outage"><i></i>Outage</span><span data-state="maintenance"><i></i>Maintenance</span><span data-state="unknown"><i></i>Unknown</span>
+          <article class="health-node health-node--auth" tabindex="0" data-component-key="authentication_accounts_sessions" data-state="unknown">
+            <span class="health-node__icon health-node__icon--auth" aria-hidden="true"></span><div class="health-node__copy"><small>CORE IDENTITY</small><strong>Authentication &amp; Sessions</strong><span class="health-node__state" data-node-state>Unknown</span></div>
+          </article>
+
+          <span class="health-topology__zone health-topology__zone--studio"><i></i>Studio surfaces / clients</span>
+          <article class="health-node health-node--browser" tabindex="0" data-component-key="browser_studio" data-state="unknown">
+            <span class="health-node__icon health-node__icon--browser" aria-hidden="true"></span><div class="health-node__copy"><small>BROWSER PRODUCT</small><strong>Browser Studio</strong><span class="health-node__state" data-node-state>Unknown</span></div>
+          </article>
+          <article class="health-node health-node--studioapp" tabindex="0" data-component-key="studioapp_connected_services" data-state="unknown">
+            <span class="health-node__icon health-node__icon--studioapp" aria-hidden="true"></span><div class="health-node__copy"><small>NATIVE CLIENT</small><strong>StudioApp</strong><span class="health-node__state" data-node-state>Unknown</span></div>
+          </article>
+          <article class="health-node health-node--obs" tabindex="0" data-component-key="studio_for_obs_connected_services" data-state="unknown">
+            <span class="health-node__icon health-node__icon--obs" aria-hidden="true"></span><div class="health-node__copy"><small>OBS INTEGRATION</small><strong>Studio for OBS</strong><span class="health-node__state" data-node-state>Unknown</span></div>
+          </article>
+
+          <span class="health-topology__zone health-topology__zone--web"><i></i>Public / web surfaces</span>
+          <article class="health-node health-node--public health-node--compact" tabindex="0" data-component-key="public_website_status_center" data-state="unknown">
+            <span class="health-node__icon health-node__icon--public" aria-hidden="true"></span><div class="health-node__copy"><small>PUBLIC SURFACE</small><strong>Public &amp; Status</strong><span class="health-node__state" data-node-state>Unknown</span></div>
+          </article>
+          <article class="health-node health-node--creator health-node--compact" tabindex="0" data-component-key="creator_dashboard" data-state="unknown">
+            <span class="health-node__icon health-node__icon--creator" aria-hidden="true"></span><div class="health-node__copy"><small>CREATOR SURFACE</small><strong>Creator</strong><span class="health-node__state" data-node-state>Unknown</span></div>
+          </article>
+          <article class="health-node health-node--admin health-node--compact" tabindex="0" data-component-key="admin_dashboard" data-state="unknown">
+            <span class="health-node__icon health-node__icon--admin" aria-hidden="true"></span><div class="health-node__copy"><small>ADMIN SURFACE</small><strong>Admin</strong><span class="health-node__state" data-node-state>Unknown</span></div>
+          </article>
+          <article class="health-node health-node--developer health-node--compact" tabindex="0" data-component-key="developer_console_documentation" data-state="unknown">
+            <span class="health-node__icon health-node__icon--developer" aria-hidden="true"></span><div class="health-node__copy"><small>DEVELOPER SURFACE</small><strong>Developer &amp; Docs</strong><span class="health-node__state" data-node-state>Unknown</span></div>
+          </article>
         </div>
+
+        <footer class="health-topology__footer">
+          <div class="health-topology__legend" aria-label="Topology state legend">
+            <span data-state="operational"><i></i>Operational</span><span data-state="degraded"><i></i>Degraded</span><span data-state="outage"><i></i>Outage</span><span data-state="maintenance"><i></i>Maintenance</span><span data-state="unknown"><i></i>Unknown</span>
+          </div>
+          <span>Focus a node to isolate its observed route</span>
+        </footer>
       </div>
     </section>
 
-    <section class="health-section shell" id="components" aria-labelledby="components-title">
+    <section class="health-section health-section--components shell" id="components" aria-labelledby="components-title">
       <div class="health-section__heading reveal">
         <div><p class="section-kicker">Current component health</p><h2 id="components-title">Measured, deferred, and external—kept distinct.</h2></div>
         <p>Every card is driven by Runtime/Auth’s sanitized projection. A missing direct observation remains Unknown; it never inherits a green state from another source.</p>
@@ -207,6 +264,7 @@
           <div class="health-latency__chart" data-latency-chart role="img" aria-label="No measured Core API response history is available.">
             <div class="health-empty-plot"><span aria-hidden="true">∿</span><strong>Not currently measured</strong><small>A trend will appear only from retained watchdog samples.</small></div>
           </div>
+          <div class="health-latency__legend"><span><i></i>Measured response time</span><span><i></i>Neutral gaps are unobserved</span></div>
           <dl class="health-latency__stats">
             <div><dt>Minimum</dt><dd data-latency-min>—</dd></div><div><dt>Median</dt><dd data-latency-median>—</dd></div><div><dt>Maximum</dt><dd data-latency-max>—</dd></div><div><dt>Samples</dt><dd data-latency-samples>0</dd></div>
           </dl>
@@ -226,9 +284,16 @@
           </div>
           <span data-history-caption>Waiting for retained observations…</span>
         </div>
+        <dl class="health-history__metrics" aria-live="polite">
+          <div><dt>Watchdog-observed availability</dt><dd data-history-availability>—</dd></div>
+          <div><dt>Observation coverage</dt><dd data-history-coverage>—</dd></div>
+          <div><dt>Observed downtime</dt><dd data-history-downtime>—</dd></div>
+          <div><dt>Observed buckets</dt><dd data-history-buckets>—</dd></div>
+        </dl>
         <div class="health-history__legend" aria-label="Historical state legend">
           <span data-state="operational"><i></i>Operational</span><span data-state="degraded"><i></i>Degraded</span><span data-state="partial"><i></i>Partial outage</span><span data-state="major"><i></i>Major outage</span><span data-state="maintenance"><i></i>Maintenance</span><span data-state="unknown"><i></i>Unknown sample</span>
         </div>
+        <div class="health-history__axis" aria-hidden="true"><span data-history-start>Range start</span><strong>AUTHORITY TIMELINE · UNOBSERVED GAPS REMAIN NEUTRAL</strong><span data-history-end>Latest</span></div>
         <div class="health-heatmap" data-health-heatmap role="region" aria-live="polite" aria-label="Historical component health heatmap">
           <div class="health-history-empty"><span class="health-history-empty__mark" aria-hidden="true"></span><div><strong>Historical sampling has not loaded yet</strong><p>The page will show only buckets present in the authoritative projection.</p></div></div>
         </div>
@@ -274,6 +339,6 @@
   <script src="/js/utils/versioning.js"></script>
   <script src="/js/utils/version-stamp.js"></script>
   <script src="/js/public-page-visit.js" defer></script>
-  <script src="/js/health-page.js?v=20260810-health-observability" defer></script>
+  <script src="/js/health-page.js?v=20260810-health-observability-redesign" defer></script>
 </body>
 </html>

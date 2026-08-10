@@ -50,6 +50,37 @@
     },
   });
 
+  const COMPONENT_ICONS = Object.freeze({
+    "3qsdkc52dgt5": "/assets/icons/icondiag-studioweb.svg",
+    "b6k38lrqx93f": "/assets/icons/ui/cast.svg",
+    "q7435t6bd41x": "/assets/icons/icondiag-studioapp.svg",
+    "4fp296vdg5w7": "/assets/icons/ui/tvlive.svg",
+    "94cn19vph28j": "/assets/icons/obs-0.svg",
+    "tb383cr2p92n": "/assets/icons/ui/shieldlock.svg",
+    "4vrh4mg9l4hn": "/assets/icons/ui/meetingroom.svg",
+    "0xm0hsy3byjj": "/assets/icons/ui/storage.svg",
+    "3xjjgpbydbbf": "/assets/icons/ui/zap.svg",
+    "qbczblv2hgv8": "/assets/icons/ui/status-bell.svg",
+    "6ww27z4z9vj8": "/assets/icons/ui/chatnotif.svg",
+    "zx07yy34tyvl": "/assets/icons/ui/ss-public.svg",
+    "rdb3pmbvr4bv": "/assets/icons/ui/photostackflower.svg",
+    "5wm11qq4b7w9": "/assets/icons/ui/ss-creator.svg",
+    "jnd29jsl8w7b": "/assets/icons/ui/ss-admin.svg",
+    "8x9n41kfjtc8": "/assets/icons/ui/ss-developer.svg",
+    "p00vypwhfhx3": "/assets/icons/ui/download.svg",
+    "n1lw27451j6d": "/assets/icons/cloudflare-0.svg",
+    "8zfbmn6ynv99": "/assets/icons/ui/status-envelope.svg",
+    "5qbjrf4hq5nn": "/assets/icons/stripeicon-0.svg",
+    "gd23vgnp3n89": "/assets/icons/github-0.svg",
+  });
+
+  const PROMINENT_COMPONENT_KEYS = new Set([
+    "authentication_accounts_sessions",
+    "public_apis_exports_version_registry",
+    "browser_studio",
+    "public_website_status_center",
+  ]);
+
   const isRecord = (value) => Boolean(value && typeof value === "object" && !Array.isArray(value));
   const finiteNumber = (value) => typeof value === "number" && Number.isFinite(value) ? value : null;
   const parseTime = (value) => {
@@ -186,6 +217,24 @@
       return `${Math.round(value / 86400)}d old`;
     };
 
+    const formatPercent = (value) => {
+      const numeric = finiteNumber(value);
+      if (numeric === null) return "Unavailable";
+      return `${numeric.toFixed(numeric % 1 ? 1 : 0)}%`;
+    };
+
+    const formatDuration = (seconds) => {
+      const numeric = finiteNumber(seconds);
+      if (numeric === null) return "Unavailable";
+      const rounded = Math.max(0, Math.round(numeric));
+      const hours = Math.floor(rounded / 3600);
+      const minutes = Math.floor((rounded % 3600) / 60);
+      const remaining = rounded % 60;
+      if (hours) return `${hours}h ${minutes}m`;
+      if (minutes) return `${minutes}m ${remaining}s`;
+      return `${remaining}s`;
+    };
+
     const readableToken = (value) => String(value || "")
       .replace(/[_-]+/g, " ")
       .replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -285,17 +334,47 @@
       const card = element("article", "health-component-card");
       card.id = `component-${key.replace(/[^a-z0-9_-]/gi, "-")}`;
       card.dataset.state = presentation.state;
+      if (PROMINENT_COMPONENT_KEYS.has(key)) card.dataset.prominence = "major";
 
       const top = element("div", "health-component-card__top");
-      const identity = element("div");
+      const identity = element("div", "health-component-card__identity");
+      const icon = element("span", "health-component-card__icon");
+      icon.setAttribute("aria-hidden", "true");
+      const image = element("img");
+      image.alt = "";
+      image.src = COMPONENT_ICONS[String(component.component_id || "")] || "/assets/icons/ui/pageinfo.svg";
+      image.addEventListener("error", () => {
+        if (image.dataset.fallback === "true") return;
+        image.dataset.fallback = "true";
+        image.src = "/assets/icons/ui/pageinfo.svg";
+      });
+      icon.append(image);
+      const identityCopy = element("div");
       const kicker = element("span", "health-component-card__kicker");
       kicker.append(element("i"), document.createTextNode(presentation.ownership));
-      identity.append(kicker, element("h4", "", component.display_name || readableToken(key)));
+      identityCopy.append(kicker, element("h4", "", component.display_name || readableToken(key)));
+      identity.append(icon, identityCopy);
       top.append(identity, element("span", "health-component-state", presentation.label));
       card.append(top);
 
       const description = component.description || "No additional public-safe component detail is available.";
       card.append(element("p", "health-component-card__description", description));
+
+      const retained = unavailable ? [] : historyBuckets(component.history, "24h").slice(-18);
+      const microhistory = element("div", retained.length ? "health-component-card__microhistory" : "health-component-card__microhistory health-component-card__microhistory--empty");
+      if (retained.length) {
+        microhistory.style.setProperty("--sample-count", String(retained.length));
+        retained.forEach((bucket) => {
+          const sample = element("span");
+          sample.dataset.state = normalizeState(bucket.state || bucket.overall_state);
+          sample.title = bucketDescription(bucket, component.display_name || readableToken(key));
+          microhistory.append(sample);
+        });
+        microhistory.setAttribute("aria-label", `${retained.length} most recent real retained samples in the 24-hour projection.`);
+      } else {
+        microhistory.textContent = unavailable ? "RETAINED SAMPLE RAIL UNAVAILABLE" : "NO RETAINED SAMPLE RAIL YET";
+      }
+      card.append(microhistory);
 
       const facts = element("dl", "health-component-card__facts");
       const observed = component.last_checked ? formatTimestamp(component.last_checked) : "Unavailable";
@@ -470,13 +549,13 @@
       }
 
       const width = 720;
-      const height = 218;
-      const left = 42;
-      const right = 18;
-      const top = 18;
-      const bottom = 32;
+      const height = 250;
+      const left = 50;
+      const right = 20;
+      const top = 20;
+      const bottom = 38;
       const baseY = height - bottom;
-      const maximum = Math.max(1, summary.maximum);
+      const maximum = Math.max(1, Math.ceil(summary.maximum * 1.15));
       const generatedAt = parseTime(currentDiagnostics?.generated_at) ?? Math.max(...buckets.map((bucket) => parseTime(bucket.at)));
       const startAt = generatedAt - RANGE_MILLISECONDS[latencyRange];
       const plot = svgElement("svg", { viewBox: `0 0 ${width} ${height}`, class: "health-latency-plot", role: "img" });
@@ -484,28 +563,71 @@
       title.textContent = `${summary.count} measured Core API response samples over ${RANGE_LABELS[latencyRange]}; minimum ${summary.minimum} milliseconds, median ${summary.median}, maximum ${summary.maximum}.`;
       plot.append(title);
       const definitions = svgElement("defs");
-      const gradient = svgElement("linearGradient", { id: "health-latency-gradient", gradientUnits: "userSpaceOnUse", x1: "0", y1: baseY, x2: "0", y2: top });
-      [["0%", "#315f7d"], ["52%", "#58b7ff"], ["100%", "#b8a8ff"]].forEach(([offset, color]) => gradient.append(svgElement("stop", { offset, "stop-color": color })));
-      definitions.append(gradient);
-      plot.append(definitions, svgElement("line", { x1: left, y1: baseY, x2: width - right, y2: baseY, class: "health-latency-plot__baseline" }));
+      const lineGradient = svgElement("linearGradient", { id: "health-latency-line-gradient", gradientUnits: "userSpaceOnUse", x1: left, y1: "0", x2: width - right, y2: "0" });
+      [["0%", "#5d96ff"], ["52%", "#70d8ff"], ["100%", "#a68bff"]].forEach(([offset, color]) => lineGradient.append(svgElement("stop", { offset, "stop-color": color })));
+      const areaGradient = svgElement("linearGradient", { id: "health-latency-area-gradient", gradientUnits: "userSpaceOnUse", x1: "0", y1: top, x2: "0", y2: baseY });
+      [["0%", "#70d8ff", ".28"], ["60%", "#5d96ff", ".13"], ["100%", "#a68bff", ".015"]].forEach(([offset, color, opacity]) => areaGradient.append(svgElement("stop", { offset, "stop-color": color, "stop-opacity": opacity })));
+      definitions.append(lineGradient, areaGradient);
+      plot.append(definitions);
 
-      buckets.forEach((bucket, index) => {
-        const at = parseTime(bucket.at);
-        const value = finiteNumber(bucket.latency_ms);
-        const ratio = Math.min(1, Math.max(0, (at - startAt) / RANGE_MILLISECONDS[latencyRange]));
-        const x = left + ratio * (width - left - right);
-        const y = top + (1 - value / maximum) * (baseY - top - 5);
-        const bar = svgElement("line", { x1: x, y1: baseY - 2, x2: x, y2: y, class: "health-latency-plot__bar", tabindex: "0", style: `animation-delay:${Math.min(index * 18, 540)}ms` });
-        const barTitle = svgElement("title");
-        barTitle.textContent = `${formatTimestamp(bucket.at)}: ${Math.round(value)} milliseconds.`;
-        bar.append(barTitle);
-        plot.append(bar);
+      const yFor = (value) => baseY - (Math.max(0, Math.min(maximum, value)) / maximum) * (baseY - top);
+      [1, .75, .5, .25, 0].forEach((ratio) => {
+        const value = Math.round(maximum * ratio);
+        const y = yFor(value);
+        plot.append(svgElement("line", { x1: left, y1: y, x2: width - right, y2: y, class: "health-latency-plot__gridline" }));
+        const label = svgElement("text", { x: left - 8, y: y + 3, "text-anchor": "end", class: "health-latency-plot__axis" });
+        label.textContent = `${value}ms`;
+        plot.append(label);
       });
-      const maxLabel = svgElement("text", { x: 8, y: top + 5, class: "health-latency-plot__label" });
-      maxLabel.textContent = `${Math.round(maximum)}ms`;
-      const zeroLabel = svgElement("text", { x: 15, y: baseY + 4, class: "health-latency-plot__label" });
-      zeroLabel.textContent = "0";
-      plot.append(maxLabel, zeroLabel);
+      for (let index = 0; index < 5; index += 1) {
+        const ratio = index / 4;
+        const x = left + ratio * (width - left - right);
+        plot.append(svgElement("line", { x1: x, y1: top, x2: x, y2: baseY, class: "health-latency-plot__gridline health-latency-plot__gridline--vertical" }));
+        const at = new Date(startAt + ratio * RANGE_MILLISECONDS[latencyRange]);
+        const label = svgElement("text", { x, y: height - 14, "text-anchor": index === 0 ? "start" : index === 4 ? "end" : "middle", class: "health-latency-plot__axis" });
+        label.textContent = new Intl.DateTimeFormat(undefined, latencyRange === "5h" || latencyRange === "24h" ? { hour: "2-digit", minute: "2-digit" } : { month: "short", day: "numeric" }).format(at);
+        plot.append(label);
+      }
+
+      const points = buckets
+        .map((bucket) => {
+          const at = parseTime(bucket.at);
+          const value = finiteNumber(bucket.latency_ms);
+          const ratio = Math.min(1, Math.max(0, (at - startAt) / RANGE_MILLISECONDS[latencyRange]));
+          return { bucket, at, value, x: left + ratio * (width - left - right), y: yFor(value) };
+        })
+        .sort((one, two) => one.at - two.at);
+      const expectedStep = RANGE_MILLISECONDS[latencyRange] / HISTORY_LIMITS[latencyRange];
+      const segments = [];
+      points.forEach((point) => {
+        const segment = segments.at(-1);
+        if (!segment || point.at - segment.at(-1).at > expectedStep * 1.8) segments.push([point]);
+        else segment.push(point);
+      });
+
+      segments.forEach((segment, index) => {
+        if (index > 0) {
+          const previous = segments[index - 1].at(-1);
+          const gap = svgElement("rect", { x: previous.x, y: top, width: Math.max(1, segment[0].x - previous.x), height: baseY - top, class: "health-latency-plot__gap" });
+          const gapTitle = svgElement("title");
+          gapTitle.textContent = `No retained response sample between ${formatTimestamp(previous.bucket.at)} and ${formatTimestamp(segment[0].bucket.at)}.`;
+          gap.append(gapTitle);
+          plot.append(gap);
+        }
+        if (segment.length < 2) return;
+        const pathData = segment.map((point, pointIndex) => `${pointIndex ? "L" : "M"}${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(" ");
+        const area = svgElement("path", { d: `${pathData} L${segment.at(-1).x.toFixed(2)} ${baseY} L${segment[0].x.toFixed(2)} ${baseY} Z`, fill: "url(#health-latency-area-gradient)", class: "health-latency-plot__area" });
+        const line = svgElement("path", { d: pathData, stroke: "url(#health-latency-line-gradient)", class: "health-latency-plot__line" });
+        plot.append(area, line);
+      });
+
+      points.forEach((point, index) => {
+        const marker = svgElement("circle", { cx: point.x, cy: point.y, r: index === points.length - 1 ? "3.5" : "2.2", class: `health-latency-plot__point${index === points.length - 1 ? " is-current" : ""}`, tabindex: "0" });
+        const markerTitle = svgElement("title");
+        markerTitle.textContent = `${formatTimestamp(point.bucket.at)}: ${Math.round(point.value)} milliseconds.`;
+        marker.append(markerTitle);
+        plot.append(marker);
+      });
       latencyChart.append(plot);
       latencyChart.setAttribute("aria-label", title.textContent);
     };
@@ -520,16 +642,22 @@
       return pieces.join(" · ");
     };
 
-    const createHeatmapRow = (label, sublabel, buckets) => {
+    const createHeatmapRow = (label, sublabel, buckets, rangeEnd) => {
       const row = element("div", "health-heatmap__row");
       const name = element("div", "health-heatmap__name");
       name.append(element("strong", "", label), element("small", "", sublabel));
       const cells = element("div", "health-heatmap__cells");
-      buckets.forEach((bucket) => {
+      const slots = HISTORY_LIMITS[historyRange];
+      const rangeStart = rangeEnd - RANGE_MILLISECONDS[historyRange];
+      cells.style.setProperty("--bucket-slots", String(slots));
+      buckets.forEach((bucket, index) => {
         const state = normalizeState(bucket.state || bucket.overall_state);
         const cell = element("button", "health-heatmap__cell");
         cell.type = "button";
         cell.dataset.state = state;
+        const at = parseTime(bucket.at);
+        const ratio = at === null ? index / Math.max(1, buckets.length - 1) : Math.min(1, Math.max(0, (at - rangeStart) / RANGE_MILLISECONDS[historyRange]));
+        cell.style.gridColumn = String(Math.min(slots, Math.max(1, Math.floor(ratio * (slots - 1)) + 1)));
         const description = bucketDescription(bucket, label);
         cell.title = description;
         cell.setAttribute("aria-label", description);
@@ -544,6 +672,16 @@
       const rows = [];
       const overall = currentDiagnostics?.overall_availability;
       const overallRange = isRecord(overall?.ranges?.[historyRange]) ? overall.ranges[historyRange] : null;
+      setText("[data-history-availability]", currentProjectionUnavailable ? "Unavailable" : formatPercent(overallRange?.watchdog_observed_availability_percent));
+      setText("[data-history-coverage]", currentProjectionUnavailable ? "Unavailable" : formatPercent(overallRange?.observation_coverage_percent));
+      setText("[data-history-downtime]", currentProjectionUnavailable ? "Unavailable" : formatDuration(overallRange?.downtime_seconds));
+      const observedBuckets = finiteNumber(overallRange?.observed_buckets);
+      const expectedBuckets = finiteNumber(overallRange?.expected_buckets);
+      setText("[data-history-buckets]", currentProjectionUnavailable || observedBuckets === null ? "Unavailable" : expectedBuckets === null ? observedBuckets : `${observedBuckets}/${expectedBuckets}`);
+      const authoritativeRangeEnd = parseTime(currentDiagnostics?.generated_at);
+      const rangeEnd = authoritativeRangeEnd ?? Date.now();
+      setText("[data-history-start]", authoritativeRangeEnd === null ? "Range start unavailable" : formatTimestamp(new Date(rangeEnd - RANGE_MILLISECONDS[historyRange]).toISOString()));
+      setText("[data-history-end]", authoritativeRangeEnd === null ? "Latest unavailable" : formatTimestamp(new Date(rangeEnd).toISOString()));
       const overallBuckets = Array.isArray(overallRange?.state_timeline)
         ? overallRange.state_timeline.slice(0, HISTORY_LIMITS[historyRange]).filter(isRecord)
         : [];
@@ -582,7 +720,7 @@
       }
 
       const container = element("div", "health-heatmap__rows");
-      rows.forEach((row) => container.append(createHeatmapRow(row.label, row.sublabel, row.buckets)));
+      rows.forEach((row) => container.append(createHeatmapRow(row.label, row.sublabel, row.buckets, rangeEnd)));
       heatmapRoot.append(container);
       const bucketCount = rows.reduce((sum, row) => sum + row.buckets.length, 0);
       setText("[data-history-caption]", `${bucketCount} real bucket${bucketCount === 1 ? "" : "s"} across ${rows.length} observed row${rows.length === 1 ? "" : "s"} · ${historyRange.toUpperCase()}`);
@@ -641,15 +779,57 @@
 
     const bindRangeButtons = (rootSelector, onChange) => {
       const root = document.querySelector(rootSelector);
+      const buttons = [...(root?.querySelectorAll("button[data-range]") || [])];
+      buttons.forEach((button) => button.setAttribute("aria-pressed", String(button.classList.contains("is-active"))));
       root?.addEventListener("click", (event) => {
         const button = event.target.closest("button[data-range]");
         if (!button || !HISTORY_LIMITS[button.dataset.range]) return;
-        root.querySelectorAll("button[data-range]").forEach((item) => item.classList.toggle("is-active", item === button));
+        buttons.forEach((item) => {
+          const active = item === button;
+          item.classList.toggle("is-active", active);
+          item.setAttribute("aria-pressed", String(active));
+        });
         onChange(button.dataset.range);
+      });
+      root?.addEventListener("keydown", (event) => {
+        if (!event.target.matches("button[data-range]")) return;
+        const currentIndex = buttons.indexOf(event.target);
+        let next = null;
+        if (event.key === "ArrowRight" || event.key === "ArrowDown") next = buttons[(currentIndex + 1) % buttons.length];
+        if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = buttons[(currentIndex - 1 + buttons.length) % buttons.length];
+        if (event.key === "Home") next = buttons[0];
+        if (event.key === "End") next = buttons.at(-1);
+        if (!next) return;
+        event.preventDefault();
+        next.focus();
+        next.click();
       });
     };
     bindRangeButtons("[data-latency-ranges]", (range) => { latencyRange = range; renderLatency(); });
     bindRangeButtons("[data-history-ranges]", (range) => { historyRange = range; renderHistory(); });
+
+    const topology = document.querySelector("[data-health-topology]");
+    const topologyNodes = [...document.querySelectorAll(".health-node[data-component-key]")];
+    const setActiveTopologyRoute = (componentKey) => {
+      const runtimeActive = componentKey === "public_apis_exports_version_registry";
+      let matched = false;
+      topology?.querySelectorAll("[data-route-to]").forEach((route) => {
+        const active = runtimeActive || route.dataset.routeTo === componentKey;
+        route.classList.toggle("is-active", active);
+        matched ||= active;
+      });
+      topology?.classList.toggle("has-active-route", matched);
+    };
+    const clearActiveTopologyRoute = () => {
+      topology?.classList.remove("has-active-route");
+      topology?.querySelectorAll("[data-route-to]").forEach((route) => route.classList.remove("is-active"));
+    };
+    topologyNodes.forEach((node) => {
+      node.addEventListener("pointerenter", () => setActiveTopologyRoute(node.dataset.componentKey));
+      node.addEventListener("pointerleave", clearActiveTopologyRoute);
+      node.addEventListener("focus", () => setActiveTopologyRoute(node.dataset.componentKey));
+      node.addEventListener("blur", clearActiveTopologyRoute);
+    });
 
     const navToggle = document.querySelector("[data-nav-toggle]");
     const primaryNav = document.querySelector("[data-primary-nav]");
