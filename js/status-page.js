@@ -33,6 +33,7 @@
     graphRanges: new Map(),
     graphEntrances: new Set(),
     overallRange: "24h",
+    resolvedFragment: "",
   };
 
   const COMPONENT_PRESENTATION = Object.freeze({
@@ -1559,6 +1560,7 @@
     const diagnostic = diagnosticFor(component, snapshot);
     const source = diagnostic || fallbackCoverage(component.id);
     const cardId = `component-${String(component.id || "unknown").replace(/[^a-z0-9_-]/gi, "")}`;
+    card.id = cardId;
 
     const identity = node("div", "component-card__identity");
     const icon = node("span", "component-card__icon");
@@ -1701,6 +1703,42 @@
     return card;
   };
 
+  const componentFragmentId = () => {
+    let fragment = "";
+    try { fragment = decodeURIComponent(window.location.hash.slice(1)); }
+    catch { return ""; }
+    return /^component-[a-z0-9_-]+$/i.test(fragment) ? fragment : "";
+  };
+
+  const revealComponentFragment = ({ force = false } = {}) => {
+    const fragment = componentFragmentId();
+    if (!fragment || (!force && state.resolvedFragment === fragment)) return false;
+    const card = document.getElementById(fragment);
+    if (!card) {
+      if (state.snapshot && (state.search || state.filter !== "all")) {
+        state.search = "";
+        state.filter = "all";
+        const search = select("[data-component-search]");
+        if (search) search.value = "";
+        selectAll("[data-status-filter]").forEach((filter) => filter.classList.toggle("is-active", filter.dataset.statusFilter === "all"));
+        renderComponents(state.snapshot);
+      }
+      return false;
+    }
+    state.resolvedFragment = fragment;
+    const toggle = select(".component-card__toggle", card);
+    if (toggle?.getAttribute("aria-expanded") !== "true") toggle.click();
+    card.classList.remove("is-deep-linked");
+    void card.offsetWidth;
+    card.classList.add("is-deep-linked");
+    window.requestAnimationFrame(() => {
+      card.scrollIntoView({ behavior: chartMotionReduced() ? "auto" : "smooth", block: "start" });
+      toggle?.focus({ preventScroll: true });
+    });
+    window.setTimeout(() => card.classList.remove("is-deep-linked"), 1800);
+    return true;
+  };
+
   const renderComponents = (snapshot) => {
     const loadState = select("[data-component-load-state]");
     const groupsRoot = select("[data-component-groups]");
@@ -1747,6 +1785,7 @@
     if (loadState) loadState.hidden = true;
     groupsRoot.hidden = visibleCount === 0;
     if (empty) empty.hidden = visibleCount !== 0;
+    revealComponentFragment();
   };
 
   const createEmptyOperation = (kind) => {
@@ -2014,6 +2053,10 @@
     initReveals();
     initRefresh();
     initMetricHistory();
+    window.addEventListener("hashchange", () => {
+      state.resolvedFragment = "";
+      revealComponentFragment({ force: true });
+    });
     store.subscribe(render);
     store.start();
   };

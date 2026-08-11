@@ -11,6 +11,13 @@
   const RANGE_LABELS = Object.freeze({ "5h": "5 hours", "24h": "24 hours", "7d": "7 days", "30d": "30 days" });
   const DISPLAY_SEGMENT_CAPS = Object.freeze({ desktop: 96, tablet: 72, mobile: 48 });
 
+  const statusComponentHref = (component) => {
+    const componentId = String(component?.component_id || "").trim();
+    return /^[a-z0-9_-]+$/i.test(componentId)
+      ? `/status#component-${componentId}`
+      : "/status#components";
+  };
+
   const STATE_META = Object.freeze({
     operational: { label: "Operational", mark: "✓", rank: 0 },
     degraded: { label: "Degraded performance", mark: "!", rank: 1 },
@@ -300,6 +307,15 @@
     let historyResizeTimer = 0;
     let latencyInteraction = null;
     let latencyPointerFrame = 0;
+    let latencyEntranceObserver = null;
+    let latencyEntranceTimer = 0;
+    let latencyEntranceToken = 0;
+    let latencyEntranceVisibilityCheck = null;
+    let latencyEntranceVisibilityFrame = 0;
+    let historyTooltipModels = new WeakMap();
+    let historyTooltip = null;
+    let historyTooltipTarget = null;
+    let historyTooltipHideTimer = 0;
     const renderSignatures = new Map();
 
     const setText = (selector, value) => {
@@ -318,6 +334,115 @@
       const node = document.createElementNS("http://www.w3.org/2000/svg", tag);
       Object.entries(attributes).forEach(([name, value]) => node.setAttribute(name, String(value)));
       return node;
+    };
+
+    const motionFrame = (callback) => (window.requestAnimationFrame || ((next) => window.setTimeout(next, 0)))(callback);
+
+    const ensureHistoryTooltip = () => {
+      if (historyTooltip?.isConnected) return historyTooltip;
+      historyTooltip = element("div", "health-history-tooltip");
+      historyTooltip.id = "health-history-tooltip";
+      historyTooltip.hidden = true;
+      historyTooltip.dataset.state = "unknown";
+      historyTooltip.setAttribute("role", "tooltip");
+      historyTooltip.setAttribute("aria-hidden", "true");
+      document.body.append(historyTooltip);
+      return historyTooltip;
+    };
+
+    const positionHistoryTooltip = (target) => {
+      const tooltip = ensureHistoryTooltip();
+      const targetBounds = target.getBoundingClientRect();
+      const tooltipBounds = tooltip.getBoundingClientRect();
+      const viewportGap = 12;
+      const anchorGap = 13;
+      const rawLeft = targetBounds.left + targetBounds.width / 2 - tooltipBounds.width / 2;
+      const left = Math.max(viewportGap, Math.min(window.innerWidth - tooltipBounds.width - viewportGap, rawLeft));
+      const above = targetBounds.top - tooltipBounds.height - anchorGap;
+      const placeBelow = above < viewportGap;
+      const top = placeBelow
+        ? Math.min(window.innerHeight - tooltipBounds.height - viewportGap, targetBounds.bottom + anchorGap)
+        : above;
+      const arrowX = Math.max(18, Math.min(tooltipBounds.width - 18, targetBounds.left + targetBounds.width / 2 - left));
+      tooltip.dataset.placement = placeBelow ? "below" : "above";
+      tooltip.style.left = `${Math.round(left)}px`;
+      tooltip.style.top = `${Math.round(Math.max(viewportGap, top))}px`;
+      tooltip.style.setProperty("--tooltip-arrow-x", `${Math.round(arrowX)}px`);
+    };
+
+    const hideHistoryTooltip = (immediate = false) => {
+      window.clearTimeout(historyTooltipHideTimer);
+      historyTooltipHideTimer = 0;
+      historyTooltipTarget?.removeAttribute("aria-describedby");
+      historyTooltipTarget = null;
+      if (!historyTooltip) return;
+      historyTooltip.classList.remove("is-visible");
+      historyTooltip.setAttribute("aria-hidden", "true");
+      if (immediate || motionQuery?.matches) {
+        historyTooltip.hidden = true;
+        return;
+      }
+      historyTooltipHideTimer = window.setTimeout(() => {
+        if (historyTooltip?.getAttribute("aria-hidden") === "true") historyTooltip.hidden = true;
+        historyTooltipHideTimer = 0;
+      }, 150);
+    };
+
+    const showHistoryTooltip = (target) => {
+      const model = historyTooltipModels.get(target);
+      if (!model) return;
+      window.clearTimeout(historyTooltipHideTimer);
+      historyTooltipHideTimer = 0;
+      const tooltip = ensureHistoryTooltip();
+      historyTooltipTarget?.removeAttribute("aria-describedby");
+      historyTooltipTarget = target;
+      target.setAttribute("aria-describedby", tooltip.id);
+      tooltip.dataset.state = model.state;
+      const header = element("header", "health-history-tooltip__header");
+      const state = element("span", "health-history-tooltip__state", STATE_META[model.state].label);
+      state.dataset.state = model.state;
+      header.append(state, element("small", "", `${model.rangeLabel} · bounded display interval`));
+      const title = element("div", "health-history-tooltip__title");
+      title.append(element("strong", "", model.label), element("span", "", model.sublabel));
+      const interval = element("div", "health-history-tooltip__interval");
+      interval.append(element("small", "", "Canonical interval"), element("strong", "", `${formatTimestamp(new Date(model.segment.startAt).toISOString())} → ${formatTimestamp(new Date(model.segment.endAt).toISOString())}`));
+      const metrics = element("dl", "health-history-tooltip__metrics");
+      [
+        ["Canonical slots", model.segment.sourceBucketCount],
+        ["Observed", model.segment.observedCount],
+        ["Unobserved", model.segment.unobservedCount],
+        ["Retained buckets", model.segment.retainedBucketCount],
+        ["Raw observations", model.segment.sampleCount],
+      ].forEach(([label, value]) => {
+        const item = element("div");
+        item.append(element("dt", "", label), element("dd", "", value));
+        metrics.append(item);
+      });
+      const stateMix = element("div", "health-history-tooltip__mix");
+      Object.entries(model.segment.counts).filter(([, count]) => count > 0).forEach(([key, count]) => {
+        const chip = element("span", "", `${count} ${STATE_META[key].label}`);
+        chip.dataset.state = key;
+        stateMix.append(chip);
+      });
+      const source = element("div", "health-history-tooltip__source");
+      source.append(
+        element("small", "", "Retained source window"),
+        element("span", "", model.segment.sourceStartAt === null
+          ? "No retained source timestamp in this interval"
+          : `${formatTimestamp(new Date(model.segment.sourceStartAt).toISOString())}${model.segment.sourceEndAt === model.segment.sourceStartAt ? "" : ` → ${formatTimestamp(new Date(model.segment.sourceEndAt).toISOString())}`}`)
+      );
+      const footer = element("footer", "health-history-tooltip__footer");
+      const footerNote = element("div", "health-history-tooltip__note");
+      footerNote.append(element("span", "", "NO BACKFILL"), element("small", "", "Unknown time remains neutral; Public derives no availability state."));
+      footer.append(footerNote, element("strong", "health-history-tooltip__action", model.statusLabel));
+      tooltip.replaceChildren(header, title, interval, metrics, stateMix, source, footer);
+      tooltip.hidden = false;
+      tooltip.setAttribute("aria-hidden", "false");
+      tooltip.classList.remove("is-visible");
+      positionHistoryTooltip(target);
+      motionFrame(() => {
+        if (historyTooltipTarget === target) tooltip.classList.add("is-visible");
+      });
     };
 
     const renderWhenChanged = (key, value, renderer, force = false) => {
@@ -663,6 +788,80 @@
       );
     };
 
+    const cancelLatencyEntrance = () => {
+      latencyEntranceObserver?.disconnect();
+      latencyEntranceObserver = null;
+      if (latencyEntranceTimer) window.clearTimeout(latencyEntranceTimer);
+      latencyEntranceTimer = 0;
+      latencyEntranceVisibilityCheck = null;
+      latencyEntranceToken += 1;
+      latencyChart?.classList.remove("is-plot-primed", "is-plot-entering", "is-plot-visible");
+    };
+
+    const startLatencyEntrance = (token) => {
+      if (!latencyChart || token !== latencyEntranceToken || latencyChart.dataset.plotEntranceStarted === String(token)) return;
+      latencyChart.dataset.plotEntranceStarted = String(token);
+      latencyEntranceVisibilityCheck = null;
+      latencyEntranceObserver?.disconnect();
+      latencyEntranceObserver = null;
+      motionFrame(() => {
+        if (token !== latencyEntranceToken) return;
+        latencyChart.classList.add("is-plot-entering");
+        motionFrame(() => {
+          if (token !== latencyEntranceToken) return;
+          latencyChart.classList.remove("is-plot-primed");
+          latencyChart.classList.add("is-plot-visible");
+        });
+      });
+      latencyEntranceTimer = window.setTimeout(() => {
+        if (token !== latencyEntranceToken) return;
+        latencyChart.classList.remove("is-plot-primed", "is-plot-entering", "is-plot-visible");
+        latencyEntranceTimer = 0;
+      }, 2260);
+    };
+
+    const queueLatencyEntrance = () => {
+      cancelLatencyEntrance();
+      if (!latencyChart?.querySelector(".health-latency-plot")) return;
+      const token = latencyEntranceToken;
+      delete latencyChart.dataset.plotEntranceStarted;
+      if (motionQuery?.matches) {
+        latencyChart.dataset.plotMotion = "reduced";
+        return;
+      }
+      latencyChart.dataset.plotMotion = "animated";
+      latencyChart.classList.add("is-plot-primed");
+      const startWhenVisible = () => {
+        if (token !== latencyEntranceToken) return;
+        const plot = latencyChart.querySelector(".health-latency-plot");
+        if (!plot) return;
+        const bounds = plot.getBoundingClientRect();
+        const viewportTop = window.innerHeight * .08;
+        const viewportBottom = window.innerHeight * .92;
+        const visiblePixels = Math.max(0, Math.min(bounds.bottom, viewportBottom) - Math.max(bounds.top, viewportTop));
+        if (visiblePixels < Math.min(120, bounds.height * .22)) return;
+        startLatencyEntrance(token);
+      };
+      latencyEntranceVisibilityCheck = startWhenVisible;
+      startWhenVisible();
+      if (latencyChart.dataset.plotEntranceStarted === String(token)) return;
+      if (!("IntersectionObserver" in window)) {
+        startLatencyEntrance(token);
+        return;
+      }
+      latencyEntranceObserver = new IntersectionObserver(startWhenVisible, { rootMargin: "-8% 0px -8% 0px", threshold: [.16, .3] });
+      latencyEntranceObserver.observe(latencyChart);
+    };
+
+    const checkLatencyEntranceOnScroll = () => {
+      if (!latencyEntranceVisibilityCheck || latencyEntranceVisibilityFrame) return;
+      latencyEntranceVisibilityFrame = motionFrame(() => {
+        latencyEntranceVisibilityFrame = 0;
+        latencyEntranceVisibilityCheck?.();
+      });
+    };
+    window.addEventListener("scroll", checkLatencyEntranceOnScroll, { passive: true, capture: true });
+
     const latencyMetric = (diagnostics = currentDiagnostics) => diagnostics?.metrics?.core_api_response_time || null;
 
     const renderLatency = (force = false) => {
@@ -694,12 +893,14 @@
       if (!force && renderSignatures.get("latency") === JSON.stringify(renderKey)) return;
       renderSignatures.set("latency", JSON.stringify(renderKey));
       const restoreFocus = latencyChart.contains(document.activeElement);
+      cancelLatencyEntrance();
       latencyInteraction = null;
       latencyChart.replaceChildren();
       if (!summary.count || currentProjectionUnavailable) {
         const empty = element("div", "health-empty-plot");
         empty.append(element("span", "", "∿"), element("strong", "", currentProjectionUnavailable ? "Fresh measurement unavailable" : "No retained samples"), element("small", "", `No real Core API response samples are available for the selected ${RANGE_LABELS[latencyRange]} window.`));
         latencyChart.append(empty);
+        latencyChart.dataset.plotMotion = "static";
         latencyChart.setAttribute("aria-label", `No measured Core API response history is available for ${RANGE_LABELS[latencyRange]}.`);
         return;
       }
@@ -723,7 +924,12 @@
       [["0%", "#5d96ff"], ["52%", "#70d8ff"], ["100%", "#a68bff"]].forEach(([offset, color]) => lineGradient.append(svgElement("stop", { offset, "stop-color": color })));
       const areaGradient = svgElement("linearGradient", { id: "health-latency-area-gradient", gradientUnits: "userSpaceOnUse", x1: "0", y1: top, x2: "0", y2: baseY });
       [["0%", "#70d8ff", ".28"], ["60%", "#5d96ff", ".13"], ["100%", "#a68bff", ".015"]].forEach(([offset, color, opacity]) => areaGradient.append(svgElement("stop", { offset, "stop-color": color, "stop-opacity": opacity })));
-      definitions.append(lineGradient, areaGradient);
+      const revealGradient = svgElement("linearGradient", { id: "health-latency-line-reveal-gradient", x1: "0%", x2: "100%" });
+      [["0%", "1"], ["92%", "1"], ["100%", "0"]].forEach(([offset, opacity]) => revealGradient.append(svgElement("stop", { offset, "stop-color": "white", "stop-opacity": opacity })));
+      const revealMask = svgElement("mask", { id: "health-latency-line-reveal-mask", maskUnits: "userSpaceOnUse", "mask-type": "luminance", x: left - 64, y: top - 24, width: width - left - right + 160, height: baseY - top + 48 });
+      const reveal = svgElement("rect", { x: left - 64, y: top - 24, width: width - left - right + 160, height: baseY - top + 48, fill: "url(#health-latency-line-reveal-gradient)", class: "health-latency-plot__line-reveal" });
+      revealMask.append(reveal);
+      definitions.append(lineGradient, areaGradient, revealGradient, revealMask);
       plot.append(definitions);
 
       const yFor = (value) => baseY - (Math.max(0, Math.min(maximum, value)) / maximum) * (baseY - top);
@@ -777,7 +983,7 @@
         if (segment.length >= 2) areaParts.push(`${pathData} L${segment.at(-1).x.toFixed(2)} ${baseY} L${segment[0].x.toFixed(2)} ${baseY} Z`);
       });
       if (areaParts.length) plot.append(svgElement("path", { d: areaParts.join(" "), fill: "url(#health-latency-area-gradient)", class: "health-latency-plot__area" }));
-      plot.append(svgElement("path", { d: lineParts.join(" "), stroke: "url(#health-latency-line-gradient)", class: "health-latency-plot__line" }));
+      plot.append(svgElement("path", { d: lineParts.join(" "), stroke: "url(#health-latency-line-gradient)", mask: "url(#health-latency-line-reveal-mask)", class: "health-latency-plot__line" }));
 
       const latest = points.at(-1);
       const latestMarker = svgElement("circle", { cx: latest.x, cy: latest.y, r: "3.8", class: "health-latency-plot__point is-current" });
@@ -797,6 +1003,7 @@
       latencyInteraction = { plot, points, hoverMarker, tooltip, activeIndex: points.length - 1, viewWidth: width };
       if (restoreFocus) interactionLayer.focus({ preventScroll: true });
       latencyChart.setAttribute("aria-label", title.textContent);
+      queueLatencyEntrance();
     };
 
     const bucketDescription = (bucket, label) => {
@@ -822,7 +1029,7 @@
     };
 
     const createHeatmapRow = (rowModel, axis) => {
-      const { key, label, sublabel, buckets } = rowModel;
+      const { key, label, sublabel, buckets, statusHref, statusLabel } = rowModel;
       const row = element("div", "health-heatmap__row");
       row.dataset.historyRowKey = key;
       const name = element("div", "health-heatmap__name");
@@ -833,8 +1040,8 @@
       cells.style.setProperty("--display-segments", String(segments.length));
       const fragment = document.createDocumentFragment();
       segments.forEach((segment) => {
-        const cell = element("button", "health-heatmap__cell");
-        cell.type = "button";
+        const cell = element("a", "health-heatmap__cell");
+        cell.href = statusHref;
         cell.dataset.state = segment.state;
         cell.dataset.historyRowKey = key;
         cell.dataset.segmentIndex = String(segment.index);
@@ -844,8 +1051,8 @@
         cell.dataset.unknownCount = String(segment.unknownCount);
         cell.dataset.coverage = segment.unobservedCount ? segment.observedCount ? "mixed" : "unobserved" : "observed";
         const description = segmentDescription(segment, label);
-        cell.title = description;
         cell.setAttribute("aria-label", description);
+        historyTooltipModels.set(cell, { state: segment.state, label, sublabel, rangeLabel: RANGE_LABELS[historyRange], segment, statusLabel });
         fragment.append(cell);
       });
       cells.append(fragment);
@@ -858,8 +1065,9 @@
       const kind = classification.kind === "direct" && !axisAvailable ? "current" : classification.kind;
       card.dataset.historyClassification = kind;
       card.dataset.componentKey = key;
+      const componentName = component.display_name || readableToken(key);
       const header = element("header");
-      header.append(element("strong", "", component.display_name || readableToken(key)), element("span", "", kind === "current" ? "Current snapshot only" : classification.label));
+      header.append(element("strong", "", componentName), element("span", "", kind === "current" ? "Current snapshot only" : classification.label));
       const official = currentProjectionUnavailable ? "unknown" : normalizeState(component.official_state_at_last_reconciliation);
       const direct = currentProjectionUnavailable ? "unknown" : normalizeState(component.direct_state);
       let detail = "No retained observations are available for this component.";
@@ -877,7 +1085,12 @@
         detail = "This boundary is not independently measured by the public watchdog, so no history rail is rendered.";
         snapshot = official === "unknown" ? "No independent current measurement" : `Official state at last reconciliation: ${STATE_META[official].label}`;
       }
-      card.append(header, element("p", "", detail), element("small", "", snapshot));
+      const statusLink = element("a", "health-history-classification__link");
+      statusLink.href = statusComponentHref(component);
+      statusLink.setAttribute("aria-label", `View ${componentName} on the Status page`);
+      statusLink.append(element("span", "", "View on Status"), element("i", "", "↗"));
+      statusLink.lastChild.setAttribute("aria-hidden", "true");
+      card.append(header, element("p", "", detail), element("small", "", snapshot), statusLink);
       return card;
     };
 
@@ -898,6 +1111,8 @@
       const focusToken = active?.matches?.(".health-heatmap__cell")
         ? { row: active.dataset.historyRowKey, segment: active.dataset.segmentIndex }
         : null;
+      hideHistoryTooltip(true);
+      historyTooltipModels = new WeakMap();
       heatmapRoot.replaceChildren();
       historyClassifications?.replaceChildren();
       const rows = [];
@@ -914,7 +1129,14 @@
         ? overallRange.state_timeline.slice(0, HISTORY_LIMITS[historyRange]).filter(isRecord)
         : [];
       if (axis && overall?.contract_version === OVERALL_CONTRACT_VERSION && overallBuckets.length) {
-        rows.push({ key: "overall", label: "Critical paths (overall)", sublabel: "Runtime-derived retained history", buckets: overallBuckets });
+        rows.push({
+          key: "overall",
+          label: "Critical paths (overall)",
+          sublabel: "Runtime-derived retained history",
+          buckets: overallBuckets,
+          statusHref: "/status#components",
+          statusLabel: "Open all components on Status ↗",
+        });
       }
 
       const criticalIds = new Set(Array.isArray(overall?.critical_components)
@@ -933,6 +1155,8 @@
           label: component.display_name || "Unnamed component",
           sublabel: classification.label,
           buckets: classification.buckets,
+          statusHref: statusComponentHref(component),
+          statusLabel: "Open this component on Status ↗",
         }));
 
       if (currentProjectionUnavailable) {
@@ -1136,14 +1360,70 @@
       if (!target?.matches?.(".health-heatmap__cell")) return;
       setText("[data-history-detail]", target.getAttribute("aria-label"));
     };
-    heatmapRoot?.addEventListener("pointerover", (event) => setHistoryDetail(event.target.closest?.(".health-heatmap__cell")));
-    heatmapRoot?.addEventListener("focusin", (event) => setHistoryDetail(event.target));
-    heatmapRoot?.addEventListener("pointerleave", () => setText("[data-history-detail]", "Focus or hover a timeline chip for its exact source range and observation counts."));
+    heatmapRoot?.addEventListener("pointerover", (event) => {
+      const target = event.target.closest?.(".health-heatmap__cell");
+      if (!target) return;
+      setHistoryDetail(target);
+      showHistoryTooltip(target);
+    });
+    heatmapRoot?.addEventListener("pointerout", (event) => {
+      const target = event.target.closest?.(".health-heatmap__cell");
+      if (!target || event.relatedTarget?.closest?.(".health-heatmap__cell")) return;
+      hideHistoryTooltip();
+    });
+    heatmapRoot?.addEventListener("focusin", (event) => {
+      if (!event.target.matches?.(".health-heatmap__cell")) return;
+      setHistoryDetail(event.target);
+      showHistoryTooltip(event.target);
+    });
+    heatmapRoot?.addEventListener("pointerleave", () => {
+      hideHistoryTooltip();
+      setText("[data-history-detail]", "Focus or hover a timeline chip for its exact source range and observation counts.");
+    });
     heatmapRoot?.addEventListener("focusout", (event) => {
+      if (event.relatedTarget?.matches?.(".health-heatmap__cell")) return;
+      hideHistoryTooltip();
       if (!heatmapRoot.contains(event.relatedTarget)) setText("[data-history-detail]", "Focus or hover a timeline chip for its exact source range and observation counts.");
     });
+    heatmapRoot?.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      hideHistoryTooltip(true);
+      event.target.closest?.(".health-heatmap__cell")?.focus({ preventScroll: true });
+    });
+    window.addEventListener("scroll", () => hideHistoryTooltip(true), { passive: true, capture: true });
+    window.addEventListener("resize", () => hideHistoryTooltip(true), { passive: true });
 
     const topology = document.querySelector("[data-health-topology]");
+    let topologyHasEntered = Boolean(reducedMotion);
+    let topologyEntranceTimer = 0;
+    const completeTopologyEntrance = () => {
+      if (!topology) return;
+      topologyHasEntered = true;
+      topology.classList.remove("is-topology-primed", "is-topology-entering");
+      topology.classList.add("has-topology-entered");
+    };
+    const startTopologyEntrance = () => {
+      if (!topology || topologyHasEntered) return;
+      if (motionQuery?.matches) {
+        completeTopologyEntrance();
+        return;
+      }
+      topology.classList.add("is-topology-entering");
+      motionFrame(() => motionFrame(() => {
+        if (!topology || topologyHasEntered) return;
+        topology.classList.remove("is-topology-primed");
+        topology.classList.add("has-topology-entered");
+        topologyHasEntered = true;
+        topologyEntranceTimer = window.setTimeout(() => {
+          topology.classList.remove("is-topology-entering");
+          topologyEntranceTimer = 0;
+        }, 1220);
+      }));
+    };
+    if (topology) {
+      if (topologyHasEntered) topology.classList.add("has-topology-entered");
+      else topology.classList.add("is-topology-primed");
+    }
     const setActiveTopologyRoute = (groupKey) => {
       const runtimeActive = groupKey === "all";
       let matched = false;
@@ -1180,17 +1460,20 @@
     const updateTopologyAnimationState = () => {
       const paused = Boolean(motionQuery?.matches) || document.hidden || !topologyInView;
       if (topology) topology.dataset.animationState = paused ? "paused" : "running";
+      if (motionQuery?.matches && !topologyHasEntered) completeTopologyEntrance();
     };
     let topologyObserver = null;
     if (topology && "IntersectionObserver" in window) {
       topologyObserver = new IntersectionObserver((entries) => {
         topologyInView = Boolean(entries[0]?.isIntersecting);
         updateTopologyAnimationState();
+        if (topologyInView) startTopologyEntrance();
       }, { rootMargin: "120px 0px", threshold: .01 });
       topologyObserver.observe(topology);
     } else {
       topologyInView = true;
       updateTopologyAnimationState();
+      startTopologyEntrance();
     }
     motionQuery?.addEventListener?.("change", updateTopologyAnimationState);
 
@@ -1248,7 +1531,11 @@
       if (pollTimer) window.clearInterval(pollTimer);
       pollTimer = 0;
       window.clearTimeout(historyResizeTimer);
+      window.clearTimeout(topologyEntranceTimer);
+      hideHistoryTooltip(true);
+      historyTooltip?.remove();
       if (latencyPointerFrame) window.cancelAnimationFrame(latencyPointerFrame);
+      cancelLatencyEntrance();
       topologyObserver?.disconnect();
       historyResizeObserver?.disconnect();
     }, { once: true });

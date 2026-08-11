@@ -155,7 +155,12 @@ test("component cards use meaningful icons, truthful source states, expansion, a
   assert.match(html, /data-diagnostic-core-history[^>]*aria-controls="component-tb383cr2p92n-details"/);
   assert.match(page, /View 5H \/ 24H \/ 7D \/ 30D history/);
   assert.match(page, /initMetricHistory/);
+  assert.match(page, /card\.id = cardId/);
+  assert.match(page, /const revealComponentFragment/);
+  assert.match(page, /window\.addEventListener\("hashchange"/);
+  assert.match(page, /card\.scrollIntoView/);
   assert.match(css, /\.component-card\.is-expanded/);
+  assert.match(css, /\.component-card\.is-deep-linked/);
   assert.match(css, /\.component-card\s*\{[\s\S]*?min-height:\s*248px;/);
   assert.match(css, /\.component-detail-rail__summary/);
   assert.match(css, /\.component-graph__axis-label/);
