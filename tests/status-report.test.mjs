@@ -258,6 +258,47 @@ test("older diagnostics never manufacture 5H or overall history", () => {
   assert.equal(model.metrics.core_api_response_time.selected_range.available, false);
 });
 
+test("stale PNG PDF and JSON report models retain history with explicit offline provenance", () => {
+  const helpers = loadReportHelpers();
+  const snapshot = fixture();
+  snapshot.diagnosticsStale = true;
+  snapshot.diagnosticsGeneratedAt = generatedAt;
+  snapshot.currentDirectObservationAvailable = false;
+  const reportTime = "2026-08-10T08:00:00.000Z";
+  const model = helpers.buildStatusReportModel(snapshot, { scopeType: "full", range: "5h", generatedAt: reportTime });
+  assert.equal(model.watchdog_diagnostics.available, true);
+  assert.equal(model.watchdog_diagnostics.fresh, false);
+  assert.equal(model.watchdog_diagnostics.stale, true);
+  assert.equal(model.watchdog_diagnostics.current_direct_observation_available, false);
+  assert.equal(model.watchdog_diagnostics.last_successful_projection_at, generatedAt);
+  assert.equal(model.components[0].direct.direct_stale, true);
+  assert.equal(model.components[0].direct.current_direct_observation_available, false);
+  assert.equal(model.components[0].direct.selected_range.buckets.length, 3);
+  assert.equal(model.components[0].direct.selected_range.availability_percent, 99.98342);
+  assert.equal(model.components[0].direct.selected_range.sample_count, 3);
+  assert.equal(model.components[0].direct.selected_range.trailing_offline.state, "unobserved_watchdog_offline");
+  assert.equal(model.components[0].direct.selected_range.trailing_offline.included_in_calculations, false);
+  assert.equal(model.overall.selected_range.watchdog_observed_availability_percent, 99.98342);
+  assert.equal(model.overall.selected_range.trailing_offline.state, "unobserved_watchdog_offline");
+  assert.equal(model.metrics.core_api_response_time.value_ms, 87);
+  assert.equal(model.metrics.core_api_response_time.current_measurement_available, false);
+  assert.equal(model.metrics.core_api_response_time.selected_range.buckets.length, 3);
+  assert.equal(model.metrics.studio_room_readiness.state, "deferred");
+  assert.equal(model.time_window.historical_through, generatedAt);
+  assert.equal(model.time_window.display_end, reportTime);
+  const json = JSON.stringify(model);
+  assert.match(json, /unobserved_watchdog_offline/);
+  assert.doesNotMatch(json, /fake|synthetic_bucket/);
+  const pdf = helpers.buildPrintDocument(model);
+  assert.match(pdf, /Watchdog diagnostics stale/);
+  assert.match(pdf, /Watchdog offline/i);
+  assert.match(pdf, /Core API response time · last measured/);
+  assert.match(pdf, /report-chart-offline/);
+  const reportSource = read("js/status-report.js");
+  assert.match(reportSource, /context\.fillRect\(offlineFrom, top/);
+  assert.match(reportSource, /WATCHDOG OFFLINE/);
+});
+
 test("report whitelist removes private fields and rejects forbidden key or local-path leakage", () => {
   const helpers = loadReportHelpers();
   const snapshot = fixture();

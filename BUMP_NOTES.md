@@ -6,6 +6,20 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-11 - Retained stale watchdog history and truthful offline spans
+
+#### Technical notes
+
+- Preserved the last valid Runtime/Auth watchdog diagnostics when the server projection is stale and added a bounded in-memory fallback for a later transport failure in the same browser session. Atlassian remains the official current-state source; stale direct state is labelled Watchdog offline and cannot trigger a fresh discrepancy warning.
+- Extended component, Core API Response Time, and `overall-availability-v1` graphs to retain every real measured segment and append only a presentation-time neutral trailing offline span from the last real observation to the browser clock. The span contains no synthetic bucket, measured line, area fill, operational rail, availability/downtime, min/average/max, or sample-count contribution; pre-monitoring time remains a distinct empty region.
+- Kept Runtime-projected 5H/24H/7D/30D percentages and derived summaries frozen as-of the last snapshot. Current watchdog-derived overall state becomes unavailable while stale, Core API remains a Last measured value, and Studio Room Readiness remains Deferred.
+- Extended PNG, PDF-print, and JSON reports to retain stale component/Core API/overall history, last-snapshot provenance, explicit fresh/stale/current-direct availability fields, and trailing unobserved graph geometry where supported. Public still performs no canonical availability recomputation.
+- Added focused transport-fallback, stale graph geometry, no-fake-data, range, card/discrepancy, overall, metric, reduced-motion, and report-model coverage. No file, route, dependency, canonical version/build value, Runtime authority, deployment configuration, or official status source was removed or changed.
+
+#### Human-readable notes
+
+Historical status and latency graphs now remain visible when the watchdog is offline, clearly freezing at the last real observation rather than disappearing.
+
 ### 2026-08-11 - Health topology, canonical rails, and bounded rendering
 
 #### Technical notes

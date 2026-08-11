@@ -207,7 +207,7 @@
     setText("[data-diagnostic-core-value]", coreMetric?.value_ms == null ? "Awaiting measured data" : `${coreMetric.value_ms} ms`);
     setText("[data-diagnostic-core-meta]", coreMetric?.value_ms == null
       ? "No real watchdog latency sample is available."
-      : `${coreBuckets.length} plotted five-minute buckets from ${coreMetric.history?.["5h"]?.sample_count ?? coreMetric.history?.["24h"]?.sample_count ?? 0} raw probe observations · ${snapshot.diagnosticsStale ? "stale" : "fresh"} · ${trend}`);
+      : `${snapshot.diagnosticsStale ? `Last measured ${formatRelative(coreMetric.last_checked)} · watchdog offline` : "Current measured signal"} · ${coreBuckets.length} plotted five-minute buckets from ${coreMetric.history?.["5h"]?.sample_count ?? coreMetric.history?.["24h"]?.sample_count ?? 0} raw probe observations · ${trend}`);
     const coreHistoryButton = select("[data-diagnostic-core-history]");
     if (coreHistoryButton) {
       coreHistoryButton.disabled = coreBuckets.length === 0;
@@ -217,7 +217,7 @@
     const diagnosticSource = select("[data-diagnostic-source]");
     if (diagnosticSource) {
       diagnosticSource.dataset.state = snapshot.diagnosticsLive ? "live" : snapshot.diagnostics ? "stale" : "unavailable";
-      diagnosticSource.textContent = snapshot.diagnosticsLive ? "Independent diagnostics connected" : snapshot.diagnostics ? "Independent diagnostics stale" : "Atlassian-only mode";
+      diagnosticSource.textContent = snapshot.diagnosticsLive ? "Independent diagnostics connected" : snapshot.diagnostics ? `Watchdog offline · historical data through ${formatAbsolute(snapshot.diagnosticsGeneratedAt || snapshot.diagnostics.generated_at)}` : "Atlassian-only mode";
     }
   };
 
@@ -298,7 +298,7 @@
     return remainder ? `${hours} hours ${remainder} minutes` : `${hours} ${hours === 1 ? "hour" : "hours"}`;
   };
 
-  const buildChartModel = (buckets, rangeKey) => {
+  const buildChartModel = (buckets, rangeKey, options = {}) => {
     const rangeMeta = CHART_RANGE_META[rangeKey] || CHART_RANGE_META["24h"];
     const parsedObservations = (Array.isArray(buckets) ? buckets : []).map((bucket) => {
       const time = normalizeBucketTimestamp(bucket?.at, rangeMeta.intervalMs);
@@ -312,12 +312,15 @@
       };
     }).filter((observation) => Number.isFinite(observation.time)).sort((a, b) => a.time - b.time);
     const deduplicated = [...new Map(parsedObservations.map((observation) => [observation.time, observation])).values()];
-    const endTime = deduplicated.at(-1)?.time || 0;
-    const startTime = endTime - rangeMeta.durationMs;
-    const observations = deduplicated.filter((observation) => observation.time >= startTime && observation.time <= endTime);
+    const observedEndTime = deduplicated.at(-1)?.time || 0;
+    const startTime = observedEndTime - rangeMeta.durationMs;
+    const requestedDisplayEnd = options.stale ? Date.parse(options.now || new Date().toISOString()) : observedEndTime;
+    const endTime = Number.isFinite(requestedDisplayEnd) && requestedDisplayEnd > observedEndTime ? requestedDisplayEnd : observedEndTime;
+    const durationMs = Math.max(1, endTime - startTime);
+    const observations = deduplicated.filter((observation) => observation.time >= startTime && observation.time <= observedEndTime);
     const plotWidth = CHART_VIEW.right - CHART_VIEW.left;
     observations.forEach((observation) => {
-      const ratio = (observation.time - startTime) / rangeMeta.durationMs;
+      const ratio = (observation.time - startTime) / durationMs;
       observation.x = CHART_VIEW.left + Math.max(0, Math.min(1, ratio)) * plotWidth;
     });
     const latencyPoints = observations.filter((observation) => observation.latency !== null);
@@ -339,6 +342,18 @@
           durationMs: firstObservation.time - startTime,
           fromX: CHART_VIEW.left,
           toX: firstObservation.x,
+        }
+      : null;
+    const lastObservation = observations.at(-1) || null;
+    const trailingGap = options.stale && lastObservation && endTime > lastObservation.time
+      ? {
+          kind: "trailing",
+          from: lastObservation,
+          fromTime: lastObservation.time,
+          toTime: endTime,
+          durationMs: endTime - lastObservation.time,
+          fromX: lastObservation.x,
+          toX: CHART_VIEW.right,
         }
       : null;
     let segment = [];
@@ -379,18 +394,21 @@
       segments,
       gaps,
       leadingGap,
+      trailingGap,
       startTime,
       endTime,
+      observedEndTime,
+      durationMs,
       domainMin,
       domainMax,
       graphType: latencyPoints.length ? "latency" : "state",
       plottedBucketCount: observations.length,
       plottedMeasurementCount: latencyPoints.length,
-      stateBandWidth: Math.max(2.4, plotWidth * (rangeMeta.intervalMs / rangeMeta.durationMs) * .86),
+      stateBandWidth: Math.max(2.4, plotWidth * (rangeMeta.intervalMs / durationMs) * .86),
     };
   };
 
-  const buildOverallChartModel = (overall, rangeKey) => {
+  const buildOverallChartModel = (overall, rangeKey, options = {}) => {
     const range = overall?.ranges?.[rangeKey];
     if (!range || typeof range !== "object") return null;
     const rangeMeta = CHART_RANGE_META[rangeKey] || CHART_RANGE_META["24h"];
@@ -400,8 +418,10 @@
       ...(Array.isArray(range.critical_path_availability_timeline) ? range.critical_path_availability_timeline : []),
       ...(Array.isArray(range.state_timeline) ? range.state_timeline : []),
     ].map((item) => Date.parse(item?.at || "")).filter(Number.isFinite);
-    const endTime = Number.isFinite(requestedEnd) ? requestedEnd : timelineTimes.at(-1) || 0;
-    const startTime = Number.isFinite(requestedStart) ? requestedStart : endTime - rangeMeta.durationMs;
+    const snapshotEndTime = Number.isFinite(requestedEnd) ? requestedEnd : timelineTimes.at(-1) || 0;
+    const requestedDisplayEnd = options.stale ? Date.parse(options.now || new Date().toISOString()) : snapshotEndTime;
+    const endTime = Number.isFinite(requestedDisplayEnd) && requestedDisplayEnd > snapshotEndTime ? requestedDisplayEnd : snapshotEndTime;
+    const startTime = Number.isFinite(requestedStart) ? requestedStart : snapshotEndTime - rangeMeta.durationMs;
     const durationMs = Math.max(1, endTime - startTime);
     const plotWidth = CHART_VIEW.right - CHART_VIEW.left;
     const xForTime = (time) => CHART_VIEW.left + Math.max(0, Math.min(1, (time - startTime) / durationMs)) * plotWidth;
@@ -426,7 +446,7 @@
           unknown: Number.isFinite(item?.unknown_path_observations) ? Number(item.unknown_path_observations) : null,
         };
       })
-      .filter((item) => Number.isFinite(item.time) && item.time >= startTime && item.time <= endTime)
+      .filter((item) => Number.isFinite(item.time) && item.time >= startTime && item.time <= snapshotEndTime)
       .sort((a, b) => a.time - b.time);
     const stateObservations = (Array.isArray(range.state_timeline) ? range.state_timeline : [])
       .map((item) => {
@@ -441,7 +461,7 @@
           observedBucketCount: Number.isFinite(item?.observed_bucket_count) ? Number(item.observed_bucket_count) : null,
         };
       })
-      .filter((item) => Number.isFinite(item.time) && item.time >= startTime && item.time <= endTime)
+      .filter((item) => Number.isFinite(item.time) && item.time >= startTime && item.time <= snapshotEndTime)
       .sort((a, b) => a.time - b.time);
     const resolutionMs = Math.max(1, Number(range.timeline_resolution_seconds || rangeMeta.intervalMs / 1000) * 1000);
     const segments = [];
@@ -462,6 +482,10 @@
     const prehistory = Number.isFinite(firstObservedTime) && firstObservedTime > startTime
       ? { fromTime: startTime, toTime: firstObservedTime, fromX: CHART_VIEW.left, toX: xForTime(firstObservedTime), durationMs: firstObservedTime - startTime }
       : null;
+    const lastObservedTime = Math.max(...[observations.at(-1)?.time, stateObservations.at(-1)?.time].filter(Number.isFinite));
+    const trailingGap = options.stale && Number.isFinite(lastObservedTime) && endTime > lastObservedTime
+      ? { kind: "trailing", fromTime: lastObservedTime, toTime: endTime, fromX: xForTime(lastObservedTime), toX: CHART_VIEW.right, durationMs: endTime - lastObservedTime }
+      : null;
     return {
       range,
       rangeKey,
@@ -470,8 +494,10 @@
       stateObservations,
       segments,
       prehistory,
+      trailingGap,
       startTime,
       endTime,
+      snapshotEndTime,
       durationMs,
       resolutionMs,
       stateBandWidth: Math.max(2.4, plotWidth * (resolutionMs / durationMs) * .9),
@@ -706,7 +732,7 @@
     }
     const activeRange = state.overallRange;
     const range = overall.ranges[activeRange];
-    const model = buildOverallChartModel(overall, activeRange);
+    const model = buildOverallChartModel(overall, activeRange, { stale: snapshot?.diagnosticsStale });
     content.innerHTML = "";
     content.classList.add("is-overall-ready");
     window.StreamSuitesStatusReport?.setCurrentOverallRange?.(activeRange);
@@ -729,11 +755,16 @@
     }
     const availableCount = Number.isFinite(current.available_path_count) ? Number(current.available_path_count) : null;
     const eligibleCount = Number.isFinite(current.total_eligible_path_count) ? Number(current.total_eligible_path_count) : null;
-    metric("Current critical paths available", availableCount == null || eligibleCount == null ? "Unavailable" : `${availableCount}/${eligibleCount}`, "paths");
+    metric(snapshot?.diagnosticsStale ? "Last calculated critical paths" : "Current critical paths available", snapshot?.diagnosticsStale ? "Unavailable now" : availableCount == null || eligibleCount == null ? "Unavailable" : `${availableCount}/${eligibleCount}`, "paths");
     const currentState = observedStateKey(current.watchdog_overall_state);
-    const stateMetric = metric("Watchdog-derived state", current.state_label || OBSERVED_STATE_LABELS[currentState], "state");
+    const stateMetric = metric("Watchdog-derived state", snapshot?.diagnosticsStale ? "Watchdog offline" : current.state_label || OBSERVED_STATE_LABELS[currentState], "state");
     stateMetric.style.setProperty("--overall-state-color", STATUS_COLORS[currentState] || STATUS_COLORS.unknown);
     content.appendChild(metrics);
+    if (snapshot?.diagnosticsStale) {
+      const staleNotice = node("div", "component-graph__offline-notice");
+      staleNotice.append(node("strong", "", "Watchdog diagnostics stale"), node("span", "", `Historical data through ${formatAbsolute(overall.generated_at || snapshot.diagnosticsGeneratedAt || snapshot.diagnostics?.generated_at)}. Atlassian remains the official current-state authority.`));
+      content.appendChild(staleNotice);
+    }
 
     const durationRail = node("div", "system-availability__duration-rail");
     [
@@ -752,12 +783,12 @@
     panel.dataset.chartType = "overall";
     const header = node("div", "component-graph__header");
     const heading = node("div", "component-graph__heading");
-    heading.append(node("span", "", "Direct observation · canonical Runtime contract"), node("h5", "", "Critical-path availability"));
+    heading.append(node("span", "", snapshot?.diagnosticsStale ? "Historical direct observation · canonical Runtime contract" : "Direct observation · canonical Runtime contract"), node("h5", "", "Critical-path availability"));
     const currentValue = node("div", "component-graph__current");
     currentValue.append(
-      node("span", "", "Current critical paths"),
-      node("strong", "", formatOverallPercent(current.critical_path_availability_percent)),
-      node("small", "", `${current.bucket_at ? formatAbsolute(current.bucket_at) : "Observation unavailable"} · ${snapshot?.diagnosticsStale ? "stale diagnostics" : "latest received"}`)
+      node("span", "", snapshot?.diagnosticsStale ? "Last calculated critical paths" : "Current critical paths"),
+      node("strong", "", snapshot?.diagnosticsStale ? "Unavailable now" : formatOverallPercent(current.critical_path_availability_percent)),
+      node("small", "", `${current.bucket_at ? formatAbsolute(current.bucket_at) : "Observation unavailable"} · ${snapshot?.diagnosticsStale ? "historical snapshot" : "latest received"}`)
     );
     header.append(heading, currentValue);
     panel.appendChild(header);
@@ -804,7 +835,7 @@
     const summary = node("p", "component-graph__summary");
     const observed = Number.isFinite(range?.observed_buckets) ? Number(range.observed_buckets) : 0;
     const expected = Number.isFinite(range?.expected_buckets) ? Number(range.expected_buckets) : 0;
-    summary.textContent = `${activeRange.toUpperCase()} watchdog-observed availability: ${formatOverallPercent(range?.watchdog_observed_availability_percent)}. Coverage: ${formatOverallPercent(range?.observation_coverage_percent)} across ${observed}/${expected} expected observation buckets. Pre-monitoring time is excluded; genuine unknown time after monitoring began remains explicit.`;
+    summary.textContent = `${activeRange.toUpperCase()} watchdog-observed availability${snapshot?.diagnosticsStale ? ` as of ${formatAbsolute(overall.generated_at || snapshot.diagnosticsGeneratedAt || snapshot.diagnostics?.generated_at)}` : ""}: ${formatOverallPercent(range?.watchdog_observed_availability_percent)}. Coverage: ${formatOverallPercent(range?.observation_coverage_percent)} across ${observed}/${expected} expected observation buckets. Pre-monitoring time is excluded; genuine unknown time after monitoring began remains explicit.${model?.trailingGap ? ` The following ${formatGapDuration(model.trailingGap.durationMs)} is unobserved because the watchdog is offline and is excluded from every calculation.` : ""}`;
     summary.setAttribute("role", "status");
     panel.appendChild(summary);
 
@@ -933,6 +964,27 @@
       defs.appendChild(gradient);
     });
 
+    if (model.trailingGap) {
+      const band = svgNode("rect", "component-graph__gap-band component-graph__gap-band--offline");
+      band.setAttribute("x", String(model.trailingGap.fromX));
+      band.setAttribute("y", String(CHART_VIEW.top));
+      band.setAttribute("width", String(Math.max(1, model.trailingGap.toX - model.trailingGap.fromX)));
+      band.setAttribute("height", String(CHART_VIEW.bottom - CHART_VIEW.top));
+      band.setAttribute("data-gap-kind", "trailing-offline");
+      band.setAttribute("data-unmeasured", "true");
+      const title = svgNode("title");
+      title.textContent = `Watchdog offline · no observations for ${formatGapDuration(model.trailingGap.durationMs)}. This span is neither uptime nor downtime.`;
+      band.appendChild(title);
+      svg.appendChild(band);
+      if (model.trailingGap.toX - model.trailingGap.fromX >= 82) {
+        const label = svgNode("text", "component-graph__gap-label component-graph__gap-label--offline");
+        label.setAttribute("x", String((model.trailingGap.fromX + model.trailingGap.toX) / 2));
+        label.setAttribute("y", String(CHART_VIEW.top + 15));
+        label.setAttribute("text-anchor", "middle");
+        label.textContent = "WATCHDOG OFFLINE";
+        svg.appendChild(label);
+      }
+    }
     if (model.prehistory) {
       const band = svgNode("rect", "component-graph__gap-band");
       band.setAttribute("x", String(model.prehistory.fromX));
@@ -1138,7 +1190,7 @@
     }
     const range = diagnostic.history[activeRange];
     const buckets = range.buckets;
-    const model = buildChartModel(buckets, activeRange);
+    const model = buildChartModel(buckets, activeRange, { stale: options.stale, now: options.now });
     if (!model.observations.length) {
       const empty = node("div", "component-graph__empty");
       empty.append(node("strong", "", "No readable observations"), node("p", "", "The selected range contains no timestamped watchdog observations. No substitute history is drawn."));
@@ -1152,7 +1204,7 @@
     const leadingHistoryLabel = model.leadingGap
       ? ` Earlier selected-range time predates the available history by ${formatGapDuration(model.leadingGap.durationMs)}.`
       : "";
-    summary.textContent = `${activeRange.toUpperCase()} watchdog-observed availability: ${range.availability_percent == null ? "Unavailable" : `${range.availability_percent}%`}. ${model.plottedBucketCount} plotted ${model.rangeMeta.bucketLabel} from ${rawObservationCount} raw probe observations; ${gapLabel}.${leadingHistoryLabel}`;
+    summary.textContent = `${activeRange.toUpperCase()} watchdog-observed availability${options.stale ? ` as of ${formatAbsolute(diagnostic.generated_at || diagnostic.last_checked || model.observations.at(-1)?.at)}` : ""}: ${range.availability_percent == null ? "Unavailable" : `${range.availability_percent}%`}. ${model.plottedBucketCount} plotted ${model.rangeMeta.bucketLabel} from ${rawObservationCount} raw probe observations; ${gapLabel}.${leadingHistoryLabel}${model.trailingGap ? ` Watchdog offline for the trailing ${formatGapDuration(model.trailingGap.durationMs)}; that unobserved span is excluded from all values.` : ""}`;
     summary.setAttribute("role", "status");
     panel.appendChild(summary);
 
@@ -1160,9 +1212,9 @@
     const latestLatency = model.latencyPoints.at(-1);
     const currentValue = node("div", "component-graph__current");
     currentValue.append(
-      node("span", "", latestLatency ? "Latest measured latency" : "Latest observed state"),
+      node("span", "", latestLatency ? options.stale ? "Last measured latency" : "Latest measured latency" : options.stale ? "Last observed state" : "Latest observed state"),
       node("strong", "", latestLatency ? `${latestLatency.latency} ms` : OBSERVED_STATE_LABELS[latestObservation.state]),
-      node("small", "", `${formatAbsolute((latestLatency || latestObservation).at)} · ${options.stale ? "stale diagnostics" : "latest received"}`)
+      node("small", "", `${formatAbsolute((latestLatency || latestObservation).at)} · ${options.stale ? "historical data through this observation" : "latest received"}`)
     );
     header.appendChild(currentValue);
 
@@ -1176,7 +1228,7 @@
     appendMetric("Latency buckets", String(model.plottedMeasurementCount));
     appendMetric("Raw observations", String(rawObservationCount));
     appendMetric("Missing intervals", String(model.gaps.length));
-    appendMetric("Availability", range.availability_percent == null ? "Unavailable" : `${range.availability_percent}%`);
+    appendMetric(options.stale ? "Availability as of snapshot" : "Availability", range.availability_percent == null ? "Unavailable" : `${range.availability_percent}%`);
     appendMetric("Freshness", options.stale ? "Stale" : "Current projection");
     if (options.isCoreApi) appendMetric("Last success", diagnostic.last_success ? formatAbsolute(diagnostic.last_success) : "Unavailable");
     const latencyValues = model.latencyPoints.map((point) => point.latency);
@@ -1294,7 +1346,7 @@
       gridLine.setAttribute("x2", String(x));
       gridLine.setAttribute("y1", String(model.graphType === "latency" ? CHART_VIEW.top : 86));
       gridLine.setAttribute("y2", String(model.graphType === "latency" ? CHART_VIEW.stateY + CHART_VIEW.stateHeight : 132));
-      const tickTime = model.startTime + ratio * model.rangeMeta.durationMs;
+      const tickTime = model.startTime + ratio * model.durationMs;
       const label = node("span");
       label.textContent = activeRange === "5h" || activeRange === "24h"
         ? new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(tickTime)
@@ -1355,9 +1407,14 @@
         label: `No observations · ${formatGapDuration(gap.durationMs)}`,
         title: `No observations for ${formatGapDuration(gap.durationMs)} between ${formatAbsolute(gap.from.at)} and ${formatAbsolute(gap.to.at)}.`,
       })),
+      ...(model.trailingGap ? [{
+        ...model.trailingGap,
+        label: "WATCHDOG OFFLINE",
+        title: `Watchdog offline · no observations for ${formatGapDuration(model.trailingGap.durationMs)} after ${formatAbsolute(model.trailingGap.from.at)}. This span is neither uptime nor downtime.`,
+      }] : []),
     ];
     unobservedBands.forEach((gap) => {
-      const band = svgNode("rect", "component-graph__gap-band");
+      const band = svgNode("rect", gap.kind === "trailing" ? "component-graph__gap-band component-graph__gap-band--offline" : "component-graph__gap-band");
       band.setAttribute("x", String(gap.fromX));
       band.setAttribute("y", String(CHART_VIEW.top));
       band.setAttribute("width", String(Math.max(1, gap.toX - gap.fromX)));
@@ -1369,7 +1426,7 @@
       band.appendChild(title);
       svg.appendChild(band);
       if (gap.toX - gap.fromX >= 82) {
-        const label = svgNode("text", "component-graph__gap-label");
+        const label = svgNode("text", gap.kind === "trailing" ? "component-graph__gap-label component-graph__gap-label--offline" : "component-graph__gap-label");
         label.setAttribute("x", String((gap.fromX + gap.toX) / 2));
         label.setAttribute("y", String(CHART_VIEW.top + 15));
         label.setAttribute("text-anchor", "middle");
@@ -1601,12 +1658,20 @@
 
     const directObservationStale = Boolean(snapshot.diagnosticsStale || diagnostic?.direct_stale);
     const facts = node("div", "component-card__facts");
-    facts.append(
-      node("span", "", `Official update · ${formatRelative(component.updated_at)}`),
-      node("span", "", diagnostic?.last_checked ? `Direct check · ${formatRelative(diagnostic.last_checked)}` : "Direct check · unavailable"),
-      node("span", "", diagnostic?.last_checked ? `Direct observation · ${directObservationStale ? "stale" : "fresh"}` : "Direct observation · unavailable")
-    );
-    if (diagnostic?.latency_ms != null) facts.appendChild(node("span", "component-card__latency", `${diagnostic.latency_ms} ms`));
+    facts.append(node("span", "", `Official · ${component.statusLabel} · Atlassian`));
+    if (directObservationStale && diagnostic) {
+      facts.append(
+        node("span", "", "Direct · Watchdog offline"),
+        node("span", "", diagnostic.last_checked ? `Last direct · ${chipLabel(diagnostic.direct_state || "unknown")} · ${formatRelative(diagnostic.last_checked)}` : "Last direct · unavailable"),
+        node("span", "", `History · Available through ${formatAbsolute(snapshot.diagnosticsGeneratedAt || snapshot.diagnostics?.generated_at || diagnostic.last_checked)}`)
+      );
+    } else {
+      facts.append(
+        node("span", "", diagnostic?.last_checked ? `Direct check · ${formatRelative(diagnostic.last_checked)}` : "Direct check · unavailable"),
+        node("span", "", diagnostic?.last_checked ? "Direct observation · fresh" : "Direct observation · unavailable")
+      );
+    }
+    if (diagnostic?.latency_ms != null) facts.appendChild(node("span", "component-card__latency", `${directObservationStale ? "Last measured · " : ""}${diagnostic.latency_ms} ms`));
 
     const directState = diagnostic?.direct_state ? normalizeComponent({ status: diagnostic.direct_state }).normalizedState : null;
     const discrepancy = Boolean(diagnostic && !directObservationStale && directState && directState !== "unknown" && directState !== component.normalizedState);
@@ -1629,7 +1694,11 @@
     const officialSummary = node("div", "component-detail-rail__source");
     officialSummary.append(node("span", "", "Official status — Atlassian"), node("strong", "", component.statusLabel), node("small", "", `Updated ${formatRelative(component.updated_at)}`));
     const directSummary = node("div", "component-detail-rail__source");
-    directSummary.append(node("span", "", source.owner === "watchdog" ? "Direct observation — StreamSuites Watchdog" : ownerLabel), node("strong", "", diagnostic?.direct_state ? chipLabel(diagnostic.direct_state) : source.coverage === "deferred" ? "Deferred" : source.coverage === "vendor_managed" ? "Provider managed" : "Unavailable"), node("small", "", diagnostic?.last_checked ? `${directObservationStale ? "Stale" : "Fresh"} · checked ${formatRelative(diagnostic.last_checked)}` : "No local check available"));
+    directSummary.append(
+      node("span", "", source.owner === "watchdog" ? "Direct observation — StreamSuites Watchdog" : ownerLabel),
+      node("strong", "", directObservationStale && diagnostic ? "Watchdog offline" : diagnostic?.direct_state ? chipLabel(diagnostic.direct_state) : source.coverage === "deferred" ? "Deferred" : source.coverage === "vendor_managed" ? "Provider managed" : "Unavailable"),
+      node("small", "", diagnostic?.last_checked ? directObservationStale ? `Last direct: ${chipLabel(diagnostic.direct_state || "unknown")} · ${formatRelative(diagnostic.last_checked)}` : `Fresh · checked ${formatRelative(diagnostic.last_checked)}` : "No local check available")
+    );
     detailSummary.append(officialSummary, directSummary);
     const detailList = node("dl", "component-details-grid");
     detailList.append(

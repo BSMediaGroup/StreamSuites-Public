@@ -29,6 +29,30 @@ const observation = (minute, latency_ms, state = "operational", availability_per
   sample_count: 1,
 });
 
+const loadStatusData = (fetchImpl) => {
+  class CustomEvent {
+    constructor(type, options = {}) { this.type = type; this.detail = options.detail; }
+  }
+  const context = {
+    window: {
+      setTimeout,
+      clearTimeout,
+      setInterval,
+      clearInterval,
+      dispatchEvent() {},
+    },
+    document: { visibilityState: "visible", addEventListener() {} },
+    fetch: fetchImpl,
+    AbortController,
+    CustomEvent,
+    performance,
+    console,
+    Intl,
+  };
+  vm.runInNewContext(read("js/status-data.js"), context);
+  return context.window.StreamSuitesStatusData;
+};
+
 test("chart line entrance uses a responsive feather mask without dash cleanup", () => {
   const page = read("js/status-page.js");
   const css = read("css/status-page.css");
@@ -84,6 +108,11 @@ test("status overview and component controls retain the polished dark layout con
   assert.doesNotMatch(css, /tokens truncated|truncation placeholder/i);
 });
 
+test("status root clips fixed ambient decoration without horizontal page scrolling", () => {
+  const css = read("css/status-page.css");
+  assert.match(css, /html\s*\{[^}]*overflow-x:\s*hidden;/s);
+});
+
 test("status controller is read-only, bounded, stale-safe, and has no demo or fake operational fallback", () => {
   const script = read("js/status-data.js");
   assert.match(script, /v0hwlmly3pd2\.statuspage\.io\/api\/v2/);
@@ -100,6 +129,30 @@ test("status controller is read-only, bounded, stale-safe, and has no demo or fa
   assert.match(script, /visibilitychange/);
   assert.doesNotMatch(script, /localStorage|\?demo=|fallbackComponents|createFallback|api\/v2\/components\/[^"'`]*\.(?:json|put|post)/i);
   assert.doesNotMatch(script, /api[_-]?key|manage\.statuspage|method:\s*["'](?:POST|PUT|PATCH|DELETE)/i);
+});
+
+test("a diagnostics transport failure retains the last successful history for the browser session", async () => {
+  let failDiagnostics = false;
+  const diagnosticBody = { available: true, fresh: true, stale: false, generated_at: "2026-08-11T00:00:00.000Z", current_direct_observation_available: true, diagnostics: { generated_at: "2026-08-11T00:00:00.000Z", components: { core: { history: { "5h": { buckets: [observation(0, 80)] } } } } } };
+  const summary = { page: {}, status: { indicator: "none", description: "All Systems Operational" }, components: [], incidents: [], scheduled_maintenances: [] };
+  const fetchImpl = async (url) => {
+    if (String(url).includes("diagnostics")) {
+      if (failDiagnostics) throw new Error("offline");
+      return { ok: true, json: async () => diagnosticBody };
+    }
+    return { ok: true, json: async () => String(url).includes("incidents") ? { incidents: [] } : String(url).includes("scheduled-maintenances") ? { scheduled_maintenances: [] } : summary };
+  };
+  const data = loadStatusData(fetchImpl);
+  const fresh = await data.refresh();
+  assert.equal(fresh.diagnosticsLive, true);
+  assert.equal(fresh.diagnostics.components.core.history["5h"].buckets.length, 1);
+  failDiagnostics = true;
+  const retained = await data.refresh({ force: true });
+  assert.equal(retained.diagnosticsLive, false);
+  assert.equal(retained.diagnosticsStale, true);
+  assert.equal(retained.currentDirectObservationAvailable, false);
+  assert.equal(retained.diagnostics.components.core.history["5h"].buckets.length, 1);
+  assert.match(retained.diagnosticsError, /retaining the last successful/i);
 });
 
 test("final locked topology renders four groups and 21 child components without group cards", () => {
@@ -196,6 +249,26 @@ test("5H, 24H, 7D, and 30D models retain exact selected time domains", () => {
     const model = helpers.buildChartModel(buckets, range);
     assert.equal(model.endTime - model.startTime, duration, range);
     assert.equal(model.rangeKey, range);
+  }
+});
+
+test("stale component history extends only presentation geometry with a trailing offline span", () => {
+  const helpers = loadChartHelpers();
+  for (const range of ["5h", "24h", "7d", "30d"]) {
+    const interval = range === "7d" || range === "30d" ? 86400000 : 300000;
+    const last = Date.parse("2026-08-09T00:00:00.000Z");
+    const buckets = [
+      { ...observation(0, 80), at: new Date(last - interval).toISOString() },
+      { ...observation(5, 90), at: new Date(last).toISOString() },
+    ];
+    const model = helpers.buildChartModel(buckets, range, { stale: true, now: new Date(last + 3 * 3600000).toISOString() });
+    assert.equal(model.observations.length, 2, range);
+    assert.equal(model.latencyPoints.length, 2, range);
+    assert.equal(model.trailingGap.durationMs, 3 * 3600000, range);
+    assert.equal(model.trailingGap.kind, "trailing", range);
+    assert.equal(model.trailingGap.from, model.observations.at(-1), range);
+    assert.equal(model.segments.flat().every((point) => point.time <= model.observedEndTime), true, range);
+    assert.equal(helpers.internalMissingRailMarkers(model).every((marker) => marker.time <= model.observedEndTime), true, range);
   }
 });
 
@@ -413,6 +486,39 @@ test("overall chart model preserves exact Runtime percentages, missing values, a
   assert.equal(model.prehistory.fromTime, Date.parse(start));
   assert.equal(model.prehistory.toTime, Date.parse("2026-08-10T04:45:00.000Z"));
   assert.match(helpers.stepChartPath([{ x: 1, value: 100 }, { x: 2, value: 83.333 }], (value) => 100 - value), /^M1\.00 0\.00 H2\.00 V16\.67$/);
+});
+
+test("stale overall history retains Runtime values and adds an excluded trailing offline span", () => {
+  const helpers = loadChartHelpers();
+  const range = {
+    requested_start: "2026-08-10T00:00:00.000Z",
+    requested_end: "2026-08-10T05:00:00.000Z",
+    timeline_resolution_seconds: 300,
+    watchdog_observed_availability_percent: 99.5,
+    observation_coverage_percent: 80,
+    state_timeline: [{ at: "2026-08-10T04:55:00.000Z", state: "operational" }],
+    critical_path_availability_timeline: [{ at: "2026-08-10T04:55:00.000Z", critical_path_availability_percent: 100 }],
+  };
+  const model = helpers.buildOverallChartModel({ ranges: { "5h": range } }, "5h", { stale: true, now: "2026-08-10T07:55:00.000Z" });
+  assert.equal(model.observations.length, 1);
+  assert.equal(model.observations[0].value, 100);
+  assert.equal(model.trailingGap.durationMs, 3 * 3600000);
+  assert.equal(model.stateObservations.length, 1);
+  assert.equal(range.watchdog_observed_availability_percent, 99.5);
+  assert.equal(range.observation_coverage_percent, 80);
+});
+
+test("stale rendering labels offline history without creating fresh discrepancies or fake graph data", () => {
+  const page = read("js/status-page.js");
+  const css = read("css/status-page.css");
+  assert.match(page, /WATCHDOG OFFLINE/);
+  assert.match(page, /Watchdog offline · historical data through/);
+  assert.match(page, /directObservationStale && diagnostic \? "Watchdog offline"/);
+  assert.match(page, /!directObservationStale && directState/);
+  assert.match(page, /included in every calculation|excluded from every calculation|excluded from all values/);
+  assert.match(css, /component-graph__gap-band--offline/);
+  assert.match(css, /component-graph__gap-band\[data-gap-kind="leading"\]\s*\{\s*fill:\s*transparent/);
+  assert.match(css, /prefers-reduced-motion:[\s\S]*?component-graph__gap-band--offline/);
 });
 
 test("status report menus and one reusable modal expose full and component formats accessibly", () => {

@@ -120,7 +120,21 @@
     };
   };
 
-  const sanitizeComponentHistory = (diagnostic, rangeKey) => {
+  const trailingOfflineSpan = (timestamps, stale, displayEnd) => {
+    if (!stale) return null;
+    const lastObserved = (Array.isArray(timestamps) ? timestamps : []).map((value) => Date.parse(value || "")).filter(Number.isFinite).sort((a, b) => a - b).at(-1);
+    const end = Date.parse(displayEnd || "");
+    if (!Number.isFinite(lastObserved) || !Number.isFinite(end) || end <= lastObserved) return null;
+    return {
+      state: "unobserved_watchdog_offline",
+      from: new Date(lastObserved).toISOString(),
+      to: new Date(end).toISOString(),
+      duration_seconds: Math.round((end - lastObserved) / 1000),
+      included_in_calculations: false,
+    };
+  };
+
+  const sanitizeComponentHistory = (diagnostic, rangeKey, context = {}) => {
     const history = diagnostic?.history;
     const supplied = Boolean(history && Object.prototype.hasOwnProperty.call(history, rangeKey));
     const selected = supplied && history[rangeKey] && typeof history[rangeKey] === "object" ? history[rangeKey] : null;
@@ -135,10 +149,12 @@
       buckets,
       gaps: gaps.internal,
       pre_history: gaps.leading,
+      trailing_offline: trailingOfflineSpan(buckets.map((item) => item.at), context.stale, context.displayEnd),
+      calculated_as_of: context.stale ? isoOrNull(context.snapshotTime) : null,
     };
   };
 
-  const sanitizeDiagnostic = (diagnostic, rangeKey) => {
+  const sanitizeDiagnostic = (diagnostic, rangeKey, context = {}) => {
     if (!diagnostic || typeof diagnostic !== "object") {
       return {
         available: false,
@@ -152,7 +168,8 @@
         last_success: null,
         last_failure: null,
         latency_ms: null,
-        selected_range: sanitizeComponentHistory(null, rangeKey),
+        current_direct_observation_available: false,
+        selected_range: sanitizeComponentHistory(null, rangeKey, context),
       };
     }
     return {
@@ -162,13 +179,14 @@
       coverage: cleanText(diagnostic.coverage),
       monitor_mode: cleanText(diagnostic.monitor_mode),
       direct_state: diagnostic.direct_state == null ? null : cleanText(diagnostic.direct_state),
-      direct_stale: Boolean(diagnostic.direct_stale),
+      direct_stale: Boolean(diagnostic.direct_stale || context.stale),
+      current_direct_observation_available: Boolean(!context.stale && !diagnostic.direct_stale),
       data_quality: cleanText(diagnostic.data_quality),
       last_checked: isoOrNull(diagnostic.last_checked),
       last_success: isoOrNull(diagnostic.last_success),
       last_failure: isoOrNull(diagnostic.last_failure),
       latency_ms: finiteOrNull(diagnostic.latency_ms),
-      selected_range: sanitizeComponentHistory(diagnostic, rangeKey),
+      selected_range: sanitizeComponentHistory(diagnostic, rangeKey, context),
     };
   };
 
@@ -219,7 +237,7 @@
     };
   };
 
-  const sanitizeOverallRange = (range, rangeKey) => {
+  const sanitizeOverallRange = (range, rangeKey, context = {}) => {
     if (!range || typeof range !== "object") {
       return {
         range: rangeKey,
@@ -271,10 +289,15 @@
         unknown_path_observations: finiteOrNull(item?.unknown_path_observations),
         source_bucket_count: finiteOrNull(item?.source_bucket_count),
       })).filter((item) => item.at),
+      trailing_offline: trailingOfflineSpan([
+        ...(Array.isArray(range.state_timeline) ? range.state_timeline : []).map((item) => item?.at),
+        ...(Array.isArray(range.critical_path_availability_timeline) ? range.critical_path_availability_timeline : []).map((item) => item?.at),
+      ], context.stale, context.displayEnd),
+      calculated_as_of: context.stale ? isoOrNull(context.snapshotTime) : null,
     };
   };
 
-  const sanitizeOverall = (diagnostics, rangeKey, included) => {
+  const sanitizeOverall = (diagnostics, rangeKey, included, context = {}) => {
     if (!included) return { included: false };
     const overall = diagnostics?.overall_availability;
     if (!overall || overall.contract_version !== "overall-availability-v1") {
@@ -283,7 +306,7 @@
         available: false,
         unavailable_reason: "Awaiting updated watchdog diagnostics",
         contract_version: overall?.contract_version ? cleanText(overall.contract_version) : null,
-        selected_range: sanitizeOverallRange(null, rangeKey),
+        selected_range: sanitizeOverallRange(null, rangeKey, context),
       };
     }
     const current = overall.current || {};
@@ -321,8 +344,9 @@
           age_seconds: finiteOrNull(current.observation_freshness.age_seconds),
           max_age_seconds: finiteOrNull(current.observation_freshness.max_age_seconds),
         } : null,
+        available_now: !context.stale,
       },
-      selected_range: sanitizeOverallRange(overall.ranges?.[rangeKey], rangeKey),
+      selected_range: sanitizeOverallRange(overall.ranges?.[rangeKey], rangeKey, context),
     };
   };
 
@@ -335,6 +359,9 @@
       : ["overall", "metrics", "components", "incidents", "maintenance"]);
     const data = snapshot?.data && typeof snapshot.data === "object" ? snapshot.data : null;
     const diagnostics = snapshot?.diagnostics && typeof snapshot.diagnostics === "object" ? snapshot.diagnostics : null;
+    const diagnosticsStale = Boolean(snapshot?.diagnosticsStale && diagnostics);
+    const snapshotTime = isoOrNull(snapshot?.diagnosticsGeneratedAt || diagnostics?.generated_at);
+    const historyContext = { stale: diagnosticsStale, snapshotTime, displayEnd: generatedAt };
     const sourceComponents = Array.isArray(data?.components) ? data.components : [];
     const groupNames = new Map(sourceComponents.filter((item) => item?.group && item?.id).map((item) => [item.id, item.name || "Component group"]));
     const officialComponents = sourceComponents.filter((item) => !item?.group);
@@ -381,7 +408,7 @@
           state_label: officialModel.state_label,
           updated_at: officialModel.updated_at,
         },
-        direct: sanitizeDiagnostic(diagnostic, rangeKey),
+        direct: sanitizeDiagnostic(diagnostic, rangeKey, historyContext),
         incidents: scopeType === "component" ? incidentAssociation.records : [],
         scheduled_maintenance: scopeType === "component" ? maintenanceAssociation.records : [],
         association: scopeType === "component" ? {
@@ -404,10 +431,12 @@
         range: rangeKey,
         requested_start: requestedStart,
         requested_end: requestedEnd,
+        display_end: generatedAt,
+        historical_through: snapshotTime,
         effective_start: isoOrNull(overallRange?.effective_range_start),
         monitoring_start: isoOrNull(overallRange?.effective_monitoring_start || diagnostics?.overall_availability?.effective_monitoring_start),
       },
-      overall: sanitizeOverall(diagnostics, rangeKey, overallIncluded),
+      overall: sanitizeOverall(diagnostics, rangeKey, overallIncluded, historyContext),
       official_status: {
         source: "atlassian_statuspage",
         page_id: STATUSPAGE_PAGE_ID,
@@ -433,12 +462,15 @@
         available: Boolean(diagnostics),
         schema_version: diagnostics ? cleanText(diagnostics.schema_version) : null,
         generated_at: isoOrNull(diagnostics?.generated_at),
+        last_successful_projection_at: snapshotTime,
         freshness: diagnostics?.freshness ? {
           state: cleanText(diagnostics.freshness.state),
           age_seconds: finiteOrNull(diagnostics.freshness.age_seconds),
           max_age_seconds: finiteOrNull(diagnostics.freshness.max_age_seconds),
         } : null,
-        stale: Boolean(snapshot?.diagnosticsStale),
+        fresh: Boolean(diagnostics && !diagnosticsStale),
+        stale: diagnosticsStale,
+        current_direct_observation_available: Boolean(diagnostics && !diagnosticsStale),
         coverage: diagnostics?.coverage ? {
           implemented: finiteOrNull(diagnostics.coverage.implemented),
           deferred_manual: finiteOrNull(diagnostics.coverage.deferred_manual),
@@ -452,8 +484,10 @@
           state: cleanText(coreMetric?.state, "unavailable"),
           value_ms: finiteOrNull(coreMetric?.value_ms),
           last_checked: isoOrNull(coreMetric?.last_checked),
-          freshness: snapshot?.diagnosticsStale ? "stale" : diagnostics ? "current_projection" : "unavailable",
-          selected_range: sanitizeComponentHistory({ history: coreMetric?.history }, rangeKey),
+          last_measured_at: isoOrNull(coreMetric?.last_checked),
+          current_measurement_available: Boolean(diagnostics && !diagnosticsStale && coreMetric?.value_ms != null),
+          freshness: diagnosticsStale ? "stale_watchdog_offline" : diagnostics ? "current_projection" : "unavailable",
+          selected_range: sanitizeComponentHistory({ history: coreMetric?.history }, rangeKey, historyContext),
         },
         studio_room_readiness: {
           metric_id: cleanText(studioMetric?.metric_id),
@@ -483,7 +517,7 @@
         diagnostics_available: Boolean(diagnostics),
         diagnostics_schema: diagnostics ? cleanText(diagnostics.schema_version) : null,
         diagnostics_timestamp: isoOrNull(diagnostics?.generated_at),
-        diagnostics_freshness: diagnostics?.freshness ? cleanText(diagnostics.freshness.state) : snapshot?.diagnosticsStale ? "stale" : "unavailable",
+        diagnostics_freshness: diagnosticsStale ? "stale_watchdog_offline" : diagnostics?.freshness ? cleanText(diagnostics.freshness.state) : "unavailable",
         overall_availability_contract: diagnostics?.overall_availability?.contract_version ? cleanText(diagnostics.overall_availability.contract_version) : null,
       },
     };
@@ -532,11 +566,12 @@
 
   const reportChartModel = (kind, payload, rangeKey) => {
     const helpers = window.StreamSuitesStatusChartHelpers;
+    const chartOptions = payload?.trailing_offline ? { stale: true, now: payload.trailing_offline.to } : {};
     if (kind === "overall" && helpers?.buildOverallChartModel) {
-      return helpers.buildOverallChartModel({ ranges: { [rangeKey]: payload } }, rangeKey);
+      return helpers.buildOverallChartModel({ ranges: { [rangeKey]: payload } }, rangeKey, chartOptions);
     }
     if (kind === "component" && helpers?.buildChartModel) {
-      return helpers.buildChartModel(payload?.buckets || [], rangeKey);
+      return helpers.buildChartModel(payload?.buckets || [], rangeKey, chartOptions);
     }
     return null;
   };
@@ -556,6 +591,7 @@
     const labels = [];
     const shapes = [];
     const rail = [];
+    const offline = [];
     const xTickCount = model.rangeMeta?.tickCount || 5;
     const duration = Math.max(1, model.endTime - model.startTime);
     for (let index = 0; index < xTickCount; index += 1) {
@@ -611,11 +647,15 @@
       });
     }
     if (!shapes.length && !rail.length) return "";
+    if (model.trailingGap) {
+      offline.push(`<rect class="report-chart-offline" x="${model.trailingGap.fromX}" y="${top}" width="${Math.max(1, model.trailingGap.toX - model.trailingGap.fromX)}" height="${bottom - top}"/><text class="report-chart-offline-label" x="${(model.trailingGap.fromX + model.trailingGap.toX) / 2}" y="${top + 16}" text-anchor="middle">WATCHDOG OFFLINE</text>`);
+    }
     return `<svg class="report-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(title)}">
       <title>${escapeHtml(title)}</title>
       <defs><linearGradient id="report-line-${kind}" x1="0" x2="1"><stop offset="0" stop-color="#4ddaf0"/><stop offset=".58" stop-color="#62bfff"/><stop offset="1" stop-color="#aa86ff"/></linearGradient><linearGradient id="report-area-${kind}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#62bfff" stop-opacity=".28"/><stop offset="1" stop-color="#aa86ff" stop-opacity=".015"/></linearGradient></defs>
       <g class="report-chart-grid">${lines.join("")}</g>
       <g class="report-chart-labels">${labels.join("")}</g>
+      <g>${offline.join("")}</g>
       <rect class="report-chart-rail" x="${left}" y="${stateY - 3}" width="${right - left}" height="${stateHeight + 6}" rx="5"/>
       <g>${rail.join("")}</g><g>${shapes.join("")}</g>
     </svg>`;
@@ -626,7 +666,7 @@
     if (component.direct.coverage === "vendor_managed") return "Official state is Atlassian/provider-managed; no local history is generated.";
     if (!component.direct.available) return "Independent watchdog diagnostics are unavailable for this component.";
     if (!component.direct.selected_range.available) return "Awaiting updated watchdog diagnostics for this selected range.";
-    return `${component.direct.selected_range.buckets.length} plotted buckets · ${formatPercent(component.direct.selected_range.availability_percent)} watchdog-observed availability.`;
+    return `${component.direct.direct_stale ? "Watchdog offline · " : ""}${component.direct.selected_range.buckets.length} plotted buckets · ${formatPercent(component.direct.selected_range.availability_percent)} watchdog-observed availability${component.direct.selected_range.calculated_as_of ? ` as of ${formatDate(component.direct.selected_range.calculated_as_of)}` : ""}.`;
   };
 
   const componentPrintHtml = (component, rangeKey) => {
@@ -636,10 +676,10 @@
       : "";
     const facts = [
       ["Official state", component.official.available ? component.official.state_label : "Official source unavailable"],
-      ["Direct state", component.direct.direct_state ? stateLabel(component.direct.direct_state) : component.direct.coverage === "deferred" ? "Deferred" : component.direct.coverage === "vendor_managed" ? "Provider managed" : "Unavailable"],
+      ["Direct state", component.direct.direct_stale && component.direct.coverage === "implemented" ? "Watchdog offline" : component.direct.direct_state ? stateLabel(component.direct.direct_state) : component.direct.coverage === "deferred" ? "Deferred" : component.direct.coverage === "vendor_managed" ? "Provider managed" : "Unavailable"],
       ["Coverage", component.direct.coverage || "Unavailable"],
       ["Availability", formatPercent(history.availability_percent)],
-      ["Latest latency", component.direct.latency_ms == null ? "Unavailable" : `${component.direct.latency_ms} ms`],
+      [component.direct.direct_stale ? "Last measured latency" : "Latest latency", component.direct.latency_ms == null ? "Unavailable" : `${component.direct.latency_ms} ms`],
       ["Last success", formatDate(component.direct.last_success)],
       ["Last failure", formatDate(component.direct.last_failure)],
       ["Observation gaps", String(history.gaps?.length || 0)],
@@ -667,10 +707,10 @@
         <div><span>Availability</span><strong>${escapeHtml(formatPercent(model.overall.selected_range.watchdog_observed_availability_percent))}</strong></div>
         <div><span>Downtime</span><strong>${escapeHtml(formatDuration(model.overall.selected_range.downtime_seconds))}</strong></div>
         <div><span>Coverage</span><strong>${escapeHtml(formatPercent(model.overall.selected_range.observation_coverage_percent))}</strong></div>
-        <div><span>Watchdog state</span><strong>${escapeHtml(model.overall.current.state_label)}</strong></div>
-      </div>${buildStaticSvgChart({ title: `Overall availability ${range.toUpperCase()}`, kind: "overall", payload: model.overall.selected_range, rangeKey: range })}<p class="report-boundary">${escapeHtml(`${model.overall.contract_version} · ${model.overall.critical_components.length} Runtime-defined critical services · direct observation, not official Atlassian uptime`)}</p>` : `<p class="report-empty">Awaiting updated watchdog diagnostics. No overall series was synthesized.</p>`}
+        <div><span>Watchdog state</span><strong>${escapeHtml(model.watchdog_diagnostics.stale ? "Watchdog offline" : model.overall.current.state_label)}</strong></div>
+      </div>${model.watchdog_diagnostics.stale ? `<p class="report-boundary">Watchdog diagnostics stale · historical calculations as of ${escapeHtml(formatDate(model.watchdog_diagnostics.last_successful_projection_at))}. The trailing offline span is unobserved and excluded.</p>` : ""}${buildStaticSvgChart({ title: `Overall availability ${range.toUpperCase()}`, kind: "overall", payload: model.overall.selected_range, rangeKey: range })}<p class="report-boundary">${escapeHtml(`${model.overall.contract_version} · ${model.overall.critical_components.length} Runtime-defined critical services · direct observation, not official Atlassian uptime`)}</p>` : `<p class="report-empty">Awaiting updated watchdog diagnostics. No overall series was synthesized.</p>`}
     </section>` : "";
-    const metrics = Object.keys(model.metrics).length ? `<section class="report-print-section"><h2>Custom metrics</h2><div class="report-summary-grid report-summary-grid--two"><div><span>Core API response time</span><strong>${model.metrics.core_api_response_time.value_ms == null ? "Awaiting measured data" : `${model.metrics.core_api_response_time.value_ms} ms`}</strong><small>${escapeHtml(model.metrics.core_api_response_time.state)}</small></div><div><span>Studio Room Readiness</span><strong>Deferred</strong><small>${escapeHtml(model.metrics.studio_room_readiness.reason)}</small></div></div>${model.metrics.core_api_response_time.selected_range.buckets.length ? buildStaticSvgChart({ title: `Core API response time ${range.toUpperCase()}`, kind: "component", payload: model.metrics.core_api_response_time.selected_range, rangeKey: range }) : ""}</section>` : "";
+    const metrics = Object.keys(model.metrics).length ? `<section class="report-print-section"><h2>Custom metrics</h2><div class="report-summary-grid report-summary-grid--two"><div><span>${model.watchdog_diagnostics.stale ? "Core API response time · last measured" : "Core API response time"}</span><strong>${model.metrics.core_api_response_time.value_ms == null ? "Awaiting measured data" : `${model.metrics.core_api_response_time.value_ms} ms`}</strong><small>${escapeHtml(model.watchdog_diagnostics.stale ? `Watchdog offline · ${formatDate(model.metrics.core_api_response_time.last_measured_at)}` : model.metrics.core_api_response_time.state)}</small></div><div><span>Studio Room Readiness</span><strong>Deferred</strong><small>${escapeHtml(model.metrics.studio_room_readiness.reason)}</small></div></div>${model.metrics.core_api_response_time.selected_range.buckets.length ? buildStaticSvgChart({ title: `Core API response time ${range.toUpperCase()}`, kind: "component", payload: model.metrics.core_api_response_time.selected_range, rangeKey: range }) : ""}</section>` : "";
     const groups = new Map();
     model.components.forEach((component) => {
       const group = component.group_name || "Components";
@@ -681,7 +721,7 @@
     const provenance = `<section class="report-provenance"><h2>Source provenance</h2><p>Official service state and incidents: Atlassian Statuspage</p><p>Independent observations: StreamSuites Status Watchdog</p><p>Generated by StreamSuites Status Center · ${escapeHtml(formatDate(model.generated_at))} · ${escapeHtml(range.toUpperCase())}</p><dl><div><dt>Statuspage page ID</dt><dd>${STATUSPAGE_PAGE_ID}</dd></div><div><dt>Diagnostics schema</dt><dd>${escapeHtml(model.provenance.diagnostics_schema || "Unavailable")}</dd></div><div><dt>Overall contract</dt><dd>${escapeHtml(model.provenance.overall_availability_contract || "Unavailable")}</dd></div><div><dt>Report schema</dt><dd>${REPORT_SCHEMA}</dd></div></dl></section>`;
     return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="color-scheme" content="dark"><title>${escapeHtml(buildFilename(model, "pdf").replace(/\.pdf$/, ""))}</title><style>
       @font-face{font-family:Tektur;src:url('/assets/fonts/Tektur-VariableFont_wdth,wght.ttf')}@font-face{font-family:Geist Sans;src:url('/assets/fonts/Geist-Regular.ttf')}@font-face{font-family:IBM Plex Mono;src:url('/assets/fonts/GeistMono-VariableFont_wght.ttf')}
-      @page{size:A4;margin:12mm}*{box-sizing:border-box}html{color-scheme:dark;background:#03070b}body{margin:0;color:#f4f8fb;background:#03070b;font:10pt/1.5 'Geist Sans',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}.report-page{max-width:190mm;margin:0 auto}.report-cover{min-height:245mm;display:grid;align-content:center;padding:18mm;border:1px solid #263849;border-radius:8mm;background:radial-gradient(circle at 95% 0,#211c43 0,transparent 38%),linear-gradient(145deg,#09131d,#03070b);break-after:page}.report-brand{display:flex;align-items:center;gap:5mm;margin-bottom:22mm}.report-brand img:first-child{width:13mm;height:13mm;border-radius:3mm}.report-brand img:last-child{width:auto;height:8mm}.report-eyebrow,.report-cover p,.report-component header p,.report-facts span,.report-summary-grid span,dt{color:#8ea4b5;font:7.5pt 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase}.report-cover h1,.report-print-section h2,.report-component h3{font-family:Tektur,sans-serif}.report-cover h1{max-width:150mm;margin:0;font-size:34pt;line-height:1;letter-spacing:-.04em}.report-cover .report-lede{max-width:138mm;margin:8mm 0 0;color:#b9c6d1;font:12pt/1.6 'Geist Sans',sans-serif;text-transform:none;letter-spacing:0}.report-cover-grid,.report-summary-grid,.report-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;margin-top:14mm;border:1px solid #263849;border-radius:4mm;overflow:hidden;background:#263849}.report-cover-grid>div,.report-summary-grid>div,.report-facts>div{display:grid;gap:2mm;padding:5mm;background:#071019}.report-cover-grid strong,.report-summary-grid strong,.report-facts strong{font-size:11pt}.report-print-section{padding:11mm 0;border-bottom:1px solid #263849;break-inside:auto}.report-print-section--overall{break-before:page}.report-print-section h2{margin:0 0 7mm;font-size:23pt;letter-spacing:-.035em}.report-summary-grid{margin-top:0}.report-summary-grid--two{grid-template-columns:repeat(2,minmax(0,1fr))}.report-summary-grid small{color:#8ea4b5}.report-chart{display:block;width:100%;margin-top:7mm;border:1px solid #263849;border-radius:4mm;background:#040b12}.report-chart-grid line{stroke:#203142;stroke-width:.7}.report-chart-labels text{fill:#8395a6;font:7px 'IBM Plex Mono',monospace}.report-chart-rail{fill:#0a131c;stroke:#253747}.report-chart-area{fill:url(#report-area-overall);stroke:none}.report-component .report-chart-area{fill:url(#report-area-component)}.report-chart-line{fill:none;stroke:url(#report-line-overall);stroke-width:2}.report-component .report-chart-line{stroke:url(#report-line-component)}.report-chart-gap{fill:none;stroke:#8191a3;stroke-width:1;stroke-dasharray:5 5}.report-component-group{break-before:page}.report-component{margin:0 0 7mm;padding:6mm;border:1px solid #263849;border-radius:4mm;background:#071019;break-inside:avoid}.report-component header{display:flex;justify-content:space-between;gap:6mm}.report-component h3{margin:1mm 0 0;font-size:16pt}.report-component header span{color:#a7c7db;font:8pt 'IBM Plex Mono',monospace}.report-component-copy,.report-boundary,.report-empty{color:#9fb0bd}.report-facts{grid-template-columns:repeat(4,minmax(0,1fr));margin-top:5mm}.report-facts>div{padding:3.5mm}.report-facts strong{font-size:8.5pt}.report-boundary{padding-left:4mm;border-left:1mm solid #58b7ff}.report-operation{display:grid;grid-template-columns:1fr auto;gap:2mm 8mm;padding:5mm 0;border-bottom:1px solid #263849;break-inside:avoid}.report-operation h3{margin:0}.report-operation span,.report-operation time{color:#8ea4b5;font:7.5pt 'IBM Plex Mono',monospace}.report-operation p{grid-column:1/-1;margin:1mm 0 0;color:#afbcc6}.report-provenance{padding:10mm 0;color:#a9b8c4;break-before:page}.report-provenance h2{font:20pt Tektur,sans-serif}.report-provenance p{margin:2mm 0}.report-provenance dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3mm;margin-top:6mm}.report-provenance dl div{padding:4mm;border:1px solid #263849}.report-provenance dd{margin:2mm 0 0;overflow-wrap:anywhere}@media print{html,body{background:#03070b}.report-page{max-width:none}}
+      @page{size:A4;margin:12mm}*{box-sizing:border-box}html{color-scheme:dark;background:#03070b}body{margin:0;color:#f4f8fb;background:#03070b;font:10pt/1.5 'Geist Sans',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}.report-page{max-width:190mm;margin:0 auto}.report-cover{min-height:245mm;display:grid;align-content:center;padding:18mm;border:1px solid #263849;border-radius:8mm;background:radial-gradient(circle at 95% 0,#211c43 0,transparent 38%),linear-gradient(145deg,#09131d,#03070b);break-after:page}.report-brand{display:flex;align-items:center;gap:5mm;margin-bottom:22mm}.report-brand img:first-child{width:13mm;height:13mm;border-radius:3mm}.report-brand img:last-child{width:auto;height:8mm}.report-eyebrow,.report-cover p,.report-component header p,.report-facts span,.report-summary-grid span,dt{color:#8ea4b5;font:7.5pt 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase}.report-cover h1,.report-print-section h2,.report-component h3{font-family:Tektur,sans-serif}.report-cover h1{max-width:150mm;margin:0;font-size:34pt;line-height:1;letter-spacing:-.04em}.report-cover .report-lede{max-width:138mm;margin:8mm 0 0;color:#b9c6d1;font:12pt/1.6 'Geist Sans',sans-serif;text-transform:none;letter-spacing:0}.report-cover-grid,.report-summary-grid,.report-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;margin-top:14mm;border:1px solid #263849;border-radius:4mm;overflow:hidden;background:#263849}.report-cover-grid>div,.report-summary-grid>div,.report-facts>div{display:grid;gap:2mm;padding:5mm;background:#071019}.report-cover-grid strong,.report-summary-grid strong,.report-facts strong{font-size:11pt}.report-print-section{padding:11mm 0;border-bottom:1px solid #263849;break-inside:auto}.report-print-section--overall{break-before:page}.report-print-section h2{margin:0 0 7mm;font-size:23pt;letter-spacing:-.035em}.report-summary-grid{margin-top:0}.report-summary-grid--two{grid-template-columns:repeat(2,minmax(0,1fr))}.report-summary-grid small{color:#8ea4b5}.report-chart{display:block;width:100%;margin-top:7mm;border:1px solid #263849;border-radius:4mm;background:#040b12}.report-chart-grid line{stroke:#203142;stroke-width:.7}.report-chart-labels text{fill:#8395a6;font:7px 'IBM Plex Mono',monospace}.report-chart-rail{fill:#0a131c;stroke:#253747}.report-chart-area{fill:url(#report-area-overall);stroke:none}.report-component .report-chart-area{fill:url(#report-area-component)}.report-chart-line{fill:none;stroke:url(#report-line-overall);stroke-width:2}.report-component .report-chart-line{stroke:url(#report-line-component)}.report-chart-gap{fill:none;stroke:#8191a3;stroke-width:1;stroke-dasharray:5 5}.report-chart-offline{fill:#8091a5;fill-opacity:.13;stroke:#9aa8b8;stroke-opacity:.22;stroke-width:.7}.report-chart-offline-label{fill:#b8c4cf;font:7px 'IBM Plex Mono',monospace;letter-spacing:.08em}.report-component-group{break-before:page}.report-component{margin:0 0 7mm;padding:6mm;border:1px solid #263849;border-radius:4mm;background:#071019;break-inside:avoid}.report-component header{display:flex;justify-content:space-between;gap:6mm}.report-component h3{margin:1mm 0 0;font-size:16pt}.report-component header span{color:#a7c7db;font:8pt 'IBM Plex Mono',monospace}.report-component-copy,.report-boundary,.report-empty{color:#9fb0bd}.report-facts{grid-template-columns:repeat(4,minmax(0,1fr));margin-top:5mm}.report-facts>div{padding:3.5mm}.report-facts strong{font-size:8.5pt}.report-boundary{padding-left:4mm;border-left:1mm solid #58b7ff}.report-operation{display:grid;grid-template-columns:1fr auto;gap:2mm 8mm;padding:5mm 0;border-bottom:1px solid #263849;break-inside:avoid}.report-operation h3{margin:0}.report-operation span,.report-operation time{color:#8ea4b5;font:7.5pt 'IBM Plex Mono',monospace}.report-operation p{grid-column:1/-1;margin:1mm 0 0;color:#afbcc6}.report-provenance{padding:10mm 0;color:#a9b8c4;break-before:page}.report-provenance h2{font:20pt Tektur,sans-serif}.report-provenance p{margin:2mm 0}.report-provenance dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3mm;margin-top:6mm}.report-provenance dl div{padding:4mm;border:1px solid #263849}.report-provenance dd{margin:2mm 0 0;overflow-wrap:anywhere}@media print{html,body{background:#03070b}.report-page{max-width:none}}
     </style></head><body><main class="report-page"><section class="report-cover"><div class="report-brand"><img src="/assets/logos/ssmainlogosq.webp" alt=""><img src="/assets/logos/wmnew.webp" alt="StreamSuites"></div><p class="report-eyebrow">Operational status report</p><h1>${escapeHtml(title)}</h1><p class="report-lede">Official Atlassian state and independent watchdog observations remain separate throughout this ${escapeHtml(range.toUpperCase())} report.</p><div class="report-cover-grid"><div><span>Range</span><strong>${escapeHtml(range.toUpperCase())}</strong></div><div><span>Official state</span><strong>${escapeHtml(model.official_status.current.description)}</strong></div><div><span>Official source</span><strong>${model.official_status.available ? "Loaded" : "Unavailable"}</strong></div><div><span>Diagnostics</span><strong>${model.watchdog_diagnostics.available ? model.watchdog_diagnostics.stale ? "Stale" : "Loaded" : "Unavailable"}</strong></div></div></section>${overall}${metrics}${components}${operationPrintHtml("Incidents", model.incidents, "No incidents are present in the loaded report context.")}${operationPrintHtml("Scheduled maintenance", model.scheduled_maintenance, "No maintenance is present in the loaded report context.")}${provenance}</main></body></html>`;
   };
 
@@ -756,6 +796,22 @@
     gradient.addColorStop(0, "#4ddaf0");
     gradient.addColorStop(.58, "#62bfff");
     gradient.addColorStop(1, "#aa86ff");
+    const scaleChartX = (chartX) => left + ((chartX - 58) / (742 - 58)) * (right - left);
+    if (model.trailingGap) {
+      const offlineFrom = scaleChartX(model.trailingGap.fromX);
+      const offlineTo = scaleChartX(model.trailingGap.toX);
+      context.fillStyle = "rgba(128,145,165,.13)";
+      context.fillRect(offlineFrom, top, Math.max(1, offlineTo - offlineFrom), bottom - top);
+      if (offlineTo - offlineFrom >= 110) {
+        context.fillStyle = "#b8c4cf";
+        context.font = '11px "IBM Plex Mono", monospace';
+        context.textAlign = "center";
+        context.textBaseline = "top";
+        context.fillText("WATCHDOG OFFLINE", (offlineFrom + offlineTo) / 2, top + 8);
+        context.textAlign = "right";
+        context.textBaseline = "middle";
+      }
+    }
     if (kind === "overall") {
       const yFor = (value) => bottom - Math.max(0, Math.min(100, Number(value))) / 100 * (bottom - top);
       [100, 75, 50, 25, 0].forEach((value) => {
@@ -1093,7 +1149,7 @@
       ["Diagnostics", model.watchdog_diagnostics.available ? model.watchdog_diagnostics.stale ? "Stale" : "Loaded" : "Unavailable", model.watchdog_diagnostics.available && !model.watchdog_diagnostics.stale ? "#62dea2" : "#f2b84b"],
     ]);
     if (model.overall.included) {
-      writer.heading("Watchdog-observed critical paths", "System availability", "This direct-observation section consumes Runtime’s overall-availability-v1 contract and is not official Atlassian uptime.");
+      writer.heading("Watchdog-observed critical paths", "System availability", model.watchdog_diagnostics.stale ? `Watchdog diagnostics stale. Historical calculations are frozen as of ${formatDate(model.watchdog_diagnostics.last_successful_projection_at)}; the trailing offline span is unobserved.` : "This direct-observation section consumes Runtime’s overall-availability-v1 contract and is not official Atlassian uptime.");
       if (model.overall.available) {
         writer.factGrid([
           ["Availability", formatPercent(model.overall.selected_range.watchdog_observed_availability_percent)],
@@ -1109,7 +1165,7 @@
     if (Object.keys(model.metrics).length) {
       writer.heading("Custom metrics", "Measured and deferred signals");
       writer.factGrid([
-        ["Core API response time", model.metrics.core_api_response_time.value_ms == null ? "Awaiting measured data" : `${model.metrics.core_api_response_time.value_ms} ms`],
+        [model.watchdog_diagnostics.stale ? "Core API last measured" : "Core API response time", model.metrics.core_api_response_time.value_ms == null ? "Awaiting measured data" : `${model.metrics.core_api_response_time.value_ms} ms`],
         ["Studio Room Readiness", "Deferred", "#f2b84b"],
       ], 2);
       if (model.metrics.core_api_response_time.selected_range.buckets.length) writer.chart("component", model.metrics.core_api_response_time.selected_range, "Core API response time");

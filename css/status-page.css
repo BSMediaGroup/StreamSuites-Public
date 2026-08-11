@@ -65,6 +65,7 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
   background: var(--bg-0);
 }
 
@@ -2529,9 +2530,27 @@ main > section:not(.status-hero) {
   stroke: none;
 }
 
-.component-graph__gap-band[data-gap-kind="leading"] { fill: color-mix(in srgb, var(--status-chart-gap) 4.5%, transparent); }
+.component-graph__gap-band[data-gap-kind="leading"] { fill: transparent; stroke: rgba(126,145,166,.16); stroke-width: .55; stroke-dasharray: 3 5; }
+.component-graph__gap-band--offline { fill: rgba(128,145,165,.11); stroke: rgba(150,166,184,.18); stroke-width: .6; opacity: 1; }
 .component-graph__gap-label { fill: rgba(145,162,181,.78); font: 7px/1 var(--font-mono); letter-spacing: .055em; text-transform: uppercase; }
 .component-graph__gap-label[data-gap-kind="leading"] { fill: rgba(126,145,166,.64); }
+.component-graph__gap-label--offline { fill: rgba(190,201,212,.84); font-weight: 700; letter-spacing: .09em; }
+
+.component-graph__offline-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(151,167,184,.18);
+  border-radius: 9px;
+  color: var(--muted);
+  background: rgba(128,145,165,.055);
+  font: 9px/1.5 var(--font-mono);
+}
+
+.component-graph__offline-notice strong { color: #c4d0db; text-transform: uppercase; letter-spacing: .06em; }
 
 .component-graph__gap-bridge {
   fill: none;
@@ -2603,6 +2622,8 @@ main > section:not(.status-hero) {
 .component-graph.is-chart-entering .component-graph__gap-bridge,
 .component-graph.is-chart-entering .component-graph__gap-band,
 .component-graph.is-chart-entering .component-graph__gap-label { transition: opacity 344ms ease 1376ms; }
+.component-graph.is-chart-entering .component-graph__gap-band--offline,
+.component-graph.is-chart-entering .component-graph__gap-label--offline { transition-delay: 220ms; transition-duration: 260ms; }
 .component-graph.is-chart-entering .component-graph__point.is-current { transition: opacity 220ms ease 1840ms; }
 .component-graph.is-chart-entering .component-graph__legend { transition: opacity 224ms ease 1568ms; }
 .component-graph.is-chart-entering.is-chart-visible .component-graph__tip { animation: chart-tip-settle 288ms ease-out 1840ms both; }
@@ -3604,6 +3625,8 @@ main > section:not(.status-hero) {
   .component-graph__tip { animation: none !important; }
   .component-graph__gap-bridge { opacity: .72 !important; }
   .component-graph__gap-band { opacity: 1 !important; }
+  .component-graph__gap-band--offline,
+  .component-graph__gap-label--offline { opacity: 1 !important; transition: none !important; }
   .system-availability__metric { animation: none !important; }
   .status-hero__feature-line,
   .system-pulse__rings span,

@@ -212,16 +212,22 @@
       lastSuccessfulData = data;
       lastSuccessfulLatency = latencyMs;
       const diagnosticsResponse = results[3].status === "fulfilled" ? results[3].value : null;
-      const diagnostics = diagnosticsResponse?.available && diagnosticsResponse?.diagnostics
+      const receivedDiagnostics = diagnosticsResponse?.available && diagnosticsResponse?.diagnostics
         ? diagnosticsResponse.diagnostics
         : null;
-      if (diagnostics) lastSuccessfulDiagnostics = diagnostics;
+      if (receivedDiagnostics) lastSuccessfulDiagnostics = receivedDiagnostics;
+      const diagnostics = receivedDiagnostics || lastSuccessfulDiagnostics;
+      const diagnosticsFallback = Boolean(!receivedDiagnostics && lastSuccessfulDiagnostics);
+      const diagnosticsStale = Boolean(diagnosticsResponse?.stale || diagnosticsFallback);
       currentSnapshot = {
         data,
         diagnostics,
-        diagnosticsStale: Boolean(diagnosticsResponse?.stale),
-        diagnosticsLive: Boolean(diagnostics && !diagnosticsResponse?.stale),
-        diagnosticsError: diagnostics ? null : "Independent diagnostics unavailable.",
+        diagnosticsStale,
+        diagnosticsLive: Boolean(receivedDiagnostics && !diagnosticsResponse?.stale),
+        diagnosticsError: diagnosticsFallback ? "Independent diagnostics request failed; retaining the last successful in-memory snapshot." : diagnostics ? null : "Independent diagnostics unavailable.",
+        diagnosticsGeneratedAt: diagnosticsResponse?.generated_at || diagnostics?.generated_at || null,
+        diagnosticsStaleAgeSeconds: diagnosticsResponse?.stale_age_seconds ?? diagnosticsResponse?.age_seconds ?? null,
+        currentDirectObservationAvailable: Boolean(receivedDiagnostics && !diagnosticsResponse?.stale && diagnosticsResponse?.current_direct_observation_available !== false),
         live: true,
         stale: false,
         checkedAt: nowIso(),
@@ -238,6 +244,9 @@
         diagnosticsStale: Boolean(lastSuccessfulDiagnostics),
         diagnosticsLive: false,
         diagnosticsError: "Independent diagnostics unavailable.",
+        diagnosticsGeneratedAt: lastSuccessfulDiagnostics?.generated_at || null,
+        diagnosticsStaleAgeSeconds: null,
+        currentDirectObservationAvailable: false,
         live: false,
         stale: Boolean(lastSuccessfulData),
         checkedAt: nowIso(),
