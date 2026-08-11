@@ -1927,6 +1927,19 @@
     return "operational";
   };
 
+  const resetHistoryTimeline = (root, countLabel) => {
+    const header = node("header", "history-timeline__header");
+    const identity = node("div");
+    identity.append(
+      node("span", "", "Official incident archive"),
+      node("strong", "", "Resolved incident log")
+    );
+    header.append(identity, node("span", "history-timeline__count", countLabel));
+    const events = node("div", "history-timeline__events");
+    root.replaceChildren(header, events);
+    return events;
+  };
+
   const renderHistory = (snapshot) => {
     const root = select("[data-incident-history]");
     if (!root) return;
@@ -1934,25 +1947,29 @@
       .filter((incident) => ["resolved", "postmortem"].includes(String(incident?.status || "").toLowerCase()))
       .sort((a, b) => Date.parse(b.resolved_at || b.updated_at || b.created_at || 0) - Date.parse(a.resolved_at || a.updated_at || a.created_at || 0))
       .slice(0, 6);
-    root.innerHTML = "";
+    const events = resetHistoryTimeline(root, incidents.length ? `${incidents.length} resolved record${incidents.length === 1 ? "" : "s"} loaded` : "No resolved records loaded");
 
     if (!incidents.length) {
       const item = node("article", "history-item");
       item.style.setProperty("--history-color", STATUS_COLORS.operational);
+      item.style.setProperty("--history-index", "0");
+      item.dataset.historyState = "operational";
       item.append(
         node("span", "history-item__date", "Current loaded history"),
         node("h3", "", "No resolved incidents in the loaded feed"),
         node("p", "", "The public Statuspage response did not include a resolved incident record for this view. The hosted history remains linked for the complete archive."),
         node("span", "history-item__chip", "Clear loaded history")
       );
-      root.appendChild(item);
+      events.appendChild(item);
       return;
     }
 
-    incidents.forEach((incident) => {
+    incidents.forEach((incident, index) => {
       const item = node("article", "history-item");
       const stateName = impactState(incident.impact);
       item.style.setProperty("--history-color", STATUS_COLORS[stateName]);
+      item.style.setProperty("--history-index", String(index));
+      item.dataset.historyState = stateName;
       const update = Array.isArray(incident.incident_updates) ? incident.incident_updates[0] : null;
       item.append(
         node("span", "history-item__date", formatAbsolute(incident.resolved_at || incident.updated_at || incident.created_at)),
@@ -1960,7 +1977,7 @@
         node("p", "", truncate(update?.body || "This incident was resolved.", 300)),
         node("span", "history-item__chip", `${String(incident.impact || "none").replaceAll("_", " ")} · ${String(incident.status || "resolved").replaceAll("_", " ")}`)
       );
-      root.appendChild(item);
+      events.appendChild(item);
     });
   };
 
@@ -2002,11 +2019,13 @@
     if (maintenanceRoot) { maintenanceRoot.innerHTML = ""; maintenanceRoot.appendChild(createEmptyOperation("maintenance")); }
     const history = select("[data-incident-history]");
     if (history) {
-      history.innerHTML = "";
+      const events = resetHistoryTimeline(history, "Feed unavailable");
       const item = node("article", "history-item");
       item.style.setProperty("--history-color", STATUS_COLORS.unknown);
+      item.style.setProperty("--history-index", "0");
+      item.dataset.historyState = "unknown";
       item.append(node("span", "history-item__date", "Public feed unavailable"), node("h3", "", "Recent incident history is unavailable"), node("p", "", "No local or fabricated history is substituted. Use the Atlassian hosted archive or retry the public feed."));
-      history.appendChild(item);
+      events.appendChild(item);
     }
   };
 

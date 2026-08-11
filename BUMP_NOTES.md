@@ -6,6 +6,20 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-11 - Resolved incident timeline alignment and presentation polish
+
+#### Technical notes
+
+- Rebuilt the `/status` resolved-incident timeline gutter around one explicit rail coordinate shared by each state marker and connector. The former container-border/child-offset combination measured 2.5px off-centre in Chromium; the new 32px desktop/tablet and 24px phone gutter measures a 0px marker-to-connector centre delta, with the connector beginning at the exact vertical centre of its marker and ending at the next event only.
+- Reframed the loaded Atlassian incident records as state-aware dark event cards with restrained surface tint, a contained connector rail, stronger date/title/body hierarchy, luminous impact chips, hover depth, and staggered in-view arrival inherited from the existing visibility observer. The final event deliberately has no trailing connector, and empty/unavailable states use the same frame without inventing a record.
+- Added a bounded archive header that reports the real number of resolved records in the loaded feed. Upgraded the adjacent authority panel with a refined blue/violet edge, layered dark surface, and explicit `Official source: Atlassian Statuspage` / `Public role: Presentation layer` facts; the hosted archive link and Atlassian authority boundary remain unchanged.
+- Added phone-specific rail and surface composition, immediate final reduced-motion rendering, focused source assertions, and bounded Status stylesheet/controller cache keys. No incident, timestamp, impact, update body, source, route, API, dependency, widget boundary, Runtime/Auth file, canonical version/build value, Statuspage configuration, or deployment configuration changed.
+- Validation passed all 35 focused Status tests, all 166 direct Public Node tests, JavaScript syntax, and `git diff --check`. Chromium rendered the live Atlassian resolved records at 1440x900, 768x1024, and 390x844 with exact 0px marker/rail deltas and zero document overflow; reduced motion produced opacity 1, no transform, and effectively disabled transitions. Local optional Runtime diagnostics and analytics remained unavailable through expected cross-origin CORS responses, while the official Atlassian incident feed and page renderer completed without script errors. Validation was local and read-only; no deployment or Runtime/Auth mutation was performed.
+
+#### Human-readable notes
+
+Recent incidents now read as a deliberate event log rather than loose text beside a slightly misaligned line. Every marker is precisely centred on its connector, each resolved incident has a richer state-aware card, and the Atlassian source-of-record panel now feels like part of the same polished composition.
+
 ### 2026-08-11 - Retained stale watchdog history and truthful offline spans
 
 #### Technical notes

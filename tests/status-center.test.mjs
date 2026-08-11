@@ -620,6 +620,27 @@ test("incident and maintenance empty states use the local tick while real-event 
   assert.match(page, /item\.scheduled_for/);
 });
 
+test("resolved incident history uses one aligned rail coordinate and a truthful archive frame", () => {
+  const html = read("status.html");
+  const page = read("js/status-page.js");
+  const css = read("css/status-page.css");
+  assert.match(html, /class="history-aside__facts"/);
+  assert.match(html, /<dt>Official source<\/dt><dd>Atlassian Statuspage<\/dd>/);
+  assert.match(html, /<dt>Public role<\/dt><dd>Presentation layer<\/dd>/);
+  assert.match(page, /const resetHistoryTimeline/);
+  assert.match(page, /Official incident archive/);
+  assert.match(page, /Resolved incident log/);
+  assert.match(page, /root\.replaceChildren\(header, events\)/);
+  assert.match(page, /item\.style\.setProperty\("--history-index", String\(index\)\)/);
+  assert.match(page, /item\.dataset\.historyState = stateName/);
+  assert.match(css, /\.history-item\s*\{[\s\S]*?--history-rail-x:\s*32px;[\s\S]*?--history-marker-y:\s*32px;/);
+  assert.match(css, /\.history-item::before\s*\{[\s\S]*?left:\s*calc\(var\(--history-rail-x\) - 7px\)/);
+  assert.match(css, /\.history-item::after\s*\{[\s\S]*?left:\s*calc\(var\(--history-rail-x\) - \.5px\)/);
+  assert.match(css, /\.history-item:last-child::after\s*\{\s*display:\s*none/);
+  assert.match(css, /\.history-timeline\.reveal\.is-visible \.history-item/);
+  assert.match(css, /@media \(max-width:\s*600px\)[\s\S]*?--history-rail-x:\s*24px/);
+});
+
 test("group summaries and source labels expose the locked monitoring taxonomy", () => {
   const page = read("js/status-page.js");
   const css = read("css/status-page.css");
