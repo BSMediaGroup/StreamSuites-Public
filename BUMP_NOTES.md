@@ -6,6 +6,23 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-11 - Health topology, canonical rails, and bounded rendering
+
+#### Technical notes
+
+- Replaced the `/health` radial starburst with an explicit Runtime Authority source and three truthful product groups: Core & Identity, Public & Web, and Studio & Clients. The same nine existing nodes and Runtime-owned relationships remain; each group now uses one structural trunk and one status signal, with no travelling SVG particles, duplicated glow route, or invented product-to-product dependency.
+- Rebuilt retained component history against one Runtime-projected canonical time axis per 5H/24H/7D/30D range. Sparse observations now occupy their actual time slots, every absent slot is visibly Unknown, and all directly retained rows share the same axis before bounded 96/72/48-segment display aggregation. Vendor-managed, current-only, deferred/unmeasured, and externally retained classifications render deliberately instead of empty or healthy-looking rails; Public still calculates no availability or canonical state.
+- Reduced response-history SVG complexity to one real-only line path, one optional area, one latest-point marker, one reusable hover marker, and delegated pointer/keyboard interaction. Component, topology, response, and history sections now skip unchanged redraws, large child insertion is fragment-batched, rail capacity updates only at responsive boundaries, and focus is restored after a genuinely changed render.
+- Added a single topology visibility controller that pauses nonessential route motion while the section is off-screen, while the document is hidden, or when reduced motion is requested. Reduced-motion output is static rather than continuously animated. Existing visibility-aware 60-second diagnostics polling, the credential-free sanitized Runtime/Auth contract, all route/anchor boundaries, and stale/failed/unknown fail-closed behavior are preserved.
+- Expanded focused coverage for canonical sparse alignment, conservative aggregation, classification, grouped line-only topology, animation pausing, bounded rails, delegated events, and constant graph marker count. No dependency, framework, file, route, Pages Function, Runtime/Auth source, canonical version/build value, Cloudflare configuration, deployment, or monitoring data changed.
+- Validation passed all 13 focused `/health` tests, all 159 direct Public Node tests, JavaScript syntax, and `git diff --check`. Local Pages routing returned HTTP 200 for `/`, `/health`, `/status`, and `/version`. Chromium rendered a captured public diagnostics projection at 1920x1080, 1440x900, 768x1024, and 390x844 with zero document overflow, topology overlap, or final console messages; reduced motion was static, off-screen and emulated-hidden topology states paused, and keyboard/pointer graph inspection reused the same marker. Three identical refreshes held the DOM at 2,502 nodes, 12 retained rows, 1,152 desktop 24H cells, and two graph circles; a three-pass scroll trace recorded no task over 200 ms (51 ms maximum). The live sanitized payload scan found no secret/private key or suspicious local/private value pattern. Validation was local and read-only apart from marking the captured fixture fresh; no deployment or Runtime/Auth mutation was performed.
+
+#### Human-readable notes
+
+System Health now reads as a clear architecture map instead of a busy radial animation. Its history rows line up to the same clock, visibly show what was not observed, and explain why a component has no retained rail instead of leaving an ambiguous blank.
+
+The page also performs substantially less browser work: the response graph reuses a single hover point, topology animation stops when it is not useful, and unchanged live refreshes keep the existing UI intact.
+
 ### 2026-08-11 - Landing-only feature-colour cycle boundary
 
 #### Technical notes

@@ -14,7 +14,7 @@
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <link rel="canonical" href="https://streamsuites.app/health" />
   <link rel="stylesheet" href="/css/status-page.css?v=20260811-header-cta" />
-  <link rel="stylesheet" href="/css/health-page.css?v=20260810-health-observability-redesign" />
+  <link rel="stylesheet" href="/css/health-page.css?v=20260811-health-topology-rails" />
 </head>
 <body class="health-page" data-page="health" data-health-state="unknown">
   <a class="skip-link" href="#main-content">Skip to content</a>
@@ -116,105 +116,87 @@
         <p>Public-safe control and state relationships grounded in the shipped product boundaries. This is not a media-path diagram: Browser Studio, StudioApp, and OBS retain their own media ownership.</p>
       </div>
 
-      <div class="health-topology reveal" data-health-topology>
+      <div class="health-topology reveal" data-health-topology data-animation-state="paused">
         <header class="health-topology__header">
           <span class="health-topology__mode"><i></i>PUBLIC OBSERVABILITY MAP</span>
           <span class="health-topology__observation" data-topology-observation>Awaiting observation</span>
         </header>
         <div class="health-topology__canvas">
-          <svg class="health-topology__routes" viewBox="0 0 1180 760" role="img" aria-labelledby="topology-svg-title topology-svg-description" preserveAspectRatio="none">
+          <div class="health-topology__authority">
+            <article class="health-node health-node--runtime" tabindex="0" data-component-key="public_apis_exports_version_registry" data-topology-group="all" data-state="unknown">
+              <div class="health-node__runtime-head">
+                <span class="health-node__icon health-node__icon--runtime" aria-hidden="true"><img src="/assets/icons/streamsuites-0.svg" alt="" /></span>
+                <div><small>CANONICAL SOURCE OF TRUTH</small><strong>Runtime Authority</strong></div>
+                <span class="health-node__state" data-node-state>Unknown</span>
+              </div>
+              <p>Public APIs, exports, and the version registry anchor every downstream observation.</p>
+              <div class="health-node__services" aria-label="Runtime Authority public domains"><span>APIs</span><span>Exports</span><span>Version registry</span></div>
+            </article>
+          </div>
+
+          <svg class="health-topology__routes" viewBox="0 0 1200 118" role="img" aria-labelledby="topology-svg-title topology-svg-description" preserveAspectRatio="none">
             <title id="topology-svg-title">StreamSuites Runtime/Auth health topology</title>
-            <desc id="topology-svg-description">Runtime Authority is the central source of truth connected to authentication, production clients, and public web surfaces. Layered route colours reflect each target component's direct watchdog observation.</desc>
-            <g class="health-route" data-route-to="authentication_accounts_sessions" style="--route-delay:-.8s">
-              <path class="health-route__base" pathLength="100" d="M430 330 C372 330 350 305 310 305" />
-              <path class="health-route__glow" pathLength="100" d="M430 330 C372 330 350 305 310 305" />
-              <path class="health-route__signal" pathLength="100" d="M430 330 C372 330 350 305 310 305" />
-              <circle class="health-route__packet" r="3.6"><animateMotion dur="7.4s" begin="-.8s" repeatCount="indefinite" path="M430 330 C372 330 350 305 310 305" /></circle>
+            <desc id="topology-svg-description">Runtime Authority connects through three non-crossing architectural trunks to Core and Identity, Public and Web, and Studio and Clients. Route colours reflect direct watchdog observations.</desc>
+            <g class="health-route" data-route-group="core" data-state="unknown" style="--route-delay:-1.1s">
+              <path class="health-route__base" pathLength="100" d="M600 0 V38 H195 V118" />
+              <path class="health-route__signal" pathLength="100" d="M600 0 V38 H195 V118" />
             </g>
-            <g class="health-route" data-route-to="browser_studio" style="--route-delay:-2.2s">
-              <path class="health-route__base" pathLength="100" d="M750 292 C810 258 818 155 860 155" />
-              <path class="health-route__glow" pathLength="100" d="M750 292 C810 258 818 155 860 155" />
-              <path class="health-route__signal" pathLength="100" d="M750 292 C810 258 818 155 860 155" />
-              <circle class="health-route__packet" r="3.6"><animateMotion dur="7.4s" begin="-2.2s" repeatCount="indefinite" path="M750 292 C810 258 818 155 860 155" /></circle>
+            <g class="health-route" data-route-group="web" data-state="unknown" style="--route-delay:-3.2s">
+              <path class="health-route__base" pathLength="100" d="M600 0 V118" />
+              <path class="health-route__signal" pathLength="100" d="M600 0 V118" />
             </g>
-            <g class="health-route" data-route-to="studioapp_connected_services" style="--route-delay:-3.6s">
-              <path class="health-route__base" pathLength="100" d="M750 330 C810 330 820 315 860 315" />
-              <path class="health-route__glow" pathLength="100" d="M750 330 C810 330 820 315 860 315" />
-              <path class="health-route__signal" pathLength="100" d="M750 330 C810 330 820 315 860 315" />
-              <circle class="health-route__packet" r="3.6"><animateMotion dur="7.4s" begin="-3.6s" repeatCount="indefinite" path="M750 330 C810 330 820 315 860 315" /></circle>
-            </g>
-            <g class="health-route" data-route-to="studio_for_obs_connected_services" style="--route-delay:-5s">
-              <path class="health-route__base" pathLength="100" d="M750 370 C810 402 820 475 860 475" />
-              <path class="health-route__glow" pathLength="100" d="M750 370 C810 402 820 475 860 475" />
-              <path class="health-route__signal" pathLength="100" d="M750 370 C810 402 820 475 860 475" />
-              <circle class="health-route__packet" r="3.6"><animateMotion dur="7.4s" begin="-5s" repeatCount="indefinite" path="M750 370 C810 402 820 475 860 475" /></circle>
-            </g>
-            <g class="health-route" data-route-to="public_website_status_center" style="--route-delay:-1.5s">
-              <path class="health-route__base" pathLength="100" d="M500 410 C420 492 270 518 190 600" />
-              <path class="health-route__glow" pathLength="100" d="M500 410 C420 492 270 518 190 600" />
-              <path class="health-route__signal" pathLength="100" d="M500 410 C420 492 270 518 190 600" />
-              <circle class="health-route__packet" r="3.6"><animateMotion dur="7.4s" begin="-1.5s" repeatCount="indefinite" path="M500 410 C420 492 270 518 190 600" /></circle>
-            </g>
-            <g class="health-route" data-route-to="creator_dashboard" style="--route-delay:-2.9s">
-              <path class="health-route__base" pathLength="100" d="M550 410 C512 494 460 530 440 600" />
-              <path class="health-route__glow" pathLength="100" d="M550 410 C512 494 460 530 440 600" />
-              <path class="health-route__signal" pathLength="100" d="M550 410 C512 494 460 530 440 600" />
-              <circle class="health-route__packet" r="3.6"><animateMotion dur="7.4s" begin="-2.9s" repeatCount="indefinite" path="M550 410 C512 494 460 530 440 600" /></circle>
-            </g>
-            <g class="health-route" data-route-to="admin_dashboard" style="--route-delay:-4.3s">
-              <path class="health-route__base" pathLength="100" d="M620 410 C622 498 678 532 700 600" />
-              <path class="health-route__glow" pathLength="100" d="M620 410 C622 498 678 532 700 600" />
-              <path class="health-route__signal" pathLength="100" d="M620 410 C622 498 678 532 700 600" />
-              <circle class="health-route__packet" r="3.6"><animateMotion dur="7.4s" begin="-4.3s" repeatCount="indefinite" path="M620 410 C622 498 678 532 700 600" /></circle>
-            </g>
-            <g class="health-route" data-route-to="developer_console_documentation" style="--route-delay:-5.7s">
-              <path class="health-route__base" pathLength="100" d="M680 410 C752 494 880 520 960 600" />
-              <path class="health-route__glow" pathLength="100" d="M680 410 C752 494 880 520 960 600" />
-              <path class="health-route__signal" pathLength="100" d="M680 410 C752 494 880 520 960 600" />
-              <circle class="health-route__packet" r="3.6"><animateMotion dur="7.4s" begin="-5.7s" repeatCount="indefinite" path="M680 410 C752 494 880 520 960 600" /></circle>
+            <g class="health-route" data-route-group="studio" data-state="unknown" style="--route-delay:-5.3s">
+              <path class="health-route__base" pathLength="100" d="M600 0 V38 H1005 V118" />
+              <path class="health-route__signal" pathLength="100" d="M600 0 V38 H1005 V118" />
             </g>
           </svg>
 
-          <span class="health-topology__zone health-topology__zone--core"><i></i>Core / authority</span>
-          <article class="health-node health-node--runtime" tabindex="0" data-component-key="public_apis_exports_version_registry" data-state="unknown">
-            <span class="health-node__core-field" aria-hidden="true"></span>
-            <div class="health-node__runtime-head">
-              <span class="health-node__icon health-node__icon--runtime" aria-hidden="true"><img src="/assets/icons/streamsuites-0.svg" alt="" /></span>
-              <div><small>CANONICAL SOURCE OF TRUTH</small><strong>Runtime Authority</strong></div>
-              <span class="health-node__state" data-node-state>Unknown</span>
-            </div>
-            <p>Public APIs, exports, and the version registry anchor every downstream observation.</p>
-            <div class="health-node__services" aria-label="Runtime Authority public domains"><span>APIs</span><span>Exports</span><span>Version registry</span></div>
-          </article>
+          <div class="health-topology__groups">
+            <section class="health-topology-group health-topology-group--core" data-topology-group-panel="core" data-state="unknown" aria-labelledby="topology-core-title">
+              <header><div><small>GROUP 01</small><h3 id="topology-core-title">Core &amp; identity</h3></div><span data-topology-group-state>Unknown</span></header>
+              <p>Identity and session support beneath the canonical Runtime authority.</p>
+              <div class="health-topology-group__nodes">
+                <article class="health-node health-node--auth" tabindex="0" data-component-key="authentication_accounts_sessions" data-topology-group="core" data-state="unknown">
+                  <span class="health-node__icon health-node__icon--auth" aria-hidden="true"></span><div class="health-node__copy"><small>CORE IDENTITY</small><strong>Authentication &amp; Sessions</strong><span class="health-node__state" data-node-state>Unknown</span></div>
+                </article>
+              </div>
+            </section>
 
-          <article class="health-node health-node--auth" tabindex="0" data-component-key="authentication_accounts_sessions" data-state="unknown">
-            <span class="health-node__icon health-node__icon--auth" aria-hidden="true"></span><div class="health-node__copy"><small>CORE IDENTITY</small><strong>Authentication &amp; Sessions</strong><span class="health-node__state" data-node-state>Unknown</span></div>
-          </article>
+            <section class="health-topology-group health-topology-group--web" data-topology-group-panel="web" data-state="unknown" aria-labelledby="topology-web-title">
+              <header><div><small>GROUP 02</small><h3 id="topology-web-title">Public &amp; web</h3></div><span data-topology-group-state>Unknown</span></header>
+              <p>Public-safe web surfaces that consume Runtime/Auth state and artifacts.</p>
+              <div class="health-topology-group__nodes health-topology-group__nodes--grid">
+                <article class="health-node health-node--public health-node--compact" tabindex="0" data-component-key="public_website_status_center" data-topology-group="web" data-state="unknown">
+                  <span class="health-node__icon health-node__icon--public" aria-hidden="true"></span><div class="health-node__copy"><small>PUBLIC SURFACE</small><strong>Public &amp; Status</strong><span class="health-node__state" data-node-state>Unknown</span></div>
+                </article>
+                <article class="health-node health-node--creator health-node--compact" tabindex="0" data-component-key="creator_dashboard" data-topology-group="web" data-state="unknown">
+                  <span class="health-node__icon health-node__icon--creator" aria-hidden="true"></span><div class="health-node__copy"><small>CREATOR SURFACE</small><strong>Creator</strong><span class="health-node__state" data-node-state>Unknown</span></div>
+                </article>
+                <article class="health-node health-node--admin health-node--compact" tabindex="0" data-component-key="admin_dashboard" data-topology-group="web" data-state="unknown">
+                  <span class="health-node__icon health-node__icon--admin" aria-hidden="true"></span><div class="health-node__copy"><small>ADMIN SURFACE</small><strong>Admin</strong><span class="health-node__state" data-node-state>Unknown</span></div>
+                </article>
+                <article class="health-node health-node--developer health-node--compact" tabindex="0" data-component-key="developer_console_documentation" data-topology-group="web" data-state="unknown">
+                  <span class="health-node__icon health-node__icon--developer" aria-hidden="true"></span><div class="health-node__copy"><small>DEVELOPER SURFACE</small><strong>Developer &amp; Docs</strong><span class="health-node__state" data-node-state>Unknown</span></div>
+                </article>
+              </div>
+            </section>
 
-          <span class="health-topology__zone health-topology__zone--studio"><i></i>Studio surfaces / clients</span>
-          <article class="health-node health-node--browser" tabindex="0" data-component-key="browser_studio" data-state="unknown">
-            <span class="health-node__icon health-node__icon--browser" aria-hidden="true"></span><div class="health-node__copy"><small>BROWSER PRODUCT</small><strong>Browser Studio</strong><span class="health-node__state" data-node-state>Unknown</span></div>
-          </article>
-          <article class="health-node health-node--studioapp" tabindex="0" data-component-key="studioapp_connected_services" data-state="unknown">
-            <span class="health-node__icon health-node__icon--studioapp" aria-hidden="true"></span><div class="health-node__copy"><small>NATIVE CLIENT</small><strong>StudioApp</strong><span class="health-node__state" data-node-state>Unknown</span></div>
-          </article>
-          <article class="health-node health-node--obs" tabindex="0" data-component-key="studio_for_obs_connected_services" data-state="unknown">
-            <span class="health-node__icon health-node__icon--obs" aria-hidden="true"></span><div class="health-node__copy"><small>OBS INTEGRATION</small><strong>Studio for OBS</strong><span class="health-node__state" data-node-state>Unknown</span></div>
-          </article>
-
-          <span class="health-topology__zone health-topology__zone--web"><i></i>Public / web surfaces</span>
-          <article class="health-node health-node--public health-node--compact" tabindex="0" data-component-key="public_website_status_center" data-state="unknown">
-            <span class="health-node__icon health-node__icon--public" aria-hidden="true"></span><div class="health-node__copy"><small>PUBLIC SURFACE</small><strong>Public &amp; Status</strong><span class="health-node__state" data-node-state>Unknown</span></div>
-          </article>
-          <article class="health-node health-node--creator health-node--compact" tabindex="0" data-component-key="creator_dashboard" data-state="unknown">
-            <span class="health-node__icon health-node__icon--creator" aria-hidden="true"></span><div class="health-node__copy"><small>CREATOR SURFACE</small><strong>Creator</strong><span class="health-node__state" data-node-state>Unknown</span></div>
-          </article>
-          <article class="health-node health-node--admin health-node--compact" tabindex="0" data-component-key="admin_dashboard" data-state="unknown">
-            <span class="health-node__icon health-node__icon--admin" aria-hidden="true"></span><div class="health-node__copy"><small>ADMIN SURFACE</small><strong>Admin</strong><span class="health-node__state" data-node-state>Unknown</span></div>
-          </article>
-          <article class="health-node health-node--developer health-node--compact" tabindex="0" data-component-key="developer_console_documentation" data-state="unknown">
-            <span class="health-node__icon health-node__icon--developer" aria-hidden="true"></span><div class="health-node__copy"><small>DEVELOPER SURFACE</small><strong>Developer &amp; Docs</strong><span class="health-node__state" data-node-state>Unknown</span></div>
-          </article>
+            <section class="health-topology-group health-topology-group--studio" data-topology-group-panel="studio" data-state="unknown" aria-labelledby="topology-studio-title">
+              <header><div><small>GROUP 03</small><h3 id="topology-studio-title">Studio &amp; clients</h3></div><span data-topology-group-state>Unknown</span></header>
+              <p>Separate product and media owners connected through bounded Runtime/Auth edges.</p>
+              <div class="health-topology-group__nodes">
+                <article class="health-node health-node--browser" tabindex="0" data-component-key="browser_studio" data-topology-group="studio" data-state="unknown">
+                  <span class="health-node__icon health-node__icon--browser" aria-hidden="true"></span><div class="health-node__copy"><small>BROWSER PRODUCT</small><strong>Browser Studio</strong><span class="health-node__state" data-node-state>Unknown</span></div>
+                </article>
+                <article class="health-node health-node--studioapp" tabindex="0" data-component-key="studioapp_connected_services" data-topology-group="studio" data-state="unknown">
+                  <span class="health-node__icon health-node__icon--studioapp" aria-hidden="true"></span><div class="health-node__copy"><small>NATIVE CLIENT</small><strong>StudioApp</strong><span class="health-node__state" data-node-state>Unknown</span></div>
+                </article>
+                <article class="health-node health-node--obs" tabindex="0" data-component-key="studio_for_obs_connected_services" data-topology-group="studio" data-state="unknown">
+                  <span class="health-node__icon health-node__icon--obs" aria-hidden="true"></span><div class="health-node__copy"><small>OBS INTEGRATION</small><strong>Studio for OBS</strong><span class="health-node__state" data-node-state>Unknown</span></div>
+                </article>
+              </div>
+            </section>
+          </div>
         </div>
 
         <footer class="health-topology__footer">
@@ -297,6 +279,8 @@
         <div class="health-heatmap" data-health-heatmap role="region" aria-live="polite" aria-label="Historical component health heatmap">
           <div class="health-history-empty"><span class="health-history-empty__mark" aria-hidden="true"></span><div><strong>Historical sampling has not loaded yet</strong><p>The page will show only buckets present in the authoritative projection.</p></div></div>
         </div>
+        <p class="health-history__detail" data-history-detail role="status" aria-live="polite">Focus or hover a timeline chip for its exact source range and observation counts.</p>
+        <div class="health-history__classifications" data-history-classifications hidden></div>
       </div>
     </section>
 
@@ -339,6 +323,6 @@
   <script src="/js/utils/versioning.js"></script>
   <script src="/js/utils/version-stamp.js"></script>
   <script src="/js/public-page-visit.js" defer></script>
-  <script src="/js/health-page.js?v=20260810-health-observability-redesign" defer></script>
+  <script src="/js/health-page.js?v=20260811-health-topology-rails" defer></script>
 </body>
 </html>

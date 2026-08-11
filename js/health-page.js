@@ -9,6 +9,7 @@
   const HISTORY_LIMITS = Object.freeze({ "5h": 60, "24h": 288, "7d": 168, "30d": 120 });
   const RANGE_MILLISECONDS = Object.freeze({ "5h": 18000000, "24h": 86400000, "7d": 604800000, "30d": 2592000000 });
   const RANGE_LABELS = Object.freeze({ "5h": "5 hours", "24h": "24 hours", "7d": "7 days", "30d": "30 days" });
+  const DISPLAY_SEGMENT_CAPS = Object.freeze({ desktop: 96, tablet: 72, mobile: 48 });
 
   const STATE_META = Object.freeze({
     operational: { label: "Operational", mark: "✓", rank: 0 },
@@ -81,6 +82,12 @@
     "public_website_status_center",
   ]);
 
+  const TOPOLOGY_GROUP_COMPONENTS = Object.freeze({
+    core: ["authentication_accounts_sessions"],
+    web: ["public_website_status_center", "creator_dashboard", "admin_dashboard", "developer_console_documentation"],
+    studio: ["browser_studio", "studioapp_connected_services", "studio_for_obs_connected_services"],
+  });
+
   const isRecord = (value) => Boolean(value && typeof value === "object" && !Array.isArray(value));
   const finiteNumber = (value) => typeof value === "number" && Number.isFinite(value) ? value : null;
   const parseTime = (value) => {
@@ -117,6 +124,108 @@
     const limit = HISTORY_LIMITS[range] || 0;
     const buckets = isRecord(history?.[range]) && Array.isArray(history[range].buckets) ? history[range].buckets : [];
     return buckets.slice(0, limit).filter(isRecord);
+  };
+
+  const displaySegmentCapacity = (width) => {
+    const numeric = finiteNumber(width);
+    if (numeric !== null && numeric <= 620) return DISPLAY_SEGMENT_CAPS.mobile;
+    if (numeric !== null && numeric <= 1020) return DISPLAY_SEGMENT_CAPS.tablet;
+    return DISPLAY_SEGMENT_CAPS.desktop;
+  };
+
+  const buildCanonicalAxis = (rangePayload, rangeKey) => {
+    if (!isRecord(rangePayload) || !HISTORY_LIMITS[rangeKey]) return null;
+    const resolutionSeconds = finiteNumber(rangePayload.timeline_resolution_seconds);
+    const bucketStart = parseTime(rangePayload.bucket_range_start);
+    const requestedStart = parseTime(rangePayload.requested_start);
+    const requestedEnd = parseTime(rangePayload.requested_end);
+    if (resolutionSeconds === null || resolutionSeconds <= 0 || requestedStart === null || requestedEnd === null || requestedEnd <= requestedStart) return null;
+    const resolutionMs = resolutionSeconds * 1000;
+    const expectedBuckets = Math.ceil((requestedEnd - requestedStart) / resolutionMs);
+    if (expectedBuckets < 1 || expectedBuckets > HISTORY_LIMITS[rangeKey]) return null;
+    const times = Array.from({ length: expectedBuckets }, (_, index) => requestedStart + index * resolutionMs);
+    return { rangeKey, requestedStart, requestedEnd, bucketStart, resolutionMs, expectedBuckets, times };
+  };
+
+  const alignBucketsToAxis = (buckets, axis) => {
+    if (!axis || !Array.isArray(axis.times)) return [];
+    const cells = axis.times.map((at, index) => ({
+      index,
+      at,
+      endAt: Math.min(at + axis.resolutionMs, axis.requestedEnd),
+      state: "unknown",
+      observed: false,
+      source: null,
+      sources: [],
+    }));
+    (Array.isArray(buckets) ? buckets : []).filter(isRecord).forEach((bucket) => {
+      const at = parseTime(bucket.at);
+      if (at === null || at < axis.requestedStart || at > axis.requestedEnd) return;
+      const index = Math.min(cells.length - 1, Math.floor((at - axis.requestedStart) / axis.resolutionMs));
+      if (index < 0 || index >= cells.length) return;
+      const state = normalizeState(bucket.state || bucket.overall_state);
+      const declaredObserved = finiteNumber(bucket.observed_bucket_count);
+      const sampleCount = finiteNumber(bucket.sample_count);
+      const observed = declaredObserved !== null ? declaredObserved > 0 : state !== "unknown" || (sampleCount !== null && sampleCount > 0);
+      const sources = [...cells[index].sources, bucket];
+      const states = sources.map((source) => normalizeState(source.state || source.overall_state));
+      const combinedState = ["major", "partial", "degraded", "maintenance", "unknown", "operational"].find((candidate) => states.includes(candidate)) || "unknown";
+      cells[index] = {
+        ...cells[index],
+        state: combinedState,
+        observed: cells[index].observed || observed,
+        source: bucket,
+        sources,
+      };
+    });
+    return cells;
+  };
+
+  const aggregateTimeline = (cells, capacity) => {
+    if (!Array.isArray(cells) || !cells.length) return [];
+    const boundedCapacity = Math.max(1, Math.min(Math.trunc(finiteNumber(capacity) ?? DISPLAY_SEGMENT_CAPS.desktop), DISPLAY_SEGMENT_CAPS.desktop));
+    const segmentCount = Math.min(cells.length, boundedCapacity);
+    const statePriority = ["major", "partial", "degraded", "maintenance", "unknown", "operational"];
+    return Array.from({ length: segmentCount }, (_, segmentIndex) => {
+      const startIndex = Math.floor(segmentIndex * cells.length / segmentCount);
+      const endIndex = Math.floor((segmentIndex + 1) * cells.length / segmentCount);
+      const sourceCells = cells.slice(startIndex, endIndex);
+      const counts = Object.fromEntries(Object.keys(STATE_META).map((state) => [state, 0]));
+      sourceCells.forEach((cell) => { counts[cell.state] = (counts[cell.state] || 0) + 1; });
+      const state = statePriority.find((candidate) => counts[candidate] > 0) || "unknown";
+      const sourceTimes = sourceCells.flatMap((cell) => cell.sources).map((source) => parseTime(source.at)).filter((at) => at !== null).sort((left, right) => left - right);
+      return {
+        index: segmentIndex,
+        state,
+        startAt: sourceCells[0].at,
+        endAt: sourceCells.at(-1).endAt,
+        sourceBucketCount: sourceCells.length,
+        observedCount: sourceCells.filter((cell) => cell.observed).length,
+        unobservedCount: sourceCells.filter((cell) => !cell.observed).length,
+        unknownCount: counts.unknown,
+        retainedBucketCount: sourceCells.reduce((sum, cell) => sum + cell.sources.length, 0),
+        sampleCount: sourceCells.reduce((sum, cell) => sum + cell.sources.reduce((cellSum, source) => cellSum + (finiteNumber(source.sample_count) ?? 0), 0), 0),
+        sourceStartAt: sourceTimes[0] ?? null,
+        sourceEndAt: sourceTimes.at(-1) ?? null,
+        counts,
+      };
+    });
+  };
+
+  const classifyComponentHistory = (component, rangeKey) => {
+    if (!isRecord(component)) return { kind: "unknown", label: "Not measured" };
+    const buckets = historyBuckets(component.history, rangeKey);
+    const coverage = String(component.coverage || "").toLowerCase();
+    if (buckets.length) {
+      return {
+        kind: "direct",
+        label: coverage === "vendor_managed" ? "Vendor-managed retained observations" : "Direct watchdog observations",
+        buckets,
+      };
+    }
+    if (coverage === "vendor_managed") return { kind: "vendor", label: "Vendor-managed" };
+    if (coverage === "implemented" && normalizeState(component.direct_state) !== "unknown") return { kind: "current", label: "Current snapshot only" };
+    return { kind: "unknown", label: "Not independently measured" };
   };
 
   const componentPresentation = (component, projectionUnavailable = false) => {
@@ -160,6 +269,11 @@
     normalizeState,
     isValidDiagnostics,
     historyBuckets,
+    displaySegmentCapacity,
+    buildCanonicalAxis,
+    alignBucketsToAxis,
+    aggregateTimeline,
+    classifyComponentHistory,
     componentPresentation,
     summarizeSamples,
   });
@@ -168,10 +282,12 @@
     const sourceChip = document.querySelector("[data-health-source]");
     if (!sourceChip) return;
 
-    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches || false;
+    const motionQuery = window.matchMedia?.("(prefers-reduced-motion: reduce)") || null;
+    const reducedMotion = motionQuery?.matches || false;
     const componentLoad = document.querySelector("[data-health-component-load]");
     const componentGroups = document.querySelector("[data-health-component-groups]");
     const heatmapRoot = document.querySelector("[data-health-heatmap]");
+    const historyClassifications = document.querySelector("[data-history-classifications]");
     const latencyChart = document.querySelector("[data-latency-chart]");
     let lastGoodDiagnostics = null;
     let currentDiagnostics = null;
@@ -180,6 +296,11 @@
     let historyRange = "24h";
     let inFlight = null;
     let pollTimer = 0;
+    let historyCapacity = displaySegmentCapacity(heatmapRoot?.clientWidth || window.innerWidth);
+    let historyResizeTimer = 0;
+    let latencyInteraction = null;
+    let latencyPointerFrame = 0;
+    const renderSignatures = new Map();
 
     const setText = (selector, value) => {
       const element = document.querySelector(selector);
@@ -197,6 +318,14 @@
       const node = document.createElementNS("http://www.w3.org/2000/svg", tag);
       Object.entries(attributes).forEach(([name, value]) => node.setAttribute(name, String(value)));
       return node;
+    };
+
+    const renderWhenChanged = (key, value, renderer, force = false) => {
+      const signature = JSON.stringify(value);
+      if (!force && renderSignatures.get(key) === signature) return false;
+      renderSignatures.set(key, signature);
+      renderer();
+      return true;
     };
 
     const formatTimestamp = (value, options = {}) => {
@@ -360,8 +489,10 @@
       const description = component.description || "No additional public-safe component detail is available.";
       card.append(element("p", "health-component-card__description", description));
 
-      const retained = unavailable ? [] : historyBuckets(component.history, "24h").slice(-18);
+      const historyClass = classifyComponentHistory(component, "24h");
+      const retained = unavailable || historyClass.kind !== "direct" ? [] : historyClass.buckets.slice(-18);
       const microhistory = element("div", retained.length ? "health-component-card__microhistory" : "health-component-card__microhistory health-component-card__microhistory--empty");
+      microhistory.dataset.historyKind = unavailable ? "unknown" : historyClass.kind;
       if (retained.length) {
         microhistory.style.setProperty("--sample-count", String(retained.length));
         retained.forEach((bucket) => {
@@ -372,7 +503,12 @@
         });
         microhistory.setAttribute("aria-label", `${retained.length} most recent real retained samples in the 24-hour projection.`);
       } else {
-        microhistory.textContent = unavailable ? "RETAINED SAMPLE RAIL UNAVAILABLE" : "NO RETAINED SAMPLE RAIL YET";
+        const emptyLabels = {
+          current: "CURRENT SNAPSHOT ONLY · NO RETAINED HISTORY",
+          vendor: "VENDOR-MANAGED · NO STREAMSUITES-RETAINED HISTORY",
+          unknown: "NOT INDEPENDENTLY MEASURED · NO RETAINED HISTORY",
+        };
+        microhistory.textContent = unavailable ? "RETAINED HISTORY UNAVAILABLE" : emptyLabels[historyClass.kind] || "NO RETAINED HISTORY";
       }
       card.append(microhistory);
 
@@ -462,9 +598,17 @@
         const name = component?.display_name || node.querySelector("strong")?.textContent || readableToken(key);
         node.setAttribute("aria-label", `${name}: ${presentation.label}. ${presentation.ownership}.`);
       });
-      document.querySelectorAll("[data-route-to]").forEach((path) => {
-        const component = components[path.dataset.routeTo];
-        path.dataset.state = componentPresentation(component, unavailable || !component).state;
+      Object.entries(TOPOLOGY_GROUP_COMPONENTS).forEach(([groupKey, componentKeys]) => {
+        const states = componentKeys.map((key) => componentPresentation(components[key], unavailable || !components[key]).state);
+        const groupState = ["major", "partial", "degraded", "maintenance"].find((state) => states.includes(state))
+          || (states.includes("unknown") ? "unknown" : "operational");
+        document.querySelector(`[data-route-group="${groupKey}"]`)?.setAttribute("data-state", groupState);
+        const panel = document.querySelector(`[data-topology-group-panel="${groupKey}"]`);
+        if (panel) {
+          panel.dataset.state = groupState;
+          const label = panel.querySelector("[data-topology-group-state]");
+          if (label) label.textContent = STATE_META[groupState].label;
+        }
       });
       setText("[data-topology-observation]", unavailable ? "LAST KNOWN / UNAVAILABLE" : `OBSERVED ${formatTimestamp(diagnostics?.generated_at).toUpperCase()}`);
     };
@@ -521,7 +665,7 @@
 
     const latencyMetric = (diagnostics = currentDiagnostics) => diagnostics?.metrics?.core_api_response_time || null;
 
-    const renderLatency = () => {
+    const renderLatency = (force = false) => {
       const metric = latencyMetric();
       const current = finiteNumber(metric?.value_ms);
       setText("[data-latency-current]", current !== null && !currentProjectionUnavailable ? `${Math.round(current)} ms` : "—");
@@ -539,6 +683,18 @@
       setText("[data-latency-max]", summary.maximum === null ? "—" : `${Math.round(summary.maximum)} ms`);
       setText("[data-latency-samples]", summary.count);
 
+      const renderKey = {
+        unavailable: currentProjectionUnavailable,
+        range: latencyRange,
+        generatedAt: currentDiagnostics?.generated_at || null,
+        value: metric?.value_ms ?? null,
+        lastChecked: metric?.last_checked || null,
+        history: historyBuckets(history, latencyRange),
+      };
+      if (!force && renderSignatures.get("latency") === JSON.stringify(renderKey)) return;
+      renderSignatures.set("latency", JSON.stringify(renderKey));
+      const restoreFocus = latencyChart.contains(document.activeElement);
+      latencyInteraction = null;
       latencyChart.replaceChildren();
       if (!summary.count || currentProjectionUnavailable) {
         const empty = element("div", "health-empty-plot");
@@ -605,6 +761,8 @@
         else segment.push(point);
       });
 
+      const lineParts = [];
+      const areaParts = [];
       segments.forEach((segment, index) => {
         if (index > 0) {
           const previous = segments[index - 1].at(-1);
@@ -614,21 +772,30 @@
           gap.append(gapTitle);
           plot.append(gap);
         }
-        if (segment.length < 2) return;
         const pathData = segment.map((point, pointIndex) => `${pointIndex ? "L" : "M"}${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(" ");
-        const area = svgElement("path", { d: `${pathData} L${segment.at(-1).x.toFixed(2)} ${baseY} L${segment[0].x.toFixed(2)} ${baseY} Z`, fill: "url(#health-latency-area-gradient)", class: "health-latency-plot__area" });
-        const line = svgElement("path", { d: pathData, stroke: "url(#health-latency-line-gradient)", class: "health-latency-plot__line" });
-        plot.append(area, line);
+        lineParts.push(pathData);
+        if (segment.length >= 2) areaParts.push(`${pathData} L${segment.at(-1).x.toFixed(2)} ${baseY} L${segment[0].x.toFixed(2)} ${baseY} Z`);
       });
+      if (areaParts.length) plot.append(svgElement("path", { d: areaParts.join(" "), fill: "url(#health-latency-area-gradient)", class: "health-latency-plot__area" }));
+      plot.append(svgElement("path", { d: lineParts.join(" "), stroke: "url(#health-latency-line-gradient)", class: "health-latency-plot__line" }));
 
-      points.forEach((point, index) => {
-        const marker = svgElement("circle", { cx: point.x, cy: point.y, r: index === points.length - 1 ? "3.5" : "2.2", class: `health-latency-plot__point${index === points.length - 1 ? " is-current" : ""}`, tabindex: "0" });
-        const markerTitle = svgElement("title");
-        markerTitle.textContent = `${formatTimestamp(point.bucket.at)}: ${Math.round(point.value)} milliseconds.`;
-        marker.append(markerTitle);
-        plot.append(marker);
-      });
-      latencyChart.append(plot);
+      const latest = points.at(-1);
+      const latestMarker = svgElement("circle", { cx: latest.x, cy: latest.y, r: "3.8", class: "health-latency-plot__point is-current" });
+      const latestTitle = svgElement("title");
+      latestTitle.textContent = `${formatTimestamp(latest.bucket.at)}: ${Math.round(latest.value)} milliseconds.`;
+      latestMarker.append(latestTitle);
+      const hoverMarker = svgElement("circle", { cx: latest.x, cy: latest.y, r: "4.2", class: "health-latency-plot__point is-hover", "aria-hidden": "true" });
+      hoverMarker.hidden = true;
+      const interactionLayer = svgElement("rect", { x: left, y: top, width: width - left - right, height: baseY - top, class: "health-latency-plot__interaction", tabindex: "0", "data-latency-interaction": "", "aria-label": `Interactive ${RANGE_LABELS[latencyRange]} response history. Use Left and Right Arrow keys to inspect ${points.length} measured points.` });
+      plot.append(latestMarker, hoverMarker, interactionLayer);
+
+      const tooltip = element("div", "health-latency__tooltip");
+      tooltip.hidden = true;
+      tooltip.setAttribute("aria-hidden", "true");
+      tooltip.append(element("span"), element("strong"), element("small"));
+      latencyChart.append(plot, tooltip);
+      latencyInteraction = { plot, points, hoverMarker, tooltip, activeIndex: points.length - 1, viewWidth: width };
+      if (restoreFocus) interactionLayer.focus({ preventScroll: true });
       latencyChart.setAttribute("aria-label", title.textContent);
     };
 
@@ -642,71 +809,133 @@
       return pieces.join(" · ");
     };
 
-    const createHeatmapRow = (label, sublabel, buckets, rangeEnd) => {
+    const segmentDescription = (segment, label) => {
+      const stateCounts = Object.entries(segment.counts)
+        .filter(([, count]) => count > 0)
+        .map(([state, count]) => `${count} ${STATE_META[state].label.toLowerCase()}`)
+        .join(", ");
+      const sampleDetail = segment.sampleCount ? ` ${segment.sampleCount} raw watchdog observation${segment.sampleCount === 1 ? "" : "s"} contributed.` : "";
+      const sourceRange = segment.sourceStartAt === null
+        ? "No retained source timestamp in this display interval."
+        : ` ${segment.retainedBucketCount} retained source bucket${segment.retainedBucketCount === 1 ? "" : "s"}, timestamped ${formatTimestamp(new Date(segment.sourceStartAt).toISOString())}${segment.sourceEndAt === segment.sourceStartAt ? "" : ` to ${formatTimestamp(new Date(segment.sourceEndAt).toISOString())}`}.`;
+      return `${label} · display interval ${formatTimestamp(new Date(segment.startAt).toISOString())} to ${formatTimestamp(new Date(segment.endAt).toISOString())} · ${segment.sourceBucketCount} canonical time slot${segment.sourceBucketCount === 1 ? "" : "s"}: ${segment.observedCount} observed, ${segment.unobservedCount} unobserved · ${stateCounts}.${sourceRange}${sampleDetail}`;
+    };
+
+    const createHeatmapRow = (rowModel, axis) => {
+      const { key, label, sublabel, buckets } = rowModel;
       const row = element("div", "health-heatmap__row");
+      row.dataset.historyRowKey = key;
       const name = element("div", "health-heatmap__name");
       name.append(element("strong", "", label), element("small", "", sublabel));
       const cells = element("div", "health-heatmap__cells");
-      const slots = HISTORY_LIMITS[historyRange];
-      const rangeStart = rangeEnd - RANGE_MILLISECONDS[historyRange];
-      cells.style.setProperty("--bucket-slots", String(slots));
-      buckets.forEach((bucket, index) => {
-        const state = normalizeState(bucket.state || bucket.overall_state);
+      const aligned = alignBucketsToAxis(buckets, axis);
+      const segments = aggregateTimeline(aligned, historyCapacity);
+      cells.style.setProperty("--display-segments", String(segments.length));
+      const fragment = document.createDocumentFragment();
+      segments.forEach((segment) => {
         const cell = element("button", "health-heatmap__cell");
         cell.type = "button";
-        cell.dataset.state = state;
-        const at = parseTime(bucket.at);
-        const ratio = at === null ? index / Math.max(1, buckets.length - 1) : Math.min(1, Math.max(0, (at - rangeStart) / RANGE_MILLISECONDS[historyRange]));
-        cell.style.gridColumn = String(Math.min(slots, Math.max(1, Math.floor(ratio * (slots - 1)) + 1)));
-        const description = bucketDescription(bucket, label);
+        cell.dataset.state = segment.state;
+        cell.dataset.historyRowKey = key;
+        cell.dataset.segmentIndex = String(segment.index);
+        cell.dataset.sourceBucketCount = String(segment.sourceBucketCount);
+        cell.dataset.retainedBucketCount = String(segment.retainedBucketCount);
+        cell.dataset.observedCount = String(segment.observedCount);
+        cell.dataset.unknownCount = String(segment.unknownCount);
+        cell.dataset.coverage = segment.unobservedCount ? segment.observedCount ? "mixed" : "unobserved" : "observed";
+        const description = segmentDescription(segment, label);
         cell.title = description;
         cell.setAttribute("aria-label", description);
-        cells.append(cell);
+        fragment.append(cell);
       });
-      row.append(name, cells, element("span", "health-heatmap__count", `${buckets.length} bucket${buckets.length === 1 ? "" : "s"}`));
-      return row;
+      cells.append(fragment);
+      row.append(name, cells, element("span", "health-heatmap__count", `${buckets.length}/${axis.expectedBuckets} retained · ${segments.length} display`));
+      return { element: row, sourceBucketCount: buckets.length, segmentCount: segments.length };
     };
 
-    const renderHistory = () => {
-      heatmapRoot.replaceChildren();
-      const rows = [];
+    const createHistoryClassificationCard = (key, component, classification, axisAvailable) => {
+      const card = element("article", "health-history-classification");
+      const kind = classification.kind === "direct" && !axisAvailable ? "current" : classification.kind;
+      card.dataset.historyClassification = kind;
+      card.dataset.componentKey = key;
+      const header = element("header");
+      header.append(element("strong", "", component.display_name || readableToken(key)), element("span", "", kind === "current" ? "Current snapshot only" : classification.label));
+      const official = currentProjectionUnavailable ? "unknown" : normalizeState(component.official_state_at_last_reconciliation);
+      const direct = currentProjectionUnavailable ? "unknown" : normalizeState(component.direct_state);
+      let detail = "No retained observations are available for this component.";
+      let snapshot = "Current state unavailable";
+      if (classification.kind === "direct" && !axisAvailable) {
+        detail = "Retained samples exist, but this payload does not provide enough canonical range timing to position them without invention.";
+        snapshot = direct === "unknown" ? "Current state unavailable" : `Current direct state: ${STATE_META[direct].label}`;
+      } else if (kind === "vendor") {
+        detail = "The upstream provider owns this state. StreamSuites does not expose retained public watchdog history for it.";
+        snapshot = official === "unknown" ? "Current upstream state unavailable" : `Upstream at last reconciliation: ${STATE_META[official].label}`;
+      } else if (kind === "current") {
+        detail = "A current direct observation exists, but no retained samples exist in the selected authority window.";
+        snapshot = direct === "unknown" ? "Current state unavailable" : `Current direct state: ${STATE_META[direct].label}`;
+      } else {
+        detail = "This boundary is not independently measured by the public watchdog, so no history rail is rendered.";
+        snapshot = official === "unknown" ? "No independent current measurement" : `Official state at last reconciliation: ${STATE_META[official].label}`;
+      }
+      card.append(header, element("p", "", detail), element("small", "", snapshot));
+      return card;
+    };
+
+    const renderHistory = (force = false) => {
       const overall = currentDiagnostics?.overall_availability;
       const overallRange = isRecord(overall?.ranges?.[historyRange]) ? overall.ranges[historyRange] : null;
+      const signatureValue = {
+        unavailable: currentProjectionUnavailable,
+        range: historyRange,
+        capacity: historyCapacity,
+        overallRange,
+        components: componentEntries().map(([key, component]) => [key, component.coverage, component.direct_state, component.official_state_at_last_reconciliation, component.history?.[historyRange]]),
+      };
+      const signature = JSON.stringify(signatureValue);
+      if (!force && renderSignatures.get("history") === signature) return;
+      renderSignatures.set("history", signature);
+      const active = document.activeElement;
+      const focusToken = active?.matches?.(".health-heatmap__cell")
+        ? { row: active.dataset.historyRowKey, segment: active.dataset.segmentIndex }
+        : null;
+      heatmapRoot.replaceChildren();
+      historyClassifications?.replaceChildren();
+      const rows = [];
       setText("[data-history-availability]", currentProjectionUnavailable ? "Unavailable" : formatPercent(overallRange?.watchdog_observed_availability_percent));
       setText("[data-history-coverage]", currentProjectionUnavailable ? "Unavailable" : formatPercent(overallRange?.observation_coverage_percent));
       setText("[data-history-downtime]", currentProjectionUnavailable ? "Unavailable" : formatDuration(overallRange?.downtime_seconds));
       const observedBuckets = finiteNumber(overallRange?.observed_buckets);
       const expectedBuckets = finiteNumber(overallRange?.expected_buckets);
       setText("[data-history-buckets]", currentProjectionUnavailable || observedBuckets === null ? "Unavailable" : expectedBuckets === null ? observedBuckets : `${observedBuckets}/${expectedBuckets}`);
-      const authoritativeRangeEnd = parseTime(currentDiagnostics?.generated_at);
-      const rangeEnd = authoritativeRangeEnd ?? Date.now();
-      setText("[data-history-start]", authoritativeRangeEnd === null ? "Range start unavailable" : formatTimestamp(new Date(rangeEnd - RANGE_MILLISECONDS[historyRange]).toISOString()));
-      setText("[data-history-end]", authoritativeRangeEnd === null ? "Latest unavailable" : formatTimestamp(new Date(rangeEnd).toISOString()));
+      const axis = buildCanonicalAxis(overallRange, historyRange);
+      setText("[data-history-start]", axis ? formatTimestamp(new Date(axis.requestedStart).toISOString()) : "Range start unavailable");
+      setText("[data-history-end]", axis ? formatTimestamp(new Date(axis.requestedEnd).toISOString()) : "Latest unavailable");
       const overallBuckets = Array.isArray(overallRange?.state_timeline)
         ? overallRange.state_timeline.slice(0, HISTORY_LIMITS[historyRange]).filter(isRecord)
         : [];
-      if (overall?.contract_version === OVERALL_CONTRACT_VERSION && overallBuckets.length) {
-        rows.push({ label: "Critical paths (overall)", sublabel: "Runtime-derived overall observations", buckets: overallBuckets });
+      if (axis && overall?.contract_version === OVERALL_CONTRACT_VERSION && overallBuckets.length) {
+        rows.push({ key: "overall", label: "Critical paths (overall)", sublabel: "Runtime-derived retained history", buckets: overallBuckets });
       }
 
       const criticalIds = new Set(Array.isArray(overall?.critical_components)
         ? overall.critical_components.map((item) => String(item?.component_id || ""))
         : []);
       componentEntries()
-        .map(([key, component]) => ({ key, component, buckets: historyBuckets(component.history, historyRange) }))
-        .filter((item) => item.buckets.length)
+        .map(([key, component]) => ({ key, component, classification: classifyComponentHistory(component, historyRange) }))
+        .filter((item) => axis && item.classification.kind === "direct")
         .sort((left, right) => {
           const leftCritical = criticalIds.has(String(left.component.component_id || "")) ? 0 : 1;
           const rightCritical = criticalIds.has(String(right.component.component_id || "")) ? 0 : 1;
           return leftCritical - rightCritical || String(left.component.display_name || "").localeCompare(String(right.component.display_name || ""));
         })
-        .forEach(({ component, buckets }) => rows.push({
+        .forEach(({ key, component, classification }) => rows.push({
+          key,
           label: component.display_name || "Unnamed component",
-          sublabel: component.coverage === "implemented" ? "Direct watchdog observations" : "Authoritative retained observations",
-          buckets,
+          sublabel: classification.label,
+          buckets: classification.buckets,
         }));
 
-      if (!rows.length || currentProjectionUnavailable) {
+      if (currentProjectionUnavailable) {
         const empty = element("div", "health-history-empty");
         const copy = element("div");
         copy.append(
@@ -716,22 +945,62 @@
         empty.append(element("span", "health-history-empty__mark"), copy);
         heatmapRoot.append(empty);
         setText("[data-history-caption]", `No retained ${historyRange.toUpperCase()} buckets available`);
+        if (historyClassifications) historyClassifications.hidden = true;
         return;
       }
 
-      const container = element("div", "health-heatmap__rows");
-      rows.forEach((row) => container.append(createHeatmapRow(row.label, row.sublabel, row.buckets, rangeEnd)));
-      heatmapRoot.append(container);
-      const bucketCount = rows.reduce((sum, row) => sum + row.buckets.length, 0);
-      setText("[data-history-caption]", `${bucketCount} real bucket${bucketCount === 1 ? "" : "s"} across ${rows.length} observed row${rows.length === 1 ? "" : "s"} · ${historyRange.toUpperCase()}`);
+      let sourceBucketCount = 0;
+      let displaySegmentCount = 0;
+      if (rows.length) {
+        const container = element("div", "health-heatmap__rows");
+        const fragment = document.createDocumentFragment();
+        rows.forEach((rowModel) => {
+          const rendered = createHeatmapRow(rowModel, axis);
+          sourceBucketCount += rendered.sourceBucketCount;
+          displaySegmentCount += rendered.segmentCount;
+          fragment.append(rendered.element);
+        });
+        container.append(fragment);
+        heatmapRoot.append(container);
+      } else {
+        const empty = element("div", "health-history-empty");
+        const copy = element("div");
+        copy.append(element("strong", "", axis ? "Historical sampling has not accumulated yet" : "Canonical timeline unavailable"), element("p", "", axis ? `No retained buckets exist for ${RANGE_LABELS[historyRange]}.` : "The authority payload does not provide enough timing metadata to place samples truthfully."));
+        empty.append(element("span", "health-history-empty__mark"), copy);
+        heatmapRoot.append(empty);
+      }
+
+      const classifications = componentEntries()
+        .map(([key, component]) => ({ key, component, classification: classifyComponentHistory(component, historyRange) }))
+        .filter((item) => !axis || item.classification.kind !== "direct");
+      if (historyClassifications) {
+        if (classifications.length) {
+          const heading = element("div", "health-history__classifications-heading");
+          heading.append(element("strong", "", "Components without a retained rail"), element("span", "", "Current state and retention are shown separately; no empty or synthetic rail is substituted."));
+          const grid = element("div", "health-history__classification-grid");
+          const fragment = document.createDocumentFragment();
+          classifications.forEach(({ key, component, classification }) => fragment.append(createHistoryClassificationCard(key, component, classification, Boolean(axis))));
+          grid.append(fragment);
+          historyClassifications.append(heading, grid);
+          historyClassifications.hidden = false;
+        } else {
+          historyClassifications.hidden = true;
+        }
+      }
+      setText("[data-history-caption]", `${sourceBucketCount} source bucket${sourceBucketCount === 1 ? "" : "s"} → ${displaySegmentCount} bounded display segment${displaySegmentCount === 1 ? "" : "s"} across ${rows.length} retained row${rows.length === 1 ? "" : "s"} · ${historyRange.toUpperCase()}`);
+      if (focusToken) heatmapRoot.querySelector(`[data-history-row-key="${focusToken.row}"][data-segment-index="${focusToken.segment}"]`)?.focus({ preventScroll: true });
     };
 
     const renderAll = (diagnostics, unavailable, responseMeta = {}) => {
       currentDiagnostics = diagnostics;
       currentProjectionUnavailable = unavailable;
       renderHero(diagnostics, unavailable, responseMeta);
-      renderComponents(diagnostics, unavailable);
-      renderTopology(diagnostics, unavailable);
+      renderWhenChanged("components", { unavailable, components: diagnostics?.components || null }, () => renderComponents(diagnostics, unavailable));
+      renderWhenChanged("topology", {
+        unavailable,
+        generatedAt: diagnostics?.generated_at || null,
+        states: Object.fromEntries(Object.values(TOPOLOGY_GROUP_COMPONENTS).flat().concat("public_apis_exports_version_registry").map((key) => [key, diagnostics?.components?.[key]?.direct_state || null])),
+      }, () => renderTopology(diagnostics, unavailable));
       renderFreshness(diagnostics, unavailable, responseMeta);
       renderLatency();
       renderHistory();
@@ -805,31 +1074,139 @@
         next.click();
       });
     };
-    bindRangeButtons("[data-latency-ranges]", (range) => { latencyRange = range; renderLatency(); });
-    bindRangeButtons("[data-history-ranges]", (range) => { historyRange = range; renderHistory(); });
+    bindRangeButtons("[data-latency-ranges]", (range) => { latencyRange = range; renderLatency(true); });
+    bindRangeButtons("[data-history-ranges]", (range) => { historyRange = range; renderHistory(true); });
+
+    const showLatencyPoint = (index) => {
+      if (!latencyInteraction?.points?.length) return;
+      const boundedIndex = Math.max(0, Math.min(latencyInteraction.points.length - 1, index));
+      const point = latencyInteraction.points[boundedIndex];
+      latencyInteraction.activeIndex = boundedIndex;
+      latencyInteraction.hoverMarker.hidden = false;
+      latencyInteraction.hoverMarker.setAttribute("cx", String(point.x));
+      latencyInteraction.hoverMarker.setAttribute("cy", String(point.y));
+      latencyInteraction.tooltip.querySelector("span").textContent = formatTimestamp(point.bucket.at);
+      latencyInteraction.tooltip.querySelector("strong").textContent = `${Math.round(point.value)} ms`;
+      latencyInteraction.tooltip.querySelector("small").textContent = `Measured watchdog response · ${boundedIndex + 1} of ${latencyInteraction.points.length}`;
+      latencyInteraction.tooltip.style.left = `${point.x / latencyInteraction.viewWidth * 100}%`;
+      latencyInteraction.tooltip.style.top = `${point.y / 250 * 100}%`;
+      latencyInteraction.tooltip.hidden = false;
+      latencyInteraction.tooltip.setAttribute("aria-hidden", "false");
+    };
+
+    const hideLatencyPoint = () => {
+      if (!latencyInteraction) return;
+      latencyInteraction.hoverMarker.hidden = true;
+      latencyInteraction.tooltip.hidden = true;
+      latencyInteraction.tooltip.setAttribute("aria-hidden", "true");
+    };
+
+    latencyChart?.addEventListener("pointermove", (event) => {
+      if (!latencyInteraction || latencyPointerFrame) return;
+      const clientX = event.clientX;
+      latencyPointerFrame = window.requestAnimationFrame(() => {
+        latencyPointerFrame = 0;
+        if (!latencyInteraction) return;
+        const bounds = latencyInteraction.plot.getBoundingClientRect();
+        const svgX = (clientX - bounds.left) / Math.max(1, bounds.width) * latencyInteraction.viewWidth;
+        const nearestIndex = latencyInteraction.points.reduce((best, point, index, points) => Math.abs(point.x - svgX) < Math.abs(points[best].x - svgX) ? index : best, 0);
+        showLatencyPoint(nearestIndex);
+      });
+    });
+    latencyChart?.addEventListener("pointerleave", hideLatencyPoint);
+    latencyChart?.addEventListener("focusin", (event) => {
+      if (event.target.matches("[data-latency-interaction]")) showLatencyPoint(latencyInteraction?.points?.length - 1 || 0);
+    });
+    latencyChart?.addEventListener("focusout", (event) => {
+      if (!latencyChart.contains(event.relatedTarget)) hideLatencyPoint();
+    });
+    latencyChart?.addEventListener("keydown", (event) => {
+      if (!event.target.matches("[data-latency-interaction]") || !latencyInteraction) return;
+      let nextIndex = null;
+      if (event.key === "ArrowLeft" || event.key === "ArrowDown") nextIndex = latencyInteraction.activeIndex - 1;
+      if (event.key === "ArrowRight" || event.key === "ArrowUp") nextIndex = latencyInteraction.activeIndex + 1;
+      if (event.key === "Home") nextIndex = 0;
+      if (event.key === "End") nextIndex = latencyInteraction.points.length - 1;
+      if (nextIndex === null) return;
+      event.preventDefault();
+      showLatencyPoint(nextIndex);
+    });
+
+    const setHistoryDetail = (target) => {
+      if (!target?.matches?.(".health-heatmap__cell")) return;
+      setText("[data-history-detail]", target.getAttribute("aria-label"));
+    };
+    heatmapRoot?.addEventListener("pointerover", (event) => setHistoryDetail(event.target.closest?.(".health-heatmap__cell")));
+    heatmapRoot?.addEventListener("focusin", (event) => setHistoryDetail(event.target));
+    heatmapRoot?.addEventListener("pointerleave", () => setText("[data-history-detail]", "Focus or hover a timeline chip for its exact source range and observation counts."));
+    heatmapRoot?.addEventListener("focusout", (event) => {
+      if (!heatmapRoot.contains(event.relatedTarget)) setText("[data-history-detail]", "Focus or hover a timeline chip for its exact source range and observation counts.");
+    });
 
     const topology = document.querySelector("[data-health-topology]");
-    const topologyNodes = [...document.querySelectorAll(".health-node[data-component-key]")];
-    const setActiveTopologyRoute = (componentKey) => {
-      const runtimeActive = componentKey === "public_apis_exports_version_registry";
+    const setActiveTopologyRoute = (groupKey) => {
+      const runtimeActive = groupKey === "all";
       let matched = false;
-      topology?.querySelectorAll("[data-route-to]").forEach((route) => {
-        const active = runtimeActive || route.dataset.routeTo === componentKey;
+      topology?.querySelectorAll("[data-route-group]").forEach((route) => {
+        const active = runtimeActive || route.dataset.routeGroup === groupKey;
         route.classList.toggle("is-active", active);
         matched ||= active;
       });
+      topology?.querySelectorAll("[data-topology-group-panel]").forEach((panel) => panel.classList.toggle("is-active", runtimeActive || panel.dataset.topologyGroupPanel === groupKey));
       topology?.classList.toggle("has-active-route", matched);
     };
     const clearActiveTopologyRoute = () => {
       topology?.classList.remove("has-active-route");
-      topology?.querySelectorAll("[data-route-to]").forEach((route) => route.classList.remove("is-active"));
+      topology?.querySelectorAll("[data-route-group]").forEach((route) => route.classList.remove("is-active"));
+      topology?.querySelectorAll("[data-topology-group-panel]").forEach((panel) => panel.classList.remove("is-active"));
     };
-    topologyNodes.forEach((node) => {
-      node.addEventListener("pointerenter", () => setActiveTopologyRoute(node.dataset.componentKey));
-      node.addEventListener("pointerleave", clearActiveTopologyRoute);
-      node.addEventListener("focus", () => setActiveTopologyRoute(node.dataset.componentKey));
-      node.addEventListener("blur", clearActiveTopologyRoute);
+    topology?.addEventListener("pointerover", (event) => {
+      const node = event.target.closest?.(".health-node[data-topology-group]");
+      if (node && !node.contains(event.relatedTarget)) setActiveTopologyRoute(node.dataset.topologyGroup);
     });
+    topology?.addEventListener("pointerout", (event) => {
+      const node = event.target.closest?.(".health-node[data-topology-group]");
+      if (node && !node.contains(event.relatedTarget)) clearActiveTopologyRoute();
+    });
+    topology?.addEventListener("focusin", (event) => {
+      const node = event.target.closest?.(".health-node[data-topology-group]");
+      if (node) setActiveTopologyRoute(node.dataset.topologyGroup);
+    });
+    topology?.addEventListener("focusout", (event) => {
+      if (!topology.contains(event.relatedTarget)) clearActiveTopologyRoute();
+    });
+
+    let topologyInView = false;
+    const updateTopologyAnimationState = () => {
+      const paused = Boolean(motionQuery?.matches) || document.hidden || !topologyInView;
+      if (topology) topology.dataset.animationState = paused ? "paused" : "running";
+    };
+    let topologyObserver = null;
+    if (topology && "IntersectionObserver" in window) {
+      topologyObserver = new IntersectionObserver((entries) => {
+        topologyInView = Boolean(entries[0]?.isIntersecting);
+        updateTopologyAnimationState();
+      }, { rootMargin: "120px 0px", threshold: .01 });
+      topologyObserver.observe(topology);
+    } else {
+      topologyInView = true;
+      updateTopologyAnimationState();
+    }
+    motionQuery?.addEventListener?.("change", updateTopologyAnimationState);
+
+    let historyResizeObserver = null;
+    if (heatmapRoot && "ResizeObserver" in window) {
+      historyResizeObserver = new ResizeObserver((entries) => {
+        window.clearTimeout(historyResizeTimer);
+        historyResizeTimer = window.setTimeout(() => {
+          const nextCapacity = displaySegmentCapacity(entries.at(-1)?.contentRect?.width || heatmapRoot.clientWidth);
+          if (nextCapacity === historyCapacity) return;
+          historyCapacity = nextCapacity;
+          renderHistory(true);
+        }, 140);
+      });
+      historyResizeObserver.observe(heatmapRoot);
+    }
 
     const navToggle = document.querySelector("[data-nav-toggle]");
     const primaryNav = document.querySelector("[data-primary-nav]");
@@ -861,6 +1238,7 @@
     }
 
     document.addEventListener("visibilitychange", () => {
+      updateTopologyAnimationState();
       if (document.visibilityState === "visible") fetchHealth();
     });
     pollTimer = window.setInterval(() => {
@@ -869,6 +1247,10 @@
     window.addEventListener("pagehide", () => {
       if (pollTimer) window.clearInterval(pollTimer);
       pollTimer = 0;
+      window.clearTimeout(historyResizeTimer);
+      if (latencyPointerFrame) window.cancelAnimationFrame(latencyPointerFrame);
+      topologyObserver?.disconnect();
+      historyResizeObserver?.disconnect();
     }, { once: true });
 
     renderHero(null, true, { loading: true });

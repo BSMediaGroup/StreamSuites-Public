@@ -109,7 +109,7 @@ test("state normalization and ownership keep direct, deferred, and upstream obse
   assert.match(upstream.ownership, /External \/ upstream/);
 });
 
-test("history and latency helpers preserve only real bounded observations", () => {
+test("history and latency helpers preserve only authoritative bounded observations", () => {
   const helpers = loadHelpers();
   const real = [
     { at: "2026-08-10T00:00:00.000Z", state: "operational", latency_ms: 80 },
@@ -129,35 +129,146 @@ test("history and latency helpers preserve only real bounded observations", () =
   const oversized = diagnostics({ components: { test: component({ history: { "24h": { buckets: Array.from({ length: 289 }, () => ({})) } } }) } });
   assert.equal(helpers.isValidDiagnostics(oversized), false);
   const script = read("js/health-page.js");
-  assert.match(script, /Every coloured cell is a real retained watchdog bucket|real bucket/i);
+  assert.match(script, /source bucket|retained bucket/i);
   assert.doesNotMatch(script, /fake|mock history|seed history|synthetic row/i);
 });
 
-test("topology, component matrix, freshness, latency, and heatmap retain premium responsive contracts", () => {
+test("canonical timeline aligns sparse history and materializes explicit unknown source positions", () => {
+  const helpers = loadHelpers();
+  const range = {
+    requested_start: "2026-08-10T00:00:00.000Z",
+    requested_end: "2026-08-10T00:30:00.000Z",
+    bucket_range_start: "2026-08-10T00:00:00.000Z",
+    timeline_resolution_seconds: 300,
+    expected_buckets: 6,
+  };
+  const axis = helpers.buildCanonicalAxis(range, "24h");
+  assert.equal(axis.times.length, 6);
+  assert.deepEqual([...axis.times], [...axis.times].sort((left, right) => left - right));
+
+  const aligned = helpers.alignBucketsToAxis([
+    { at: "2026-08-10T00:00:00.000Z", state: "operational", sample_count: 2 },
+    { at: "2026-08-10T00:25:00.000Z", state: "degraded_performance", sample_count: 1 },
+  ], axis);
+  assert.equal(aligned.length, 6);
+  assert.equal(aligned[0].state, "operational");
+  assert.equal(aligned[1].state, "unknown");
+  assert.equal(aligned[1].observed, false);
+  assert.equal(aligned[5].state, "degraded");
+  assert.equal(aligned[5].source.at, "2026-08-10T00:25:00.000Z");
+  assert.equal(helpers.buildCanonicalAxis({ expected_buckets: 6 }, "24h"), null);
+
+  const sevenDayAxis = helpers.buildCanonicalAxis({
+    requested_start: "2026-08-04T00:00:00.000Z",
+    requested_end: "2026-08-11T00:00:00.000Z",
+    bucket_range_start: "2026-08-09T00:50:00.000Z",
+    timeline_resolution_seconds: 3600,
+    expected_buckets: 632,
+  }, "7d");
+  assert.equal(sevenDayAxis.times.length, 168, "display timing comes from the requested window and Runtime resolution, not raw five-minute expected bucket totals");
+  assert.equal(helpers.alignBucketsToAxis([{ at: "2026-08-10T00:00:00.000Z", state: "operational" }], sevenDayAxis)[144].state, "operational");
+});
+
+test("display aggregation stays capped and conservatively preserves incidents and unknown coverage", () => {
+  const helpers = loadHelpers();
+  const range = {
+    requested_start: "2026-08-10T00:00:00.000Z",
+    requested_end: "2026-08-10T00:30:00.000Z",
+    bucket_range_start: "2026-08-10T00:00:00.000Z",
+    timeline_resolution_seconds: 300,
+    expected_buckets: 6,
+  };
+  const source = [
+    { at: "2026-08-10T00:00:00.000Z", state: "operational", sample_count: 2, availability_percent: 100 },
+    { at: "2026-08-10T00:10:00.000Z", state: "degraded_performance", sample_count: 1, availability_percent: 50 },
+    { at: "2026-08-10T00:25:00.000Z", state: "major_outage", sample_count: 1, availability_percent: 0 },
+  ];
+  const segments = helpers.aggregateTimeline(helpers.alignBucketsToAxis(source, helpers.buildCanonicalAxis(range, "24h")), 3);
+  assert.equal(segments.length, 3);
+  assert.equal(segments[0].state, "unknown", "operational plus an unobserved source bucket must not become operational");
+  assert.equal(segments[1].state, "degraded");
+  assert.equal(segments[2].state, "major");
+  assert.equal(segments[0].sourceBucketCount, 2);
+  assert.equal(segments[0].retainedBucketCount, 1);
+  assert.equal(segments[0].observedCount, 1);
+  assert.equal(segments[0].unknownCount, 1);
+  assert.equal(segments[0].startAt, Date.parse("2026-08-10T00:00:00.000Z"));
+  assert.equal(segments[0].endAt, Date.parse("2026-08-10T00:10:00.000Z"));
+  assert.equal("availability_percent" in segments[0], false, "display segments must not calculate authoritative availability");
+  assert.deepEqual([
+    helpers.displaySegmentCapacity(1400),
+    helpers.displaySegmentCapacity(800),
+    helpers.displaySegmentCapacity(390),
+  ], [96, 72, 48]);
+});
+
+test("component history classification distinguishes retained, current-only, vendor, and unmeasured states", () => {
+  const helpers = loadHelpers();
+  const retained = component({ history: { "24h": { buckets: [{ at: "2026-08-10T00:00:00.000Z", state: "operational" }] } } });
+  assert.equal(helpers.classifyComponentHistory(retained, "24h").kind, "direct");
+  assert.equal(helpers.classifyComponentHistory(component(), "24h").kind, "current");
+  assert.equal(helpers.classifyComponentHistory(component({ coverage: "vendor_managed", direct_state: null }), "24h").kind, "vendor");
+  assert.equal(helpers.classifyComponentHistory(component({ coverage: "deferred", direct_state: null }), "24h").kind, "unknown");
+  const externalRetained = component({ coverage: "vendor_managed", direct_state: null, history: { "24h": { buckets: [{ at: "2026-08-10T00:00:00.000Z", state: "unknown" }] } } });
+  assert.equal(helpers.classifyComponentHistory(externalRetained, "24h").kind, "direct", "real retained external history must not be excluded");
+});
+
+test("topology is grouped, line-only, visibility-aware, and keeps the canonical Runtime icon", () => {
   const html = read("health.html");
   const css = read("css/health-page.css");
   const script = read("js/health-page.js");
   assert.equal((html.match(/data-component-key=/g) || []).length, 9);
-  assert.equal((html.match(/data-route-to=/g) || []).length, 8);
-  assert.equal((html.match(/class="health-route__base"/g) || []).length, 8);
-  assert.equal((html.match(/class="health-route__glow"/g) || []).length, 8);
-  assert.equal((html.match(/class="health-route__signal"/g) || []).length, 8);
-  assert.equal((html.match(/class="health-route__packet"/g) || []).length, 8);
+  assert.equal((html.match(/data-route-group=/g) || []).length, 3);
+  assert.equal((html.match(/class="health-route__base"/g) || []).length, 3);
+  assert.equal((html.match(/class="health-route__signal"/g) || []).length, 3);
+  assert.equal((html.match(/data-topology-group-panel=/g) || []).length, 3);
+  assert.doesNotMatch(html, /health-route__glow|health-route__packet|<animateMotion|<circle/);
   assert.match(html, /class="health-node health-node--runtime"[\s\S]*?<img src="\/assets\/icons\/streamsuites-0\.svg"/);
-  assert.match(html, /Core \/ authority/);
-  assert.match(html, /Studio surfaces \/ clients/);
-  assert.match(html, /Public \/ web surfaces/);
+  assert.match(html, /Core &amp; identity/);
+  assert.match(html, /Studio &amp; clients/);
+  assert.match(html, /Public &amp; web/);
   assert.match(html, /This is not a media-path diagram/);
   assert.match(css, /\.health-topology__routes \.health-route__base[\s\S]*?stroke-width:\s*2/);
   assert.match(css, /\.health-topology__routes \.health-route__signal[\s\S]*?stroke-width:\s*2\.5/);
+  assert.match(css, /data-animation-state="paused"[\s\S]*?animation-play-state:\s*paused/);
+  assert.match(css, /prefers-reduced-motion:[^}]+reduce[\s\S]*?\.health-topology__routes \.health-route__signal[\s\S]*?animation:\s*none/);
   assert.match(css, /\.health-topology\.has-active-route \.health-route\.is-active/);
+  assert.match(css, /\.health-topology \.health-node\s*\{[\s\S]*?position:\s*relative !important;[\s\S]*?left:\s*auto !important;[\s\S]*?grid-column:\s*auto;[\s\S]*?width:\s*100% !important;/);
+  assert.match(css, /\.health-topology \.health-node--runtime\s*\{[\s\S]*?justify-self:\s*center;[\s\S]*?width:\s*min\(520px, 100%\) !important;/);
   assert.match(script, /setActiveTopologyRoute/);
+  assert.match(script, /topologyInView/);
+  assert.match(script, /document\.hidden/);
+  assert.match(script, /new IntersectionObserver/);
+  assert.match(script, /topology\?\.addEventListener\("pointerover"/);
+  assert.doesNotMatch(script, /topologyNodes\.forEach|health-route__packet|animateMotion/);
+});
+
+test("component matrix, bounded rails, response graph, and incremental polling retain responsive contracts", () => {
+  const html = read("health.html");
+  const css = read("css/health-page.css");
+  const script = read("js/health-page.js");
   assert.match(css, /\.health-component-grid\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2/);
   assert.match(css, /\.health-component-card__microhistory/);
   assert.match(script, /COMPONENT_ICONS/);
   assert.match(css, /\.health-heatmap__cell\[data-state="operational"\]/);
-  assert.match(script, /--bucket-slots/);
+  assert.match(css, /\.health-heatmap__cell\[data-state="unknown"\]/);
+  assert.match(script, /--display-segments/);
+  assert.match(script, /document\.createDocumentFragment/);
+  assert.match(script, /heatmapRoot\?\.addEventListener\("pointerover"/);
+  assert.doesNotMatch(script, /cell\.addEventListener/);
+  assert.match(script, /ResizeObserver/);
   assert.match(script, /watchdog_observed_availability_percent/);
+  assert.match(html, /data-history-classifications/);
+  assert.match(script, /Current snapshot only/);
+  assert.match(script, /Vendor-managed/);
+  assert.match(script, /Not independently measured/);
+  assert.match(script, /const latestMarker = svgElement\("circle"/);
+  assert.match(script, /const hoverMarker = svgElement\("circle"/);
+  assert.match(script, /data-latency-interaction/);
+  const latencyRenderer = script.slice(script.indexOf("const renderLatency"), script.indexOf("const bucketDescription"));
+  assert.equal((latencyRenderer.match(/svgElement\("circle"/g) || []).length, 2);
+  assert.match(script, /renderWhenChanged/);
+  assert.match(script, /visibilityState === "visible"/);
   assert.match(css, /@media \(max-width:\s*1080px\)/);
   assert.match(css, /@media \(max-width:\s*820px\)/);
   assert.match(css, /@media \(max-width:\s*600px\)/);
