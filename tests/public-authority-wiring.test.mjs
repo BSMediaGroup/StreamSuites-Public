@@ -211,6 +211,7 @@ test("public profile owner editor stays runtime-backed and uses canonical social
   const app = read("js/public-pages-app.js");
   const hub = read("js/public-data-hub.js");
   const css = read("css/public-shell.css");
+  const profileCss = read("css/public-profile.css");
 
   assert.match(hub, /key: "pickax"[\s\S]*label: "Pickax"[\s\S]*icon: "\/assets\/icons\/pickax\.svg"/);
   assert.match(hub, /key: "onlyfans"[\s\S]*label: "OnlyFans"[\s\S]*icon: "\/assets\/icons\/onlyfans\.svg"/);
@@ -219,12 +220,31 @@ test("public profile owner editor stays runtime-backed and uses canonical social
   assert.match(app, /function validatePublicProfileEditorSocialUrl/);
   assert.match(app, /https:\/\/\$\{expectedHost\}\/yourhandle/);
   assert.match(app, /data-profile-edit-social/);
+  assert.match(app, /aboutInput\.dataset\.profileEditAbout = "true"/);
+  assert.match(app, /about: aboutInput\.value\.trim\(\)/);
+  assert.match(app, /streamsuites_theme_preset:\s*normalizeProfileThemePreset/);
+  assert.match(app, /key:\s*"frosted_silver"/);
+  assert.match(app, /modal\.dataset\.profileTheme = nextTheme/);
+  assert.match(app, /profile-edit-workspace/);
+  assert.match(app, /handleModalKeydown/);
   assert.match(app, /profile-edit-open-button/);
   assert.match(app, /canEditProfile: canEdit/);
   assert.match(app, /if \(canEdit && \(error\?\.status === 401 \|\| error\?\.status === 403\)\)/);
   assert.match(css, /\.profile-edit-modal-backdrop/);
   assert.match(css, /\.profile-edit-media/);
   assert.match(css, /\.profile-edit-social-grid/);
+  assert.match(profileCss, /\.profile-edit-modal--profile/);
+  assert.match(profileCss, /\.profile-edit-footer/);
+});
+
+test("public profile primary visitor action prefers the highest-priority saved platform", () => {
+  const app = read("js/public-pages-app.js");
+  const actionRail = app.match(/function buildProfileHeroActionRail\(profile, options = \{\}\) \{[\s\S]*?\r?\n  \}\r?\n\r?\n  function buildStandaloneProfileHero/)?.[0] || "";
+
+  assert.ok(actionRail, "profile action rail should exist");
+  assert.match(actionRail, /`View on \$\{socialEntries\[0\]\.label\}`/);
+  assert.ok(actionRail.indexOf("else if (socialEntries[0])") < actionRail.indexOf("else if (artifacts.length)"));
+  assert.match(actionRail, /target = "_blank"[\s\S]*rel = "noopener noreferrer"/);
 });
 
 test("public leaderboards route hydrates from authoritative progression API", () => {

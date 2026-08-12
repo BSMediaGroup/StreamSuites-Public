@@ -94,6 +94,16 @@ function normalizeProfilePayload(payload, slug, requestUrl) {
     requestUrl
   );
   const bio = pickString(source.bio, source.summary, source.description);
+  const about = pickString(source.about, source.about_story, source.aboutStory);
+  const allowedThemePresets = new Set([
+    "violet_blue", "crimson_magenta", "emerald_cyan", "gold_amber",
+    "royal_blue", "magenta_violet", "red_gold", "green_gold",
+    "dark_slate", "neutral_greytone", "frosted_silver"
+  ]);
+  const requestedThemePreset = String(source.streamsuites_theme_preset || source.streamsuitesThemePreset || "violet_blue")
+    .trim()
+    .toLowerCase()
+    .replace(/-/g, "_");
   const canonicalUrl = new URL(`/u/${encodeURIComponent(publicSlug)}`, PUBLIC_ORIGIN).toString();
 
   return {
@@ -106,6 +116,8 @@ function normalizeProfilePayload(payload, slug, requestUrl) {
     coverImageUrl,
     bannerImageUrl: coverImageUrl,
     bio,
+    about,
+    streamsuitesThemePreset: allowedThemePresets.has(requestedThemePreset) ? requestedThemePreset : "violet_blue",
     role: pickString(source.role, source.account_type, source.accountType) || "viewer",
     tier: pickString(source.tier),
     streamsuitesProfileUrl: canonicalUrl,

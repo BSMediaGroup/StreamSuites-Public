@@ -106,6 +106,25 @@
   const PROFILE_TIER_BADGE_KEYS = Object.freeze(["core", "gold", "pro", "developer"]);
   const PROFILE_MAIN_ROLE_KEYS = Object.freeze(["admin", "creator", "developer", "viewer"]);
   const PROFILE_PUBLIC_BADGE_KEYS = Object.freeze(["core", "gold", "pro", "admin", "developer", "founder", "moderator"]);
+  const PROFILE_THEME_PRESETS = Object.freeze([
+    Object.freeze({ key: "violet_blue", label: "Violet Blue", description: "Signature violet and electric blue", colors: ["#6257ff", "#9b63ed", "#55b8ff"] }),
+    Object.freeze({ key: "crimson_magenta", label: "Crimson Magenta", description: "Deep red with vivid magenta", colors: ["#ef355d", "#e83fb5", "#8f4cff"] }),
+    Object.freeze({ key: "emerald_cyan", label: "Emerald Cyan", description: "Fresh emerald with cool cyan", colors: ["#16b878", "#28d7aa", "#36bce8"] }),
+    Object.freeze({ key: "gold_amber", label: "Gold Amber", description: "Warm gold with polished amber", colors: ["#f0b83e", "#ffcf5c", "#f07a36"] }),
+    Object.freeze({ key: "royal_blue", label: "Royal Blue", description: "Saturated blue with indigo depth", colors: ["#3568ff", "#5398ff", "#634cff"] }),
+    Object.freeze({ key: "magenta_violet", label: "Magenta Violet", description: "Electric magenta with rich violet", colors: ["#ed3fd3", "#bc4bff", "#7356ff"] }),
+    Object.freeze({ key: "red_gold", label: "Red Gold", description: "Crimson energy with a gold finish", colors: ["#e64149", "#f2783d", "#f5c84f"] }),
+    Object.freeze({ key: "green_gold", label: "Green Gold", description: "Emerald contrast with warm gold", colors: ["#24b879", "#67c45a", "#e4bd47"] }),
+    Object.freeze({ key: "dark_slate", label: "Dark Slate", description: "Deep architectural slate tones", colors: ["#202938", "#3b4658", "#5f6b7a"] }),
+    Object.freeze({ key: "neutral_greytone", label: "Neutral Greytone", description: "Balanced graphite and soft grey", colors: ["#565a62", "#858a94", "#afb4bd"] }),
+    Object.freeze({ key: "frosted_silver", label: "Frosted Silver", description: "Cool luminous silver and ice", colors: ["#8c9baa", "#c3ced8", "#eef4f7"] })
+  ]);
+  const PROFILE_THEME_PRESET_KEYS = new Set(PROFILE_THEME_PRESETS.map((preset) => preset.key));
+
+  function normalizeProfileThemePreset(value) {
+    const normalized = String(value || "violet_blue").trim().toLowerCase().replace(/-/g, "_");
+    return PROFILE_THEME_PRESET_KEYS.has(normalized) ? normalized : "violet_blue";
+  }
   const PROFILE_CHIP_CONTEXTS = Object.freeze({
     role: Object.freeze({ baseClass: "profile-role-chip", icons: false, badgeKind: "role" }),
     heroRole: Object.freeze({ baseClass: "profile-hero-role-chip", icons: false, badgeKind: "role" }),
@@ -9657,10 +9676,10 @@
     close.appendChild(closeIcon);
     const header = create("div", "market-item-lightbox-header");
     const navGroup = create("div", "market-item-lightbox-nav-group");
-    const prevButton = create("button", "market-item-lightbox-nav market-item-lightbox-nav--prev", "<- Previous");
+    const prevButton = create("button", "market-item-lightbox-nav market-item-lightbox-nav--prev", "← Previous");
     prevButton.type = "button";
     prevButton.dataset.marketLightboxPrevious = "";
-    const nextButton = create("button", "market-item-lightbox-nav market-item-lightbox-nav--next", "Next ->");
+    const nextButton = create("button", "market-item-lightbox-nav market-item-lightbox-nav--next", "Next →");
     nextButton.type = "button";
     nextButton.dataset.marketLightboxNext = "";
     const content = create("div", "market-item-lightbox-content");
@@ -10992,6 +11011,10 @@
       ""
     );
     const bio = String(payload?.bio || fallbackProfile?.bio || "").trim();
+    const about = String(payload?.about || payload?.about_story || payload?.aboutStory || fallbackProfile?.about || "").trim();
+    const streamsuitesThemePreset = normalizeProfileThemePreset(
+      payload?.streamsuites_theme_preset || payload?.streamsuitesThemePreset || fallbackProfile?.streamsuitesThemePreset || fallbackProfile?.streamsuites_theme_preset
+    );
     const joinedAt = String(
       payload?.joined_at ||
       payload?.joinedAt ||
@@ -11117,6 +11140,8 @@
       tier,
       joinedAt,
       bio,
+      about,
+      streamsuitesThemePreset,
       socialLinks,
       coverImageUrl,
       bannerImageUrl,
@@ -11498,11 +11523,15 @@
 
   function openPublicProfileEditModal(profile, options = {}) {
     const restoreFocusTo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const selectedTheme = normalizeProfileThemePreset(profile.streamsuitesThemePreset);
+    const pageShell = document.querySelector(".standalone-profile-shell");
     const backdrop = create("div", "profile-edit-modal-backdrop is-open");
-    const modal = create("section", "profile-edit-modal");
+    const modal = create("section", "profile-edit-modal profile-edit-modal--profile");
+    modal.dataset.profileTheme = selectedTheme;
     modal.setAttribute("role", "dialog");
     modal.setAttribute("aria-modal", "true");
     modal.setAttribute("aria-labelledby", "profile-edit-modal-title");
+    modal.setAttribute("aria-describedby", "profile-edit-modal-subtitle");
 
     const closeButton = create("button", "profile-edit-modal-close");
     closeButton.type = "button";
@@ -11511,21 +11540,37 @@
 
     const header = create("div", "profile-edit-modal-header");
     header.append(
-      create("p", "profile-edit-eyebrow", "Public profile"),
-      create("h2", "profile-edit-title", "Edit profile")
+      create("p", "profile-edit-eyebrow", "Owner studio"),
+      create("h2", "profile-edit-title", "Edit your public profile")
     );
     header.querySelector(".profile-edit-title").id = "profile-edit-modal-title";
-    const subtitle = create("p", "profile-edit-subtitle", "Updates save through the existing Runtime/Auth profile endpoint.");
+    const subtitle = create("p", "profile-edit-subtitle", "Shape what visitors see. Every change saves to your authoritative StreamSuites identity.");
+    subtitle.id = "profile-edit-modal-subtitle";
     header.appendChild(subtitle);
 
+    const progress = create("div", "profile-edit-progress");
+    [
+      ["Identity", "/assets/icons/ui/idcardfilled.svg"],
+      ["Story", "/assets/icons/ui/profilecard.svg"],
+      ["Style", "/assets/icons/ui/formatpaint.svg"],
+      ["Presence", "/assets/icons/ui/addlink.svg"]
+    ].forEach(([label, iconPath], index) => {
+      const item = create("span", `profile-edit-progress-item${index === 0 ? " is-active" : ""}`);
+      item.append(createIcon(iconPath, "profile-edit-progress-icon"), create("span", "", label));
+      progress.appendChild(item);
+    });
+    header.appendChild(progress);
+
     const form = create("form", "profile-edit-form");
-    const media = create("section", "profile-edit-media");
+    const media = create("section", "profile-edit-media profile-edit-media--hero");
+    media.setAttribute("aria-label", "Profile media preview");
+    media.dataset.profileTheme = selectedTheme;
     const cover = create("label", "profile-edit-cover");
     const coverImg = create("img");
     coverImg.src = profile.coverImageUrl || profile.bannerImageUrl || DEFAULT_PROFILE_COVER;
     coverImg.alt = "";
     const coverCopy = create("span", "profile-edit-media-copy");
-    coverCopy.append(create("strong", "", "Cover image"), create("span", "", "Upload a new banner image"));
+    coverCopy.append(create("strong", "", "Change cover"), create("span", "", "PNG, JPG, WEBP, or GIF"));
     const coverInput = create("input");
     coverInput.type = "file";
     coverInput.accept = "image/png,image/jpeg,image/webp,image/gif";
@@ -11537,16 +11582,26 @@
     avatarImg.src = profile.avatar || "/assets/icons/ui/profile.svg";
     avatarImg.alt = "";
     const avatarCopy = create("span", "profile-edit-media-copy");
-    avatarCopy.append(create("strong", "", "Avatar"), create("span", "", "Upload a profile image"));
+    avatarCopy.append(create("strong", "", "Change avatar"), create("span", "", "Choose a clear square image"));
     const avatarInput = create("input");
     avatarInput.type = "file";
     avatarInput.accept = "image/png,image/jpeg,image/webp,image/gif";
     avatarInput.dataset.profileEditAvatarFile = "true";
     avatar.append(avatarImg, avatarCopy, avatarInput);
-    media.append(cover, avatar);
+    const previewIdentity = create("div", "profile-edit-preview-identity");
+    const previewName = create("strong", "profile-edit-preview-name", profile.displayName || "Public User");
+    const previewHandle = create("span", "profile-edit-preview-handle", `@${getCanonicalProfileSlug(profile, "public-user")}`);
+    const previewBio = create("p", "profile-edit-preview-bio", profile.bio || "Add a concise bio for your identity header.");
+    previewIdentity.append(previewName, previewHandle, previewBio);
+    media.append(cover, avatar, previewIdentity);
 
-    const identity = create("section", "profile-edit-section");
-    identity.appendChild(create("h3", "", "Identity"));
+    const identity = create("section", "profile-edit-section profile-edit-panel");
+    identity.id = "profile-edit-identity";
+    identity.append(
+      create("p", "profile-edit-section-eyebrow", "01 / Identity"),
+      create("h3", "", "Public identity"),
+      create("p", "profile-edit-section-copy", "Keep your display name and visibility clear across StreamSuites.")
+    );
     const displayNameLabel = create("label", "profile-edit-field");
     displayNameLabel.appendChild(create("span", "", "Display name"));
     const displayNameInput = create("input", "profile-edit-input");
@@ -11564,17 +11619,36 @@
     handleLabel.append(handleInput, create("small", "", "Handle changes are not exposed by the current public self-edit API."));
     identity.append(displayNameLabel, handleLabel);
 
-    const bioSection = create("section", "profile-edit-section");
-    bioSection.appendChild(create("h3", "", "About"));
+    const bioSection = create("section", "profile-edit-section profile-edit-panel");
+    bioSection.id = "profile-edit-story";
+    bioSection.append(
+      create("p", "profile-edit-section-eyebrow", "02 / Story"),
+      create("h3", "", "Bio & About"),
+      create("p", "profile-edit-section-copy", "Use Bio for the concise identity-header introduction and About for the expanded profile story below the hero.")
+    );
     const bioLabel = create("label", "profile-edit-field");
-    bioLabel.appendChild(create("span", "", "Bio"));
+    const bioFieldHead = create("span", "profile-edit-field-head");
+    const bioCount = create("span", "profile-edit-character-count");
+    bioFieldHead.append(create("span", "", "Bio"), bioCount);
+    bioLabel.appendChild(bioFieldHead);
     const bioInput = create("textarea", "profile-edit-input profile-edit-textarea");
-    bioInput.rows = 5;
+    bioInput.rows = 3;
     bioInput.maxLength = 1200;
     bioInput.value = profile.bio || "";
     bioInput.dataset.profileEditBio = "true";
-    bioLabel.appendChild(bioInput);
-    bioSection.appendChild(bioLabel);
+    bioLabel.append(bioInput, create("small", "", "Appears in the identity hero. Aim for one or two concise sentences."));
+    const aboutLabel = create("label", "profile-edit-field");
+    const aboutFieldHead = create("span", "profile-edit-field-head");
+    const aboutCount = create("span", "profile-edit-character-count");
+    aboutFieldHead.append(create("span", "", "About"), aboutCount);
+    aboutLabel.appendChild(aboutFieldHead);
+    const aboutInput = create("textarea", "profile-edit-input profile-edit-textarea profile-edit-textarea--about");
+    aboutInput.rows = 8;
+    aboutInput.maxLength = 6000;
+    aboutInput.value = profile.about || "";
+    aboutInput.dataset.profileEditAbout = "true";
+    aboutLabel.append(aboutInput, create("small", "", "Your expanded story. Paragraph breaks are preserved safely on the public profile."));
+    bioSection.append(bioLabel, aboutLabel);
     const visibilityLabel = create("label", "profile-edit-check-row");
     const visibilityInput = create("input");
     visibilityInput.type = "checkbox";
@@ -11584,10 +11658,50 @@
       visibilityInput,
       create("span", "", "Anonymous / private profile")
     );
-    bioSection.appendChild(visibilityLabel);
+    identity.appendChild(visibilityLabel);
 
-    const socialSection = create("section", "profile-edit-section");
-    socialSection.appendChild(create("h3", "", "Social links"));
+    const styleSection = create("section", "profile-edit-section profile-edit-panel");
+    styleSection.id = "profile-edit-style";
+    styleSection.append(
+      create("p", "profile-edit-section-eyebrow", "03 / Style"),
+      create("h3", "", "Feature gradient"),
+      create("p", "profile-edit-section-copy", "Choose the accent system used across this page, including the StreamSuites header emblem, hero spine, highlights, and primary actions.")
+    );
+    const themeFieldset = create("fieldset", "profile-theme-picker");
+    themeFieldset.dataset.profileThemePicker = "true";
+    const themeLegend = create("legend", "sr-only", "Public profile theme");
+    themeFieldset.appendChild(themeLegend);
+    PROFILE_THEME_PRESETS.forEach((preset) => {
+      const option = create("label", "profile-theme-option");
+      option.style.setProperty("--theme-swatch-a", preset.colors[0]);
+      option.style.setProperty("--theme-swatch-b", preset.colors[1]);
+      option.style.setProperty("--theme-swatch-c", preset.colors[2]);
+      const input = create("input");
+      input.type = "radio";
+      input.name = "streamsuites_theme_preset";
+      input.value = preset.key;
+      input.checked = preset.key === selectedTheme;
+      input.dataset.profileThemeOption = preset.key;
+      const swatch = create("span", "profile-theme-swatch");
+      swatch.style.setProperty("--theme-swatch-a", preset.colors[0]);
+      swatch.style.setProperty("--theme-swatch-b", preset.colors[1]);
+      swatch.style.setProperty("--theme-swatch-c", preset.colors[2]);
+      swatch.setAttribute("aria-hidden", "true");
+      const copy = create("span", "profile-theme-option-copy");
+      copy.append(create("strong", "", preset.label), create("small", "", preset.description));
+      const selectedMark = create("span", "profile-theme-selected-mark", "Selected");
+      option.append(input, swatch, copy, selectedMark);
+      themeFieldset.appendChild(option);
+    });
+    styleSection.appendChild(themeFieldset);
+
+    const socialSection = create("section", "profile-edit-section profile-edit-panel");
+    socialSection.id = "profile-edit-presence";
+    socialSection.append(
+      create("p", "profile-edit-section-eyebrow", "04 / Presence"),
+      create("h3", "", "Social links"),
+      create("p", "profile-edit-section-copy", "Your highest-priority saved platform becomes the main visitor action when you are not live.")
+    );
     const socialGrid = create("div", "profile-edit-social-grid");
     const currentLinks = normalizeSocialLinks(profile.socialLinks);
     getProfileEditorPlatformKeys().forEach((key) => {
@@ -11605,7 +11719,26 @@
     save.type = "submit";
     actions.append(cancel, save);
 
-    form.append(media, identity, bioSection, socialSection, status, actions);
+    const editorNav = create("nav", "profile-edit-nav");
+    editorNav.setAttribute("aria-label", "Profile editor sections");
+    [
+      ["#profile-edit-identity", "Identity", "/assets/icons/ui/idcardfilled.svg"],
+      ["#profile-edit-story", "Bio & About", "/assets/icons/ui/profilecard.svg"],
+      ["#profile-edit-style", "Page style", "/assets/icons/ui/formatpaint.svg"],
+      ["#profile-edit-presence", "Social links", "/assets/icons/ui/addlink.svg"]
+    ].forEach(([href, label, iconPath]) => {
+      const link = create("a", "profile-edit-nav-link", label);
+      link.href = href;
+      link.prepend(createIcon(iconPath, "profile-edit-nav-icon"));
+      editorNav.appendChild(link);
+    });
+    const sections = create("div", "profile-edit-sections");
+    sections.append(identity, bioSection, styleSection, socialSection);
+    const workspace = create("div", "profile-edit-workspace");
+    workspace.append(editorNav, sections);
+    const footer = create("div", "profile-edit-footer");
+    footer.append(status, actions);
+    form.append(media, workspace, footer);
     modal.append(closeButton, header, form);
     backdrop.appendChild(modal);
     document.body.appendChild(backdrop);
@@ -11617,12 +11750,50 @@
     };
     coverInput.addEventListener("change", () => syncPreview(coverInput, coverImg));
     avatarInput.addEventListener("change", () => syncPreview(avatarInput, avatarImg));
-    const handleEscape = (event) => {
-      if (event.key !== "Escape" || !backdrop.parentElement) return;
-      close();
+    const syncStoryPreview = () => {
+      previewName.textContent = displayNameInput.value.trim() || "Public User";
+      previewBio.textContent = bioInput.value.trim() || "Add a concise bio for your identity header.";
+      bioCount.textContent = `${bioInput.value.length} / ${bioInput.maxLength}`;
+      aboutCount.textContent = `${aboutInput.value.length} / ${aboutInput.maxLength}`;
     };
-    const close = () => {
-      document.removeEventListener("keydown", handleEscape);
+    displayNameInput.addEventListener("input", syncStoryPreview);
+    bioInput.addEventListener("input", syncStoryPreview);
+    aboutInput.addEventListener("input", syncStoryPreview);
+    themeFieldset.addEventListener("change", (event) => {
+      const input = event.target;
+      if (input instanceof HTMLInputElement && input.matches("[data-profile-theme-option]")) {
+        const nextTheme = normalizeProfileThemePreset(input.value);
+        media.dataset.profileTheme = nextTheme;
+        modal.dataset.profileTheme = nextTheme;
+        if (pageShell instanceof HTMLElement) pageShell.dataset.profileTheme = nextTheme;
+      }
+    });
+    syncStoryPreview();
+    const handleModalKeydown = (event) => {
+      if (!backdrop.parentElement) return;
+      if (event.key === "Escape") {
+        close();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusable = Array.from(modal.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+        .filter((element) => element instanceof HTMLElement && !element.hidden);
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    const close = (closeOptions = {}) => {
+      document.removeEventListener("keydown", handleModalKeydown);
+      if (closeOptions.restoreTheme !== false && pageShell instanceof HTMLElement) {
+        pageShell.dataset.profileTheme = selectedTheme;
+      }
       closePublicProfileEditModal(backdrop, restoreFocusTo);
     };
     closeButton.addEventListener("click", close);
@@ -11630,7 +11801,7 @@
     backdrop.addEventListener("click", (event) => {
       if (event.target === backdrop) close();
     });
-    document.addEventListener("keydown", handleEscape);
+    document.addEventListener("keydown", handleModalKeydown);
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -11642,6 +11813,10 @@
         const payload = {
           display_name: displayNameInput.value.trim(),
           bio: bioInput.value.trim(),
+          about: aboutInput.value.trim(),
+          streamsuites_theme_preset: normalizeProfileThemePreset(
+            form.querySelector('input[name="streamsuites_theme_preset"]:checked')?.value
+          ),
           anonymous: visibilityInput.checked,
           social_links: collectPublicProfileEditorSocialLinks(form, profile.socialLinks)
         };
@@ -11656,7 +11831,7 @@
         const updated = await saveMyPublicProfile(payload);
         status.textContent = "Saved";
         status.dataset.tone = "success";
-        close();
+        close({ restoreTheme: false });
         if (typeof options.onSaved === "function") options.onSaved(updated);
       } catch (error) {
         status.textContent = error instanceof Error ? error.message : "Save failed";
@@ -11667,7 +11842,14 @@
       }
     });
 
-    window.requestAnimationFrame(() => displayNameInput.focus());
+    window.requestAnimationFrame(() => {
+      if (options.focusField === "about") {
+        aboutInput.focus();
+        aboutInput.scrollIntoView({ block: "center" });
+        return;
+      }
+      displayNameInput.focus();
+    });
   }
 
   function collectProfileArtifacts(data, ...profileKeys) {
@@ -11770,10 +11952,8 @@
   }
 
   function getProfileHeaderSocialVisibleLimit() {
-    if (window.matchMedia("(max-width: 520px)").matches) return 3;
-    if (window.matchMedia("(max-width: 760px)").matches) return 4;
-    if (window.matchMedia("(max-width: 1080px)").matches) return 6;
-    return 10;
+    if (window.matchMedia("(max-width: 520px)").matches) return 2;
+    return 3;
   }
 
   function buildProfileHeaderSocialRail(socialLinks) {
@@ -12000,11 +12180,9 @@
     const left = create("a", "profile-overlay-brand");
     left.href = "/community/";
     left.setAttribute("aria-label", "Community home");
-    const logo = create("img", "profile-overlay-brand-logo");
-    logo.src = "/assets/logos/ssnewcon.webp";
-    logo.alt = "";
-    logo.loading = "eager";
-    logo.decoding = "async";
+    const logo = create("span", "profile-overlay-brand-logo");
+    logo.setAttribute("aria-hidden", "true");
+    logo.appendChild(create("span", "profile-overlay-brand-glyph"));
     const brandText = create("span", "profile-overlay-brand-text");
     brandText.append(
       create("span", "profile-overlay-brand-text-default", "StreamSuites™"),
@@ -12023,14 +12201,8 @@
       editButton.addEventListener("click", () => options.openProfileEditor(profile));
       right.appendChild(editButton);
     }
-    const socialEntries = collectOrderedSocialEntries(profile?.socialLinks);
-    if (socialEntries.length) {
-      const presenceLink = create("a", "profile-header-presence-link", "Presence");
-      presenceLink.href = "#profile-presence";
-      presenceLink.prepend(createIcon(UI_ICON_MAP.social, "profile-header-presence-icon"));
-      presenceLink.setAttribute("aria-label", `View ${formatNumber(socialEntries.length)} public platform link${socialEntries.length === 1 ? "" : "s"}`);
-      right.appendChild(presenceLink);
-    }
+    const socialRail = buildProfileHeaderSocialRail(profile?.socialLinks);
+    if (socialRail) right.appendChild(socialRail);
     right.appendChild(
       buildProfileHeaderAccountWidget(authState, {
         openAuthModal: options.openAuthModal,
@@ -12099,12 +12271,8 @@
       primaryAction.target = "_blank";
       primaryAction.rel = "noopener noreferrer";
       primaryAction.prepend(createIcon("/assets/icons/ui/tvlive.svg", "profile-action-icon"));
-    } else if (artifacts.length) {
-      primaryAction = create("a", "profile-primary-action", "Explore public work");
-      primaryAction.href = "#profile-artifacts";
-      primaryAction.prepend(createIcon("/assets/icons/ui/clipcards.svg", "profile-action-icon"));
     } else if (socialEntries[0]) {
-      primaryAction = create("a", "profile-primary-action", `Open ${socialEntries[0].label}`);
+      primaryAction = create("a", "profile-primary-action", `View on ${socialEntries[0].label}`);
       primaryAction.href = socialEntries[0].url;
       primaryAction.target = "_blank";
       primaryAction.rel = "noopener noreferrer";
@@ -12113,6 +12281,10 @@
       icon.alt = "";
       icon.setAttribute("aria-hidden", "true");
       primaryAction.prepend(icon);
+    } else if (artifacts.length) {
+      primaryAction = create("a", "profile-primary-action", "Explore public work");
+      primaryAction.href = "#profile-artifacts";
+      primaryAction.prepend(createIcon("/assets/icons/ui/clipcards.svg", "profile-action-icon"));
     } else if (canonicalUrl) {
       primaryAction = create("button", "profile-primary-action", "Copy profile link");
       primaryAction.type = "button";
@@ -12196,9 +12368,12 @@
     const hero = create("section", "profile-cinematic-hero");
     const coverUrl = String(profile?.bannerImageUrl || profile?.coverImageUrl || DEFAULT_PROFILE_COVER).trim() || DEFAULT_PROFILE_COVER;
     const backgroundUrl = String(profile?.backgroundImageUrl || "").trim();
+    const hasCustomCover = coverUrl !== DEFAULT_PROFILE_COVER;
     hero.style.setProperty("--profile-cover-image", `url("${coverUrl.replace(/"/g, "%22")}")`);
     hero.style.setProperty("--profile-background-image", backgroundUrl ? `url("${backgroundUrl.replace(/"/g, "%22")}")` : "none");
-    hero.dataset.profileMedia = backgroundUrl ? "background" : coverUrl !== DEFAULT_PROFILE_COVER ? "cover" : "fallback";
+    hero.dataset.profileMedia = backgroundUrl ? "background" : hasCustomCover ? "cover" : "fallback";
+    hero.dataset.profileCover = hasCustomCover ? "custom" : "fallback";
+    hero.dataset.profileBackground = backgroundUrl ? "custom" : "none";
     hero.setAttribute("aria-labelledby", "profile-title");
 
     hero.appendChild(buildStandaloneProfileHeader(profile, authState, options));
@@ -12221,6 +12396,7 @@
     avatar.setAttribute("aria-label", `${profile?.displayName || "Public user"} profile image`);
 
     const identity = create("div", "profile-hero-identity");
+    identity.id = "profile-bio";
     identity.appendChild(create("p", "profile-hero-eyebrow", "STREAMSUITES PUBLIC IDENTITY"));
     const name = create("h1", "profile-hero-name", profile?.displayName || "Public User");
     name.id = "profile-title";
@@ -12229,9 +12405,11 @@
     const badgeRow = buildBadgeSuffix(profile, { includeRoleChip: false });
     badgeRow.classList.add("profile-hero-badges");
     badgeRow.hidden = badgeRow.childElementCount === 0;
+    const metaLine = create("div", "profile-hero-meta-line");
+    if (!badgeRow.hidden) metaLine.appendChild(badgeRow);
+    if (handle) metaLine.appendChild(handle);
     identity.appendChild(name);
-    if (handle) identity.appendChild(handle);
-    if (!badgeRow.hidden) identity.appendChild(badgeRow);
+    if (metaLine.childElementCount) identity.appendChild(metaLine);
 
     const bioText = String(profile?.bio || "").trim();
     if (bioText) {
@@ -12255,11 +12433,11 @@
       });
     }
 
+    content.append(avatar, identity);
     if (!options.messageMode) {
       const chips = buildStandaloneRoleChips(profile);
-      if (!chips.hidden) identity.appendChild(chips);
+      if (!chips.hidden) content.appendChild(chips);
     }
-    content.append(avatar, identity);
     stage.appendChild(content);
     if (!options.messageMode) stage.appendChild(buildProfileHeroActionRail(profile, { ...options, authState }));
     hero.appendChild(stage);
@@ -12318,19 +12496,26 @@
     return header;
   }
 
-  function buildProfileAboutSection(profile) {
+  function buildProfileAboutSection(profile, canEdit, options = {}) {
     const section = create("section", "profile-utility-section profile-about-section");
     section.id = "profile-about";
     section.setAttribute("aria-labelledby", "profile-about-title");
     const header = buildProfileSectionHeading("Profile story", "About");
     header.querySelector("h2").id = "profile-about-title";
-    const bio = String(profile?.bio || "").trim();
-    const body = create(
+    if (canEdit && typeof options.openProfileEditor === "function") {
+      const editButton = create("button", "profile-section-edit-button", "Edit story");
+      editButton.type = "button";
+      editButton.prepend(createIcon(UI_ICON_MAP.edit, "profile-section-edit-icon"));
+      editButton.addEventListener("click", () => options.openProfileEditor(profile, { focusField: "about" }));
+      header.appendChild(editButton);
+    }
+    const aboutText = String(profile?.about || "").trim();
+    const copy = create(
       "p",
-      bio ? "profile-about-copy" : "profile-about-copy profile-about-copy--empty",
-      bio || "This profile has not published an about story yet."
+      `profile-about-copy${aboutText ? "" : " profile-about-copy--empty"}`,
+      aboutText || "This profile has not published an expanded About story yet."
     );
-    section.append(header, body);
+    section.append(header, copy);
     return section;
   }
 
@@ -12338,6 +12523,7 @@
     const nav = create("nav", "profile-section-nav");
     nav.setAttribute("aria-label", "Profile sections");
     const links = [
+      ["#profile-bio", "Bio"],
       ["#profile-about", "About"],
       ["#profile-live", profileIsLive(profile) ? "Live now" : "Stream"],
       ["#profile-artifacts", artifacts.length ? `Public work · ${formatNumber(artifacts.length)}` : "Public work"],
@@ -13150,6 +13336,7 @@
     const socialEntries = collectOrderedSocialEntries(profile?.socialLinks);
     const isContentRich = Boolean(
       String(profile?.bio || "").trim() ||
+      String(profile?.about || "").trim() ||
       profileArtifacts.length ||
       socialEntries.length ||
       hasUsableProfileStream(profile) ||
@@ -13158,15 +13345,14 @@
     );
     profileCard.dataset.profileDensity = isContentRich ? "rich" : "sparse";
 
-    const primaryGrid = create("div", "profile-body-grid");
-    primaryGrid.append(
-      buildProfileAboutSection(profile),
-      buildProfileOverviewPanel(profile, profileArtifacts, options.helpers || null)
-    );
+    profileCard.appendChild(buildProfileAboutSection(profile, canEdit, options));
+
+    const primaryGrid = create("div", "profile-body-grid profile-body-grid--overview-only");
+    primaryGrid.appendChild(buildProfileOverviewPanel(profile, profileArtifacts, options.helpers || null));
     profileCard.appendChild(primaryGrid);
     profileCard.appendChild(buildLatestStreamSection(profile, options.helpers || null));
-    profileCard.appendChild(buildProfileMiniArtifactGallery(profileArtifacts, canEdit, options.helpers || null));
     profileCard.appendChild(buildProfileBadgeGallerySection(profile));
+    profileCard.appendChild(buildProfileMiniArtifactGallery(profileArtifacts, canEdit, options.helpers || null));
     profileCard.appendChild(buildProfileGameCompetitionSection(profile, { canEdit }));
     profileCard.appendChild(buildProfileScopedProgressionSection(profile));
 
@@ -13220,15 +13406,13 @@
 
   function renderStandaloneProfileLoadingUtilityBody(profileCard) {
     clear(profileCard);
-    const primaryGrid = create("div", "profile-body-grid");
-    primaryGrid.append(
-      buildProfileLoadingSection("About", 3),
-      buildProfileLoadingSection("Profile overview", 4)
-    );
+    profileCard.appendChild(buildProfileLoadingSection("About", 3));
+    const primaryGrid = create("div", "profile-body-grid profile-body-grid--overview-only");
+    primaryGrid.appendChild(buildProfileLoadingSection("Profile overview", 4));
     profileCard.appendChild(primaryGrid);
     profileCard.appendChild(buildProfileLoadingSection("Latest stream", 2));
-    profileCard.appendChild(buildProfileLoadingSection("Public work", 3));
     profileCard.appendChild(buildProfileLoadingSection("Public badges", 3));
+    profileCard.appendChild(buildProfileLoadingSection("Public work", 3));
     profileCard.appendChild(buildProfileLoadingSection("Game & Competition", 4));
     const grid = create("div", "profile-utility-grid profile-utility-grid--slim");
     grid.append(buildProfileLoadingSection("Social links", 3), buildProfileLoadingSection("Share Links", 2));
@@ -13239,6 +13423,7 @@
     cleanupStandaloneProfileInteractions();
     clear(host);
     const shell = create("div", "standalone-profile-shell");
+    shell.dataset.profileTheme = normalizeProfileThemePreset(profile?.streamsuitesThemePreset);
     const atmosphereUrl = String(profile?.backgroundImageUrl || profile?.bannerImageUrl || profile?.coverImageUrl || "").trim();
     shell.style.setProperty("--profile-atmosphere-image", atmosphereUrl ? `url("${atmosphereUrl.replace(/"/g, "%22")}")` : "none");
     shell.appendChild(buildStandaloneProfileHero(profile, options.authState || null, { ...options, canEditProfile: canEdit }));
@@ -13671,7 +13856,8 @@
           onMenuAction: ctx.handleAccountMenuAction,
           profileArtifacts,
           helpers: data.helpers,
-          openProfileEditor: (editableProfile) => openPublicProfileEditModal(editableProfile, {
+          openProfileEditor: (editableProfile, editorOptions = {}) => openPublicProfileEditModal(editableProfile, {
+            ...editorOptions,
             onSaved: (updatedPayload) => {
               profile = normalizeProfilePayload(updatedPayload, profile, profileCode);
               renderResolvedProfile(profile);

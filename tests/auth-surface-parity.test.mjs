@@ -327,12 +327,17 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /function renderStandaloneProfilePage\(host, profile, canEdit, options = \{\}\)/);
   assert.match(app, /buildStandaloneProfileHero\(profile, options\.authState \|\| null, \{ \.\.\.options, canEditProfile: canEdit \}\)/);
   assert.match(app, /const media = create\("div", "profile-hero-media"\)/);
+  assert.match(app, /identity\.id = "profile-bio"/);
+  assert.match(app, /function buildProfileAboutSection\(profile, canEdit, options = \{\}\)/);
+  assert.match(app, /section\.id = "profile-about"/);
+  assert.match(app, /String\(profile\?\.about \|\| ""\)\.trim\(\)/);
   assert.match(app, /buildStandaloneProfileHeader\(profile, authState, options = \{\}\)/);
-  assert.match(app, /const socialEntries = collectOrderedSocialEntries\(profile\?\.socialLinks\)/);
-  assert.match(app, /presenceLink\.href = "#profile-presence"/);
+  assert.match(app, /const socialRail = buildProfileHeaderSocialRail\(profile\?\.socialLinks\)/);
+  assert.match(app, /if \(socialRail\) right\.appendChild\(socialRail\)/);
   assert.match(app, /buildProfileHeaderAccountWidget\(authState/);
   assert.match(app, /profile-overlay-brand-logo/);
-  assert.match(app, /\/assets\/logos\/ssnewcon\.webp/);
+  assert.match(app, /profile-overlay-brand-glyph/);
+  assert.doesNotMatch(app, /\/assets\/logos\/ssnewcon\.webp/);
   assert.doesNotMatch(app, /profile-overlay-brand-icon/);
   assert.match(app, /profile-overlay-brand-text-default", "StreamSuites™"/);
   assert.match(app, /profile-overlay-brand-text-hover", "COMMUNITY HOME"/);
@@ -345,6 +350,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.ok(standaloneLoadingBlock, "standalone profile loading utility body should exist");
   assert.match(standaloneUtilityBlock, /profileCard\.appendChild\(buildLatestStreamSection\(profile, options\.helpers \|\| null\)\)/);
   assert.match(standaloneUtilityBlock, /buildProfileOverviewPanel\(profile, profileArtifacts/);
+  assert.match(standaloneUtilityBlock, /profileCard\.appendChild\(buildProfileAboutSection\(profile, canEdit, options\)\)/);
   assert.match(standaloneUtilityBlock, /buildProfileMiniArtifactGallery\(profileArtifacts, canEdit/);
   assert.match(standaloneUtilityBlock, /profileCard\.appendChild\(buildProfileBadgeGallerySection\(profile\)\)[\s\S]*profileCard\.appendChild\(buildProfileGameCompetitionSection\(profile, \{ canEdit \}\)\)/);
   assert.match(standaloneUtilityBlock, /const socialGallery = buildProfileSocialGallerySection\(profile\)/);
@@ -352,6 +358,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(standaloneUtilityBlock, /buildProfileGameCompetitionSection\(profile, \{ canEdit \}\)/);
   assert.match(standaloneUtilityBlock, /buildProfileShareSection\(profile, \{ compact: true \}\)/);
   assert.match(standaloneUtilityBlock, /buildCollapsedAuthorityRequestPanel\(resolveProfileAuthorityContext\(profile\)/);
+  assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("About", 3\)/);
   assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("Profile overview", 4\)/);
   assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("Public work", 3\)/);
   assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("Public badges", 3\)/);
@@ -445,6 +452,16 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /@media \(max-width: 560px\)[\s\S]*\.profile-header-account \.account-text,[\s\S]*\.profile-header-account \.account-name/);
   assert.match(css, /@media \(max-width: 560px\)[\s\S]*\.profile-header-account \.account-pill\s*\{[\s\S]*justify-content:\s*center/);
   assert.match(css, /\.profile-overlay-brand-logo/);
+  assert.match(profileCss, /\.profile-overlay-brand-glyph\s*\{[\s\S]*streamsuites-filled\.svg/);
+  assert.match(profileCss, /\.profile-overlay-brand\s*\{[\s\S]*border:\s*0;[\s\S]*background:\s*transparent/);
+  assert.match(profileCss, /\.profile-overlay-brand-text\s*\{[\s\S]*font-weight:\s*800/);
+  assert.match(profileCss, /@keyframes profile-brand-breathe/);
+  assert.match(profileCss, /@keyframes profile-brand-spectrum/);
+  assert.match(profileCss, /--profile-gradient-a:\s*#6257ff/);
+  assert.match(profileCss, /--profile-gradient-hover-a:\s*#4ac7ff/);
+  assert.match(profileCss, /\.profile-overlay-brand-glyph\s*\{[\s\S]*var\(--profile-gradient-a\)[\s\S]*var\(--profile-gradient-c\)/);
+  assert.match(profileCss, /\.profile-overlay-brand:hover \.profile-overlay-brand-glyph,[\s\S]*var\(--profile-gradient-hover-a\)/);
+  assert.match(profileCss, /data-profile-theme="frosted_silver"/);
   assert.match(css, /\.profile-overlay-brand-text\s*\{[\s\S]*letter-spacing:\s*0\.12em/);
   assert.match(css, /\.profile-overlay-brand-text\s*\{[\s\S]*text-transform:\s*none/);
   assert.match(css, /\.profile-overlay-brand-text-default\s*\{[\s\S]*font-size:\s*1\.25em/);
@@ -458,6 +475,10 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /\.account-avatar-icon\s*\{[\s\S]*background-color:\s*currentColor/);
   assert.match(css, /\.profile-hero-trim/);
   assert.match(css, /\.profile-hero-bio\s*\{[\s\S]*-webkit-line-clamp:\s*4/);
+  assert.match(profileCss, /\.profile-about-copy\s*\{[\s\S]*white-space:\s*pre-line/);
+  assert.match(profileCss, /\.profile-edit-modal--profile/);
+  assert.match(profileCss, /\.profile-edit-workspace/);
+  assert.match(profileCss, /\.profile-edit-media--hero/);
   assert.match(css, /\.profile-utility-panel\s*\{[\s\S]*backdrop-filter:\s*blur\(18px\) saturate\(122%\)/);
   assert.match(css, /\.profile-body-grid/);
   assert.match(css, /\.profile-stream-collapsible/);
@@ -512,7 +533,14 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /\.profile-footer-status-slot/);
   assert.match(profileCss, /\.profile-hero-media\s*\{[\s\S]*height:\s*clamp\(220px, 18vw, 260px\)/);
   assert.match(profileCss, /\.profile-hero-stage\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\) minmax\(310px, 390px\)/);
+  assert.match(profileCss, /\.profile-hero-avatar\.creator-avatar\s*\{[\s\S]*grid-row:\s*1 \/ span 2;[\s\S]*margin-top:\s*0/);
+  assert.match(profileCss, /@media \(max-width: 820px\)[\s\S]*\.profile-hero-role-chips\s*\{[\s\S]*position:\s*absolute;[\s\S]*top:\s*1px;[\s\S]*right:\s*1px/);
+  assert.match(profileCss, /@media \(max-width: 560px\)[\s\S]*\.profile-hero-role-chips\s*\{[\s\S]*position:\s*static;[\s\S]*grid-column:\s*1;[\s\S]*grid-row:\s*2/);
   assert.match(profileCss, /\.profile-mini-artifact-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(profileCss, /\.profile-badge-gallery-card--moderator\s*\{ --badge-accent: 73, 155, 255; \}/);
+  assert.match(profileCss, /body\[data-public-page="public-profile-standalone"\] \.market-item-lightbox\s*\{/);
+  assert.match(profileCss, /body\[data-public-page="public-profile-standalone"\] \.item-info-popover\s*\{/);
+  assert.match(profileCss, /body\[data-public-page="public-profile-standalone"\] \.ss-badge-floating-tooltip\s*\{/);
   assert.match(profileCss, /\.profile-action-rail\s*\{/);
   assert.match(profileCss, /\.profile-section-nav\s*\{[\s\S]*position:\s*sticky/);
   assert.match(profileCss, /\.profile-utility-panel\s*\{[\s\S]*background:\s*transparent/);
@@ -679,6 +707,15 @@ test("standalone profiles keep canonical metadata and truthful adaptive states",
   assert.match(dataHub, /\.replace\(\/\[\^a-z0-9_-\]\+\/g, ""\)/);
   assert.match(profileFunction, /\.replace\(\/\[\^a-z0-9_-\]\+\/g, ""\)/);
   assert.match(profileFunction, /<link rel="canonical" href="\$\{escapeHtml\(meta\.ogUrl\)\}"/);
+});
+
+test("standalone profile detail flow keeps stream and identity ahead of public work", () => {
+  const app = read("js/public-pages-app.js");
+  const utilityBody = app.match(/function renderStandaloneProfileUtilityBody\(profileCard, profile, canEdit, options = \{\}\) \{[\s\S]*?\r?\n  \}\r?\n\r?\n  function buildProfileLoadingSection/)?.[0] || "";
+  const streamIndex = utilityBody.indexOf("buildLatestStreamSection");
+  const badgeIndex = utilityBody.indexOf("buildProfileBadgeGallerySection");
+  const artifactIndex = utilityBody.indexOf("buildProfileMiniArtifactGallery");
+  assert.ok(streamIndex >= 0 && badgeIndex > streamIndex && artifactIndex > badgeIndex);
 });
 
 test("public badge surfaces share the floating badge-tooltip helper", () => {

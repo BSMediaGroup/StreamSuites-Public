@@ -15,6 +15,24 @@
   };
 
   const FALLBACK_AVATAR = "/assets/logos/logocircle.png";
+  const PROFILE_THEME_PRESET_KEYS = new Set([
+    "violet_blue",
+    "crimson_magenta",
+    "emerald_cyan",
+    "gold_amber",
+    "royal_blue",
+    "magenta_violet",
+    "red_gold",
+    "green_gold",
+    "dark_slate",
+    "neutral_greytone",
+    "frosted_silver"
+  ]);
+
+  function normalizeProfileThemePreset(value) {
+    const normalized = String(value || "violet_blue").trim().toLowerCase().replace(/-/g, "_");
+    return PROFILE_THEME_PRESET_KEYS.has(normalized) ? normalized : "violet_blue";
+  }
 
   const PLATFORM_ICON_MAP = Object.freeze({
     rumble: "/assets/icons/rumble.svg",
@@ -1116,6 +1134,8 @@
         tier
       ),
       bio: raw.bio || raw.summary || "",
+      about: raw.about || raw.about_story || raw.aboutStory || "",
+      streamsuitesThemePreset: normalizeProfileThemePreset(raw.streamsuites_theme_preset || raw.streamsuitesThemePreset),
       socialLinks,
       coverImageUrl,
       bannerImageUrl,
