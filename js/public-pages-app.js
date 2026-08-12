@@ -129,7 +129,7 @@
   }
   const ABOUT_VIDEO_PROVIDER_FALLBACKS = Object.freeze([
     Object.freeze({ key: "youtube", label: "YouTube Video / Livestream", provider_label: "YouTube", kind: "video", helper_text: "Paste a specific YouTube video, livestream, Short, or embed URL.", example_url: "https://www.youtube.com/watch?v=uPfbuo6iP6Y", external_action_label: "Watch on YouTube", iframe_allow: "autoplay; encrypted-media; picture-in-picture; web-share; fullscreen" }),
-    Object.freeze({ key: "rumble", label: "Rumble Video / Livestream", provider_label: "Rumble", kind: "video", helper_text: "Paste a Rumble watch URL or a direct Rumble iframe URL.", example_url: "https://rumble.com/v7e1oni-birthday-attempt-3.html", external_action_label: "Watch on Rumble", iframe_allow: "autoplay; encrypted-media; picture-in-picture; fullscreen" }),
+    Object.freeze({ key: "rumble", label: "Rumble Video / Livestream", provider_label: "Rumble", kind: "video", helper_text: "Paste the direct Rumble iframe URL from Share → Embed. Watch-page IDs are not player IDs.", example_url: "https://rumble.com/embed/v7bv5ia/?pub=vmzw3", external_action_label: "Watch on Rumble", iframe_allow: "autoplay; encrypted-media; picture-in-picture; fullscreen" }),
     Object.freeze({ key: "kick", label: "Kick Live Channel", provider_label: "Kick", kind: "channel", helper_text: "Paste a Kick livestream channel URL. Kick VOD URLs are not supported.", example_url: "https://kick.com/yourchannel", external_action_label: "Open Kick channel", iframe_allow: "autoplay; encrypted-media; picture-in-picture; fullscreen" })
   ]);
   const ABOUT_VIDEO_PROVIDER_KEYS = new Set(ABOUT_VIDEO_PROVIDER_FALLBACKS.map((item) => item.key));
@@ -260,7 +260,7 @@
     layoutStack: "/assets/icons/ui/tablechart.svg",
     gallery: "/assets/icons/ui/cards.svg",
     list: "/assets/icons/ui/tablechart.svg",
-    edit: "/assets/icons/ui/edit.svg",
+    edit: "/assets/icons/ui/editcon.svg",
     share: "/assets/icons/ui/send.svg",
     visibility: "/assets/icons/ui/globe.svg",
     profile: "/assets/icons/ui/profile.svg",
@@ -11623,14 +11623,16 @@
     subtitle.id = "profile-edit-modal-subtitle";
     header.appendChild(subtitle);
 
+    const editorSections = [
+      ["profile-edit-identity", "Identity", "Identity", "/assets/icons/ui/idcardfilled.svg"],
+      ["profile-edit-story", "Story", "Bio & About", "/assets/icons/ui/profilecard.svg"],
+      ["profile-edit-style", "Style", "Page style", "/assets/icons/ui/formatpaint.svg"],
+      ["profile-edit-presence", "Presence", "Social links", "/assets/icons/ui/addlink.svg"]
+    ];
     const progress = create("div", "profile-edit-progress");
-    [
-      ["Identity", "/assets/icons/ui/idcardfilled.svg"],
-      ["Story", "/assets/icons/ui/profilecard.svg"],
-      ["Style", "/assets/icons/ui/formatpaint.svg"],
-      ["Presence", "/assets/icons/ui/addlink.svg"]
-    ].forEach(([label, iconPath], index) => {
+    editorSections.forEach(([targetId, label, _navLabel, iconPath], index) => {
       const item = create("span", `profile-edit-progress-item${index === 0 ? " is-active" : ""}`);
+      item.dataset.profileEditProgress = targetId;
       item.append(createIcon(iconPath, "profile-edit-progress-icon"), create("span", "", label));
       progress.appendChild(item);
     });
@@ -11672,6 +11674,7 @@
 
     const identity = create("section", "profile-edit-section profile-edit-panel");
     identity.id = "profile-edit-identity";
+    identity.tabIndex = -1;
     identity.append(
       create("p", "profile-edit-section-eyebrow", "01 / Identity"),
       create("h3", "", "Public identity"),
@@ -11696,6 +11699,7 @@
 
     const bioSection = create("section", "profile-edit-section profile-edit-panel");
     bioSection.id = "profile-edit-story";
+    bioSection.tabIndex = -1;
     bioSection.append(
       create("p", "profile-edit-section-eyebrow", "02 / Story"),
       create("h3", "", "Bio & About"),
@@ -11806,6 +11810,7 @@
 
     const styleSection = create("section", "profile-edit-section profile-edit-panel");
     styleSection.id = "profile-edit-style";
+    styleSection.tabIndex = -1;
     styleSection.append(
       create("p", "profile-edit-section-eyebrow", "03 / Style"),
       create("h3", "", "Feature gradient"),
@@ -11841,6 +11846,7 @@
 
     const socialSection = create("section", "profile-edit-section profile-edit-panel");
     socialSection.id = "profile-edit-presence";
+    socialSection.tabIndex = -1;
     socialSection.append(
       create("p", "profile-edit-section-eyebrow", "04 / Presence"),
       create("h3", "", "Social links"),
@@ -11865,14 +11871,11 @@
 
     const editorNav = create("nav", "profile-edit-nav");
     editorNav.setAttribute("aria-label", "Profile editor sections");
-    [
-      ["#profile-edit-identity", "Identity", "/assets/icons/ui/idcardfilled.svg"],
-      ["#profile-edit-story", "Bio & About", "/assets/icons/ui/profilecard.svg"],
-      ["#profile-edit-style", "Page style", "/assets/icons/ui/formatpaint.svg"],
-      ["#profile-edit-presence", "Social links", "/assets/icons/ui/addlink.svg"]
-    ].forEach(([href, label, iconPath]) => {
-      const link = create("a", "profile-edit-nav-link", label);
-      link.href = href;
+    editorSections.forEach(([targetId, _progressLabel, label, iconPath], index) => {
+      const link = create("a", `profile-edit-nav-link${index === 0 ? " is-active" : ""}`, label);
+      link.href = `#${targetId}`;
+      link.dataset.profileEditNav = targetId;
+      if (index === 0) link.setAttribute("aria-current", "location");
       link.prepend(createIcon(iconPath, "profile-edit-nav-icon"));
       editorNav.appendChild(link);
     });
@@ -11880,13 +11883,43 @@
     sections.append(identity, bioSection, styleSection, socialSection);
     const workspace = create("div", "profile-edit-workspace");
     workspace.append(editorNav, sections);
+    const scrollBody = create("div", "profile-edit-scrollbody");
+    scrollBody.append(media, workspace);
     const footer = create("div", "profile-edit-footer");
     footer.append(status, actions);
-    form.append(media, workspace, footer);
+    form.append(scrollBody, footer);
     modal.append(closeButton, header, form);
     backdrop.appendChild(modal);
     document.body.appendChild(backdrop);
     document.body.classList.add("modal-open");
+
+    const activateEditorSection = (targetId) => {
+      editorNav.querySelectorAll("[data-profile-edit-nav]").forEach((link) => {
+        const active = link.dataset.profileEditNav === targetId;
+        link.classList.toggle("is-active", active);
+        if (active) link.setAttribute("aria-current", "location");
+        else link.removeAttribute("aria-current");
+      });
+      progress.querySelectorAll("[data-profile-edit-progress]").forEach((item) => {
+        item.classList.toggle("is-active", item.dataset.profileEditProgress === targetId);
+      });
+    };
+    editorNav.addEventListener("click", (event) => {
+      const link = event.target.closest("[data-profile-edit-nav]");
+      if (!(link instanceof HTMLAnchorElement) || !editorNav.contains(link)) return;
+      const targetId = link.dataset.profileEditNav || "";
+      const target = modal.querySelector(`#${targetId}`);
+      if (!(target instanceof HTMLElement)) return;
+      event.preventDefault();
+      activateEditorSection(targetId);
+      const bodyRect = scrollBody.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      scrollBody.scrollTo({
+        top: Math.max(0, scrollBody.scrollTop + targetRect.top - bodyRect.top - 12),
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
+      });
+      target.focus({ preventScroll: true });
+    });
 
     const syncPreview = async (input, img) => {
       const dataUrl = await readPublicProfileEditorImageInput(input).catch(() => "");

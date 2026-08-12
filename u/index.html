@@ -9,21 +9,31 @@
   <link rel="stylesheet" href="/css/base.css" />
   <link rel="stylesheet" href="/css/theme-dark.css" />
   <link rel="stylesheet" href="/css/public-shell.css" />
-  <link rel="stylesheet" href="/css/public-profile.css?v=20260812-premium-profile" />
-  <link rel="stylesheet" href="/css/status-widget.css" />
+  <link rel="stylesheet" href="/css/public-profile.css?v=20260813-profile-editor-footer" />
+  <link rel="stylesheet" href="/css/status-widget.css?v=20260813-profile-footer" />
   <link rel="stylesheet" href="/assets/css/ss-profile-hovercard.css" />
 </head>
 <body data-public-page="public-profile-standalone">
   <a class="profile-skip-link" href="#profile-main">Skip to profile content</a>
   <div id="public-app"></div>
-  <footer class="profile-shell-footer" data-profile-shell-footer>
-    <div class="profile-footer-left">
-      <a class="profile-return-link" href="https://streamsuites.app/community/">
-        <span class="profile-return-icon" style="--icon-mask: url('/assets/icons/ui/community.svg')" aria-hidden="true"></span>
-        <span>Community Home</span>
-      </a>
+  <footer class="profile-site-footer" data-profile-shell-footer>
+    <div class="profile-site-footer__top">
+      <div class="profile-site-footer__brand">
+        <a class="profile-site-footer__brand-lockup" href="/" aria-label="StreamSuites home">
+          <img class="profile-site-footer__mark" src="/assets/logos/ssmainlogosq.webp" alt="" width="38" height="38" />
+          <img class="profile-site-footer__wordmark" src="/assets/logos/wmnew.webp" alt="StreamSuites" />
+        </a>
+        <p>Public profiles connect creator identity, live presence, and published work.</p>
+      </div>
+      <nav class="profile-site-footer__links" aria-label="Public profile footer">
+        <div><strong>This profile</strong><a href="#profile-bio">Bio</a><a href="#profile-about">About</a><a href="#profile-artifacts">Public work</a></div>
+        <div><strong>Discover</strong><a href="/community/">Community</a><a href="/live">Live</a><a href="/clips">Clips</a></div>
+        <div><strong>Resources</strong><a href="/support.html">Support</a><a href="/privacy.html">Privacy</a><a href="/status">Status</a></div>
+      </nav>
     </div>
-    <div class="profile-footer-center">
+    <div class="profile-site-footer__bottom">
+      <a class="profile-site-footer__copyright" href="https://brainstream.media" target="_blank" rel="noopener noreferrer">© 2026 Brainstream Media Group</a>
+      <div class="profile-site-footer__status" data-status-slot></div>
       <span class="footer-version-tooltip-container">
         <a class="footer-version profile-footer-version" href="/version" aria-describedby="profile-footer-version-tooltip">Loading version...</a>
         <span class="footer-version-tooltip" id="profile-footer-version-tooltip" role="tooltip">
@@ -33,15 +43,12 @@
         </span>
       </span>
     </div>
-    <div class="profile-footer-right">
-      <span class="profile-footer-status-slot" data-status-slot data-status-slot-mode="inline"></span>
-    </div>
   </footer>
 
   <script src="/js/utils/versioning.js" defer></script>
   <script src="/js/public-badge-ui.js" defer></script>
   <script src="/js/public-data-hub.js?v=20260812-premium-profile" defer></script>
-  <script src="/js/public-pages-app.js?v=20260812-premium-profile" defer></script>
+  <script src="/js/public-pages-app.js?v=20260813-profile-editor-footer" defer></script>
   <script src="/assets/js/ss-profile-hovercard.js" defer></script>
   <script src="/js/utils/version-stamp.js" defer></script>
   <script src="/js/status-widget.js" defer></script>

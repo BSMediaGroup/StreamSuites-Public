@@ -63,23 +63,6 @@
 .ss-status-widget[data-state="maintenance"] { --widget-state: var(--widget-maintenance); }
 .ss-status-widget[data-state="unknown"] { --widget-state: var(--widget-unknown); }
 
-body[data-public-page="public-profile-standalone"] .profile-footer-status-slot.ss-status-widget-host {
-  position: relative;
-  right: auto;
-  bottom: auto;
-  z-index: 1;
-  transition: none;
-}
-
-body[data-public-page="public-profile-standalone"] .profile-footer-status-slot .ss-status-indicator {
-  position: relative;
-}
-
-body[data-public-page="public-profile-standalone"] .profile-footer-status-slot .ss-status-widget__panel {
-  right: 0;
-  bottom: calc(100% + 12px);
-}
-
 .ss-status-widget__toggle {
   position: relative;
   display: grid;

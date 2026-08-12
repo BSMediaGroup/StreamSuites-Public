@@ -530,8 +530,11 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /\.profile-hero-role-chip::after,[\s\S]*\.profile-role-chip::before,[\s\S]*\.profile-badge-chip::before,[\s\S]*\.profile-badge-chip::after\s*\{/);
   assert.match(css, /@keyframes profile-role-chip-sheen/);
   assert.match(css, /\.profile-return-link/);
-  assert.match(css, /\.profile-shell-footer\s*\{[\s\S]*position:\s*fixed/);
-  assert.match(css, /\.profile-footer-status-slot/);
+  assert.match(profileCss, /\.profile-site-footer\s*\{[\s\S]*position:\s*relative/);
+  assert.match(profileCss, /\.profile-site-footer__top/);
+  assert.match(profileCss, /\.profile-site-footer__links/);
+  assert.match(profileCss, /\.profile-site-footer__bottom/);
+  assert.match(profileCss, /body\[data-public-page="public-profile-standalone"\]\.modal-open :is\(\.ss-status-widget-host, \[data-status-widget-host\]\)/);
   assert.match(profileCss, /\.profile-hero-media\s*\{[\s\S]*height:\s*clamp\(220px, 18vw, 260px\)/);
   assert.match(profileCss, /\.profile-hero-stage\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\) minmax\(310px, 390px\)/);
   assert.match(profileCss, /\.profile-hero-avatar\.creator-avatar\s*\{[\s\S]*grid-row:\s*1 \/ span 2;[\s\S]*margin-top:\s*0/);
@@ -548,13 +551,17 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(profileCss, /@media \(max-width: 560px\)/);
   assert.match(profileCss, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(profileCss, /@media \(forced-colors: active\)/);
-  assert.match(statusCss, /body\[data-public-page="public-profile-standalone"\] \.profile-footer-status-slot \.ss-status-indicator\s*\{[\s\S]*position:\s*relative/);
+  assert.doesNotMatch(statusCss, /body\[data-public-page="public-profile-standalone"\] \.profile-footer-status-slot/);
 
-  assert.match(profileHtml, /href="\/css\/public-profile\.css\?v=20260812-premium-profile"/);
+  assert.match(profileHtml, /href="\/css\/public-profile\.css\?v=20260813-profile-editor-footer"/);
+  assert.match(profileHtml, /href="\/css\/status-widget\.css\?v=20260813-profile-footer"/);
+  assert.match(profileHtml, /src="\/js\/public-pages-app\.js\?v=20260813-profile-editor-footer"/);
   assert.match(profileHtml, /class="profile-skip-link" href="#profile-main"/);
-  assert.match(profileHtml, /<footer class="profile-shell-footer" data-profile-shell-footer>/);
-  assert.match(profileHtml, /data-status-slot data-status-slot-mode="inline"/);
-  assert.match(profileHtml, /Community Home/);
+  assert.match(profileHtml, /<footer class="profile-site-footer" data-profile-shell-footer>/);
+  assert.match(profileHtml, /class="profile-site-footer__status" data-status-slot/);
+  assert.doesNotMatch(profileHtml, /data-status-slot-mode="inline"/);
+  assert.match(profileHtml, /Public work/);
+  assert.match(profileHtml, /Community/);
 });
 
 test("standalone /u profile hydration keeps runtime profile media ahead of local fallback data", () => {

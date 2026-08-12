@@ -19,6 +19,8 @@ test("public About renderer selects text or one Runtime-approved video iframe", 
   assert.match(app, /payload\.about_video_provider\s*=/);
   assert.match(app, /payload\.about_video_source_url\s*=/);
   assert.match(app, /remove_about_video/);
+  assert.match(app, /https:\/\/rumble\.com\/embed\/v7bv5ia\/\?pub=vmzw3/);
+  assert.doesNotMatch(app, /Paste a Rumble watch URL/);
   assert.doesNotMatch(app, /innerHTML\s*=\s*.*iframe/i);
 });
 

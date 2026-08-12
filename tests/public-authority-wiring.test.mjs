@@ -227,10 +227,14 @@ test("public profile owner editor stays runtime-backed and uses canonical social
   assert.match(app, /key:\s*"frosted_silver"/);
   assert.match(app, /modal\.dataset\.profileTheme = nextTheme/);
   assert.match(app, /profile-edit-workspace/);
+  assert.match(app, /profile-edit-scrollbody/);
+  assert.match(app, /editorNav\.addEventListener\("click"/);
+  assert.match(app, /event\.preventDefault\(\);[\s\S]*scrollBody\.scrollTo/);
+  assert.match(app, /target\.focus\(\{ preventScroll: true \}\)/);
   assert.match(app, /handleModalKeydown/);
   assert.match(app, /profile-edit-open-button/);
-  assert.match(app, /edit:\s*"\/assets\/icons\/ui\/edit\.svg"/);
-  assert.ok(fs.existsSync(path.join(repoRoot, "assets/icons/ui/edit.svg")));
+  assert.match(app, /edit:\s*"\/assets\/icons\/ui\/editcon\.svg"/);
+  assert.ok(fs.existsSync(path.join(repoRoot, "assets/icons/ui/editcon.svg")));
   assert.match(app, /profile-edit-open-button profile-edit-open-button--header-icon/);
   assert.match(app, /editButton\.dataset\.profileTooltip = "Edit profile"/);
   assert.doesNotMatch(app, /const manageButton = create\("button", "profile-secondary-action", "Manage"\)/);
@@ -242,6 +246,9 @@ test("public profile owner editor stays runtime-backed and uses canonical social
   assert.match(profileCss, /\.profile-edit-modal--profile/);
   assert.match(profileCss, /\.profile-edit-open-button--header-icon::after/);
   assert.match(profileCss, /\.profile-edit-footer/);
+  assert.match(profileCss, /\.profile-edit-form\s*\{[\s\S]*grid-template-rows:\s*minmax\(0, 1fr\) auto/);
+  assert.match(profileCss, /\.profile-edit-scrollbody\s*\{[\s\S]*overflow:\s*auto/);
+  assert.match(profileCss, /\.profile-edit-footer\s*\{[\s\S]*position:\s*relative/);
 });
 
 test("public profile primary visitor action prefers the highest-priority saved platform", () => {

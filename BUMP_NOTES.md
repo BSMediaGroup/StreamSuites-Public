@@ -6,6 +6,17 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-13 - Profile editor framing, footer, status, and Rumble input correction
+
+- Reframed the owner editor as a fixed-height dialog grid with one independently scrolling content body and a stable action row. Sidebar links now scroll that body without mutating the page hash, synchronize active section/progress state, and retain keyboard focus semantics; desktop and mobile action controls remain reachable without the former blank lower region.
+- Replaced the fixed slim profile footer with a compact normal-flow footer derived from the main landing page's lockup, grouped links, copyright, and version treatment. The profile-only inline status override was removed, so the shared status widget once again floats at the viewport edge and uses its existing homepage geometry to rise 12px above the footer when it enters view.
+- Updated the Rumble fallback guidance in the on-page editor to request the direct iframe URL from Rumble Share → Embed. Runtime/Auth validates that deterministic player shape without a provider fetch; Public still never mints or trusts a player URL from raw input. No deployment, version/build change, commit, or push was performed.
+- Validation passed all 172 Public Node tests, JavaScript syntax, and rendered Chromium checks at 1366×768, 768×1024, and 390×844. The modal measured exactly within each viewport with zero horizontal overflow; Page Style navigation changed the modal scroll position from 0 to 1239px while leaving `location.hash` empty; the shared status widget measured 18px from the viewport normally and 12.7px above the visible footer at page end. A mocked Runtime-approved Rumble projection created exactly one iframe at `https://rumble.com/embed/v7bv5ia/?pub=vmzw3`; live Rumble playback was not claimed.
+
+### 2026-08-13 - Public profile edit icon correction
+
+- Replaced the public profile owner's former generic edit glyph with the supplied `assets/icons/ui/editcon.svg` asset in both edit-profile entry points. The existing button labels, tooltip, focus behavior, modal workflow, layout, and Runtime/Auth contract are unchanged; `editcon-filled.svg` remains unused. No deployment, version/build change, commit, or push was performed.
+
 ### 2026-08-13 - Safe video-based extended About presentation
 
 #### Technical notes
