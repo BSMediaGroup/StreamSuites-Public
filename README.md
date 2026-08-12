@@ -431,6 +431,7 @@ StreamSuites-Public/
         └── ui/
             ├── clipboard.svg
             ├── cmdkey.svg
+            ├── edit.svg
             ├── filters.svg
             ├── findmehereicon.svg
             ├── search.svg

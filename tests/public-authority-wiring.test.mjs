@@ -223,17 +223,24 @@ test("public profile owner editor stays runtime-backed and uses canonical social
   assert.match(app, /aboutInput\.dataset\.profileEditAbout = "true"/);
   assert.match(app, /about: aboutInput\.value\.trim\(\)/);
   assert.match(app, /streamsuites_theme_preset:\s*normalizeProfileThemePreset/);
+  assert.match(app, /key:\s*"signal_red"/);
   assert.match(app, /key:\s*"frosted_silver"/);
   assert.match(app, /modal\.dataset\.profileTheme = nextTheme/);
   assert.match(app, /profile-edit-workspace/);
   assert.match(app, /handleModalKeydown/);
   assert.match(app, /profile-edit-open-button/);
+  assert.match(app, /edit:\s*"\/assets\/icons\/ui\/edit\.svg"/);
+  assert.ok(fs.existsSync(path.join(repoRoot, "assets/icons/ui/edit.svg")));
+  assert.match(app, /profile-edit-open-button profile-edit-open-button--header-icon/);
+  assert.match(app, /editButton\.dataset\.profileTooltip = "Edit profile"/);
+  assert.doesNotMatch(app, /const manageButton = create\("button", "profile-secondary-action", "Manage"\)/);
   assert.match(app, /canEditProfile: canEdit/);
   assert.match(app, /if \(canEdit && \(error\?\.status === 401 \|\| error\?\.status === 403\)\)/);
   assert.match(css, /\.profile-edit-modal-backdrop/);
   assert.match(css, /\.profile-edit-media/);
   assert.match(css, /\.profile-edit-social-grid/);
   assert.match(profileCss, /\.profile-edit-modal--profile/);
+  assert.match(profileCss, /\.profile-edit-open-button--header-icon::after/);
   assert.match(profileCss, /\.profile-edit-footer/);
 });
 

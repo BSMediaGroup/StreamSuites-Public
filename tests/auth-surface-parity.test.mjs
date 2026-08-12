@@ -457,8 +457,9 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(profileCss, /\.profile-overlay-brand-text\s*\{[\s\S]*font-weight:\s*800/);
   assert.match(profileCss, /@keyframes profile-brand-breathe/);
   assert.match(profileCss, /@keyframes profile-brand-spectrum/);
-  assert.match(profileCss, /--profile-gradient-a:\s*#6257ff/);
-  assert.match(profileCss, /--profile-gradient-hover-a:\s*#4ac7ff/);
+  assert.match(profileCss, /--profile-gradient-a:\s*#7468ff/);
+  assert.match(profileCss, /--profile-gradient-hover-a:\s*#6aa8ff/);
+  assert.match(profileCss, /--profile-gradient-hover-c:\s*#c2a4ff/);
   assert.match(profileCss, /\.profile-overlay-brand-glyph\s*\{[\s\S]*var\(--profile-gradient-a\)[\s\S]*var\(--profile-gradient-c\)/);
   assert.match(profileCss, /\.profile-overlay-brand:hover \.profile-overlay-brand-glyph,[\s\S]*var\(--profile-gradient-hover-a\)/);
   assert.match(profileCss, /data-profile-theme="frosted_silver"/);

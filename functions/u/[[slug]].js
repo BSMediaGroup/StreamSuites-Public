@@ -96,7 +96,7 @@ function normalizeProfilePayload(payload, slug, requestUrl) {
   const bio = pickString(source.bio, source.summary, source.description);
   const about = pickString(source.about, source.about_story, source.aboutStory);
   const allowedThemePresets = new Set([
-    "violet_blue", "crimson_magenta", "emerald_cyan", "gold_amber",
+    "violet_blue", "crimson_magenta", "signal_red", "emerald_cyan", "gold_amber",
     "royal_blue", "magenta_violet", "red_gold", "green_gold",
     "dark_slate", "neutral_greytone", "frosted_silver"
   ]);

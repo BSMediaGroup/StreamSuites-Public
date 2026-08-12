@@ -18,6 +18,7 @@
   const PROFILE_THEME_PRESET_KEYS = new Set([
     "violet_blue",
     "crimson_magenta",
+    "signal_red",
     "emerald_cyan",
     "gold_amber",
     "royal_blue",
