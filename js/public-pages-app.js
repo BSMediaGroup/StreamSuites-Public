@@ -110,7 +110,7 @@
   const PROFILE_THEME_PRESETS = Object.freeze([
     Object.freeze({ key: "violet_blue", label: "Violet Blue", description: "Signature violet and electric blue", colors: ["#7468ff", "#a76ef2", "#709eff"] }),
     Object.freeze({ key: "crimson_magenta", label: "Crimson Magenta", description: "Deep red with vivid magenta", colors: ["#ef355d", "#e83fb5", "#8f4cff"] }),
-    Object.freeze({ key: "signal_red", label: "Signal Red", description: "Focused red with deep scarlet contrast", colors: ["#df2838", "#ff4655", "#861b2b"] }),
+    Object.freeze({ key: "signal_red", label: "Signal Red", description: "Bold signal red with deeper scarlet contrast", colors: ["#f02038", "#ff3348", "#580817"] }),
     Object.freeze({ key: "emerald_cyan", label: "Emerald Cyan", description: "Fresh emerald with cool cyan", colors: ["#16b878", "#28d7aa", "#36bce8"] }),
     Object.freeze({ key: "gold_amber", label: "Gold Amber", description: "Warm gold with polished amber", colors: ["#f0b83e", "#ffcf5c", "#f07a36"] }),
     Object.freeze({ key: "royal_blue", label: "Royal Blue", description: "Saturated blue with indigo depth", colors: ["#3568ff", "#5398ff", "#634cff"] }),
@@ -11603,6 +11603,7 @@
     const backdrop = create("div", "profile-edit-modal-backdrop is-open");
     const modal = create("section", "profile-edit-modal profile-edit-modal--profile");
     modal.dataset.profileTheme = selectedTheme;
+    document.body.dataset.profileTheme = selectedTheme;
     modal.setAttribute("role", "dialog");
     modal.setAttribute("aria-modal", "true");
     modal.setAttribute("aria-labelledby", "profile-edit-modal-title");
@@ -11892,6 +11893,10 @@
     backdrop.appendChild(modal);
     document.body.appendChild(backdrop);
     document.body.classList.add("modal-open");
+    modal.addEventListener("scroll", () => {
+      if (modal.scrollTop !== 0) modal.scrollTop = 0;
+      if (modal.scrollLeft !== 0) modal.scrollLeft = 0;
+    }, { passive: true });
 
     const activateEditorSection = (targetId) => {
       editorNav.querySelectorAll("[data-profile-edit-nav]").forEach((link) => {
@@ -12016,6 +12021,7 @@
         const nextTheme = normalizeProfileThemePreset(input.value);
         media.dataset.profileTheme = nextTheme;
         modal.dataset.profileTheme = nextTheme;
+        document.body.dataset.profileTheme = nextTheme;
         if (pageShell instanceof HTMLElement) pageShell.dataset.profileTheme = nextTheme;
       }
     });
@@ -12045,6 +12051,7 @@
       if (closeOptions.restoreTheme !== false && pageShell instanceof HTMLElement) {
         pageShell.dataset.profileTheme = selectedTheme;
       }
+      if (closeOptions.restoreTheme !== false) document.body.dataset.profileTheme = selectedTheme;
       closePublicProfileEditModal(backdrop, restoreFocusTo);
     };
     closeButton.addEventListener("click", close);
@@ -12101,13 +12108,18 @@
     });
 
     window.requestAnimationFrame(() => {
+      modal.scrollTop = 0;
+      backdrop.scrollTop = 0;
       if (options.focusField === "about") {
         const target = initialAboutMode === "video" ? videoUrlInput : aboutInput;
-        target.focus();
-        target.scrollIntoView({ block: "center" });
+        const bodyRect = scrollBody.getBoundingClientRect();
+        const targetRect = target.getBoundingClientRect();
+        scrollBody.scrollTop = Math.max(0, scrollBody.scrollTop + targetRect.top - bodyRect.top - 24);
+        target.focus({ preventScroll: true });
         return;
       }
-      displayNameInput.focus();
+      scrollBody.scrollTop = 0;
+      displayNameInput.focus({ preventScroll: true });
     });
   }
 
@@ -13739,7 +13751,9 @@
     cleanupStandaloneProfileInteractions();
     clear(host);
     const shell = create("div", "standalone-profile-shell");
-    shell.dataset.profileTheme = normalizeProfileThemePreset(profile?.streamsuitesThemePreset);
+    const profileTheme = normalizeProfileThemePreset(profile?.streamsuitesThemePreset);
+    shell.dataset.profileTheme = profileTheme;
+    document.body.dataset.profileTheme = profileTheme;
     const atmosphereUrl = String(profile?.backgroundImageUrl || profile?.bannerImageUrl || profile?.coverImageUrl || "").trim();
     shell.style.setProperty("--profile-atmosphere-image", atmosphereUrl ? `url("${atmosphereUrl.replace(/"/g, "%22")}")` : "none");
     shell.appendChild(buildStandaloneProfileHero(profile, options.authState || null, { ...options, canEditProfile: canEdit }));

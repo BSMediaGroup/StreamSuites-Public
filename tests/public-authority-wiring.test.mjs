@@ -224,8 +224,11 @@ test("public profile owner editor stays runtime-backed and uses canonical social
   assert.match(app, /about: aboutInput\.value\.trim\(\)/);
   assert.match(app, /streamsuites_theme_preset:\s*normalizeProfileThemePreset/);
   assert.match(app, /key:\s*"signal_red"/);
+  assert.match(app, /colors:\s*\["#f02038", "#ff3348", "#580817"\]/);
   assert.match(app, /key:\s*"frosted_silver"/);
   assert.match(app, /modal\.dataset\.profileTheme = nextTheme/);
+  assert.match(app, /document\.body\.dataset\.profileTheme = nextTheme/);
+  assert.match(app, /document\.body\.dataset\.profileTheme = profileTheme/);
   assert.match(app, /profile-edit-workspace/);
   assert.match(app, /profile-edit-scrollbody/);
   assert.match(app, /editorNav\.addEventListener\("click"/);
@@ -249,6 +252,10 @@ test("public profile owner editor stays runtime-backed and uses canonical social
   assert.match(profileCss, /\.profile-edit-form\s*\{[\s\S]*grid-template-rows:\s*minmax\(0, 1fr\) auto/);
   assert.match(profileCss, /\.profile-edit-scrollbody\s*\{[\s\S]*overflow:\s*auto/);
   assert.match(profileCss, /\.profile-edit-footer\s*\{[\s\S]*position:\s*relative/);
+  assert.match(profileCss, /\.profile-edit-footer\s*\{[\s\S]*box-sizing:\s*border-box/);
+  assert.match(profileCss, /\.profile-edit-modal--profile::before\s*\{[\s\S]*inset:\s*-1px auto -1px -1px[\s\S]*var\(--profile-gradient-b\)/);
+  assert.match(profileCss, /body\[data-public-page="public-profile-standalone"\] \.market-item-lightbox::before\s*\{[\s\S]*var\(--profile-gradient-b\)/);
+  assert.match(profileCss, /\.profile-site-footer::before\s*\{[\s\S]*left:\s*0[\s\S]*width:\s*100%/);
 });
 
 test("public profile primary visitor action prefers the highest-priority saved platform", () => {
