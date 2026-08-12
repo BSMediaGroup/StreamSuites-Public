@@ -35,6 +35,7 @@
   const AUTH_ME_URL = `${AUTH_API_BASE}/api/public/me`;
   const AUTH_PUBLIC_PROFILE_URL = `${AUTH_API_BASE}/api/public/profile`;
   const AUTH_PUBLIC_PROFILE_ME_URL = `${AUTH_API_BASE}/api/public/profile/me`;
+  const AUTH_PUBLIC_PROFILE_ABOUT_VIDEO_RESOLVE_URL = `${AUTH_API_BASE}/api/public/profile/about-video/resolve`;
   const AUTH_PUBLIC_PROFILE_RESOLVE_URL = `${AUTH_API_BASE}/api/public/profile/resolve`;
   const PROFILE_CACHE_TTL_MS = 60 * 1000;
   const AUTH_PUBLIC_AUTHORITY_REQUESTS_URL = `${AUTH_API_BASE}/api/public/authority/requests`;
@@ -125,6 +126,73 @@
   function normalizeProfileThemePreset(value) {
     const normalized = String(value || "violet_blue").trim().toLowerCase().replace(/-/g, "_");
     return PROFILE_THEME_PRESET_KEYS.has(normalized) ? normalized : "violet_blue";
+  }
+  const ABOUT_VIDEO_PROVIDER_FALLBACKS = Object.freeze([
+    Object.freeze({ key: "youtube", label: "YouTube Video / Livestream", provider_label: "YouTube", kind: "video", helper_text: "Paste a specific YouTube video, livestream, Short, or embed URL.", example_url: "https://www.youtube.com/watch?v=uPfbuo6iP6Y", external_action_label: "Watch on YouTube", iframe_allow: "autoplay; encrypted-media; picture-in-picture; web-share; fullscreen" }),
+    Object.freeze({ key: "rumble", label: "Rumble Video / Livestream", provider_label: "Rumble", kind: "video", helper_text: "Paste a Rumble watch URL or a direct Rumble iframe URL.", example_url: "https://rumble.com/v7e1oni-birthday-attempt-3.html", external_action_label: "Watch on Rumble", iframe_allow: "autoplay; encrypted-media; picture-in-picture; fullscreen" }),
+    Object.freeze({ key: "kick", label: "Kick Live Channel", provider_label: "Kick", kind: "channel", helper_text: "Paste a Kick livestream channel URL. Kick VOD URLs are not supported.", example_url: "https://kick.com/yourchannel", external_action_label: "Open Kick channel", iframe_allow: "autoplay; encrypted-media; picture-in-picture; fullscreen" })
+  ]);
+  const ABOUT_VIDEO_PROVIDER_KEYS = new Set(ABOUT_VIDEO_PROVIDER_FALLBACKS.map((item) => item.key));
+
+  function normalizeAboutMode(value) {
+    return String(value || "text").trim().toLowerCase() === "video" ? "video" : "text";
+  }
+
+  function normalizeAboutVideoProviderOptions(value) {
+    const supplied = Array.isArray(value) ? value : [];
+    const byKey = new Map(supplied.filter((item) => item && ABOUT_VIDEO_PROVIDER_KEYS.has(String(item.key || "").toLowerCase())).map((item) => [String(item.key).toLowerCase(), item]));
+    return ABOUT_VIDEO_PROVIDER_FALLBACKS.map((fallback) => ({ ...fallback, ...(byKey.get(fallback.key) || {}), key: fallback.key }));
+  }
+
+  function normalizeAboutVideoProjection(value) {
+    if (!value || typeof value !== "object") return null;
+    const provider = String(value.provider || "").trim().toLowerCase();
+    const resourceId = String(value.resource_id || value.resourceId || "").trim();
+    const sourceUrl = String(value.source_url || value.sourceUrl || "").trim();
+    const embedUrl = String(value.embed_url || value.embedUrl || "").trim();
+    if (!ABOUT_VIDEO_PROVIDER_KEYS.has(provider) || !resourceId || !sourceUrl || !embedUrl) return null;
+    let source = null;
+    let embed = null;
+    try {
+      source = new URL(sourceUrl);
+      embed = new URL(embedUrl);
+    } catch (_error) {
+      return null;
+    }
+    if (source.protocol !== "https:" || embed.protocol !== "https:" || source.username || source.password || source.port || embed.username || embed.password || embed.port) return null;
+    const host = embed.hostname.toLowerCase();
+    const sourceHost = source.hostname.toLowerCase();
+    const safe =
+      (provider === "youtube" && /^[A-Za-z0-9_-]{11}$/.test(resourceId) && sourceHost === "www.youtube.com" && host === "www.youtube.com" && embed.pathname === `/embed/${resourceId}` && !embed.search) ||
+      (provider === "rumble" && /^[A-Za-z0-9]{3,64}$/.test(resourceId) && sourceHost === "rumble.com" && host === "rumble.com" && embed.pathname.replace(/\/$/, "") === `/embed/${resourceId}` && Array.from(embed.searchParams.keys()).every((key) => key === "pub")) ||
+      (provider === "kick" && /^[a-z0-9_][a-z0-9_-]{1,24}$/.test(resourceId) && sourceHost === "kick.com" && host === "player.kick.com" && embed.pathname === `/${resourceId}` && embed.searchParams.get("autoplay") === "false" && Array.from(embed.searchParams.keys()).every((key) => key === "autoplay"));
+    if (!safe) return null;
+    const option = normalizeAboutVideoProviderOptions([]).find((item) => item.key === provider);
+    return {
+      provider,
+      providerLabel: String(value.provider_label || value.providerLabel || option?.provider_label || provider).trim(),
+      sourceUrl,
+      embedUrl,
+      resourceId,
+      kind: String(value.kind || option?.kind || "video").trim(),
+      title: String(value.title || "").trim(),
+      aspectRatio: "16 / 9",
+      iframeAllow: String(value.iframe_allow || value.iframeAllow || option?.iframe_allow || "fullscreen").trim(),
+      externalActionLabel: String(value.external_action_label || value.externalActionLabel || option?.external_action_label || "Open on provider").trim()
+    };
+  }
+
+  function buildTrustedAboutVideoIframe(video, title) {
+    const normalized = normalizeAboutVideoProjection(video);
+    if (!normalized) return null;
+    const iframe = create("iframe", "profile-about-video-iframe");
+    iframe.src = normalized.embedUrl;
+    iframe.title = String(title || normalized.title || `${normalized.providerLabel} About video`).trim();
+    iframe.loading = "lazy";
+    iframe.referrerPolicy = "strict-origin-when-cross-origin";
+    iframe.allow = normalized.iframeAllow;
+    iframe.allowFullscreen = true;
+    return iframe;
   }
   const PROFILE_CHIP_CONTEXTS = Object.freeze({
     role: Object.freeze({ baseClass: "profile-role-chip", icons: false, badgeKind: "role" }),
@@ -11013,6 +11081,9 @@
     );
     const bio = String(payload?.bio || fallbackProfile?.bio || "").trim();
     const about = String(payload?.about || payload?.about_story || payload?.aboutStory || fallbackProfile?.about || "").trim();
+    const aboutMode = normalizeAboutMode(payload?.about_mode || payload?.aboutMode || fallbackProfile?.aboutMode);
+    const aboutVideo = normalizeAboutVideoProjection(payload?.about_video || payload?.aboutVideo || fallbackProfile?.aboutVideo);
+    const aboutVideoProviders = normalizeAboutVideoProviderOptions(payload?.about_video_providers || payload?.aboutVideoProviders || fallbackProfile?.aboutVideoProviders);
     const streamsuitesThemePreset = normalizeProfileThemePreset(
       payload?.streamsuites_theme_preset || payload?.streamsuitesThemePreset || fallbackProfile?.streamsuitesThemePreset || fallbackProfile?.streamsuites_theme_preset
     );
@@ -11142,6 +11213,9 @@
       joinedAt,
       bio,
       about,
+      aboutMode,
+      aboutVideo,
+      aboutVideoProviders,
       streamsuitesThemePreset,
       socialLinks,
       coverImageUrl,
@@ -11649,7 +11723,76 @@
     aboutInput.value = profile.about || "";
     aboutInput.dataset.profileEditAbout = "true";
     aboutLabel.append(aboutInput, create("small", "", "Your expanded story. Paragraph breaks are preserved safely on the public profile."));
-    bioSection.append(bioLabel, aboutLabel);
+    const aboutModeFieldset = create("fieldset", "profile-about-mode-selector");
+    aboutModeFieldset.appendChild(create("legend", "profile-edit-field-head", "About presentation"));
+    const initialAboutMode = normalizeAboutMode(profile.aboutMode);
+    [
+      ["text", "Text", "Show your expanded written About"],
+      ["video", "Video", "Show one validated provider player"]
+    ].forEach(([value, label, description]) => {
+      const option = create("label", "profile-about-mode-option");
+      const input = create("input");
+      input.type = "radio";
+      input.name = "about_mode";
+      input.value = value;
+      input.checked = value === initialAboutMode;
+      input.dataset.profileEditAboutMode = value;
+      option.append(input, create("strong", "", label), create("small", "", description));
+      aboutModeFieldset.appendChild(option);
+    });
+    const aboutTextPanel = create("div", "profile-about-editor-panel");
+    aboutTextPanel.dataset.aboutEditorPanel = "text";
+    aboutTextPanel.appendChild(aboutLabel);
+
+    const aboutVideoPanel = create("div", "profile-about-editor-panel profile-about-video-editor");
+    aboutVideoPanel.dataset.aboutEditorPanel = "video";
+    const providerFieldset = create("fieldset", "profile-about-provider-selector");
+    providerFieldset.appendChild(create("legend", "profile-edit-field-head", "Supported platform"));
+    const providerOptions = normalizeAboutVideoProviderOptions(profile.aboutVideoProviders);
+    const initialProvider = profile.aboutVideo?.provider || providerOptions[0].key;
+    providerOptions.forEach((provider) => {
+      const option = create("label", "profile-about-provider-option");
+      const input = create("input");
+      input.type = "radio";
+      input.name = "about_video_provider";
+      input.value = provider.key;
+      input.checked = provider.key === initialProvider;
+      input.dataset.profileEditAboutProvider = provider.key;
+      const icon = create("img", "profile-about-provider-icon");
+      icon.src = `/assets/icons/${provider.key}.svg`;
+      icon.alt = "";
+      icon.setAttribute("aria-hidden", "true");
+      option.append(input, icon, create("span", "", provider.label));
+      providerFieldset.appendChild(option);
+    });
+    const videoUrlLabel = create("label", "profile-edit-field");
+    videoUrlLabel.appendChild(create("span", "", "Provider URL"));
+    const videoUrlInput = create("input", "profile-edit-input");
+    videoUrlInput.type = "url";
+    videoUrlInput.inputMode = "url";
+    videoUrlInput.autocomplete = "url";
+    videoUrlInput.spellcheck = false;
+    videoUrlInput.value = profile.aboutVideo?.sourceUrl || "";
+    videoUrlInput.dataset.profileEditAboutVideoUrl = "true";
+    const videoHelp = create("small", "profile-about-video-help");
+    videoHelp.id = "profile-about-video-help";
+    videoUrlInput.setAttribute("aria-describedby", videoHelp.id);
+    videoUrlLabel.append(videoUrlInput, videoHelp);
+    const videoActions = create("div", "profile-about-video-actions");
+    const validateVideo = create("button", "profile-edit-button profile-edit-button-primary", "Validate / Preview");
+    validateVideo.type = "button";
+    validateVideo.dataset.profileEditAboutVideoValidate = "true";
+    const removeVideo = create("button", "profile-edit-button profile-edit-button-secondary profile-about-video-remove", "Remove configured video");
+    removeVideo.type = "button";
+    removeVideo.dataset.profileEditAboutVideoRemove = "true";
+    videoActions.append(validateVideo, removeVideo);
+    const videoStatus = create("p", "profile-about-video-status");
+    videoStatus.setAttribute("role", "status");
+    videoStatus.setAttribute("aria-live", "polite");
+    const videoPreview = create("div", "profile-about-video-preview");
+    videoPreview.dataset.profileEditAboutVideoPreview = "true";
+    aboutVideoPanel.append(providerFieldset, videoUrlLabel, videoActions, videoStatus, videoPreview);
+    bioSection.append(bioLabel, aboutModeFieldset, aboutTextPanel, aboutVideoPanel);
     const visibilityLabel = create("label", "profile-edit-check-row");
     const visibilityInput = create("input");
     visibilityInput.type = "checkbox";
@@ -11751,6 +11894,80 @@
     };
     coverInput.addEventListener("change", () => syncPreview(coverInput, coverImg));
     avatarInput.addEventListener("change", () => syncPreview(avatarInput, avatarImg));
+    let validatedAboutVideo = profile.aboutVideo || null;
+    let removeAboutVideo = false;
+    const selectedAboutProvider = () => String(form.querySelector('input[name="about_video_provider"]:checked')?.value || providerOptions[0].key);
+    const syncAboutVideoHelp = () => {
+      const selected = providerOptions.find((item) => item.key === selectedAboutProvider()) || providerOptions[0];
+      videoHelp.textContent = `${selected.helper_text} Example: ${selected.example_url}`;
+      videoUrlInput.placeholder = selected.example_url;
+    };
+    const renderAboutVideoPreview = (video) => {
+      videoPreview.replaceChildren();
+      const iframe = buildTrustedAboutVideoIframe(video, video?.title || "Validated About video preview");
+      if (!iframe) return;
+      const shell = create("div", "profile-about-video-frame");
+      shell.appendChild(iframe);
+      const link = create("a", "profile-about-video-source-link", video.externalActionLabel);
+      link.href = video.sourceUrl;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      videoPreview.append(shell, link);
+    };
+    const invalidateAboutVideoPreview = () => {
+      validatedAboutVideo = null;
+      videoPreview.replaceChildren();
+      delete videoStatus.dataset.tone;
+      videoStatus.textContent = videoUrlInput.value.trim() ? "URL changed. Validate again before previewing." : "Enter a provider URL, then validate it through Runtime/Auth.";
+    };
+    const syncAboutModePanels = () => {
+      const mode = String(form.querySelector('input[name="about_mode"]:checked')?.value || "text");
+      aboutTextPanel.hidden = mode !== "text";
+      aboutVideoPanel.hidden = mode !== "video";
+    };
+    aboutModeFieldset.addEventListener("change", syncAboutModePanels);
+    providerFieldset.addEventListener("change", () => {
+      removeAboutVideo = false;
+      syncAboutVideoHelp();
+      invalidateAboutVideoPreview();
+    });
+    videoUrlInput.addEventListener("input", () => {
+      removeAboutVideo = false;
+      invalidateAboutVideoPreview();
+    });
+    validateVideo.addEventListener("click", async () => {
+      validateVideo.disabled = true;
+      videoStatus.textContent = selectedAboutProvider() === "rumble" ? "Resolving Rumble’s safe iframe player…" : "Validating provider URL…";
+      delete videoStatus.dataset.tone;
+      videoPreview.replaceChildren();
+      try {
+        validatedAboutVideo = await resolveMyAboutVideo(selectedAboutProvider(), videoUrlInput.value.trim());
+        removeAboutVideo = false;
+        videoUrlInput.value = validatedAboutVideo.sourceUrl;
+        renderAboutVideoPreview(validatedAboutVideo);
+        videoStatus.textContent = `${validatedAboutVideo.providerLabel} preview validated. Save changes to publish it.`;
+        videoStatus.dataset.tone = "success";
+      } catch (error) {
+        validatedAboutVideo = null;
+        videoStatus.textContent = error instanceof Error ? error.message : "Video preview could not be validated.";
+        videoStatus.dataset.tone = "error";
+      } finally {
+        validateVideo.disabled = false;
+      }
+    });
+    removeVideo.addEventListener("click", () => {
+      removeAboutVideo = true;
+      validatedAboutVideo = null;
+      videoUrlInput.value = "";
+      videoPreview.replaceChildren();
+      videoStatus.textContent = "Configured video will be removed when you save. Your written About is unchanged.";
+      videoStatus.dataset.tone = "success";
+    });
+    syncAboutVideoHelp();
+    syncAboutModePanels();
+    videoStatus.textContent = profile.aboutVideo
+      ? "Saved video loaded. Validate to open a fresh preview, or save unchanged to revalidate server-side."
+      : "Enter a provider URL, then validate it through Runtime/Auth.";
     const syncStoryPreview = () => {
       previewName.textContent = displayNameInput.value.trim() || "Public User";
       previewBio.textContent = bioInput.value.trim() || "Add a concise bio for your identity header.";
@@ -11815,12 +12032,19 @@
           display_name: displayNameInput.value.trim(),
           bio: bioInput.value.trim(),
           about: aboutInput.value.trim(),
+          about_mode: String(form.querySelector('input[name="about_mode"]:checked')?.value || "text"),
           streamsuites_theme_preset: normalizeProfileThemePreset(
             form.querySelector('input[name="streamsuites_theme_preset"]:checked')?.value
           ),
           anonymous: visibilityInput.checked,
           social_links: collectPublicProfileEditorSocialLinks(form, profile.socialLinks)
         };
+        if (removeAboutVideo) {
+          payload.remove_about_video = true;
+        } else if (videoUrlInput.value.trim()) {
+          payload.about_video_provider = selectedAboutProvider();
+          payload.about_video_source_url = videoUrlInput.value.trim();
+        }
         const socialValidationError = validatePublicProfileEditorSocialLinks(payload.social_links);
         if (socialValidationError) {
           throw new Error(socialValidationError);
@@ -11845,8 +12069,9 @@
 
     window.requestAnimationFrame(() => {
       if (options.focusField === "about") {
-        aboutInput.focus();
-        aboutInput.scrollIntoView({ block: "center" });
+        const target = initialAboutMode === "video" ? videoUrlInput : aboutInput;
+        target.focus();
+        target.scrollIntoView({ block: "center" });
         return;
       }
       displayNameInput.focus();
@@ -12225,6 +12450,25 @@
     return row;
   }
 
+  async function resolveMyAboutVideo(provider, sourceUrl) {
+    const response = await fetch(AUTH_PUBLIC_PROFILE_ABOUT_VIDEO_RESOLVE_URL, {
+      method: "POST",
+      cache: "no-store",
+      credentials: "include",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({ provider, source_url: sourceUrl })
+    });
+    const responsePayload = await response.json().catch(() => ({}));
+    if (!response.ok || responsePayload?.success === false) {
+      const error = new Error(String(responsePayload?.error || "").trim() || `preview failed (${response.status})`);
+      error.code = String(responsePayload?.code || "");
+      throw error;
+    }
+    const resolved = normalizeAboutVideoProjection(responsePayload?.about_video);
+    if (!resolved) throw new Error("Runtime/Auth did not return a safe video preview.");
+    return resolved;
+  }
+
   function hasUsableProfileStream(profile) {
     const stream = profile?.latestStream || null;
     return Boolean(stream && (stream.isLive || stream.title || stream.thumbnailUrl || stream.url || stream.sourceUrl));
@@ -12496,7 +12740,12 @@
     const section = create("section", "profile-utility-section profile-about-section");
     section.id = "profile-about";
     section.setAttribute("aria-labelledby", "profile-about-title");
-    const header = buildProfileSectionHeading("Profile story", "About");
+    const aboutMode = normalizeAboutMode(profile?.aboutMode);
+    const aboutVideo = normalizeAboutVideoProjection(profile?.aboutVideo);
+    const header = buildProfileSectionHeading(
+      aboutMode === "video" && aboutVideo ? `${aboutVideo.providerLabel} presentation` : "Profile story",
+      "About"
+    );
     header.querySelector("h2").id = "profile-about-title";
     if (canEdit && typeof options.openProfileEditor === "function") {
       const editButton = create("button", "profile-section-edit-button", "Edit story");
@@ -12505,13 +12754,50 @@
       editButton.addEventListener("click", () => options.openProfileEditor(profile, { focusField: "about" }));
       header.appendChild(editButton);
     }
-    const aboutText = String(profile?.about || "").trim();
-    const copy = create(
-      "p",
-      `profile-about-copy${aboutText ? "" : " profile-about-copy--empty"}`,
-      aboutText || "This profile has not published an expanded About story yet."
-    );
-    section.append(header, copy);
+    if (aboutMode === "video" && aboutVideo) {
+      const presentation = create("div", "profile-about-video-presentation");
+      const meta = create("div", "profile-about-video-meta");
+      const providerBadge = create("span", "profile-about-video-provider");
+      const providerIcon = create("img", "profile-about-video-provider-icon");
+      providerIcon.src = `/assets/icons/${aboutVideo.provider}.svg`;
+      providerIcon.alt = "";
+      providerIcon.setAttribute("aria-hidden", "true");
+      providerBadge.append(providerIcon, create("span", "", aboutVideo.providerLabel));
+      meta.appendChild(providerBadge);
+      if (aboutVideo.title) meta.appendChild(create("h3", "profile-about-video-title", aboutVideo.title));
+      const frame = create("div", "profile-about-video-frame is-loading");
+      const loading = create("span", "profile-about-video-loading", `Loading ${aboutVideo.providerLabel} player…`);
+      loading.setAttribute("role", "status");
+      const iframe = buildTrustedAboutVideoIframe(aboutVideo, aboutVideo.title || `${aboutVideo.providerLabel} About video`);
+      if (iframe) {
+        iframe.addEventListener("load", () => {
+          frame.classList.remove("is-loading");
+          loading.remove();
+        }, { once: true });
+        frame.append(loading, iframe);
+      }
+      const sourceLink = create("a", "profile-about-video-source-link", aboutVideo.externalActionLabel);
+      sourceLink.href = aboutVideo.sourceUrl;
+      sourceLink.target = "_blank";
+      sourceLink.rel = "noopener noreferrer";
+      presentation.append(meta, frame, sourceLink);
+      section.append(header, presentation);
+    } else if (aboutMode === "video") {
+      const fallback = create("div", "profile-about-video-fallback");
+      fallback.append(
+        create("strong", "", canEdit ? "Add a video to complete this About section" : "Video About unavailable"),
+        create("p", "", canEdit ? "Open the profile editor to validate a YouTube, Rumble, or Kick livestream URL." : "This creator’s selected video is not available right now.")
+      );
+      section.append(header, fallback);
+    } else {
+      const aboutText = String(profile?.about || "").trim();
+      const copy = create(
+        "p",
+        `profile-about-copy${aboutText ? "" : " profile-about-copy--empty"}`,
+        aboutText || "This profile has not published an expanded About story yet."
+      );
+      section.append(header, copy);
+    }
     return section;
   }
 
@@ -13333,6 +13619,7 @@
     const isContentRich = Boolean(
       String(profile?.bio || "").trim() ||
       String(profile?.about || "").trim() ||
+      normalizeAboutMode(profile?.aboutMode) === "video" ||
       profileArtifacts.length ||
       socialEntries.length ||
       hasUsableProfileStream(profile) ||

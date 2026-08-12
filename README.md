@@ -18,6 +18,7 @@ Canonical public StreamSuites surface deployed to Cloudflare Pages at `https://s
 - Same-origin Cloudflare Pages Functions proxy browser requests to the authoritative Auth API, but they do not move backend ownership into this repo.
 - Canonical slug resolution, profile visibility, share URLs, and FindMeHere eligibility remain runtime/Auth-owned in `StreamSuites`.
 - Public routes render authoritative runtime exports and Auth payloads; they do not mint competing profile or live-status truth.
+- Public profile About sections render exactly the Runtime/Auth-selected text or validated video projection. The browser never accepts raw embed markup, builds at most one lazy iframe through DOM APIs, and keeps YouTube video/live, Rumble video/live, and Kick live-channel provider support presentation-only.
 
 ## Studio-First Public Identity
 
@@ -202,6 +203,7 @@ The design reference is preserved at `sspoc1/`. Its original archive remains `St
 StreamSuites-Public/
 ├── .env.example             # Download-gate variable names; secret value intentionally blank
 ├── .gitignore
+├── _headers                 # Narrow CSP frame allowlist for existing trusted frames and profile players
 ├── _redirects
 ├── 404.html
 ├── about.html
@@ -379,6 +381,7 @@ StreamSuites-Public/
 │   └── status-widget.css
 ├── tests/
 │   ├── auth-surface-parity.test.mjs
+│   ├── profile-about-video.test.mjs
 │   ├── download-surfaces.test.mjs
 │   ├── health-page.test.mjs
 │   ├── live-status-authority.test.mjs
@@ -393,7 +396,7 @@ StreamSuites-Public/
 │   ├── version-page.test.mjs
 │   └── wheels-authority.test.mjs
 ├── output/
-│   └── playwright/           # Local profile-redesign browser evidence; not deployed runtime assets
+│   └── playwright/           # Local profile and browser validation evidence; not deployed runtime assets
 ├── pocv9/                     # Approved read-only landing motion and diagram reference
 │   ├── index.html
 │   ├── styles.css

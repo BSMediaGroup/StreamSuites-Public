@@ -6,6 +6,18 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-13 - Safe video-based extended About presentation
+
+#### Technical notes
+
+- Extended the existing standalone profile and owner editor so About selects exactly one Runtime/Auth-backed variant: preserved text or one validated YouTube video/live, Rumble video/live, or Kick live-channel player. Bio, routes, anchors, identity data, live state, artifacts, progression, economy, social links, and profile themes remain unchanged.
+- Added provider guidance, authenticated validate/preview feedback, explicit video removal, responsive 16:9 presentation, provider attribution/source actions, loading and unavailable fallbacks, and DOM-created lazy iframes with fullscreen support, strict referrer policy, and no client-added autoplay. Public performs defense-in-depth validation but never derives canonical embed authority.
+- Added a narrow Pages CSP `frame-src` allowlist retaining existing Turnstile, YouTube-nocookie, and Twitch frame origins while permitting the three Runtime-approved players. Focused Public tests passed 47/47. No deployment, version/build change, commit, or push was performed.
+
+#### Human-readable notes
+
+Public profiles can now use their expanded About area for either a written story or a clean, responsive provider video without accepting pasted embed code or weakening the rest of the page.
+
 ### 2026-08-13 - Owner profile studio, distinct About story, and coordinated page themes
 
 #### Technical notes
