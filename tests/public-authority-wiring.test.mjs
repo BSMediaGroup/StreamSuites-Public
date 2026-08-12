@@ -644,8 +644,8 @@ test("public profile overview table uses the same runtime progression summary as
   assert.match(overviewSection, /addRow\("XP", overviewXpValue, !progression\)/);
   assert.match(overviewSection, /addRow\("Level", overviewLevelValue, !progression\)/);
   assert.match(overviewSection, /addRow\("Global Rank", overviewGlobalRankValue, !progression\)/);
-  assert.match(overviewSection, /addRow\("Balance", economy \? buildEconomyBalanceValue\(economy, \{ compact: true \}\) : "Starting", false\)/);
-  assert.match(overviewSection, /addRow\("Inventory", displayInventory\.length \? `\$\{formatNumber\(displayInventory\.length\)\} item type/);
+  assert.match(overviewSection, /addRow\("Balance", economy \? buildEconomyBalanceValue\(economy, \{ compact: true \}\) : "Unavailable", !economy\)/);
+  assert.match(overviewSection, /profile\?\.inventoryAvailable[\s\S]*displayInventory\.length \? `\$\{formatNumber\(displayInventory\.length\)\} item type/);
   assert.doesNotMatch(overviewSection, /addRow\("XP", "Pending", true\)/);
   assert.doesNotMatch(overviewSection, /addRow\("Rank", "Pending", true\)/);
 });

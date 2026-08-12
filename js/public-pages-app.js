@@ -10868,10 +10868,28 @@
     const source = String(value || "").trim();
     if (!source) return false;
     if (source.startsWith("data:") || source.startsWith("blob:")) return true;
-    if (/^https?:\/\//i.test(source)) return true;
-    if (source.startsWith("//")) return true;
-    if (source.startsWith("/") && !source.includes("/assets/icons/ui/profile.svg")) return true;
-    return false;
+    try {
+      const parsed = new URL(source, window.location.origin);
+      const localHttp = parsed.protocol === "http:" && parsed.origin === window.location.origin;
+      const safeTransport = parsed.protocol === "https:" || localHttp;
+      return safeTransport && !parsed.pathname.includes("/assets/icons/ui/profile.svg");
+    } catch (_error) {
+      return false;
+    }
+  }
+
+  function normalizeProfileMediaUrl(value, fallback = "") {
+    const source = String(value || "").trim();
+    if (!source || !isUsableProfileImageUrl(source)) return String(fallback || "").trim();
+    if (source.startsWith("data:") || source.startsWith("blob:")) return source;
+    try {
+      const parsed = new URL(source, window.location.origin);
+      return parsed.origin === window.location.origin && source.startsWith("/")
+        ? `${parsed.pathname}${parsed.search}${parsed.hash}`
+        : parsed.toString();
+    } catch (_error) {
+      return String(fallback || "").trim();
+    }
   }
 
   function normalizedImageContract(source = {}, fallback = {}) {
@@ -10961,11 +10979,18 @@
     const displayName = String(payload?.display_name || payload?.displayName || fallbackProfile?.displayName || "Public User").trim() || "Public User";
     const imageContract = normalizedImageContract(payload, fallbackProfile);
     const avatar = imageContract.avatarUrl;
-    const coverImageUrl = String(payload?.cover_image_url || payload?.coverImageUrl || fallbackProfile?.coverImageUrl || DEFAULT_PROFILE_COVER).trim() || DEFAULT_PROFILE_COVER;
-    const bannerImageUrl = String(
-      payload?.banner_image_url || payload?.bannerImageUrl || payload?.cover_image_url || payload?.coverImageUrl || fallbackProfile?.bannerImageUrl || coverImageUrl
-    ).trim() || coverImageUrl;
-    const backgroundImageUrl = String(payload?.background_image_url || payload?.backgroundImageUrl || fallbackProfile?.backgroundImageUrl || "").trim();
+    const coverImageUrl = normalizeProfileMediaUrl(
+      payload?.cover_image_url || payload?.coverImageUrl || fallbackProfile?.coverImageUrl,
+      DEFAULT_PROFILE_COVER
+    ) || DEFAULT_PROFILE_COVER;
+    const bannerImageUrl = normalizeProfileMediaUrl(
+      payload?.banner_image_url || payload?.bannerImageUrl || payload?.cover_image_url || payload?.coverImageUrl || fallbackProfile?.bannerImageUrl || coverImageUrl,
+      coverImageUrl
+    ) || coverImageUrl;
+    const backgroundImageUrl = normalizeProfileMediaUrl(
+      payload?.background_image_url || payload?.backgroundImageUrl || fallbackProfile?.backgroundImageUrl,
+      ""
+    );
     const bio = String(payload?.bio || fallbackProfile?.bio || "").trim();
     const joinedAt = String(
       payload?.joined_at ||
@@ -11053,6 +11078,12 @@
         : Array.isArray(fallbackProfile?.inventory)
           ? fallbackProfile.inventory
           : [];
+    const inventoryAvailable = Boolean(
+      Array.isArray(payload?.inventory) ||
+      Array.isArray(payload?.public_inventory) ||
+      fallbackProfile?.inventoryAvailable === true ||
+      (fallbackProfile?.inventoryAvailable == null && Array.isArray(fallbackProfile?.inventory))
+    );
     const exchangeableItems = Array.isArray(payload?.exchangeable_items)
       ? payload.exchangeable_items
       : Array.isArray(payload?.public_exchangeable_items)
@@ -11115,6 +11146,7 @@
       progression,
       economy,
       inventory,
+      inventoryAvailable,
       exchangeableItems,
       scopedProgression,
       authorityIdentity
@@ -11151,6 +11183,33 @@
         return payload?.profile && typeof payload.profile === "object" ? payload.profile : payload;
       })
       .then((payload) => {
+        if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+          const error = new Error("public profile response was malformed");
+          error.status = 502;
+          error.code = "profile_payload_malformed";
+          throw error;
+        }
+        const hasIdentity = Boolean(
+          String(
+            payload.public_slug ||
+            payload.publicSlug ||
+            payload.slug ||
+            payload.canonical_user_code ||
+            payload.canonicalUserCode ||
+            payload.user_code ||
+            payload.userCode ||
+            payload.display_name ||
+            payload.displayName ||
+            payload.name ||
+            ""
+          ).trim()
+        );
+        if (!hasIdentity) {
+          const error = new Error("public profile response was malformed");
+          error.status = 502;
+          error.code = "profile_payload_malformed";
+          throw error;
+        }
         publicProfileRequestCache.set(cacheKey, { payload, timestamp: Date.now() });
         return payload;
       })
@@ -11183,7 +11242,80 @@
     const canonicalHref = buildCanonicalProfileHref(profile);
     if (normalizePath(window.location.pathname) === normalizePath(canonicalHref)) return;
     // TODO: replace with a server-side redirect once migration-safe legacy handling is retired.
-    window.history.replaceState(window.history.state, "", canonicalHref);
+    const canonicalUrl = new URL(canonicalHref, window.location.origin);
+    canonicalUrl.search = window.location.search;
+    canonicalUrl.hash = window.location.hash;
+    window.history.replaceState(window.history.state, "", canonicalUrl.toString());
+  }
+
+  function setDocumentMeta(selector, attribute, value) {
+    const content = String(value || "").trim();
+    let node = document.head.querySelector(selector);
+    if (!content) {
+      node?.remove();
+      return;
+    }
+    if (!node) {
+      node = document.createElement(attribute === "href" ? "link" : "meta");
+      if (attribute === "href") {
+        node.setAttribute("rel", "canonical");
+      } else if (selector.includes("property=")) {
+        const property = selector.match(/property=["']([^"']+)/)?.[1];
+        if (property) node.setAttribute("property", property);
+      } else {
+        const name = selector.match(/name=["']([^"']+)/)?.[1];
+        if (name) node.setAttribute("name", name);
+      }
+      document.head.appendChild(node);
+    }
+    node.setAttribute(attribute, content);
+  }
+
+  function syncStandaloneProfileMetadata(profile, options = {}) {
+    const state = String(options.state || "profile").trim().toLowerCase();
+    const slug = getCanonicalProfileSlug(profile, "") || normalizeUserCode(options.requestedCode, "");
+    const displayName = String(profile?.displayName || "").trim();
+    const publicBio = String(profile?.bio || "").replace(/\s+/g, " ").trim();
+    const canonicalUrl = slug
+      ? new URL(`/u/${encodeURIComponent(slug)}`, window.location.origin).toString()
+      : new URL(window.location.pathname, window.location.origin).toString();
+    const rawImageUrl = String(profile?.avatar || profile?.avatarUrl || "/assets/backgrounds/seoshare.jpg").trim();
+    let imageUrl = new URL("/assets/backgrounds/seoshare.jpg", window.location.origin).toString();
+    try {
+      imageUrl = new URL(rawImageUrl, window.location.origin).toString();
+    } catch (_error) {
+      // Keep the same-origin public sharing image when an optional media URL is invalid.
+    }
+    let title = displayName ? `${displayName} | StreamSuites Public Profile` : "StreamSuites Public Profile";
+    let description = publicBio || (displayName ? `View ${displayName}'s public StreamSuites profile.` : "Standalone public profile on the canonical StreamSuites site.");
+
+    if (state === "not-found") {
+      title = slug ? `${slug} | Profile Not Found` : "Profile Not Found | StreamSuites";
+      description = "This StreamSuites public profile could not be found.";
+    } else if (state === "unavailable") {
+      title = slug ? `${slug} | Profile Unavailable` : "Profile Unavailable | StreamSuites";
+      description = "This StreamSuites public profile is currently unavailable.";
+    } else if (state === "error") {
+      title = "Profile Temporarily Unavailable | StreamSuites";
+      description = "This StreamSuites public profile could not be loaded right now.";
+    } else if (state === "loading") {
+      title = "Loading Public Profile | StreamSuites";
+      description = "Loading the requested StreamSuites public profile from the authoritative profile service.";
+    }
+
+    description = description.slice(0, 200);
+    document.title = title;
+    setDocumentMeta('meta[name="description"]', "content", description);
+    setDocumentMeta('link[rel="canonical"]', "href", canonicalUrl);
+    setDocumentMeta('meta[property="og:title"]', "content", title);
+    setDocumentMeta('meta[property="og:description"]', "content", description);
+    setDocumentMeta('meta[property="og:type"]', "content", "profile");
+    setDocumentMeta('meta[property="og:url"]', "content", canonicalUrl);
+    setDocumentMeta('meta[property="og:image"]', "content", imageUrl);
+    setDocumentMeta('meta[name="twitter:card"]', "content", "summary_large_image");
+    setDocumentMeta('meta[name="twitter:title"]', "content", title);
+    setDocumentMeta('meta[name="twitter:description"]', "content", description);
+    setDocumentMeta('meta[name="twitter:image"]', "content", imageUrl);
   }
 
   function canEditResolvedProfile(authState, profile, fallbackIdentifier = "") {
@@ -11210,7 +11342,7 @@
       openAuthModal: options.openAuthModal || null,
       onMenuAction: options.onMenuAction || null
     });
-    document.title = normalizedCode ? `${normalizedCode} | Profile Not Found` : "Profile Not Found | StreamSuites";
+    syncStandaloneProfileMetadata(null, { state: "not-found", requestedCode: normalizedCode });
   }
 
   function renderProfileUnavailable(host, profile, requestedCode, options = {}) {
@@ -11224,7 +11356,22 @@
       openAuthModal: options.openAuthModal || null,
       onMenuAction: options.onMenuAction || null
     });
-    document.title = normalizedCode ? `${normalizedCode} | Profile Unavailable` : "Profile Unavailable | StreamSuites";
+    syncStandaloneProfileMetadata(profile, { state: "unavailable", requestedCode: normalizedCode });
+  }
+
+  function renderProfileLoadError(host, requestedCode, options = {}) {
+    const normalizedCode = String(requestedCode || "").trim();
+    renderStandaloneProfileMessage(host, {
+      title: "Profile temporarily unavailable",
+      subtitle: "The profile service could not be reached. This is different from a missing profile, and no availability or identity state has been inferred.",
+      attemptedHandle: normalizedCode,
+      action: { label: "Try again", href: window.location.href },
+      authState: options.authState || null,
+      openAuthModal: options.openAuthModal || null,
+      onMenuAction: options.onMenuAction || null,
+      messageState: "error"
+    });
+    syncStandaloneProfileMetadata(null, { state: "error", requestedCode: normalizedCode });
   }
 
   async function fetchMyPublicProfile() {
@@ -11876,8 +12023,14 @@
       editButton.addEventListener("click", () => options.openProfileEditor(profile));
       right.appendChild(editButton);
     }
-    const socialRail = buildProfileHeaderSocialRail(profile?.socialLinks);
-    if (socialRail) right.appendChild(socialRail);
+    const socialEntries = collectOrderedSocialEntries(profile?.socialLinks);
+    if (socialEntries.length) {
+      const presenceLink = create("a", "profile-header-presence-link", "Presence");
+      presenceLink.href = "#profile-presence";
+      presenceLink.prepend(createIcon(UI_ICON_MAP.social, "profile-header-presence-icon"));
+      presenceLink.setAttribute("aria-label", `View ${formatNumber(socialEntries.length)} public platform link${socialEntries.length === 1 ? "" : "s"}`);
+      right.appendChild(presenceLink);
+    }
     right.appendChild(
       buildProfileHeaderAccountWidget(authState, {
         openAuthModal: options.openAuthModal,
@@ -11897,26 +12050,187 @@
     return row;
   }
 
+  function hasUsableProfileStream(profile) {
+    const stream = profile?.latestStream || null;
+    return Boolean(stream && (stream.isLive || stream.title || stream.thumbnailUrl || stream.url || stream.sourceUrl));
+  }
+
+  function profileIsLive(profile) {
+    return Boolean(getLiveStatus(profile) || profile?.latestStream?.isLive === true);
+  }
+
+  function buildProfileHeroActionRail(profile, options = {}) {
+    const artifacts = Array.isArray(options.profileArtifacts) ? options.profileArtifacts : [];
+    const stream = profile?.latestStream || null;
+    const isLive = profileIsLive(profile);
+    const hasStream = hasUsableProfileStream(profile);
+    const streamUrl = String(stream?.url || stream?.sourceUrl || "").trim();
+    const socialEntries = collectOrderedSocialEntries(profile?.socialLinks);
+    const canonicalUrl = String(profile?.streamsuitesShareUrl || profile?.streamsuitesProfileUrl || "").trim();
+    const rail = create("aside", "profile-action-rail");
+    rail.setAttribute("aria-label", "Profile status and actions");
+    rail.dataset.profileLiveState = isLive ? "live" : "offline";
+
+    const statusCard = create("div", "profile-status-card");
+    const statusIcon = create("span", "profile-status-icon");
+    statusIcon.appendChild(createIcon(isLive ? "/assets/icons/ui/tvlive.svg" : "/assets/icons/ui/videocameraoff.svg", "profile-status-icon-mask"));
+    const statusCopy = create("div", "profile-status-copy");
+    const platformLabel = String(stream?.platformLabel || stream?.platform || "").trim();
+    statusCopy.append(
+      create("span", "profile-status-eyebrow", isLive ? "Live signal" : "Current signal"),
+      create("strong", "profile-status-title", isLive ? "Live now" : hasStream ? "Currently offline" : "Offline"),
+      create(
+        "span",
+        "profile-status-detail",
+        isLive
+          ? platformLabel ? `Streaming on ${platformLabel}.` : "A current public live source is available."
+          : hasStream
+            ? platformLabel ? `Latest public source: ${platformLabel}.` : "A latest public stream source is available."
+            : "No current public live source is available."
+      )
+    );
+    statusCard.append(statusIcon, statusCopy);
+
+    const actionStack = create("div", "profile-action-stack");
+    let primaryAction = null;
+    if (isLive && streamUrl) {
+      primaryAction = create("a", "profile-primary-action", "Watch live");
+      primaryAction.href = streamUrl;
+      primaryAction.target = "_blank";
+      primaryAction.rel = "noopener noreferrer";
+      primaryAction.prepend(createIcon("/assets/icons/ui/tvlive.svg", "profile-action-icon"));
+    } else if (artifacts.length) {
+      primaryAction = create("a", "profile-primary-action", "Explore public work");
+      primaryAction.href = "#profile-artifacts";
+      primaryAction.prepend(createIcon("/assets/icons/ui/clipcards.svg", "profile-action-icon"));
+    } else if (socialEntries[0]) {
+      primaryAction = create("a", "profile-primary-action", `Open ${socialEntries[0].label}`);
+      primaryAction.href = socialEntries[0].url;
+      primaryAction.target = "_blank";
+      primaryAction.rel = "noopener noreferrer";
+      const icon = create("img", "profile-action-brand-icon");
+      icon.src = socialEntries[0].iconPath || socialIconPath(socialEntries[0].network);
+      icon.alt = "";
+      icon.setAttribute("aria-hidden", "true");
+      primaryAction.prepend(icon);
+    } else if (canonicalUrl) {
+      primaryAction = create("button", "profile-primary-action", "Copy profile link");
+      primaryAction.type = "button";
+      primaryAction.prepend(createIcon(UI_ICON_MAP.copy, "profile-action-icon"));
+    }
+    if (primaryAction) actionStack.appendChild(primaryAction);
+
+    const secondaryActions = create("div", "profile-secondary-actions");
+    const feedback = create("span", "profile-action-feedback");
+    feedback.setAttribute("role", "status");
+    feedback.setAttribute("aria-live", "polite");
+    let feedbackTimer = 0;
+    const announce = (message) => {
+      window.clearTimeout(feedbackTimer);
+      feedback.textContent = message;
+      feedbackTimer = window.setTimeout(() => {
+        feedback.textContent = "";
+      }, 1800);
+    };
+    registerStandaloneProfileCleanup(() => window.clearTimeout(feedbackTimer));
+
+    const copyAction = () => {
+      copyTextToClipboard(canonicalUrl).then((copied) => announce(copied ? "Profile link copied." : "Profile link could not be copied."));
+    };
+    if (primaryAction?.tagName === "BUTTON") {
+      primaryAction.addEventListener("click", copyAction);
+    }
+    if (canonicalUrl && primaryAction?.tagName !== "BUTTON") {
+      const copyButton = create("button", "profile-secondary-action", "Copy link");
+      copyButton.type = "button";
+      copyButton.prepend(createIcon(UI_ICON_MAP.copy, "profile-action-icon"));
+      copyButton.addEventListener("click", copyAction);
+      secondaryActions.appendChild(copyButton);
+    }
+    if (canonicalUrl) {
+      const shareButton = create("button", "profile-secondary-action", "Share");
+      shareButton.type = "button";
+      shareButton.prepend(createIcon(UI_ICON_MAP.share, "profile-action-icon"));
+      shareButton.addEventListener("click", async () => {
+        if (typeof navigator.share === "function") {
+          try {
+            await navigator.share({ title: `${profile?.displayName || "StreamSuites"} profile`, url: canonicalUrl });
+            announce("Profile shared.");
+          } catch (_error) {
+            // Native share cancellation is an intentional no-op.
+          }
+          return;
+        }
+        copyAction();
+      });
+      secondaryActions.appendChild(shareButton);
+    }
+    if (options.canEditProfile && typeof options.openProfileEditor === "function") {
+      const manageButton = create("button", "profile-secondary-action", "Manage");
+      manageButton.type = "button";
+      manageButton.prepend(createIcon(UI_ICON_MAP.edit, "profile-action-icon"));
+      manageButton.addEventListener("click", () => options.openProfileEditor(profile));
+      secondaryActions.appendChild(manageButton);
+    }
+    if (secondaryActions.childElementCount) actionStack.appendChild(secondaryActions);
+    actionStack.appendChild(feedback);
+
+    const signals = create("dl", "profile-signal-list");
+    const addSignal = (term, value) => {
+      if (!value) return;
+      const row = create("div", "profile-signal-row");
+      row.append(create("dt", "", term), create("dd", "", value));
+      signals.appendChild(row);
+    };
+    addSignal("Identity", resolveProfileTypeDescriptor(profile).label);
+    addSignal("Tier", resolveProfileTier(profile?.tier || "", profile?.accountType || profile?.account_type).toUpperCase());
+    if (platformLabel) addSignal("Platform", platformLabel);
+    if (artifacts.length) addSignal("Public work", `${formatNumber(artifacts.length)} item${artifacts.length === 1 ? "" : "s"}`);
+
+    rail.append(statusCard, actionStack);
+    if (signals.childElementCount) rail.appendChild(signals);
+    return rail;
+  }
+
   function buildStandaloneProfileHero(profile, authState, options = {}) {
     const hero = create("section", "profile-cinematic-hero");
     const coverUrl = String(profile?.bannerImageUrl || profile?.coverImageUrl || DEFAULT_PROFILE_COVER).trim() || DEFAULT_PROFILE_COVER;
+    const backgroundUrl = String(profile?.backgroundImageUrl || "").trim();
     hero.style.setProperty("--profile-cover-image", `url("${coverUrl.replace(/"/g, "%22")}")`);
+    hero.style.setProperty("--profile-background-image", backgroundUrl ? `url("${backgroundUrl.replace(/"/g, "%22")}")` : "none");
+    hero.dataset.profileMedia = backgroundUrl ? "background" : coverUrl !== DEFAULT_PROFILE_COVER ? "cover" : "fallback";
+    hero.setAttribute("aria-labelledby", "profile-title");
 
     hero.appendChild(buildStandaloneProfileHeader(profile, authState, options));
-    hero.append(create("div", "profile-hero-cover", ""), create("div", "profile-hero-vignette", ""));
 
+    const media = create("div", "profile-hero-media");
+    media.setAttribute("aria-hidden", "true");
+    media.append(
+      create("div", "profile-hero-background", ""),
+      create("div", "profile-hero-cover", ""),
+      create("div", "profile-hero-grid", ""),
+      create("div", "profile-hero-vignette", "")
+    );
+    hero.appendChild(media);
+
+    const stage = create("div", "profile-hero-stage");
     const content = create("div", "profile-hero-content");
     const avatar = buildAvatar(profile);
     avatar.classList.add("profile-hero-avatar");
+    avatar.setAttribute("role", "img");
+    avatar.setAttribute("aria-label", `${profile?.displayName || "Public user"} profile image`);
 
     const identity = create("div", "profile-hero-identity");
+    identity.appendChild(create("p", "profile-hero-eyebrow", "STREAMSUITES PUBLIC IDENTITY"));
     const name = create("h1", "profile-hero-name", profile?.displayName || "Public User");
+    name.id = "profile-title";
     const handleText = getCanonicalProfileSlug(profile, "");
-    const handle = create("p", "profile-hero-handle", handleText ? `@${handleText}` : "@public-user");
+    const handle = handleText ? create("p", "profile-hero-handle", `@${handleText}`) : null;
     const badgeRow = buildBadgeSuffix(profile, { includeRoleChip: false });
     badgeRow.classList.add("profile-hero-badges");
     badgeRow.hidden = badgeRow.childElementCount === 0;
-    identity.append(name, handle);
+    identity.appendChild(name);
+    if (handle) identity.appendChild(handle);
     if (!badgeRow.hidden) identity.appendChild(badgeRow);
 
     const bioText = String(profile?.bio || "").trim();
@@ -11941,10 +12255,14 @@
       });
     }
 
-    const chips = buildStandaloneRoleChips(profile);
-    if (!chips.hidden) identity.appendChild(chips);
+    if (!options.messageMode) {
+      const chips = buildStandaloneRoleChips(profile);
+      if (!chips.hidden) identity.appendChild(chips);
+    }
     content.append(avatar, identity);
-    hero.appendChild(content);
+    stage.appendChild(content);
+    if (!options.messageMode) stage.appendChild(buildProfileHeroActionRail(profile, { ...options, authState }));
+    hero.appendChild(stage);
     return hero;
   }
 
@@ -11952,7 +12270,7 @@
     if (!canEdit) return null;
     const tools = create("section", "profile-utility-section profile-owner-tools");
     const header = create("div", "profile-inline-header");
-    header.appendChild(create("h3", "", "Owner controls"));
+    header.appendChild(create("h2", "", "Owner controls"));
     const editButton = create("button", "profile-edit-open-button profile-edit-open-button--panel", "Edit profile");
     editButton.type = "button";
     editButton.prepend(createIcon(UI_ICON_MAP.edit, "profile-edit-open-icon"));
@@ -11986,6 +12304,53 @@
       acc[type] = (acc[type] || 0) + 1;
       return acc;
     }, { total: 0 });
+  }
+
+  function buildProfileSectionHeading(eyebrowText, titleText, metaText = "") {
+    const header = create("div", "profile-inline-header profile-section-heading");
+    const copy = create("div", "profile-section-heading-copy");
+    copy.append(
+      create("span", "profile-section-eyebrow", eyebrowText),
+      create("h2", "", titleText)
+    );
+    header.appendChild(copy);
+    if (metaText) header.appendChild(create("span", "profile-section-count", metaText));
+    return header;
+  }
+
+  function buildProfileAboutSection(profile) {
+    const section = create("section", "profile-utility-section profile-about-section");
+    section.id = "profile-about";
+    section.setAttribute("aria-labelledby", "profile-about-title");
+    const header = buildProfileSectionHeading("Profile story", "About");
+    header.querySelector("h2").id = "profile-about-title";
+    const bio = String(profile?.bio || "").trim();
+    const body = create(
+      "p",
+      bio ? "profile-about-copy" : "profile-about-copy profile-about-copy--empty",
+      bio || "This profile has not published an about story yet."
+    );
+    section.append(header, body);
+    return section;
+  }
+
+  function buildProfileSectionNav(profile, artifacts = []) {
+    const nav = create("nav", "profile-section-nav");
+    nav.setAttribute("aria-label", "Profile sections");
+    const links = [
+      ["#profile-about", "About"],
+      ["#profile-live", profileIsLive(profile) ? "Live now" : "Stream"],
+      ["#profile-artifacts", artifacts.length ? `Public work · ${formatNumber(artifacts.length)}` : "Public work"],
+      ["#profile-identity", "Identity"],
+      ["#profile-presence", "Presence"],
+      ["#profile-safety", "Safety"]
+    ];
+    links.forEach(([href, label]) => {
+      const link = create("a", "profile-section-nav-link", label);
+      link.href = href;
+      nav.appendChild(link);
+    });
+    return nav;
   }
 
   function resolveProfileChipMeta(contextName, key, options = {}) {
@@ -12118,11 +12483,10 @@
   function buildProfileBadgeGallerySection(profile) {
     const badges = getProfilePublicBadges(profile);
     const section = create("section", "profile-utility-section profile-badge-gallery-section");
-    const header = create("div", "profile-inline-header");
-    header.appendChild(create("h3", "", "Public badges"));
-    if (badges.length) {
-      header.appendChild(create("span", "profile-section-count", `${formatNumber(badges.length)} public`));
-    }
+    section.id = "profile-identity";
+    section.setAttribute("aria-labelledby", "profile-identity-title");
+    const header = buildProfileSectionHeading("Identity signals", "Public badges", badges.length ? `${formatNumber(badges.length)} public` : "");
+    header.querySelector("h2").id = "profile-identity-title";
     section.appendChild(header);
 
     if (!badges.length) {
@@ -12158,11 +12522,11 @@
     if (!entries.length) return null;
 
     const section = create("section", "profile-utility-section profile-social-gallery-section");
-    const header = create("div", "profile-inline-header");
-    header.append(
-      create("h3", "", "Social links"),
-      create("span", "profile-section-count", `${formatNumber(entries.length)} public`)
-    );
+    section.id = "profile-presence";
+    section.setAttribute("aria-labelledby", "profile-presence-title");
+    section.classList.toggle("profile-social-gallery-section--compact", entries.length <= 2);
+    const header = buildProfileSectionHeading("Around the web", "Platform presence", `${formatNumber(entries.length)} public`);
+    header.querySelector("h2").id = "profile-presence-title";
     const gallery = create("div", "profile-social-gallery-grid");
     entries.forEach((entry) => {
       const card = create("a", "profile-social-gallery-card");
@@ -12206,8 +12570,9 @@
       ? buildProgressionGlobalRankValue(progression, { compact: true, emptyLabel: "Unranked" })
       : "Pending";
     const section = create("section", "profile-utility-section profile-overview-panel");
-    const header = create("div", "profile-inline-header");
-    header.appendChild(create("h3", "", "Public overview"));
+    section.setAttribute("aria-labelledby", "profile-overview-title");
+    const header = buildProfileSectionHeading("At a glance", "Public overview");
+    header.querySelector("h2").id = "profile-overview-title";
 
     const statGrid = create("div", "profile-overview-stat-grid");
     [
@@ -12240,8 +12605,14 @@
     addRow("XP", overviewXpValue, !progression);
     addRow("Level", overviewLevelValue, !progression);
     addRow("Global Rank", overviewGlobalRankValue, !progression);
-    addRow("Balance", economy ? buildEconomyBalanceValue(economy, { compact: true }) : "Starting", false);
-    addRow("Inventory", displayInventory.length ? `${formatNumber(displayInventory.length)} item type${displayInventory.length === 1 ? "" : "s"}` : "Empty", false);
+    addRow("Balance", economy ? buildEconomyBalanceValue(economy, { compact: true }) : "Unavailable", !economy);
+    addRow(
+      "Inventory",
+      profile?.inventoryAvailable
+        ? displayInventory.length ? `${formatNumber(displayInventory.length)} item type${displayInventory.length === 1 ? "" : "s"}` : "Empty"
+        : "Unavailable",
+      !profile?.inventoryAvailable
+    );
 
     section.append(header, statGrid, details);
     return section;
@@ -12260,6 +12631,8 @@
       )
     );
     const details = create("details", "profile-authority-collapsible profile-stream-collapsible");
+    details.id = "profile-live";
+    details.setAttribute("aria-label", "Latest public stream");
     details.open = hasUsableStream;
     const summary = create("summary", "profile-authority-summary profile-stream-summary");
     const action = create("span", "profile-authority-summary-action profile-stream-summary-action");
@@ -12291,7 +12664,7 @@
     }
     body.append(
       eyebrow,
-      create("h3", "", hasUsableStream ? (stream.title || (stream.isLive ? `${stream.platformLabel} stream` : "Latest stream")) : "No livestream data available"),
+      create("h2", "", hasUsableStream ? (stream.title || (stream.isLive ? `${stream.platformLabel} stream` : "Latest stream")) : "No livestream data available"),
       create(
         "p",
         "",
@@ -12306,7 +12679,7 @@
           : "No supported public livestream data is currently available for this public profile."
       )
     );
-    body.querySelector("h3")?.setAttribute("data-latest-stream-title", "true");
+    body.querySelector("h2")?.setAttribute("data-latest-stream-title", "true");
     body.querySelector(".profile-stream-state")?.setAttribute("data-latest-stream-state", "true");
     const facts = create("div", "profile-latest-stream-facts");
     if (hasUsableStream && stream?.viewerCount != null) facts.appendChild(create("span", "", `${formatNumber(stream.viewerCount)} watching`));
@@ -12353,15 +12726,26 @@
     const scopedRows = normalizeScopedProgressionRows(profile?.scopedProgression || profile?.scoped_progression || []);
     const displayInventory = inventory.filter((item) => !isWalletDenominationInventoryItem(item));
     const exchangeableItems = normalizeExchangeableItems({ exchangeable_items: profile?.exchangeableItems }, inventory);
+    const hasGameData = Boolean(progression || economy || profile?.inventoryAvailable || scopedRows.length);
     const details = create("details", "profile-authority-collapsible profile-game-collapsible");
     details.dataset.profileProgressionMode = "global";
-    details.open = true;
+    details.dataset.profileDataState = hasGameData ? "available" : "empty";
+    details.open = hasGameData;
     const summary = create("summary", "profile-authority-summary profile-game-summary");
     const action = create("span", "profile-authority-summary-action profile-game-summary-action");
     action.append(
       createIcon("/assets/icons/ui/gamecontroller.svg", "profile-authority-summary-action-icon"),
       create("span", "", "GAME & COMPETITION")
     );
+    if (!hasGameData) {
+      const emptyMeta = create("span", "profile-authority-summary-meta");
+      emptyMeta.appendChild(create("span", "", "No public game data"));
+      summary.append(action, emptyMeta, buildProfileCollapsibleToggle(details));
+      const emptyPanel = create("div", "profile-game-panel");
+      emptyPanel.appendChild(create("div", "profile-empty-state", "No authoritative public XP, wallet, inventory, or scoped-board data is available for this profile yet."));
+      details.append(summary, emptyPanel);
+      return details;
+    }
     const scopeWrap = create("span", "profile-game-scope-compact");
     scopeWrap.dataset.profileScopeSelector = "compact";
     const scopeChip = create("span", "profile-game-scope-chip");
@@ -12545,8 +12929,11 @@
   }
 
   function buildProfileMiniArtifactCard(item, helpers) {
-    const link = create("a", "profile-mini-artifact-card");
+    const artifactType = String(item?.type || item?.artifactType || "artifact").trim().toLowerCase() || "artifact";
+    const link = create("a", `profile-mini-artifact-card profile-mini-artifact-card--${artifactType}`);
     link.href = item?.href || buildArtifactGalleryLink(item?.type || "clips");
+    link.dataset.artifactType = artifactType;
+    link.setAttribute("aria-label", `Open ${toTitle(artifactType)}: ${buildCardTitle(item || {})}`);
     const preview = create("span", "profile-mini-artifact-preview");
     const previewImage = getProfileArtifactPreviewImage(item);
     if (previewImage) {
@@ -12566,7 +12953,7 @@
 
     const body = create("span", "profile-mini-artifact-body");
     body.append(
-      create("span", "profile-mini-artifact-type", toTitle(item?.type || item?.artifactType || "Artifact")),
+        create("span", "profile-mini-artifact-type", toTitle(artifactType)),
       create("span", "profile-mini-artifact-title", buildCardTitle(item || {})),
       create(
         "span",
@@ -12580,16 +12967,16 @@
 
   function buildProfileMiniArtifactGallery(artifacts, ownerMode, helpers) {
     const section = create("section", "profile-utility-section profile-mini-artifacts");
-    const header = create("div", "profile-inline-header");
-    header.appendChild(create("h3", "", "Artifact showcase"));
-    if (Array.isArray(artifacts) && artifacts.length) {
-      const count = create("span", "profile-section-count", `${formatNumber(artifacts.length)} public`);
-      header.appendChild(count);
-    }
+    section.id = "profile-artifacts";
+    section.setAttribute("aria-labelledby", "profile-artifacts-title");
+    const artifactCount = Array.isArray(artifacts) ? artifacts.length : 0;
+    section.dataset.artifactVolume = artifactCount === 0 ? "empty" : artifactCount === 1 ? "single" : artifactCount <= 4 ? "compact" : "gallery";
+    const header = buildProfileSectionHeading("Published from this identity", "Public work", artifactCount ? `${formatNumber(artifactCount)} public` : "No public items");
+    header.querySelector("h2").id = "profile-artifacts-title";
     section.appendChild(header);
 
     if (!Array.isArray(artifacts) || !artifacts.length) {
-      section.appendChild(create("div", "profile-empty-state", "No public artifacts are linked to this profile yet."));
+      section.appendChild(create("div", "profile-empty-state", "No public artifacts are linked to this profile yet. The page stays focused on identity and presence until public work is available."));
       return section;
     }
 
@@ -12706,7 +13093,7 @@
     section.dataset.scopedBoardsList = "profile";
     section.dataset.scopeMode = mode === "error" ? "error" : rows.length ? "scoped" : "empty";
     const header = create("div", "profile-inline-header profile-scoped-progression-header");
-    const title = create("h3", "", "Scoped boards");
+    const title = create("h2", "", "Scoped boards");
     const meta = create("span", "profile-scoped-progression-summary-meta", rows.length
       ? `${formatNumber(rows.length)} scoped creator/channel board${rows.length === 1 ? "" : "s"}`
       : mode === "error"
@@ -12760,46 +13147,67 @@
   function renderStandaloneProfileUtilityBody(profileCard, profile, canEdit, options = {}) {
     clear(profileCard);
     const profileArtifacts = Array.isArray(options.profileArtifacts) ? options.profileArtifacts : [];
-    profileCard.appendChild(buildLatestStreamSection(profile, options.helpers || null));
+    const socialEntries = collectOrderedSocialEntries(profile?.socialLinks);
+    const isContentRich = Boolean(
+      String(profile?.bio || "").trim() ||
+      profileArtifacts.length ||
+      socialEntries.length ||
+      hasUsableProfileStream(profile) ||
+      profile?.progression ||
+      profile?.economy
+    );
+    profileCard.dataset.profileDensity = isContentRich ? "rich" : "sparse";
 
     const primaryGrid = create("div", "profile-body-grid");
     primaryGrid.append(
-      buildProfileOverviewPanel(profile, profileArtifacts, options.helpers || null),
-      buildProfileMiniArtifactGallery(profileArtifacts, canEdit, options.helpers || null)
+      buildProfileAboutSection(profile),
+      buildProfileOverviewPanel(profile, profileArtifacts, options.helpers || null)
     );
     profileCard.appendChild(primaryGrid);
+    profileCard.appendChild(buildLatestStreamSection(profile, options.helpers || null));
+    profileCard.appendChild(buildProfileMiniArtifactGallery(profileArtifacts, canEdit, options.helpers || null));
     profileCard.appendChild(buildProfileBadgeGallerySection(profile));
     profileCard.appendChild(buildProfileGameCompetitionSection(profile, { canEdit }));
     profileCard.appendChild(buildProfileScopedProgressionSection(profile));
 
     const grid = create("div", "profile-utility-grid profile-utility-grid--slim");
+    grid.dataset.profileSocialVolume = socialEntries.length === 0
+      ? "empty"
+      : socialEntries.length <= 2
+        ? "sparse"
+        : socialEntries.length <= 6
+          ? "compact"
+          : "gallery";
     const socialGallery = buildProfileSocialGallerySection(profile);
     if (socialGallery) grid.appendChild(socialGallery);
     const shareSection = create("section", "profile-utility-section");
-    const shareHeader = create("div", "profile-inline-header");
-    const shareTitle = create("h3", "", "Share Links");
-    shareHeader.appendChild(shareTitle);
+    shareSection.classList.add("profile-share-links-section");
+    shareSection.id = socialGallery ? "profile-share" : "profile-presence";
+    shareSection.setAttribute("aria-labelledby", "profile-share-title");
+    const shareHeader = buildProfileSectionHeading("Take this profile with you", "Share profile");
+    shareHeader.querySelector("h2").id = "profile-share-title";
     shareSection.append(shareHeader, buildProfileShareSection(profile, { compact: true }));
 
     grid.appendChild(shareSection);
     profileCard.appendChild(grid);
 
-    profileCard.appendChild(
-      buildCollapsedAuthorityRequestPanel(resolveProfileAuthorityContext(profile), {
-        authState: options.authState || null,
-        openAuthModal: options.openAuthModal || null
-      })
-    );
-
     const ownerTools = buildStandaloneProfileOwnerTools(profile, canEdit, options);
     if (ownerTools) profileCard.appendChild(ownerTools);
+
+    const safetyPanel = buildCollapsedAuthorityRequestPanel(resolveProfileAuthorityContext(profile), {
+        authState: options.authState || null,
+        openAuthModal: options.openAuthModal || null
+      });
+    safetyPanel.id = "profile-safety";
+    safetyPanel.setAttribute("aria-label", "Profile safety and authority requests");
+    profileCard.appendChild(safetyPanel);
   }
 
   function buildProfileLoadingSection(title, rows = 3) {
     const section = create("section", "profile-utility-section profile-loading-section");
     const header = create("div", "profile-inline-header");
     header.append(
-      create("h3", "", title),
+      create("h2", "", title),
       create("span", "profile-section-count profile-section-count--loading", "Loading")
     );
     const stack = create("div", "profile-skeleton-stack");
@@ -12814,10 +13222,12 @@
     clear(profileCard);
     const primaryGrid = create("div", "profile-body-grid");
     primaryGrid.append(
-      buildProfileLoadingSection("Profile overview", 4),
-      buildProfileLoadingSection("Artifact showcase", 3)
+      buildProfileLoadingSection("About", 3),
+      buildProfileLoadingSection("Profile overview", 4)
     );
     profileCard.appendChild(primaryGrid);
+    profileCard.appendChild(buildProfileLoadingSection("Latest stream", 2));
+    profileCard.appendChild(buildProfileLoadingSection("Public work", 3));
     profileCard.appendChild(buildProfileLoadingSection("Public badges", 3));
     profileCard.appendChild(buildProfileLoadingSection("Game & Competition", 4));
     const grid = create("div", "profile-utility-grid profile-utility-grid--slim");
@@ -12829,10 +13239,14 @@
     cleanupStandaloneProfileInteractions();
     clear(host);
     const shell = create("div", "standalone-profile-shell");
+    const atmosphereUrl = String(profile?.backgroundImageUrl || profile?.bannerImageUrl || profile?.coverImageUrl || "").trim();
+    shell.style.setProperty("--profile-atmosphere-image", atmosphereUrl ? `url("${atmosphereUrl.replace(/"/g, "%22")}")` : "none");
     shell.appendChild(buildStandaloneProfileHero(profile, options.authState || null, { ...options, canEditProfile: canEdit }));
     shell.appendChild(create("div", "profile-hero-trim"));
+    shell.appendChild(buildProfileSectionNav(profile, options.profileArtifacts || []));
 
-    const body = create("section", "public-standalone-main profile-standalone-body");
+    const body = create("main", "public-standalone-main profile-standalone-body");
+    body.id = "profile-main";
     const profileCard = create("div", "profile-utility-panel");
     body.appendChild(profileCard);
     shell.appendChild(body);
@@ -12865,8 +13279,10 @@
     cleanupStandaloneProfileInteractions();
     clear(host);
     const shell = create("div", "standalone-profile-shell standalone-profile-shell--message");
-    shell.appendChild(buildStandaloneProfileHero(profile, options.authState || null, options));
-    const body = create("section", "public-standalone-main profile-standalone-body");
+    shell.dataset.profileMessageState = String(options.messageState || "unavailable");
+    shell.appendChild(buildStandaloneProfileHero(profile, options.authState || null, { ...options, messageMode: true }));
+    const body = create("main", "public-standalone-main profile-standalone-body");
+    body.id = "profile-main";
     const card = create("article", "profile-card profile-card-expanded profile-card-standalone profile-message-panel");
     card.append(
       create("div", "empty-state", title),
@@ -13140,13 +13556,14 @@
     const profileCode = resolveStandaloneProfileCode();
     const bootstrap = readStandaloneProfileBootstrap();
     const localProfile = findLocalProfile(data, profileCode);
-    const fallbackProfile = localProfile || resolveLocalProfile(data, profileCode);
+    // Never borrow the generic local profile for a different authoritative identity.
+    const fallbackProfile = localProfile || null;
     const bootstrapProfile = bootstrapMatchesProfileCode(bootstrap, profileCode)
       ? normalizeProfilePayload(bootstrap.profile, fallbackProfile, profileCode)
       : null;
 
     if (bootstrapProfile) {
-      document.title = `${bootstrapProfile.displayName} | StreamSuites Public Profile`;
+      syncStandaloneProfileMetadata(bootstrapProfile, { requestedCode: profileCode });
       renderStandaloneProfilePage(host, bootstrapProfile, false, {
         authState,
         openAuthModal: ctx.openAuthModal,
@@ -13156,12 +13573,14 @@
         loadingSections: true
       });
     } else {
+      syncStandaloneProfileMetadata(null, { state: "loading", requestedCode: profileCode });
       renderStandaloneProfileMessage(host, {
         title: "Profile",
         subtitle: "Loading public profile...",
         authState,
         openAuthModal: ctx.openAuthModal,
-        onMenuAction: ctx.handleAccountMenuAction
+        onMenuAction: ctx.handleAccountMenuAction,
+        messageState: "loading"
       });
     }
 
@@ -13187,11 +13606,13 @@
           canEdit = false;
         }
         if (!profile) {
-          renderProfileNotFound(host, profileCode, {
-            authState,
-            openAuthModal: ctx.openAuthModal,
-            onMenuAction: ctx.handleAccountMenuAction
-          });
+          const renderOptions = {
+              authState,
+              openAuthModal: ctx.openAuthModal,
+              onMenuAction: ctx.handleAccountMenuAction
+            };
+          if (error?.status === 404) renderProfileNotFound(host, profileCode, renderOptions);
+          else renderProfileLoadError(host, profileCode, renderOptions);
           return;
         }
         if (!canEdit && error?.status === 404) {
@@ -13232,7 +13653,7 @@
       }
 
       syncStandaloneProfileCanonicalUrl(profile, profileCode);
-      document.title = `${profile.displayName} | StreamSuites Public Profile`;
+      syncStandaloneProfileMetadata(profile, { requestedCode: profileCode });
       const profileArtifacts = collectProfileArtifacts(
         data,
         profile.publicSlug,
@@ -13626,9 +14047,9 @@
     const raw = String(value || "").trim().toLowerCase();
     const isUuidLike = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(raw);
     const normalized = raw
-      .replace(/[\s-]+/g, "")
-      .replace(/[^a-z0-9_]+/g, "")
-      .replace(/^_+|_+$/g, "");
+      .replace(/\s+/g, "")
+      .replace(/[^a-z0-9_-]+/g, "")
+      .replace(/^[-_]+|[-_]+$/g, "");
     if (!normalized || isUuidLike) return fallback;
     return normalized;
   }

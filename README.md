@@ -96,7 +96,7 @@ flowchart TD
 - `/downloads/obs-plugin/` truthfully presents **StreamSuites Studio for OBS** as in development. It publishes no artifact, version, release date, or compatibility claim; Runtime/Auth remains the control authority and OBS owns the media pipeline.
 - `/downloads/studioapp/extensions/` is a searchable directory shell backed by the versioned, intentionally empty `data/studioapp-extension-catalog.v1.json` presentation contract. Public is not an extension registry: future listings must come from Runtime/Auth or an authoritative generated export, and the current catalog contains no installable item or executable-download field.
 - The public `/home` and `/community` experiences now share one dashboard-style shell and one sidebar/navigation model, with the main Dashboard group listed before Production, `/home` remaining the default public home tab for the public dashboard, and `/media` preserved only as a compatibility entry. The shell brand uses the first-party square `assets/logos/ssmainlogosq.webp` icon; its title and subheading chip use Tektur at bold and regular weights respectively, while authenticated account-overview values use a system-monospace stack.
-- Canonical public profiles resolve at `/u/<slug>`, backed by the authoritative public slug model exported by `StreamSuites`.
+- Canonical public profiles resolve at `/u/<slug>`, backed by the authoritative public slug model exported by `StreamSuites`. The standalone route now uses a dedicated adaptive profile presentation: a media-aware identity hero, truthful live/offline action rail, content-volume-aware work and presence layouts, and explicit sparse, private, not-found, malformed, and transport-failure states. Client navigation keeps canonical metadata synchronized without turning Public into an identity or availability authority.
 - Legacy `user_code` compatibility is still preserved during profile resolution and migration-safe routing.
 - Clean public artifact routes are supported for clips, polls, and scores via `/clips/<id-or-slug>`, `/polls/<id-or-slug>`, and `/scores/<id-or-slug>`, while legacy detail entry points remain available.
 - `/community/settings.html` is the viewer/public account profile settings surface and loads or saves supported authoritative fields through the public profile API.
@@ -112,7 +112,7 @@ flowchart TD
 ### Route treatment for this milestone
 
 - Fully redesigned expressive surfaces: `/`, `/about.html`, `/donate.html`, `/support.html`, `/privacy.html`, `/roadmap`, `/version`, `/accessibility.html`, and the presentation-only `404.html`. Download implementations remain visually protected reference surfaces.
-- Visually harmonized functional surfaces: `/home`, clips, polls, wheels, tallies, scoreboards, leaderboards, games/economy, market exchange, `/live`, community pages, settings/my-data, and `/u` profiles through the shared `public-shell.css` and existing renderer code.
+- Visually harmonized functional surfaces: `/home`, clips, polls, wheels, tallies, scoreboards, leaderboards, games/economy, market exchange, `/live`, community pages, and settings/my-data through the shared `public-shell.css` and existing renderer code. Standalone `/u/<slug>` profiles retain that renderer and shared contract while applying the dedicated route-local `public-profile.css` presentation layer.
 - Visually harmonized quiet utility/information surfaces: login/auth pages, requests entry pages, resources, stats, terms, and postmortem through the existing shared page styles. The obsolete rendered Tools page is removed; the former Changelog page is replaced by Roadmap.
 - Purpose-built download surfaces: `/downloads/`, `/downloads/studioapp/`, `/downloads/obs-plugin/`, and `/downloads/studioapp/extensions/`; their polished diagrams, search/catalog treatments, platform states, and feature trim share one download-specific system while preserving each route's real behavior.
 - Intentionally excluded from production mutation: auth callback/bridge shims, overlay/browser-source surfaces, generated exports, functions/data artifacts, fixtures/samples, archived `index-v2.html` plus `css/aurora-landing-v2.css`, the `sspoc1` reference, the approved read-only `pocv9` reference, and preserved ZIP archives.
@@ -365,6 +365,7 @@ StreamSuites-Public/
 │   ├── obs-plugin-download.css
 │   ├── public-login.css
 │   ├── public-pages-v2.css
+│   ├── public-profile.css
 │   ├── public-shell.css
 │   ├── requests-auth.css
 │   ├── requests.css
@@ -391,6 +392,8 @@ StreamSuites-Public/
 │   ├── status-report.test.mjs
 │   ├── version-page.test.mjs
 │   └── wheels-authority.test.mjs
+├── output/
+│   └── playwright/           # Local profile-redesign browser evidence; not deployed runtime assets
 ├── pocv9/                     # Approved read-only landing motion and diagram reference
 │   ├── index.html
 │   ├── styles.css

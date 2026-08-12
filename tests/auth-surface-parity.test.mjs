@@ -318,15 +318,18 @@ test("public account menu keeps the overview card and capability-aware console l
 test("standalone /u profile pages own the cinematic header and hero treatment", () => {
   const app = read("js/public-pages-app.js");
   const css = read("css/public-shell.css");
+  const profileCss = read("css/public-profile.css");
   const statusCss = read("css/status-widget.css");
   const profileHtml = read("u/index.html");
   const standaloneUtilityBlock = app.match(/function renderStandaloneProfileUtilityBody\(profileCard, profile, canEdit, options = \{\}\) \{[\s\S]*?\r?\n  \}\r?\n\r?\n  function buildProfileLoadingSection/)?.[0] || "";
   const standaloneLoadingBlock = app.match(/function renderStandaloneProfileLoadingUtilityBody\(profileCard\) \{[\s\S]*?\r?\n  \}\r?\n\r?\n  function renderStandaloneProfilePage/)?.[0] || "";
 
   assert.match(app, /function renderStandaloneProfilePage\(host, profile, canEdit, options = \{\}\)/);
-  assert.match(app, /buildStandaloneProfileHero\(profile, options\.authState \|\| null, options\)/);
+  assert.match(app, /buildStandaloneProfileHero\(profile, options\.authState \|\| null, \{ \.\.\.options, canEditProfile: canEdit \}\)/);
+  assert.match(app, /const media = create\("div", "profile-hero-media"\)/);
   assert.match(app, /buildStandaloneProfileHeader\(profile, authState, options = \{\}\)/);
-  assert.match(app, /buildProfileHeaderSocialRail\(profile\?\.socialLinks\)/);
+  assert.match(app, /const socialEntries = collectOrderedSocialEntries\(profile\?\.socialLinks\)/);
+  assert.match(app, /presenceLink\.href = "#profile-presence"/);
   assert.match(app, /buildProfileHeaderAccountWidget\(authState/);
   assert.match(app, /profile-overlay-brand-logo/);
   assert.match(app, /\/assets\/logos\/ssnewcon\.webp/);
@@ -350,7 +353,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(standaloneUtilityBlock, /buildProfileShareSection\(profile, \{ compact: true \}\)/);
   assert.match(standaloneUtilityBlock, /buildCollapsedAuthorityRequestPanel\(resolveProfileAuthorityContext\(profile\)/);
   assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("Profile overview", 4\)/);
-  assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("Artifact showcase", 3\)/);
+  assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("Public work", 3\)/);
   assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("Public badges", 3\)/);
   assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("Game & Competition", 4\)/);
   assert.match(app, /if \(options\.loadingSections === true\) \{/);
@@ -405,7 +408,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /profile-social-gallery-body/);
   assert.match(app, /create\("span", "", formatProfileLinkLabel\(entry\.url\)\)/);
   assert.match(app, /function buildProfileGameCompetitionSection\(profile = null, options = \{\}\)/);
-  assert.match(app, /details\.open = true/);
+  assert.match(app, /details\.open = hasGameData/);
   assert.match(app, /GAME & COMPETITION/);
   assert.match(app, /gamecontroller\.svg/);
   assert.match(app, /XP, level, wallet balance, and inventory hydrate from runtime public authority/);
@@ -507,8 +510,19 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /\.profile-return-link/);
   assert.match(css, /\.profile-shell-footer\s*\{[\s\S]*position:\s*fixed/);
   assert.match(css, /\.profile-footer-status-slot/);
+  assert.match(profileCss, /\.profile-hero-media\s*\{[\s\S]*height:\s*clamp\(220px, 18vw, 260px\)/);
+  assert.match(profileCss, /\.profile-hero-stage\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\) minmax\(310px, 390px\)/);
+  assert.match(profileCss, /\.profile-mini-artifact-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(profileCss, /\.profile-action-rail\s*\{/);
+  assert.match(profileCss, /\.profile-section-nav\s*\{[\s\S]*position:\s*sticky/);
+  assert.match(profileCss, /\.profile-utility-panel\s*\{[\s\S]*background:\s*transparent/);
+  assert.match(profileCss, /@media \(max-width: 560px\)/);
+  assert.match(profileCss, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(profileCss, /@media \(forced-colors: active\)/);
   assert.match(statusCss, /body\[data-public-page="public-profile-standalone"\] \.profile-footer-status-slot \.ss-status-indicator\s*\{[\s\S]*position:\s*relative/);
 
+  assert.match(profileHtml, /href="\/css\/public-profile\.css\?v=20260812-premium-profile"/);
+  assert.match(profileHtml, /class="profile-skip-link" href="#profile-main"/);
   assert.match(profileHtml, /<footer class="profile-shell-footer" data-profile-shell-footer>/);
   assert.match(profileHtml, /data-status-slot data-status-slot-mode="inline"/);
   assert.match(profileHtml, /Community Home/);
@@ -536,7 +550,7 @@ test("standalone /u profile hydration keeps runtime profile media ahead of local
   assert.match(app, /profileMedia\.provider_picture/);
   assert.match(app, /media\.provider_picture/);
   assert.match(app, /find\(isUsableProfileImageUrl\)/);
-  assert.match(app, /!source\.includes\("\/assets\/icons\/ui\/profile\.svg"\)/);
+  assert.match(app, /!parsed\.pathname\.includes\("\/assets\/icons\/ui\/profile\.svg"\)/);
   assert.match(app, /parsed\.origin !== window\.location\.origin\) return source/);
   assert.match(normalizeProfilePayloadBlock, /const imageContract = normalizedImageContract\(payload, fallbackProfile\)/);
   assert.match(normalizeProfilePayloadBlock, /rawAvatarUrl: imageContract\.rawAvatarUrl/);
@@ -561,6 +575,8 @@ test("standalone /u profile hydration keeps runtime profile media ahead of local
   assert.ok(standaloneProfileBlock, "renderStandaloneProfile should exist");
   assert.match(standaloneProfileBlock, /readStandaloneProfileBootstrap\(\)/);
   assert.match(standaloneProfileBlock, /bootstrapMatchesProfileCode\(bootstrap, profileCode\)/);
+  assert.match(standaloneProfileBlock, /const fallbackProfile = localProfile \|\| null/);
+  assert.doesNotMatch(standaloneProfileBlock, /localProfile \|\| resolveLocalProfile/);
   assert.match(standaloneProfileBlock, /loadingSections: true/);
   assert.match(standaloneProfileBlock, /await fetchPublicProfileByIdentifier\(profileCode\)/);
   assert.match(standaloneProfileBlock, /profile = normalizeProfilePayload\(payload, fallbackProfile, profileCode\)/);
@@ -581,6 +597,7 @@ test("standalone /u profile hydration keeps runtime profile media ahead of local
   assert.match(profileFunction, /<meta property="og:title"/);
   assert.match(profileFunction, /<meta property="og:image"/);
   assert.match(profileFunction, /<meta name="twitter:card"/);
+  assert.match(profileFunction, /<link rel="canonical" href="\$\{escapeHtml\(meta\.ogUrl\)\}"/);
   assert.match(profileFunction, /streamsuites-profile-bootstrap/);
   assert.match(profileFunction, /escapeJsonForScript/);
   assert.match(profileFunction, /Cache-Control/);
@@ -639,6 +656,29 @@ test("public profile route shim canonicalizes /@slug to /u/slug without adding a
   assert.match(app, /window\.history\.replaceState\(window\.history\.state, "", initialAliasUrl\.toString\(\)\);/);
   assert.match(app, /const nextUrl = getCanonicalProfileAliasUrl\(url\) \|\| url;/);
   assert.match(app, /window\.history\.pushState\(\{ path: nextUrl\.pathname \+ nextUrl\.search \}, "", nextUrl\.toString\(\)\);/);
+});
+
+test("standalone profiles keep canonical metadata and truthful adaptive states", () => {
+  const app = read("js/public-pages-app.js");
+  const dataHub = read("js/public-data-hub.js");
+  const profileFunction = read("functions/u/[[slug]].js");
+  const profileCss = read("css/public-profile.css");
+
+  assert.match(app, /function syncStandaloneProfileMetadata\(profile, options = \{\}\)/);
+  assert.match(app, /setDocumentMeta\('link\[rel="canonical"\]', "href", canonicalUrl\)/);
+  assert.match(app, /function renderProfileLoadError\(host, requestedCode, options = \{\}\)/);
+  assert.match(app, /This is different from a missing profile, and no availability or identity state has been inferred/);
+  assert.match(app, /error\.status = 502;[\s\S]*error\.code = "profile_payload_malformed"/);
+  assert.match(app, /if \(error\?\.status === 404\) renderProfileNotFound\(host, profileCode, renderOptions\);[\s\S]*else renderProfileLoadError\(host, profileCode, renderOptions\)/);
+  assert.match(app, /const fallbackProfile = localProfile \|\| null/);
+  assert.match(app, /grid\.dataset\.profileSocialVolume = socialEntries\.length === 0/);
+  assert.match(profileCss, /data-profile-social-volume="gallery"/);
+  assert.match(profileCss, /data-artifact-volume="single"/);
+  assert.match(profileCss, /data-profile-live-state="live"/);
+  assert.match(app, /\.replace\(\/\[\^a-z0-9_-\]\+\/g, ""\)/);
+  assert.match(dataHub, /\.replace\(\/\[\^a-z0-9_-\]\+\/g, ""\)/);
+  assert.match(profileFunction, /\.replace\(\/\[\^a-z0-9_-\]\+\/g, ""\)/);
+  assert.match(profileFunction, /<link rel="canonical" href="\$\{escapeHtml\(meta\.ogUrl\)\}"/);
 });
 
 test("public badge surfaces share the floating badge-tooltip helper", () => {

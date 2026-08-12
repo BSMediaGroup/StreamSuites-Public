@@ -34,9 +34,9 @@ function normalizeSlug(value) {
     .trim()
     .toLowerCase()
     .replace(/^@+/, "")
-    .replace(/[\s-]+/g, "")
-    .replace(/[^a-z0-9_]+/g, "")
-    .replace(/^_+|_+$/g, "");
+    .replace(/\s+/g, "")
+    .replace(/[^a-z0-9_-]+/g, "")
+    .replace(/^[-_]+|[-_]+$/g, "");
 }
 
 function escapeHtml(value) {
@@ -141,11 +141,14 @@ function buildMetadata(profile, slug, requestUrl) {
   const title = profile?.displayName
     ? `${profile.displayName} | StreamSuites Public Profile`
     : "StreamSuites Public Profile";
-  const description = profile?.bio
+  const description = (profile?.bio
     ? profile.bio
     : profile?.displayName
       ? `View ${profile.displayName}'s public StreamSuites profile.`
-      : "Standalone public profile on the canonical StreamSuites site.";
+      : "Standalone public profile on the canonical StreamSuites site.")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 200);
   const canonicalUrl = profile?.streamsuitesProfileUrl || new URL(requestUrl.pathname, PUBLIC_ORIGIN).toString();
   const image = resolveHttpsAssetUrl(profile?.avatarUrl || profile?.avatar, requestUrl);
 
@@ -183,7 +186,8 @@ function injectProfileHead(html, meta, profile) {
   const withMeta = html
     .replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(meta.title)}</title>`)
     .replace(/<meta\s+name=["']description["'][^>]*>/i, `<meta name="description" content="${escapeHtml(meta.description)}" />`)
-    .replace("</head>", `  ${metaTags}\n</head>`);
+    .replace(/\s*<link\s+rel=["']canonical["'][^>]*>/i, "")
+    .replace("</head>", `  <link rel="canonical" href="${escapeHtml(meta.ogUrl)}" />\n  ${metaTags}\n</head>`);
 
   if (!profile) return withMeta;
 

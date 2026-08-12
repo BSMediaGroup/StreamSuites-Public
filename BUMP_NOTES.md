@@ -6,6 +6,24 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-12 - Premium adaptive standalone public profiles
+
+#### Technical notes
+
+- Rebuilt the canonical `/u/<slug>` presentation around a cinematic media-aware identity hero, one truthful live/offline status and action rail, a compact sticky section navigator, a story-first About/overview composition, deliberate live-stream framing, type-accented public work, identity badges, Runtime-backed game/progression panels, content-volume-aware social/share layouts, owner controls, and a quiet authority/safety boundary. The new `css/public-profile.css` layer is scoped only to the standalone profile route; shared Public shell, community, artifact, Status, Health, landing, and download surfaces retain their existing presentation contracts.
+- Replaced the initial full-bleed profile treatment after rendered review with a cohesive creator-dashboard composition informed by the approved visual references: a contained violet/blue cover frame, overlapping portrait and identity dock, compact integrated status/actions/identity metrics, equalized overview cards, denser artifact/badge/presence modules, and a substantially shorter responsive page. The correction applies to the whole standalone route rather than only its hero and preserves the same data and interaction contracts.
+- Preserved every existing Runtime/Auth-backed identity, visibility, role/tier, live, artifact, social, sharing, owner-edit, authority-request, progression, economy, inventory, scoped-board, auth-widget, footer-version, and status-widget path. Public remains presentation-only. The standalone resolver no longer borrows the generic local profile when a different authoritative identity has no exact local match, preventing sparse profiles from inheriting unrelated biography or artifact content.
+- Added truthful loading, not-found, private/unavailable, transport-failure, malformed-payload, sparse, missing-media, offline, and live states. Transport or malformed responses no longer become false 404s; absent economy/inventory data renders Unavailable instead of a fabricated starting state; unsafe optional media transports fall back to the established local cover; single/few/many artifact and presence layouts adapt without empty wall-like cards.
+- Added synchronized client title, description, canonical, Open Graph, and Twitter metadata for profile and failure states, plus canonical SSR link output. Canonical profile navigation continues to preserve query strings and fragments during `/@slug` migration and browser history, and supported hyphenated or underscored slugs are no longer collapsed by the Function, client renderer, or data hub.
+- Added a keyboard skip link, one `h1`, semantic `main` and section landmarks, stable section IDs, visible focus treatment, bounded content, reduced-motion final states, forced-colour fallbacks, and responsive compositions for wide desktop, desktop, tablet, and phone viewports. No framework, dependency, API, route, schema, canonical version/build value, Runtime/Auth file, deployment configuration, or provider contract changed.
+- Validation passed JavaScript and Pages Function module syntax, all 55 focused profile/shell tests, all 167 direct Public Node tests, SSR canonical metadata checks (including a hyphenated slug), and browser route smoke checks returning HTTP 200 for `/`, `/u/danielclancy`, `/status`, `/health`, and `/version`. Chromium verified the resolved profile at 1920x1080, 1440x900, 1024x768, 768x1024, and 390x844 with all six section anchors, one `h1`, correct canonical metadata, no horizontal overflow, static reduced-motion hero/action states, working copy feedback, preserved alias query/hash and back/forward navigation, and explicit mocked not-found, network, malformed, private, sparse, unsafe-media, offline, and live states. Local-only Runtime/Auth connection refusals and cross-origin diagnostics/analytics CORS messages were expected; no script exception was observed. No deployment was performed.
+
+#### Human-readable notes
+
+Public profiles now feel like premium creator destinations instead of dense utility dashboards. Identity and the most relevant action lead the page, while live activity, public work, badges, game data, platform presence, sharing, and safety controls gain clear hierarchy and adapt to the amount of real content available.
+
+Empty or unavailable data is also much more honest: a missing profile, a private profile, and a temporary service failure are visibly different, sparse accounts stay sparse, and missing media or metrics no longer create misleading content.
+
 ### 2026-08-11 - Resolved incident timeline alignment and presentation polish
 
 #### Technical notes
