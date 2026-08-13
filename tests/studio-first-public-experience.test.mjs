@@ -317,10 +317,14 @@ test("approved typography is centralized without external font requests", () => 
 
   for (const expected of [
     "/assets/fonts/Tektur-VariableFont_wdth,wght.ttf",
-    "/assets/fonts/Geist-Regular.ttf",
-    "/assets/fonts/Geist-Medium.ttf",
-    "/assets/fonts/Geist-SemiBold.ttf",
-    "/assets/fonts/Geist-Bold.ttf",
+    "/assets/fonts/body/Blinker-Thin.ttf",
+    "/assets/fonts/body/Blinker-ExtraLight.ttf",
+    "/assets/fonts/body/Blinker-Light.ttf",
+    "/assets/fonts/body/Blinker-Regular.ttf",
+    "/assets/fonts/body/Blinker-SemiBold.ttf",
+    "/assets/fonts/body/Blinker-Bold.ttf",
+    "/assets/fonts/body/Blinker-ExtraBold.ttf",
+    "/assets/fonts/body/Blinker-Black.ttf",
     "/assets/fonts/mono/IBMPlexMono-Regular.ttf",
     "/assets/fonts/mono/IBMPlexMono-Medium.ttf",
     "/assets/fonts/mono/IBMPlexMono-SemiBold.ttf",
@@ -331,7 +335,7 @@ test("approved typography is centralized without external font requests", () => 
 
   assert.match(fonts, /font-display:\s*swap/g);
   assert.match(fonts, /--public-font-display:\s*"Tektur"/);
-  assert.match(fonts, /--public-font-body:\s*"Geist Sans"/);
+  assert.match(fonts, /--public-font-body:\s*"Blinker"/);
   assert.match(fonts, /--public-font-mono:\s*"IBM Plex Mono"/);
   [fonts, landing, shell, shared, download].forEach((css) => {
     assert.doesNotMatch(css, /https?:\/\/[^)"']+\.(?:woff2?|ttf|otf)/i);

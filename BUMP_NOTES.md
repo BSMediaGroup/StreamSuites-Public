@@ -6,6 +6,17 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-14 - Blinker body typography
+
+#### Technical notes
+
+- Replaced the active Geist Sans body/UI assignment in `css/public-fonts.css` with the local fixed-weight Blinker family and registered the supplied 100/200/300/400/600/700/800/900 faces with `font-display: swap`. The status center, public-profile fallbacks, generated status report, and canvas report copy now resolve the same body family.
+- Preserved Tektur display typography, existing Geist-backed heading fallbacks, IBM Plex Mono technical roles, every existing font weight declaration, layout, route, content structure, and application behavior. No external font dependency, version change, deployment, commit, or push was introduced.
+
+#### Human-readable summary
+
+Normal Public body copy and controls now use the locally bundled Blinker family, while headings and technical text keep their established typography.
+
 ### 2026-08-14 - Public-profile chrome, metadata, About, and navigation refinement
 
 #### Technical notes

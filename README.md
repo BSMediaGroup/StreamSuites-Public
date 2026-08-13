@@ -33,7 +33,7 @@ Canonical public StreamSuites surface deployed to Cloudflare Pages at `https://s
 
 ## Shared Public Design System
 
-- `css/public-fonts.css` is the local typography contract: Tektur for display headings, Geist Sans for body/UI copy, and IBM Plex Mono for version, status, system, code, and compact metadata. Every face uses `font-display: swap`; refreshed surfaces use `font-synthesis: none`; no external font request or JavaScript font loader is required.
+- `css/public-fonts.css` is the local typography contract: Tektur for display headings, Blinker for body/UI copy, retained Geist Sans for existing heading fallbacks, and IBM Plex Mono for version, status, system, code, and compact metadata. Blinker uses the local fixed 100/200/300/400/600/700/800/900 faces with `font-display: swap`; refreshed surfaces use `font-synthesis: none`; no external font request or JavaScript font loader is required.
 - `css/studio-first-landing.css` owns the approved `pocv9` production adaptation and its corrective pass. The hero atmosphere is deliberately weighted behind the left-side copy, with a denser DPR-capped particle field, visible fine links, and soft point halos above the grain layer. `Run it your way.` now uses only tonal variations of the active product feature color and eases between blue, lime, violet, or gold with the selected preview. Browser Studio and StudioApp restore the protected POC's direct stage composition exactly: the matching output background and safe area use the same 8% inset, Browser participants occupy the POC positions, and StudioApp uses the POC solo-output geometry without an extra production wrapper. The complete four-state device uses the POC perspective angle and gently straightens on hover. Production `index.html` uses a bounded presentation revision on the stylesheet URL so a newly deployed document cannot reuse the earlier landing stylesheet. The landing header and footer retain the first-party square `assets/logos/ssmainlogosq.webp` plus `assets/logos/wmnew.webp` lockup; the Creator Login destinations, dismissible access notice, auth modal, OAuth/email/password, Turnstile, legal, account-switch, and temporary bypass controls remain unchanged.
 - `css/standalone-pages.css` extends that accepted landing token, typography, header, navigation, footer, focus, and reduced-motion contract across About, Donate, Support, Privacy, Roadmap, Accessibility, and the Version Reference without changing the download cascades. The retained pages use the exact landing mark-plus-wordmark treatment, normal-flow footer, bounded desktop gutters, and collapsible mobile navigation; page-specific composition remains scoped to the standalone body classes.
 - Standalone hero titles use a restrained bounded scale, and every standalone footer repeats the exact square-mark plus `wmnew.webp` wordmark lockup used by its header. The production landing footer now uses that exact lockup as well. Donate retains the six established suggested amounts, their impact explanations, five funding-use areas, trust guidance, and local-only donor-message preview while keeping Stripe Checkout as its only network action. Roadmap percentages count once as each programme enters view; progress bars and programme cards add restrained hover/focus sheen, with immediate static rendering under reduced motion.
@@ -184,9 +184,10 @@ Production never silently switches to public HTTP manifest fetching. The `STUDIO
 The approved local font files were already present under the production asset tree, so this milestone copied no font binary:
 
 - Display: `assets/fonts/Tektur-VariableFont_wdth,wght.ttf` (`400–900`, `75%–100%` stretch).
-- Body/UI: `assets/fonts/Geist-Light.ttf`, `Geist-Regular.ttf`, `Geist-Medium.ttf`, `Geist-SemiBold.ttf`, `Geist-Bold.ttf`, and `Geist-ExtraBold.ttf`.
+- Body/UI: `assets/fonts/body/Blinker-{Thin,ExtraLight,Light,Regular,SemiBold,Bold,ExtraBold,Black}.ttf` at fixed weights 100/200/300/400/600/700/800/900.
 - System metadata: `assets/fonts/mono/IBMPlexMono-Light.ttf`, `IBMPlexMono-Regular.ttf`, `IBMPlexMono-Medium.ttf`, `IBMPlexMono-SemiBold.ttf`, and `IBMPlexMono-Bold.ttf`.
 - The existing Geist and IBM Plex Mono license files remain at `assets/fonts/GEISTMONOOFL.txt` and `assets/fonts/mono/IBMPLEXMONOOFL.txt`.
+- Retained Geist font binaries continue to support the unchanged heading/display fallback roles; the Blinker license is stored with the body family at `assets/fonts/body/BLINKEROFL.txt`.
 - The POC/font-package notes reference a Tektur `OFL.txt`, but that exact license file was not found in the POC or neighboring StreamSuites repositories. No license text was fabricated. Recovering and reviewing that file remains a release/licensing follow-up before publication.
 - Studio brand mark: `assets/logos/studiologo3.webp`, byte-identical to the Browser Studio asset selected by `src/components/BrandMark.tsx` (SHA-256 `43C28A45FBABC4A710C4DAD151ECD33952FA823C5A2E17D615343F1C6BF7A786`).
 
@@ -427,6 +428,9 @@ StreamSuites-Public/
     │   ├── Tektur-VariableFont_wdth,wght.ttf
     │   ├── Geist-{Light,Regular,Medium,SemiBold,Bold,ExtraBold}.ttf
     │   ├── GEISTMONOOFL.txt
+    │   ├── body/
+    │   │   ├── Blinker-{Thin,ExtraLight,Light,Regular,SemiBold,Bold,ExtraBold,Black}.ttf
+    │   │   └── BLINKEROFL.txt
     │   └── mono/
     │       ├── IBMPlexMono-{Light,Regular,Medium,SemiBold,Bold}.ttf
     │       └── IBMPLEXMONOOFL.txt
