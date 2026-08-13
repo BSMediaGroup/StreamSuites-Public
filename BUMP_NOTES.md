@@ -6,6 +6,20 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-14 - Public-profile chrome, metadata, About, and navigation refinement
+
+#### Technical notes
+
+- Scoped theme-derived scrollbars to the standalone profile document and every descendant scroll surface, including portal-rendered editor, menu, and inventory-lightbox content. Live theme preview updates the document-owned scrollbar immediately, cancel restores the authoritative theme, and leaving the profile route removes the profile root state.
+- Rebalanced the header logo animation away from near-white endpoints, kept header social/account borders neutral, and consolidated primary, subtle edit, neutral utility, focus, hover, and disabled action states around the selected profile preset.
+- Removed the duplicate hero identity chip, reused the existing SVG-backed profile-type and tier chips in the signal card, increased the collapsed biography to three lines, and made video-only About content use the full available card width while retaining the split story/video layout.
+- Replaced the colliding standalone sticky rail with a mirrored header rail only after the original reaches the fixed header. The two rails share active-section state, transfer keyboard focus during the handoff, keep only one copy interactive, and use one passive scroll frame plus one IntersectionObserver.
+- Validation passed JavaScript syntax, CSS structural checks, all Public Node tests, and local route smokes. Deterministic Chromium QA covered 1920, 1440, 1024, 768, and 390 pixel widths, owner and visitor states, all requested theme families, document/editor/menu/lightbox scroll surfaces, About content combinations, keyboard tab ownership, focus handoff, reduced motion, and zero horizontal overflow. No deployment, version/build change, commit, push, or Runtime/Auth restart was performed.
+
+#### Human-readable summary
+
+Public profiles now keep their controls, scrollbars, identity metadata, About layout, and compact sticky navigation visually aligned with the selected profile theme. The original section rail hands off cleanly to the fixed header while scrolling and returns when the page moves back above it.
+
 ### 2026-08-14 - Forensic repair of public-profile avatar and cover hydration
 
 #### Technical notes

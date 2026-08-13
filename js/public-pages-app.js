@@ -132,6 +132,27 @@
     const normalized = String(value || "violet_blue").trim().toLowerCase().replace(/-/g, "_");
     return PROFILE_THEME_PRESET_KEYS.has(normalized) ? normalized : "violet_blue";
   }
+
+  function applyStandaloneProfileRootTheme(value) {
+    const theme = normalizeProfileThemePreset(value);
+    const preset = PROFILE_THEME_PRESETS.find((item) => item.key === theme) || PROFILE_THEME_PRESETS[0];
+    const root = document.documentElement;
+    root.dataset.profilePage = "active";
+    root.dataset.profileTheme = theme;
+    document.body.dataset.profileTheme = theme;
+    ["a", "b", "c"].forEach((key, index) => {
+      root.style.setProperty(`--profile-gradient-${key}`, preset.colors[index]);
+    });
+    return theme;
+  }
+
+  function clearStandaloneProfileRootTheme() {
+    const root = document.documentElement;
+    delete root.dataset.profilePage;
+    delete root.dataset.profileTheme;
+    delete document.body.dataset.profileTheme;
+    ["a", "b", "c"].forEach((key) => root.style.removeProperty(`--profile-gradient-${key}`));
+  }
   const ABOUT_VIDEO_PROVIDER_FALLBACKS = Object.freeze([
     Object.freeze({ key: "youtube", label: "YouTube Video / Livestream", provider_label: "YouTube", kind: "video", helper_text: "Paste a specific YouTube video, livestream, Short, or embed URL.", example_url: "https://www.youtube.com/watch?v=uPfbuo6iP6Y", external_action_label: "Watch on YouTube", iframe_allow: "autoplay; encrypted-media; picture-in-picture; web-share; fullscreen" }),
     Object.freeze({ key: "rumble", label: "Rumble Video / Livestream", provider_label: "Rumble", kind: "video", helper_text: "Paste the direct Rumble iframe URL from Share → Embed. Watch-page IDs are not player IDs.", example_url: "https://rumble.com/embed/v7bv5ia/?pub=vmzw3", external_action_label: "Watch on Rumble", iframe_allow: "autoplay; encrypted-media; picture-in-picture; fullscreen" }),
@@ -11928,8 +11949,7 @@
     const backdrop = create("div", "profile-edit-modal-backdrop is-open");
     const modal = create("section", "profile-edit-modal profile-edit-modal--profile");
     modal.dataset.profileTheme = selectedTheme;
-    document.body.dataset.profileTheme = selectedTheme;
-    document.documentElement.dataset.profileTheme = selectedTheme;
+    applyStandaloneProfileRootTheme(selectedTheme);
     modal.setAttribute("role", "dialog");
     modal.setAttribute("aria-modal", "true");
     modal.setAttribute("aria-labelledby", "profile-edit-modal-title");
@@ -12275,9 +12295,9 @@
     status.setAttribute("role", "status");
     status.setAttribute("aria-live", "polite");
     const actions = create("div", "profile-edit-actions");
-    const cancel = create("button", "profile-edit-button profile-edit-button-secondary", "Cancel");
+    const cancel = create("button", "profile-edit-button profile-edit-button-secondary profile-feature-action profile-feature-action--neutral", "Cancel");
     cancel.type = "button";
-    const save = create("button", "profile-edit-button profile-edit-button-primary", "Save changes");
+    const save = create("button", "profile-edit-button profile-edit-button-primary profile-feature-action profile-feature-action--primary", "Save changes");
     save.type = "submit";
     actions.append(cancel, save);
 
@@ -12510,8 +12530,7 @@
         const nextTheme = normalizeProfileThemePreset(input.value);
         media.dataset.profileTheme = nextTheme;
         modal.dataset.profileTheme = nextTheme;
-        document.body.dataset.profileTheme = nextTheme;
-        document.documentElement.dataset.profileTheme = nextTheme;
+        applyStandaloneProfileRootTheme(nextTheme);
         if (pageShell instanceof HTMLElement) pageShell.dataset.profileTheme = nextTheme;
       }
     });
@@ -12544,8 +12563,7 @@
       if (closeOptions.restoreTheme !== false && pageShell instanceof HTMLElement) {
         pageShell.dataset.profileTheme = selectedTheme;
       }
-      if (closeOptions.restoreTheme !== false) document.body.dataset.profileTheme = selectedTheme;
-      if (closeOptions.restoreTheme !== false) document.documentElement.dataset.profileTheme = selectedTheme;
+      if (closeOptions.restoreTheme !== false) applyStandaloneProfileRootTheme(selectedTheme);
       closePublicProfileEditModal(backdrop, restoreFocusTo);
     };
     closeButton.addEventListener("click", close);
@@ -13048,6 +13066,7 @@
 
   function buildStandaloneProfileHeader(profile, authState, options = {}) {
     const header = create("header", "profile-overlay-header");
+    const brandGroup = create("div", "profile-overlay-brand-group");
     const left = create("a", "profile-overlay-brand");
     left.href = "/community/";
     left.setAttribute("aria-label", "Community home");
@@ -13063,6 +13082,9 @@
       logo,
       brandText
     );
+    const headerNav = buildProfileSectionNav(profile, options.profileArtifacts || [], { placement: "header" });
+    setProfileSectionNavInteractive(headerNav, false, { hidden: true });
+    brandGroup.append(left, headerNav);
 
     const right = create("div", "profile-overlay-actions");
     const socialRail = buildProfileHeaderSocialRail(profile?.socialLinks);
@@ -13074,16 +13096,8 @@
       })
     );
 
-    header.append(left, right);
+    header.append(brandGroup, right);
     return header;
-  }
-
-  function buildStandaloneRoleChips(profile) {
-    const row = create("div", "profile-hero-role-chips");
-    const typeChip = resolveProfileTypeDescriptor(profile);
-    row.appendChild(buildProfileContextChip("heroRole", typeChip.key, { label: typeChip.label, kind: "role" }));
-    row.hidden = row.childElementCount === 0;
-    return row;
   }
 
   async function resolveMyAboutVideo(provider, sourceUrl) {
@@ -13275,13 +13289,13 @@
     const actionStack = create("div", "profile-action-stack");
     let primaryAction = null;
     if (isLive && streamUrl) {
-      primaryAction = create("a", "profile-primary-action", "Watch live");
+      primaryAction = create("a", "profile-primary-action profile-feature-action profile-feature-action--primary", "Watch live");
       primaryAction.href = streamUrl;
       primaryAction.target = "_blank";
       primaryAction.rel = "noopener noreferrer";
       primaryAction.prepend(createIcon("/assets/icons/ui/tvlive.svg", "profile-action-icon"));
     } else if (socialEntries[0]) {
-      primaryAction = create("a", "profile-primary-action", `View on ${socialEntries[0].label}`);
+      primaryAction = create("a", "profile-primary-action profile-feature-action profile-feature-action--primary", `View on ${socialEntries[0].label}`);
       primaryAction.href = socialEntries[0].url;
       primaryAction.target = "_blank";
       primaryAction.rel = "noopener noreferrer";
@@ -13291,11 +13305,11 @@
       icon.setAttribute("aria-hidden", "true");
       primaryAction.prepend(icon);
     } else if (artifacts.length) {
-      primaryAction = create("a", "profile-primary-action", "Explore public work");
+      primaryAction = create("a", "profile-primary-action profile-feature-action profile-feature-action--primary", "Explore public work");
       primaryAction.href = "#profile-artifacts";
       primaryAction.prepend(createIcon("/assets/icons/ui/clipcards.svg", "profile-action-icon"));
     } else if (canonicalUrl) {
-      primaryAction = create("button", "profile-primary-action", "Copy profile link");
+      primaryAction = create("button", "profile-primary-action profile-feature-action profile-feature-action--primary", "Copy profile link");
       primaryAction.type = "button";
       primaryAction.prepend(createIcon(UI_ICON_MAP.copy, "profile-action-icon"));
     }
@@ -13322,14 +13336,14 @@
       primaryAction.addEventListener("click", copyAction);
     }
     if (canonicalUrl && primaryAction?.tagName !== "BUTTON") {
-      const copyButton = create("button", "profile-secondary-action", "Copy link");
+      const copyButton = create("button", "profile-secondary-action profile-feature-action profile-feature-action--neutral", "Copy link");
       copyButton.type = "button";
       copyButton.prepend(createIcon(UI_ICON_MAP.copy, "profile-action-icon"));
       copyButton.addEventListener("click", copyAction);
       secondaryActions.appendChild(copyButton);
     }
     if (canonicalUrl) {
-      const shareButton = create("button", "profile-secondary-action", "Share");
+      const shareButton = create("button", "profile-secondary-action profile-feature-action profile-feature-action--neutral", "Share");
       shareButton.type = "button";
       shareButton.prepend(createIcon(UI_ICON_MAP.share, "profile-action-icon"));
       shareButton.addEventListener("click", async () => {
@@ -13353,11 +13367,14 @@
     const addSignal = (term, value) => {
       if (!value) return;
       const row = create("div", "profile-signal-row");
-      row.append(create("dt", "", term), create("dd", "", value));
+      const definition = create("dd");
+      if (value instanceof Node) definition.appendChild(value);
+      else definition.textContent = String(value);
+      row.append(create("dt", "", term), definition);
       signals.appendChild(row);
     };
-    addSignal("Identity", resolveProfileTypeDescriptor(profile).label);
-    addSignal("Tier", resolveProfileTier(profile?.tier || "", profile?.accountType || profile?.account_type).toUpperCase());
+    addSignal("Identity", buildProfileTypeChip(profile));
+    addSignal("Tier", buildProfileTierChip(resolveProfileTier(profile?.tier || "", profile?.accountType || profile?.account_type)));
     if (platformLabel) addSignal("Platform", platformLabel);
     if (artifacts.length) addSignal("Public work", `${formatNumber(artifacts.length)} item${artifacts.length === 1 ? "" : "s"}`);
 
@@ -13442,7 +13459,7 @@
     identity.appendChild(name);
     if (metaLine.childElementCount) identity.appendChild(metaLine);
     if (options.canEditProfile && typeof options.openProfileEditor === "function") {
-      const editButton = create("button", "profile-edit-open-button profile-edit-open-button--hero", "Edit profile");
+      const editButton = create("button", "profile-edit-open-button profile-edit-open-button--hero profile-feature-action profile-feature-action--subtle", "Edit profile");
       editButton.type = "button";
       editButton.setAttribute("aria-label", "Edit profile");
       editButton.prepend(createIcon(UI_ICON_MAP.edit, "profile-edit-open-icon"));
@@ -13480,10 +13497,6 @@
     }
 
     content.append(avatar, identity);
-    if (!options.messageMode) {
-      const chips = buildStandaloneRoleChips(profile);
-      if (!chips.hidden) content.appendChild(chips);
-    }
     stage.appendChild(content);
     if (!options.messageMode) stage.appendChild(buildProfileHeroActionRail(profile, { ...options, authState }));
     hero.appendChild(stage);
@@ -13495,7 +13508,7 @@
     const tools = create("section", "profile-utility-section profile-owner-tools");
     const header = create("div", "profile-inline-header");
     header.appendChild(create("h2", "", "Owner controls"));
-    const editButton = create("button", "profile-edit-open-button profile-edit-open-button--panel", "Edit profile");
+    const editButton = create("button", "profile-edit-open-button profile-edit-open-button--panel profile-feature-action profile-feature-action--subtle", "Edit profile");
     editButton.type = "button";
     editButton.prepend(createIcon(UI_ICON_MAP.edit, "profile-edit-open-icon"));
     editButton.addEventListener("click", () => {
@@ -13553,13 +13566,12 @@
     );
     header.querySelector("h2").id = "profile-about-title";
     if (canEdit && typeof options.openProfileEditor === "function") {
-      const editButton = create("button", "profile-section-edit-button", "Edit story");
+      const editButton = create("button", "profile-section-edit-button profile-feature-action profile-feature-action--subtle", "Edit story");
       editButton.type = "button";
       editButton.prepend(createIcon(UI_ICON_MAP.edit, "profile-section-edit-icon"));
       editButton.addEventListener("click", () => options.openProfileEditor(profile, { focusField: "about" }));
       header.appendChild(editButton);
     }
-    const layout = create("div", `profile-about-layout${aboutVideo ? " has-media" : ""}`);
     const story = create("div", "profile-about-story");
     const aboutHtml = String(profile?.aboutHtml || "").trim();
     if (aboutHtml) appendSanitizedAboutProjection(story, aboutHtml);
@@ -13573,8 +13585,14 @@
         ));
       }
     }
-    if (story.childNodes.length) layout.appendChild(story);
-    else layout.classList.add("is-video-only");
+    const hasStory = story.childNodes.length > 0;
+    const contentState = hasStory && aboutVideo ? "story-video" : aboutVideo ? "video-only" : "story-only";
+    const layout = create(
+      "div",
+      `profile-about-layout profile-about-layout--${contentState}${aboutVideo ? " has-media" : ""}${contentState === "video-only" ? " is-video-only" : ""}`
+    );
+    layout.dataset.profileAboutState = contentState;
+    if (hasStory) layout.appendChild(story);
     if (aboutVideo) {
       const presentation = create("div", "profile-about-video-presentation");
       const meta = create("div", "profile-about-video-meta");
@@ -13613,7 +13631,7 @@
       }
       presentation.append(meta, frame);
       if (aboutVideo.sourceType === "embed") {
-        const sourceLink = create("a", "profile-about-video-source-link", aboutVideo.externalActionLabel);
+        const sourceLink = create("a", "profile-about-video-source-link profile-feature-action profile-feature-action--subtle", aboutVideo.externalActionLabel);
         sourceLink.href = aboutVideo.sourceUrl;
         sourceLink.target = "_blank";
         sourceLink.rel = "noopener noreferrer";
@@ -13625,10 +13643,8 @@
     return section;
   }
 
-  function buildProfileSectionNav(profile, artifacts = []) {
-    const nav = create("nav", "profile-section-nav");
-    nav.setAttribute("aria-label", "Profile sections");
-    const links = [
+  function getProfileSectionNavItems(profile, artifacts = []) {
+    return [
       ["#profile-bio", "Bio"],
       ["#profile-about", "About"],
       ["#profile-live", profileIsLive(profile) ? "Live now" : "Stream"],
@@ -13637,11 +13653,35 @@
       ["#profile-presence", "Presence"],
       ["#profile-safety", "Safety"]
     ];
-    links.forEach(([href, label]) => {
+  }
+
+  function populateProfileSectionNav(nav, items, activeHref = "") {
+    clear(nav);
+    items.forEach(([href, label]) => {
       const link = create("a", "profile-section-nav-link", label);
       link.href = href;
+      link.dataset.profileSectionHref = href;
+      if (href === activeHref) link.setAttribute("aria-current", "location");
       nav.appendChild(link);
     });
+  }
+
+  function setProfileSectionNavInteractive(nav, interactive, options = {}) {
+    if (!(nav instanceof HTMLElement)) return;
+    nav.hidden = options.hidden === true;
+    nav.inert = !interactive;
+    nav.setAttribute("aria-hidden", interactive ? "false" : "true");
+    nav.querySelectorAll("a[href]").forEach((link) => {
+      link.tabIndex = interactive ? 0 : -1;
+    });
+  }
+
+  function buildProfileSectionNav(profile, artifacts = [], options = {}) {
+    const headerPlacement = options.placement === "header";
+    const nav = create("nav", `profile-section-nav${headerPlacement ? " profile-header-section-nav" : " profile-standalone-section-nav"}`);
+    nav.dataset.profileNavPlacement = headerPlacement ? "header" : "standalone";
+    nav.setAttribute("aria-label", headerPlacement ? "Docked profile sections" : "Profile sections");
+    populateProfileSectionNav(nav, getProfileSectionNavItems(profile, artifacts));
     return nav;
   }
 
@@ -14531,20 +14571,130 @@
 
   function initializeStandaloneProfileScrollEffects(shell) {
     let frame = 0;
+    let resizeFrame = 0;
+    let navigationObserver = null;
+    let docked = false;
+    let lastFocusedNav = null;
+    let lastFocusedHref = "";
+    const header = shell.querySelector(".profile-overlay-header");
+    const brandText = shell.querySelector(".profile-overlay-brand-text");
+    const sentinel = shell.querySelector(".profile-section-nav-sentinel");
+    const standaloneNav = shell.querySelector('[data-profile-nav-placement="standalone"]');
+    const headerNav = shell.querySelector('[data-profile-nav-placement="header"]');
+    const sections = Array.from(shell.querySelectorAll("#profile-bio, #profile-about, #profile-live, #profile-artifacts, #profile-identity, #profile-presence, #profile-safety"));
+    const visibleSections = new Map();
+
+    const rememberFocusedNav = (event) => {
+      const nav = event.target instanceof Element ? event.target.closest("[data-profile-nav-placement]") : null;
+      if (nav !== headerNav && nav !== standaloneNav) {
+        lastFocusedNav = null;
+        lastFocusedHref = "";
+        return;
+      }
+      lastFocusedNav = nav;
+      lastFocusedHref = event.target?.dataset?.profileSectionHref || "";
+    };
+    document.addEventListener("focusin", rememberFocusedNav);
+    document.addEventListener("pointerdown", rememberFocusedNav, { capture: true });
+
+    const setActiveSection = (sectionId) => {
+      const href = sectionId ? `#${sectionId}` : "";
+      if (!href) return;
+      shell.dataset.profileActiveSection = href;
+      shell.querySelectorAll("[data-profile-section-href]").forEach((link) => {
+        const active = link.dataset.profileSectionHref === href;
+        link.classList.toggle("is-active", active);
+        if (active) link.setAttribute("aria-current", "location");
+        else link.removeAttribute("aria-current");
+      });
+    };
+
+    const setDocked = (nextDocked) => {
+      if (!headerNav || !standaloneNav || docked === nextDocked) return;
+      const previousNav = docked ? headerNav : standaloneNav;
+      const nextNav = nextDocked ? headerNav : standaloneNav;
+      const focusedHref = previousNav.contains(document.activeElement)
+        ? document.activeElement?.dataset?.profileSectionHref || ""
+        : lastFocusedNav === previousNav ? lastFocusedHref : "";
+      docked = nextDocked;
+      shell.classList.toggle("is-profile-nav-docked", docked);
+      if (brandText instanceof HTMLElement) brandText.setAttribute("aria-hidden", docked ? "true" : "false");
+      setProfileSectionNavInteractive(nextNav, true, { hidden: false });
+      setProfileSectionNavInteractive(previousNav, false, { hidden: previousNav === headerNav });
+      if (focusedHref) {
+        const focusTarget = nextNav.querySelector(`[data-profile-section-href="${focusedHref}"]`);
+        window.requestAnimationFrame(() => focusTarget?.focus({ preventScroll: true }));
+      }
+    };
+
+    const selectVisibleSection = () => {
+      const active = sections
+        .filter((section) => visibleSections.get(section)?.isIntersecting)
+        .sort((left, right) => {
+          const leftEntry = visibleSections.get(left);
+          const rightEntry = visibleSections.get(right);
+          return Math.abs(leftEntry.boundingClientRect.top) - Math.abs(rightEntry.boundingClientRect.top);
+        })[0];
+      if (active) setActiveSection(active.id);
+    };
+
+    const observeNavigation = () => {
+      navigationObserver?.disconnect();
+      visibleSections.clear();
+      if (!(header instanceof HTMLElement) || !(sentinel instanceof HTMLElement) || typeof IntersectionObserver !== "function") return;
+      const headerHeight = Math.ceil(header.getBoundingClientRect().height);
+      navigationObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.target === sentinel) {
+            setDocked(!entry.isIntersecting && entry.boundingClientRect.top < headerHeight);
+            return;
+          }
+          visibleSections.set(entry.target, entry);
+        });
+        selectVisibleSection();
+      }, {
+        root: null,
+        rootMargin: `-${headerHeight}px 0px -58% 0px`,
+        threshold: [0, 0.01, 0.5]
+      });
+      navigationObserver.observe(sentinel);
+      sections.forEach((section) => navigationObserver.observe(section));
+    };
+
     const update = () => {
       frame = 0;
       const progress = Math.max(0, Math.min(1, window.scrollY / 360));
       shell.style.setProperty("--profile-scroll-progress", progress.toFixed(3));
       shell.classList.toggle("is-profile-scrolled", progress > 0.035);
+      if (sentinel instanceof HTMLElement && header instanceof HTMLElement) {
+        setDocked(sentinel.getBoundingClientRect().top < header.getBoundingClientRect().bottom);
+      }
     };
     const onScroll = () => {
       if (!frame) frame = window.requestAnimationFrame(update);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
+    const onResize = () => {
+      if (resizeFrame) return;
+      resizeFrame = window.requestAnimationFrame(() => {
+        resizeFrame = 0;
+        observeNavigation();
+      });
+    };
+    window.addEventListener("resize", onResize, { passive: true });
+    setProfileSectionNavInteractive(headerNav, false, { hidden: true });
+    setProfileSectionNavInteractive(standaloneNav, true, { hidden: false });
+    setActiveSection(sections[0]?.id || "");
+    observeNavigation();
     update();
     registerStandaloneProfileCleanup(() => {
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+      document.removeEventListener("focusin", rememberFocusedNav);
+      document.removeEventListener("pointerdown", rememberFocusedNav, { capture: true });
       if (frame) window.cancelAnimationFrame(frame);
+      if (resizeFrame) window.cancelAnimationFrame(resizeFrame);
+      navigationObserver?.disconnect();
     });
   }
 
@@ -14557,12 +14707,14 @@
     shell.dataset.profileCanEdit = canEdit ? "true" : "false";
     const profileTheme = normalizeProfileThemePreset(profile?.streamsuitesThemePreset);
     shell.dataset.profileTheme = profileTheme;
-    document.body.dataset.profileTheme = profileTheme;
-    document.documentElement.dataset.profileTheme = profileTheme;
+    applyStandaloneProfileRootTheme(profileTheme);
     const atmosphereUrl = String(profile?.backgroundImageUrl || profile?.bannerImageUrl || profile?.coverImageUrl || "").trim();
     shell.style.setProperty("--profile-atmosphere-image", atmosphereUrl ? `url("${atmosphereUrl.replace(/"/g, "%22")}")` : "none");
     shell.appendChild(buildStandaloneProfileHero(profile, options.authState || null, { ...options, canEditProfile: canEdit }));
     shell.appendChild(create("div", "profile-hero-trim"));
+    const navSentinel = create("div", "profile-section-nav-sentinel");
+    navSentinel.setAttribute("aria-hidden", "true");
+    shell.appendChild(navSentinel);
     shell.appendChild(buildProfileSectionNav(profile, options.profileArtifacts || []));
 
     const body = create("main", "public-standalone-main profile-standalone-body");
@@ -14571,13 +14723,13 @@
     body.appendChild(profileCard);
     shell.appendChild(body);
     host.appendChild(shell);
-    initializeStandaloneProfileScrollEffects(shell);
 
     if (options.loadingSections === true) {
       renderStandaloneProfileLoadingUtilityBody(profileCard);
     } else {
       renderStandaloneProfileUtilityBody(profileCard, profile, canEdit, options);
     }
+    initializeStandaloneProfileScrollEffects(shell);
   }
 
   function renderStandaloneProfileMessage(host, options = {}) {
@@ -14597,6 +14749,7 @@
       bannerImageUrl: DEFAULT_PROFILE_COVER,
       badges: []
     };
+    applyStandaloneProfileRootTheme("violet_blue");
     cleanupStandaloneProfileInteractions();
     clear(host);
     const shell = create("div", "standalone-profile-shell standalone-profile-shell--message");
@@ -14895,9 +15048,17 @@
     const currentShell = host.querySelector(":scope > .standalone-profile-shell");
     const artifactKey = standaloneProfileArtifactKey(artifacts, canEdit);
     if (!currentShell || currentShell.dataset.profileArtifactKey === artifactKey) return;
-    const currentNav = currentShell.querySelector(".profile-section-nav");
     const currentArtifacts = currentShell.querySelector(".profile-mini-artifacts");
-    if (currentNav) currentNav.replaceWith(buildProfileSectionNav(profile, artifacts));
+    const navItems = getProfileSectionNavItems(profile, artifacts);
+    currentShell.querySelectorAll(".profile-section-nav").forEach((nav) => {
+      populateProfileSectionNav(nav, navItems, currentShell.dataset.profileActiveSection || "");
+      const interactive = nav.dataset.profileNavPlacement === "header"
+        ? currentShell.classList.contains("is-profile-nav-docked")
+        : !currentShell.classList.contains("is-profile-nav-docked");
+      setProfileSectionNavInteractive(nav, interactive, {
+        hidden: nav.dataset.profileNavPlacement === "header" && !interactive
+      });
+    });
     if (currentArtifacts) currentArtifacts.replaceWith(buildProfileMiniArtifactGallery(artifacts, canEdit, helpers));
     currentShell.dataset.profileArtifactKey = artifactKey;
   }
@@ -16043,6 +16204,10 @@
     function applyConfig(nextConfig, options = {}) {
       currentConfig = nextConfig;
       currentPageId = Object.keys(PAGE_CONFIG).find((key) => PAGE_CONFIG[key] === nextConfig) || currentPageId;
+      if (nextConfig !== PAGE_CONFIG["public-profile-standalone"]) {
+        cleanupStandaloneProfileInteractions();
+        clearStandaloneProfileRootTheme();
+      }
 
       if (nextConfig.standalone) {
         document.body.classList.add("public-standalone-page");

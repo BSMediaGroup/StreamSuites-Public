@@ -462,7 +462,8 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(profileCss, /--profile-gradient-hover-a:\s*#6aa8ff/);
   assert.match(profileCss, /--profile-gradient-hover-c:\s*#c2a4ff/);
   assert.match(profileCss, /\.profile-overlay-brand-glyph\s*\{[\s\S]*var\(--profile-gradient-a\)[\s\S]*var\(--profile-gradient-c\)/);
-  assert.match(profileCss, /\.profile-overlay-brand:hover \.profile-overlay-brand-glyph,[\s\S]*var\(--profile-gradient-hover-a\)/);
+  assert.match(profileCss, /\.profile-overlay-brand:hover \.profile-overlay-brand-glyph,[\s\S]*var\(--profile-feature-lift\)/);
+  assert.doesNotMatch(profileCss.match(/@keyframes profile-brand-breathe[\s\S]*?\n\}/)?.[0] || "", /profile-gradient-hover-c|white/);
   assert.match(profileCss, /data-profile-theme="frosted_silver"/);
   assert.match(css, /\.profile-overlay-brand-text\s*\{[\s\S]*letter-spacing:\s*0\.12em/);
   assert.match(css, /\.profile-overlay-brand-text\s*\{[\s\S]*text-transform:\s*none/);
@@ -554,9 +555,9 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(profileCss, /@media \(forced-colors: active\)/);
   assert.doesNotMatch(statusCss, /body\[data-public-page="public-profile-standalone"\] \.profile-footer-status-slot/);
 
-  assert.match(profileHtml, /href="\/css\/public-profile\.css\?v=20260813-profile-theme-shell"/);
+  assert.match(profileHtml, /href="\/css\/public-profile\.css\?v=20260814-profile-chrome"/);
   assert.match(profileHtml, /href="\/css\/status-widget\.css\?v=20260813-profile-footer"/);
-  assert.match(profileHtml, /src="\/js\/public-pages-app\.js\?v=20260813-profile-hydration-v2"/);
+  assert.match(profileHtml, /src="\/js\/public-pages-app\.js\?v=20260814-profile-chrome"/);
   assert.match(profileHtml, /class="profile-skip-link" href="#profile-main"/);
   assert.match(profileHtml, /<footer class="profile-site-footer" data-profile-shell-footer>/);
   assert.match(profileHtml, /class="profile-site-footer__status" data-status-slot/);
@@ -569,15 +570,15 @@ test("standalone /u profile hydration keeps runtime profile media ahead of local
   const app = read("js/public-pages-app.js");
   const profileFunction = read("functions/u/[[slug]].js");
   const normalizeProfilePayloadBlock = app.match(/function normalizeProfilePayload\(payload, fallbackProfile, fallbackCode\) \{[\s\S]*?\r?\n  \}\r?\n\r?\n  async function fetchPublicProfileByIdentifier/)?.[0] || "";
-  const roleChipBlock = app.match(/function buildStandaloneRoleChips\(profile\) \{[\s\S]*?\r?\n  \}/)?.[0] || "";
   const profileTypeBlock = app.match(/function buildProfileTypeChip\(profile\) \{[\s\S]*?\r?\n  \}/)?.[0] || "";
   const profileTierBlock = app.match(/function buildProfileTierChip\(tier\) \{[\s\S]*?\r?\n  \}/)?.[0] || "";
+  const actionRailBlock = app.match(/function buildProfileHeroActionRail\(profile, options = \{\}\) \{[\s\S]*?\r?\n  \}\r?\n\r?\n  function buildStandaloneProfileHero/)?.[0] || "";
   const standaloneProfileBlock = app.match(/function renderStandaloneProfile\(ctx\) \{[\s\S]*?\r?\n  \}\r?\n\r?\n  function renderCommunitySettings/)?.[0] || "";
 
   assert.ok(normalizeProfilePayloadBlock, "normalizeProfilePayload should exist");
-  assert.ok(roleChipBlock, "buildStandaloneRoleChips should exist");
   assert.ok(profileTypeBlock, "buildProfileTypeChip should exist");
   assert.ok(profileTierBlock, "buildProfileTierChip should exist");
+  assert.ok(actionRailBlock, "profile action rail should exist");
   assert.match(app, /function normalizedImageContract\(source = \{\}, fallback = \{\}\)/);
   assert.doesNotMatch(app, /function stableImageUrl\(url, cacheKey\)/);
   assert.doesNotMatch(app, /searchParams\.set\("v"/);
@@ -603,8 +604,9 @@ test("standalone /u profile hydration keeps runtime profile media ahead of local
   assert.match(normalizeProfilePayloadBlock, /authorityIdentity\?\.account_user_code/);
   assert.match(normalizeProfilePayloadBlock, /const tier = resolveProfileTier\(payload\?\.tier \|\| fallbackProfile\?\.tier \|\| "", accountType\)/);
   assert.match(normalizeProfilePayloadBlock, /accountType,/);
-  assert.match(roleChipBlock, /resolveProfileTypeDescriptor\(profile\)/);
-  assert.doesNotMatch(roleChipBlock, /founder|moderator/);
+  assert.doesNotMatch(app, /function buildStandaloneRoleChips/);
+  assert.match(actionRailBlock, /addSignal\("Identity", buildProfileTypeChip\(profile\)\)/);
+  assert.match(actionRailBlock, /addSignal\("Tier", buildProfileTierChip\(/);
   assert.match(profileTypeBlock, /resolveProfileTypeDescriptor\(profile\)/);
   assert.match(profileTypeBlock, /buildProfileContextChip\("role", key/);
   assert.doesNotMatch(profileTypeBlock, /profile-badge-chip-icon|create\("img"|typeChip\.icon/);

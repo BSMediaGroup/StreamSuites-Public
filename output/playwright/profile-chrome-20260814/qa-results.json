@@ -1,0 +1,879 @@
+{
+  "breakpoints": [
+    {
+      "width": 1920,
+      "height": 1080,
+      "top": {
+        "label": "1920x1080-top",
+        "viewport": [
+          1920,
+          1080
+        ],
+        "scrollY": 0,
+        "docked": false,
+        "headerTop": 0,
+        "wordmarkHidden": false,
+        "standaloneNav": {
+          "hidden": false,
+          "inert": false,
+          "tabStops": 7
+        },
+        "headerNav": {
+          "hidden": true,
+          "inert": true,
+          "tabStops": 0
+        },
+        "activeStandalone": "#profile-bio",
+        "activeHeader": "#profile-bio",
+        "bioClamp": "3",
+        "aboutState": "story-video",
+        "aboutColumns": "714.891px 539.094px",
+        "aboutWidth": 1276,
+        "videoWidth": 539,
+        "identity": "ADMIN",
+        "tier": "PRO",
+        "tierIcon": true,
+        "leftRoleChipCount": 0,
+        "socialBorder": "rgba(221, 214, 242, 0.14)",
+        "accountBorder": "rgba(221, 214, 242, 0.14)",
+        "rootTheme": "signal_red",
+        "profilePageState": "active",
+        "bodyScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "rootScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "horizontalOverflow": 0
+      },
+      "docked": {
+        "label": "1920x1080-docked",
+        "viewport": [
+          1920,
+          1080
+        ],
+        "scrollY": 900,
+        "docked": true,
+        "headerTop": 0,
+        "wordmarkHidden": true,
+        "standaloneNav": {
+          "hidden": false,
+          "inert": true,
+          "tabStops": 0
+        },
+        "headerNav": {
+          "hidden": false,
+          "inert": false,
+          "tabStops": 7
+        },
+        "activeStandalone": "#profile-about",
+        "activeHeader": "#profile-about",
+        "bioClamp": "3",
+        "aboutState": "story-video",
+        "aboutColumns": "714.891px 539.094px",
+        "aboutWidth": 1276,
+        "videoWidth": 539,
+        "identity": "ADMIN",
+        "tier": "PRO",
+        "tierIcon": true,
+        "leftRoleChipCount": 0,
+        "socialBorder": "rgba(221, 214, 242, 0.14)",
+        "accountBorder": "rgba(221, 214, 242, 0.14)",
+        "rootTheme": "signal_red",
+        "profilePageState": "active",
+        "bodyScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "rootScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "horizontalOverflow": 0
+      },
+      "returned": {
+        "label": "1920x1080-returned",
+        "viewport": [
+          1920,
+          1080
+        ],
+        "scrollY": 0,
+        "docked": false,
+        "headerTop": 0,
+        "wordmarkHidden": false,
+        "standaloneNav": {
+          "hidden": false,
+          "inert": false,
+          "tabStops": 7
+        },
+        "headerNav": {
+          "hidden": true,
+          "inert": true,
+          "tabStops": 0
+        },
+        "activeStandalone": "#profile-bio",
+        "activeHeader": "#profile-bio",
+        "bioClamp": "3",
+        "aboutState": "story-video",
+        "aboutColumns": "714.891px 539.094px",
+        "aboutWidth": 1276,
+        "videoWidth": 539,
+        "identity": "ADMIN",
+        "tier": "PRO",
+        "tierIcon": true,
+        "leftRoleChipCount": 0,
+        "socialBorder": "rgba(221, 214, 242, 0.14)",
+        "accountBorder": "rgba(221, 214, 242, 0.14)",
+        "rootTheme": "signal_red",
+        "profilePageState": "active",
+        "bodyScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "rootScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "horizontalOverflow": 0
+      }
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "top": {
+        "label": "1440x900-top",
+        "viewport": [
+          1440,
+          900
+        ],
+        "scrollY": 0,
+        "docked": false,
+        "headerTop": 0,
+        "wordmarkHidden": false,
+        "standaloneNav": {
+          "hidden": false,
+          "inert": false,
+          "tabStops": 7
+        },
+        "headerNav": {
+          "hidden": true,
+          "inert": true,
+          "tabStops": 0
+        },
+        "activeStandalone": "#profile-bio",
+        "activeHeader": "#profile-bio",
+        "bioClamp": "3",
+        "aboutState": "story-video",
+        "aboutColumns": "714.891px 539.094px",
+        "aboutWidth": 1276,
+        "videoWidth": 539,
+        "identity": "ADMIN",
+        "tier": "PRO",
+        "tierIcon": true,
+        "leftRoleChipCount": 0,
+        "socialBorder": "rgba(221, 214, 242, 0.14)",
+        "accountBorder": "rgba(221, 214, 242, 0.14)",
+        "rootTheme": "signal_red",
+        "profilePageState": "active",
+        "bodyScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "rootScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "horizontalOverflow": 0
+      },
+      "docked": {
+        "label": "1440x900-docked",
+        "viewport": [
+          1440,
+          900
+        ],
+        "scrollY": 900,
+        "docked": true,
+        "headerTop": 0,
+        "wordmarkHidden": true,
+        "standaloneNav": {
+          "hidden": false,
+          "inert": true,
+          "tabStops": 0
+        },
+        "headerNav": {
+          "hidden": false,
+          "inert": false,
+          "tabStops": 7
+        },
+        "activeStandalone": "#profile-about",
+        "activeHeader": "#profile-about",
+        "bioClamp": "3",
+        "aboutState": "story-video",
+        "aboutColumns": "714.891px 539.094px",
+        "aboutWidth": 1276,
+        "videoWidth": 539,
+        "identity": "ADMIN",
+        "tier": "PRO",
+        "tierIcon": true,
+        "leftRoleChipCount": 0,
+        "socialBorder": "rgba(221, 214, 242, 0.14)",
+        "accountBorder": "rgba(221, 214, 242, 0.14)",
+        "rootTheme": "signal_red",
+        "profilePageState": "active",
+        "bodyScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "rootScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "horizontalOverflow": 0
+      },
+      "returned": {
+        "label": "1440x900-returned",
+        "viewport": [
+          1440,
+          900
+        ],
+        "scrollY": 0,
+        "docked": false,
+        "headerTop": 0,
+        "wordmarkHidden": false,
+        "standaloneNav": {
+          "hidden": false,
+          "inert": false,
+          "tabStops": 7
+        },
+        "headerNav": {
+          "hidden": true,
+          "inert": true,
+          "tabStops": 0
+        },
+        "activeStandalone": "#profile-bio",
+        "activeHeader": "#profile-bio",
+        "bioClamp": "3",
+        "aboutState": "story-video",
+        "aboutColumns": "714.891px 539.094px",
+        "aboutWidth": 1276,
+        "videoWidth": 539,
+        "identity": "ADMIN",
+        "tier": "PRO",
+        "tierIcon": true,
+        "leftRoleChipCount": 0,
+        "socialBorder": "rgba(221, 214, 242, 0.14)",
+        "accountBorder": "rgba(221, 214, 242, 0.14)",
+        "rootTheme": "signal_red",
+        "profilePageState": "active",
+        "bodyScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "rootScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "horizontalOverflow": 0
+      }
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "top": {
+        "label": "1024x768-top",
+        "viewport": [
+          1024,
+          768
+        ],
+        "scrollY": 0,
+        "docked": false,
+        "headerTop": 0,
+        "wordmarkHidden": false,
+        "standaloneNav": {
+          "hidden": false,
+          "inert": false,
+          "tabStops": 7
+        },
+        "headerNav": {
+          "hidden": true,
+          "inert": true,
+          "tabStops": 0
+        },
+        "activeStandalone": "#profile-bio",
+        "activeHeader": "#profile-bio",
+        "bioClamp": "3",
+        "aboutState": "story-video",
+        "aboutColumns": "511.109px 385.422px",
+        "aboutWidth": 919,
+        "videoWidth": 385,
+        "identity": "ADMIN",
+        "tier": "PRO",
+        "tierIcon": true,
+        "leftRoleChipCount": 0,
+        "socialBorder": "rgba(221, 214, 242, 0.14)",
+        "accountBorder": "rgba(221, 214, 242, 0.14)",
+        "rootTheme": "signal_red",
+        "profilePageState": "active",
+        "bodyScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "rootScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "horizontalOverflow": 0
+      },
+      "docked": {
+        "label": "1024x768-docked",
+        "viewport": [
+          1024,
+          768
+        ],
+        "scrollY": 900,
+        "docked": true,
+        "headerTop": 0,
+        "wordmarkHidden": true,
+        "standaloneNav": {
+          "hidden": false,
+          "inert": true,
+          "tabStops": 0
+        },
+        "headerNav": {
+          "hidden": false,
+          "inert": false,
+          "tabStops": 7
+        },
+        "activeStandalone": "#profile-about",
+        "activeHeader": "#profile-about",
+        "bioClamp": "3",
+        "aboutState": "story-video",
+        "aboutColumns": "511.109px 385.422px",
+        "aboutWidth": 919,
+        "videoWidth": 385,
+        "identity": "ADMIN",
+        "tier": "PRO",
+        "tierIcon": true,
+        "leftRoleChipCount": 0,
+        "socialBorder": "rgba(221, 214, 242, 0.14)",
+        "accountBorder": "rgba(221, 214, 242, 0.14)",
+        "rootTheme": "signal_red",
+        "profilePageState": "active",
+        "bodyScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "rootScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "horizontalOverflow": 0
+      },
+      "returned": {
+        "label": "1024x768-returned",
+        "viewport": [
+          1024,
+          768
+        ],
+        "scrollY": 0,
+        "docked": false,
+        "headerTop": 0,
+        "wordmarkHidden": false,
+        "standaloneNav": {
+          "hidden": false,
+          "inert": false,
+          "tabStops": 7
+        },
+        "headerNav": {
+          "hidden": true,
+          "inert": true,
+          "tabStops": 0
+        },
+        "activeStandalone": "#profile-bio",
+        "activeHeader": "#profile-bio",
+        "bioClamp": "3",
+        "aboutState": "story-video",
+        "aboutColumns": "511.109px 385.422px",
+        "aboutWidth": 919,
+        "videoWidth": 385,
+        "identity": "ADMIN",
+        "tier": "PRO",
+        "tierIcon": true,
+        "leftRoleChipCount": 0,
+        "socialBorder": "rgba(221, 214, 242, 0.14)",
+        "accountBorder": "rgba(221, 214, 242, 0.14)",
+        "rootTheme": "signal_red",
+        "profilePageState": "active",
+        "bodyScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "rootScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "horizontalOverflow": 0
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "top": {
+        "label": "768x1024-top",
+        "viewport": [
+          768,
+          1024
+        ],
+        "scrollY": 0,
+        "docked": false,
+        "headerTop": 0,
+        "wordmarkHidden": false,
+        "standaloneNav": {
+          "hidden": false,
+          "inert": false,
+          "tabStops": 7
+        },
+        "headerNav": {
+          "hidden": true,
+          "inert": true,
+          "tabStops": 0
+        },
+        "activeStandalone": "#profile-bio",
+        "activeHeader": "#profile-bio",
+        "bioClamp": "3",
+        "aboutState": "story-video",
+        "aboutColumns": "696px",
+        "aboutWidth": 696,
+        "videoWidth": 696,
+        "identity": "ADMIN",
+        "tier": "PRO",
+        "tierIcon": true,
+        "leftRoleChipCount": 0,
+        "socialBorder": "rgba(221, 214, 242, 0.14)",
+        "accountBorder": "rgba(221, 214, 242, 0.14)",
+        "rootTheme": "signal_red",
+        "profilePageState": "active",
+        "bodyScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "rootScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "horizontalOverflow": 0
+      },
+      "docked": {
+        "label": "768x1024-docked",
+        "viewport": [
+          768,
+          1024
+        ],
+        "scrollY": 1187,
+        "docked": true,
+        "headerTop": 0,
+        "wordmarkHidden": true,
+        "standaloneNav": {
+          "hidden": false,
+          "inert": true,
+          "tabStops": 0
+        },
+        "headerNav": {
+          "hidden": false,
+          "inert": false,
+          "tabStops": 7
+        },
+        "activeStandalone": "#profile-about",
+        "activeHeader": "#profile-about",
+        "bioClamp": "3",
+        "aboutState": "story-video",
+        "aboutColumns": "696px",
+        "aboutWidth": 696,
+        "videoWidth": 696,
+        "identity": "ADMIN",
+        "tier": "PRO",
+        "tierIcon": true,
+        "leftRoleChipCount": 0,
+        "socialBorder": "rgba(221, 214, 242, 0.14)",
+        "accountBorder": "rgba(221, 214, 242, 0.14)",
+        "rootTheme": "signal_red",
+        "profilePageState": "active",
+        "bodyScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "rootScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "horizontalOverflow": 0
+      },
+      "returned": {
+        "label": "768x1024-returned",
+        "viewport": [
+          768,
+          1024
+        ],
+        "scrollY": 0,
+        "docked": false,
+        "headerTop": 0,
+        "wordmarkHidden": false,
+        "standaloneNav": {
+          "hidden": false,
+          "inert": false,
+          "tabStops": 7
+        },
+        "headerNav": {
+          "hidden": true,
+          "inert": true,
+          "tabStops": 0
+        },
+        "activeStandalone": "#profile-bio",
+        "activeHeader": "#profile-bio",
+        "bioClamp": "3",
+        "aboutState": "story-video",
+        "aboutColumns": "696px",
+        "aboutWidth": 696,
+        "videoWidth": 696,
+        "identity": "ADMIN",
+        "tier": "PRO",
+        "tierIcon": true,
+        "leftRoleChipCount": 0,
+        "socialBorder": "rgba(221, 214, 242, 0.14)",
+        "accountBorder": "rgba(221, 214, 242, 0.14)",
+        "rootTheme": "signal_red",
+        "profilePageState": "active",
+        "bodyScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "rootScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "horizontalOverflow": 0
+      }
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "top": {
+        "label": "390x844-top",
+        "viewport": [
+          390,
+          844
+        ],
+        "scrollY": 0,
+        "docked": false,
+        "headerTop": 0,
+        "wordmarkHidden": false,
+        "standaloneNav": {
+          "hidden": false,
+          "inert": false,
+          "tabStops": 7
+        },
+        "headerNav": {
+          "hidden": true,
+          "inert": true,
+          "tabStops": 0
+        },
+        "activeStandalone": "#profile-bio",
+        "activeHeader": "#profile-bio",
+        "bioClamp": "3",
+        "aboutState": "story-video",
+        "aboutColumns": "336px",
+        "aboutWidth": 336,
+        "videoWidth": 336,
+        "identity": "ADMIN",
+        "tier": "PRO",
+        "tierIcon": true,
+        "leftRoleChipCount": 0,
+        "socialBorder": "rgba(221, 214, 242, 0.14)",
+        "accountBorder": "rgba(221, 214, 242, 0.14)",
+        "rootTheme": "signal_red",
+        "profilePageState": "active",
+        "bodyScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "rootScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "horizontalOverflow": 0
+      },
+      "docked": {
+        "label": "390x844-docked",
+        "viewport": [
+          390,
+          844
+        ],
+        "scrollY": 950,
+        "docked": true,
+        "headerTop": 0,
+        "wordmarkHidden": true,
+        "standaloneNav": {
+          "hidden": false,
+          "inert": true,
+          "tabStops": 0
+        },
+        "headerNav": {
+          "hidden": false,
+          "inert": false,
+          "tabStops": 7
+        },
+        "activeStandalone": "#profile-about",
+        "activeHeader": "#profile-about",
+        "bioClamp": "3",
+        "aboutState": "story-video",
+        "aboutColumns": "336px",
+        "aboutWidth": 336,
+        "videoWidth": 336,
+        "identity": "ADMIN",
+        "tier": "PRO",
+        "tierIcon": true,
+        "leftRoleChipCount": 0,
+        "socialBorder": "rgba(221, 214, 242, 0.14)",
+        "accountBorder": "rgba(221, 214, 242, 0.14)",
+        "rootTheme": "signal_red",
+        "profilePageState": "active",
+        "bodyScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "rootScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "horizontalOverflow": 0
+      },
+      "returned": {
+        "label": "390x844-returned",
+        "viewport": [
+          390,
+          844
+        ],
+        "scrollY": 0,
+        "docked": false,
+        "headerTop": 0,
+        "wordmarkHidden": false,
+        "standaloneNav": {
+          "hidden": false,
+          "inert": false,
+          "tabStops": 7
+        },
+        "headerNav": {
+          "hidden": true,
+          "inert": true,
+          "tabStops": 0
+        },
+        "activeStandalone": "#profile-bio",
+        "activeHeader": "#profile-bio",
+        "bioClamp": "3",
+        "aboutState": "story-video",
+        "aboutColumns": "336px",
+        "aboutWidth": 336,
+        "videoWidth": 336,
+        "identity": "ADMIN",
+        "tier": "PRO",
+        "tierIcon": true,
+        "leftRoleChipCount": 0,
+        "socialBorder": "rgba(221, 214, 242, 0.14)",
+        "accountBorder": "rgba(221, 214, 242, 0.14)",
+        "rootTheme": "signal_red",
+        "profilePageState": "active",
+        "bodyScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "rootScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+        "horizontalOverflow": 0
+      }
+    }
+  ],
+  "profileStates": [
+    {
+      "label": "creator-gold-owner",
+      "viewport": [
+        1024,
+        768
+      ],
+      "scrollY": 0,
+      "docked": false,
+      "headerTop": 0,
+      "wordmarkHidden": false,
+      "standaloneNav": {
+        "hidden": false,
+        "inert": false,
+        "tabStops": 7
+      },
+      "headerNav": {
+        "hidden": true,
+        "inert": true,
+        "tabStops": 0
+      },
+      "activeStandalone": "#profile-bio",
+      "activeHeader": "#profile-bio",
+      "bioClamp": "3",
+      "aboutState": "story-video",
+      "aboutColumns": "511.109px 385.422px",
+      "aboutWidth": 919,
+      "videoWidth": 385,
+      "identity": "CREATOR",
+      "tier": "GOLD",
+      "tierIcon": true,
+      "leftRoleChipCount": 0,
+      "socialBorder": "rgba(221, 214, 242, 0.14)",
+      "accountBorder": "rgba(221, 214, 242, 0.14)",
+      "rootTheme": "signal_red",
+      "profilePageState": "active",
+      "bodyScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+      "rootScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+      "horizontalOverflow": 0
+    }
+  ],
+  "aboutStates": [
+    {
+      "label": "about-story-video",
+      "viewport": [
+        1440,
+        900
+      ],
+      "scrollY": 221,
+      "docked": false,
+      "headerTop": 0,
+      "wordmarkHidden": false,
+      "standaloneNav": {
+        "hidden": false,
+        "inert": false,
+        "tabStops": 7
+      },
+      "headerNav": {
+        "hidden": true,
+        "inert": true,
+        "tabStops": 0
+      },
+      "activeStandalone": "#profile-bio",
+      "activeHeader": "#profile-bio",
+      "bioClamp": "3",
+      "aboutState": "story-video",
+      "aboutColumns": "714.891px 539.094px",
+      "aboutWidth": 1276,
+      "videoWidth": 539,
+      "identity": "ADMIN",
+      "tier": "PRO",
+      "tierIcon": true,
+      "leftRoleChipCount": 0,
+      "socialBorder": "rgba(221, 214, 242, 0.14)",
+      "accountBorder": "rgba(221, 214, 242, 0.14)",
+      "rootTheme": "signal_red",
+      "profilePageState": "active",
+      "bodyScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+      "rootScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+      "horizontalOverflow": 0
+    },
+    {
+      "label": "about-video-only",
+      "viewport": [
+        1440,
+        900
+      ],
+      "scrollY": 547,
+      "docked": true,
+      "headerTop": 0,
+      "wordmarkHidden": true,
+      "standaloneNav": {
+        "hidden": false,
+        "inert": true,
+        "tabStops": 0
+      },
+      "headerNav": {
+        "hidden": false,
+        "inert": false,
+        "tabStops": 7
+      },
+      "activeStandalone": "#profile-about",
+      "activeHeader": "#profile-about",
+      "bioClamp": "3",
+      "aboutState": "video-only",
+      "aboutColumns": "1276px",
+      "aboutWidth": 1276,
+      "videoWidth": 1120,
+      "identity": "ADMIN",
+      "tier": "PRO",
+      "tierIcon": true,
+      "leftRoleChipCount": 0,
+      "socialBorder": "rgba(221, 214, 242, 0.14)",
+      "accountBorder": "rgba(221, 214, 242, 0.14)",
+      "rootTheme": "signal_red",
+      "profilePageState": "active",
+      "bodyScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+      "rootScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+      "horizontalOverflow": 0
+    },
+    {
+      "label": "about-story-only",
+      "viewport": [
+        1440,
+        900
+      ],
+      "scrollY": 0,
+      "docked": false,
+      "headerTop": 0,
+      "wordmarkHidden": false,
+      "standaloneNav": {
+        "hidden": false,
+        "inert": false,
+        "tabStops": 7
+      },
+      "headerNav": {
+        "hidden": true,
+        "inert": true,
+        "tabStops": 0
+      },
+      "activeStandalone": "#profile-bio",
+      "activeHeader": "#profile-bio",
+      "bioClamp": "3",
+      "aboutState": "story-only",
+      "aboutColumns": "1276px",
+      "aboutWidth": 1276,
+      "videoWidth": 0,
+      "identity": "ADMIN",
+      "tier": "PRO",
+      "tierIcon": true,
+      "leftRoleChipCount": 0,
+      "socialBorder": "rgba(221, 214, 242, 0.14)",
+      "accountBorder": "rgba(221, 214, 242, 0.14)",
+      "rootTheme": "signal_red",
+      "profilePageState": "active",
+      "bodyScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+      "rootScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+      "horizontalOverflow": 0
+    }
+  ],
+  "themeCoverage": [
+    {
+      "theme": "violet_blue",
+      "thumb": "color-mix(in srgb, #a76ef2 66%, #737985 34%)",
+      "hover": "color-mix(in srgb, #a76ef2 78%, #709eff 22%)",
+      "active": "color-mix(in srgb, #7468ff 42%, #a76ef2 58%)",
+      "scrollbar": "color(srgb 0.585569 0.446039 0.803686) color(srgb 0.0821961 0.083451 0.175216)",
+      "logoBackground": "linear-gradient(135deg, rgb(116, 104, 255) 0%, rgb(167, 110, 242) 48%, color(srgb 0.607451 0.472784 0.960235) 100%)",
+      "logoAnimation": "profile-brand-spectrum"
+    },
+    {
+      "theme": "signal_red",
+      "thumb": "color-mix(in srgb, #ff3348 66%, #737985 34%)",
+      "hover": "color-mix(in srgb, #ff3348 78%, #580817 22%)",
+      "active": "color-mix(in srgb, #f02038 42%, #ff3348 58%)",
+      "scrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+      "logoBackground": "linear-gradient(135deg, rgb(240, 32, 56) 0%, rgb(255, 51, 72) 48%, color(srgb 0.855922 0.162902 0.240078) 100%)",
+      "logoAnimation": "profile-brand-spectrum"
+    },
+    {
+      "theme": "emerald_cyan",
+      "thumb": "color-mix(in srgb, #28d7aa 66%, #737985 34%)",
+      "hover": "color-mix(in srgb, #28d7aa 78%, #36bce8 22%)",
+      "active": "color-mix(in srgb, #16b878 42%, #28d7aa 58%)",
+      "scrollbar": "color(srgb 0.256863 0.717804 0.617333) color(srgb 0.0379608 0.121098 0.111686)",
+      "logoBackground": "linear-gradient(135deg, rgb(22, 184, 120) 0%, rgb(40, 215, 170) 48%, color(srgb 0.168941 0.819843 0.720157) 100%)",
+      "logoAnimation": "profile-brand-spectrum"
+    },
+    {
+      "theme": "gold_amber",
+      "thumb": "color-mix(in srgb, #ffcf5c 66%, #737985 34%)",
+      "hover": "color-mix(in srgb, #ffcf5c 78%, #f07a36 22%)",
+      "active": "color-mix(in srgb, #f0b83e 42%, #ffcf5c 58%)",
+      "scrollbar": "color(srgb 0.813333 0.697098 0.415451) color(srgb 0.140549 0.121098 0.0843922)",
+      "logoBackground": "linear-gradient(135deg, rgb(240, 184, 62) 0%, rgb(255, 207, 92) 48%, color(srgb 0.987059 0.738431 0.328) 100%)",
+      "logoAnimation": "profile-brand-spectrum"
+    },
+    {
+      "theme": "dark_slate",
+      "thumb": "color-mix(in srgb, #3b4658 66%, #737985 34%)",
+      "hover": "color-mix(in srgb, #3b4658 78%, #5f6b7a 22%)",
+      "active": "color-mix(in srgb, #202938 42%, #3b4658 58%)",
+      "scrollbar": "color(srgb 0.306039 0.34251 0.405098) color(srgb 0.0426667 0.0538039 0.0815686)",
+      "logoBackground": "linear-gradient(135deg, rgb(32, 41, 56) 0%, rgb(59, 70, 88) 48%, color(srgb 0.262431 0.306431 0.374431) 100%)",
+      "logoAnimation": "profile-brand-spectrum"
+    },
+    {
+      "theme": "neutral_greytone",
+      "thumb": "color-mix(in srgb, #858a94 66%, #737985 34%)",
+      "hover": "color-mix(in srgb, #858a94 78%, #afb4bd 22%)",
+      "active": "color-mix(in srgb, #565a62 42%, #858a94 58%)",
+      "scrollbar": "color(srgb 0.497569 0.51851 0.560392) color(srgb 0.0680784 0.0768627 0.101333)",
+      "logoBackground": "linear-gradient(135deg, rgb(86, 90, 98) 0%, rgb(133, 138, 148) 48%, color(srgb 0.557804 0.577412 0.615765) 100%)",
+      "logoAnimation": "profile-brand-spectrum"
+    },
+    {
+      "theme": "frosted_silver",
+      "thumb": "color-mix(in srgb, #c3ced8 66%, #737985 34%)",
+      "hover": "color-mix(in srgb, #c3ced8 78%, #eef4f7 22%)",
+      "active": "color-mix(in srgb, #8c9baa 42%, #c3ced8 58%)",
+      "scrollbar": "color(srgb 0.658039 0.69451 0.736392) color(srgb 0.0934902 0.107451 0.135216)",
+      "logoBackground": "linear-gradient(135deg, rgb(140, 155, 170) 0%, rgb(195, 206, 216) 48%, color(srgb 0.801804 0.840627 0.873804) 100%)",
+      "logoAnimation": "profile-brand-spectrum"
+    }
+  ],
+  "editor": {
+    "savedTheme": "signal_red",
+    "preview": {
+      "root": "emerald_cyan",
+      "rootScrollbar": "color(srgb 0.256863 0.717804 0.617333) color(srgb 0.0379608 0.121098 0.111686)",
+      "bodyScrollbar": "color(srgb 0.256863 0.717804 0.617333) color(srgb 0.0379608 0.121098 0.111686)",
+      "modalScrollbar": "color(srgb 0.156863 0.843137 0.666667 / 0.52) rgba(10, 11, 17, 0.9)",
+      "markdownScrollbar": "color(srgb 0.256863 0.717804 0.617333) color(srgb 0.0379608 0.121098 0.111686)",
+      "socialMenuScrollbar": "color(srgb 0.256863 0.717804 0.617333) color(srgb 0.0379608 0.121098 0.111686)",
+      "zIndex": "260",
+      "headerZIndex": "100",
+      "outerScrollTop": 0,
+      "horizontalOverflow": 0
+    },
+    "cancelled": {
+      "root": "signal_red",
+      "rootScrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)"
+    }
+  },
+  "lightbox": {
+    "scrollbar": "color(srgb 0.813333 0.293333 0.363686) color(srgb 0.140549 0.0495686 0.0815686)",
+    "zIndex": "1200",
+    "headerZIndex": "100"
+  },
+  "keyboardHandoff": {
+    "dockedFocus": {
+      "placement": "header",
+      "href": "#profile-about"
+    },
+    "returnedFocus": {
+      "placement": "standalone",
+      "href": "#profile-about"
+    }
+  },
+  "routeCleanup": {
+    "profilePageState": "",
+    "profileTheme": ""
+  },
+  "reducedMotion": {
+    "logoAnimation": "none",
+    "glyphAnimation": "none",
+    "wordmarkTransition": "0s",
+    "overflow": 0
+  },
+  "pageErrors": []
+}

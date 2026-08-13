@@ -230,9 +230,10 @@ test("public profile owner editor stays runtime-backed and uses canonical social
   assert.match(app, /iconPath: item\.iconUrl \|\| PUBLIC_CUSTOM_LINK_FALLBACK_ICON/);
   assert.match(app, /icon\.src = item\.iconUrl \|\| PUBLIC_CUSTOM_LINK_FALLBACK_ICON/);
   assert.match(app, /if \(!item\.iconUrl\) icon\.classList\.add\("profile-link-fallback-icon"\)/);
-  assert.match(app, /document\.documentElement\.dataset\.profileTheme = profileTheme/);
-  assert.match(app, /document\.documentElement\.dataset\.profileTheme = nextTheme/);
-  assert.match(app, /document\.documentElement\.dataset\.profileTheme = selectedTheme/);
+  assert.match(app, /function applyStandaloneProfileRootTheme\(value\)/);
+  assert.match(app, /applyStandaloneProfileRootTheme\(profileTheme\)/);
+  assert.match(app, /applyStandaloneProfileRootTheme\(nextTheme\)/);
+  assert.match(app, /applyStandaloneProfileRootTheme\(selectedTheme\)/);
   assert.match(app, /custom_links: collectPublicProfileEditorCustomLinks/);
   assert.match(app, /aboutInput\.dataset\.profileEditAbout = "true"/);
   assert.match(app, /about: aboutInput\.value\.trim\(\)/);
@@ -241,8 +242,8 @@ test("public profile owner editor stays runtime-backed and uses canonical social
   assert.match(app, /colors:\s*\["#f02038", "#ff3348", "#580817"\]/);
   assert.match(app, /key:\s*"frosted_silver"/);
   assert.match(app, /modal\.dataset\.profileTheme = nextTheme/);
-  assert.match(app, /document\.body\.dataset\.profileTheme = nextTheme/);
-  assert.match(app, /document\.body\.dataset\.profileTheme = profileTheme/);
+  assert.match(app, /root\.dataset\.profilePage = "active"/);
+  assert.match(app, /document\.body\.dataset\.profileTheme = theme/);
   assert.match(app, /profile-edit-workspace/);
   assert.match(app, /profile-edit-scrollbody/);
   assert.match(app, /editorNav\.addEventListener\("click"/);
@@ -253,7 +254,7 @@ test("public profile owner editor stays runtime-backed and uses canonical social
   assert.match(app, /edit:\s*"\/assets\/icons\/ui\/editcon\.svg"/);
   assert.ok(fs.existsSync(path.join(repoRoot, "assets/icons/ui/editcon.svg")));
   assert.doesNotMatch(app, /profile-edit-open-button profile-edit-open-button--header-icon/);
-  assert.match(app, /profile-edit-open-button profile-edit-open-button--hero", "Edit profile"/);
+  assert.match(app, /profile-edit-open-button profile-edit-open-button--hero profile-feature-action profile-feature-action--subtle", "Edit profile"/);
   assert.doesNotMatch(app, /const manageButton = create\("button", "profile-secondary-action", "Manage"\)/);
   assert.match(app, /canEditProfile: canEdit/);
   assert.match(app, /if \(canEdit && \(error\?\.status === 401 \|\| error\?\.status === 403\)\)/);
@@ -264,7 +265,7 @@ test("public profile owner editor stays runtime-backed and uses canonical social
   assert.match(profileCss, /\.profile-link-add-option/);
   assert.match(profileCss, /\.profile-link-custom-icon-options/);
   assert.match(profileCss, /\.profile-link-fallback-icon\s*\{[\s\S]*?filter: brightness\(0\) invert\(1\)/);
-  assert.match(profileCss, /html:has\(body\[data-public-page="public-profile-standalone"\]\)\[data-profile-theme="signal_red"\] \{ --profile-gradient-b: #ff3348; \}/);
+  assert.match(profileCss, /html\[data-profile-page="active"\]\s*\{[\s\S]*--profile-scroll-thumb:/);
   assert.match(profileCss, /\.profile-edit-modal--profile/);
   assert.match(profileCss, /\.profile-edit-open-button--hero\s*\{/);
   assert.match(profileCss, /\.profile-edit-footer/);
