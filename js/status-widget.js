@@ -586,7 +586,7 @@
   };
 
   const boot = async () => {
-    void loadModule("/js/public-page-visit.js", "ss-public-page-visit-module");
+    void loadModule("/js/public-page-visit.js?v=20260813-profile-hydration", "ss-public-page-visit-module");
     if (!window.StreamSuitesStatusData) {
       await loadModule("/js/status-data.js", "ss-status-data-module");
     }

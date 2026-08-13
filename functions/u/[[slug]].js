@@ -72,6 +72,13 @@ function resolveHttpsAssetUrl(value, requestUrl) {
   }
 }
 
+function resolveOptionalHttpsAssetUrl(value, requestUrl) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const resolved = resolveHttpsAssetUrl(raw, requestUrl);
+  return resolved.endsWith(SHARE_IMAGE_PATH) && !raw.endsWith(SHARE_IMAGE_PATH) ? "" : resolved;
+}
+
 function pickString(...values) {
   for (const value of values) {
     const text = String(value || "").trim();
@@ -88,9 +95,37 @@ function normalizeProfilePayload(payload, slug, requestUrl) {
   const displayName = pickString(source.display_name, source.displayName, source.name);
   if (!publicSlug || !displayName) return null;
 
-  const avatarUrl = resolveHttpsAssetUrl(pickString(source.avatar_url, source.avatarUrl, source.avatar), requestUrl);
-  const coverImageUrl = resolveHttpsAssetUrl(
+  const profileMedia = source.profile_media && typeof source.profile_media === "object" ? source.profile_media : {};
+  const image = source.image && typeof source.image === "object" ? source.image : {};
+  const avatarUrl = resolveOptionalHttpsAssetUrl(pickString(
+    image.avatar_url,
+    image.profile_image_url,
+    image.profile_photo_url,
+    image.url,
+    image.provider_picture,
+    profileMedia.avatar_url,
+    profileMedia.profile_image_url,
+    profileMedia.provider_picture,
+    source.profile_image_url,
+    source.profileImageUrl,
+    source.profile_photo_url,
+    source.profilePhotoUrl,
+    source.avatar_url,
+    source.avatarUrl,
+    source.avatar,
+    source.provider_picture,
+    source.providerPicture
+  ), requestUrl);
+  const coverImageUrl = resolveOptionalHttpsAssetUrl(
     pickString(source.cover_image_url, source.coverImageUrl, source.banner_image_url, source.bannerImageUrl),
+    requestUrl
+  );
+  const bannerImageUrl = resolveOptionalHttpsAssetUrl(
+    pickString(source.banner_image_url, source.bannerImageUrl, source.cover_image_url, source.coverImageUrl),
+    requestUrl
+  );
+  const backgroundImageUrl = resolveOptionalHttpsAssetUrl(
+    pickString(source.background_image_url, source.backgroundImageUrl),
     requestUrl
   );
   const bio = pickString(source.bio, source.summary, source.description);
@@ -107,24 +142,62 @@ function normalizeProfilePayload(payload, slug, requestUrl) {
   const canonicalUrl = new URL(`/u/${encodeURIComponent(publicSlug)}`, PUBLIC_ORIGIN).toString();
 
   return {
+    id: pickString(source.id, source.account_id, source.accountId),
     publicSlug,
     slug: publicSlug,
     userCode: pickString(source.canonical_user_code, source.canonicalUserCode, source.account_user_code, source.accountUserCode, source.user_code, source.userCode),
+    username: pickString(source.username),
     displayName,
     avatar: avatarUrl,
     avatarUrl,
+    rawAvatarUrl: avatarUrl,
+    imageVersion: pickString(source.image_version, source.imageVersion, image.image_version, image.cache_key),
+    avatarSource: pickString(source.avatar_source, source.avatarSource, image.avatar_source, image.source),
+    fallbackDisplayInitial: pickString(source.fallback_display_initial, source.fallbackDisplayInitial, image.fallback_display_initial),
+    image,
+    profileMedia,
     coverImageUrl,
-    bannerImageUrl: coverImageUrl,
+    bannerImageUrl,
+    backgroundImageUrl,
     bio,
     about,
+    aboutMode: pickString(source.about_mode, source.aboutMode) || "text",
+    aboutVideo: source.about_video && typeof source.about_video === "object" ? source.about_video : source.aboutVideo || null,
+    aboutVideoProviders: Array.isArray(source.about_video_providers) ? source.about_video_providers : Array.isArray(source.aboutVideoProviders) ? source.aboutVideoProviders : [],
+    socialLinks: source.social_links && typeof source.social_links === "object" ? source.social_links : source.socialLinks || {},
     streamsuitesThemePreset: allowedThemePresets.has(requestedThemePreset) ? requestedThemePreset : "violet_blue",
     role: pickString(source.role, source.account_type, source.accountType) || "viewer",
+    accountType: pickString(source.account_type, source.accountType),
     tier: pickString(source.tier),
+    joinedAt: pickString(source.joined_at, source.joinedAt, source.created_at, source.createdAt),
+    slugAliases: Array.isArray(source.slug_aliases) ? source.slug_aliases : Array.isArray(source.slugAliases) ? source.slugAliases : [],
+    badges: Array.isArray(source.badges) ? source.badges : [],
+    publicSurfaceAccountType: pickString(source.public_surface_account_type, source.publicSurfaceAccountType),
+    creatorCapable: source.creator_capable === true || source.creatorCapable === true,
+    viewerOnly: source.viewer_only === true || source.viewerOnly === true,
+    isAnonymous: source.is_anonymous === true || source.isAnonymous === true,
+    isListed: source.is_listed !== false && source.isListed !== false,
+    liveStatus: source.live_status && typeof source.live_status === "object" ? source.live_status : source.liveStatus || null,
+    latestStream: source.latest_stream && typeof source.latest_stream === "object" ? source.latest_stream : source.latestStream || null,
+    progression: source.progression && typeof source.progression === "object" ? source.progression : null,
+    economy: source.economy && typeof source.economy === "object" ? source.economy : null,
+    inventory: Array.isArray(source.inventory) ? source.inventory : [],
+    inventoryAvailable: source.inventory_available === true || source.inventoryAvailable === true,
+    exchangeableItems: Array.isArray(source.exchangeable_items) ? source.exchangeable_items : Array.isArray(source.exchangeableItems) ? source.exchangeableItems : [],
+    scopedProgression: Array.isArray(source.scoped_progression) ? source.scoped_progression : Array.isArray(source.scopedProgression) ? source.scopedProgression : [],
     streamsuitesProfileUrl: canonicalUrl,
     streamsuitesShareUrl: canonicalUrl,
     streamsuitesProfileVisible: source.streamsuites_profile_visible !== false && source.streamsuitesProfileVisible !== false,
     streamsuitesProfileEnabled: source.streamsuites_profile_enabled !== false && source.streamsuitesProfileEnabled !== false,
-    streamsuitesProfileEligible: source.streamsuites_profile_eligible !== false && source.streamsuitesProfileEligible !== false
+    streamsuitesProfileEligible: source.streamsuites_profile_eligible !== false && source.streamsuitesProfileEligible !== false,
+    streamsuitesProfileStatusReason: pickString(source.streamsuites_profile_status_reason, source.streamsuitesProfileStatusReason),
+    findmehereEnabled: source.findmehere_enabled === true || source.findmehereEnabled === true,
+    findmehereEligible: source.findmehere_eligible === true || source.findmehereEligible === true,
+    findmehereVisible: source.findmehere_visible === true || source.findmehereVisible === true,
+    findmehereProfileUrl: pickString(source.findmehere_profile_url, source.findmehereProfileUrl),
+    findmehereShareUrl: pickString(source.findmehere_share_url, source.findmehereShareUrl),
+    findmehereStatusReason: pickString(source.findmehere_status_reason, source.findmehereStatusReason),
+    authorityIdentity: source.authority_identity && typeof source.authority_identity === "object" ? source.authority_identity : source.authorityIdentity || null
   };
 }
 

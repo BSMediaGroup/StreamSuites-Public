@@ -4,7 +4,7 @@
   if (window.__streamSuitesPageVisitReporterLoaded) return;
   window.__streamSuitesPageVisitReporterLoaded = true;
 
-  const ANALYTICS_URL = "https://api.streamsuites.app/api/public/analytics/page-visit";
+  const ANALYTICS_URL = "/api/public/analytics/page-visit";
   const VISIT_SESSION_STORAGE_KEY = "ss-public-page-visit";
   const VISIT_DEDUPE_MS = 30000;
 

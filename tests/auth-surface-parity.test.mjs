@@ -555,7 +555,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
 
   assert.match(profileHtml, /href="\/css\/public-profile\.css\?v=20260813-profile-theme-shell"/);
   assert.match(profileHtml, /href="\/css\/status-widget\.css\?v=20260813-profile-footer"/);
-  assert.match(profileHtml, /src="\/js\/public-pages-app\.js\?v=20260813-profile-theme-shell"/);
+  assert.match(profileHtml, /src="\/js\/public-pages-app\.js\?v=20260813-profile-hydration-v2"/);
   assert.match(profileHtml, /class="profile-skip-link" href="#profile-main"/);
   assert.match(profileHtml, /<footer class="profile-site-footer" data-profile-shell-footer>/);
   assert.match(profileHtml, /class="profile-site-footer__status" data-status-slot/);
@@ -589,6 +589,8 @@ test("standalone /u profile hydration keeps runtime profile media ahead of local
   assert.match(app, /!parsed\.pathname\.includes\("\/assets\/icons\/ui\/profile\.svg"\)/);
   assert.match(app, /parsed\.origin !== window\.location\.origin\) return source/);
   assert.match(normalizeProfilePayloadBlock, /const imageContract = normalizedImageContract\(payload, fallbackProfile\)/);
+  assert.match(normalizeProfilePayloadBlock, /payload\?\.isListed !== false/);
+  assert.match(normalizeProfilePayloadBlock, /payload\?\.liveStatus/);
   assert.match(normalizeProfilePayloadBlock, /rawAvatarUrl: imageContract\.rawAvatarUrl/);
   assert.match(normalizeProfilePayloadBlock, /imageVersion: imageContract\.imageVersion/);
   assert.match(normalizeProfilePayloadBlock, /payload\?\.cover_image_url \|\| payload\?\.coverImageUrl \|\| fallbackProfile\?\.coverImageUrl/);
@@ -611,21 +613,28 @@ test("standalone /u profile hydration keeps runtime profile media ahead of local
   assert.ok(standaloneProfileBlock, "renderStandaloneProfile should exist");
   assert.match(standaloneProfileBlock, /readStandaloneProfileBootstrap\(\)/);
   assert.match(standaloneProfileBlock, /bootstrapMatchesProfileCode\(bootstrap, profileCode\)/);
-  assert.match(standaloneProfileBlock, /const fallbackProfile = localProfile \|\| null/);
+  assert.match(standaloneProfileBlock, /const fallbackProfile = initialPayload \? null : localProfile \|\| null/);
   assert.doesNotMatch(standaloneProfileBlock, /localProfile \|\| resolveLocalProfile/);
-  assert.match(standaloneProfileBlock, /loadingSections: true/);
+  assert.match(standaloneProfileBlock, /loadingSections: false/);
   assert.match(standaloneProfileBlock, /await fetchPublicProfileByIdentifier\(profileCode\)/);
   assert.match(standaloneProfileBlock, /profile = normalizeProfilePayload\(payload, fallbackProfile, profileCode\)/);
   assert.match(app, /const PROFILE_CACHE_TTL_MS = 60 \* 1000/);
+  assert.match(app, /const PROFILE_SESSION_CACHE_MAX_AGE_MS = 10 \* 60 \* 1000/);
+  assert.match(app, /function readPublicProfileSessionCache\(identifier, options = \{\}\)/);
+  assert.match(app, /function writePublicProfileSessionCache\(identifier, payload, timestamp = Date\.now\(\)\)/);
   assert.match(app, /const publicProfileRequestCache = new Map\(\)/);
-  assert.match(app, /async function fetchPublicProfileByIdentifier\(identifier, options = \{\}\)[\s\S]*cache:\s*"no-store"/);
+  assert.match(app, /async function fetchPublicProfileByIdentifier\(identifier, options = \{\}\)[\s\S]*cache:\s*"default"/);
+  assert.match(standaloneProfileBlock, /const renderGeneration = \+\+standaloneProfileRenderGeneration/);
+  assert.match(standaloneProfileBlock, /if \(!isCurrentRender\(\)\) return/);
+  assert.match(standaloneProfileBlock, /patchStandaloneProfileProgression\(host, profile, canEdit\)/);
   assert.match(app, /No such profile was found/);
   assert.match(app, /Attempted handle: @/);
   assert.match(app, /action:\s*\{\s*label:\s*"Browse members",\s*href:\s*"\/members"\s*\}/);
   assert.match(app, /function readStandaloneProfileBootstrap\(\)/);
   assert.match(app, /function buildBootstrapDataContext\(profileCode, bootstrap\)/);
+  assert.match(app, /function buildEmptyStandaloneDataContext\(\)/);
   assert.match(app, /let loadedDataIsBootstrap = false/);
-  assert.match(app, /if \(currentConfig\.standalone\)[\s\S]*loadedData = buildBootstrapDataContext\(profileCode, bootstrap\)/);
+  assert.match(app, /if \(currentConfig\.standalone\)[\s\S]*buildBootstrapDataContext\(profileCode, \{ profile: initialProfilePayload \}\)/);
   assert.match(app, /if \(loadedData && !loadedDataIsBootstrap\) return loadedData/);
   assert.match(profileFunction, /PROFILE_LOOKUP_TIMEOUT_MS = 2500/);
   assert.match(profileFunction, /STREAMSUITES_API_ORIGIN/);
@@ -637,6 +646,21 @@ test("standalone /u profile hydration keeps runtime profile media ahead of local
   assert.match(profileFunction, /streamsuites-profile-bootstrap/);
   assert.match(profileFunction, /escapeJsonForScript/);
   assert.match(profileFunction, /Cache-Control/);
+  assert.match(profileFunction, /aboutVideo:/);
+  assert.match(profileFunction, /backgroundImageUrl/);
+  assert.match(profileFunction, /latestStream:/);
+  assert.match(profileFunction, /scopedProgression:/);
+});
+
+test("standalone profile boot suppresses duplicate auth rerenders and uses same-origin analytics", () => {
+  const app = read("js/public-pages-app.js");
+  const analytics = read("js/public-page-visit.js");
+
+  assert.match(app, /refreshAuthWidget\(true, \{ rerender: false \}\)/);
+  assert.match(app, /if \(options\.rerender !== false\) rerender\(\)/);
+  assert.match(app, /if \(initialStandaloneAuthPromise\) await initialStandaloneAuthPromise/);
+  assert.match(analytics, /const ANALYTICS_URL = "\/api\/public\/analytics\/page-visit"/);
+  assert.doesNotMatch(analytics, /https:\/\/api\.streamsuites\.app\/api\/public\/analytics\/page-visit/);
 });
 
 test("public clip normalization does not request missing local SEO placeholder thumbnails", () => {
@@ -706,7 +730,7 @@ test("standalone profiles keep canonical metadata and truthful adaptive states",
   assert.match(app, /This is different from a missing profile, and no availability or identity state has been inferred/);
   assert.match(app, /error\.status = 502;[\s\S]*error\.code = "profile_payload_malformed"/);
   assert.match(app, /if \(error\?\.status === 404\) renderProfileNotFound\(host, profileCode, renderOptions\);[\s\S]*else renderProfileLoadError\(host, profileCode, renderOptions\)/);
-  assert.match(app, /const fallbackProfile = localProfile \|\| null/);
+  assert.match(app, /const fallbackProfile = initialPayload \? null : localProfile \|\| null/);
   assert.match(app, /grid\.dataset\.profileSocialVolume = socialEntries\.length === 0/);
   assert.match(profileCss, /data-profile-social-volume="gallery"/);
   assert.match(profileCss, /data-artifact-volume="single"/);

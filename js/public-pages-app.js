@@ -38,6 +38,8 @@
   const AUTH_PUBLIC_PROFILE_ABOUT_VIDEO_RESOLVE_URL = `${AUTH_API_BASE}/api/public/profile/about-video/resolve`;
   const AUTH_PUBLIC_PROFILE_RESOLVE_URL = `${AUTH_API_BASE}/api/public/profile/resolve`;
   const PROFILE_CACHE_TTL_MS = 60 * 1000;
+  const PROFILE_SESSION_CACHE_MAX_AGE_MS = 10 * 60 * 1000;
+  const PROFILE_SESSION_CACHE_PREFIX = "ss-public-profile-v2:";
   const AUTH_PUBLIC_AUTHORITY_REQUESTS_URL = `${AUTH_API_BASE}/api/public/authority/requests`;
   const AUTH_PUBLIC_AUTHORITY_REQUESTS_MINE_URL = `${AUTH_API_BASE}/api/public/authority/requests/mine`;
   const AUTH_PUBLIC_PROGRESSION_ME_URL = `${AUTH_API_BASE}/api/public/progression/me`;
@@ -95,6 +97,7 @@
   const PUBLIC_AUTH_COMPLETE_MESSAGE_TYPE = "ss_public_auth_complete";
   const CANONICAL_PROFILE_PREFIX = "/u/";
   const publicProfileRequestCache = new Map();
+  let standaloneProfileRenderGeneration = 0;
   const BADGE_ICON_MAP = Object.freeze({
     admin: "/assets/icons/tierbadge-admin.svg",
     core: "/assets/icons/tierbadge-core.svg",
@@ -10894,6 +10897,47 @@
     return collectProfileIdentifiers(profile).includes(requested);
   }
 
+  function publicProfileSessionCacheKey(identifier) {
+    const normalized = normalizeUserCode(identifier, "");
+    return normalized ? `${PROFILE_SESSION_CACHE_PREFIX}${normalized}` : "";
+  }
+
+  function readPublicProfileSessionCache(identifier, options = {}) {
+    const key = publicProfileSessionCacheKey(identifier);
+    if (!key) return null;
+    try {
+      const parsed = JSON.parse(window.sessionStorage.getItem(key) || "null");
+      const payload = parsed?.payload;
+      const timestamp = Number(parsed?.timestamp);
+      const age = Date.now() - timestamp;
+      if (!payload || typeof payload !== "object" || Array.isArray(payload) || !Number.isFinite(timestamp) || age > PROFILE_SESSION_CACHE_MAX_AGE_MS) {
+        if (parsed) window.sessionStorage.removeItem(key);
+        return null;
+      }
+      if (options.allowStale !== true && age > PROFILE_CACHE_TTL_MS) return null;
+      return { payload, timestamp };
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function writePublicProfileSessionCache(identifier, payload, timestamp = Date.now()) {
+    const key = publicProfileSessionCacheKey(identifier);
+    if (!key || !payload || typeof payload !== "object" || Array.isArray(payload)) return;
+    try {
+      window.sessionStorage.setItem(key, JSON.stringify({ payload, timestamp }));
+    } catch (_error) {
+      // A public profile cache is only a rendering optimization; storage failures stay non-fatal.
+    }
+  }
+
+  function seedPublicProfileCache(identifier, payload, timestamp = Date.now()) {
+    const key = normalizeUserCode(identifier, "");
+    if (!key || !payload || typeof payload !== "object" || Array.isArray(payload)) return;
+    publicProfileRequestCache.set(key, { payload, timestamp });
+    writePublicProfileSessionCache(key, payload, timestamp);
+  }
+
   function buildBootstrapDataContext(profileCode, bootstrap) {
     const profile = bootstrap?.profile && typeof bootstrap.profile === "object" ? bootstrap.profile : null;
     const normalizedProfile = normalizeProfilePayload(profile || {}, profile || {}, profileCode || "public-user");
@@ -10915,6 +10959,33 @@
       profilesById: { [normalizedProfile.id]: normalizedProfile },
       profilesBySlug: bySlug,
       profilesByCode: byCode,
+      artifactsByProfile: {},
+      meta: null,
+      liveStatus: null,
+      rumbleDiscovery: null,
+      authority: { identities: null, artifacts: null, identityByUserCode: new Map(), artifactByCode: new Map() },
+      sourceStatus: { bootstrap: true },
+      helpers: {
+        toTimestamp: window.StreamSuitesPublicData?.toTimestamp,
+        toTitle: window.StreamSuitesPublicData?.toTitle,
+        platformIconFor: window.StreamSuitesPublicData?.platformIconFor,
+        normalizePlatformKey: window.StreamSuitesPublicData?.normalizePlatformKey
+      }
+    };
+  }
+
+  function buildEmptyStandaloneDataContext() {
+    return {
+      clips: [],
+      polls: [],
+      wheels: [],
+      scoreboards: [],
+      tallies: [],
+      notices: [],
+      profiles: [],
+      profilesById: {},
+      profilesBySlug: {},
+      profilesByCode: {},
       artifactsByProfile: {},
       meta: null,
       liveStatus: null,
@@ -11099,8 +11170,8 @@
       ""
     ).trim();
     const socialLinks = normalizeSocialLinks(payload?.social_links || payload?.socialLinks || fallbackProfile?.socialLinks);
-    const isAnonymous = payload?.is_anonymous === true || payload?.anonymous === true || fallbackProfile?.isAnonymous === true;
-    const isListed = payload?.is_listed !== false && payload?.listed !== false && fallbackProfile?.isListed !== false;
+    const isAnonymous = payload?.is_anonymous === true || payload?.isAnonymous === true || payload?.anonymous === true || fallbackProfile?.isAnonymous === true;
+    const isListed = payload?.is_listed !== false && payload?.isListed !== false && payload?.listed !== false && fallbackProfile?.isListed !== false;
     const creatorCapable = firstBoolean(payload?.creator_capable, payload?.creatorCapable, fallbackProfile?.creatorCapable, accountType !== "VIEWER") === true;
     const viewerOnly =
       firstBoolean(payload?.viewer_only, payload?.viewerOnly, fallbackProfile?.viewerOnly, accountType === "VIEWER" && !creatorCapable) === true;
@@ -11146,7 +11217,7 @@
     const findmehereStatusReason = String(
       payload?.findmehere_status_reason || payload?.findmehereStatusReason || fallbackProfile?.findmehereStatusReason || ""
     ).trim();
-    const liveStatus = fallbackProfile?.liveStatus || null;
+    const liveStatus = payload?.live_status || payload?.liveStatus || fallbackProfile?.liveStatus || null;
     const latestStream = normalizeLatestStreamPayload(payload?.latest_stream || payload?.latestStream || fallbackProfile?.latestStream);
     const progression = (
       payload?.progression && typeof payload.progression === "object"
@@ -11265,11 +11336,18 @@
       }
     }
 
+    const sessionCached = readPublicProfileSessionCache(cacheKey, { allowStale: false });
+    if (!options.force && sessionCached) {
+      publicProfileRequestCache.set(cacheKey, sessionCached);
+      return sessionCached.payload;
+    }
+    const staleSessionCached = readPublicProfileSessionCache(cacheKey, { allowStale: true });
+
     const endpoint = new URL(AUTH_PUBLIC_PROFILE_URL);
     endpoint.searchParams.set("slug", cacheKey);
     const promise = fetch(endpoint.toString(), {
       method: "GET",
-      cache: "no-store",
+      cache: "default",
       credentials: "include",
       headers: { Accept: "application/json" }
     })
@@ -11310,11 +11388,15 @@
           error.code = "profile_payload_malformed";
           throw error;
         }
-        publicProfileRequestCache.set(cacheKey, { payload, timestamp: Date.now() });
+        seedPublicProfileCache(cacheKey, payload);
         return payload;
       })
       .catch((error) => {
         publicProfileRequestCache.delete(cacheKey);
+        if (staleSessionCached && error?.status !== 404 && error?.status !== 410) {
+          publicProfileRequestCache.set(cacheKey, staleSessionCached);
+          return staleSessionCached.payload;
+        }
         throw error;
       });
     publicProfileRequestCache.set(cacheKey, { promise, timestamp: now });
@@ -12654,7 +12736,12 @@
     const coverUrl = String(profile?.bannerImageUrl || profile?.coverImageUrl || DEFAULT_PROFILE_COVER).trim() || DEFAULT_PROFILE_COVER;
     const backgroundUrl = String(profile?.backgroundImageUrl || "").trim();
     const hasCustomCover = coverUrl !== DEFAULT_PROFILE_COVER;
-    hero.style.setProperty("--profile-cover-image", `url("${coverUrl.replace(/"/g, "%22")}")`);
+    const safeCoverUrl = coverUrl.replace(/"/g, "%22");
+    const safeFallbackCoverUrl = DEFAULT_PROFILE_COVER.replace(/"/g, "%22");
+    hero.style.setProperty(
+      "--profile-cover-image",
+      hasCustomCover ? `url("${safeCoverUrl}"), url("${safeFallbackCoverUrl}")` : `url("${safeFallbackCoverUrl}")`
+    );
     hero.style.setProperty("--profile-background-image", backgroundUrl ? `url("${backgroundUrl.replace(/"/g, "%22")}")` : "none");
     hero.dataset.profileMedia = backgroundUrl ? "background" : hasCustomCover ? "cover" : "fallback";
     hero.dataset.profileCover = hasCustomCover ? "custom" : "fallback";
@@ -13751,6 +13838,9 @@
     cleanupStandaloneProfileInteractions();
     clear(host);
     const shell = create("div", "standalone-profile-shell");
+    shell.dataset.profileRenderKey = String(options.renderKey || "");
+    shell.dataset.profileArtifactKey = String(options.artifactKey || "");
+    shell.dataset.profileCanEdit = canEdit ? "true" : "false";
     const profileTheme = normalizeProfileThemePreset(profile?.streamsuitesThemePreset);
     shell.dataset.profileTheme = profileTheme;
     document.body.dataset.profileTheme = profileTheme;
@@ -14064,30 +14154,77 @@
     })();
   }
 
+  function stableStandaloneRenderHash(value) {
+    const serialized = JSON.stringify(value);
+    let hash = 2166136261;
+    for (let index = 0; index < serialized.length; index += 1) {
+      hash ^= serialized.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(36);
+  }
+
+  function standaloneProfileRenderKey(profile, canEdit) {
+    return stableStandaloneRenderHash({ profile, canEdit: Boolean(canEdit) });
+  }
+
+  function standaloneProfileArtifactKey(artifacts = [], canEdit = false) {
+    return stableStandaloneRenderHash({
+      canEdit: Boolean(canEdit),
+      artifacts: (Array.isArray(artifacts) ? artifacts : []).map((item) => item?.id || item?.routeId || item?.href || "")
+    });
+  }
+
+  function patchStandaloneProfileArtifacts(host, profile, artifacts, canEdit, helpers) {
+    const currentShell = host.querySelector(":scope > .standalone-profile-shell");
+    const artifactKey = standaloneProfileArtifactKey(artifacts, canEdit);
+    if (!currentShell || currentShell.dataset.profileArtifactKey === artifactKey) return;
+    const currentNav = currentShell.querySelector(".profile-section-nav");
+    const currentArtifacts = currentShell.querySelector(".profile-mini-artifacts");
+    if (currentNav) currentNav.replaceWith(buildProfileSectionNav(profile, artifacts));
+    if (currentArtifacts) currentArtifacts.replaceWith(buildProfileMiniArtifactGallery(artifacts, canEdit, helpers));
+    currentShell.dataset.profileArtifactKey = artifactKey;
+  }
+
+  function patchStandaloneProfileProgression(host, profile, canEdit) {
+    const currentGame = host.querySelector(".profile-game-collapsible");
+    const currentScoped = host.querySelector(".profile-scoped-progression-section");
+    if (currentGame) currentGame.replaceWith(buildProfileGameCompetitionSection(profile, { canEdit }));
+    if (currentScoped) currentScoped.replaceWith(buildProfileScopedProgressionSection(profile));
+  }
+
   function renderStandaloneProfile(ctx) {
     const { host, data, authState } = ctx;
-    clear(host);
-
+    const renderGeneration = ++standaloneProfileRenderGeneration;
+    const isCurrentRender = () => renderGeneration === standaloneProfileRenderGeneration && host.isConnected;
     const profileCode = resolveStandaloneProfileCode();
     const bootstrap = readStandaloneProfileBootstrap();
     const localProfile = findLocalProfile(data, profileCode);
-    // Never borrow the generic local profile for a different authoritative identity.
-    const fallbackProfile = localProfile || null;
-    const bootstrapProfile = bootstrapMatchesProfileCode(bootstrap, profileCode)
-      ? normalizeProfilePayload(bootstrap.profile, fallbackProfile, profileCode)
-      : null;
+    const matchingBootstrap = bootstrapMatchesProfileCode(bootstrap, profileCode) ? bootstrap : null;
+    const bootstrapTimestamp = Date.parse(matchingBootstrap?.fetchedAt || "");
+    if (matchingBootstrap?.profile) {
+      seedPublicProfileCache(profileCode, matchingBootstrap.profile, Number.isFinite(bootstrapTimestamp) ? bootstrapTimestamp : Date.now());
+    }
+    const sessionCached = readPublicProfileSessionCache(profileCode, { allowStale: true });
+    const initialPayload = matchingBootstrap?.profile || sessionCached?.payload || null;
+    // Once an authoritative public projection exists, local directory data must not reshape it during hydration.
+    const fallbackProfile = initialPayload ? null : localProfile || null;
+    const initialProfile = initialPayload ? normalizeProfilePayload(initialPayload, fallbackProfile, profileCode) : null;
+    const existingShell = host.querySelector(":scope > .standalone-profile-shell");
 
-    if (bootstrapProfile) {
-      syncStandaloneProfileMetadata(bootstrapProfile, { requestedCode: profileCode });
-      renderStandaloneProfilePage(host, bootstrapProfile, false, {
+    if (!existingShell && initialProfile) {
+      syncStandaloneProfileMetadata(initialProfile, { requestedCode: profileCode });
+      renderStandaloneProfilePage(host, initialProfile, false, {
         authState,
         openAuthModal: ctx.openAuthModal,
         onMenuAction: ctx.handleAccountMenuAction,
         profileArtifacts: [],
         helpers: data.helpers,
-        loadingSections: true
+        loadingSections: false,
+        renderKey: standaloneProfileRenderKey(initialProfile, false),
+        artifactKey: standaloneProfileArtifactKey([], false)
       });
-    } else {
+    } else if (!existingShell) {
       syncStandaloneProfileMetadata(null, { state: "loading", requestedCode: profileCode });
       renderStandaloneProfileMessage(host, {
         title: "Profile",
@@ -14101,6 +14238,7 @@
 
     (async () => {
       if (!profileCode) {
+        if (!isCurrentRender()) return;
         renderProfileNotFound(host, "", {
           authState,
           openAuthModal: ctx.openAuthModal,
@@ -14109,23 +14247,24 @@
         return;
       }
 
-      let profile = bootstrapProfile || (localProfile ? normalizeProfilePayload(localProfile, localProfile, profileCode) : null);
+      let profile = initialProfile || (localProfile ? normalizeProfilePayload(localProfile, localProfile, profileCode) : null);
       let canEdit = canEditResolvedProfile(authState, profile, profileCode);
       try {
         const payload = canEdit ? await fetchMyPublicProfile() : await fetchPublicProfileByIdentifier(profileCode);
+        if (!isCurrentRender()) return;
         profile = normalizeProfilePayload(payload, fallbackProfile, profileCode);
         canEdit = canEditResolvedProfile(authState, profile, profileCode);
-        profile = await hydrateProfileScopedProgression(profile, profileCode);
       } catch (error) {
+        if (!isCurrentRender()) return;
         if (canEdit && (error?.status === 401 || error?.status === 403)) {
           canEdit = false;
         }
         if (!profile) {
           const renderOptions = {
-              authState,
-              openAuthModal: ctx.openAuthModal,
-              onMenuAction: ctx.handleAccountMenuAction
-            };
+            authState,
+            openAuthModal: ctx.openAuthModal,
+            onMenuAction: ctx.handleAccountMenuAction
+          };
           if (error?.status === 404) renderProfileNotFound(host, profileCode, renderOptions);
           else renderProfileLoadError(host, profileCode, renderOptions);
           return;
@@ -14146,18 +14285,10 @@
           }
           return;
         }
-        // Keep local profile fallback when API profile endpoints are unavailable.
+        // Keep the exact cached/local profile visible when a transient authority request fails.
       }
 
-      if (!profile) {
-        renderProfileNotFound(host, profileCode, {
-          authState,
-          openAuthModal: ctx.openAuthModal,
-          onMenuAction: ctx.handleAccountMenuAction
-        });
-        return;
-      }
-
+      if (!profile || !isCurrentRender()) return;
       if (!canEdit && !isProfileVisibleOnStreamSuites(profile)) {
         renderProfileUnavailable(host, profile, profileCode, {
           authState,
@@ -14180,12 +14311,21 @@
         fallbackProfile?.userCode
       );
       const renderResolvedProfile = (resolvedProfile) => {
+        const renderKey = standaloneProfileRenderKey(resolvedProfile, canEdit);
+        const artifactKey = standaloneProfileArtifactKey(profileArtifacts, canEdit);
+        const currentShell = host.querySelector(":scope > .standalone-profile-shell");
+        if (currentShell?.dataset.profileRenderKey === renderKey) {
+          patchStandaloneProfileArtifacts(host, resolvedProfile, profileArtifacts, canEdit, data.helpers);
+          return;
+        }
         renderStandaloneProfilePage(host, resolvedProfile, canEdit, {
           authState,
           openAuthModal: ctx.openAuthModal,
           onMenuAction: ctx.handleAccountMenuAction,
           profileArtifacts,
           helpers: data.helpers,
+          renderKey,
+          artifactKey,
           openProfileEditor: (editableProfile, editorOptions = {}) => openPublicProfileEditModal(editableProfile, {
             ...editorOptions,
             onSaved: (updatedPayload) => {
@@ -14196,6 +14336,11 @@
         });
       };
       renderResolvedProfile(profile);
+
+      const progressionProfile = await hydrateProfileScopedProgression(profile, profileCode);
+      if (!isCurrentRender()) return;
+      profile = progressionProfile;
+      patchStandaloneProfileProgression(host, profile, canEdit);
     })();
   }
 
@@ -15062,7 +15207,7 @@
       applyAuthStateToShell(shell, authState, handleAccountMenuAction);
     }
 
-    async function refreshAuthWidget(force = false) {
+    async function refreshAuthWidget(force = false, options = {}) {
       if (!force && authRefreshPromise) return authRefreshPromise;
 
       authRefreshPromise = (async () => {
@@ -15073,7 +15218,7 @@
           console.warn("[StreamSuites Public] Auth API unavailable; falling back to Guest widget.");
         } finally {
           applyCurrentAuthState();
-          rerender();
+          if (options.rerender !== false) rerender();
         }
         return authState;
       })();
@@ -15113,12 +15258,19 @@
     if (currentConfig.standalone) {
       const bootstrap = readStandaloneProfileBootstrap();
       const profileCode = resolveStandaloneProfileCode();
-      if (bootstrapMatchesProfileCode(bootstrap, profileCode)) {
-        loadedData = buildBootstrapDataContext(profileCode, bootstrap);
-        loadedDataIsBootstrap = true;
-        rerender();
-      }
+      const cachedProfile = readPublicProfileSessionCache(profileCode, { allowStale: true });
+      const initialProfilePayload = bootstrapMatchesProfileCode(bootstrap, profileCode)
+        ? bootstrap?.profile
+        : cachedProfile?.payload || null;
+      loadedData = initialProfilePayload
+        ? buildBootstrapDataContext(profileCode, { profile: initialProfilePayload })
+        : buildEmptyStandaloneDataContext();
+      loadedDataIsBootstrap = true;
+      rerender();
     }
+    const initialStandaloneAuthPromise = currentConfig.standalone
+      ? refreshAuthWidget(true, { rerender: false })
+      : null;
 
     function shouldUseWheelLiveSync(config) {
       return Boolean(
@@ -15360,10 +15512,11 @@
           const finalCode = resolvedCode || "public-user";
           window.history.replaceState(window.history.state, "", buildLegacyProfileHref(finalCode));
         }
+        if (initialStandaloneAuthPromise) await initialStandaloneAuthPromise;
       })
       .finally(() => {
         applyConfig(currentConfig, { keepState: false });
-        refreshAuthWidget(true);
+        if (!initialStandaloneAuthPromise) refreshAuthWidget(true);
         shell.setLoading(false);
       });
   }
