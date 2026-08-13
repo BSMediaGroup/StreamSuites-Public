@@ -1,0 +1,584 @@
+- generic [ref=e10]:
+  - link "Skip to profile content" [ref=e11] [cursor=pointer]:
+    - /url: "#profile-main"
+  - generic [ref=e13]:
+    - region [ref=e14]:
+      - generic [ref=e15]:
+        - link "Community home" [ref=e16] [cursor=pointer]:
+          - /url: /community/
+          - generic [ref=e19]:
+            - generic [ref=e20]: StreamSuites™
+            - generic [ref=e21]: COMMUNITY HOME
+        - generic [ref=e22]:
+          - generic "Profile social links" [ref=e24]:
+            - link "Rumble" [ref=e704] [cursor=pointer]:
+              - /url: https://rumble.com/c/bsmediagroup
+            - link "YouTube" [ref=e705] [cursor=pointer]:
+              - /url: https://www.youtube.com/@bsmediagroup
+          - button "Admin Admin" [ref=e28] [cursor=pointer]:
+            - generic [ref=e31]:
+              - generic [ref=e32]: Admin
+              - generic "Admin" [ref=e34]
+      - generic [ref=e37]:
+        - generic [ref=e38]:
+          - img "Admin profile image" [ref=e39]
+          - generic [ref=e40]:
+            - paragraph [ref=e41]: STREAMSUITES PUBLIC IDENTITY
+            - heading "Admin" [level=1] [ref=e42]
+            - generic [ref=e43]:
+              - generic "Admin" [ref=e45]
+              - paragraph [ref=e47]: "@bsmediagroup"
+            - button "Edit profile" [ref=e48] [cursor=pointer]
+            - paragraph [ref=e51]: Administrator account for StreamSuites systems. This fixture validates the owner profile polish without changing live data.
+          - generic "ADMIN" [ref=e53]
+        - complementary "Profile status and actions" [ref=e54]:
+          - generic [ref=e57]:
+            - generic [ref=e58]: Current signal
+            - strong [ref=e59]: Offline
+            - generic [ref=e60]: No current public live source is available.
+          - generic [ref=e61]:
+            - link "View on Rumble" [ref=e62] [cursor=pointer]:
+              - /url: https://rumble.com/c/bsmediagroup
+            - generic [ref=e64]:
+              - button "Copy link" [ref=e65] [cursor=pointer]
+              - button "Share" [ref=e66] [cursor=pointer]
+            - status
+          - generic [ref=e67]:
+            - generic [ref=e68]:
+              - term [ref=e69]: Identity
+              - definition [ref=e70]: ADMIN
+            - generic [ref=e71]:
+              - term [ref=e72]: Tier
+              - definition [ref=e73]: PRO
+    - navigation "Profile sections" [ref=e74]:
+      - link "Bio" [ref=e75] [cursor=pointer]:
+        - /url: "#profile-bio"
+      - link "About" [ref=e76] [cursor=pointer]:
+        - /url: "#profile-about"
+      - link "Stream" [ref=e77] [cursor=pointer]:
+        - /url: "#profile-live"
+      - link "Public work" [ref=e78] [cursor=pointer]:
+        - /url: "#profile-artifacts"
+      - link "Identity" [ref=e79] [cursor=pointer]:
+        - /url: "#profile-identity"
+      - link "Presence" [ref=e80] [cursor=pointer]:
+        - /url: "#profile-presence"
+      - link "Safety" [ref=e81] [cursor=pointer]:
+        - /url: "#profile-safety"
+    - main [ref=e82]:
+      - generic [ref=e83]:
+        - region [ref=e84]:
+          - generic [ref=e85]:
+            - generic [ref=e86]:
+              - generic [ref=e87]: Profile story
+              - heading "About" [level=2] [ref=e88]
+            - button "Edit story" [ref=e89] [cursor=pointer]
+          - generic [ref=e91]:
+            - generic [ref=e92]:
+              - heading "Building StreamSuites" [level=2] [ref=e93]
+              - paragraph [ref=e94]:
+                - text: We build
+                - strong [ref=e95]: creator-first
+                - text: tools with
+                - emphasis [ref=e96]: clear authority boundaries
+                - text: .
+              - blockquote [ref=e97]:
+                - paragraph [ref=e98]: Production truth stays more important than decoration.
+              - list [ref=e99]:
+                - listitem [ref=e100]: Native media where it belongs
+                - listitem [ref=e101]: Safe public presentation
+                - listitem [ref=e102]: Accessible, responsive controls
+            - generic [ref=e103]:
+              - generic [ref=e104]:
+                - generic [ref=e105]: Uploaded video
+                - heading "StreamSuites profile presentation" [level=3] [ref=e107]
+              - generic [ref=e108]: Your browser cannot play this video.
+          - text: PUBLIC IDENTITY / STREAMSUITES
+        - region [ref=e111]:
+          - generic [ref=e113]:
+            - generic [ref=e114]: At a glance
+            - heading "Public overview" [level=2] [ref=e115]
+          - generic [ref=e116]:
+            - generic [ref=e117]:
+              - generic [ref=e118]: Tier
+              - strong [ref=e119]:
+                - generic "PRO" [ref=e120]
+            - generic [ref=e122]:
+              - generic [ref=e123]: Artifacts
+              - strong [ref=e124]: "0"
+            - generic [ref=e125]:
+              - generic [ref=e126]: Clips
+              - strong [ref=e127]: "0"
+            - generic [ref=e128]:
+              - generic [ref=e129]: Polls
+              - strong [ref=e130]: "0"
+          - generic [ref=e131]:
+            - generic [ref=e132]:
+              - generic [ref=e133]: Joined
+              - generic [ref=e134]: Pending public data
+            - generic [ref=e135]:
+              - generic [ref=e136]: Profile type
+              - generic "ADMIN" [ref=e138]
+            - generic [ref=e139]:
+              - generic [ref=e140]: XP
+              - generic [ref=e141]: Pending
+            - generic [ref=e142]:
+              - generic [ref=e143]: Level
+              - generic [ref=e144]: Pending
+            - generic [ref=e145]:
+              - generic [ref=e146]: Global Rank
+              - generic [ref=e147]: Pending
+            - generic [ref=e148]:
+              - generic [ref=e149]: Balance
+              - generic [ref=e150]: Unavailable
+            - generic [ref=e151]:
+              - generic [ref=e152]: Inventory
+              - generic [ref=e153]: Unavailable
+        - group "Latest public stream" [ref=e154]:
+          - generic "LATEST STREAM Expand section" [ref=e155] [cursor=pointer]:
+            - generic [ref=e156]: LATEST STREAM
+            - button "Expand section" [ref=e159]:
+              - generic [ref=e160]: Expand
+        - region [ref=e162]:
+          - generic [ref=e163]:
+            - generic [ref=e164]:
+              - generic [ref=e165]: Identity signals
+              - heading "Public badges" [level=2] [ref=e166]
+            - generic [ref=e167]: 2 public
+          - generic [ref=e168]:
+            - article [ref=e169]:
+              - generic [ref=e172]:
+                - strong [ref=e173]: Admin
+                - generic [ref=e174]: Administrative StreamSuites account badge surfaced by the public profile contract.
+            - article [ref=e175]:
+              - generic [ref=e178]:
+                - strong [ref=e179]: Pro Tier
+                - generic [ref=e180]: Advanced StreamSuites entitlement visible on this public profile.
+        - region [ref=e181]:
+          - generic [ref=e182]:
+            - generic [ref=e183]:
+              - generic [ref=e184]: Published from this identity
+              - heading "Public work" [level=2] [ref=e185]
+            - generic [ref=e186]: No public items
+          - generic [ref=e187]: No public artifacts are linked to this profile yet. The page stays focused on identity and presence until public work is available.
+        - group [ref=e188]:
+          - generic "GAME & COMPETITION Global default Global Collapse section" [ref=e189] [cursor=pointer]:
+            - generic [ref=e190]: GAME & COMPETITION
+            - generic [ref=e193]:
+              - generic [ref=e194]: Global default
+              - combobox "Game and competition scope" [ref=e197]:
+                - option "Global" [selected]
+                - option "Kick · streamsuites"
+                - option "Kick · danielclancy"
+            - button "Collapse section" [expanded] [ref=e198]:
+              - generic [ref=e199]: Collapse
+          - generic [ref=e201]:
+            - generic [ref=e202]:
+              - article [ref=e203]:
+                - generic [ref=e204]: Current XP / Global rank
+                - strong [ref=e205]:
+                  - generic [ref=e206]:
+                    - generic [ref=e207]: 0 XP
+                    - generic [ref=e209]: Unranked
+                - generic [ref=e211]: No global leaderboard placement has been returned for this identity yet.
+              - article [ref=e212]:
+                - generic [ref=e213]: Current level
+                - strong [ref=e214]: No level yet
+                - generic [ref=e215]: Level appears after the runtime returns progression data.
+              - article [ref=e216]:
+                - generic [ref=e217]: Current balance
+                - strong [ref=e218]:
+                  - generic [ref=e219]: 0 Credits
+                - generic [ref=e222]: No economy events have been recorded yet.
+                - generic [ref=e223]: No denomination breakdown is available yet.
+              - article [ref=e225]:
+                - generic [ref=e226]: Inventory
+                - strong [ref=e227]:
+                  - generic [ref=e228]: Empty
+                - generic [ref=e231]: No authority-owned items have been issued yet.
+                - generic [ref=e232]: No inventory items have been recorded yet.
+              - article [ref=e235]:
+                - generic [ref=e236]: Next level progress
+                - strong [ref=e237]: Not available
+                - generic [ref=e238]: Progress appears with runtime progression data.
+              - article [ref=e239]:
+                - generic [ref=e240]: Season standing
+                - strong [ref=e241]: Not seeded
+                - generic [ref=e242]: Ladders arrive later
+            - paragraph [ref=e243]: No authoritative XP events have been recorded for this public identity yet. Wallet and inventory can still show real starting state when returned by runtime authority.
+        - generic [ref=e244]:
+          - generic [ref=e245]:
+            - heading "Scoped boards" [level=2] [ref=e246]
+            - generic [ref=e247]: 2 scoped creator/channel boards
+          - generic [ref=e248]:
+            - generic [ref=e249]:
+              - generic [ref=e250]: Platform
+              - generic [ref=e251]: Channel
+              - generic [ref=e252]: Rank
+              - generic [ref=e253]: XP
+              - generic [ref=e254]: Level
+              - generic [ref=e255]: Messages
+              - generic [ref=e256]: Updated
+              - generic [ref=e257]: Action
+            - generic [ref=e258]:
+              - article [ref=e259]:
+                - generic [ref=e260]: Kick
+                - generic [ref=e266]:
+                  - strong [ref=e267]: streamsuites
+                  - generic [ref=e268]: Kick · streamsuites
+                - generic [ref=e269]: "#1"
+                - generic [ref=e270]: 40 XP
+                - generic "Stone (LEVEL0)" [ref=e274]: Stone
+                - generic [ref=e276]: "8"
+                - generic [ref=e277]: May 22, 2026
+                - link "VIEW" [ref=e278] [cursor=pointer]:
+                  - /url: /leaderboards?scope_key=kick%3Acreator%3A3c426a3d-2409-4409-a0bf-c26960081027%3Achannel%3Astreamsuites
+              - article [ref=e279]:
+                - generic [ref=e280]: Kick
+                - generic [ref=e286]:
+                  - strong [ref=e287]: danielclancy
+                  - generic [ref=e288]: Kick · danielclancy
+                - generic [ref=e289]: "#2"
+                - generic [ref=e290]: 10 XP
+                - generic "Stone (LEVEL0)" [ref=e294]: Stone
+                - generic [ref=e296]: "2"
+                - generic [ref=e297]: May 26, 2026
+                - link "VIEW" [ref=e298] [cursor=pointer]:
+                  - /url: /leaderboards?scope_key=kick%3Acreator%3Aaa4359f0-b243-42de-bbf4-dbab8cbaa09c%3Achannel%3Adanielclancy
+        - generic [ref=e299]:
+          - region [ref=e300]:
+            - generic [ref=e301]:
+              - generic [ref=e302]:
+                - generic [ref=e303]: Around the web
+                - heading "Platform presence" [level=2] [ref=e304]
+              - generic [ref=e305]: 2 public
+            - generic [ref=e306]:
+              - link "Open Rumble" [ref=e307] [cursor=pointer]:
+                - /url: https://rumble.com/c/bsmediagroup
+                - generic [ref=e310]:
+                  - strong [ref=e311]: Rumble
+                  - generic [ref=e312]: rumble.com/c/bsmediagroup
+              - link "Open YouTube" [ref=e313] [cursor=pointer]:
+                - /url: https://www.youtube.com/@bsmediagroup
+                - generic [ref=e316]:
+                  - strong [ref=e317]: YouTube
+                  - generic [ref=e318]: www.youtube.com/@bsmediagroup
+          - region [ref=e319]:
+            - generic [ref=e321]:
+              - generic [ref=e322]: Take this profile with you
+              - heading "Share profile" [level=2] [ref=e323]
+            - generic [ref=e325]:
+              - generic [ref=e327]:
+                - link "Open StreamSuites link" [ref=e328] [cursor=pointer]:
+                  - /url: https://streamsuites.app/u/bsmediagroup
+                  - generic [ref=e330]: StreamSuites
+                  - code [ref=e331]: streamsuites.app/u/bsmediagroup
+                - button "Copy share link" [ref=e332] [cursor=pointer]
+                - button "Share StreamSuites link" [ref=e335] [cursor=pointer]
+              - generic [ref=e339]:
+                - link "Open FindMeHere link" [ref=e340] [cursor=pointer]:
+                  - /url: https://findmehere.live/bsmediagroup
+                  - generic [ref=e342]: FindMeHere
+                  - code [ref=e343]: findmehere.live/bsmediagroup
+                - button "Copy share link" [ref=e344] [cursor=pointer]
+                - button "Share FindMeHere link" [ref=e347] [cursor=pointer]
+        - generic [ref=e350]:
+          - generic [ref=e351]:
+            - heading "Owner controls" [level=2] [ref=e352]
+            - button "Edit profile" [ref=e353] [cursor=pointer]
+          - paragraph [ref=e355]: Edit display name, bio, media, visibility, and social links in one compact profile editor.
+        - group "Profile safety and authority requests" [ref=e356]:
+          - generic "PUBLIC AUTHORITY Target pending Signed in Expand section" [ref=e357] [cursor=pointer]:
+            - generic [ref=e358]: PUBLIC AUTHORITY
+            - generic [ref=e361]:
+              - generic [ref=e362]: Target pending
+              - generic [ref=e363]: Signed in
+            - button "Expand section" [ref=e364]:
+              - generic [ref=e365]: Expand
+  - contentinfo [ref=e367]:
+    - generic [ref=e368]:
+      - generic [ref=e369]:
+        - link "StreamSuites home" [ref=e370] [cursor=pointer]:
+          - /url: /
+          - img "StreamSuites" [ref=e371]
+        - paragraph [ref=e372]: Public profiles connect creator identity, live presence, and published work.
+      - navigation "Public profile footer" [ref=e373]:
+        - generic [ref=e374]:
+          - strong [ref=e375]: This profile
+          - link "Bio" [ref=e376] [cursor=pointer]:
+            - /url: "#profile-bio"
+          - link "About" [ref=e377] [cursor=pointer]:
+            - /url: "#profile-about"
+          - link "Public work" [ref=e378] [cursor=pointer]:
+            - /url: "#profile-artifacts"
+        - generic [ref=e379]:
+          - strong [ref=e380]: Discover
+          - link "Community" [ref=e381] [cursor=pointer]:
+            - /url: /community/
+          - link "Live" [ref=e382] [cursor=pointer]:
+            - /url: /live
+          - link "Clips" [ref=e383] [cursor=pointer]:
+            - /url: /clips
+        - generic [ref=e384]:
+          - strong [ref=e385]: Resources
+          - link "Support" [ref=e386] [cursor=pointer]:
+            - /url: /support.html
+          - link "Privacy" [ref=e387] [cursor=pointer]:
+            - /url: /privacy.html
+          - link "Status" [ref=e388] [cursor=pointer]:
+            - /url: /status
+    - generic [ref=e389]:
+      - link "© 2026 Brainstream Media Group" [ref=e390] [cursor=pointer]:
+        - /url: https://brainstream.media
+      - link "v0.5.4-alpha" [ref=e393] [cursor=pointer]:
+        - /url: /version
+  - dialog [ref=e395]:
+    - button "Close profile editor" [ref=e396] [cursor=pointer]
+    - generic [ref=e398]:
+      - paragraph [ref=e399]: Owner studio
+      - heading "Edit your public profile" [level=2] [ref=e400]
+      - paragraph [ref=e401]: Shape what visitors see. Every change saves to your authoritative StreamSuites identity.
+    - generic [ref=e402]:
+      - generic [ref=e403]:
+        - region "Profile media preview" [ref=e404]:
+          - generic [ref=e405] [cursor=pointer]:
+            - strong [ref=e407]: Change cover
+            - button "Change cover" [ref=e408]
+          - generic [ref=e409] [cursor=pointer]:
+            - strong [ref=e411]: Change avatar
+            - button "Change avatar" [ref=e412]
+          - generic:
+            - strong: Admin
+            - generic: "@bsmediagroup"
+            - paragraph: Administrator account for StreamSuites systems. This fixture validates the owner profile polish without changing live data.
+        - generic [ref=e413]:
+          - navigation "Profile editor sections" [ref=e1]:
+            - link "Identity" [ref=e2] [cursor=pointer]:
+              - /url: "#profile-edit-identity"
+            - link "Bio & About" [ref=e4] [cursor=pointer]:
+              - /url: "#profile-edit-story"
+            - link "Page style" [ref=e6] [cursor=pointer]:
+              - /url: "#profile-edit-style"
+            - link "Social links" [ref=e8] [cursor=pointer]:
+              - /url: "#profile-edit-presence"
+          - generic [ref=e414]:
+            - generic [ref=e415]:
+              - paragraph [ref=e416]: 01 / Identity
+              - heading "Public identity" [level=3] [ref=e417]
+              - paragraph [ref=e418]: Keep your display name and visibility clear across StreamSuites.
+              - generic [ref=e419]:
+                - generic [ref=e420]: Display name
+                - textbox "Display name" [ref=e421]: Admin
+              - generic [ref=e422]:
+                - generic [ref=e423]: Public handle
+                - textbox "Public handle Handle changes are not exposed by the current public self-edit API." [disabled] [ref=e424]: bsmediagroup
+                - generic [ref=e425]: Handle changes are not exposed by the current public self-edit API.
+              - generic [ref=e426]:
+                - checkbox "Anonymous / private profile" [ref=e427]
+                - generic [ref=e428]: Anonymous / private profile
+            - generic [ref=e429]:
+              - paragraph [ref=e430]: 02 / Story
+              - heading "Bio & About" [level=3] [ref=e431]
+              - paragraph [ref=e432]: Use Bio for the concise identity-header introduction and About for the expanded profile story below the hero.
+              - generic [ref=e433]:
+                - generic [ref=e434]:
+                  - generic [ref=e435]: Bio
+                  - generic [ref=e436]: 123 / 1200
+                - textbox "Bio 123 / 1200 Appears in the identity hero. Aim for one or two concise sentences." [ref=e437]: Administrator account for StreamSuites systems. This fixture validates the owner profile polish without changing live data.
+                - generic [ref=e438]: Appears in the identity hero. Aim for one or two concise sentences.
+              - generic [ref=e440]:
+                - generic [ref=e441]:
+                  - generic [ref=e442]: About
+                  - generic [ref=e443]: 257 / 6000
+                - generic [ref=e444]:
+                  - toolbar "Markdown formatting" [ref=e445]:
+                    - 'button "About 257 / 6000 Markdown formatting ## List item## Building StreamSuites We build **creator-first** tools with _clear authority boundaries_. > Production truth stays more important than decoration. - Native media where it belongs - Safe public presentation - Accessible, responsive controls Building StreamSuites We build creator-first tools with clear authority boundaries. Production truth stays more important than decoration. Native media where it belongs Safe public presentation Accessible, responsive controls Markdown is rendered and sanitized by Runtime/Auth. Images and raw HTML are not supported." [ref=e446] [cursor=pointer]': Bold
+                    - button "Italic" [ref=e447] [cursor=pointer]
+                    - button "Heading 2" [ref=e448] [cursor=pointer]
+                    - button "Heading 3" [ref=e449] [cursor=pointer]
+                    - button "Link" [ref=e450] [cursor=pointer]
+                    - button "Quote" [ref=e451] [cursor=pointer]
+                    - button "Bullets" [ref=e452] [cursor=pointer]
+                    - button "Numbered list" [ref=e453] [cursor=pointer]
+                    - button "Inline code" [ref=e454] [cursor=pointer]
+                    - button "Strikethrough" [ref=e455] [cursor=pointer]
+                    - button "Horizontal rule" [ref=e456] [cursor=pointer]
+                    - generic [ref=e457]: Markdown
+                    - button "Preview" [ref=e458] [cursor=pointer]
+                  - textbox [ref=e459]: "## List item## Building StreamSuites We build **creator-first** tools with _clear authority boundaries_. > Production truth stays more important than decoration. - Native media where it belongs - Safe public presentation - Accessible, responsive controls"
+                  - generic [ref=e460]:
+                    - heading "Building StreamSuites" [level=2] [ref=e461]
+                    - paragraph [ref=e462]:
+                      - text: We build
+                      - strong [ref=e463]: creator-first
+                      - text: tools with
+                      - emphasis [ref=e464]: clear authority boundaries
+                      - text: .
+                    - blockquote [ref=e465]:
+                      - paragraph [ref=e466]: Production truth stays more important than decoration.
+                    - list [ref=e467]:
+                      - listitem [ref=e468]: Native media where it belongs
+                      - listitem [ref=e469]: Safe public presentation
+                      - listitem [ref=e470]: Accessible, responsive controls
+                - generic [ref=e471]: Markdown is rendered and sanitized by Runtime/Auth. Images and raw HTML are not supported.
+              - group "About video (optional)" [ref=e472]:
+                - generic [ref=e474] [cursor=pointer]:
+                  - radio "No video Publish the Markdown story on its own" [ref=e475]
+                  - strong [ref=e476]: No video
+                  - generic [ref=e477]: Publish the Markdown story on its own
+                - generic [ref=e478] [cursor=pointer]:
+                  - radio "Embed (recommended) Use a validated YouTube, Rumble, or Vimeo source" [checked] [ref=e479]
+                  - strong [ref=e480]: Embed (recommended)
+                  - generic [ref=e481]: Use a validated YouTube, Rumble, or Vimeo source
+                - generic [ref=e482] [cursor=pointer]:
+                  - radio "Upload Attach one MP4 or WebM file" [ref=e483]
+                  - strong [ref=e484]: Upload
+                  - generic [ref=e485]: Attach one MP4 or WebM file
+              - generic [ref=e706]:
+                - group "Supported platform" [ref=e707]:
+                  - generic [ref=e709] [cursor=pointer]:
+                    - radio "YouTube Video / Livestream" [checked] [ref=e710]
+                    - generic [ref=e712]: YouTube Video / Livestream
+                  - generic [ref=e713] [cursor=pointer]:
+                    - radio "Rumble Video / Livestream" [ref=e714]
+                    - generic [ref=e716]: Rumble Video / Livestream
+                  - generic [ref=e717] [cursor=pointer]:
+                    - radio "Vimeo Video / Livestream" [ref=e718]
+                    - generic [ref=e720]: Vimeo Video / Livestream
+                - generic [ref=e721]:
+                  - generic [ref=e722]: Provider URL
+                  - 'textbox "Provider URL Paste a specific YouTube video, livestream, Short, or embed URL. Example: https://www.youtube.com/watch?v=uPfbuo6iP6Y" [ref=e723]':
+                    - /placeholder: https://www.youtube.com/watch?v=uPfbuo6iP6Y
+                  - generic [ref=e724]: "Paste a specific YouTube video, livestream, Short, or embed URL. Example: https://www.youtube.com/watch?v=uPfbuo6iP6Y"
+                - generic [ref=e725]:
+                  - button "Validate / Preview" [ref=e726] [cursor=pointer]
+                  - button "Remove configured video" [ref=e727] [cursor=pointer]
+                - status [ref=e728]: Saved video loaded. Validate to open a fresh preview, or save unchanged to revalidate server-side.
+            - generic [ref=e493]:
+              - paragraph [ref=e494]: 03 / Style
+              - heading "Feature gradient" [level=3] [ref=e495]
+              - paragraph [ref=e496]: Choose the accent system used across this page, including the StreamSuites header emblem, hero spine, highlights, and primary actions.
+              - group "Public profile theme" [ref=e497]:
+                - generic [ref=e499] [cursor=pointer]:
+                  - radio "Violet Blue Signature violet and electric blue Selected"
+                  - generic [ref=e501]:
+                    - strong [ref=e502]: Violet Blue
+                    - generic [ref=e503]: Signature violet and electric blue
+                  - generic [ref=e504]: Selected
+                - generic [ref=e505] [cursor=pointer]:
+                  - radio "Crimson Magenta Deep red with vivid magenta Selected"
+                  - generic [ref=e507]:
+                    - strong [ref=e508]: Crimson Magenta
+                    - generic [ref=e509]: Deep red with vivid magenta
+                  - generic [ref=e510]: Selected
+                - generic [ref=e511] [cursor=pointer]:
+                  - radio "Signal Red Bold signal red with deeper scarlet contrast Selected" [checked]
+                  - generic [ref=e513]:
+                    - strong [ref=e514]: Signal Red
+                    - generic [ref=e515]: Bold signal red with deeper scarlet contrast
+                  - generic [ref=e516]: Selected
+                - generic [ref=e517] [cursor=pointer]:
+                  - radio "Emerald Cyan Fresh emerald with cool cyan Selected"
+                  - generic [ref=e519]:
+                    - strong [ref=e520]: Emerald Cyan
+                    - generic [ref=e521]: Fresh emerald with cool cyan
+                  - generic [ref=e522]: Selected
+                - generic [ref=e523] [cursor=pointer]:
+                  - radio "Gold Amber Warm gold with polished amber Selected"
+                  - generic [ref=e525]:
+                    - strong [ref=e526]: Gold Amber
+                    - generic [ref=e527]: Warm gold with polished amber
+                  - generic [ref=e528]: Selected
+                - generic [ref=e529] [cursor=pointer]:
+                  - radio "Royal Blue Saturated blue with indigo depth Selected"
+                  - generic [ref=e531]:
+                    - strong [ref=e532]: Royal Blue
+                    - generic [ref=e533]: Saturated blue with indigo depth
+                  - generic [ref=e534]: Selected
+                - generic [ref=e535] [cursor=pointer]:
+                  - radio "Magenta Violet Electric magenta with rich violet Selected"
+                  - generic [ref=e537]:
+                    - strong [ref=e538]: Magenta Violet
+                    - generic [ref=e539]: Electric magenta with rich violet
+                  - generic [ref=e540]: Selected
+                - generic [ref=e541] [cursor=pointer]:
+                  - radio "Red Gold Crimson energy with a gold finish Selected"
+                  - generic [ref=e543]:
+                    - strong [ref=e544]: Red Gold
+                    - generic [ref=e545]: Crimson energy with a gold finish
+                  - generic [ref=e546]: Selected
+                - generic [ref=e547] [cursor=pointer]:
+                  - radio "Green Gold Emerald contrast with warm gold Selected"
+                  - generic [ref=e549]:
+                    - strong [ref=e550]: Green Gold
+                    - generic [ref=e551]: Emerald contrast with warm gold
+                  - generic [ref=e552]: Selected
+                - generic [ref=e553] [cursor=pointer]:
+                  - radio "Dark Slate Deep architectural slate tones Selected"
+                  - generic [ref=e555]:
+                    - strong [ref=e556]: Dark Slate
+                    - generic [ref=e557]: Deep architectural slate tones
+                  - generic [ref=e558]: Selected
+                - generic [ref=e559] [cursor=pointer]:
+                  - radio "Neutral Greytone Balanced graphite and soft grey Selected"
+                  - generic [ref=e561]:
+                    - strong [ref=e562]: Neutral Greytone
+                    - generic [ref=e563]: Balanced graphite and soft grey
+                  - generic [ref=e564]: Selected
+                - generic [ref=e565] [cursor=pointer]:
+                  - radio "Frosted Silver Cool luminous silver and ice Selected"
+                  - generic [ref=e567]:
+                    - strong [ref=e568]: Frosted Silver
+                    - generic [ref=e569]: Cool luminous silver and ice
+                  - generic [ref=e570]: Selected
+            - generic [ref=e571]:
+              - paragraph [ref=e572]: 04 / Presence
+              - heading "Social links" [level=3] [ref=e573]
+              - paragraph [ref=e574]: Keep only active links in view. Add another platform or up to six custom destinations when you need them.
+              - generic [ref=e575]:
+                - paragraph [ref=e576]: 3 defined · 1/6 custom
+                - button "Add link" [ref=e729] [cursor=pointer]
+              - generic [ref=e578]:
+                - article [ref=e730]:
+                  - generic [ref=e731]:
+                    - strong [ref=e734]: Rumble
+                    - button "Remove Rumble link" [ref=e735] [cursor=pointer]: Remove
+                  - generic [ref=e736]:
+                    - generic [ref=e737]: Profile URL
+                    - textbox "Profile URL" [ref=e738]:
+                      - /placeholder: https://example.com/yourhandle
+                      - text: https://rumble.com/c/bsmediagroup
+                - article [ref=e739]:
+                  - generic [ref=e740]:
+                    - strong [ref=e743]: YouTube
+                    - button "Remove YouTube link" [ref=e744] [cursor=pointer]: Remove
+                  - generic [ref=e745]:
+                    - generic [ref=e746]: Profile URL
+                    - textbox "Profile URL" [ref=e747]:
+                      - /placeholder: https://example.com/yourhandle
+                      - text: https://www.youtube.com/@bsmediagroup
+                - article [ref=e748]:
+                  - generic [ref=e749]:
+                    - strong [ref=e753]: Custom link 1
+                    - button "Remove" [ref=e754] [cursor=pointer]
+                  - generic [ref=e755]:
+                    - generic [ref=e756]:
+                      - generic [ref=e757]: Link label
+                      - textbox "Link label" [active] [ref=e758]:
+                        - /placeholder: Store, Media kit, Community
+                    - generic [ref=e759]:
+                      - generic [ref=e760]: Destination URL
+                      - textbox "Destination URL" [ref=e761]:
+                        - /placeholder: https://example.com/destination
+                  - generic [ref=e762]:
+                    - generic [ref=e763]:
+                      - strong [ref=e764]: Custom icon
+                      - generic [ref=e765]: Optional · SVG preferred · PNG, BMP, and WebP supported · 256 KiB max
+                    - generic [ref=e767] [cursor=pointer]:
+                      - text: Choose icon
+                      - button "Choose icon"
+      - generic [ref=e699]:
+        - status [ref=e700]
+        - generic [ref=e701]:
+          - button "Cancel" [ref=e702] [cursor=pointer]
+          - button "Save changes" [ref=e703] [cursor=pointer]

@@ -1,0 +1,65 @@
+- generic [active] [ref=e571]:
+  - paragraph [ref=e572]: 04 / Presence
+  - heading "Social links" [level=3] [ref=e573]
+  - paragraph [ref=e574]: Keep only active links in view. Add another platform or up to six custom destinations when you need them.
+  - generic [ref=e575]:
+    - paragraph [ref=e576]: 2 defined · 0/6 custom
+    - button "Close menu" [expanded] [ref=e577] [cursor=pointer]
+  - generic [ref=e578]:
+    - article [ref=e579]:
+      - generic [ref=e580]:
+        - strong [ref=e583]: Rumble
+        - button "Remove Rumble link" [ref=e584] [cursor=pointer]: Remove
+      - generic [ref=e585]:
+        - generic [ref=e586]: Profile URL
+        - textbox "Profile URL" [ref=e587]:
+          - /placeholder: https://example.com/yourhandle
+          - text: https://rumble.com/c/bsmediagroup
+    - article [ref=e588]:
+      - generic [ref=e589]:
+        - strong [ref=e592]: YouTube
+        - button "Remove YouTube link" [ref=e593] [cursor=pointer]: Remove
+      - generic [ref=e594]:
+        - generic [ref=e595]: Profile URL
+        - textbox "Profile URL" [ref=e596]:
+          - /placeholder: https://example.com/yourhandle
+          - text: https://www.youtube.com/@bsmediagroup
+  - generic [ref=e597]:
+    - generic [ref=e598]:
+      - generic [ref=e599]: Choose another link
+      - generic [ref=e600]: Only platforms not already defined are shown.
+    - generic [ref=e601]:
+      - button "Twitch" [ref=e602] [cursor=pointer]
+      - button "Kick" [ref=e605] [cursor=pointer]
+      - button "Pilled" [ref=e608] [cursor=pointer]
+      - button "Discord" [ref=e611] [cursor=pointer]
+      - button "X" [ref=e614] [cursor=pointer]
+      - button "Instagram" [ref=e617] [cursor=pointer]
+      - button "TikTok" [ref=e620] [cursor=pointer]
+      - button "Facebook" [ref=e623] [cursor=pointer]
+      - button "Threads" [ref=e626] [cursor=pointer]
+      - button "Reddit" [ref=e629] [cursor=pointer]
+      - button "Telegram" [ref=e632] [cursor=pointer]
+      - button "WhatsApp Channels" [ref=e635] [cursor=pointer]
+      - button "Patreon" [ref=e638] [cursor=pointer]
+      - button "Pickax" [ref=e641] [cursor=pointer]
+      - button "OnlyFans" [ref=e644] [cursor=pointer]
+      - button "Substack" [ref=e647] [cursor=pointer]
+      - button "SoundCloud" [ref=e650] [cursor=pointer]
+      - button "Apple Podcasts" [ref=e653] [cursor=pointer]
+      - button "Website" [ref=e656] [cursor=pointer]
+      - button "Bluesky" [ref=e659] [cursor=pointer]
+      - button "Locals" [ref=e662] [cursor=pointer]
+      - button "Spotify" [ref=e665] [cursor=pointer]
+      - button "Vimeo" [ref=e668] [cursor=pointer]
+      - button "Dailymotion" [ref=e671] [cursor=pointer]
+      - button "Odysee" [ref=e674] [cursor=pointer]
+      - button "Trovo" [ref=e677] [cursor=pointer]
+      - button "Snapchat" [ref=e680] [cursor=pointer]
+      - button "Pinterest" [ref=e683] [cursor=pointer]
+      - button "Ko-fi" [ref=e686] [cursor=pointer]
+      - button "GitHub" [ref=e689] [cursor=pointer]
+      - button "Minds" [ref=e692] [cursor=pointer]
+      - button "Custom link 6 remaining" [ref=e695] [cursor=pointer]:
+        - generic [ref=e697]: Custom link
+        - generic [ref=e698]: 6 remaining

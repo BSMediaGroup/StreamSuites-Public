@@ -2143,6 +2143,23 @@ body[data-public-page="public-profile-standalone"] :where(.profile-edit-scrollbo
   scrollbar-width: thin;
 }
 
+html:has(body[data-public-page="public-profile-standalone"]) {
+  --profile-gradient-b: #9b63ed;
+  --profile-scrollbar: color-mix(in srgb, var(--profile-gradient-b) 58%, #565b67 42%);
+}
+
+html:has(body[data-public-page="public-profile-standalone"])[data-profile-theme="crimson_magenta"] { --profile-gradient-b: #e83fb5; }
+html:has(body[data-public-page="public-profile-standalone"])[data-profile-theme="signal_red"] { --profile-gradient-b: #ff3348; }
+html:has(body[data-public-page="public-profile-standalone"])[data-profile-theme="emerald_cyan"] { --profile-gradient-b: #28d7aa; }
+html:has(body[data-public-page="public-profile-standalone"])[data-profile-theme="gold_amber"] { --profile-gradient-b: #ffcf5c; }
+html:has(body[data-public-page="public-profile-standalone"])[data-profile-theme="royal_blue"] { --profile-gradient-b: #5398ff; }
+html:has(body[data-public-page="public-profile-standalone"])[data-profile-theme="magenta_violet"] { --profile-gradient-b: #bc4bff; }
+html:has(body[data-public-page="public-profile-standalone"])[data-profile-theme="red_gold"] { --profile-gradient-b: #f2783d; }
+html:has(body[data-public-page="public-profile-standalone"])[data-profile-theme="green_gold"] { --profile-gradient-b: #67c45a; }
+html:has(body[data-public-page="public-profile-standalone"])[data-profile-theme="dark_slate"] { --profile-gradient-b: #3b4658; }
+html:has(body[data-public-page="public-profile-standalone"])[data-profile-theme="neutral_greytone"] { --profile-gradient-b: #858a94; }
+html:has(body[data-public-page="public-profile-standalone"])[data-profile-theme="frosted_silver"] { --profile-gradient-b: #c3ced8; }
+
 html:has(body[data-public-page="public-profile-standalone"])::-webkit-scrollbar,
 body[data-public-page="public-profile-standalone"]::-webkit-scrollbar,
 body[data-public-page="public-profile-standalone"] :where(.profile-edit-scrollbody, .profile-edit-sections)::-webkit-scrollbar {
@@ -3801,6 +3818,11 @@ body[data-public-page="public-profile-standalone"] .profile-edit-social-row {
   height: 18px;
   flex: 0 0 18px;
   object-fit: contain;
+}
+
+.profile-link-fallback-icon {
+  filter: brightness(0) invert(1);
+  opacity: 0.82;
 }
 
 .profile-link-custom-icon-preview {

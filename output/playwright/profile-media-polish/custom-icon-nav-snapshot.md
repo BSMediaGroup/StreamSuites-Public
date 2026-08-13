@@ -1,0 +1,9 @@
+- navigation "Profile editor sections" [ref=e1]:
+  - link "Identity" [ref=e2] [cursor=pointer]:
+    - /url: "#profile-edit-identity"
+  - link "Bio & About" [ref=e4] [cursor=pointer]:
+    - /url: "#profile-edit-story"
+  - link "Page style" [ref=e6] [cursor=pointer]:
+    - /url: "#profile-edit-style"
+  - link "Social links" [ref=e8] [cursor=pointer]:
+    - /url: "#profile-edit-presence"

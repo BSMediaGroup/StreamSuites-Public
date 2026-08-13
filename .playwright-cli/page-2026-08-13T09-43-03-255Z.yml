@@ -1,0 +1,479 @@
+- generic [ref=e217]:
+  - link "Skip to profile content" [ref=e218] [cursor=pointer]:
+    - /url: "#profile-main"
+  - generic [ref=e220]:
+    - region [ref=e221]:
+      - generic [ref=e222]:
+        - link "Community home" [ref=e223] [cursor=pointer]:
+          - /url: /community/
+          - generic [ref=e226]:
+            - generic [ref=e227]: StreamSuites™
+            - generic [ref=e228]: COMMUNITY HOME
+        - generic [ref=e229]:
+          - generic "Profile social links" [ref=e231]:
+            - link "Rumble" [ref=e232] [cursor=pointer]:
+              - /url: https://rumble.com/c/bsmediagroup
+            - link "YouTube" [ref=e233] [cursor=pointer]:
+              - /url: https://www.youtube.com/@bsmediagroup
+          - button "Admin Admin" [ref=e235] [cursor=pointer]:
+            - generic [ref=e238]:
+              - generic [ref=e239]: Admin
+              - generic "Admin" [ref=e241]
+      - generic [ref=e244]:
+        - generic [ref=e245]:
+          - img "Admin profile image" [ref=e246]
+          - generic [ref=e247]:
+            - paragraph [ref=e248]: STREAMSUITES PUBLIC IDENTITY
+            - heading "Admin" [level=1] [ref=e249]
+            - generic [ref=e250]:
+              - generic "Admin" [ref=e252]
+              - paragraph [ref=e254]: "@bsmediagroup"
+            - button "Edit profile" [active] [ref=e255] [cursor=pointer]
+            - paragraph [ref=e258]: Administrator account for StreamSuites systems. This fixture validates the owner profile polish without changing live data.
+          - generic "ADMIN" [ref=e260]
+        - complementary "Profile status and actions" [ref=e261]:
+          - generic [ref=e264]:
+            - generic [ref=e265]: Current signal
+            - strong [ref=e266]: Offline
+            - generic [ref=e267]: No current public live source is available.
+          - generic [ref=e268]:
+            - link "View on Rumble" [ref=e269] [cursor=pointer]:
+              - /url: https://rumble.com/c/bsmediagroup
+            - generic [ref=e271]:
+              - button "Copy link" [ref=e272] [cursor=pointer]
+              - button "Share" [ref=e273] [cursor=pointer]
+            - status
+          - generic [ref=e274]:
+            - generic [ref=e275]:
+              - term [ref=e276]: Identity
+              - definition [ref=e277]: ADMIN
+            - generic [ref=e278]:
+              - term [ref=e279]: Tier
+              - definition [ref=e280]: PRO
+    - navigation "Profile sections" [ref=e281]:
+      - link "Bio" [ref=e282] [cursor=pointer]:
+        - /url: "#profile-bio"
+      - link "About" [ref=e283] [cursor=pointer]:
+        - /url: "#profile-about"
+      - link "Stream" [ref=e284] [cursor=pointer]:
+        - /url: "#profile-live"
+      - link "Public work" [ref=e285] [cursor=pointer]:
+        - /url: "#profile-artifacts"
+      - link "Identity" [ref=e286] [cursor=pointer]:
+        - /url: "#profile-identity"
+      - link "Presence" [ref=e287] [cursor=pointer]:
+        - /url: "#profile-presence"
+      - link "Safety" [ref=e288] [cursor=pointer]:
+        - /url: "#profile-safety"
+    - main [ref=e289]:
+      - generic [ref=e290]:
+        - region [ref=e291]:
+          - generic [ref=e292]:
+            - generic [ref=e293]:
+              - generic [ref=e294]: Profile story
+              - heading "About" [level=2] [ref=e295]
+            - button "Edit story" [ref=e296] [cursor=pointer]
+          - generic [ref=e298]:
+            - generic [ref=e299]:
+              - heading "Building StreamSuites" [level=2] [ref=e300]
+              - paragraph [ref=e301]:
+                - text: We build
+                - strong [ref=e302]: creator-first
+                - text: tools with
+                - emphasis [ref=e303]: clear authority boundaries
+                - text: .
+              - blockquote [ref=e304]:
+                - paragraph [ref=e305]: Production truth stays more important than decoration.
+              - list [ref=e306]:
+                - listitem [ref=e307]: Native media where it belongs
+                - listitem [ref=e308]: Safe public presentation
+                - listitem [ref=e309]: Accessible, responsive controls
+            - generic [ref=e310]:
+              - generic [ref=e311]:
+                - generic [ref=e312]: Uploaded video
+                - heading "StreamSuites profile presentation" [level=3] [ref=e314]
+              - generic [ref=e315]: Your browser cannot play this video.
+          - text: PUBLIC IDENTITY / STREAMSUITES
+        - region [ref=e318]:
+          - generic [ref=e320]:
+            - generic [ref=e321]: At a glance
+            - heading "Public overview" [level=2] [ref=e322]
+          - generic [ref=e323]:
+            - generic [ref=e324]:
+              - generic [ref=e325]: Tier
+              - strong [ref=e326]:
+                - generic "PRO" [ref=e327]
+            - generic [ref=e329]:
+              - generic [ref=e330]: Artifacts
+              - strong [ref=e331]: "0"
+            - generic [ref=e332]:
+              - generic [ref=e333]: Clips
+              - strong [ref=e334]: "0"
+            - generic [ref=e335]:
+              - generic [ref=e336]: Polls
+              - strong [ref=e337]: "0"
+          - generic [ref=e338]:
+            - generic [ref=e339]:
+              - generic [ref=e340]: Joined
+              - generic [ref=e341]: Pending public data
+            - generic [ref=e342]:
+              - generic [ref=e343]: Profile type
+              - generic "ADMIN" [ref=e345]
+            - generic [ref=e346]:
+              - generic [ref=e347]: XP
+              - generic [ref=e348]: Pending
+            - generic [ref=e349]:
+              - generic [ref=e350]: Level
+              - generic [ref=e351]: Pending
+            - generic [ref=e352]:
+              - generic [ref=e353]: Global Rank
+              - generic [ref=e354]: Pending
+            - generic [ref=e355]:
+              - generic [ref=e356]: Balance
+              - generic [ref=e357]: Unavailable
+            - generic [ref=e358]:
+              - generic [ref=e359]: Inventory
+              - generic [ref=e360]: Unavailable
+        - group "Latest public stream" [ref=e361]:
+          - generic "LATEST STREAM Expand section" [ref=e362] [cursor=pointer]:
+            - generic [ref=e363]: LATEST STREAM
+            - button "Expand section" [ref=e366]:
+              - generic [ref=e367]: Expand
+        - region [ref=e369]:
+          - generic [ref=e370]:
+            - generic [ref=e371]:
+              - generic [ref=e372]: Identity signals
+              - heading "Public badges" [level=2] [ref=e373]
+            - generic [ref=e374]: 2 public
+          - generic [ref=e375]:
+            - article [ref=e376]:
+              - generic [ref=e379]:
+                - strong [ref=e380]: Admin
+                - generic [ref=e381]: Administrative StreamSuites account badge surfaced by the public profile contract.
+            - article [ref=e382]:
+              - generic [ref=e385]:
+                - strong [ref=e386]: Pro Tier
+                - generic [ref=e387]: Advanced StreamSuites entitlement visible on this public profile.
+        - region [ref=e388]:
+          - generic [ref=e389]:
+            - generic [ref=e390]:
+              - generic [ref=e391]: Published from this identity
+              - heading "Public work" [level=2] [ref=e392]
+            - generic [ref=e393]: No public items
+          - generic [ref=e394]: No public artifacts are linked to this profile yet. The page stays focused on identity and presence until public work is available.
+        - group [ref=e395]:
+          - generic "GAME & COMPETITION Global default Global Collapse section" [ref=e396] [cursor=pointer]:
+            - generic [ref=e397]: GAME & COMPETITION
+            - generic [ref=e400]:
+              - generic [ref=e401]: Global default
+              - combobox "Game and competition scope" [ref=e404]:
+                - option "Global" [selected]
+                - option "Kick · streamsuites"
+                - option "Kick · danielclancy"
+            - button "Collapse section" [expanded] [ref=e405]:
+              - generic [ref=e406]: Collapse
+          - generic [ref=e408]:
+            - generic [ref=e409]:
+              - article [ref=e410]:
+                - generic [ref=e411]: Current XP / Global rank
+                - strong [ref=e412]:
+                  - generic [ref=e413]:
+                    - generic [ref=e414]: 0 XP
+                    - generic [ref=e416]: Unranked
+                - generic [ref=e418]: No global leaderboard placement has been returned for this identity yet.
+              - article [ref=e419]:
+                - generic [ref=e420]: Current level
+                - strong [ref=e421]: No level yet
+                - generic [ref=e422]: Level appears after the runtime returns progression data.
+              - article [ref=e423]:
+                - generic [ref=e424]: Current balance
+                - strong [ref=e425]:
+                  - generic [ref=e426]: 0 Credits
+                - generic [ref=e429]: No economy events have been recorded yet.
+                - generic [ref=e430]: No denomination breakdown is available yet.
+              - article [ref=e432]:
+                - generic [ref=e433]: Inventory
+                - strong [ref=e434]:
+                  - generic [ref=e435]: Empty
+                - generic [ref=e438]: No authority-owned items have been issued yet.
+                - generic [ref=e439]: No inventory items have been recorded yet.
+              - article [ref=e442]:
+                - generic [ref=e443]: Next level progress
+                - strong [ref=e444]: Not available
+                - generic [ref=e445]: Progress appears with runtime progression data.
+              - article [ref=e446]:
+                - generic [ref=e447]: Season standing
+                - strong [ref=e448]: Not seeded
+                - generic [ref=e449]: Ladders arrive later
+            - paragraph [ref=e450]: No authoritative XP events have been recorded for this public identity yet. Wallet and inventory can still show real starting state when returned by runtime authority.
+        - generic [ref=e451]:
+          - generic [ref=e452]:
+            - heading "Scoped boards" [level=2] [ref=e453]
+            - generic [ref=e454]: 2 scoped creator/channel boards
+          - generic [ref=e455]:
+            - generic [ref=e456]:
+              - generic [ref=e457]: Platform
+              - generic [ref=e458]: Channel
+              - generic [ref=e459]: Rank
+              - generic [ref=e460]: XP
+              - generic [ref=e461]: Level
+              - generic [ref=e462]: Messages
+              - generic [ref=e463]: Updated
+              - generic [ref=e464]: Action
+            - generic [ref=e465]:
+              - article [ref=e466]:
+                - generic [ref=e467]: Kick
+                - generic [ref=e473]:
+                  - strong [ref=e474]: streamsuites
+                  - generic [ref=e475]: Kick · streamsuites
+                - generic [ref=e476]: "#1"
+                - generic [ref=e477]: 40 XP
+                - generic "Stone (LEVEL0)" [ref=e481]: Stone
+                - generic [ref=e483]: "8"
+                - generic [ref=e484]: May 22, 2026
+                - link "VIEW" [ref=e485] [cursor=pointer]:
+                  - /url: /leaderboards?scope_key=kick%3Acreator%3A3c426a3d-2409-4409-a0bf-c26960081027%3Achannel%3Astreamsuites
+              - article [ref=e486]:
+                - generic [ref=e487]: Kick
+                - generic [ref=e493]:
+                  - strong [ref=e494]: danielclancy
+                  - generic [ref=e495]: Kick · danielclancy
+                - generic [ref=e496]: "#2"
+                - generic [ref=e497]: 10 XP
+                - generic "Stone (LEVEL0)" [ref=e501]: Stone
+                - generic [ref=e503]: "2"
+                - generic [ref=e504]: May 26, 2026
+                - link "VIEW" [ref=e505] [cursor=pointer]:
+                  - /url: /leaderboards?scope_key=kick%3Acreator%3Aaa4359f0-b243-42de-bbf4-dbab8cbaa09c%3Achannel%3Adanielclancy
+        - generic [ref=e506]:
+          - region [ref=e507]:
+            - generic [ref=e508]:
+              - generic [ref=e509]:
+                - generic [ref=e510]: Around the web
+                - heading "Platform presence" [level=2] [ref=e511]
+              - generic [ref=e512]: 2 public
+            - generic [ref=e513]:
+              - link "Open Rumble" [ref=e514] [cursor=pointer]:
+                - /url: https://rumble.com/c/bsmediagroup
+                - generic [ref=e517]:
+                  - strong [ref=e518]: Rumble
+                  - generic [ref=e519]: rumble.com/c/bsmediagroup
+              - link "Open YouTube" [ref=e520] [cursor=pointer]:
+                - /url: https://www.youtube.com/@bsmediagroup
+                - generic [ref=e523]:
+                  - strong [ref=e524]: YouTube
+                  - generic [ref=e525]: www.youtube.com/@bsmediagroup
+          - region [ref=e526]:
+            - generic [ref=e528]:
+              - generic [ref=e529]: Take this profile with you
+              - heading "Share profile" [level=2] [ref=e530]
+            - generic [ref=e532]:
+              - generic [ref=e534]:
+                - link "Open StreamSuites link" [ref=e535] [cursor=pointer]:
+                  - /url: https://streamsuites.app/u/bsmediagroup
+                  - generic [ref=e537]: StreamSuites
+                  - code [ref=e538]: streamsuites.app/u/bsmediagroup
+                - button "Copy share link" [ref=e539] [cursor=pointer]
+                - button "Share StreamSuites link" [ref=e542] [cursor=pointer]
+              - generic [ref=e546]:
+                - link "Open FindMeHere link" [ref=e547] [cursor=pointer]:
+                  - /url: https://findmehere.live/bsmediagroup
+                  - generic [ref=e549]: FindMeHere
+                  - code [ref=e550]: findmehere.live/bsmediagroup
+                - button "Copy share link" [ref=e551] [cursor=pointer]
+                - button "Share FindMeHere link" [ref=e554] [cursor=pointer]
+        - generic [ref=e557]:
+          - generic [ref=e558]:
+            - heading "Owner controls" [level=2] [ref=e559]
+            - button "Edit profile" [ref=e560] [cursor=pointer]
+          - paragraph [ref=e562]: Edit display name, bio, media, visibility, and social links in one compact profile editor.
+        - group "Profile safety and authority requests" [ref=e563]:
+          - generic "PUBLIC AUTHORITY Target pending Signed in Expand section" [ref=e564] [cursor=pointer]:
+            - generic [ref=e565]: PUBLIC AUTHORITY
+            - generic [ref=e568]:
+              - generic [ref=e569]: Target pending
+              - generic [ref=e570]: Signed in
+            - button "Expand section" [ref=e571]:
+              - generic [ref=e572]: Expand
+  - contentinfo [ref=e574]:
+    - generic [ref=e575]:
+      - generic [ref=e576]:
+        - link "StreamSuites home" [ref=e577] [cursor=pointer]:
+          - /url: /
+          - img "StreamSuites" [ref=e578]
+        - paragraph [ref=e579]: Public profiles connect creator identity, live presence, and published work.
+      - navigation "Public profile footer" [ref=e580]:
+        - generic [ref=e581]:
+          - strong [ref=e582]: This profile
+          - link "Bio" [ref=e583] [cursor=pointer]:
+            - /url: "#profile-bio"
+          - link "About" [ref=e584] [cursor=pointer]:
+            - /url: "#profile-about"
+          - link "Public work" [ref=e585] [cursor=pointer]:
+            - /url: "#profile-artifacts"
+        - generic [ref=e586]:
+          - strong [ref=e587]: Discover
+          - link "Community" [ref=e588] [cursor=pointer]:
+            - /url: /community/
+          - link "Live" [ref=e589] [cursor=pointer]:
+            - /url: /live
+          - link "Clips" [ref=e590] [cursor=pointer]:
+            - /url: /clips
+        - generic [ref=e591]:
+          - strong [ref=e592]: Resources
+          - link "Support" [ref=e593] [cursor=pointer]:
+            - /url: /support.html
+          - link "Privacy" [ref=e594] [cursor=pointer]:
+            - /url: /privacy.html
+          - link "Status" [ref=e595] [cursor=pointer]:
+            - /url: /status
+    - generic [ref=e596]:
+      - link "© 2026 Brainstream Media Group" [ref=e597] [cursor=pointer]:
+        - /url: https://brainstream.media
+      - link "v0.5.4-alpha" [ref=e600] [cursor=pointer]:
+        - /url: /version
+  - generic [ref=e601]:
+    - button "All Systems Operational. Open complete service status." [ref=e602] [cursor=pointer]:
+      - generic:
+        - strong [ref=e605]: All Systems Operational
+        - generic [ref=e606]: 21/21 components · Just now
+    - region:
+      - generic:
+        - generic: ✓
+        - generic:
+          - paragraph: Live Atlassian Statuspage
+          - heading [level=2]: All Systems Operational
+          - generic: Checked Just now · 1639 ms
+        - button: ×
+      - generic:
+        - generic:
+          - strong: "21"
+          - generic: Components
+        - generic:
+          - strong: "0"
+          - generic: Attention
+        - generic:
+          - strong: "0"
+          - generic: Incidents
+        - generic:
+          - strong: 1639ms
+          - generic: Feed latency
+      - generic:
+        - generic:
+          - generic:
+            - heading [level=3]: Atlassian custom metrics
+            - generic: 2 metrics
+          - paragraph: Sanitized Runtime/Auth projection · read only
+          - generic:
+            - article:
+              - generic:
+                - heading [level=4]: Core API response time
+                - generic: Observed
+              - strong: 391 ms
+              - paragraph: Measured 1 minute ago. Historical ranges are available in the Status Center.
+            - article:
+              - generic:
+                - heading [level=4]: Studio Room Readiness
+                - generic: Deferred
+              - strong: Deferred
+              - paragraph: No genuine Studio room and RealtimeKit readiness transaction exists; homepage latency is not a substitute. Historical data begins only after that transaction exists.
+        - generic:
+          - generic:
+            - heading [level=3]: Core Platform
+            - generic: 6/6 operational
+          - list:
+            - listitem:
+              - generic: Authentication, Accounts & Sessions
+              - generic: Operational
+            - listitem:
+              - generic: Rooms & Invitations
+              - generic: Operational
+            - listitem:
+              - generic: Public APIs, Exports & Version Registry
+              - generic: Operational
+            - listitem:
+              - generic: Automation & Trigger Services
+              - generic: Operational
+            - listitem:
+              - generic: Alerts & Notifications
+              - generic: Operational
+            - listitem:
+              - generic: Platform Integrations & Live Chat
+              - generic: Operational
+        - generic:
+          - generic:
+            - heading [level=3]: External Dependencies
+            - generic: 4/4 operational
+          - list:
+            - listitem:
+              - generic: Cloudflare Pages
+              - generic: Operational
+            - listitem:
+              - generic: Transactional Email Delivery
+              - generic: Operational
+            - listitem:
+              - generic: Stripe API
+              - generic: Operational
+            - listitem:
+              - generic: GitHub Git Operations
+              - generic: Operational
+        - generic:
+          - generic:
+            - heading [level=3]: Production Products
+            - generic: 5/5 operational
+          - list:
+            - listitem:
+              - generic: Browser Studio
+              - generic: Operational
+            - listitem:
+              - generic: Realtime Media & Guest Connections
+              - generic: Operational
+            - listitem:
+              - generic: StudioApp Connected Services
+              - generic: Operational
+            - listitem:
+              - generic: Streaming Destinations & Credential Delivery
+              - generic: Operational
+            - listitem:
+              - generic: Studio for OBS Connected Services
+              - generic: Operational
+        - generic:
+          - generic:
+            - heading [level=3]: Web & Audience Surfaces
+            - generic: 6/6 operational
+          - list:
+            - listitem:
+              - generic: Public Website & Status Center
+              - generic: Operational
+            - listitem:
+              - generic: Public Profiles, Community & Artifacts
+              - generic: Operational
+            - listitem:
+              - generic: Creator Dashboard
+              - generic: Operational
+            - listitem:
+              - generic: Admin Dashboard
+              - generic: Operational
+            - listitem:
+              - generic: Developer Console & Documentation
+              - generic: Operational
+            - listitem:
+              - generic: Downloads & Update Distribution
+              - generic: Operational
+        - generic:
+          - generic:
+            - heading [level=3]: Active incidents
+            - generic: "0"
+          - paragraph: No active incidents reported.
+        - generic:
+          - generic:
+            - heading [level=3]: Scheduled maintenance
+            - generic: "0"
+          - paragraph: No active maintenance windows reported.
+      - generic:
+        - link:
+          - /url: /status
+          - text: Full StreamSuites status
+        - link:
+          - /url: https://streamsuites.statuspage.io/
+          - text: Atlassian page ↗

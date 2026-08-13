@@ -226,6 +226,13 @@ test("public profile owner editor stays runtime-backed and uses canonical social
   assert.match(app, /data-profile-custom-add/);
   assert.match(app, /const PUBLIC_CUSTOM_LINK_MAX_ITEMS = 6/);
   assert.match(app, /Choose an SVG, PNG, BMP, or WebP icon/);
+  assert.match(app, /profile-link-fallback-icon/);
+  assert.match(app, /iconPath: item\.iconUrl \|\| PUBLIC_CUSTOM_LINK_FALLBACK_ICON/);
+  assert.match(app, /icon\.src = item\.iconUrl \|\| PUBLIC_CUSTOM_LINK_FALLBACK_ICON/);
+  assert.match(app, /if \(!item\.iconUrl\) icon\.classList\.add\("profile-link-fallback-icon"\)/);
+  assert.match(app, /document\.documentElement\.dataset\.profileTheme = profileTheme/);
+  assert.match(app, /document\.documentElement\.dataset\.profileTheme = nextTheme/);
+  assert.match(app, /document\.documentElement\.dataset\.profileTheme = selectedTheme/);
   assert.match(app, /custom_links: collectPublicProfileEditorCustomLinks/);
   assert.match(app, /aboutInput\.dataset\.profileEditAbout = "true"/);
   assert.match(app, /about: aboutInput\.value\.trim\(\)/);
@@ -256,6 +263,8 @@ test("public profile owner editor stays runtime-backed and uses canonical social
   assert.match(profileCss, /\.profile-link-add-menu/);
   assert.match(profileCss, /\.profile-link-add-option/);
   assert.match(profileCss, /\.profile-link-custom-icon-options/);
+  assert.match(profileCss, /\.profile-link-fallback-icon\s*\{[\s\S]*?filter: brightness\(0\) invert\(1\)/);
+  assert.match(profileCss, /html:has\(body\[data-public-page="public-profile-standalone"\]\)\[data-profile-theme="signal_red"\] \{ --profile-gradient-b: #ff3348; \}/);
   assert.match(profileCss, /\.profile-edit-modal--profile/);
   assert.match(profileCss, /\.profile-edit-open-button--hero\s*\{/);
   assert.match(profileCss, /\.profile-edit-footer/);

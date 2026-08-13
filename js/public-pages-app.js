@@ -2686,6 +2686,7 @@
     const icon = create("img", iconClass);
     icon.src = entry.iconPath || socialIconPath(entry.network);
     icon.alt = "";
+    if (entry.fallbackIcon) icon.classList.add("profile-link-fallback-icon");
     anchor.appendChild(icon);
     return anchor;
   }
@@ -2701,6 +2702,7 @@
       url: item.url,
       label: item.label,
       iconPath: item.iconUrl || PUBLIC_CUSTOM_LINK_FALLBACK_ICON,
+      fallbackIcon: !item.iconUrl,
       custom: true
     }));
     return [...standardEntries, ...customEntries];
@@ -11830,6 +11832,7 @@
     icon.src = item.iconUrl || PUBLIC_CUSTOM_LINK_FALLBACK_ICON;
     icon.alt = "";
     icon.setAttribute("aria-hidden", "true");
+    if (!item.iconUrl) icon.classList.add("profile-link-fallback-icon");
     iconWrap.appendChild(icon);
     brand.append(iconWrap, create("strong", "", item.label || `Custom link ${index + 1}`));
     const remove = create("button", "profile-link-remove-button", "Remove");
@@ -11957,6 +11960,7 @@
     const modal = create("section", "profile-edit-modal profile-edit-modal--profile");
     modal.dataset.profileTheme = selectedTheme;
     document.body.dataset.profileTheme = selectedTheme;
+    document.documentElement.dataset.profileTheme = selectedTheme;
     modal.setAttribute("role", "dialog");
     modal.setAttribute("aria-modal", "true");
     modal.setAttribute("aria-labelledby", "profile-edit-modal-title");
@@ -12282,6 +12286,7 @@
         icon.src = PUBLIC_CUSTOM_LINK_FALLBACK_ICON;
         icon.alt = "";
         icon.setAttribute("aria-hidden", "true");
+        icon.classList.add("profile-link-fallback-icon");
         customOption.append(icon, create("span", "", "Custom link"), create("small", "", `${PUBLIC_CUSTOM_LINK_MAX_ITEMS - customLinkDrafts.length} remaining`));
         addLinkOptions.appendChild(customOption);
       }
@@ -12537,6 +12542,7 @@
         media.dataset.profileTheme = nextTheme;
         modal.dataset.profileTheme = nextTheme;
         document.body.dataset.profileTheme = nextTheme;
+        document.documentElement.dataset.profileTheme = nextTheme;
         if (pageShell instanceof HTMLElement) pageShell.dataset.profileTheme = nextTheme;
       }
     });
@@ -12570,6 +12576,7 @@
         pageShell.dataset.profileTheme = selectedTheme;
       }
       if (closeOptions.restoreTheme !== false) document.body.dataset.profileTheme = selectedTheme;
+      if (closeOptions.restoreTheme !== false) document.documentElement.dataset.profileTheme = selectedTheme;
       closePublicProfileEditModal(backdrop, restoreFocusTo);
     };
     closeButton.addEventListener("click", close);
@@ -14578,6 +14585,7 @@
     const profileTheme = normalizeProfileThemePreset(profile?.streamsuitesThemePreset);
     shell.dataset.profileTheme = profileTheme;
     document.body.dataset.profileTheme = profileTheme;
+    document.documentElement.dataset.profileTheme = profileTheme;
     const atmosphereUrl = String(profile?.backgroundImageUrl || profile?.bannerImageUrl || profile?.coverImageUrl || "").trim();
     shell.style.setProperty("--profile-atmosphere-image", atmosphereUrl ? `url("${atmosphereUrl.replace(/"/g, "%22")}")` : "none");
     shell.appendChild(buildStandaloneProfileHero(profile, options.authState || null, { ...options, canEditProfile: canEdit }));
