@@ -415,6 +415,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /profile-social-gallery-body/);
   assert.match(app, /create\("span", "", formatProfileLinkLabel\(entry\.url\)\)/);
   assert.match(app, /function buildProfileGameCompetitionSection\(profile = null, options = \{\}\)/);
+  assert.match(app, /if \(!label\) return create\("span", className, options\.emptyLabel \|\| "Unranked"\)/);
   assert.match(app, /details\.open = hasGameData/);
   assert.match(app, /GAME & COMPETITION/);
   assert.match(app, /gamecontroller\.svg/);
@@ -578,7 +579,8 @@ test("standalone /u profile hydration keeps runtime profile media ahead of local
   assert.ok(profileTypeBlock, "buildProfileTypeChip should exist");
   assert.ok(profileTierBlock, "buildProfileTierChip should exist");
   assert.match(app, /function normalizedImageContract\(source = \{\}, fallback = \{\}\)/);
-  assert.match(app, /function stableImageUrl\(url, cacheKey\)/);
+  assert.doesNotMatch(app, /function stableImageUrl\(url, cacheKey\)/);
+  assert.doesNotMatch(app, /searchParams\.set\("v"/);
   assert.match(app, /provider_picture/);
   assert.match(app, /profile_photo_url/);
   assert.match(app, /public_avatar_url/);
@@ -587,7 +589,8 @@ test("standalone /u profile hydration keeps runtime profile media ahead of local
   assert.match(app, /media\.provider_picture/);
   assert.match(app, /find\(isUsableProfileImageUrl\)/);
   assert.match(app, /!parsed\.pathname\.includes\("\/assets\/icons\/ui\/profile\.svg"\)/);
-  assert.match(app, /parsed\.origin !== window\.location\.origin\) return source/);
+  assert.match(app, /avatarUrl: normalizeProfileMediaUrl\(avatarUrl, ""\)/);
+  assert.match(app, /parsed\.hostname = "streamsuites\.app"/);
   assert.match(normalizeProfilePayloadBlock, /const imageContract = normalizedImageContract\(payload, fallbackProfile\)/);
   assert.match(normalizeProfilePayloadBlock, /payload\?\.isListed !== false/);
   assert.match(normalizeProfilePayloadBlock, /payload\?\.liveStatus/);
@@ -644,6 +647,7 @@ test("standalone /u profile hydration keeps runtime profile media ahead of local
   assert.match(profileFunction, /<meta name="twitter:card"/);
   assert.match(profileFunction, /<link rel="canonical" href="\$\{escapeHtml\(meta\.ogUrl\)\}"/);
   assert.match(profileFunction, /streamsuites-profile-bootstrap/);
+  assert.match(profileFunction, /parsed\.protocol !== "https:" && !localRequest/);
   assert.match(profileFunction, /escapeJsonForScript/);
   assert.match(profileFunction, /Cache-Control/);
   assert.match(profileFunction, /aboutVideo:/);

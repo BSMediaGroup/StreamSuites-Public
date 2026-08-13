@@ -319,26 +319,35 @@
       .replace(/^[-_]+|[-_]+$/g, "");
   }
 
-  function stableImageUrl(url, cacheKey) {
+  function canonicalProfileMediaUrl(url) {
     const source = String(url || "").trim();
-    const key = String(cacheKey || "").trim();
-    if (!source || !key || source.startsWith("data:") || source.startsWith("blob:")) return source;
+    if (!source || source.startsWith("data:") || source.startsWith("blob:")) return "";
     try {
       const parsed = new URL(source, window.location.origin);
-      if (/^https?:\/\//i.test(source) && parsed.origin !== window.location.origin) return source;
-      if (!parsed.searchParams.has("v")) parsed.searchParams.set("v", key);
+      const runtimeAssetPath = /^\/u\/[A-Za-z0-9]{7}\/(avatar|cover|background|logo)\/v[1-9]\d*\.webp$/;
+      const publicAssetPath = /^\/profile-media\/u\/[A-Za-z0-9]{7}\/(avatar|cover|background|logo)\/v[1-9]\d*\.webp$/;
+      if (["cdn.streamsuites.app", "api.streamsuites.app"].includes(parsed.hostname) && runtimeAssetPath.test(parsed.pathname)) {
+        parsed.protocol = "https:";
+        parsed.hostname = "streamsuites.app";
+        parsed.port = "";
+        parsed.pathname = `/profile-media${parsed.pathname}`;
+      }
+      if (parsed.hostname === "streamsuites.app" && publicAssetPath.test(parsed.pathname)) {
+        parsed.search = "";
+        parsed.hash = "";
+      }
       return parsed.origin === window.location.origin && source.startsWith("/")
         ? `${parsed.pathname}${parsed.search}${parsed.hash}`
         : parsed.toString();
-    } catch (_) {
-      return source;
+    } catch (_error) {
+      return "";
     }
   }
 
   function isUsableProfileImageUrl(value) {
     const source = String(value || "").trim();
     if (!source) return false;
-    if (source.startsWith("data:") || source.startsWith("blob:")) return true;
+    if (source.startsWith("data:") || source.startsWith("blob:")) return false;
     if (/^https?:\/\//i.test(source)) return true;
     if (source.startsWith("//")) return true;
     if (source.startsWith("/") && !source.includes("/assets/icons/ui/profile.svg")) return true;
@@ -377,8 +386,8 @@
         ""
     ).trim();
     return {
-      avatarUrl: stableImageUrl(avatarUrl, imageVersion),
-      rawAvatarUrl: avatarUrl,
+      avatarUrl: canonicalProfileMediaUrl(avatarUrl),
+      rawAvatarUrl: canonicalProfileMediaUrl(avatarUrl),
       imageVersion,
       avatarSource: String(image.avatar_source || image.source || profileMedia.avatar_source || source?.avatar_source || source?.avatarSource || "").trim(),
       fallbackInitial: String(image.fallback_display_initial || profileMedia.fallback_display_initial || source?.fallback_display_initial || source?.fallbackDisplayInitial || "").trim()

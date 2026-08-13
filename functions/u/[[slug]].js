@@ -65,7 +65,10 @@ function resolveHttpsAssetUrl(value, requestUrl) {
   try {
     const base = requestUrl.protocol === "https:" ? requestUrl.origin : PUBLIC_ORIGIN;
     const parsed = new URL(raw, base);
-    if (parsed.protocol !== "https:") return fallback;
+    const localRequest = requestUrl.protocol === "http:"
+      && ["127.0.0.1", "localhost"].includes(requestUrl.hostname)
+      && parsed.origin === requestUrl.origin;
+    if (parsed.protocol !== "https:" && !localRequest) return fallback;
     return parsed.toString();
   } catch (_error) {
     return fallback;

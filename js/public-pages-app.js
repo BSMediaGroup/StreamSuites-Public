@@ -961,8 +961,9 @@
   function buildProgressionGlobalRankValue(summary = {}, options = {}) {
     const placementRank = progressionGlobalPlacementRank(summary);
     const label = placementRank ? formatOrdinal(placementRank) : "";
-    if (!label) return options.emptyLabel || "Unranked";
-    const wrap = create("span", `progression-global-rank-value${options.compact ? " progression-global-rank-value--compact" : ""}${options.prominent ? " progression-global-rank-value--prominent" : ""}`);
+    const className = `progression-global-rank-value${options.compact ? " progression-global-rank-value--compact" : ""}${options.prominent ? " progression-global-rank-value--prominent" : ""}`;
+    if (!label) return create("span", className, options.emptyLabel || "Unranked");
+    const wrap = create("span", className);
     wrap.append(create("span", "", label), create("span", "progression-global-rank-context", " globally"));
     return wrap;
   }
@@ -1381,7 +1382,7 @@
     return button;
   }
 
-  function buildAvatar(profile) {
+  function buildAvatar(profile, options = {}) {
     const avatar = create("span", "creator-avatar");
     if (getLiveStatus(profile)) avatar.classList.add("is-live");
     const image = profile?.avatar;
@@ -1393,15 +1394,7 @@
       avatar.classList.add("has-image");
       avatar.textContent = "";
       const probe = new Image();
-      let retried = false;
       probe.addEventListener("error", () => {
-        const alternate = retried ? "" : legacyProfileMediaAlternate(image);
-        if (alternate) {
-          retried = true;
-          applyImage(alternate);
-          probe.src = alternate;
-          return;
-        }
         avatar.style.backgroundImage = "";
         avatar.classList.remove("has-image");
         avatar.classList.add("is-fallback");
@@ -1409,7 +1402,8 @@
           String(profile?.fallbackDisplayInitial || "").trim().charAt(0).toUpperCase() ||
           (profile?.displayName || "Public User").trim().charAt(0).toUpperCase() ||
           "P";
-      });
+        if (typeof options.onFailure === "function") options.onFailure();
+      }, { once: true });
       probe.src = image;
       return avatar;
     }
@@ -11140,22 +11134,6 @@
     return "/assets/icons/link.svg";
   }
 
-  function stableImageUrl(url, cacheKey) {
-    const source = String(url || "").trim();
-    const key = String(cacheKey || "").trim();
-    if (!source || !key || source.startsWith("data:") || source.startsWith("blob:")) return source;
-    try {
-      const parsed = new URL(source, window.location.origin);
-      if (/^https?:\/\//i.test(source) && parsed.origin !== window.location.origin) return source;
-      if (!parsed.searchParams.has("v")) parsed.searchParams.set("v", key);
-      return parsed.origin === window.location.origin && source.startsWith("/")
-        ? `${parsed.pathname}${parsed.search}${parsed.hash}`
-        : parsed.toString();
-    } catch (_) {
-      return source;
-    }
-  }
-
   function isUsableProfileImageUrl(value) {
     const source = String(value || "").trim();
     if (!source) return false;
@@ -11166,23 +11144,9 @@
       const safeTransport = parsed.protocol === "https:" || localHttp;
       const host = parsed.hostname.toLowerCase();
       const unsafeHost = host === "localhost" || host.endsWith(".local") || /^127\./.test(host) || /^10\./.test(host) || /^192\.168\./.test(host) || /^172\.(1[6-9]|2\d|3[01])\./.test(host) || host === "::1";
-      return safeTransport && !unsafeHost && !parsed.username && !parsed.password && !parsed.pathname.includes("/assets/icons/ui/profile.svg");
+      return safeTransport && (!unsafeHost || localHttp) && !parsed.username && !parsed.password && !parsed.pathname.includes("/assets/icons/ui/profile.svg");
     } catch (_error) {
       return false;
-    }
-  }
-
-  function legacyProfileMediaAlternate(value) {
-    const source = String(value || "").trim();
-    try {
-      const parsed = new URL(source);
-      if (parsed.protocol !== "https:" || !["cdn.streamsuites.app", "api.streamsuites.app"].includes(parsed.hostname) || parsed.username || parsed.password || parsed.port) return "";
-      if (!/^\/u\/[A-Za-z0-9]{7}\/(avatar|cover|background|logo)\/v[1-9]\d*\.webp$/.test(parsed.pathname)) return "";
-      parsed.hostname = "streamsuites.app";
-      parsed.pathname = `/profile-media${parsed.pathname}`;
-      return parsed.toString();
-    } catch (_error) {
-      return "";
     }
   }
 
@@ -11192,16 +11156,9 @@
     const safeFallback = String(fallback || "").startsWith("/assets/")
       ? String(fallback)
       : normalizeProfileMediaUrl(fallback, "");
-    let retried = false;
     image.addEventListener("error", () => {
-      const alternate = retried ? "" : legacyProfileMediaAlternate(canonical);
-      if (alternate) {
-        retried = true;
-        image.src = alternate;
-        return;
-      }
       if (safeFallback && image.src !== new URL(safeFallback, window.location.origin).toString()) image.src = safeFallback;
-    });
+    }, { once: true });
     image.src = canonical || safeFallback;
   }
 
@@ -11211,6 +11168,18 @@
     if (source.startsWith("data:") || source.startsWith("blob:")) return source;
     try {
       const parsed = new URL(source, window.location.origin);
+      const runtimeAssetPath = /^\/u\/[A-Za-z0-9]{7}\/(avatar|cover|background|logo)\/v[1-9]\d*\.webp$/;
+      const publicAssetPath = /^\/profile-media\/u\/[A-Za-z0-9]{7}\/(avatar|cover|background|logo)\/v[1-9]\d*\.webp$/;
+      if (["cdn.streamsuites.app", "api.streamsuites.app"].includes(parsed.hostname) && runtimeAssetPath.test(parsed.pathname)) {
+        parsed.protocol = "https:";
+        parsed.hostname = "streamsuites.app";
+        parsed.port = "";
+        parsed.pathname = `/profile-media${parsed.pathname}`;
+      }
+      if (parsed.hostname === "streamsuites.app" && publicAssetPath.test(parsed.pathname)) {
+        parsed.search = "";
+        parsed.hash = "";
+      }
       return parsed.origin === window.location.origin && source.startsWith("/")
         ? `${parsed.pathname}${parsed.search}${parsed.hash}`
         : parsed.toString();
@@ -11251,8 +11220,8 @@
         ""
     ).trim();
     return {
-      avatarUrl: stableImageUrl(avatarUrl, imageVersion),
-      rawAvatarUrl: avatarUrl,
+      avatarUrl: normalizeProfileMediaUrl(avatarUrl, ""),
+      rawAvatarUrl: normalizeProfileMediaUrl(avatarUrl, ""),
       imageVersion,
       avatarSource: String(image.avatar_source || image.source || profileMedia.avatar_source || source?.avatar_source || source?.avatarSource || "").trim(),
       fallbackInitial: String(image.fallback_display_initial || profileMedia.fallback_display_initial || source?.fallback_display_initial || source?.fallbackDisplayInitial || "").trim()
@@ -12724,6 +12693,12 @@
         close({ restoreTheme: false });
         if (typeof options.onSaved === "function") options.onSaved(updated);
       } catch (error) {
+        stagedImageUrls.forEach((url) => URL.revokeObjectURL(url));
+        stagedImageUrls.clear();
+        avatarInput.value = "";
+        coverInput.value = "";
+        applyProfileImageElementRecovery(avatarImg, profile.avatar, "/assets/icons/ui/profile.svg");
+        applyProfileImageElementRecovery(coverImg, profile.coverImageUrl || profile.bannerImageUrl, DEFAULT_PROFILE_COVER);
         status.textContent = error instanceof Error ? error.message : "Save failed";
         status.dataset.tone = "error";
       } finally {
@@ -13408,36 +13383,23 @@
     hero.dataset.profileBackground = backgroundUrl ? "custom" : "none";
     hero.setAttribute("aria-labelledby", "profile-title");
 
+    let mediaFailureDiagnostic = null;
     if (hasCustomCover) {
       const probe = new Image();
-      let retried = false;
       probe.addEventListener("error", () => {
-        const alternate = retried ? "" : legacyProfileMediaAlternate(coverUrl);
-        if (alternate) {
-          retried = true;
-          hero.style.setProperty("--profile-cover-image", `url("${alternate.replace(/"/g, "%22")}"), url("${safeFallbackCoverUrl}")`);
-          probe.src = alternate;
-          return;
-        }
         hero.dataset.profileCover = "fallback";
         hero.style.setProperty("--profile-cover-image", `url("${safeFallbackCoverUrl}")`);
-      });
+        if (mediaFailureDiagnostic) mediaFailureDiagnostic.hidden = false;
+      }, { once: true });
       probe.src = coverUrl;
     }
     if (backgroundUrl) {
       const backgroundProbe = new Image();
-      let backgroundRetried = false;
       backgroundProbe.addEventListener("error", () => {
-        const alternate = backgroundRetried ? "" : legacyProfileMediaAlternate(backgroundUrl);
-        if (alternate) {
-          backgroundRetried = true;
-          hero.style.setProperty("--profile-background-image", `url("${alternate.replace(/"/g, "%22")}")`);
-          backgroundProbe.src = alternate;
-          return;
-        }
         hero.dataset.profileBackground = "none";
         hero.style.setProperty("--profile-background-image", "none");
-      });
+        if (mediaFailureDiagnostic) mediaFailureDiagnostic.hidden = false;
+      }, { once: true });
       backgroundProbe.src = backgroundUrl;
     }
 
@@ -13455,7 +13417,11 @@
 
     const stage = create("div", "profile-hero-stage");
     const content = create("div", "profile-hero-content");
-    const avatar = buildAvatar(profile);
+    const avatar = buildAvatar(profile, {
+      onFailure: () => {
+        if (mediaFailureDiagnostic) mediaFailureDiagnostic.hidden = false;
+      }
+    });
     avatar.classList.add("profile-hero-avatar");
     avatar.setAttribute("role", "img");
     avatar.setAttribute("aria-label", `${profile?.displayName || "Public user"} profile image`);
@@ -13482,6 +13448,13 @@
       editButton.prepend(createIcon(UI_ICON_MAP.edit, "profile-edit-open-icon"));
       editButton.addEventListener("click", () => options.openProfileEditor(profile));
       identity.appendChild(editButton);
+      if (profile?.avatar || hasCustomCover || backgroundUrl) {
+        mediaFailureDiagnostic = create("button", "profile-media-owner-diagnostic", "Profile media unavailable — replace");
+        mediaFailureDiagnostic.type = "button";
+        mediaFailureDiagnostic.hidden = true;
+        mediaFailureDiagnostic.addEventListener("click", () => options.openProfileEditor(profile));
+        identity.appendChild(mediaFailureDiagnostic);
+      }
     }
 
     const bioText = String(profile?.bio || "").trim();

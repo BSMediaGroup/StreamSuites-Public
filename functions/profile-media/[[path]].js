@@ -41,6 +41,46 @@ function copyHeader(source, target, name) {
   if (value) target.set(name, value);
 }
 
+async function validatedWebpBody(body) {
+  if (!body || typeof body.getReader !== "function") return null;
+  const reader = body.getReader();
+  const buffered = [];
+  let prefix = new Uint8Array(0);
+  while (prefix.length < 12) {
+    const next = await reader.read();
+    if (next.done) break;
+    buffered.push(next.value);
+    const combined = new Uint8Array(Math.min(12, prefix.length + next.value.length));
+    combined.set(prefix.slice(0, combined.length), 0);
+    combined.set(next.value.slice(0, combined.length - prefix.length), prefix.length);
+    prefix = combined;
+  }
+  const valid = prefix.length >= 12
+    && prefix[0] === 0x52 && prefix[1] === 0x49 && prefix[2] === 0x46 && prefix[3] === 0x46
+    && prefix[8] === 0x57 && prefix[9] === 0x45 && prefix[10] === 0x42 && prefix[11] === 0x50;
+  if (!valid) {
+    await reader.cancel().catch(() => {});
+    return null;
+  }
+  return new ReadableStream({
+    start(controller) {
+      buffered.forEach((chunk) => controller.enqueue(chunk));
+      const pump = () => reader.read().then(({ done, value }) => {
+        if (done) {
+          controller.close();
+          return;
+        }
+        controller.enqueue(value);
+        return pump();
+      }).catch((error) => controller.error(error));
+      return pump();
+    },
+    cancel(reason) {
+      return reader.cancel(reason);
+    },
+  });
+}
+
 export async function onRequest(context) {
   const request = context.request;
   if (request.method !== "GET" && request.method !== "HEAD") return errorResponse(405);
@@ -87,6 +127,11 @@ export async function onRequest(context) {
 
   const upstreamType = String(upstream.headers.get("Content-Type") || "").split(";", 1)[0].trim().toLowerCase();
   if (upstream.status !== 304 && upstreamType !== expectedType) return errorResponse(502);
+  let responseBody = upstream.body;
+  if (request.method === "GET" && upstream.status === 200 && expectedType === "image/webp") {
+    responseBody = await validatedWebpBody(upstream.body);
+    if (!responseBody) return errorResponse(502);
+  }
 
   const headers = new Headers({
     "Cache-Control": "public, max-age=31536000, immutable",
@@ -98,7 +143,7 @@ export async function onRequest(context) {
     copyHeader(upstream.headers, headers, name);
   }
 
-  return new Response(request.method === "HEAD" || upstream.status === 304 ? null : upstream.body, {
+  return new Response(request.method === "HEAD" || upstream.status === 304 ? null : responseBody, {
     status: upstream.status,
     statusText: upstream.statusText,
     headers,

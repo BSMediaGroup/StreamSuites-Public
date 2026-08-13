@@ -3,6 +3,8 @@ import fs from "node:fs";
 import test from "node:test";
 
 const source = fs.readFileSync(new URL("../functions/profile-media/[[path]].js", import.meta.url), "utf8");
+const appSource = fs.readFileSync(new URL("../js/public-pages-app.js", import.meta.url), "utf8");
+const dataHubSource = fs.readFileSync(new URL("../js/public-data-hub.js", import.meta.url), "utf8");
 const { onRequest } = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
 
 const IMAGE_URL = "https://streamsuites.app/profile-media/u/ABC1234/avatar/v2.webp";
@@ -17,6 +19,19 @@ async function withFetch(replacement, run) {
     globalThis.fetch = original;
   }
 }
+
+test("profile clients use the authoritative immutable URL without synthetic query or origin retries", () => {
+  for (const clientSource of [appSource, dataHubSource]) {
+    assert.doesNotMatch(clientSource, /function stableImageUrl\(/);
+    assert.doesNotMatch(clientSource, /searchParams\.set\("v"/);
+  }
+  assert.doesNotMatch(appSource, /legacyProfileMediaAlternate/);
+  assert.match(appSource, /avatarUrl: normalizeProfileMediaUrl\(avatarUrl, ""\)/);
+  assert.match(dataHubSource, /avatarUrl: canonicalProfileMediaUrl\(avatarUrl\)/);
+  assert.match(appSource, /profile-media-owner-diagnostic/);
+  assert.match(appSource, /initialStandaloneAuthPromise[\s\S]*?refreshAuthWidget\(true\)/);
+  assert.match(appSource, /stagedImageUrls\.forEach\(\(url\) => URL\.revokeObjectURL\(url\)\)/);
+});
 
 test("profile media proxy accepts only immutable canonical GET/HEAD paths", async () => {
   let calls = 0;
@@ -38,7 +53,7 @@ test("profile media proxy accepts only immutable canonical GET/HEAD paths", asyn
 });
 
 test("profile image proxy strips browser credentials/fingerprints and returns exact WebP bytes", async () => {
-  const body = Uint8Array.from([82, 73, 70, 70, 1, 2, 3, 4, 87, 69, 66, 80]);
+  const body = Uint8Array.from([82, 73, 70, 70, 4, 0, 0, 0, 87, 69, 66, 80, 1, 2, 3, 4]);
   await withFetch(async (url, init) => {
     assert.equal(url, "https://api.streamsuites.app/u/ABC1234/avatar/v2.webp");
     assert.equal(init.method, "GET");
@@ -97,6 +112,7 @@ test("profile video proxy preserves one bounded byte range and rejects challenge
   for (const upstream of [
     new Response("403 Forbidden cloudflare", { status: 403, headers: { "Content-Type": "text/html" } }),
     new Response("not an image", { status: 200, headers: { "Content-Type": "text/html" } }),
+    new Response("not webp bytes", { status: 200, headers: { "Content-Type": "image/webp" } }),
   ]) {
     await withFetch(async () => upstream, async () => {
       const response = await onRequest({ request: new Request(IMAGE_URL), env: {} });

@@ -367,6 +367,24 @@ body[data-public-page="public-profile-standalone"] .public-standalone-root {
     inset 0 1px rgba(255, 255, 255, 0.16);
 }
 
+.profile-media-owner-diagnostic {
+  width: fit-content;
+  padding: 0;
+  border: 0;
+  color: var(--profile-text-muted);
+  background: transparent;
+  font: 600 0.72rem/1.4 var(--font-ui);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 48%, transparent);
+  text-underline-offset: 0.22em;
+  cursor: pointer;
+}
+
+.profile-media-owner-diagnostic:hover,
+.profile-media-owner-diagnostic:focus-visible {
+  color: var(--profile-feature-bright);
+}
+
 .profile-hero-identity {
   min-width: 0;
   display: grid;

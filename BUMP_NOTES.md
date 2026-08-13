@@ -6,6 +6,19 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-14 - Forensic repair of public-profile avatar and cover hydration
+
+#### Technical notes
+
+- Proved the current deployed avatar failure in installed Edge, Chrome, and Brave at desktop, tablet, and mobile widths: Runtime/Auth, the public API, SSR, same-origin media route, and direct image decoding all supplied the same valid immutable WebP, with no current ORB, CORS, CSP, MIME, or responsive-layout failure. The client alone changed the valid avatar URL into `v3.webp?v=avatar-v3`; the intentionally strict Pages route rejects every query string, so that synthetic request returned HTTP 404 and the UI selected its fallback. The query-free cover continued to decode. This is a defect in the deployed prior repair, distinct from the older browser-shaped CDN/API HTTP 403/ORB incident.
+- Removed synthetic profile-image cache queries and alternate-origin retries. Exact legacy CDN/API version paths normalize once to the direct query-free same-origin version URL; one genuine load error now enters the existing designed fallback, with a subtle owner-only replacement diagnostic. Failed owner saves revoke staged object URLs, clear file inputs, and restore authoritative previews instead of leaving unsaved blobs or fabricated success in the page.
+- Hardened the Pages image transport without buffering the entire asset: exact method/path/query validation remains fail closed, and the streamed upstream body must begin with a valid RIFF/WEBP signature before Public returns it. Also corrected the Unranked progression value to remain a DOM node, preventing the initial standalone render exception that previously stopped owner-auth hydration.
+- Validation passed all 178 Public Node tests, JavaScript/Function syntax checks, and route smoke checks for `/`, `/u/bsmediagroup`, `/status`, `/health`, and `/version`. An isolated real Auth/Pages A→B upload sequence preserved old hashes and returned the new bytes after restart; a representative owner/visitor matrix passed 12/12 across installed Edge, Chrome, and Brave at 1440×900, 768×1024, and 390×844 with reloads, zero media/ORB/CORS/CSP/page errors, and zero horizontal overflow. No deployment, normal Runtime restart, version/build change, commit, or push was performed.
+
+#### Human-readable summary
+
+Profile avatars and covers now use the exact saved version URL instead of adding a query that the secure media route correctly refuses. Successful replacements show immediately and survive restart; failed loads or saves stay truthful and recoverable.
+
 ### 2026-08-13 - Vimeo About embeds and compact social-link editing
 
 - Corrected the black-filled fallback Custom link globe so it renders as a legible light icon against dark profile/editor surfaces. The treatment is attached only when the fallback asset is in use across the Add Link menu, editable custom card, and visitor-facing custom link; uploaded user icons and standard platform artwork are unchanged.
