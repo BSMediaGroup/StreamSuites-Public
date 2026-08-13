@@ -18,7 +18,7 @@ Canonical public StreamSuites surface deployed to Cloudflare Pages at `https://s
 - Same-origin Cloudflare Pages Functions proxy browser requests to the authoritative Auth API, but they do not move backend ownership into this repo.
 - Canonical slug resolution, profile visibility, share URLs, and FindMeHere eligibility remain runtime/Auth-owned in `StreamSuites`.
 - Public routes render authoritative runtime exports and Auth payloads; they do not mint competing profile or live-status truth.
-- Public profile About sections render exactly the Runtime/Auth-selected text or validated video projection. The browser never accepts raw embed markup, builds at most one lazy iframe through DOM APIs, and keeps YouTube video/live, Rumble video/live, and Kick live-channel provider support presentation-only.
+- Public profile About sections render the Runtime/Auth-sanitized Markdown story and, independently, an optional validated YouTube, direct Rumble, or Vimeo embed or an uploaded MP4/WebM projection. The browser reconstructs only the documented safe Markdown element set, never accepts raw embed markup, and keeps all video support presentation-only.
 
 ## Studio-First Public Identity
 
@@ -97,8 +97,11 @@ flowchart TD
 - `/downloads/obs-plugin/` truthfully presents **StreamSuites Studio for OBS** as in development. It publishes no artifact, version, release date, or compatibility claim; Runtime/Auth remains the control authority and OBS owns the media pipeline.
 - `/downloads/studioapp/extensions/` is a searchable directory shell backed by the versioned, intentionally empty `data/studioapp-extension-catalog.v1.json` presentation contract. Public is not an extension registry: future listings must come from Runtime/Auth or an authoritative generated export, and the current catalog contains no installable item or executable-download field.
 - The public `/home` and `/community` experiences now share one dashboard-style shell and one sidebar/navigation model, with the main Dashboard group listed before Production, `/home` remaining the default public home tab for the public dashboard, and `/media` preserved only as a compatibility entry. The shell brand uses the first-party square `assets/logos/ssmainlogosq.webp` icon; its title and subheading chip use Tektur at bold and regular weights respectively, while authenticated account-overview values use a system-monospace stack.
-- Canonical public profiles resolve at `/u/<slug>`, backed by the authoritative public slug model exported by `StreamSuites`. The standalone route now uses a dedicated adaptive profile presentation: a media-aware identity hero with concise Runtime-backed Bio, an expanded About that presents either preserved text or one Runtime-validated YouTube, direct Rumble iframe URL, or Kick live-channel player, truthful live/offline action rail, content-volume-aware work and presence layouts, and explicit sparse, private, not-found, malformed, and transport-failure states. Runtime-backed feature-gradient presets coordinate the complete page accent system—including owner-editor chrome, detached badge/inventory overlays, primary actions, the header emblem, and the full-width footer edge—without becoming new authority. The Pages bootstrap carries the same known public projection used by the client, and the browser keeps a bounded ten-minute session-only last-known public response for instant refresh recovery; current 404/private responses still win, while transient transport failures may retain that already-public projection. Generation-guarded hydration keeps one ordered profile request active, waits for initial auth without a redundant standalone rerender, and patches scoped progression in place instead of rebuilding the page. Client navigation keeps canonical metadata synchronized without turning Public into an identity or availability authority. Its compact homepage-derived footer uses the same responsive content track as the profile and remains in normal document flow, while the shared status widget keeps the homepage floating and footer-avoidance behavior.
-- The latest local profile/editor evidence is retained under `output/playwright/` as `profile-editor-theme-shell-1060x640.png`, `profile-editor-style-shell-1060x640.png`, `profile-editor-signal-red-1060x640.png`, `profile-footer-fullwidth-status-1060x640.png`, `profile-editor-style-shell-390x844.png`, the prior desktop/tablet/mobile framing captures, and `profile-editor-rumble-direct-preview-768x1024.png`. These are deterministic browser-validation artifacts, not deployed profile content or live-provider acceptance.
+- Canonical public profiles resolve at `/u/<slug>`, backed by the authoritative public slug model exported by `StreamSuites`. The standalone route uses a theme-complete adaptive presentation: a fixed glass header that strengthens on scroll, a pinned cover that fades beneath the identity card, a compact hero `Edit profile` affordance, and a responsive About composition with the sanitized Markdown story first and an optional embed or native uploaded video second. Theme tokens cover accents, muted surfaces, focus, dividers, rails, buttons, scrollbars, and editor chrome without becoming authority. Stable media projects through the strict same-origin `/profile-media/u/...` Pages transport, which validates immutable paths, strips browser credentials/fingerprint headers, rejects HTML/challenge responses, and streams exact Runtime/Auth WebP/MP4/WebM bytes. Exact legacy CDN/API media paths receive one bounded recovery attempt through that transport before the existing visual fallback; arbitrary URLs, private hosts, data/blob values, and retry loops remain rejected.
+- The owner editor uses one non-duplicated section control: its sticky sidebar becomes a compact sticky row at narrow widths, scrolls the internal editor body without changing the page hash, and tracks the section currently in view with matching active and accessible state.
+- The owner editor's Social links section renders only currently defined destinations as compact URL detail cards. `Add link` opens the unused standard-platform icon menu plus a repeatable Custom link action; standard platforms stay single-instance, while up to six custom destinations may carry an optional SVG, PNG, BMP, or WebP icon beneath that custom card and otherwise retain the established fallback icon. Custom links are saved only through Runtime/Auth and join the visitor-facing platform-presence gallery.
+- The About corner silhouette uses the supplied `assets/logos/ssmotfinew.webp` artwork at the established size, opacity, and position; the main site brand continues to use `ssmainlogosq.webp` where already documented.
+- The latest local profile/editor evidence is retained under `output/playwright/`, including the theme/framing captures and `profile-media-polish/owner-editor-social-defined-1060x640.png`, `profile-media-polish/owner-editor-social-add-menu-detail.png`, `profile-media-polish/owner-editor-social-custom-link-1060x640.png`, and `profile-media-polish/owner-editor-social-custom-link-390x844.png`. These are deterministic browser-validation artifacts, not deployed profile content or live-provider acceptance.
 - Legacy `user_code` compatibility is still preserved during profile resolution and migration-safe routing.
 - Clean public artifact routes are supported for clips, polls, and scores via `/clips/<id-or-slug>`, `/polls/<id-or-slug>`, and `/scores/<id-or-slug>`, while legacy detail entry points remain available.
 - `/community/settings.html` is the viewer/public account profile settings surface and loads or saves supported authoritative fields through the public profile API.
@@ -239,6 +242,8 @@ StreamSuites-Public/
 ├── wheels.html
 ├── BUMP_NOTES.md
 ├── assets/
+│   ├── logos/
+│   │   └── ssmotfinew.webp      # About-card silhouette artwork
 │   └── icons/ui/
 │       ├── editcon.svg
 │       ├── status-bell.svg
@@ -275,6 +280,8 @@ StreamSuites-Public/
 │   │   └── index.js
 │   ├── scoreboards/
 │   │   └── index.js
+│   ├── profile-media/
+│   │   └── [[path]].js
 │   ├── scores/
 │   │   ├── [[artifact]].js
 │   │   └── index.js
@@ -384,6 +391,7 @@ StreamSuites-Public/
 ├── tests/
 │   ├── auth-surface-parity.test.mjs
 │   ├── profile-about-video.test.mjs
+│   ├── profile-media-proxy.test.mjs
 │   ├── download-surfaces.test.mjs
 │   ├── health-page.test.mjs
 │   ├── live-status-authority.test.mjs

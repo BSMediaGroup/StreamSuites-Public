@@ -1069,6 +1069,9 @@
     const tier = normalizeTier(raw.tier || raw.plan_tier || raw.membership_tier || raw.membershipTier || raw.tier_label);
     const platform = raw.platform || "StreamSuites";
     const socialLinks = normalizeSocialLinks(raw.social_links || raw.socialLinks);
+    const customLinks = Array.isArray(raw.custom_links || raw.customLinks)
+      ? (raw.custom_links || raw.customLinks).slice(0, 6).map((item) => ({ ...(item || {}) }))
+      : [];
     const coverImageUrl = String(raw.cover_image_url || raw.coverImageUrl || "").trim() || "/assets/placeholders/defaultprofilecover.webp";
     const bannerImageUrl = String(raw.banner_image_url || raw.bannerImageUrl || raw.cover_image_url || raw.coverImageUrl || "").trim() || coverImageUrl;
     const backgroundImageUrl = String(raw.background_image_url || raw.backgroundImageUrl || "").trim();
@@ -1138,6 +1141,7 @@
       about: raw.about || raw.about_story || raw.aboutStory || "",
       streamsuitesThemePreset: normalizeProfileThemePreset(raw.streamsuites_theme_preset || raw.streamsuitesThemePreset),
       socialLinks,
+      customLinks,
       coverImageUrl,
       bannerImageUrl,
       backgroundImageUrl,

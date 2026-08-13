@@ -6,6 +6,28 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-13 - Vimeo About embeds and compact social-link editing
+
+- Replaced only the public-profile About option for Kick live channels with Runtime/Auth-approved Vimeo video/player URLs, including preservation of the required unlisted-video privacy hash. Public now allows `player.vimeo.com` in the About frame policy while retaining `player.kick.com` solely for the separate Latest Stream viewer; YouTube and direct Rumble About behavior are unchanged.
+- Rebuilt the owner modal's Social links section around currently defined URL detail cards and one compact `Add link` menu of unused platform icons and labels. Standard providers remain single-instance. Custom links are repeatable up to six, show their icon controls directly beneath the new card, accept preferred SVG plus PNG, BMP, and WebP, and keep the existing fallback icon when no custom artwork is supplied. Saved custom destinations also render in the visitor-facing platform-presence gallery.
+- Removed the former always-visible empty platform-field grid because it duplicated unavailable choices and consumed the editor workspace. The sidebar remains the only section navigator, and Runtime/Auth remains the sole persistence and validation authority. No deployment, version/build change, commit, or push was performed.
+- Validation passed JavaScript syntax and all 177 Public Node tests. Deterministic Chromium checks at 1060×640 and 390×844 confirmed the sidebar navigation/active state, absent header chips, defined-link cards, unused-platform menu, repeatable custom card with icon controls, and zero document/modal horizontal overflow. The only console error was the live page's unrelated Cloudflare Insights integrity mismatch; the existing iframe `allowfullscreen` precedence warning also remained.
+
+### 2026-08-13 - Hardened profile media and complete themed profile polish
+
+#### Technical notes
+
+- Confirmed the deployed avatar/cover failure as Cloudflare's browser request path returning an HTML 403 for both the legacy CDN URL and the otherwise valid direct Runtime API asset URL; Chromium cross-origin image requests surface `ERR_BLOCKED_BY_ORB` while non-browser GET/HEAD still receive the correct immutable WebP bytes. Canonical URLs now use strict same-origin `/profile-media/u/...` Pages transport that forwards only `Accept`, conditional, and range headers to the exact Runtime/Auth asset path, rejects challenge HTML/MIME mismatches, and never forwards cookies, authorization, referrer, user-agent, or `Sec-Fetch-*` browser fingerprints. Exact legacy CDN/API media paths receive one bounded recovery attempt through that transport.
+- Completed the profile-scoped theme layer across the fixed strengthening glass header, pinned/fading cover, hero and compact edit affordance, section rails, controls, focus states, dividers, scrollbars, and responsive About layout. Scroll work is one passive listener with a single animation-frame update and reduced-motion support.
+- Removed the redundant editor-header section chips to recover vertical workspace. The sidebar remains the single section navigator, converting to one sticky compact row at narrow widths; its links scroll the internal editor body, expose current-location state, and automatically follow the section crossing the modal's activation line, including the final section at the scroll boundary.
+- Reworked About as a Runtime/Auth-sanitized Markdown story plus an independent optional embed or native uploaded video. The owner editor supplies Markdown formatting/authoritative preview, MP4/WebM upload staging, existing embed guidance, object-URL cleanup, and the existing authenticated save boundary; visitor rendering rebuilds only the safe element allowlist through DOM APIs.
+- Replaced only the About card's former `ssmainlogosq.webp` corner silhouette with the supplied `assets/logos/ssmotfinew.webp`; its established dimensions, opacity, position, grayscale treatment, and pointer behavior are unchanged. The new asset is intentionally added, while the existing `ssmainlogosq.webp` remains in all other brand roles.
+- Updated the profile media CSP for same-origin canonical media, backward-compatible API-hosted video, and local upload previews. No deployment, version/build change, commit, push, or Runtime/Auth restart was performed.
+
+#### Human-readable summary
+
+Profiles now recover legacy avatar and cover links safely, carry their selected theme through the full page and editor, and can present a formatted story alongside an optional video. The About corner uses the newly supplied motion-finish silhouette.
+
 ### 2026-08-13 - Stable public profile hydration and refresh recovery
 
 - Removed the overlapping standalone-profile hydration loop. Pages now preserve an already-rendered bootstrap/session profile while data and auth settle, cancel stale async render generations, suppress the redundant initial auth rerender, and patch scoped progression in place rather than waiting on it before rebuilding the complete route.

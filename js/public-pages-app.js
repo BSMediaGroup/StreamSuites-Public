@@ -36,6 +36,8 @@
   const AUTH_PUBLIC_PROFILE_URL = `${AUTH_API_BASE}/api/public/profile`;
   const AUTH_PUBLIC_PROFILE_ME_URL = `${AUTH_API_BASE}/api/public/profile/me`;
   const AUTH_PUBLIC_PROFILE_ABOUT_VIDEO_RESOLVE_URL = `${AUTH_API_BASE}/api/public/profile/about-video/resolve`;
+  const AUTH_PUBLIC_PROFILE_ABOUT_PREVIEW_URL = `${AUTH_API_BASE}/api/public/profile/about/preview`;
+  const AUTH_PUBLIC_PROFILE_ABOUT_VIDEO_UPLOAD_URL = `${AUTH_API_BASE}/api/public/profile/about-video/upload`;
   const AUTH_PUBLIC_PROFILE_RESOLVE_URL = `${AUTH_API_BASE}/api/public/profile/resolve`;
   const PROFILE_CACHE_TTL_MS = 60 * 1000;
   const PROFILE_SESSION_CACHE_MAX_AGE_MS = 10 * 60 * 1000;
@@ -133,7 +135,7 @@
   const ABOUT_VIDEO_PROVIDER_FALLBACKS = Object.freeze([
     Object.freeze({ key: "youtube", label: "YouTube Video / Livestream", provider_label: "YouTube", kind: "video", helper_text: "Paste a specific YouTube video, livestream, Short, or embed URL.", example_url: "https://www.youtube.com/watch?v=uPfbuo6iP6Y", external_action_label: "Watch on YouTube", iframe_allow: "autoplay; encrypted-media; picture-in-picture; web-share; fullscreen" }),
     Object.freeze({ key: "rumble", label: "Rumble Video / Livestream", provider_label: "Rumble", kind: "video", helper_text: "Paste the direct Rumble iframe URL from Share → Embed. Watch-page IDs are not player IDs.", example_url: "https://rumble.com/embed/v7bv5ia/?pub=vmzw3", external_action_label: "Watch on Rumble", iframe_allow: "autoplay; encrypted-media; picture-in-picture; fullscreen" }),
-    Object.freeze({ key: "kick", label: "Kick Live Channel", provider_label: "Kick", kind: "channel", helper_text: "Paste a Kick livestream channel URL. Kick VOD URLs are not supported.", example_url: "https://kick.com/yourchannel", external_action_label: "Open Kick channel", iframe_allow: "autoplay; encrypted-media; picture-in-picture; fullscreen" })
+    Object.freeze({ key: "vimeo", label: "Vimeo Video / Livestream", provider_label: "Vimeo", kind: "video", helper_text: "Paste a specific Vimeo video or player URL. Unlisted links must include their privacy hash.", example_url: "https://vimeo.com/76979871", external_action_label: "Watch on Vimeo", iframe_allow: "autoplay; encrypted-media; picture-in-picture; fullscreen" })
   ]);
   const ABOUT_VIDEO_PROVIDER_KEYS = new Set(ABOUT_VIDEO_PROVIDER_FALLBACKS.map((item) => item.key));
 
@@ -149,6 +151,37 @@
 
   function normalizeAboutVideoProjection(value) {
     if (!value || typeof value !== "object") return null;
+    const sourceType = String(value.source_type || value.sourceType || "embed").trim().toLowerCase();
+    if (sourceType === "upload") {
+      let url = String(value.url || value.public_url || value.publicUrl || "").trim();
+      const mimeType = String(value.mime_type || value.mimeType || "").trim().toLowerCase();
+      try {
+        const parsed = new URL(url);
+        const directApiPath = /^\/u\/[A-Za-z0-9]{7}\/about-video\/[a-f0-9]{32}\.(mp4|webm)$/.test(parsed.pathname);
+        const publicProxyPath = /^\/profile-media\/u\/[A-Za-z0-9]{7}\/about-video\/[a-f0-9]{32}\.(mp4|webm)$/.test(parsed.pathname);
+        if (
+          parsed.protocol !== "https:" || parsed.username || parsed.password || parsed.port ||
+          !["video/mp4", "video/webm"].includes(mimeType) ||
+          !((parsed.hostname === "api.streamsuites.app" && directApiPath) || (parsed.hostname === "streamsuites.app" && publicProxyPath))
+        ) return null;
+        if (parsed.hostname === "api.streamsuites.app") {
+          parsed.hostname = "streamsuites.app";
+          parsed.pathname = `/profile-media${parsed.pathname}`;
+        }
+        url = parsed.toString();
+      } catch (_error) {
+        return null;
+      }
+      return {
+        sourceType: "upload",
+        kind: "video",
+        url,
+        mimeType,
+        title: String(value.title || "About video").trim() || "About video",
+        fileSize: Number(value.file_size || value.fileSize || 0),
+        providerLabel: "Uploaded video"
+      };
+    }
     const provider = String(value.provider || "").trim().toLowerCase();
     const resourceId = String(value.resource_id || value.resourceId || "").trim();
     const sourceUrl = String(value.source_url || value.sourceUrl || "").trim();
@@ -165,14 +198,32 @@
     if (source.protocol !== "https:" || embed.protocol !== "https:" || source.username || source.password || source.port || embed.username || embed.password || embed.port) return null;
     const host = embed.hostname.toLowerCase();
     const sourceHost = source.hostname.toLowerCase();
+    const vimeoSourceParts = source.pathname.split("/").filter(Boolean);
+    const vimeoSourceHash = vimeoSourceParts.length === 2 ? vimeoSourceParts[1] : "";
+    const vimeoEmbedHashes = embed.searchParams.getAll("h");
     const safe =
       (provider === "youtube" && /^[A-Za-z0-9_-]{11}$/.test(resourceId) && sourceHost === "www.youtube.com" && host === "www.youtube.com" && embed.pathname === `/embed/${resourceId}` && !embed.search) ||
       (provider === "rumble" && /^[A-Za-z0-9]{3,64}$/.test(resourceId) && sourceHost === "rumble.com" && host === "rumble.com" && embed.pathname.replace(/\/$/, "") === `/embed/${resourceId}` && Array.from(embed.searchParams.keys()).every((key) => key === "pub")) ||
-      (provider === "kick" && /^[a-z0-9_][a-z0-9_-]{1,24}$/.test(resourceId) && sourceHost === "kick.com" && host === "player.kick.com" && embed.pathname === `/${resourceId}` && embed.searchParams.get("autoplay") === "false" && Array.from(embed.searchParams.keys()).every((key) => key === "autoplay"));
+      (
+        provider === "vimeo" &&
+        /^[1-9][0-9]{0,19}$/.test(resourceId) &&
+        sourceHost === "vimeo.com" &&
+        host === "player.vimeo.com" &&
+        vimeoSourceParts[0] === resourceId &&
+        (vimeoSourceParts.length === 1 || (vimeoSourceParts.length === 2 && /^[A-Za-z0-9_-]{6,64}$/.test(vimeoSourceHash))) &&
+        embed.pathname === `/video/${resourceId}` &&
+        !source.search &&
+        Array.from(embed.searchParams.keys()).every((key) => key === "h") &&
+        (
+          (vimeoSourceParts.length === 1 && vimeoEmbedHashes.length === 0) ||
+          (vimeoSourceParts.length === 2 && vimeoEmbedHashes.length === 1 && vimeoEmbedHashes[0] === vimeoSourceHash)
+        )
+      );
     if (!safe) return null;
     const option = normalizeAboutVideoProviderOptions([]).find((item) => item.key === provider);
     return {
       provider,
+      sourceType: "embed",
       providerLabel: String(value.provider_label || value.providerLabel || option?.provider_label || provider).trim(),
       sourceUrl,
       embedUrl,
@@ -773,6 +824,63 @@
     }, {});
   }
 
+  const PUBLIC_CUSTOM_LINK_MAX_ITEMS = 6;
+  const PUBLIC_CUSTOM_LINK_LABEL_MAX_LENGTH = 80;
+  const PUBLIC_CUSTOM_LINK_ICON_MAX_BYTES = 256 * 1024;
+  const PUBLIC_CUSTOM_LINK_FALLBACK_ICON = "/assets/icons/ui/portal.svg";
+  const PUBLIC_CUSTOM_LINK_ICON_TYPES = Object.freeze(["image/svg+xml", "image/png", "image/bmp", "image/webp"]);
+  const PUBLIC_CUSTOM_LINK_ICON_EXTENSIONS = Object.freeze([".svg", ".png", ".bmp", ".webp"]);
+
+  function normalizePublicCustomLinkDestination(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    if (raw.startsWith("/") && !raw.startsWith("//")) return raw;
+    try {
+      const parsed = new URL(raw);
+      if (!["http:", "https:"].includes(parsed.protocol) || parsed.username || parsed.password) return "";
+      return parsed.href;
+    } catch (_error) {
+      return "";
+    }
+  }
+
+  function normalizePublicCustomLinkIcon(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    if (/^data:image\/(?:svg\+xml|png|bmp|webp);base64,[A-Za-z0-9+/=\r\n]+$/i.test(raw)) {
+      return raw.length <= Math.ceil(PUBLIC_CUSTOM_LINK_ICON_MAX_BYTES * 1.38) + 96 ? raw : "";
+    }
+    let path = raw;
+    if (!raw.startsWith("/")) {
+      try {
+        const parsed = new URL(raw);
+        if (parsed.protocol !== "https:" || parsed.username || parsed.password) return "";
+        path = parsed.pathname;
+      } catch (_error) {
+        return "";
+      }
+    }
+    const loweredPath = path.toLowerCase();
+    return PUBLIC_CUSTOM_LINK_ICON_EXTENSIONS.some((extension) => loweredPath.endsWith(extension)) ? raw : "";
+  }
+
+  function normalizePublicCustomLinks(value) {
+    if (!Array.isArray(value)) return [];
+    return value.slice(0, PUBLIC_CUSTOM_LINK_MAX_ITEMS).reduce((links, item, index) => {
+      if (!item || typeof item !== "object") return links;
+      const label = String(item.label || item.title || item.name || "").trim().slice(0, PUBLIC_CUSTOM_LINK_LABEL_MAX_LENGTH);
+      const url = normalizePublicCustomLinkDestination(item.url || item.href || item.destination);
+      if (!label || !url) return links;
+      links.push({
+        id: String(item.id || `custom-link-${index + 1}`).trim(),
+        label,
+        url,
+        iconUrl: normalizePublicCustomLinkIcon(item.icon_url || item.iconUrl || item.icon) || ""
+      });
+      return links;
+    }, []);
+  }
+
   function buildFiltersForConfig(config) {
     if (config.filterMode === "none") return [];
     return MEDIA_FILTERS.map((filter) => ({
@@ -1278,11 +1386,22 @@
     if (getLiveStatus(profile)) avatar.classList.add("is-live");
     const image = profile?.avatar;
     if (image) {
-      avatar.style.backgroundImage = `url(${image})`;
+      const applyImage = (url) => {
+        avatar.style.backgroundImage = `url("${String(url).replace(/"/g, "%22")}")`;
+      };
+      applyImage(image);
       avatar.classList.add("has-image");
       avatar.textContent = "";
       const probe = new Image();
+      let retried = false;
       probe.addEventListener("error", () => {
+        const alternate = retried ? "" : legacyProfileMediaAlternate(image);
+        if (alternate) {
+          retried = true;
+          applyImage(alternate);
+          probe.src = alternate;
+          return;
+        }
         avatar.style.backgroundImage = "";
         avatar.classList.remove("has-image");
         avatar.classList.add("is-fallback");
@@ -1290,7 +1409,7 @@
           String(profile?.fallbackDisplayInitial || "").trim().charAt(0).toUpperCase() ||
           (profile?.displayName || "Public User").trim().charAt(0).toUpperCase() ||
           "P";
-      }, { once: true });
+      });
       probe.src = image;
       return avatar;
     }
@@ -2573,6 +2692,18 @@
 
   function collectMemberSocialEntries(socialLinks) {
     return collectOrderedSocialEntries(socialLinks);
+  }
+
+  function collectProfileLinkEntries(socialLinks, customLinks) {
+    const standardEntries = collectOrderedSocialEntries(socialLinks);
+    const customEntries = normalizePublicCustomLinks(customLinks).map((item, index) => ({
+      network: `custom-${index + 1}`,
+      url: item.url,
+      label: item.label,
+      iconPath: item.iconUrl || PUBLIC_CUSTOM_LINK_FALLBACK_ICON,
+      custom: true
+    }));
+    return [...standardEntries, ...customEntries];
   }
 
   function buildMemberCardAvatar(profile) {
@@ -11026,15 +11157,50 @@
   function isUsableProfileImageUrl(value) {
     const source = String(value || "").trim();
     if (!source) return false;
-    if (source.startsWith("data:") || source.startsWith("blob:")) return true;
+    if (source.startsWith("data:") || source.startsWith("blob:")) return false;
     try {
       const parsed = new URL(source, window.location.origin);
       const localHttp = parsed.protocol === "http:" && parsed.origin === window.location.origin;
       const safeTransport = parsed.protocol === "https:" || localHttp;
-      return safeTransport && !parsed.pathname.includes("/assets/icons/ui/profile.svg");
+      const host = parsed.hostname.toLowerCase();
+      const unsafeHost = host === "localhost" || host.endsWith(".local") || /^127\./.test(host) || /^10\./.test(host) || /^192\.168\./.test(host) || /^172\.(1[6-9]|2\d|3[01])\./.test(host) || host === "::1";
+      return safeTransport && !unsafeHost && !parsed.username && !parsed.password && !parsed.pathname.includes("/assets/icons/ui/profile.svg");
     } catch (_error) {
       return false;
     }
+  }
+
+  function legacyProfileMediaAlternate(value) {
+    const source = String(value || "").trim();
+    try {
+      const parsed = new URL(source);
+      if (parsed.protocol !== "https:" || !["cdn.streamsuites.app", "api.streamsuites.app"].includes(parsed.hostname) || parsed.username || parsed.password || parsed.port) return "";
+      if (!/^\/u\/[A-Za-z0-9]{7}\/(avatar|cover|background|logo)\/v[1-9]\d*\.webp$/.test(parsed.pathname)) return "";
+      parsed.hostname = "streamsuites.app";
+      parsed.pathname = `/profile-media${parsed.pathname}`;
+      return parsed.toString();
+    } catch (_error) {
+      return "";
+    }
+  }
+
+  function applyProfileImageElementRecovery(image, source, fallback) {
+    if (!(image instanceof HTMLImageElement)) return;
+    const canonical = normalizeProfileMediaUrl(source, fallback);
+    const safeFallback = String(fallback || "").startsWith("/assets/")
+      ? String(fallback)
+      : normalizeProfileMediaUrl(fallback, "");
+    let retried = false;
+    image.addEventListener("error", () => {
+      const alternate = retried ? "" : legacyProfileMediaAlternate(canonical);
+      if (alternate) {
+        retried = true;
+        image.src = alternate;
+        return;
+      }
+      if (safeFallback && image.src !== new URL(safeFallback, window.location.origin).toString()) image.src = safeFallback;
+    });
+    image.src = canonical || safeFallback;
   }
 
   function normalizeProfileMediaUrl(value, fallback = "") {
@@ -11152,9 +11318,18 @@
     );
     const bio = String(payload?.bio || fallbackProfile?.bio || "").trim();
     const about = String(payload?.about || payload?.about_story || payload?.aboutStory || fallbackProfile?.about || "").trim();
+    const aboutHtml = String(payload?.about_html || payload?.aboutHtml || fallbackProfile?.aboutHtml || "").trim();
     const aboutMode = normalizeAboutMode(payload?.about_mode || payload?.aboutMode || fallbackProfile?.aboutMode);
     const aboutVideo = normalizeAboutVideoProjection(payload?.about_video || payload?.aboutVideo || fallbackProfile?.aboutVideo);
     const aboutVideoProviders = normalizeAboutVideoProviderOptions(payload?.about_video_providers || payload?.aboutVideoProviders || fallbackProfile?.aboutVideoProviders);
+    const aboutVideoUploadSource = payload?.about_video_upload || payload?.aboutVideoUpload || fallbackProfile?.aboutVideoUpload || {};
+    const aboutVideoUpload = {
+      enabled: aboutVideoUploadSource?.enabled === true,
+      maxBytes: Math.max(0, Number(aboutVideoUploadSource?.max_bytes || aboutVideoUploadSource?.maxBytes || 0)),
+      mimeTypes: Array.isArray(aboutVideoUploadSource?.mime_types || aboutVideoUploadSource?.mimeTypes)
+        ? (aboutVideoUploadSource.mime_types || aboutVideoUploadSource.mimeTypes).filter((item) => ["video/mp4", "video/webm"].includes(String(item)))
+        : []
+    };
     const streamsuitesThemePreset = normalizeProfileThemePreset(
       payload?.streamsuites_theme_preset || payload?.streamsuitesThemePreset || fallbackProfile?.streamsuitesThemePreset || fallbackProfile?.streamsuites_theme_preset
     );
@@ -11170,6 +11345,7 @@
       ""
     ).trim();
     const socialLinks = normalizeSocialLinks(payload?.social_links || payload?.socialLinks || fallbackProfile?.socialLinks);
+    const customLinks = normalizePublicCustomLinks(payload?.custom_links || payload?.customLinks || fallbackProfile?.customLinks);
     const isAnonymous = payload?.is_anonymous === true || payload?.isAnonymous === true || payload?.anonymous === true || fallbackProfile?.isAnonymous === true;
     const isListed = payload?.is_listed !== false && payload?.isListed !== false && payload?.listed !== false && fallbackProfile?.isListed !== false;
     const creatorCapable = firstBoolean(payload?.creator_capable, payload?.creatorCapable, fallbackProfile?.creatorCapable, accountType !== "VIEWER") === true;
@@ -11284,11 +11460,14 @@
       joinedAt,
       bio,
       about,
+      aboutHtml,
       aboutMode,
       aboutVideo,
       aboutVideoProviders,
+      aboutVideoUpload,
       streamsuitesThemePreset,
       socialLinks,
+      customLinks,
       coverImageUrl,
       bannerImageUrl,
       backgroundImageUrl,
@@ -11595,19 +11774,34 @@
   function getProfileEditorPlatformKeys() {
     const api = getSocialDataApi();
     const registry = Array.isArray(api?.SOCIAL_PLATFORM_REGISTRY) ? api.SOCIAL_PLATFORM_REGISTRY : [];
-    const firstClass = registry.filter((entry) => entry?.tier === "first-class").map((entry) => entry.key).filter(Boolean);
+    const registryKeys = registry.map((entry) => entry?.key).filter(Boolean);
     const current = ["website", "x", "instagram", "youtube", "twitch", "rumble", "kick", "discord", "pickax", "onlyfans"];
-    return Array.from(new Set([...current, ...firstClass])).filter((key) => key !== "custom");
+    return Array.from(new Set([...registryKeys, ...current])).filter((key) => key !== "custom");
   }
 
-  function buildPublicProfileEditorSocialRow(key, value) {
-    const row = create("label", "profile-edit-social-row");
-    const label = create("span", "profile-edit-social-label");
-    const icon = create("img", "profile-edit-social-icon");
+  function getPublicProfileEditorPlatformMeta(key) {
+    const api = getSocialDataApi();
+    const registry = Array.isArray(api?.SOCIAL_PLATFORM_REGISTRY) ? api.SOCIAL_PLATFORM_REGISTRY : [];
+    return registry.find((entry) => entry?.key === key) || { key, label: socialLabel(key), icon: socialIconPath(key) };
+  }
+
+  function buildPublicProfileEditorSocialCard(key, value) {
+    const card = create("article", "profile-link-detail-card");
+    card.dataset.profileSocialCard = key;
+    const header = create("div", "profile-link-detail-head");
+    const brand = create("span", "profile-link-detail-brand");
+    const icon = create("img", "profile-link-detail-icon");
     icon.src = typeof getSocialDataApi()?.socialIconPath === "function" ? getSocialDataApi().socialIconPath(key) : "/assets/icons/link.svg";
     icon.alt = "";
     icon.setAttribute("aria-hidden", "true");
-    label.append(icon, create("span", "", socialLabel(key)));
+    brand.append(icon, create("strong", "", socialLabel(key)));
+    const remove = create("button", "profile-link-remove-button", "Remove");
+    remove.type = "button";
+    remove.dataset.profileSocialRemove = key;
+    remove.setAttribute("aria-label", `Remove ${socialLabel(key)} link`);
+    header.append(brand, remove);
+    const label = create("label", "profile-link-url-field");
+    label.appendChild(create("span", "profile-link-url-label", "Profile URL"));
     const input = create("input", "profile-edit-input");
     input.type = "url";
     input.inputMode = "url";
@@ -11621,24 +11815,95 @@
           ? "https://onlyfans.com/yourhandle"
           : "https://example.com/yourhandle";
     input.dataset.profileEditSocial = key;
-    row.append(label, input);
-    return row;
+    label.appendChild(input);
+    card.append(header, label);
+    return card;
   }
 
-  function collectPublicProfileEditorSocialLinks(form, originalLinks) {
-    const normalizedOriginal = normalizeSocialLinks(originalLinks);
-    const known = new Set(getProfileEditorPlatformKeys());
-    const next = {};
-    Object.entries(normalizedOriginal).forEach(([key, value]) => {
-      if (!known.has(key) && String(value || "").trim()) next[key] = String(value || "").trim();
+  function buildPublicProfileEditorCustomCard(item, index) {
+    const card = create("article", "profile-link-detail-card profile-link-detail-card--custom");
+    card.dataset.profileCustomCard = item.id;
+    const header = create("div", "profile-link-detail-head");
+    const brand = create("span", "profile-link-detail-brand");
+    const iconWrap = create("span", "profile-link-custom-icon-preview");
+    const icon = create("img", "profile-link-detail-icon");
+    icon.src = item.iconUrl || PUBLIC_CUSTOM_LINK_FALLBACK_ICON;
+    icon.alt = "";
+    icon.setAttribute("aria-hidden", "true");
+    iconWrap.appendChild(icon);
+    brand.append(iconWrap, create("strong", "", item.label || `Custom link ${index + 1}`));
+    const remove = create("button", "profile-link-remove-button", "Remove");
+    remove.type = "button";
+    remove.dataset.profileCustomRemove = item.id;
+    header.append(brand, remove);
+
+    const fields = create("div", "profile-link-custom-fields");
+    const labelField = create("label", "profile-link-url-field");
+    labelField.appendChild(create("span", "profile-link-url-label", "Link label"));
+    const labelInput = create("input", "profile-edit-input");
+    labelInput.type = "text";
+    labelInput.maxLength = PUBLIC_CUSTOM_LINK_LABEL_MAX_LENGTH;
+    labelInput.placeholder = "Store, Media kit, Community";
+    labelInput.value = item.label;
+    labelInput.dataset.profileCustomLabel = item.id;
+    labelField.appendChild(labelInput);
+    const urlField = create("label", "profile-link-url-field");
+    urlField.appendChild(create("span", "profile-link-url-label", "Destination URL"));
+    const urlInput = create("input", "profile-edit-input");
+    urlInput.type = "url";
+    urlInput.inputMode = "url";
+    urlInput.autocomplete = "url";
+    urlInput.spellcheck = false;
+    urlInput.placeholder = "https://example.com/destination";
+    urlInput.value = item.url;
+    urlInput.dataset.profileCustomUrl = item.id;
+    urlField.appendChild(urlInput);
+    fields.append(labelField, urlField);
+
+    const iconOptions = create("div", "profile-link-custom-icon-options");
+    const iconCopy = create("div", "profile-link-custom-icon-copy");
+    iconCopy.append(
+      create("strong", "", "Custom icon"),
+      create("span", "", "Optional · SVG preferred · PNG, BMP, and WebP supported · 256 KiB max")
+    );
+    const iconActions = create("div", "profile-link-custom-icon-actions");
+    const uploadLabel = create("label", "profile-link-icon-upload-button", item.iconUrl ? "Replace icon" : "Choose icon");
+    const uploadInput = create("input");
+    uploadInput.type = "file";
+    uploadInput.accept = ".svg,.png,.bmp,.webp,image/svg+xml,image/png,image/bmp,image/webp";
+    uploadInput.dataset.profileCustomIcon = item.id;
+    uploadLabel.appendChild(uploadInput);
+    iconActions.appendChild(uploadLabel);
+    if (item.iconUrl) {
+      const clearIcon = create("button", "profile-link-remove-button", "Use fallback");
+      clearIcon.type = "button";
+      clearIcon.dataset.profileCustomIconClear = item.id;
+      iconActions.appendChild(clearIcon);
+    }
+    iconOptions.append(iconCopy, iconActions);
+    card.append(header, fields, iconOptions);
+    return card;
+  }
+
+  function collectPublicProfileEditorSocialLinks(draft) {
+    return Object.entries(draft || {}).reduce((links, [key, value]) => {
+      const normalizedValue = String(value || "").trim();
+      if (key && normalizedValue) links[key] = normalizedValue;
+      return links;
+    }, {});
+  }
+
+  function collectPublicProfileEditorCustomLinks(drafts) {
+    return (drafts || []).map((item, index) => {
+      const label = String(item.label || "").trim();
+      const rawUrl = String(item.url || "").trim();
+      if (!label || !rawUrl) {
+        throw new Error(`Custom link ${index + 1} needs both a label and destination URL, or it must be removed.`);
+      }
+      const url = normalizePublicCustomLinkDestination(rawUrl);
+      if (!url) throw new Error(`Custom link ${index + 1} must use a valid HTTP(S) or site-relative destination.`);
+      return { label, url, icon_url: normalizePublicCustomLinkIcon(item.iconUrl) };
     });
-    form.querySelectorAll("[data-profile-edit-social]").forEach((input) => {
-      if (!(input instanceof HTMLInputElement)) return;
-      const key = String(input.dataset.profileEditSocial || "").trim();
-      const value = String(input.value || "").trim();
-      if (key && value) next[key] = value;
-    });
-    return next;
   }
 
   function validatePublicProfileEditorSocialUrl(key, value) {
@@ -11681,6 +11946,12 @@
   function openPublicProfileEditModal(profile, options = {}) {
     const restoreFocusTo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const selectedTheme = normalizeProfileThemePreset(profile.streamsuitesThemePreset);
+    const socialLinkDraft = { ...normalizeSocialLinks(profile.socialLinks) };
+    let customLinkDrafts = normalizePublicCustomLinks(profile.customLinks).map((item, index) => ({
+      ...item,
+      id: `${item.id || "custom-link"}-${index + 1}`
+    }));
+    let addLinkMenuOpen = false;
     const pageShell = document.querySelector(".standalone-profile-shell");
     const backdrop = create("div", "profile-edit-modal-backdrop is-open");
     const modal = create("section", "profile-edit-modal profile-edit-modal--profile");
@@ -11712,14 +11983,6 @@
       ["profile-edit-style", "Style", "Page style", "/assets/icons/ui/formatpaint.svg"],
       ["profile-edit-presence", "Presence", "Social links", "/assets/icons/ui/addlink.svg"]
     ];
-    const progress = create("div", "profile-edit-progress");
-    editorSections.forEach(([targetId, label, _navLabel, iconPath], index) => {
-      const item = create("span", `profile-edit-progress-item${index === 0 ? " is-active" : ""}`);
-      item.dataset.profileEditProgress = targetId;
-      item.append(createIcon(iconPath, "profile-edit-progress-icon"), create("span", "", label));
-      progress.appendChild(item);
-    });
-    header.appendChild(progress);
 
     const form = create("form", "profile-edit-form");
     const media = create("section", "profile-edit-media profile-edit-media--hero");
@@ -11727,7 +11990,7 @@
     media.dataset.profileTheme = selectedTheme;
     const cover = create("label", "profile-edit-cover");
     const coverImg = create("img");
-    coverImg.src = profile.coverImageUrl || profile.bannerImageUrl || DEFAULT_PROFILE_COVER;
+    applyProfileImageElementRecovery(coverImg, profile.coverImageUrl || profile.bannerImageUrl, DEFAULT_PROFILE_COVER);
     coverImg.alt = "";
     const coverCopy = create("span", "profile-edit-media-copy");
     coverCopy.append(create("strong", "", "Change cover"), create("span", "", "PNG, JPG, WEBP, or GIF"));
@@ -11739,7 +12002,7 @@
 
     const avatar = create("label", "profile-edit-avatar");
     const avatarImg = create("img");
-    avatarImg.src = profile.avatar || "/assets/icons/ui/profile.svg";
+    applyProfileImageElementRecovery(avatarImg, profile.avatar, "/assets/icons/ui/profile.svg");
     avatarImg.alt = "";
     const avatarCopy = create("span", "profile-edit-media-copy");
     avatarCopy.append(create("strong", "", "Change avatar"), create("span", "", "Choose a clear square image"));
@@ -11809,26 +12072,27 @@
     aboutInput.maxLength = 6000;
     aboutInput.value = profile.about || "";
     aboutInput.dataset.profileEditAbout = "true";
-    aboutLabel.append(aboutInput, create("small", "", "Your expanded story. Paragraph breaks are preserved safely on the public profile."));
+    aboutLabel.append(buildMarkdownAuthoringControls(aboutInput), create("small", "", "Markdown is rendered and sanitized by Runtime/Auth. Images and raw HTML are not supported."));
     const aboutModeFieldset = create("fieldset", "profile-about-mode-selector");
-    aboutModeFieldset.appendChild(create("legend", "profile-edit-field-head", "About presentation"));
-    const initialAboutMode = normalizeAboutMode(profile.aboutMode);
+    aboutModeFieldset.appendChild(create("legend", "profile-edit-field-head", "About video (optional)"));
+    const initialAboutVideoSource = profile.aboutVideo?.sourceType === "upload" ? "upload" : profile.aboutVideo ? "embed" : "none";
     [
-      ["text", "Text", "Show your expanded written About"],
-      ["video", "Video", "Show one validated provider player"]
+      ["none", "No video", "Publish the Markdown story on its own"],
+      ["embed", "Embed (recommended)", "Use a validated YouTube, Rumble, or Vimeo source"],
+      ["upload", "Upload", "Attach one MP4 or WebM file"]
     ].forEach(([value, label, description]) => {
       const option = create("label", "profile-about-mode-option");
       const input = create("input");
       input.type = "radio";
-      input.name = "about_mode";
+      input.name = "about_video_source_type";
       input.value = value;
-      input.checked = value === initialAboutMode;
-      input.dataset.profileEditAboutMode = value;
+      input.checked = value === initialAboutVideoSource;
+      input.dataset.profileEditAboutVideoSource = value;
       option.append(input, create("strong", "", label), create("small", "", description));
       aboutModeFieldset.appendChild(option);
     });
     const aboutTextPanel = create("div", "profile-about-editor-panel");
-    aboutTextPanel.dataset.aboutEditorPanel = "text";
+    aboutTextPanel.dataset.aboutEditorPanel = "markdown";
     aboutTextPanel.appendChild(aboutLabel);
 
     const aboutVideoPanel = create("div", "profile-about-editor-panel profile-about-video-editor");
@@ -11879,7 +12143,27 @@
     const videoPreview = create("div", "profile-about-video-preview");
     videoPreview.dataset.profileEditAboutVideoPreview = "true";
     aboutVideoPanel.append(providerFieldset, videoUrlLabel, videoActions, videoStatus, videoPreview);
-    bioSection.append(bioLabel, aboutModeFieldset, aboutTextPanel, aboutVideoPanel);
+    const uploadPanel = create("div", "profile-about-editor-panel profile-about-video-upload-editor");
+    uploadPanel.dataset.aboutEditorPanel = "upload";
+    const uploadLimit = Math.max(0, Number(profile.aboutVideoUpload?.maxBytes || 0));
+    const uploadLabel = create("label", "profile-about-upload-dropzone");
+    const uploadInput = create("input");
+    uploadInput.type = "file";
+    uploadInput.accept = "video/mp4,video/webm";
+    uploadInput.dataset.profileEditAboutVideoFile = "true";
+    const uploadCopy = create("span", "profile-about-upload-copy");
+    const uploadLimitMiB = uploadLimit ? uploadLimit / (1024 * 1024) : 0;
+    uploadCopy.append(
+      create("strong", "", "Choose MP4 or WebM"),
+      create("span", "", uploadLimit ? `Maximum ${uploadLimitMiB.toLocaleString(undefined, { maximumFractionDigits: 1 })} MiB. Embeds are recommended to reduce storage use.` : "Embeds are recommended to reduce storage use.")
+    );
+    uploadLabel.append(uploadInput, uploadCopy);
+    const uploadPreview = create("div", "profile-about-video-preview");
+    uploadPreview.dataset.profileEditAboutUploadPreview = "true";
+    const clearUpload = create("button", "profile-edit-button profile-edit-button-secondary", "Clear staged file");
+    clearUpload.type = "button";
+    uploadPanel.append(uploadLabel, uploadPreview, clearUpload);
+    bioSection.append(bioLabel, aboutTextPanel, aboutModeFieldset, aboutVideoPanel, uploadPanel);
     const visibilityLabel = create("label", "profile-edit-check-row");
     const visibilityInput = create("input");
     visibilityInput.type = "checkbox";
@@ -11933,14 +12217,85 @@
     socialSection.append(
       create("p", "profile-edit-section-eyebrow", "04 / Presence"),
       create("h3", "", "Social links"),
-      create("p", "profile-edit-section-copy", "Your highest-priority saved platform becomes the main visitor action when you are not live.")
+      create("p", "profile-edit-section-copy", "Keep only active links in view. Add another platform or up to six custom destinations when you need them.")
     );
-    const socialGrid = create("div", "profile-edit-social-grid");
-    const currentLinks = normalizeSocialLinks(profile.socialLinks);
-    getProfileEditorPlatformKeys().forEach((key) => {
-      socialGrid.appendChild(buildPublicProfileEditorSocialRow(key, currentLinks[key]));
-    });
-    socialSection.appendChild(socialGrid);
+    const socialEditorHead = create("div", "profile-link-editor-head");
+    const socialSummary = create("p", "profile-link-editor-summary");
+    const addLinkButton = create("button", "profile-edit-button profile-edit-button-secondary profile-link-add-button", "Add link");
+    addLinkButton.type = "button";
+    addLinkButton.setAttribute("aria-expanded", "false");
+    socialEditorHead.append(socialSummary, addLinkButton);
+    const currentLinks = create("div", "profile-link-current-list");
+    const addLinkMenu = create("div", "profile-link-add-menu");
+    addLinkMenu.hidden = true;
+    const addLinkMenuHead = create("div", "profile-link-add-menu-head");
+    addLinkMenuHead.append(
+      create("div", "", "Choose another link"),
+      create("span", "", "Only platforms not already defined are shown.")
+    );
+    const addLinkOptions = create("div", "profile-link-add-options");
+    addLinkMenu.append(addLinkMenuHead, addLinkOptions);
+    socialSection.append(socialEditorHead, currentLinks, addLinkMenu);
+
+    const renderSocialLinkEditor = (focusSelector = "") => {
+      currentLinks.replaceChildren();
+      const orderedKeys = getProfileEditorPlatformKeys().filter((key) => Object.prototype.hasOwnProperty.call(socialLinkDraft, key));
+      Object.keys(socialLinkDraft).forEach((key) => {
+        if (!orderedKeys.includes(key)) orderedKeys.push(key);
+      });
+      orderedKeys.forEach((key) => currentLinks.appendChild(buildPublicProfileEditorSocialCard(key, socialLinkDraft[key])));
+      customLinkDrafts.forEach((item, index) => currentLinks.appendChild(buildPublicProfileEditorCustomCard(item, index)));
+      if (!orderedKeys.length && !customLinkDrafts.length) {
+        const empty = create("div", "profile-link-empty-state");
+        empty.append(
+          create("strong", "", "No links defined yet"),
+          create("span", "", "Use Add link to choose a platform or create a custom destination.")
+        );
+        currentLinks.appendChild(empty);
+      }
+
+      const definedCount = orderedKeys.filter((key) => String(socialLinkDraft[key] || "").trim()).length + customLinkDrafts.length;
+      socialSummary.textContent = `${definedCount} defined · ${customLinkDrafts.length}/${PUBLIC_CUSTOM_LINK_MAX_ITEMS} custom`;
+      addLinkButton.textContent = addLinkMenuOpen ? "Close menu" : "Add link";
+      addLinkButton.setAttribute("aria-expanded", addLinkMenuOpen ? "true" : "false");
+      addLinkMenu.hidden = !addLinkMenuOpen;
+      addLinkOptions.replaceChildren();
+      getProfileEditorPlatformKeys()
+        .filter((key) => !Object.prototype.hasOwnProperty.call(socialLinkDraft, key))
+        .forEach((key) => {
+          const meta = getPublicProfileEditorPlatformMeta(key);
+          const option = create("button", "profile-link-add-option");
+          option.type = "button";
+          option.dataset.profileSocialAdd = key;
+          const icon = create("img", "profile-link-add-option-icon");
+          icon.src = meta.icon || socialIconPath(key);
+          icon.alt = "";
+          icon.setAttribute("aria-hidden", "true");
+          option.append(icon, create("span", "", meta.label || socialLabel(key)));
+          addLinkOptions.appendChild(option);
+        });
+      if (customLinkDrafts.length < PUBLIC_CUSTOM_LINK_MAX_ITEMS) {
+        const customOption = create("button", "profile-link-add-option profile-link-add-option--custom");
+        customOption.type = "button";
+        customOption.dataset.profileCustomAdd = "true";
+        const icon = create("img", "profile-link-add-option-icon");
+        icon.src = PUBLIC_CUSTOM_LINK_FALLBACK_ICON;
+        icon.alt = "";
+        icon.setAttribute("aria-hidden", "true");
+        customOption.append(icon, create("span", "", "Custom link"), create("small", "", `${PUBLIC_CUSTOM_LINK_MAX_ITEMS - customLinkDrafts.length} remaining`));
+        addLinkOptions.appendChild(customOption);
+      }
+      if (!addLinkOptions.children.length) {
+        addLinkOptions.appendChild(create("p", "profile-link-menu-empty", "Every available platform is already defined and the custom-link limit has been reached."));
+      }
+      if (focusSelector) {
+        window.requestAnimationFrame(() => {
+          const target = socialSection.querySelector(focusSelector);
+          if (target instanceof HTMLInputElement) target.focus({ preventScroll: true });
+        });
+      }
+    };
+    renderSocialLinkEditor();
 
     const status = create("p", "profile-edit-status");
     status.setAttribute("role", "status");
@@ -11987,35 +12342,77 @@
         if (active) link.setAttribute("aria-current", "location");
         else link.removeAttribute("aria-current");
       });
-      progress.querySelectorAll("[data-profile-edit-progress]").forEach((item) => {
-        item.classList.toggle("is-active", item.dataset.profileEditProgress === targetId);
+    };
+    const navigateToEditorSection = (targetId) => {
+      const target = modal.querySelector(`#${targetId}`);
+      if (!(target instanceof HTMLElement)) return false;
+      activateEditorSection(targetId);
+      const bodyRect = scrollBody.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      const navRect = editorNav.getBoundingClientRect();
+      const navOverlapsTarget = navRect.right > targetRect.left && navRect.left < targetRect.right;
+      const stickyNavOffset = window.getComputedStyle(editorNav).position === "sticky" && navOverlapsTarget
+        ? navRect.height + 26
+        : 12;
+      scrollBody.scrollTo({
+        top: Math.max(0, scrollBody.scrollTop + targetRect.top - bodyRect.top - stickyNavOffset),
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
       });
+      target.focus({ preventScroll: true });
+      return true;
     };
     editorNav.addEventListener("click", (event) => {
       const link = event.target.closest("[data-profile-edit-nav]");
       if (!(link instanceof HTMLAnchorElement) || !editorNav.contains(link)) return;
-      const targetId = link.dataset.profileEditNav || "";
-      const target = modal.querySelector(`#${targetId}`);
-      if (!(target instanceof HTMLElement)) return;
       event.preventDefault();
-      activateEditorSection(targetId);
-      const bodyRect = scrollBody.getBoundingClientRect();
-      const targetRect = target.getBoundingClientRect();
-      scrollBody.scrollTo({
-        top: Math.max(0, scrollBody.scrollTop + targetRect.top - bodyRect.top - 12),
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
-      });
-      target.focus({ preventScroll: true });
+      navigateToEditorSection(link.dataset.profileEditNav || "");
     });
+    const editorSectionElements = editorSections
+      .map(([targetId]) => modal.querySelector(`#${targetId}`))
+      .filter((section) => section instanceof HTMLElement);
+    let sectionNavigationFrame = 0;
+    const syncEditorSectionNavigation = () => {
+      sectionNavigationFrame = 0;
+      if (!scrollBody.isConnected || !editorSectionElements.length) return;
+      const bodyRect = scrollBody.getBoundingClientRect();
+      const activationLine = bodyRect.top + Math.min(140, bodyRect.height * 0.32);
+      let activeSection = editorSectionElements[0];
+      editorSectionElements.forEach((section) => {
+        if (section.getBoundingClientRect().top <= activationLine) activeSection = section;
+      });
+      if (scrollBody.scrollTop + scrollBody.clientHeight >= scrollBody.scrollHeight - 2) {
+        activeSection = editorSectionElements[editorSectionElements.length - 1];
+      }
+      activateEditorSection(activeSection.id);
+    };
+    const scheduleEditorSectionNavigation = () => {
+      if (sectionNavigationFrame) return;
+      sectionNavigationFrame = window.requestAnimationFrame(syncEditorSectionNavigation);
+    };
+    scrollBody.addEventListener("scroll", scheduleEditorSectionNavigation, { passive: true });
+    scheduleEditorSectionNavigation();
 
+    const stagedImageUrls = new Map();
     const syncPreview = async (input, img) => {
-      const dataUrl = await readPublicProfileEditorImageInput(input).catch(() => "");
-      if (dataUrl) img.src = dataUrl;
+      const file = input.files?.[0];
+      if (!file) return;
+      const existing = stagedImageUrls.get(input);
+      if (existing) URL.revokeObjectURL(existing);
+      const objectUrl = URL.createObjectURL(file);
+      stagedImageUrls.set(input, objectUrl);
+      img.src = objectUrl;
     };
     coverInput.addEventListener("change", () => syncPreview(coverInput, coverImg));
     avatarInput.addEventListener("change", () => syncPreview(avatarInput, avatarImg));
     let validatedAboutVideo = profile.aboutVideo || null;
     let removeAboutVideo = false;
+    let stagedAboutVideoFile = null;
+    let stagedAboutVideoObjectUrl = "";
+    const revokeStagedAboutVideo = () => {
+      if (stagedAboutVideoObjectUrl) URL.revokeObjectURL(stagedAboutVideoObjectUrl);
+      stagedAboutVideoObjectUrl = "";
+    };
+    const selectedAboutVideoSource = () => String(form.querySelector('input[name="about_video_source_type"]:checked')?.value || "none");
     const selectedAboutProvider = () => String(form.querySelector('input[name="about_video_provider"]:checked')?.value || providerOptions[0].key);
     const syncAboutVideoHelp = () => {
       const selected = providerOptions.find((item) => item.key === selectedAboutProvider()) || providerOptions[0];
@@ -12041,9 +12438,11 @@
       videoStatus.textContent = videoUrlInput.value.trim() ? "URL changed. Validate again before previewing." : "Enter a provider URL, then validate it through Runtime/Auth.";
     };
     const syncAboutModePanels = () => {
-      const mode = String(form.querySelector('input[name="about_mode"]:checked')?.value || "text");
-      aboutTextPanel.hidden = mode !== "text";
-      aboutVideoPanel.hidden = mode !== "video";
+      const source = selectedAboutVideoSource();
+      aboutTextPanel.hidden = false;
+      aboutVideoPanel.hidden = source !== "embed";
+      uploadPanel.hidden = source !== "upload";
+      removeAboutVideo = source === "none";
     };
     aboutModeFieldset.addEventListener("change", syncAboutModePanels);
     providerFieldset.addEventListener("change", () => {
@@ -12082,6 +12481,40 @@
       videoPreview.replaceChildren();
       videoStatus.textContent = "Configured video will be removed when you save. Your written About is unchanged.";
       videoStatus.dataset.tone = "success";
+      const noneOption = form.querySelector('input[name="about_video_source_type"][value="none"]');
+      if (noneOption instanceof HTMLInputElement) noneOption.checked = true;
+      syncAboutModePanels();
+    });
+    uploadInput.addEventListener("change", () => {
+      revokeStagedAboutVideo();
+      uploadPreview.replaceChildren();
+      stagedAboutVideoFile = uploadInput.files?.[0] || null;
+      if (!stagedAboutVideoFile) return;
+      if (!["video/mp4", "video/webm"].includes(stagedAboutVideoFile.type)) {
+        stagedAboutVideoFile = null;
+        uploadInput.value = "";
+        uploadPreview.appendChild(create("p", "profile-markdown-preview-error", "Choose an MP4 or WebM file."));
+        return;
+      }
+      if (uploadLimit && stagedAboutVideoFile.size > uploadLimit) {
+        stagedAboutVideoFile = null;
+        uploadInput.value = "";
+        uploadPreview.appendChild(create("p", "profile-markdown-preview-error", `File exceeds the ${uploadLimit.toLocaleString()} byte limit.`));
+        return;
+      }
+      stagedAboutVideoObjectUrl = URL.createObjectURL(stagedAboutVideoFile);
+      const localVideo = create("video", "profile-about-uploaded-video");
+      localVideo.controls = true;
+      localVideo.preload = "metadata";
+      localVideo.src = stagedAboutVideoObjectUrl;
+      uploadPreview.append(localVideo, create("p", "muted", `${stagedAboutVideoFile.name} · ${stagedAboutVideoFile.size.toLocaleString()} bytes`));
+      removeAboutVideo = false;
+    });
+    clearUpload.addEventListener("click", () => {
+      revokeStagedAboutVideo();
+      stagedAboutVideoFile = null;
+      uploadInput.value = "";
+      uploadPreview.replaceChildren();
     });
     syncAboutVideoHelp();
     syncAboutModePanels();
@@ -12130,6 +12563,9 @@
     };
     const close = (closeOptions = {}) => {
       document.removeEventListener("keydown", handleModalKeydown);
+      revokeStagedAboutVideo();
+      stagedImageUrls.forEach((url) => URL.revokeObjectURL(url));
+      stagedImageUrls.clear();
       if (closeOptions.restoreTheme !== false && pageShell instanceof HTMLElement) {
         pageShell.dataset.profileTheme = selectedTheme;
       }
@@ -12143,6 +12579,91 @@
     });
     document.addEventListener("keydown", handleModalKeydown);
 
+    addLinkButton.addEventListener("click", () => {
+      addLinkMenuOpen = !addLinkMenuOpen;
+      renderSocialLinkEditor();
+    });
+    socialSection.addEventListener("click", (event) => {
+      const target = event.target instanceof HTMLElement ? event.target : null;
+      const addPlatform = target?.closest("[data-profile-social-add]");
+      if (addPlatform instanceof HTMLButtonElement) {
+        const key = String(addPlatform.dataset.profileSocialAdd || "").trim();
+        if (key && !Object.prototype.hasOwnProperty.call(socialLinkDraft, key)) {
+          socialLinkDraft[key] = "";
+          addLinkMenuOpen = false;
+          renderSocialLinkEditor(`[data-profile-edit-social="${key}"]`);
+        }
+        return;
+      }
+      if (target?.closest("[data-profile-custom-add]")) {
+        if (customLinkDrafts.length >= PUBLIC_CUSTOM_LINK_MAX_ITEMS) return;
+        const id = `custom-link-${Date.now().toString(36)}-${customLinkDrafts.length + 1}`;
+        customLinkDrafts.push({ id, label: "", url: "", iconUrl: "" });
+        addLinkMenuOpen = false;
+        renderSocialLinkEditor(`[data-profile-custom-label="${id}"]`);
+        return;
+      }
+      const removePlatform = target?.closest("[data-profile-social-remove]");
+      if (removePlatform instanceof HTMLButtonElement) {
+        delete socialLinkDraft[removePlatform.dataset.profileSocialRemove || ""];
+        renderSocialLinkEditor();
+        return;
+      }
+      const removeCustom = target?.closest("[data-profile-custom-remove]");
+      if (removeCustom instanceof HTMLButtonElement) {
+        const id = removeCustom.dataset.profileCustomRemove || "";
+        customLinkDrafts = customLinkDrafts.filter((item) => item.id !== id);
+        renderSocialLinkEditor();
+        return;
+      }
+      const clearCustomIcon = target?.closest("[data-profile-custom-icon-clear]");
+      if (clearCustomIcon instanceof HTMLButtonElement) {
+        const item = customLinkDrafts.find((entry) => entry.id === clearCustomIcon.dataset.profileCustomIconClear);
+        if (item) item.iconUrl = "";
+        renderSocialLinkEditor();
+      }
+    });
+    socialSection.addEventListener("input", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) return;
+      const socialKey = String(target.dataset.profileEditSocial || "").trim();
+      if (socialKey) {
+        socialLinkDraft[socialKey] = target.value;
+        return;
+      }
+      const customId = target.dataset.profileCustomLabel || target.dataset.profileCustomUrl || "";
+      const custom = customLinkDrafts.find((item) => item.id === customId);
+      if (!custom) return;
+      if (target.dataset.profileCustomLabel) custom.label = target.value.slice(0, PUBLIC_CUSTOM_LINK_LABEL_MAX_LENGTH);
+      if (target.dataset.profileCustomUrl) custom.url = target.value;
+    });
+    socialSection.addEventListener("change", async (event) => {
+      const input = event.target;
+      if (!(input instanceof HTMLInputElement) || !input.dataset.profileCustomIcon) return;
+      const file = input.files?.[0];
+      const custom = customLinkDrafts.find((item) => item.id === input.dataset.profileCustomIcon);
+      if (!file || !custom) return;
+      try {
+        const extension = `.${String(file.name || "").split(".").pop().toLowerCase()}`;
+        const canonicalTypeByExtension = { ".svg": "image/svg+xml", ".png": "image/png", ".bmp": "image/bmp", ".webp": "image/webp" };
+        const canonicalType = file.type === "image/x-ms-bmp" ? "image/bmp" : (PUBLIC_CUSTOM_LINK_ICON_TYPES.includes(file.type) ? file.type : canonicalTypeByExtension[extension]);
+        if (!canonicalType || !PUBLIC_CUSTOM_LINK_ICON_EXTENSIONS.includes(extension)) {
+          throw new Error("Choose an SVG, PNG, BMP, or WebP icon.");
+        }
+        if (file.size > PUBLIC_CUSTOM_LINK_ICON_MAX_BYTES) {
+          throw new Error("Custom link icons must be 256 KiB or smaller.");
+        }
+        const encoded = await readFileAsDataUrl(file);
+        const base64Payload = encoded.includes(",") ? encoded.slice(encoded.indexOf(",") + 1) : "";
+        custom.iconUrl = `data:${canonicalType};base64,${base64Payload}`;
+        renderSocialLinkEditor();
+      } catch (error) {
+        status.textContent = error instanceof Error ? error.message : "Unable to read that custom icon.";
+        status.dataset.tone = "error";
+        input.value = "";
+      }
+    });
+
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       status.textContent = "Saving...";
@@ -12154,18 +12675,29 @@
           display_name: displayNameInput.value.trim(),
           bio: bioInput.value.trim(),
           about: aboutInput.value.trim(),
-          about_mode: String(form.querySelector('input[name="about_mode"]:checked')?.value || "text"),
           streamsuites_theme_preset: normalizeProfileThemePreset(
             form.querySelector('input[name="streamsuites_theme_preset"]:checked')?.value
           ),
           anonymous: visibilityInput.checked,
-          social_links: collectPublicProfileEditorSocialLinks(form, profile.socialLinks)
+          social_links: collectPublicProfileEditorSocialLinks(socialLinkDraft),
+          custom_links: collectPublicProfileEditorCustomLinks(customLinkDrafts)
         };
-        if (removeAboutVideo) {
+        const selectedVideoSource = selectedAboutVideoSource();
+        if (selectedVideoSource === "none" || removeAboutVideo) {
           payload.remove_about_video = true;
-        } else if (videoUrlInput.value.trim()) {
+          payload.about_video_enabled = false;
+          payload.about_video_source_type = "";
+          payload.about_mode = "text";
+        } else if (selectedVideoSource === "embed" && videoUrlInput.value.trim()) {
+          payload.about_mode = "video";
+          payload.about_video_enabled = true;
+          payload.about_video_source_type = "embed";
           payload.about_video_provider = selectedAboutProvider();
           payload.about_video_source_url = videoUrlInput.value.trim();
+        } else if (selectedVideoSource === "embed") {
+          throw new Error("Enter and validate an embed URL, or choose No video.");
+        } else if (selectedVideoSource === "upload" && !stagedAboutVideoFile && profile.aboutVideo?.sourceType !== "upload") {
+          throw new Error("Choose an MP4 or WebM file before saving.");
         }
         const socialValidationError = validatePublicProfileEditorSocialLinks(payload.social_links);
         if (socialValidationError) {
@@ -12175,7 +12707,11 @@
         const coverData = await readPublicProfileEditorImageInput(coverInput);
         if (avatarData) payload.avatar_url = avatarData;
         if (coverData) payload.cover_image_url = coverData;
-        const updated = await saveMyPublicProfile(payload);
+        let updated = await saveMyPublicProfile(payload);
+        if (selectedVideoSource === "upload" && stagedAboutVideoFile) {
+          status.textContent = "Uploading About video…";
+          updated = await uploadMyAboutVideo(stagedAboutVideoFile);
+        }
         status.textContent = "Saved";
         status.dataset.tone = "success";
         close({ restoreTheme: false });
@@ -12193,7 +12729,7 @@
       modal.scrollTop = 0;
       backdrop.scrollTop = 0;
       if (options.focusField === "about") {
-        const target = initialAboutMode === "video" ? videoUrlInput : aboutInput;
+        const target = initialAboutVideoSource === "embed" ? videoUrlInput : aboutInput;
         const bodyRect = scrollBody.getBoundingClientRect();
         const targetRect = target.getBoundingClientRect();
         scrollBody.scrollTop = Math.max(0, scrollBody.scrollTop + targetRect.top - bodyRect.top - 24);
@@ -12269,9 +12805,9 @@
     return { wrap, setMode };
   }
 
-  function buildSocialLinksRow(socialLinks) {
+  function buildSocialLinksRow(socialLinks, customLinks = []) {
     const row = create("div", "profile-social-row");
-    const entries = collectOrderedSocialEntries(socialLinks);
+    const entries = collectProfileLinkEntries(socialLinks, customLinks);
     if (!entries.length) {
       row.appendChild(create("span", "muted", "No social links set."));
       return row;
@@ -12547,15 +13083,6 @@
     );
 
     const right = create("div", "profile-overlay-actions");
-    if (options.canEditProfile && typeof options.openProfileEditor === "function") {
-      const editButton = create("button", "profile-edit-open-button profile-edit-open-button--header-icon", "Edit profile");
-      editButton.type = "button";
-      editButton.setAttribute("aria-label", "Edit profile");
-      editButton.dataset.profileTooltip = "Edit profile";
-      editButton.prepend(createIcon(UI_ICON_MAP.edit, "profile-edit-open-icon"));
-      editButton.addEventListener("click", () => options.openProfileEditor(profile));
-      right.appendChild(editButton);
-    }
     const socialRail = buildProfileHeaderSocialRail(profile?.socialLinks);
     if (socialRail) right.appendChild(socialRail);
     right.appendChild(
@@ -12594,6 +13121,132 @@
     const resolved = normalizeAboutVideoProjection(responsePayload?.about_video);
     if (!resolved) throw new Error("Runtime/Auth did not return a safe video preview.");
     return resolved;
+  }
+
+  async function renderMyAboutMarkdown(markdown) {
+    const response = await fetch(AUTH_PUBLIC_PROFILE_ABOUT_PREVIEW_URL, {
+      method: "POST",
+      cache: "no-store",
+      credentials: "include",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({ about: String(markdown || "").slice(0, 6000) })
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload?.success === false) throw new Error(String(payload?.error || "").trim() || `preview failed (${response.status})`);
+    return String(payload?.about_html || "");
+  }
+
+  async function uploadMyAboutVideo(file) {
+    const response = await fetch(AUTH_PUBLIC_PROFILE_ABOUT_VIDEO_UPLOAD_URL, {
+      method: "POST",
+      cache: "no-store",
+      credentials: "include",
+      headers: { Accept: "application/json", "Content-Type": file.type, "X-Upload-Filename": file.name },
+      body: file
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload?.success === false) throw new Error(String(payload?.error || "").trim() || `upload failed (${response.status})`);
+    return payload?.profile && typeof payload.profile === "object" ? payload.profile : payload;
+  }
+
+  function appendSanitizedAboutProjection(container, renderedHtml) {
+    const allowed = new Set(["P", "H2", "H3", "STRONG", "EM", "S", "BLOCKQUOTE", "UL", "OL", "LI", "CODE", "PRE", "A", "HR"]);
+    const parsed = new DOMParser().parseFromString(String(renderedHtml || ""), "text/html");
+    const appendNode = (source, target) => {
+      if (source.nodeType === Node.TEXT_NODE) {
+        target.appendChild(document.createTextNode(source.textContent || ""));
+        return;
+      }
+      if (source.nodeType !== Node.ELEMENT_NODE || !allowed.has(source.tagName)) return;
+      const node = document.createElement(source.tagName.toLowerCase());
+      if (source.tagName === "A") {
+        try {
+          const href = new URL(source.getAttribute("href") || "");
+          if (!["http:", "https:"].includes(href.protocol) || href.username || href.password) return;
+          node.href = href.toString();
+          node.target = "_blank";
+          node.rel = "noopener noreferrer";
+        } catch (_error) {
+          return;
+        }
+      }
+      Array.from(source.childNodes).forEach((child) => appendNode(child, node));
+      target.appendChild(node);
+    };
+    Array.from(parsed.body.childNodes).forEach((node) => appendNode(node, container));
+  }
+
+  function applyMarkdownToolbarAction(textarea, action) {
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = textarea.value.slice(start, end);
+    const wrap = (before, after = before, placeholder = "text") => {
+      const content = selected || placeholder;
+      textarea.setRangeText(`${before}${content}${after}`, start, end, "select");
+      textarea.setSelectionRange(start + before.length, start + before.length + content.length);
+    };
+    const line = (prefix, ordered = false) => {
+      const content = selected || "List item";
+      const replacement = content.split(/\r?\n/).map((item, index) => `${ordered ? `${index + 1}. ` : prefix}${item}`).join("\n");
+      textarea.setRangeText(replacement, start, end, "select");
+    };
+    if (action === "bold") wrap("**");
+    else if (action === "italic") wrap("_");
+    else if (action === "strike") wrap("~~");
+    else if (action === "code") wrap("`");
+    else if (action === "link") wrap("[", "](https://example.com)", "link text");
+    else if (action === "h2") line("## ");
+    else if (action === "h3") line("### ");
+    else if (action === "quote") line("> ");
+    else if (action === "bullets") line("- ");
+    else if (action === "numbered") line("", true);
+    else if (action === "rule") textarea.setRangeText(`${start ? "\n" : ""}---\n`, start, end, "end");
+    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    textarea.focus();
+  }
+
+  function buildMarkdownAuthoringControls(textarea) {
+    const shell = create("div", "profile-markdown-editor");
+    const toolbar = create("div", "profile-markdown-toolbar");
+    toolbar.setAttribute("role", "toolbar");
+    toolbar.setAttribute("aria-label", "Markdown formatting");
+    const commands = [
+      ["bold", "Bold"], ["italic", "Italic"], ["h2", "Heading 2"], ["h3", "Heading 3"],
+      ["link", "Link"], ["quote", "Quote"], ["bullets", "Bullets"], ["numbered", "Numbered list"],
+      ["code", "Inline code"], ["strike", "Strikethrough"], ["rule", "Horizontal rule"]
+    ];
+    commands.forEach(([action, label]) => {
+      const button = create("button", "profile-markdown-tool", label);
+      button.type = "button";
+      button.dataset.markdownAction = action;
+      button.title = label;
+      button.addEventListener("click", () => applyMarkdownToolbarAction(textarea, action));
+      toolbar.appendChild(button);
+    });
+    toolbar.appendChild(create("span", "profile-markdown-indicator", "Markdown"));
+    const previewButton = create("button", "profile-markdown-preview-button", "Preview");
+    previewButton.type = "button";
+    const preview = create("div", "profile-markdown-preview");
+    preview.hidden = true;
+    preview.setAttribute("aria-live", "polite");
+    previewButton.addEventListener("click", async () => {
+      previewButton.disabled = true;
+      preview.replaceChildren(create("span", "muted", "Rendering preview…"));
+      preview.hidden = false;
+      try {
+        const rendered = await renderMyAboutMarkdown(textarea.value);
+        preview.replaceChildren();
+        appendSanitizedAboutProjection(preview, rendered);
+        if (!preview.childNodes.length) preview.appendChild(create("p", "muted", "Nothing to preview yet."));
+      } catch (error) {
+        preview.replaceChildren(create("p", "profile-markdown-preview-error", error instanceof Error ? error.message : "Preview failed"));
+      } finally {
+        previewButton.disabled = false;
+      }
+    });
+    toolbar.appendChild(previewButton);
+    shell.append(toolbar, textarea, preview);
+    return shell;
   }
 
   function hasUsableProfileStream(profile) {
@@ -12748,6 +13401,39 @@
     hero.dataset.profileBackground = backgroundUrl ? "custom" : "none";
     hero.setAttribute("aria-labelledby", "profile-title");
 
+    if (hasCustomCover) {
+      const probe = new Image();
+      let retried = false;
+      probe.addEventListener("error", () => {
+        const alternate = retried ? "" : legacyProfileMediaAlternate(coverUrl);
+        if (alternate) {
+          retried = true;
+          hero.style.setProperty("--profile-cover-image", `url("${alternate.replace(/"/g, "%22")}"), url("${safeFallbackCoverUrl}")`);
+          probe.src = alternate;
+          return;
+        }
+        hero.dataset.profileCover = "fallback";
+        hero.style.setProperty("--profile-cover-image", `url("${safeFallbackCoverUrl}")`);
+      });
+      probe.src = coverUrl;
+    }
+    if (backgroundUrl) {
+      const backgroundProbe = new Image();
+      let backgroundRetried = false;
+      backgroundProbe.addEventListener("error", () => {
+        const alternate = backgroundRetried ? "" : legacyProfileMediaAlternate(backgroundUrl);
+        if (alternate) {
+          backgroundRetried = true;
+          hero.style.setProperty("--profile-background-image", `url("${alternate.replace(/"/g, "%22")}")`);
+          backgroundProbe.src = alternate;
+          return;
+        }
+        hero.dataset.profileBackground = "none";
+        hero.style.setProperty("--profile-background-image", "none");
+      });
+      backgroundProbe.src = backgroundUrl;
+    }
+
     hero.appendChild(buildStandaloneProfileHeader(profile, authState, options));
 
     const media = create("div", "profile-hero-media");
@@ -12782,6 +13468,14 @@
     if (handle) metaLine.appendChild(handle);
     identity.appendChild(name);
     if (metaLine.childElementCount) identity.appendChild(metaLine);
+    if (options.canEditProfile && typeof options.openProfileEditor === "function") {
+      const editButton = create("button", "profile-edit-open-button profile-edit-open-button--hero", "Edit profile");
+      editButton.type = "button";
+      editButton.setAttribute("aria-label", "Edit profile");
+      editButton.prepend(createIcon(UI_ICON_MAP.edit, "profile-edit-open-icon"));
+      editButton.addEventListener("click", () => options.openProfileEditor(profile));
+      identity.appendChild(editButton);
+    }
 
     const bioText = String(profile?.bio || "").trim();
     if (bioText) {
@@ -12872,10 +13566,9 @@
     const section = create("section", "profile-utility-section profile-about-section");
     section.id = "profile-about";
     section.setAttribute("aria-labelledby", "profile-about-title");
-    const aboutMode = normalizeAboutMode(profile?.aboutMode);
     const aboutVideo = normalizeAboutVideoProjection(profile?.aboutVideo);
     const header = buildProfileSectionHeading(
-      aboutMode === "video" && aboutVideo ? `${aboutVideo.providerLabel} presentation` : "Profile story",
+      "Profile story",
       "About"
     );
     header.querySelector("h2").id = "profile-about-title";
@@ -12886,50 +13579,69 @@
       editButton.addEventListener("click", () => options.openProfileEditor(profile, { focusField: "about" }));
       header.appendChild(editButton);
     }
-    if (aboutMode === "video" && aboutVideo) {
+    const layout = create("div", `profile-about-layout${aboutVideo ? " has-media" : ""}`);
+    const story = create("div", "profile-about-story");
+    const aboutHtml = String(profile?.aboutHtml || "").trim();
+    if (aboutHtml) appendSanitizedAboutProjection(story, aboutHtml);
+    if (!story.childNodes.length) {
+      const aboutText = String(profile?.about || "").trim();
+      if (aboutText || !aboutVideo) {
+        story.appendChild(create(
+          "p",
+          `profile-about-copy${aboutText ? "" : " profile-about-copy--empty"}`,
+          aboutText || "This profile has not published an expanded About story yet."
+        ));
+      }
+    }
+    if (story.childNodes.length) layout.appendChild(story);
+    else layout.classList.add("is-video-only");
+    if (aboutVideo) {
       const presentation = create("div", "profile-about-video-presentation");
       const meta = create("div", "profile-about-video-meta");
       const providerBadge = create("span", "profile-about-video-provider");
-      const providerIcon = create("img", "profile-about-video-provider-icon");
-      providerIcon.src = `/assets/icons/${aboutVideo.provider}.svg`;
-      providerIcon.alt = "";
-      providerIcon.setAttribute("aria-hidden", "true");
-      providerBadge.append(providerIcon, create("span", "", aboutVideo.providerLabel));
+      if (aboutVideo.sourceType === "embed") {
+        const providerIcon = create("img", "profile-about-video-provider-icon");
+        providerIcon.src = `/assets/icons/${aboutVideo.provider}.svg`;
+        providerIcon.alt = "";
+        providerIcon.setAttribute("aria-hidden", "true");
+        providerBadge.append(providerIcon);
+      }
+      providerBadge.append(create("span", "", aboutVideo.providerLabel));
       meta.appendChild(providerBadge);
       if (aboutVideo.title) meta.appendChild(create("h3", "profile-about-video-title", aboutVideo.title));
       const frame = create("div", "profile-about-video-frame is-loading");
-      const loading = create("span", "profile-about-video-loading", `Loading ${aboutVideo.providerLabel} player…`);
-      loading.setAttribute("role", "status");
-      const iframe = buildTrustedAboutVideoIframe(aboutVideo, aboutVideo.title || `${aboutVideo.providerLabel} About video`);
-      if (iframe) {
-        iframe.addEventListener("load", () => {
-          frame.classList.remove("is-loading");
-          loading.remove();
-        }, { once: true });
-        frame.append(loading, iframe);
+      if (aboutVideo.sourceType === "upload") {
+        frame.classList.remove("is-loading");
+        const video = create("video", "profile-about-uploaded-video");
+        video.controls = true;
+        video.preload = "metadata";
+        video.playsInline = true;
+        video.appendChild(Object.assign(document.createElement("source"), { src: aboutVideo.url, type: aboutVideo.mimeType }));
+        video.appendChild(document.createTextNode("Your browser cannot play this video."));
+        frame.appendChild(video);
+      } else {
+        const loading = create("span", "profile-about-video-loading", `Loading ${aboutVideo.providerLabel} player…`);
+        loading.setAttribute("role", "status");
+        const iframe = buildTrustedAboutVideoIframe(aboutVideo, aboutVideo.title || `${aboutVideo.providerLabel} About video`);
+        if (iframe) {
+          iframe.addEventListener("load", () => {
+            frame.classList.remove("is-loading");
+            loading.remove();
+          }, { once: true });
+          frame.append(loading, iframe);
+        }
       }
-      const sourceLink = create("a", "profile-about-video-source-link", aboutVideo.externalActionLabel);
-      sourceLink.href = aboutVideo.sourceUrl;
-      sourceLink.target = "_blank";
-      sourceLink.rel = "noopener noreferrer";
-      presentation.append(meta, frame, sourceLink);
-      section.append(header, presentation);
-    } else if (aboutMode === "video") {
-      const fallback = create("div", "profile-about-video-fallback");
-      fallback.append(
-        create("strong", "", canEdit ? "Add a video to complete this About section" : "Video About unavailable"),
-        create("p", "", canEdit ? "Open the profile editor to validate a YouTube, Rumble, or Kick livestream URL." : "This creator’s selected video is not available right now.")
-      );
-      section.append(header, fallback);
-    } else {
-      const aboutText = String(profile?.about || "").trim();
-      const copy = create(
-        "p",
-        `profile-about-copy${aboutText ? "" : " profile-about-copy--empty"}`,
-        aboutText || "This profile has not published an expanded About story yet."
-      );
-      section.append(header, copy);
+      presentation.append(meta, frame);
+      if (aboutVideo.sourceType === "embed") {
+        const sourceLink = create("a", "profile-about-video-source-link", aboutVideo.externalActionLabel);
+        sourceLink.href = aboutVideo.sourceUrl;
+        sourceLink.target = "_blank";
+        sourceLink.rel = "noopener noreferrer";
+        presentation.appendChild(sourceLink);
+      }
+      layout.appendChild(presentation);
     }
+    section.append(header, layout);
     return section;
   }
 
@@ -13118,7 +13830,10 @@
   }
 
   function buildProfileSocialGallerySection(profile) {
-    const entries = collectOrderedSocialEntries(profile?.socialLinks || profile?.social_links);
+    const entries = collectProfileLinkEntries(
+      profile?.socialLinks || profile?.social_links,
+      profile?.customLinks || profile?.custom_links
+    );
     if (!entries.length) return null;
 
     const section = create("section", "profile-utility-section profile-social-gallery-section");
@@ -13834,6 +14549,25 @@
     profileCard.appendChild(grid);
   }
 
+  function initializeStandaloneProfileScrollEffects(shell) {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const progress = Math.max(0, Math.min(1, window.scrollY / 360));
+      shell.style.setProperty("--profile-scroll-progress", progress.toFixed(3));
+      shell.classList.toggle("is-profile-scrolled", progress > 0.035);
+    };
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    update();
+    registerStandaloneProfileCleanup(() => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    });
+  }
+
   function renderStandaloneProfilePage(host, profile, canEdit, options = {}) {
     cleanupStandaloneProfileInteractions();
     clear(host);
@@ -13856,6 +14590,7 @@
     body.appendChild(profileCard);
     shell.appendChild(body);
     host.appendChild(shell);
+    initializeStandaloneProfileScrollEffects(shell);
 
     if (options.loadingSections === true) {
       renderStandaloneProfileLoadingUtilityBody(profileCard);
@@ -13969,7 +14704,7 @@
       editSocial.href = "/community/settings.html";
       socialHeader.appendChild(editSocial);
     }
-    profileCard.append(socialHeader, buildSocialLinksRow(profile.socialLinks));
+    profileCard.append(socialHeader, buildSocialLinksRow(profile.socialLinks, profile.customLinks));
 
     const bioHeader = create("div", "profile-inline-header");
     bioHeader.append(create("h3", "", "Bio"));

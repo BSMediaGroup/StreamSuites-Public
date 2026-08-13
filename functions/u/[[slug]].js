@@ -75,7 +75,20 @@ function resolveHttpsAssetUrl(value, requestUrl) {
 function resolveOptionalHttpsAssetUrl(value, requestUrl) {
   const raw = String(value || "").trim();
   if (!raw) return "";
-  const resolved = resolveHttpsAssetUrl(raw, requestUrl);
+  let resolved = resolveHttpsAssetUrl(raw, requestUrl);
+  try {
+    const parsed = new URL(resolved);
+    if (
+      ["cdn.streamsuites.app", "api.streamsuites.app"].includes(parsed.hostname) &&
+      /^\/u\/[A-Za-z0-9]{7}\/(avatar|cover|background|logo)\/v[1-9]\d*\.webp$/.test(parsed.pathname)
+    ) {
+      parsed.hostname = "streamsuites.app";
+      parsed.pathname = `/profile-media${parsed.pathname}`;
+      resolved = parsed.toString();
+    }
+  } catch (_error) {
+    return "";
+  }
   return resolved.endsWith(SHARE_IMAGE_PATH) && !raw.endsWith(SHARE_IMAGE_PATH) ? "" : resolved;
 }
 
@@ -161,9 +174,11 @@ function normalizeProfilePayload(payload, slug, requestUrl) {
     backgroundImageUrl,
     bio,
     about,
+    aboutHtml: pickString(source.about_html, source.aboutHtml),
     aboutMode: pickString(source.about_mode, source.aboutMode) || "text",
     aboutVideo: source.about_video && typeof source.about_video === "object" ? source.about_video : source.aboutVideo || null,
     aboutVideoProviders: Array.isArray(source.about_video_providers) ? source.about_video_providers : Array.isArray(source.aboutVideoProviders) ? source.aboutVideoProviders : [],
+    aboutVideoUpload: source.about_video_upload && typeof source.about_video_upload === "object" ? source.about_video_upload : source.aboutVideoUpload || null,
     socialLinks: source.social_links && typeof source.social_links === "object" ? source.social_links : source.socialLinks || {},
     streamsuitesThemePreset: allowedThemePresets.has(requestedThemePreset) ? requestedThemePreset : "violet_blue",
     role: pickString(source.role, source.account_type, source.accountType) || "viewer",
