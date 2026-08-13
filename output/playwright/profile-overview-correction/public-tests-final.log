@@ -1,0 +1,915 @@
+TAP version 13
+# Subtest: every public-shell route loads the shared turnstile helper
+ok 1 - every public-shell route loads the shared turnstile helper
+  ---
+  duration_ms: 334.0217
+  ...
+# Subtest: leaderboard and standalone profile shells load active scoped progression assets before the router mounts
+ok 2 - leaderboard and standalone profile shells load active scoped progression assets before the router mounts
+  ---
+  duration_ms: 3.8927
+  ...
+# Subtest: economy, home, and compatibility aliases serve direct assets without redirect cycles
+ok 3 - economy, home, and compatibility aliases serve direct assets without redirect cycles
+  ---
+  duration_ms: 49.8674
+  ...
+# Subtest: home layout prioritizes gallery and action content before compact status notes
+ok 4 - home layout prioritizes gallery and action content before compact status notes
+  ---
+  duration_ms: 47.3318
+  ...
+# Subtest: games economy section bar is shell-level, collapsible, and overflow-capable
+ok 5 - games economy section bar is shell-level, collapsible, and overflow-capable
+  ---
+  duration_ms: 23.8328
+  ...
+# Subtest: economy shell section bar is not configured for other public pages
+ok 6 - economy shell section bar is not configured for other public pages
+  ---
+  duration_ms: 45.2883
+  ...
+# Subtest: public login surfaces expose alternate surface links
+ok 7 - public login surfaces expose alternate surface links
+  ---
+  duration_ms: 15.001
+  ...
+# Subtest: public lander defers auth modal turnstile init until deferred helper is ready
+ok 8 - public lander defers auth modal turnstile init until deferred helper is ready
+  ---
+  duration_ms: 2.0543
+  ...
+# Subtest: public auth surfaces keep alternate-surface links above the lower turnstile block
+ok 9 - public auth surfaces keep alternate-surface links above the lower turnstile block
+  ---
+  duration_ms: 11.0848
+  ...
+# Subtest: shared public turnstile helper collapses auth surfaces cleanly when runtime config disables it
+ok 10 - shared public turnstile helper collapses auth surfaces cleanly when runtime config disables it
+  ---
+  duration_ms: 0.9228
+  ...
+# Subtest: public modal surfaces keep the shared divider hook above alternate surface links
+ok 11 - public modal surfaces keep the shared divider hook above alternate surface links
+  ---
+  duration_ms: 8.3248
+  ...
+# Subtest: public modal disclaimer links retain the shared blue treatment
+ok 12 - public modal disclaimer links retain the shared blue treatment
+  ---
+  duration_ms: 3.8553
+  ...
+# Subtest: shared public-shell modal ships the lander selector set and divider rhythm
+ok 13 - shared public-shell modal ships the lander selector set and divider rhythm
+  ---
+  duration_ms: 21.5538
+  ...
+# Subtest: public account menu keeps the overview card and capability-aware console link
+ok 14 - public account menu keeps the overview card and capability-aware console link
+  ---
+  duration_ms: 17.1526
+  ...
+# Subtest: standalone /u profile pages own the cinematic header and hero treatment
+ok 15 - standalone /u profile pages own the cinematic header and hero treatment
+  ---
+  duration_ms: 88.4792
+  ...
+# Subtest: standalone /u profile hydration keeps runtime profile media ahead of local fallback data
+ok 16 - standalone /u profile hydration keeps runtime profile media ahead of local fallback data
+  ---
+  duration_ms: 24.3757
+  ...
+# Subtest: standalone profile boot suppresses duplicate auth rerenders and uses same-origin analytics
+ok 17 - standalone profile boot suppresses duplicate auth rerenders and uses same-origin analytics
+  ---
+  duration_ms: 15.8566
+  ...
+# Subtest: public clip normalization does not request missing local SEO placeholder thumbnails
+ok 18 - public clip normalization does not request missing local SEO placeholder thumbnails
+  ---
+  duration_ms: 1.3864
+  ...
+# Subtest: community member hydration uses the authoritative runtime endpoint
+ok 19 - community member hydration uses the authoritative runtime endpoint
+  ---
+  duration_ms: 14.5319
+  ...
+# Subtest: community member galleries keep shared alpha filtering and 20-per-page pagination
+ok 20 - community member galleries keep shared alpha filtering and 20-per-page pagination
+  ---
+  duration_ms: 14.5965
+  ...
+# Subtest: public profile route shim canonicalizes /@slug to /u/slug without adding a second profile route
+ok 21 - public profile route shim canonicalizes /@slug to /u/slug without adding a second profile route
+  ---
+  duration_ms: 55.1861
+  ...
+# Subtest: standalone profiles keep canonical metadata and truthful adaptive states
+ok 22 - standalone profiles keep canonical metadata and truthful adaptive states
+  ---
+  duration_ms: 11.9494
+  ...
+# Subtest: standalone profile detail flow follows the canonical restructured order
+ok 23 - standalone profile detail flow follows the canonical restructured order
+  ---
+  duration_ms: 7.4028
+  ...
+# Subtest: public badge surfaces share the floating badge-tooltip helper
+ok 24 - public badge surfaces share the floating badge-tooltip helper
+  ---
+  duration_ms: 278.9573
+  ...
+# Subtest: members pagination buttons inherit the shared public font stack
+ok 25 - members pagination buttons inherit the shared public font stack
+  ---
+  duration_ms: 2.3084
+  ...
+# Subtest: community member gallery cards keep slug-first handles and the cleaned tooltip-style footer composition
+ok 26 - community member gallery cards keep slug-first handles and the cleaned tooltip-style footer composition
+  ---
+  duration_ms: 14.0568
+  ...
+# Subtest: standalone public profile uses the authoritative restructured section contract
+ok 27 - standalone public profile uses the authoritative restructured section contract
+  ---
+  duration_ms: 28.8382
+  ...
+# Subtest: standalone profile corrective presentation keeps hierarchy, order, and media state deliberate
+ok 28 - standalone profile corrective presentation keeps hierarchy, order, and media state deliberate
+  ---
+  duration_ms: 38.3916
+  ...
+# Subtest: download routes use the approved Public typography and retain authoritative product marks
+ok 29 - download routes use the approved Public typography and retain authoritative product marks
+  ---
+  duration_ms: 21.1599
+  ...
+# Subtest: download polish uses feature accents, supplied platform icons, and truthful coming-soon scaffolds
+ok 30 - download polish uses feature accents, supplied platform icons, and truthful coming-soon scaffolds
+  ---
+  duration_ms: 10.7627
+  ...
+# Subtest: downloads index is searchable, routed, and links only to truthful product surfaces
+ok 31 - downloads index is searchable, routed, and links only to truthful product surfaces
+  ---
+  duration_ms: 3.037
+  ...
+# Subtest: OBS route is a truthful unavailable product scaffold with required cross-links
+ok 32 - OBS route is a truthful unavailable product scaffold with required cross-links
+  ---
+  duration_ms: 4.5055
+  ...
+# Subtest: StudioApp surface preserves dynamic release and gate hooks without live values
+ok 33 - StudioApp surface preserves dynamic release and gate hooks without live values
+  ---
+  duration_ms: 6.3771
+  ...
+# Subtest: canonical /health page is a separate observability surface with stable section anchors
+ok 34 - canonical /health page is a separate observability surface with stable section anchors
+  ---
+  duration_ms: 19.0417
+  ...
+# Subtest: health page consumes only the existing public-safe Runtime diagnostics contract
+ok 35 - health page consumes only the existing public-safe Runtime diagnostics contract
+  ---
+  duration_ms: 3.251
+  ...
+# Subtest: network, stale, malformed, and missing overall data cannot become operational
+ok 36 - network, stale, malformed, and missing overall data cannot become operational
+  ---
+  duration_ms: 16.7811
+  ...
+# Subtest: state normalization and ownership keep direct, deferred, and upstream observations distinct
+ok 37 - state normalization and ownership keep direct, deferred, and upstream observations distinct
+  ---
+  duration_ms: 16.6838
+  ...
+# Subtest: history and latency helpers preserve only authoritative bounded observations
+ok 38 - history and latency helpers preserve only authoritative bounded observations
+  ---
+  duration_ms: 15.6244
+  ...
+# Subtest: canonical timeline aligns sparse history and materializes explicit unknown source positions
+ok 39 - canonical timeline aligns sparse history and materializes explicit unknown source positions
+  ---
+  duration_ms: 16.811
+  ...
+# Subtest: display aggregation stays capped and conservatively preserves incidents and unknown coverage
+ok 40 - display aggregation stays capped and conservatively preserves incidents and unknown coverage
+  ---
+  duration_ms: 20.4044
+  ...
+# Subtest: component history classification distinguishes retained, current-only, vendor, and unmeasured states
+ok 41 - component history classification distinguishes retained, current-only, vendor, and unmeasured states
+  ---
+  duration_ms: 7.9871
+  ...
+# Subtest: topology is grouped, line-only, visibility-aware, and keeps the canonical Runtime icon
+ok 42 - topology is grouped, line-only, visibility-aware, and keeps the canonical Runtime icon
+  ---
+  duration_ms: 12.091
+  ...
+# Subtest: component matrix, bounded rails, response graph, and incremental polling retain responsive contracts
+ok 43 - component matrix, bounded rails, response graph, and incremental polling retain responsive contracts
+  ---
+  duration_ms: 8.5871
+  ...
+# Subtest: API-derived content uses safe DOM construction and no dynamic HTML execution sinks
+ok 44 - API-derived content uses safe DOM construction and no dynamic HTML execution sinks
+  ---
+  duration_ms: 9.6276
+  ...
+# Subtest: status and health cross-link without changing the Status Center authority boundary
+ok 45 - status and health cross-link without changing the Status Center authority boundary
+  ---
+  duration_ms: 1.9224
+  ...
+# Subtest: external dependencies retain explicit upstream presentation and missing history never becomes a healthy segment
+ok 46 - external dependencies retain explicit upstream presentation and missing history never becomes a healthy segment
+  ---
+  duration_ms: 5.0085
+  ...
+# Subtest: public authoritative live adapter enriches rumble entries from discovery metadata
+ok 47 - public authoritative live adapter enriches rumble entries from discovery metadata
+  ---
+  duration_ms: 17.4938
+  ...
+# Subtest: public authoritative live adapter does not create live state from discovery alone
+ok 48 - public authoritative live adapter does not create live state from discovery alone
+  ---
+  duration_ms: 11.8947
+  ...
+# Subtest: public authoritative live adapter keeps stale aggregate entries offline
+ok 49 - public authoritative live adapter keeps stale aggregate entries offline
+  ---
+  duration_ms: 6.4843
+  ...
+# Subtest: public authoritative live adapter accepts normalized kick live providers
+ok 50 - public authoritative live adapter accepts normalized kick live providers
+  ---
+  duration_ms: 18.4842
+  ...
+# Subtest: public authoritative live adapter ignores embedded live payloads when aggregate truth is absent
+ok 51 - public authoritative live adapter ignores embedded live payloads when aggregate truth is absent
+  ---
+  duration_ms: 12.2413
+  ...
+# Subtest: public data hub prefers shared runtime live exports and falls back to checked-in mirrors
+ok 52 - public data hub prefers shared runtime live exports and falls back to checked-in mirrors
+  ---
+  duration_ms: 16.3963
+  ...
+# Subtest: public About renderer keeps Markdown story primary with optional Runtime-approved media
+ok 53 - public About renderer keeps Markdown story primary with optional Runtime-approved media
+  ---
+  duration_ms: 21.8101
+  ...
+# Subtest: public CSP permits only the required validated player and retained first-party frame origins
+ok 54 - public CSP permits only the required validated player and retained first-party frame origins
+  ---
+  duration_ms: 1.3563
+  ...
+# Subtest: profile video shell is themed responsive and overflow-safe
+ok 55 - profile video shell is themed responsive and overflow-safe
+  ---
+  duration_ms: 44.3393
+  ...
+# Subtest: profile owner action, sticky header, cover fade, and theme variables use the profile contract
+ok 56 - profile owner action, sticky header, cover fade, and theme variables use the profile contract
+  ---
+  duration_ms: 122.4336
+  ...
+# Subtest: profile chrome uses shared actions, docked navigation, metadata chips, and route-root scrollbars
+ok 57 - profile chrome uses shared actions, docked navigation, metadata chips, and route-root scrollbars
+  ---
+  duration_ms: 26.1518
+  ...
+# Subtest: profile clients use the authoritative immutable URL without synthetic query or origin retries
+ok 58 - profile clients use the authoritative immutable URL without synthetic query or origin retries
+  ---
+  duration_ms: 10.6061
+  ...
+# Subtest: profile media proxy accepts only immutable canonical GET/HEAD paths
+ok 59 - profile media proxy accepts only immutable canonical GET/HEAD paths
+  ---
+  duration_ms: 54.6241
+  ...
+# Subtest: profile image proxy strips browser credentials/fingerprints and returns exact WebP bytes
+ok 60 - profile image proxy strips browser credentials/fingerprints and returns exact WebP bytes
+  ---
+  duration_ms: 14.6182
+  ...
+# Subtest: profile video proxy preserves one bounded byte range and rejects challenge or MIME HTML
+ok 61 - profile video proxy preserves one bounded byte range and rejects challenge or MIME HTML
+  ---
+  duration_ms: 6.9232
+  ...
+# Subtest: public data hub consumes runtime public authority exports
+ok 62 - public data hub consumes runtime public authority exports
+  ---
+  duration_ms: 8.4517
+  ...
+# Subtest: public app wires authority request submission and my-data history to the real endpoints
+ok 63 - public app wires authority request submission and my-data history to the real endpoints
+  ---
+  duration_ms: 17.5224
+  ...
+# Subtest: games economy page uses gallery-first market groups and shell toolbar anchors
+ok 64 - games economy page uses gallery-first market groups and shell toolbar anchors
+  ---
+  duration_ms: 198.1827
+  ...
+# Subtest: public profile owner editor stays runtime-backed and uses canonical social assets
+ok 65 - public profile owner editor stays runtime-backed and uses canonical social assets
+  ---
+  duration_ms: 60.3502
+  ...
+# Subtest: public profile primary visitor action prefers the highest-priority saved platform
+ok 66 - public profile primary visitor action prefers the highest-priority saved platform
+  ---
+  duration_ms: 6.8988
+  ...
+# Subtest: public leaderboards route hydrates from authoritative progression API
+ok 67 - public leaderboards route hydrates from authoritative progression API
+  ---
+  duration_ms: 205.7396
+  ...
+# Subtest: public profile game section renders runtime progression and economy authority summaries
+ok 68 - public profile game section renders runtime progression and economy authority summaries
+  ---
+  duration_ms: 25.9575
+  ...
+# Subtest: public scoped platform icons and stable latest stream layout are pinned
+ok 69 - public scoped platform icons and stable latest stream layout are pinned
+  ---
+  duration_ms: 45.247
+  ...
+# Subtest: public profile overview surface uses the same runtime progression summary as games
+ok 70 - public profile overview surface uses the same runtime progression summary as games
+  ---
+  duration_ms: 8.1013
+  ...
+# Subtest: public level chips include restrained hover sheen without changing compact consumers
+ok 71 - public level chips include restrained hover sheen without changing compact consumers
+  ---
+  duration_ms: 9.265
+  ...
+# Subtest: public economy rendering keeps denominations separate from inventory rows
+ok 72 - public economy rendering keeps denominations separate from inventory rows
+  ---
+  duration_ms: 63.6358
+  ...
+# Subtest: public economy item tooltip controller keeps one active popover and preserves fallback copy
+ok 73 - public economy item tooltip controller keeps one active popover and preserves fallback copy
+  ---
+  duration_ms: 49.0557
+  ...
+# Subtest: public economy item lightbox normalizes wallet inventory profile and market payloads safely
+ok 74 - public economy item lightbox normalizes wallet inventory profile and market payloads safely
+  ---
+  duration_ms: 105.8932
+  ...
+# Subtest: public economy item lightbox renders hashtag tag chips and scoped item code styling
+ok 75 - public economy item lightbox renders hashtag tag chips and scoped item code styling
+  ---
+  duration_ms: 29.7318
+  ...
+# Subtest: public economy item lightbox exposes scoped navigation and currentColor currency symbols
+ok 76 - public economy item lightbox exposes scoped navigation and currentColor currency symbols
+  ---
+  duration_ms: 25.2603
+  ...
+# Subtest: public games exchange section hydrates exchange-capable payload rows into wider category cards
+ok 77 - public games exchange section hydrates exchange-capable payload rows into wider category cards
+  ---
+  duration_ms: 20.7578
+  ...
+# Subtest: public games exchange section paginates categories independently with gems and currency first
+ok 78 - public games exchange section paginates categories independently with gems and currency first
+  ---
+  duration_ms: 15.8782
+  ...
+# Subtest: public economy item rows delegate click and keyboard activation to the lightbox
+ok 79 - public economy item rows delegate click and keyboard activation to the lightbox
+  ---
+  duration_ms: 22.6582
+  ...
+# Subtest: public profile progress meter uses animated electric blue fill
+ok 80 - public profile progress meter uses animated electric blue fill
+  ---
+  duration_ms: 31.4898
+  ...
+# Subtest: shared footer feature edges retain the Status footer geometry and page-aware accent token
+ok 81 - shared footer feature edges retain the Status footer geometry and page-aware accent token
+  ---
+  duration_ms: 14.9145
+  ...
+# Subtest: every inventoried human-facing route directly loads or inherits the shared footer-edge stylesheet
+ok 82 - every inventoried human-facing route directly loads or inherits the shared footer-edge stylesheet
+  ---
+  duration_ms: 57.8787
+  ...
+# Subtest: Status owns exactly one unchanged edge pair and special-purpose entries remain excluded
+ok 83 - Status owns exactly one unchanged edge pair and special-purpose entries remain excluded
+  ---
+  duration_ms: 32.7541
+  ...
+# Subtest: the approved pocv9 reference still matches its protected SHA-256 manifest
+ok 84 - the approved pocv9 reference still matches its protected SHA-256 manifest
+  ---
+  duration_ms: 18.0872
+  ...
+# Subtest: standalone pages use the canonical landing brand, shell, and mobile navigation contract
+ok 85 - standalone pages use the canonical landing brand, shell, and mobile navigation contract
+  ---
+  duration_ms: 70.3734
+  ...
+# Subtest: public header Open Studio buttons retain their dark foreground
+ok 86 - public header Open Studio buttons retain their dark foreground
+  ---
+  duration_ms: 7.9956
+  ...
+# Subtest: the ten-second product feature-color cycle remains exclusive to the main landing
+ok 87 - the ten-second product feature-color cycle remains exclusive to the main landing
+  ---
+  duration_ms: 18.0955
+  ...
+# Subtest: obsolete rendered Tools and Changelog pages are removed and compatibility redirects are bounded
+ok 88 - obsolete rendered Tools and Changelog pages are removed and compatibility redirects are bounded
+  ---
+  duration_ms: 3.0658
+  ...
+# Subtest: roadmap is a concise programme snapshot with matching visible, width, and ARIA values
+ok 89 - roadmap is a concise programme snapshot with matching visible, width, and ARIA values
+  ---
+  duration_ms: 2.8636
+  ...
+# Subtest: roadmap release cards link only to changelog routes present in StreamSuites Docs
+ok 90 - roadmap release cards link only to changelog routes present in StreamSuites Docs
+  ---
+  duration_ms: 1.0348
+  ...
+# Subtest: donation checkout preserves the real one-time API contract and validates whole-dollar amounts
+ok 91 - donation checkout preserves the real one-time API contract and validates whole-dollar amounts
+  ---
+  duration_ms: 8.9971
+  ...
+# Subtest: standalone hero scale and About primary CTA retain deliberate contrast
+ok 92 - standalone hero scale and About primary CTA retain deliberate contrast
+  ---
+  duration_ms: 3.6605
+  ...
+# Subtest: support ticket-centre preview is stable, disabled, and has no client submission path
+ok 93 - support ticket-centre preview is stable, disabled, and has no client submission path
+  ---
+  duration_ms: 1.329
+  ...
+# Subtest: support pathways retain their destinations and use distinct feature icon treatments
+ok 94 - support pathways retain their destinations and use distinct feature icon treatments
+  ---
+  duration_ms: 2.3177
+  ...
+# Subtest: support Discord community widget is first-party, read-only, resilient, and joinable
+ok 95 - support Discord community widget is first-party, read-only, resilient, and joinable
+  ---
+  duration_ms: 7.5098
+  ...
+# Subtest: privacy policy date and section anchors remain intact
+ok 96 - privacy policy date and section anchors remain intact
+  ---
+  duration_ms: 2.2633
+  ...
+# Subtest: live public HTML and shell code no longer link to obsolete public routes
+ok 97 - live public HTML and shell code no longer link to obsolete public routes
+  ---
+  duration_ms: 1499.2314
+  ...
+# Subtest: chart line entrance uses a responsive feather mask without dash cleanup
+ok 98 - chart line entrance uses a responsive feather mask without dash cleanup
+  ---
+  duration_ms: 16.0451
+  ...
+# Subtest: canonical status page uses the approved production brand and omits the floating widget
+ok 99 - canonical status page uses the approved production brand and omits the floating widget
+  ---
+  duration_ms: 3.0684
+  ...
+# Subtest: status overview and component controls retain the polished dark layout contract
+ok 100 - status overview and component controls retain the polished dark layout contract
+  ---
+  duration_ms: 39.4402
+  ...
+# Subtest: status root clips fixed ambient decoration without horizontal page scrolling
+ok 101 - status root clips fixed ambient decoration without horizontal page scrolling
+  ---
+  duration_ms: 14.8566
+  ...
+# Subtest: status controller is read-only, bounded, stale-safe, and has no demo or fake operational fallback
+ok 102 - status controller is read-only, bounded, stale-safe, and has no demo or fake operational fallback
+  ---
+  duration_ms: 3.8653
+  ...
+# Subtest: a diagnostics transport failure retains the last successful history for the browser session
+ok 103 - a diagnostics transport failure retains the last successful history for the browser session
+  ---
+  duration_ms: 64.2511
+  ...
+# Subtest: final locked topology renders four groups and 21 child components without group cards
+ok 104 - final locked topology renders four groups and 21 child components without group cards
+  ---
+  duration_ms: 14.8612
+  ...
+# Subtest: component cards use meaningful icons, truthful source states, expansion, and real-history-only graphs
+ok 105 - component cards use meaningful icons, truthful source states, expansion, and real-history-only graphs
+  ---
+  duration_ms: 15.358
+  ...
+# Subtest: chart model preserves only real observations, explicit nulls, and measured zero values
+ok 106 - chart model preserves only real observations, explicit nulls, and measured zero values
+  ---
+  duration_ms: 51.481
+  ...
+# Subtest: 5H, 24H, 7D, and 30D models retain exact selected time domains
+ok 107 - 5H, 24H, 7D, and 30D models retain exact selected time domains
+  ---
+  duration_ms: 11.778
+  ...
+# Subtest: stale component history extends only presentation geometry with a trailing offline span
+ok 108 - stale component history extends only presentation geometry with a trailing offline span
+  ---
+  duration_ms: 14.5511
+  ...
+# Subtest: selected-range time before the first real bucket is exposed as unavailable history
+ok 109 - selected-range time before the first real bucket is exposed as unavailable history
+  ---
+  duration_ms: 67.2597
+  ...
+# Subtest: single and two-point latency history stays sparse without manufactured geometry
+ok 110 - single and two-point latency history stays sparse without manufactured geometry
+  ---
+  duration_ms: 31.0267
+  ...
+# Subtest: missing intervals split smooth curves instead of implying measurements
+ok 111 - missing intervals split smooth curves instead of implying measurements
+  ---
+  duration_ms: 15.0699
+  ...
+# Subtest: observability rail creates flat markers only for missing internal buckets
+ok 112 - observability rail creates flat markers only for missing internal buckets
+  ---
+  duration_ms: 11.3328
+  ...
+# Subtest: five-minute normalization tolerates timestamp jitter and reports plotted bucket counts
+ok 113 - five-minute normalization tolerates timestamp jitter and reports plotted bucket counts
+  ---
+  duration_ms: 31.5787
+  ...
+# Subtest: latest measured point after a genuine gap remains real and is the gap destination
+ok 114 - latest measured point after a genuine gap remains real and is the gap destination
+  ---
+  duration_ms: 12.2817
+  ...
+# Subtest: state-only history never manufactures a latency series
+ok 115 - state-only history never manufactures a latency series
+  ---
+  duration_ms: 15.7492
+  ...
+# Subtest: nearest-point tooltip data is copied from a real observation
+ok 116 - nearest-point tooltip data is copied from a real observation
+  ---
+  duration_ms: 12.7557
+  ...
+# Subtest: premium SVG treatment remains dependency-free, range-accessible, and reduced-motion safe
+ok 117 - premium SVG treatment remains dependency-free, range-accessible, and reduced-motion safe
+  ---
+  duration_ms: 10.9908
+  ...
+# Subtest: overall availability consumes Runtime's canonical contract without duplicating policy
+ok 118 - overall availability consumes Runtime's canonical contract without duplicating policy
+  ---
+  duration_ms: 12.2727
+  ...
+# Subtest: overall chart model preserves exact Runtime percentages, missing values, and pre-history
+ok 119 - overall chart model preserves exact Runtime percentages, missing values, and pre-history
+  ---
+  duration_ms: 35.8724
+  ...
+# Subtest: stale overall history retains Runtime values and adds an excluded trailing offline span
+ok 120 - stale overall history retains Runtime values and adds an excluded trailing offline span
+  ---
+  duration_ms: 20.3294
+  ...
+# Subtest: stale rendering labels offline history without creating fresh discrepancies or fake graph data
+ok 121 - stale rendering labels offline history without creating fresh discrepancies or fake graph data
+  ---
+  duration_ms: 8.8876
+  ...
+# Subtest: status report menus and one reusable modal expose full and component formats accessibly
+ok 122 - status report menus and one reusable modal expose full and component formats accessibly
+  ---
+  duration_ms: 73.1331
+  ...
+# Subtest: official non-operational states tint the hero, diagram, component frame, and component glyph
+ok 123 - official non-operational states tint the hero, diagram, component frame, and component glyph
+  ---
+  duration_ms: 11.8862
+  ...
+# Subtest: hero diagram uses production SVG assets and sequential semantic routes
+ok 124 - hero diagram uses production SVG assets and sequential semantic routes
+  ---
+  duration_ms: 14.8667
+  ...
+# Subtest: status header reuses canonical Public version hydration without a hardcoded version
+ok 125 - status header reuses canonical Public version hydration without a hardcoded version
+  ---
+  duration_ms: 4.6525
+  ...
+# Subtest: incident and maintenance empty states use the local tick while real-event rendering remains
+ok 126 - incident and maintenance empty states use the local tick while real-event rendering remains
+  ---
+  duration_ms: 7.5811
+  ...
+# Subtest: resolved incident history uses one aligned rail coordinate and a truthful archive frame
+ok 127 - resolved incident history uses one aligned rail coordinate and a truthful archive frame
+  ---
+  duration_ms: 19.3771
+  ...
+# Subtest: group summaries and source labels expose the locked monitoring taxonomy
+ok 128 - group summaries and source labels expose the locked monitoring taxonomy
+  ---
+  duration_ms: 3.5912
+  ...
+# Subtest: all newly referenced status icons exist locally
+ok 129 - all newly referenced status icons exist locally
+  ---
+  duration_ms: 28.0181
+  ...
+# Subtest: public widget implements the approved idle, hover, detailed, and footer-aware states
+ok 130 - public widget implements the approved idle, hover, detailed, and footer-aware states
+  ---
+  duration_ms: 2.8729
+  ...
+# Subtest: production status imports never depend on retained POC directories
+ok 131 - production status imports never depend on retained POC directories
+  ---
+  duration_ms: 16.6787
+  ...
+# Subtest: primary public status links now resolve to the branded status center
+ok 132 - primary public status links now resolve to the branded status center
+  ---
+  duration_ms: 16.2033
+  ...
+# Subtest: full report preserves exact schema, precise values, canonical critical IDs, and source separation
+ok 133 - full report preserves exact schema, precise values, canonical critical IDs, and source separation
+  ---
+  duration_ms: 80.2851
+  ...
+# Subtest: component reports scope history and only explicitly associated official records
+ok 134 - component reports scope history and only explicitly associated official records
+  ---
+  duration_ms: 20.5734
+  ...
+# Subtest: missing component association metadata is described without claiming no historical impact
+ok 135 - missing component association metadata is described without claiming no historical impact
+  ---
+  duration_ms: 18.1788
+  ...
+# Subtest: partial source reports keep official and direct availability explicit
+ok 136 - partial source reports keep official and direct availability explicit
+  ---
+  duration_ms: 29.3134
+  ...
+# Subtest: older diagnostics never manufacture 5H or overall history
+ok 137 - older diagnostics never manufacture 5H or overall history
+  ---
+  duration_ms: 18.0717
+  ...
+# Subtest: stale PNG PDF and JSON report models retain history with explicit offline provenance
+ok 138 - stale PNG PDF and JSON report models retain history with explicit offline provenance
+  ---
+  duration_ms: 97.6467
+  ...
+# Subtest: report whitelist removes private fields and rejects forbidden key or local-path leakage
+ok 139 - report whitelist removes private fields and rejects forbidden key or local-path leakage
+  ---
+  duration_ms: 30.9656
+  ...
+# Subtest: filenames are stable and component-safe
+ok 140 - filenames are stable and component-safe
+  ---
+  duration_ms: 14.3612
+  ...
+# Subtest: native report renderers stay dependency-free, paginated, vector-printable, and provenance-complete
+ok 141 - native report renderers stay dependency-free, paginated, vector-printable, and provenance-complete
+  ---
+  duration_ms: 2.7183
+  ...
+# Subtest: production landing is Studio-first and preserves the production access contracts
+ok 142 - production landing is Studio-first and preserves the production access contracts
+  ---
+  duration_ms: 43.6044
+  ...
+# Subtest: production landing preserves the approved POC hero, bento modules, and authority map
+ok 143 - production landing preserves the approved POC hero, bento modules, and authority map
+  ---
+  duration_ms: 111.1317
+  ...
+# Subtest: approved typography is centralized without external font requests
+ok 144 - approved typography is centralized without external font requests
+  ---
+  duration_ms: 33.9711
+  ...
+# Subtest: About tells the current product story and keeps its manifest renderer hooks
+ok 145 - About tells the current product story and keeps its manifest renderer hooks
+  ---
+  duration_ms: 4.7648
+  ...
+# Subtest: functional shell connects to real product routes without changing route contracts
+ok 146 - functional shell connects to real product routes without changing route contracts
+  ---
+  duration_ms: 25.1131
+  ...
+# Subtest: application and standalone Public surfaces use the restrained premium polish layers
+ok 147 - application and standalone Public surfaces use the restrained premium polish layers
+  ---
+  duration_ms: 9.0109
+  ...
+# Subtest: POC references remain intact and obsolete live landing CSS is retired
+ok 148 - POC references remain intact and obsolete live landing CSS is retired
+  ---
+  duration_ms: 11.5769
+  ...
+# Subtest: download configuration is bounded and fails closed when locked
+ok 149 - download configuration is bounded and fails closed when locked
+  ---
+  duration_ms: 6.1567
+  ...
+# Subtest: signed HttpOnly access cookie expires and rejects tampering
+ok 150 - signed HttpOnly access cookie expires and rejects tampering
+  ---
+  duration_ms: 119.3169
+  ...
+# Subtest: bypass comparison is constant-shape and bounded request parsing rejects oversized input
+ok 151 - bypass comparison is constant-shape and bounded request parsing rejects oversized input
+  ---
+  duration_ms: 33.9517
+  ...
+# Subtest: manifest validation accepts only the canonical product channel architecture host and filename
+ok 152 - manifest validation accepts only the canonical product channel architecture host and filename
+  ---
+  duration_ms: 44.3311
+  ...
+# Subtest: product manifest is preferred and the deployed legacy path remains a bounded fallback
+ok 153 - product manifest is preferred and the deployed legacy path remains a bounded fallback
+  ---
+  duration_ms: 2.2522
+  ...
+# Subtest: current schema-v2 product release projects exact public metadata while locked
+ok 154 - current schema-v2 product release projects exact public metadata while locked
+  ---
+  duration_ms: 1.8414
+  ...
+# Subtest: manifest fallback is limited to unavailable or unsupported product contracts
+ok 155 - manifest fallback is limited to unavailable or unsupported product contracts
+  ---
+  duration_ms: 17.8623
+  ...
+# Subtest: direct R2 binding prefers a valid product manifest and reports its source
+ok 156 - direct R2 binding prefers a valid product manifest and reports its source
+  ---
+  duration_ms: 5.3847
+  ...
+# Subtest: direct R2 binding falls back only when the product manifest is missing or unsupported
+ok 157 - direct R2 binding falls back only when the product manifest is missing or unsupported
+  ---
+  duration_ms: 4.2256
+  ...
+# Subtest: direct R2 binding returns bounded precise read parse size and contract failures
+ok 158 - direct R2 binding returns bounded precise read parse size and contract failures
+  ---
+  duration_ms: 4.7014
+  ...
+# Subtest: Production fails explicitly when the R2 binding is missing and HTTP fallback remains local or Preview only
+ok 159 - Production fails explicitly when the R2 binding is missing and HTTP fallback remains local or Preview only
+  ---
+  duration_ms: 9.3978
+  ...
+# Subtest: optional system metadata may be absent but artifact identity remains strict
+ok 160 - optional system metadata may be absent but artifact identity remains strict
+  ---
+  duration_ms: 3.5138
+  ...
+# Subtest: release metadata stays visible while locked and controlled download fails closed
+ok 161 - release metadata stays visible while locked and controlled download fails closed
+  ---
+  duration_ms: 64.5617
+  ...
+# Subtest: access state reports configuration blockers without exposing the bypass secret
+ok 162 - access state reports configuration blockers without exposing the bypass secret
+  ---
+  duration_ms: 6.8105
+  ...
+# Subtest: local manifest fixture is strictly localhost-only
+ok 163 - local manifest fixture is strictly localhost-only
+  ---
+  duration_ms: 3.8507
+  ...
+# Subtest: static download route reuses access visuals, contains no secret, and exposes no raw installer URL
+ok 164 - static download route reuses access visuals, contains no secret, and exposes no raw installer URL
+  ---
+  duration_ms: 7.0574
+  ...
+# Subtest: Pages Function routes keep the bypass code server-side and normal downloads controlled
+ok 165 - Pages Function routes keep the bypass code server-side and normal downloads controlled
+  ---
+  duration_ms: 2.1229
+  ...
+# Subtest: deployment marker is nonsecret and identifies the exact public route
+ok 166 - deployment marker is nonsecret and identifies the exact public route
+  ---
+  duration_ms: 2.7745
+  ...
+# Subtest: Pages runtime declares the authoritative direct R2 bucket binding
+ok 167 - Pages runtime declares the authoritative direct R2 bucket binding
+  ---
+  duration_ms: 5.0144
+  ...
+# Subtest: production catalog is versioned, explicitly non-authoritative, and empty
+ok 168 - production catalog is versioned, explicitly non-authoritative, and empty
+  ---
+  duration_ms: 27.0367
+  ...
+# Subtest: strict catalog contract accepts bounded synthetic fixtures and rejects unsafe shapes
+ok 169 - strict catalog contract accepts bounded synthetic fixtures and rejects unsafe shapes
+  ---
+  duration_ms: 4.513
+  ...
+# Subtest: Extensions page and catalog fixture keep the dedicated plugin-store artwork
+ok 170 - Extensions page and catalog fixture keep the dedicated plugin-store artwork
+  ---
+  duration_ms: 1.4604
+  ...
+# Subtest: catalog text is preserved as text and the renderer never uses raw HTML
+ok 171 - catalog text is preserved as text and the renderer never uses raw HTML
+  ---
+  duration_ms: 3.5629
+  ...
+# Subtest: search, individual filters, combined filters, and sorting operate on safe fields
+ok 172 - search, individual filters, combined filters, and sorting operate on safe fields
+  ---
+  duration_ms: 2.4917
+  ...
+# Subtest: query parameters restore bounded state and clear to an empty query
+ok 173 - query parameters restore bounded state and clear to an empty query
+  ---
+  duration_ms: 1.8341
+  ...
+# Subtest: Extensions page exposes labelled controls, states, route aliases, and no production records
+ok 174 - Extensions page exposes labelled controls, states, route aliases, and no production records
+  ---
+  duration_ms: 2.3179
+  ...
+# Subtest: version reference is a canonical standalone public surface with the exact brand lockup
+ok 175 - version reference is a canonical standalone public surface with the exact brand lockup
+  ---
+  duration_ms: 14.4914
+  ...
+# Subtest: version reference consumes only the same-origin authoritative public registry route
+ok 176 - version reference consumes only the same-origin authoritative public registry route
+  ---
+  duration_ms: 2.6113
+  ...
+# Subtest: version reference renders and copies all public fields without fake local state
+ok 177 - version reference renders and copies all public fields without fake local state
+  ---
+  duration_ms: 3.8569
+  ...
+# Subtest: version page presentation is responsive, focus-visible, and reduced-motion aware
+ok 178 - version page presentation is responsive, focus-visible, and reduced-motion aware
+  ---
+  duration_ms: 1.6024
+  ...
+# Subtest: landing footer uses the same mark and wordmark as its header and links to version details
+ok 179 - landing footer uses the same mark and wordmark as its header and links to version details
+  ---
+  duration_ms: 5.2142
+  ...
+# Subtest: public data hub hydrates wheels from the authoritative live API first and reuses them for scoreboard mode
+ok 180 - public data hub hydrates wheels from the authoritative live API first and reuses them for scoreboard mode
+  ---
+  duration_ms: 4.2603
+  ...
+# Subtest: public wheels route preserves the shell and provides clean list/detail artifact routes
+ok 181 - public wheels route preserves the shell and provides clean list/detail artifact routes
+  ---
+  duration_ms: 65.1163
+  ...
+1..181
+# tests 181
+# suites 0
+# pass 181
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2673.138

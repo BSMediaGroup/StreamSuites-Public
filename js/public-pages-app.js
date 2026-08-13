@@ -1461,14 +1461,14 @@
     return button;
   }
 
-  function buildProfileCollapsibleSectionShell({ id, label, eyebrow = "Public profile", icon, meta = "", className = "", open = true }) {
+  function buildProfileCollapsibleSectionShell({ id, label, eyebrow = "", icon, meta = "", className = "", open = true }) {
     const details = create("details", `profile-authority-collapsible profile-content-collapsible${className ? ` ${className}` : ""}`);
     details.id = id;
     details.open = open;
     const summary = create("summary", "profile-authority-summary profile-content-summary");
     summary.id = `${id}-summary`;
     const action = create("span", "profile-authority-summary-action");
-    action.appendChild(create("span", "profile-section-eyebrow profile-content-summary-eyebrow", eyebrow));
+    if (eyebrow) action.appendChild(create("span", "profile-section-eyebrow profile-content-summary-eyebrow", eyebrow));
     const titleLine = create("span", "profile-content-summary-title-line");
     if (icon) titleLine.appendChild(createIcon(icon, "profile-authority-summary-action-icon"));
     const normalizedLabel = String(label || "Section").trim().toLowerCase();
@@ -13673,10 +13673,8 @@
   function buildProfileSectionHeading(eyebrowText, titleText, metaText = "") {
     const header = create("div", "profile-inline-header profile-section-heading");
     const copy = create("div", "profile-section-heading-copy");
-    copy.append(
-      create("span", "profile-section-eyebrow", eyebrowText),
-      create("h2", "", titleText)
-    );
+    if (eyebrowText) copy.appendChild(create("span", "profile-section-eyebrow", eyebrowText));
+    copy.appendChild(create("h2", "", titleText));
     header.appendChild(copy);
     if (metaText) header.appendChild(create("span", "profile-section-count", metaText));
     return header;
@@ -13689,14 +13687,13 @@
     const { details: section, panel } = buildProfileCollapsibleSectionShell({
       id: "profile-about",
       label: "ABOUT",
-      eyebrow: "Profile story",
       icon: "/assets/icons/ui/profilecard.svg",
       meta: aboutVideo ? "Story + video" : "Profile story",
       className: "profile-about-section",
       open: true
     });
     const header = buildProfileSectionHeading(
-      "Profile story",
+      "",
       "Expanded About"
     );
     header.querySelector("h2").id = "profile-about-title";
@@ -13727,9 +13724,9 @@
       `profile-about-layout profile-about-layout--${contentState}${aboutVideo ? " has-media" : ""}${contentState === "video-only" ? " is-video-only" : ""}`
     );
     layout.dataset.profileAboutState = contentState;
-    if (hasStory) layout.appendChild(story);
+    let presentation = null;
     if (aboutVideo) {
-      const presentation = create("div", "profile-about-video-presentation");
+      presentation = create("div", "profile-about-video-presentation");
       const meta = create("div", "profile-about-video-meta");
       const providerBadge = create("span", "profile-about-video-provider");
       if (aboutVideo.sourceType === "embed") {
@@ -13766,14 +13763,15 @@
       }
       presentation.append(meta, frame);
       if (aboutVideo.sourceType === "embed") {
-        const sourceLink = create("a", "profile-about-video-source-link profile-feature-action profile-feature-action--subtle", aboutVideo.externalActionLabel);
+        const sourceLink = create("a", "profile-about-video-source-link", aboutVideo.externalActionLabel);
         sourceLink.href = aboutVideo.sourceUrl;
         sourceLink.target = "_blank";
         sourceLink.rel = "noopener noreferrer";
         presentation.appendChild(sourceLink);
       }
-      layout.appendChild(presentation);
     }
+    if (presentation) layout.appendChild(presentation);
+    if (hasStory) layout.appendChild(story);
     panel.append(header, layout);
     return section;
   }
@@ -13788,10 +13786,10 @@
     const items = [["#profile-bio", "BIO"]];
     if (profileHasRenderableAbout(profile)) items.push(["#profile-about", "ABOUT"]);
     items.push(
-      ["#media", "MEDIA"],
-      ["#artifacts", "ARTIFACTS"],
-      ["#clips", "CLIPS"],
       ["#profile-identity", "IDENTITY"],
+      ["#media", "WATCH"],
+      ["#clips", "CLIPS"],
+      ["#artifacts", "ARTIFACTS"],
       ["#profile-presence", "PRESENCE"],
       ["#profile-safety", "SAFETY"]
     );
@@ -14003,13 +14001,12 @@
     const { details: section, panel } = buildProfileCollapsibleSectionShell({
       id: "profile-identity",
       label: "IDENTITY",
-      eyebrow: "Identity signals",
       icon: "/assets/icons/ui/idcardfilled.svg",
       meta: badges.length ? `${formatNumber(badges.length)} public badge${badges.length === 1 ? "" : "s"}` : "No public badges",
       className: "profile-badge-gallery-section",
       open: true
     });
-    const header = buildProfileSectionHeading("Identity signals", "Public badges", badges.length ? `${formatNumber(badges.length)} public` : "");
+    const header = buildProfileSectionHeading("", "Public badges", badges.length ? `${formatNumber(badges.length)} public` : "");
     header.querySelector("h2").id = "profile-identity-title";
     panel.appendChild(header);
 
@@ -14100,11 +14097,18 @@
     section.id = "profile-overview";
     section.setAttribute("aria-labelledby", "profile-overview-title");
     const header = buildProfileSectionHeading("At a glance", "Public overview");
+    header.classList.add("profile-overview-heading");
     header.querySelector("h2").id = "profile-overview-title";
+    header.querySelector(".profile-section-heading-copy")?.appendChild(create(
+      "p",
+      "profile-overview-intro",
+      "Identity, activity and progression in one public snapshot."
+    ));
 
     const details = create("dl", "profile-overview-definition-list");
-    const addRow = (label, value, pending = false) => {
-      const row = create("div", "profile-overview-definition-item");
+    const addRow = (label, value, { pending = false, kind = "activity", emphasis = false } = {}) => {
+      const row = create("div", `profile-overview-definition-item profile-overview-definition-item--${kind}${emphasis ? " is-emphasis" : ""}`);
+      row.dataset.profileOverviewMetric = kind;
       if (pending) row.classList.add("is-pending");
       const valueNode = create("dd", "profile-overview-value");
       if (value instanceof Node) valueNode.appendChild(value);
@@ -14113,23 +14117,23 @@
       details.appendChild(row);
     };
 
-    addRow("Tier", buildProfileTierChip(profile?.tier || "core"));
-    addRow("Artifacts", formatNumber(counts.total));
-    addRow("Clips", formatNumber(Array.isArray(clips) ? clips.length : 0));
-    addRow("Polls", formatNumber(counts.polls || 0));
-    addRow("Joined", formatProfileDate(profile?.joinedAt || profile?.createdAt, helpers) || "Pending public data", !profile?.joinedAt && !profile?.createdAt);
-    addRow("Profile type", buildProfileTypeChip(profile));
-    addRow("XP", overviewXpValue, !progression);
-    addRow("Level", overviewLevelValue, !progression);
-    addRow("Global Rank", overviewGlobalRankValue, !progression);
-    addRow("Balance", economy ? buildEconomyBalanceValue(economy, { compact: true }) : "Unavailable", !economy);
+    addRow("Tier", buildProfileTierChip(profile?.tier || "core"), { kind: "tier", emphasis: true });
+    addRow("Level", overviewLevelValue, { pending: !progression, kind: "level", emphasis: true });
+    addRow("XP", overviewXpValue, { pending: !progression, kind: "xp", emphasis: true });
+    addRow("Global Rank", overviewGlobalRankValue, { pending: !progression, kind: "rank", emphasis: true });
+    addRow("Artifacts", formatNumber(counts.total), { kind: "artifacts" });
+    addRow("Clips", formatNumber(Array.isArray(clips) ? clips.length : 0), { kind: "clips" });
+    addRow("Polls", formatNumber(counts.polls || 0), { kind: "polls" });
     addRow(
       "Inventory",
       profile?.inventoryAvailable
         ? displayInventory.length ? `${formatNumber(displayInventory.length)} item type${displayInventory.length === 1 ? "" : "s"}` : "Empty"
         : "Unavailable",
-      !profile?.inventoryAvailable
+      { pending: !profile?.inventoryAvailable, kind: "inventory" }
     );
+    addRow("Profile type", buildProfileTypeChip(profile), { kind: "profile" });
+    addRow("Joined", formatProfileDate(profile?.joinedAt || profile?.createdAt, helpers) || "Pending public data", { pending: !profile?.joinedAt && !profile?.createdAt, kind: "joined" });
+    addRow("Balance", economy ? buildEconomyBalanceValue(economy, { compact: true }) : "Unavailable", { pending: !economy, kind: "balance" });
 
     section.append(header, details);
     return section;
@@ -14147,14 +14151,14 @@
         stream.sourceUrl
       )
     );
+    const hasPublishedMedia = hasUsableStream || buildLatestStreamTrayEntries(stream).length > 0;
     const { details, panel } = buildProfileCollapsibleSectionShell({
       id: "media",
-      label: "MEDIA",
-      eyebrow: "Latest and recent",
+      label: "WATCH",
       icon: "/assets/icons/ui/visible.svg",
-      meta: hasUsableStream ? (stream?.isLive ? "Live now" : "Latest + recent") : "No current stream",
+      meta: hasPublishedMedia ? (stream?.isLive ? "Live now" : "Latest + recent") : "No media published",
       className: "profile-stream-collapsible profile-media-section",
-      open: true
+      open: hasPublishedMedia
     });
     panel.classList.add("profile-stream-panel");
     const card = create("article", `profile-latest-stream-card${hasUsableStream && stream?.isLive ? " is-live" : ""}${hasUsableStream ? "" : " is-empty"}`);
@@ -14537,11 +14541,10 @@
     const { details, panel } = buildProfileCollapsibleSectionShell({
       id: "artifacts",
       label: "ARTIFACTS",
-      eyebrow: "Progression and published work",
       icon: UI_ICON_MAP.gallery,
       meta: `${formatNumber(publicArtifacts.length)} published · ${formatNumber(scopedCount)} scoped board${scopedCount === 1 ? "" : "s"}`,
       className: "profile-artifacts-section",
-      open: true
+      open: false
     });
     panel.append(
       buildProfileGameCompetitionSection(profile, { canEdit }),
@@ -14610,7 +14613,6 @@
     const { details, panel } = buildProfileCollapsibleSectionShell({
       id: "clips",
       label: "CLIPS",
-      eyebrow: "Authoritative provenance",
       icon: "/assets/icons/ui/clipcards.svg",
       meta: gallery.status === "available" ? `${formatNumber(total)} public` : "Data unavailable",
       className: "profile-clips-section",
@@ -14718,13 +14720,12 @@
     const { details, panel } = buildProfileCollapsibleSectionShell({
       id: "profile-safety",
       label: "SAFETY",
-      eyebrow: "Controls and authority",
       icon: "/assets/icons/ui/shieldtick.svg",
       meta: authorityContext?.targetIdentityCode ? "Profile controls · authority requests" : "Authority target pending",
       className: "profile-safety-section",
       open: true
     });
-    const header = buildProfileSectionHeading("Profile controls & public authority", "Safety");
+    const header = buildProfileSectionHeading("", "Safety");
     header.querySelector("h2").id = "profile-safety-title";
     panel.appendChild(header);
     if (canEdit) {
@@ -14894,12 +14895,18 @@
     );
     profileCard.dataset.profileDensity = isContentRich ? "rich" : "sparse";
 
+    const aboutSection = buildProfileAboutSection(profile, canEdit, options);
+    if (aboutSection) profileCard.appendChild(aboutSection);
+
     const primaryGrid = create("div", "profile-body-grid profile-body-grid--overview-only");
     primaryGrid.appendChild(buildProfileOverviewPanel(profile, profileArtifacts, profileClips.all || [], options.helpers || null));
     profileCard.appendChild(primaryGrid);
-    const aboutSection = buildProfileAboutSection(profile, canEdit, options);
-    if (aboutSection) profileCard.appendChild(aboutSection);
+
+    profileCard.appendChild(buildProfileBadgeGallerySection(profile));
     profileCard.appendChild(buildProfileMediaSection(profile, options.helpers || null));
+    profileCard.appendChild(buildProfileClipsSection(profileClips, options.helpers || null));
+    profileCard.appendChild(buildProfileArtifactsSection(profile, profileArtifacts, canEdit, options.helpers || null));
+
     const socialGallery = buildProfileSocialGallerySection(profile);
     socialGallery.dataset.profileSocialVolume = socialEntries.length === 0
       ? "empty"
@@ -14909,9 +14916,7 @@
           ? "compact"
           : "gallery";
     profileCard.appendChild(socialGallery);
-    profileCard.appendChild(buildProfileArtifactsSection(profile, profileArtifacts, canEdit, options.helpers || null));
-    profileCard.appendChild(buildProfileClipsSection(profileClips, options.helpers || null));
-    profileCard.appendChild(buildProfileBadgeGallerySection(profile));
+
     const shareSection = create("section", "profile-utility-section");
     shareSection.classList.add("profile-share-links-section");
     shareSection.id = "profile-share";
@@ -14947,16 +14952,16 @@
 
   function renderStandaloneProfileLoadingUtilityBody(profileCard) {
     clear(profileCard);
+    profileCard.appendChild(buildProfileLoadingSection("About", 3));
     const primaryGrid = create("div", "profile-body-grid profile-body-grid--overview-only");
     primaryGrid.appendChild(buildProfileLoadingSection("Profile overview", 4));
     profileCard.appendChild(primaryGrid);
-    profileCard.appendChild(buildProfileLoadingSection("About", 3));
-    profileCard.appendChild(buildProfileLoadingSection("Media", 3));
-    profileCard.appendChild(buildProfileLoadingSection("Presence", 3));
-    profileCard.appendChild(buildProfileLoadingSection("Artifacts", 4));
-    profileCard.appendChild(buildProfileLoadingSection("Clips", 3));
     profileCard.appendChild(buildProfileLoadingSection("Identity", 3));
-    profileCard.appendChild(buildProfileLoadingSection("Share", 2));
+    profileCard.appendChild(buildProfileLoadingSection("Watch", 3));
+    profileCard.appendChild(buildProfileLoadingSection("Clips", 3));
+    profileCard.appendChild(buildProfileLoadingSection("Artifacts", 4));
+    profileCard.appendChild(buildProfileLoadingSection("Platform presence", 3));
+    profileCard.appendChild(buildProfileLoadingSection("Share profile", 2));
     profileCard.appendChild(buildProfileLoadingSection("Safety", 2));
   }
 
@@ -14972,8 +14977,7 @@
     const sentinel = shell.querySelector(".profile-section-nav-sentinel");
     const standaloneNav = shell.querySelector('[data-profile-nav-placement="standalone"]');
     const headerNav = shell.querySelector('[data-profile-nav-placement="header"]');
-    const sections = Array.from(shell.querySelectorAll("#profile-bio, #profile-about, #media, #artifacts, #clips, #profile-identity, #profile-presence, #profile-safety"));
-    const visibleSections = new Map();
+    const sections = Array.from(shell.querySelectorAll("#profile-bio, #profile-about, #profile-identity, #media, #clips, #artifacts, #profile-presence, #profile-safety"));
     const legacyProfileAnchors = new Map([
       ["#profile-live", "#media"],
       ["#stream", "#media"],
@@ -15047,19 +15051,20 @@
     };
 
     const selectVisibleSection = () => {
-      const active = sections
-        .filter((section) => visibleSections.get(section)?.isIntersecting)
-        .sort((left, right) => {
-          const leftEntry = visibleSections.get(left);
-          const rightEntry = visibleSections.get(right);
-          return Math.abs(leftEntry.boundingClientRect.top) - Math.abs(rightEntry.boundingClientRect.top);
-        })[0];
+      const headerBottom = header instanceof HTMLElement ? header.getBoundingClientRect().bottom : 0;
+      const activeLine = headerBottom + 32;
+      let active = sections[0] || null;
+      for (const section of sections) {
+        if (section.getBoundingClientRect().top > activeLine) break;
+        active = section;
+      }
+      const atDocumentEnd = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+      if (atDocumentEnd && sections.length) active = sections[sections.length - 1];
       if (active) setActiveSection(active.id);
     };
 
     const observeNavigation = () => {
       navigationObserver?.disconnect();
-      visibleSections.clear();
       if (!(header instanceof HTMLElement) || !(sentinel instanceof HTMLElement) || typeof IntersectionObserver !== "function") return;
       const headerHeight = Math.ceil(header.getBoundingClientRect().height);
       navigationObserver = new IntersectionObserver((entries) => {
@@ -15068,7 +15073,6 @@
             setDocked(!entry.isIntersecting && entry.boundingClientRect.top < headerHeight);
             return;
           }
-          visibleSections.set(entry.target, entry);
         });
         selectVisibleSection();
       }, {
@@ -15088,6 +15092,7 @@
       if (sentinel instanceof HTMLElement && header instanceof HTMLElement) {
         setDocked(sentinel.getBoundingClientRect().top < header.getBoundingClientRect().bottom);
       }
+      selectVisibleSection();
     };
     const onScroll = () => {
       if (!frame) frame = window.requestAnimationFrame(update);

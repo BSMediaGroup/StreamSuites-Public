@@ -6,6 +6,20 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-14 - Public-profile overview and interaction correction
+
+#### Technical notes
+
+- Replaced the first-pass Overview table treatment with a premium continuous 12-column definition-list composition. Four emphasized identity/progression facts, four activity facts, and three account-context facts now share one layered full-width surface with restrained dividers, deliberate responsive spans, left-aligned values, and no nested metric cards or boxed mini-containers; a compound wrapper rule prevents tablet layouts from shrinking it into a half-width column.
+- Simplified primary/feature and StreamSuites header-mark gradients to exactly the selected theme's two core colours. Rest and hover use opposing 135-degree/315-degree directions, while theme-coloured shadow, slight brightness, and saturation make the hover state visible without multi-stop white-heavy spectra.
+- Removed the redundant red eyebrow line from the About, Watch, Artifacts, Clips, Identity, and Safety feature-card headings. Reordered the cards to About, Public Overview, Identity, Watch, Clips, Artifacts, Platform Presence, Share Profile, and Safety; the shared standalone/header navigation registry follows that same scroll order, live document geometry prevents stale scrollspy reversals, and navigation hover/focus tint uses the active profile theme.
+- Matched Edit story typography to Edit profile, placed About video before story text in the desktop split and responsive stack, and replaced the About provider action treatment with a discreet underlined attribution link. Watch opens initially only when current, latest, or secondary media exists; empty Watch and the Artifacts section stay collapsed until explicitly opened through their header or navigation.
+- Extended focused source/CSS coverage for the upgraded Overview hierarchy, two-colour directional gradients, heading removal, section/navigation order and tint, About media ordering, matched editing controls, polished source attribution, content-aware Watch state, and the collapsed Artifacts default. Runtime/Auth contracts, profile data, canonical/legacy anchors, and the accepted hero/header layout remain unchanged.
+
+#### Human-readable summary
+
+The profile Overview now feels like a deliberate premium identity snapshot instead of an unfinished table. The page flows from About through Overview, Identity, Watch, Clips, Artifacts, Presence, sharing, and Safety; empty Watch and Artifacts stay out of the way, and theme hovers are strong, simple two-colour transitions.
+
 ### 2026-08-14 - Completed public-profile content restructure
 
 #### Technical notes

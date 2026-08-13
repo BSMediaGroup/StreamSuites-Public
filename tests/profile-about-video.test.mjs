@@ -56,12 +56,14 @@ test("public CSP permits only the required validated player and retained first-p
 });
 
 test("profile video shell is themed responsive and overflow-safe", () => {
+  const app = read("js/public-pages-app.js");
   const css = read("css/public-profile.css");
   assert.match(css, /\.profile-about-video-frame\s*\{[\s\S]*aspect-ratio:\s*16\s*\/\s*9/);
   assert.match(css, /\.profile-about-video-iframe\s*\{[\s\S]*width:\s*100%[\s\S]*height:\s*100%/);
   assert.match(css, /var\(--profile-gradient-b\)/);
   assert.match(css, /\.profile-about-provider-selector\s*\{[\s\S]*grid-template-columns/);
-  assert.match(css, /\.profile-about-layout\.has-media\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1\.22fr\) minmax\(320px, 0\.92fr\)/);
+  assert.match(css, /\.profile-about-layout\.has-media\s*\{[\s\S]*grid-template-columns:\s*minmax\(320px, 0\.96fr\) minmax\(0, 1\.14fr\)/);
+  assert.match(app, /if \(presentation\) layout\.appendChild\(presentation\);\s*if \(hasStory\) layout\.appendChild\(story\)/);
   assert.match(css, /\.profile-about-layout\.is-video-only\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/);
   assert.match(css, /\.profile-about-layout--video-only \.profile-about-video-presentation\s*\{[\s\S]*width:\s*min\(100%, 1120px\)/);
   assert.match(css, /@media \(max-width: 900px\)[\s\S]*\.profile-about-layout\.has-media \{ grid-template-columns: 1fr/);

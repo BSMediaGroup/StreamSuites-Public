@@ -692,7 +692,7 @@ test("public scoped platform icons and stable latest stream layout are pinned", 
   assert.match(css, /\.progression-leaderboard-gallery-top-row/);
 });
 
-test("public profile overview table uses the same runtime progression summary as games", () => {
+test("public profile overview surface uses the same runtime progression summary as games", () => {
   const app = read("js/public-pages-app.js");
   const overviewSection = app.match(/function buildProfileOverviewPanel\(profile, artifacts, clips, helpers\) \{[\s\S]*?return section;\r?\n  \}/)?.[0] || "";
   assert.ok(overviewSection, "profile overview section should exist");
@@ -702,10 +702,10 @@ test("public profile overview table uses the same runtime progression summary as
   assert.match(overviewSection, /buildProgressionXpValue\(progression\.xp_total \?\? progression\.total_xp \?\? 0, \{ compact: true \}\)/);
   assert.match(overviewSection, /buildProgressionLevelChip\(progression, \{ compact: true \}\)/);
   assert.match(overviewSection, /buildProgressionGlobalRankValue\(progression, \{ compact: true, emptyLabel: "Unranked" \}\)/);
-  assert.match(overviewSection, /addRow\("XP", overviewXpValue, !progression\)/);
-  assert.match(overviewSection, /addRow\("Level", overviewLevelValue, !progression\)/);
-  assert.match(overviewSection, /addRow\("Global Rank", overviewGlobalRankValue, !progression\)/);
-  assert.match(overviewSection, /addRow\("Balance", economy \? buildEconomyBalanceValue\(economy, \{ compact: true \}\) : "Unavailable", !economy\)/);
+  assert.match(overviewSection, /addRow\("XP", overviewXpValue, \{ pending: !progression, kind: "xp", emphasis: true \}\)/);
+  assert.match(overviewSection, /addRow\("Level", overviewLevelValue, \{ pending: !progression, kind: "level", emphasis: true \}\)/);
+  assert.match(overviewSection, /addRow\("Global Rank", overviewGlobalRankValue, \{ pending: !progression, kind: "rank", emphasis: true \}\)/);
+  assert.match(overviewSection, /addRow\("Balance", economy \? buildEconomyBalanceValue\(economy, \{ compact: true \}\) : "Unavailable", \{ pending: !economy, kind: "balance" \}\)/);
   assert.match(overviewSection, /profile\?\.inventoryAvailable[\s\S]*displayInventory\.length \? `\$\{formatNumber\(displayInventory\.length\)\} item type/);
   assert.doesNotMatch(overviewSection, /addRow\("XP", "Pending", true\)/);
   assert.doesNotMatch(overviewSection, /addRow\("Rank", "Pending", true\)/);
