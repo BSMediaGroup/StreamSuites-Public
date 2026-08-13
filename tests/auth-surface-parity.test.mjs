@@ -329,8 +329,8 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /const media = create\("div", "profile-hero-media"\)/);
   assert.match(app, /identity\.id = "profile-bio"/);
   assert.match(app, /function buildProfileAboutSection\(profile, canEdit, options = \{\}\)/);
-  assert.match(app, /section\.id = "profile-about"/);
-  assert.match(app, /String\(profile\?\.about \|\| ""\)\.trim\(\)/);
+  assert.match(app, /id: "profile-about"/);
+  assert.match(app, /profile\?\.aboutEnabled === false/);
   assert.match(app, /buildStandaloneProfileHeader\(profile, authState, options = \{\}\)/);
   assert.match(app, /const socialRail = buildProfileHeaderSocialRail\(profile\?\.socialLinks\)/);
   assert.match(app, /if \(socialRail\) right\.appendChild\(socialRail\)/);
@@ -348,23 +348,23 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.doesNotMatch(app, /buildStandaloneProfileReturnFooter/);
   assert.ok(standaloneUtilityBlock, "standalone profile utility body should exist");
   assert.ok(standaloneLoadingBlock, "standalone profile loading utility body should exist");
-  assert.match(standaloneUtilityBlock, /profileCard\.appendChild\(buildLatestStreamSection\(profile, options\.helpers \|\| null\)\)/);
+  assert.match(standaloneUtilityBlock, /profileCard\.appendChild\(buildProfileMediaSection\(profile, options\.helpers \|\| null\)\)/);
   assert.match(standaloneUtilityBlock, /buildProfileOverviewPanel\(profile, profileArtifacts/);
-  assert.match(standaloneUtilityBlock, /profileCard\.appendChild\(buildProfileAboutSection\(profile, canEdit, options\)\)/);
-  assert.match(standaloneUtilityBlock, /buildProfileMiniArtifactGallery\(profileArtifacts, canEdit/);
-  assert.match(standaloneUtilityBlock, /profileCard\.appendChild\(buildProfileBadgeGallerySection\(profile\)\)[\s\S]*profileCard\.appendChild\(buildProfileGameCompetitionSection\(profile, \{ canEdit \}\)\)/);
+  assert.match(standaloneUtilityBlock, /const aboutSection = buildProfileAboutSection\(profile, canEdit, options\)/);
+  assert.match(standaloneUtilityBlock, /buildProfileArtifactsSection\(profile, profileArtifacts, canEdit/);
+  assert.match(standaloneUtilityBlock, /buildProfileClipsSection\(profileClips/);
+  assert.match(standaloneUtilityBlock, /buildProfileArtifactsSection[\s\S]*buildProfileClipsSection[\s\S]*buildProfileBadgeGallerySection/);
   assert.match(standaloneUtilityBlock, /const socialGallery = buildProfileSocialGallerySection\(profile\)/);
-  assert.match(standaloneUtilityBlock, /if \(socialGallery\) grid\.appendChild\(socialGallery\)/);
-  assert.match(standaloneUtilityBlock, /buildProfileGameCompetitionSection\(profile, \{ canEdit \}\)/);
+  assert.match(standaloneUtilityBlock, /profileCard\.appendChild\(socialGallery\)/);
   assert.match(standaloneUtilityBlock, /buildProfileShareSection\(profile, \{ compact: true \}\)/);
-  assert.match(standaloneUtilityBlock, /buildCollapsedAuthorityRequestPanel\(resolveProfileAuthorityContext\(profile\)/);
+  assert.match(standaloneUtilityBlock, /buildProfileSafetySection\(profile, canEdit/);
   assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("About", 3\)/);
   assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("Profile overview", 4\)/);
-  assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("Public work", 3\)/);
-  assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("Public badges", 3\)/);
-  assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("Game & Competition", 4\)/);
+  assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("Artifacts", 4\)/);
+  assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("Clips", 3\)/);
+  assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("Identity", 3\)/);
   assert.match(app, /if \(options\.loadingSections === true\) \{/);
-  assert.match(app, /function buildLatestStreamSection\(profile, helpers\)/);
+  assert.match(app, /function buildProfileMediaSection\(profile, helpers\)/);
   assert.match(app, /alternate_sources|alternateSources/);
   assert.match(app, /const STREAM_SOURCE_PRIORITY = Object\.freeze\(\["kick", "rumble", "youtube", "twitch"\]\)/);
   assert.match(app, /function buildLatestStreamSourceEntries\(profile, stream, hasUsableStream\)/);
@@ -374,7 +374,9 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /profile-latest-stream-placeholder-card/);
   assert.match(app, /media\.classList\.add\("is-fallback-preview"\)/);
   assert.match(app, /const hasUsableStream = Boolean/);
-  assert.match(app, /details\.open = hasUsableStream/);
+  assert.match(app, /id: "media"[\s\S]*label: "MEDIA"/);
+  assert.match(app, /profile-media-tray-viewport/);
+  assert.match(profileCss, /scroll-snap-type:\s*inline mandatory/);
   assert.match(app, /No livestream data available/);
   assert.match(app, /label\.textContent = details\.open \? "Collapse" : "Expand"/);
   assert.match(app, /resolveLatestStreamEmbedUrl\(stream\)/);
@@ -416,9 +418,8 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /create\("span", "", formatProfileLinkLabel\(entry\.url\)\)/);
   assert.match(app, /function buildProfileGameCompetitionSection\(profile = null, options = \{\}\)/);
   assert.match(app, /if \(!label\) return create\("span", className, options\.emptyLabel \|\| "Unranked"\)/);
-  assert.match(app, /details\.open = hasGameData/);
-  assert.match(app, /GAME & COMPETITION/);
-  assert.match(app, /gamecontroller\.svg/);
+  assert.match(app, /profile-artifacts-progression profile-game-collapsible/);
+  assert.match(app, /Progression & inventory/);
   assert.match(app, /XP, level, wallet balance, and inventory hydrate from runtime public authority/);
   assert.match(app, /Seasonal standings remain deferred/);
   assert.doesNotMatch(app, /addRow\("StreamSuites"/);
@@ -440,7 +441,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /icon\.setAttribute\("aria-hidden", "true"\)/);
   assert.doesNotMatch(app, /details\.open \? 'url\("\/assets\/icons\/ui\/visible\.svg"\)' : 'url\("\/assets\/icons\/ui\/hidden\.svg"\)'/);
   assert.match(app, /details\.addEventListener\("toggle", sync\)/);
-  assert.match(app, /PUBLIC AUTHORITY/);
+  assert.match(app, /Profile controls & public authority/);
   assert.doesNotMatch(standaloneUtilityBlock, /shareTitle\.prepend/);
   assert.match(app, /function buildNativeShareButton\(url, label\)/);
   assert.match(app, /buildShareBox\(url, \{ label, iconPath, compact: true, displayUrl: formatProfileLinkLabel\(url\) \}\)/);
@@ -555,14 +556,14 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(profileCss, /@media \(forced-colors: active\)/);
   assert.doesNotMatch(statusCss, /body\[data-public-page="public-profile-standalone"\] \.profile-footer-status-slot/);
 
-  assert.match(profileHtml, /href="\/css\/public-profile\.css\?v=20260814-profile-chrome"/);
+  assert.match(profileHtml, /href="\/css\/public-profile\.css\?v=20260814-profile-restructure"/);
   assert.match(profileHtml, /href="\/css\/status-widget\.css\?v=20260813-profile-footer"/);
-  assert.match(profileHtml, /src="\/js\/public-pages-app\.js\?v=20260814-profile-chrome"/);
+  assert.match(profileHtml, /src="\/js\/public-pages-app\.js\?v=20260814-profile-restructure"/);
   assert.match(profileHtml, /class="profile-skip-link" href="#profile-main"/);
   assert.match(profileHtml, /<footer class="profile-site-footer" data-profile-shell-footer>/);
   assert.match(profileHtml, /class="profile-site-footer__status" data-status-slot/);
   assert.doesNotMatch(profileHtml, /data-status-slot-mode="inline"/);
-  assert.match(profileHtml, /Public work/);
+  assert.match(profileHtml, /Artifacts/);
   assert.match(profileHtml, /Community/);
 });
 
@@ -737,7 +738,7 @@ test("standalone profiles keep canonical metadata and truthful adaptive states",
   assert.match(app, /error\.status = 502;[\s\S]*error\.code = "profile_payload_malformed"/);
   assert.match(app, /if \(error\?\.status === 404\) renderProfileNotFound\(host, profileCode, renderOptions\);[\s\S]*else renderProfileLoadError\(host, profileCode, renderOptions\)/);
   assert.match(app, /const fallbackProfile = initialPayload \? null : localProfile \|\| null/);
-  assert.match(app, /grid\.dataset\.profileSocialVolume = socialEntries\.length === 0/);
+  assert.match(app, /socialGallery\.dataset\.profileSocialVolume = socialEntries\.length === 0/);
   assert.match(profileCss, /data-profile-social-volume="gallery"/);
   assert.match(profileCss, /data-artifact-volume="single"/);
   assert.match(profileCss, /data-profile-live-state="live"/);
@@ -747,13 +748,19 @@ test("standalone profiles keep canonical metadata and truthful adaptive states",
   assert.match(profileFunction, /<link rel="canonical" href="\$\{escapeHtml\(meta\.ogUrl\)\}"/);
 });
 
-test("standalone profile detail flow keeps stream and identity ahead of public work", () => {
+test("standalone profile detail flow follows the canonical restructured order", () => {
   const app = read("js/public-pages-app.js");
   const utilityBody = app.match(/function renderStandaloneProfileUtilityBody\(profileCard, profile, canEdit, options = \{\}\) \{[\s\S]*?\r?\n  \}\r?\n\r?\n  function buildProfileLoadingSection/)?.[0] || "";
-  const streamIndex = utilityBody.indexOf("buildLatestStreamSection");
-  const badgeIndex = utilityBody.indexOf("buildProfileBadgeGallerySection");
-  const artifactIndex = utilityBody.indexOf("buildProfileMiniArtifactGallery");
-  assert.ok(streamIndex >= 0 && badgeIndex > streamIndex && artifactIndex > badgeIndex);
+  const overviewIndex = utilityBody.indexOf("buildProfileOverviewPanel");
+  const mediaIndex = utilityBody.indexOf("buildProfileMediaSection");
+  const presenceIndex = utilityBody.indexOf("buildProfileSocialGallerySection");
+  const artifactIndex = utilityBody.indexOf("buildProfileArtifactsSection");
+  const clipsIndex = utilityBody.indexOf("buildProfileClipsSection");
+  const identityIndex = utilityBody.indexOf("buildProfileBadgeGallerySection");
+  const shareIndex = utilityBody.indexOf("buildProfileShareSection");
+  const safetyIndex = utilityBody.indexOf("buildProfileSafetySection");
+  assert.ok(overviewIndex >= 0 && mediaIndex > overviewIndex && presenceIndex > mediaIndex && artifactIndex > presenceIndex);
+  assert.ok(clipsIndex > artifactIndex && identityIndex > clipsIndex && shareIndex > identityIndex && safetyIndex > shareIndex);
 });
 
 test("public badge surfaces share the floating badge-tooltip helper", () => {
@@ -814,4 +821,39 @@ test("community member gallery cards keep slug-first handles and the cleaned too
   assert.match(css, /\.member-gallery-card-artifact-count/);
   assert.match(css, /\.member-gallery-card-social-icon-image/);
   assert.match(css, /\.social-overflow-indicator/);
+});
+
+test("standalone public profile uses the authoritative restructured section contract", () => {
+  const app = read("js/public-pages-app.js");
+  const dataHub = read("js/public-data-hub.js");
+  const css = read("css/public-profile.css");
+
+  assert.match(app, /aboutEnabled = firstBoolean\([\s\S]*payload\?\.about_enabled[\s\S]*true/);
+  assert.match(app, /about_enabled: aboutVisibilityInput\.checked/);
+  assert.match(app, /if \(profile\?\.aboutEnabled === false \|\| !hasPublishedStory\) return null/);
+  assert.match(app, /\["#media", "MEDIA"\][\s\S]*\["#artifacts"[\s\S]*\["#clips", "CLIPS"\]/);
+  assert.match(app, /function buildProfileOverviewPanel\(profile, artifacts, clips, helpers\)/);
+  assert.match(app, /create\("dl", "profile-overview-definition-list"\)/);
+  assert.match(app, /currentOverview\.replaceWith\(buildProfileOverviewPanel\(profile, artifacts, clipGallery\?\.all \|\| \[\], helpers\)\)/);
+  assert.match(app, /profile-section-eyebrow profile-content-summary-eyebrow/);
+  assert.match(app, /profile-content-summary-title/);
+  assert.match(app, /function buildSecondaryMediaTray/);
+  assert.match(app, /function buildProfileArtifactsSection/);
+  assert.match(app, /function buildProfileClipsSection/);
+  assert.match(app, /Channel clips/);
+  assert.match(app, /Clips created/);
+  assert.match(app, /function profileClipPageCapacity\(\)[\s\S]*return 12[\s\S]*return 9[\s\S]*return 6[\s\S]*return 3/);
+  assert.match(app, /\["#profile-live", "#media"\]/);
+  assert.match(app, /\["#public-work", "#artifacts"\]/);
+  assert.match(app, /panel\.inert = !details\.open/);
+  assert.match(app, /querySelectorAll\("video, audio"\)/);
+  assert.match(app, /function buildProfileSafetySection/);
+  assert.doesNotMatch(dataHub.match(/function buildProfileArtifacts\(data, profileId\)[\s\S]*?return sortByUpdated\(artifacts\);/)?.[0] || "", /"clips"/);
+  assert.match(css, /\.profile-media-tray-viewport[\s\S]*scroll-snap-type:\s*inline mandatory/);
+  assert.match(css, /html\[data-profile-page="active"\] body \.profile-media-tray-viewport[\s\S]*scrollbar-width:\s*none/);
+  assert.match(css, /profile-content-summary \.profile-authority-summary-action[\s\S]*border:\s*0/);
+  assert.match(css, /--profile-action-primary-hover-bg:\s*linear-gradient\([\s\S]*var\(--profile-gradient-hover-e\)[\s\S]*var\(--profile-gradient-hover-b\)[\s\S]*var\(--profile-gradient-c\)/);
+  assert.match(css, /profile-overlay-brand:hover[\s\S]*profile-overlay-brand-logo[\s\S]*radial-gradient\([\s\S]*profile-gradient-hover-b/);
+  assert.match(css, /profile-feature-action--primary:hover[\s\S]*background:\s*var\(--profile-action-primary-hover-bg\)/);
+  assert.match(css, /@media \(min-width: 1600px\)[\s\S]*profile-clips-grid/);
 });

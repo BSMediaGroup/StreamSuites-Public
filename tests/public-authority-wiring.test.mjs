@@ -627,7 +627,7 @@ test("public profile game section renders runtime progression and economy author
 test("public scoped platform icons and stable latest stream layout are pinned", () => {
   const app = read("js/public-pages-app.js");
   const hub = read("js/public-data-hub.js");
-  const css = read("css/public-shell.css");
+  const css = read("css/public-shell.css") + read("css/public-profile.css");
   assert.match(app, /SCOPED_PLATFORM_ICON_MAP = Object\.freeze/);
   ["kick", "youtube", "rumble", "twitch", "pilled", "global", "unknown"].forEach((key) => {
     assert.match(app, new RegExp(`${key}:`));
@@ -645,8 +645,8 @@ test("public scoped platform icons and stable latest stream layout are pinned", 
   assert.match(app, /const icon = create\("img", `\$\{className\}-icon`\)/);
   assert.match(app, /label\.textContent = details\.open \? "Collapse" : "Expand"/);
   assert.match(app, /icon\.src = details\.open \? "\/assets\/icons\/ui\/visible\.svg" : "\/assets\/icons\/ui\/hidden\.svg"/);
-  assert.match(app, /summary\.append\(action, meta, buildProfileCollapsibleToggle\(details\)\)/);
-  assert.match(app, /summary\.append\(action, scopeWrap, buildProfileCollapsibleToggle\(details\)\)/);
+  assert.match(app, /summary\.append\(action, summaryMeta, buildProfileCollapsibleToggle\(details\)\)/);
+  assert.match(app, /header\.append\(action, scopeWrap\)/);
   assert.doesNotMatch(app, /hasUsableStream \? stream\?\.platformLabel : "No data available"/);
   assert.doesNotMatch(app, /hasUsableStream \? \(stream\?\.isLive \? "Current live" : "Featured source"\) : "Expand for details"/);
   assert.match(css, /\.profile-collapsible-toggle\s*\{[\s\S]*border-radius:\s*999px/);
@@ -672,9 +672,9 @@ test("public scoped platform icons and stable latest stream layout are pinned", 
   assert.match(css, /\.profile-latest-stream-card\s*\{[\s\S]*grid-template-columns:\s*minmax\(320px, 1\.18fr\) minmax\(0, 0\.82fr\)/);
   assert.match(css, /\.profile-stream-panel\s*\{[\s\S]*display:\s*grid[\s\S]*gap:\s*10px/);
   assert.match(css, /\.profile-latest-stream-source-card\s*\{/);
-  assert.match(css, /\.profile-latest-stream-thumbnails\s*\{[\s\S]*grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/);
-  assert.match(css, /\.profile-latest-stream-thumbnails\s*\{[\s\S]*overflow-x:\s*auto/);
-  assert.match(css, /\.profile-latest-stream-thumbnails\s*\{[\s\S]*border:\s*1px solid rgba\(203, 219, 246, 0\.13\)/);
+  assert.match(css, /\.profile-media-tray-viewport\s*\{[\s\S]*overflow-x:\s*auto/);
+  assert.match(css, /\.profile-media-tray-track\s*\{[\s\S]*display:\s*flex/);
+  assert.match(css, /\.profile-media-tray-track \.profile-latest-stream-thumb\s*\{[\s\S]*scroll-snap-align:\s*start/);
   assert.match(css, /\.profile-latest-stream-thumbnails-empty\s*\{[\s\S]*border:\s*1px dashed rgba\(203, 219, 246, 0\.16\)/);
   assert.match(css, /\.profile-latest-stream-thumbnails-empty::before/);
   assert.match(css, /\.profile-latest-stream-body\s*\{[\s\S]*align-content:\s*start/);
@@ -694,7 +694,7 @@ test("public scoped platform icons and stable latest stream layout are pinned", 
 
 test("public profile overview table uses the same runtime progression summary as games", () => {
   const app = read("js/public-pages-app.js");
-  const overviewSection = app.match(/function buildProfileOverviewPanel\(profile, artifacts, helpers\) \{[\s\S]*?return section;\r?\n  \}/)?.[0] || "";
+  const overviewSection = app.match(/function buildProfileOverviewPanel\(profile, artifacts, clips, helpers\) \{[\s\S]*?return section;\r?\n  \}/)?.[0] || "";
   assert.ok(overviewSection, "profile overview section should exist");
   assert.match(overviewSection, /const progression = profile\?\.progression && typeof profile\.progression === "object" \? profile\.progression : null/);
   assert.match(overviewSection, /const economy = profile\?\.economy && typeof profile\.economy === "object" \? profile\.economy : null/);

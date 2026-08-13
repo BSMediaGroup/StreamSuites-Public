@@ -6,6 +6,21 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-14 - Completed public-profile content restructure
+
+#### Technical notes
+
+- Reordered the standalone profile into one deliberate hierarchy: integrated Overview, optional About, Media, Presence, unified Artifacts, dedicated Clips, Identity, Share, and combined Safety. About, Media, Artifacts, Clips, Identity, and Safety share accessible collapse behavior; navigation opens its target, closed content becomes inert, media pauses, and legacy stream/public-work/game hashes resolve to their canonical sections.
+- Renamed Stream to Media and retained the latest/current player while adding a real-data secondary-media scroll-snap tray with visible previous/next controls and a hidden native scrollbar. Merged public work, progression/inventory, scoped boards, and paginated non-clip work into Artifacts without removing the existing level backgrounds, item details, modal, or scoped-board behavior.
+- Added separate Channel clips and Clips created tabs driven by Runtime/Auth provenance, with truthful unavailable/empty states, responsive pagination capped at three card rows, no fabricated metrics, and no title-based ownership inference. Overview now uses one semantic definition list, and the former standalone owner-controls card is folded into Safety with public authority requests.
+- Preserved the newer profile card-header language across every collapsible section: eyebrow and display title remain integrated into the card, metadata stays unboxed, and the collapse action is flat rather than inheriting the retired authority-pill treatment. Late artifact hydration now refreshes Overview totals as well as the Artifacts and Clips sections.
+- Restored a clearly visible theme-colored gradient on feature/primary hover states and the header brand icon. The hover spectrum now uses each preset's saturated and dark color stops for contrast while keeping white limited to a restrained highlight instead of washing out the gradient.
+- Added the authoritative About visibility control to the Public owner editor. The public card and About navigation are omitted when disabled while saved text/video remain available to the owner. No deployment, version/build change, commit, or push was performed.
+
+#### Human-readable summary
+
+Public profiles now read as one cohesive page instead of a stack of separate dashboards. Media, published artifacts, and clips have clear homes, and creators can hide their expanded About story without deleting it.
+
 ### 2026-08-14 - Blinker body typography
 
 #### Technical notes

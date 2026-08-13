@@ -1250,6 +1250,14 @@
     const routeId =
       firstArtifactIdentifier(raw, ["public_slug", "slug", "clip_slug", "clipSlug", "canonical_id", "canonicalId"]) || id;
     const profile = resolveProfileRef(raw?.creator, profiles);
+    const declaredRelationship = String(raw?.profile_relationship || raw?.profileRelationship || raw?.relationship || "").trim().toLowerCase();
+    const profileRelationship = declaredRelationship === "created" || declaredRelationship === "clips_created"
+      ? "created"
+      : declaredRelationship === "channel" || declaredRelationship === "channel_clip" || declaredRelationship === "channel_clips"
+        ? "channel"
+        : raw?.creator
+          ? "channel"
+          : "";
     const mediaUrl = raw?.media_url || raw?.video_url || raw?.url || null;
     const removal = resolveRemovalState(raw);
 
@@ -1282,6 +1290,8 @@
       profileId: profile.id,
       profileCode: profile.publicSlug || profile.userCode || profile.username || profile.id,
       creator: profile,
+      profileRelationship,
+      sourceChannel: String(raw?.source_channel || raw?.sourceChannel || raw?.channel_name || raw?.channelName || profile?.displayName || "").trim(),
       authorityArtifact:
         authorityArtifactCode && authorityArtifacts?.byCode?.has(authorityArtifactCode)
           ? authorityArtifacts.byCode.get(authorityArtifactCode)
@@ -1703,7 +1713,7 @@
 
   function buildProfileArtifacts(data, profileId) {
     const artifacts = [];
-    ["clips", "polls", "scoreboards", "tallies"].forEach((key) => {
+    ["polls", "wheels", "scoreboards", "tallies"].forEach((key) => {
       (data[key] || []).forEach((item) => {
         if (item.profileId === profileId && !item.isRemoved) artifacts.push(item);
       });
@@ -1773,7 +1783,7 @@
       });
 
       const artifactsByProfile = profileList.reduce((acc, profile) => {
-        const artifacts = buildProfileArtifacts({ clips, polls, wheels, tallies }, profile.id);
+        const artifacts = buildProfileArtifacts({ polls, wheels, scoreboards, tallies }, profile.id);
         [
           profile?.id,
           profile?.publicSlug,
