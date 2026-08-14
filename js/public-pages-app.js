@@ -7684,14 +7684,27 @@
     const wheelStageWrap = create("section", "wheel-stage-wrap wheel-arena-card");
     const stageHeader = create("header", "wheel-arena-header");
     const stageHeading = create("div", "wheel-arena-heading");
+    const stageDescription = String(item?.summary || item?.description || "").trim();
     stageHeading.append(
       create("span", "wheel-console-eyebrow", "Wheel arena"),
-      create("h2", "wheel-arena-title", spinOwnerOnly ? "Owner-locked public session" : "Public wheel session")
+      create("h1", "wheel-arena-title", item?.title || item?.question || "Wheel")
+    );
+    if (stageDescription) {
+      stageHeading.appendChild(create("p", "wheel-arena-description", stageDescription));
+    }
+    const stageHeaderActions = create("div", "wheel-arena-header-actions");
+    stageHeaderActions.appendChild(
+      create(
+        "span",
+        "wheel-console-policy-chip wheel-arena-policy-chip",
+        spinOwnerOnly ? "Owner controls spins" : "Public session"
+      )
     );
     const entrantsJumpButton = create("button", "wheel-console-quiet-button", "Entrants list");
     entrantsJumpButton.type = "button";
     entrantsJumpButton.setAttribute("aria-label", "Open the unique entrants list");
-    stageHeader.append(stageHeading, entrantsJumpButton);
+    stageHeaderActions.appendChild(entrantsJumpButton);
+    stageHeader.append(stageHeading, stageHeaderActions);
 
     const liveLabel = create("div", "wheel-live-selection");
     const liveLabelTitle = create("span", "wheel-live-selection__eyebrow", "Current entrant");
@@ -7712,7 +7725,8 @@
     arenaAtmosphere.append(arenaBeamLeft, arenaBeamRight, arenaPylonLeft, arenaPylonRight, arenaPortal, arenaFloor, arenaPlinth);
     ["a", "b", "c", "d"].forEach((position) => arenaAtmosphere.appendChild(create("i", `wheel-arena-glint wheel-arena-glint--${position}`)));
 
-    const celebrationLayer = create("div", "wheel-celebration-layer");
+    const celebrationLayer = create("canvas", "wheel-celebration-layer");
+    celebrationLayer.setAttribute("aria-hidden", "true");
     const stageAssembly = create("div", "wheel-stage-assembly");
     const stageGlow = create("div", "wheel-stage-aura");
     const stageChassis = create("div", "wheel-stage-chassis");
@@ -8019,6 +8033,8 @@
       frameId: 0,
       spinTimer: 0,
       pulseTimer: 0,
+      celebrationFrame: 0,
+      celebrationColor: "",
       audioUnlocked: false,
       musicAudio: null
     };
@@ -8248,48 +8264,139 @@
       }
     }
 
-    function flashCelebration() {
-      if (item?.presentation?.celebration_enabled === false && item?.presentation?.confetti_enabled !== true) return;
-      if (reducedMotionQuery.matches) return;
-      clear(celebrationLayer);
-      const count = 84;
-      const bursts = [
-        { particleRatio: 0.25, spread: 26, startVelocity: 55, decay: 0.91, scalar: 1 },
-        { particleRatio: 0.2, spread: 60, startVelocity: 40, decay: 0.9, scalar: 1 },
-        { particleRatio: 0.35, spread: 100, startVelocity: 48, decay: 0.91, scalar: 0.8 },
-        { particleRatio: 0.1, spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 },
-        { particleRatio: 0.1, spread: 120, startVelocity: 45, decay: 0.9, scalar: 1 }
+    function clearCelebration() {
+      window.cancelAnimationFrame(sessionState.celebrationFrame);
+      sessionState.celebrationFrame = 0;
+      const context = celebrationLayer.getContext("2d");
+      if (!context) return;
+      context.setTransform(1, 0, 0, 1, 0, 0);
+      context.clearRect(0, 0, celebrationLayer.width, celebrationLayer.height);
+    }
+
+    function prepareCelebrationCanvas() {
+      const bounds = winnerOverlay.getBoundingClientRect();
+      const width = Math.max(1, bounds.width);
+      const height = Math.max(1, bounds.height);
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+      celebrationLayer.width = Math.max(1, Math.round(width * pixelRatio));
+      celebrationLayer.height = Math.max(1, Math.round(height * pixelRatio));
+      celebrationLayer.style.width = `${width}px`;
+      celebrationLayer.style.height = `${height}px`;
+      const context = celebrationLayer.getContext("2d");
+      if (!context) return null;
+      context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+      return { context, width, height };
+    }
+
+    function flashCelebration(winnerColor = "") {
+      clearCelebration();
+      sessionState.celebrationColor = winnerColor || item?.palette?.accent_color || "#ffd56b";
+      if (reducedMotionQuery.matches || item?.presentation?.animation_enabled === false) return;
+      const prepared = prepareCelebrationCanvas();
+      if (!prepared) return;
+      const { context, width, height } = prepared;
+      const palette = [
+        sessionState.celebrationColor,
+        "#4be1ff",
+        "#6976ff",
+        "#c553ff",
+        "#ffe176",
+        "#ffffff"
       ];
-      let colorIndex = 0;
-      bursts.forEach((burst, burstIndex) => {
-        const particleCount = Math.max(1, Math.floor(count * burst.particleRatio));
-        for (let index = 0; index < particleCount; index += 1) {
-          const confetti = create("span", "wheel-confetti");
-          const spreadAngle = (-90 + (Math.random() - 0.5) * burst.spread) * (Math.PI / 180);
-          const velocity = burst.startVelocity * (0.55 + Math.random() * 0.8) * (burst.scalar || 1);
-          const distance = velocity * (burst.decay || 0.9) * 3.2;
-          const drift = Math.cos(spreadAngle) * distance;
-          const rise = Math.sin(spreadAngle) * distance;
-          const spin = (Math.random() * 480 - 240).toFixed(2);
-          const duration = 860 + Math.round(Math.random() * 520) + burstIndex * 40;
-          confetti.style.left = "50%";
-          confetti.style.top = "70%";
-          confetti.style.setProperty("--confetti-x", `${drift.toFixed(2)}px`);
-          confetti.style.setProperty("--confetti-y", `${rise.toFixed(2)}px`);
-          confetti.style.setProperty("--confetti-rotate", `${spin}deg`);
-          confetti.style.setProperty("--confetti-scale", `${(0.72 + Math.random() * 0.75 * (burst.scalar || 1)).toFixed(2)}`);
-          confetti.style.setProperty("--confetti-delay", `${(Math.random() * 0.12 + burstIndex * 0.02).toFixed(3)}s`);
-          confetti.style.setProperty("--confetti-duration", `${duration}ms`);
-          confetti.style.setProperty(
-            "--confetti-color",
-            resolveEntryColor(wheelEntries[colorIndex % Math.max(1, wheelEntries.length)] || {}, item, colorIndex)
-          );
-          colorIndex += 1;
-          celebrationLayer.appendChild(confetti);
+      const enhancedFireworks = item?.presentation?.celebration_enabled !== false || item?.presentation?.confetti_enabled === true;
+      const confetti = Array.from({ length: enhancedFireworks ? 190 : 160 }, (_, index) => ({
+        x: Math.random() * width,
+        y: -24 + Math.random() * height * 0.56,
+        vx: (Math.random() - 0.5) * 2.8,
+        vy: 1.7 + Math.random() * 3.2,
+        gravity: 0.035 + Math.random() * 0.026,
+        width: 4 + Math.random() * 7,
+        height: 2 + Math.random() * 5,
+        rotation: Math.random() * Math.PI,
+        rotationVelocity: (Math.random() - 0.5) * 0.24,
+        color: palette[index % palette.length],
+        alpha: 0.76 + Math.random() * 0.24
+      }));
+      const fireworks = [];
+      const burstTimes = enhancedFireworks ? [0, 260, 560, 880, 1240] : [];
+      const burstPositions = [[0.16, 0.28], [0.84, 0.24], [0.31, 0.14], [0.72, 0.36], [0.48, 0.18]];
+      const startTime = performance.now();
+      let spawnedBursts = 0;
+
+      function spawnFirework(x, y) {
+        const color = palette[Math.floor(Math.random() * palette.length)];
+        for (let index = 0; index < 54; index += 1) {
+          const angle = (Math.PI * 2 * index) / 54 + (Math.random() - 0.5) * 0.08;
+          const speed = 1.2 + Math.random() * 3.4;
+          fireworks.push({
+            x,
+            y,
+            previousX: x,
+            previousY: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: 1,
+            decay: 0.012 + Math.random() * 0.008,
+            color
+          });
         }
-      });
-      celebrationLayer.classList.remove("is-active");
-      window.requestAnimationFrame(() => celebrationLayer.classList.add("is-active"));
+      }
+
+      function drawCelebration(now) {
+        if (winnerOverlay.getAttribute("aria-hidden") === "true") return;
+        const elapsed = now - startTime;
+        context.clearRect(0, 0, width, height);
+        context.globalCompositeOperation = "lighter";
+        while (spawnedBursts < burstTimes.length && elapsed >= burstTimes[spawnedBursts]) {
+          const [x, y] = burstPositions[spawnedBursts];
+          spawnFirework(width * x, height * y);
+          spawnedBursts += 1;
+        }
+        fireworks.forEach((particle) => {
+          particle.previousX = particle.x;
+          particle.previousY = particle.y;
+          particle.x += particle.vx;
+          particle.y += particle.vy;
+          particle.vx *= 0.986;
+          particle.vy = particle.vy * 0.986 + 0.016;
+          particle.life -= particle.decay;
+          context.globalAlpha = Math.max(0, particle.life);
+          context.strokeStyle = particle.color;
+          context.lineWidth = 1.5;
+          context.beginPath();
+          context.moveTo(particle.previousX, particle.previousY);
+          context.lineTo(particle.x, particle.y);
+          context.stroke();
+        });
+        for (let index = fireworks.length - 1; index >= 0; index -= 1) {
+          if (fireworks[index].life <= 0) fireworks.splice(index, 1);
+        }
+        context.globalCompositeOperation = "source-over";
+        confetti.forEach((particle) => {
+          particle.x += particle.vx;
+          particle.y += particle.vy;
+          particle.vy += particle.gravity;
+          particle.rotation += particle.rotationVelocity;
+          if (particle.y > height + 30) {
+            particle.y = -20;
+            particle.x = Math.random() * width;
+            particle.vy = 1.4 + Math.random() * 2.2;
+          }
+          context.save();
+          context.translate(particle.x, particle.y);
+          context.rotate(particle.rotation);
+          context.globalAlpha = particle.alpha * Math.max(0, 1 - Math.max(0, elapsed - 5200) / 1400);
+          context.fillStyle = particle.color;
+          context.fillRect(-particle.width / 2, -particle.height / 2, particle.width, particle.height);
+          context.restore();
+        });
+        context.globalAlpha = 1;
+        if (elapsed < 6600) {
+          sessionState.celebrationFrame = window.requestAnimationFrame(drawCelebration);
+        }
+      }
+
+      sessionState.celebrationFrame = window.requestAnimationFrame(drawCelebration);
     }
 
     async function playSound(category, { loop = false } = {}) {
@@ -8336,8 +8443,7 @@
       }
       winnerOverlay.classList.remove("is-visible");
       winnerOverlay.setAttribute("aria-hidden", "true");
-      celebrationLayer.classList.remove("is-active");
-      clear(celebrationLayer);
+      clearCelebration();
       winnerReturnFocus = null;
     }
 
@@ -8475,7 +8581,7 @@
         publishLocalWinner(winner, "Local result.");
         rebuildWheel();
         openWinnerOverlay(winner);
-        flashCelebration();
+        flashCelebration(winner?.color);
       }
       window.clearTimeout(sessionState.pulseTimer);
       sessionState.pulseTimer = window.setTimeout(() => {
@@ -8569,6 +8675,12 @@
       updateControls();
     }
 
+    function handleWinnerResize() {
+      if (winnerOverlay.getAttribute("aria-hidden") === "false") {
+        flashCelebration(sessionState.celebrationColor);
+      }
+    }
+
     function tick(now) {
       if (reducedMotionQuery.matches || item?.presentation?.animation_enabled === false) {
         sessionState.frameId = 0;
@@ -8616,6 +8728,7 @@
       if (event.target === winnerOverlay) closeWinnerOverlay();
     });
     window.addEventListener("keydown", handleWinnerKeydown);
+    window.addEventListener("resize", handleWinnerResize, { passive: true });
 
     renderDetailCard(wheelEntries[0] || null);
     renderWinnerList();
@@ -8628,8 +8741,10 @@
       stopMusic();
       window.cancelAnimationFrame(sessionState.frameId);
       window.cancelAnimationFrame(sessionState.spinTimer);
+      clearCelebration();
       window.clearTimeout(sessionState.pulseTimer);
       window.removeEventListener("keydown", handleWinnerKeydown);
+      window.removeEventListener("resize", handleWinnerResize);
     };
     return main;
   }
@@ -8894,7 +9009,7 @@
           </label>
           <label class="wheel-owner-toggle">
             <input type="checkbox" data-wheel-editor-field="presentation.celebration_enabled" ${draft.presentation.celebration_enabled ? "checked" : ""} />
-            <span>Enable celebration visuals</span>
+            <span>Enable celebration fireworks</span>
           </label>
           <label class="wheel-owner-field wheel-owner-field--compact">
             <span>Trim</span>
@@ -9219,7 +9334,10 @@
     applyDocumentTitle(item.title || item.question || config.topbarLabel);
     updateShell?.({ topbarLabel: item.title || item.question || config.topbarLabel, filtersCollapsed: true });
 
-    host.appendChild(buildPageHeading(item.title || item.question || "Detail", item.summary || "Public detail view."));
+    const isWheelDetail = item.viewFamily === "wheel" || config.detailType === "wheels";
+    if (!isWheelDetail || item.isRemoved) {
+      host.appendChild(buildPageHeading(item.title || item.question || "Detail", item.summary || "Public detail view."));
+    }
 
     if (item.isRemoved) {
       const removedLayout = create("section", "detail-layout is-stacked");
@@ -9238,7 +9356,7 @@
       return;
     }
 
-    if (item.viewFamily === "wheel" || config.detailType === "wheels") {
+    if (isWheelDetail) {
       const wheelLayout = create("section", "detail-layout is-stacked");
       const wheelMain = buildWheelDetailMain(item, { ...config, authState, helpers: data.helpers, openAuthModal: ctx.openAuthModal });
       if (typeof wheelMain?._cleanupWheelDetail === "function") {

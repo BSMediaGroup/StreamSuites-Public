@@ -54,10 +54,17 @@ test("public wheels route preserves the shell and provides clean list/detail art
   assert.match(app, /function aggregateWheelEntrants\(entries\)/);
   assert.match(app, /function getWheelSliceLabelRotation\(angle\)/);
   assert.match(app, /const labelRotation = getWheelSliceLabelRotation\(segment\.midAngle\);/);
+  assert.match(app, /const isWheelDetail = item\.viewFamily === "wheel" \|\| config\.detailType === "wheels";/);
+  assert.match(app, /if \(!isWheelDetail \|\| item\.isRemoved\) \{/);
+  assert.match(app, /create\("h1", "wheel-arena-title", item\?\.title \|\| item\?\.question \|\| "Wheel"\)/);
   assert.match(app, /Repeated records are grouped into one entrant/);
   assert.match(app, /tabList\.setAttribute\("role", "tablist"\)/);
   assert.match(app, /button\.setAttribute\("aria-selected", index === 0 \? "true" : "false"\)/);
   assert.match(app, /winnerDialog\.setAttribute\("aria-modal", "true"\)/);
+  assert.match(app, /create\("canvas", "wheel-celebration-layer"\)/);
+  assert.match(app, /function prepareCelebrationCanvas\(\)/);
+  assert.match(app, /length: enhancedFireworks \? 190 : 160/);
+  assert.match(app, /if \(elapsed < 6600\)/);
   assert.match(app, /window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)/);
   assert.match(app, /const PUBLIC_WHEEL_EVENTS_URL = `\$\{AUTH_API_BASE\}\/api\/public\/wheels\/events`;/);
   assert.match(app, /function syncWheelLiveSubscription\(\)/);
@@ -106,6 +113,7 @@ test("public wheels route preserves the shell and provides clean list/detail art
   assert.match(css, /\.wheel-owner-editor-panel/);
   assert.match(css, /\.wheel-scoreboard-table/);
   assert.match(css, /\.wheel-stage-assembly/);
+  assert.match(css, /\.detail-main\.wheel-detail-main/);
   assert.match(css, /\.wheel-console-workspace/);
   assert.match(css, /\.wheel-arena-atmosphere/);
   assert.match(css, /\.wheel-stage-chassis/);

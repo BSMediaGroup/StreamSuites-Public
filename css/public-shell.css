@@ -6515,24 +6515,11 @@ body[data-public-page="public-profile-standalone"] .edit-affordance:focus-visibl
 .wheel-celebration-layer {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
   pointer-events: none;
-  z-index: 3;
-}
-
-.wheel-confetti {
-  position: absolute;
-  width: 9px;
-  height: 18px;
-  border-radius: 999px 999px 3px 3px;
-  background: var(--confetti-color, #4de9ff);
-  opacity: 0;
-  transform: translate3d(0, 0, 0) rotate(0deg) scale(var(--confetti-scale, 1));
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.12);
-}
-
-.wheel-celebration-layer.is-active .wheel-confetti {
-  animation: wheelConfettiBurst var(--confetti-duration, 1100ms) cubic-bezier(0.16, 0.82, 0.2, 1) forwards;
-  animation-delay: var(--confetti-delay, 0s);
+  z-index: 2;
 }
 
 @keyframes wheelTrimOrbit {
@@ -6578,20 +6565,6 @@ body[data-public-page="public-profile-standalone"] .edit-affordance:focus-visibl
   }
 }
 
-@keyframes wheelConfettiBurst {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 0, 0) rotate(0deg) scale(var(--confetti-scale, 1));
-  }
-  12% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translate3d(var(--confetti-x, 0px), var(--confetti-y, 180px), 0) rotate(var(--confetti-rotate, 180deg)) scale(var(--confetti-scale, 1));
-  }
-}
-
 @media (max-width: 1220px) {
   .wheel-spin-shell-premium {
     grid-template-columns: 1fr;
@@ -6633,6 +6606,13 @@ body[data-public-page="public-profile-standalone"] .edit-affordance:focus-visibl
 .wheel-detail-main {
   gap: 14px;
   padding: 0;
+}
+
+.detail-main.wheel-detail-main {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .wheel-detail-card,
@@ -6685,7 +6665,7 @@ body[data-public-page="public-profile-standalone"] .edit-affordance:focus-visibl
 .wheel-arena-heading {
   min-width: 0;
   display: grid;
-  gap: 4px;
+  gap: 3px;
 }
 
 .wheel-console-eyebrow,
@@ -6702,8 +6682,31 @@ body[data-public-page="public-profile-standalone"] .edit-affordance:focus-visibl
 .wheel-arena-title {
   margin: 0;
   color: #f1f8fd;
-  font-size: 0.94rem;
-  line-height: 1.25;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.wheel-arena-description {
+  max-width: 66ch;
+  margin: 0;
+  overflow: hidden;
+  color: rgba(155, 177, 198, 0.82);
+  font-size: 0.67rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wheel-arena-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.wheel-arena-policy-chip {
+  grid-column: auto;
 }
 
 .wheel-console-quiet-button {
@@ -7806,6 +7809,15 @@ body[data-public-page="public-profile-standalone"] .edit-affordance:focus-visibl
 @media (max-width: 760px) {
   .wheel-arena-header {
     align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .wheel-arena-heading {
+    flex: 1 1 240px;
+  }
+
+  .wheel-arena-header-actions {
+    flex: 1 1 auto;
   }
 
   .wheel-spin-stage-premium {
@@ -7877,6 +7889,10 @@ body[data-public-page="public-profile-standalone"] .edit-affordance:focus-visibl
 
   .wheel-arena-title {
     font-size: 0.82rem;
+  }
+
+  .wheel-arena-policy-chip {
+    display: none;
   }
 
   .wheel-console-quiet-button {
@@ -7962,8 +7978,7 @@ body[data-public-page="public-profile-standalone"] .edit-affordance:focus-visibl
   .wheel-stage-trim-noise,
   .wheel-spin-stage-premium[data-state="spinning"] .wheel-spin-pointer-premium,
   .wheel-winner-rays,
-  .wheel-winner-dialog::before,
-  .wheel-celebration-layer.is-active .wheel-confetti {
+  .wheel-winner-dialog::before {
     animation: none !important;
   }
 

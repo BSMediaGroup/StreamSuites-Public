@@ -6,6 +6,17 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-15 - Wheel Console V3 stage and celebration correction
+
+#### Technical notes
+
+- Removed the inherited `detail-main` panel frame from the wheel route and stopped rendering the generic full-width artifact heading for active wheels. The real wheel title and description now sit in the arena's compact internal header with the session policy and entrant-list action, leaving the existing Public shell and non-wheel detail pages unchanged.
+- Replaced the short DOM-particle burst with the approved POC V3-style bounded canvas celebration: immediately visible falling confetti for every animated winner reveal, optional enhanced fireworks from the existing celebration setting, a 6.6-second lifecycle, device-pixel-ratio capping, resize handling, and explicit animation-frame cleanup. Reduced motion and the existing master animation disable still suppress the non-essential motion.
+
+#### Human-readable summary
+
+The wheel no longer sits inside a pointless extra box or below a wasteful title row. Its name and description are now part of the arena itself, and winning once again produces the visible confetti-filled payoff shown in the approved POC.
+
 ### 2026-08-15 - Profile primary-action text legibility
 
 #### Technical notes
