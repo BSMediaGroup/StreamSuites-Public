@@ -63,10 +63,13 @@ test("profile video shell is themed responsive and overflow-safe", () => {
   assert.match(css, /var\(--profile-gradient-b\)/);
   assert.match(css, /\.profile-about-provider-selector\s*\{[\s\S]*grid-template-columns/);
   assert.match(css, /\.profile-about-layout\.has-media\s*\{[\s\S]*grid-template-columns:\s*minmax\(320px, 0\.96fr\) minmax\(0, 1\.14fr\)/);
-  assert.match(app, /if \(presentation\) layout\.appendChild\(presentation\);\s*if \(hasStory\) layout\.appendChild\(story\)/);
+  assert.match(app, /if \(hasStory\) layout\.appendChild\(story\);\s*if \(presentation\) layout\.appendChild\(presentation\)/);
+  assert.doesNotMatch(app, /create\("span", "profile-about-video-provider"/);
+  assert.match(app, /create\("img", "profile-about-video-source-icon"\)/);
+  assert.match(app, /create\("div", "profile-about-footer", "PUBLIC IDENTITY \/ STREAMSUITES"\)/);
   assert.match(css, /\.profile-about-layout\.is-video-only\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/);
   assert.match(css, /\.profile-about-layout--video-only \.profile-about-video-presentation\s*\{[\s\S]*width:\s*min\(100%, 1120px\)/);
-  assert.match(css, /@media \(max-width: 900px\)[\s\S]*\.profile-about-layout\.has-media \{ grid-template-columns: 1fr/);
+  assert.match(css, /@media \(max-width: 900px\)[\s\S]*grid-template-areas:\s*"story" "video"/);
 });
 
 test("profile owner action, sticky header, cover fade, and theme variables use the profile contract", () => {

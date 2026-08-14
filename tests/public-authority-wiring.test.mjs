@@ -521,7 +521,7 @@ test("public leaderboards route hydrates from authoritative progression API", ()
 
 test("public profile game section renders runtime progression and economy authority summaries", () => {
   const app = read("js/public-pages-app.js");
-  const css = read("css/public-shell.css");
+  const css = read("css/public-shell.css") + read("css/public-profile.css");
   const profileSection = app.match(/function buildProfileGameCompetitionSection\(profile = null, options = \{\}\) \{[\s\S]*?return details;\r?\n  \}/)?.[0] || "";
   const scopedProfileSection = app.match(/function buildProfileScopedProgressionSection\(profile = null\) \{[\s\S]*?return section;\r?\n  \}/)?.[0] || "";
   assert.ok(profileSection, "profile progression section should exist");
@@ -546,13 +546,13 @@ test("public profile game section renders runtime progression and economy author
   assert.match(profileSection, /panel\.dataset\.profileProgressionMode = scoped \? "scoped" : "global"/);
   assert.match(profileSection, /Current XP \/ Scoped rank/);
   assert.match(profileSection, /Scoped level/);
-  assert.match(profileSection, /Messages/);
+  assert.match(profileSection, /Scoped activity/);
   assert.match(profileSection, /No scoped wallet data yet/);
   assert.match(profileSection, /No scoped inventory data yet/);
-  assert.match(profileSection, /buildEconomyBalanceValue\(economy \|\| \{\}, \{ prominent: true, fullColorIcon: true, showCashComponent: true, leadClassName: "profile-game-card-lead profile-game-card-lead--balance" \}\)/);
-  assert.match(profileSection, /buildInventoryCardLeadValue\(scoped \? scopedInventory\.length \? "Itemized" : scopedInventoryAvailable \? "Empty" : "Unavailable" : displayInventory\.length \? "Itemized" : "Empty"\)/);
-  assert.match(profileSection, /buildEconomyDenominationBreakdown\(economy \|\| \{\}\)/);
-  assert.match(profileSection, /buildInventorySummaryList\(displayInventory, \{ context: "Global profile inventory" \}\)/);
+  assert.match(profileSection, /buildEconomyBalanceValue\(activeWallet, \{ prominent: true, fullColorIcon: true, showCashComponent: true, leadClassName: "profile-game-card-lead profile-game-card-lead--balance" \}\)/);
+  assert.match(profileSection, /buildInventoryCardLeadValue\(activeInventory\.length \? "Itemized" : scoped && !scopedInventoryAvailable \? "Unavailable" : "Empty"\)/);
+  assert.match(profileSection, /buildEconomyDenominationBreakdown\(activeWallet\)/);
+  assert.match(profileSection, /buildInventorySummaryList\(activeInventory, \{ context: scoped \? scopedProgressionScopeLabel\(selectedRow\) : "Global profile inventory" \}\)/);
   assert.match(profileSection, /buildPublicValueItemExchangePanel\(exchangeableItems\)/);
   assert.match(profileSection, /options\.canEdit/);
   assert.match(profileSection, /buildProgressionXpValue\(sourceXpTotal, \{ prominent: true \}\)/);
@@ -571,7 +571,7 @@ test("public profile game section renders runtime progression and economy author
   assert.match(profileSection, /profile-game-progress-meter/);
   assert.match(profileSection, /No level yet/);
   assert.doesNotMatch(profileSection, /value: progression \? buildProgressionRankChip\(progression, \{ compact: true \}\) : "Bronze"/);
-  assert.match(profileSection, /XP, level, wallet balance, and inventory hydrate from runtime public authority/);
+  assert.match(profileSection, /XP, level, wallet balance, and inventory hydrate from Runtime\/Auth public authority/);
   assert.match(css, /\.progression-xp-value--prominent/);
   assert.match(css, /\.progression-global-rank-value--prominent/);
   assert.match(css, /\.economy-balance-value--prominent/);
@@ -593,7 +593,7 @@ test("public profile game section renders runtime progression and economy author
   assert.match(css, /var\(--profile-current-level-banner-image\) right center \/ cover no-repeat/);
   assert.match(css, /\.profile-game-preview-card--current-level::before\s*\{[\s\S]*mask-image:\s*linear-gradient/);
   assert.match(css, /\.profile-game-preview-card--current-level\.has-level-banner::before\s*\{[\s\S]*opacity:\s*0\.62/);
-  assert.match(css, /\.profile-game-preview-card--breakdown,[\s\S]*\.profile-game-preview-card--progress\s*\{[\s\S]*grid-column:\s*span 3/);
+  assert.match(css, /\.profile-game-breakdown-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(profileSection, /profile-game-preview-card--breakdown profile-game-preview-card--balance/);
   assert.match(profileSection, /profile-game-preview-card--breakdown profile-game-preview-card--inventory/);
   assert.match(css, /\.profile-game-inventory-stack/);
@@ -605,9 +605,9 @@ test("public profile game section renders runtime progression and economy author
   assert.match(app, /"VIEW"/);
   assert.doesNotMatch(scopedProfileSection, /"VIEW BOARD"/);
   assert.match(app, /scopedLeaderboardHref\(row\.scope_key\)/);
-  assert.match(profileSection, /buildInventorySummaryList\(scopedInventory, \{ context: scopedProgressionScopeLabel\(selectedRow\) \}\)/);
+  assert.match(profileSection, /buildInventorySummaryList\(activeInventory, \{ context: scoped \? scopedProgressionScopeLabel\(selectedRow\) : "Global profile inventory" \}\)/);
   assert.match(profileSection, /leaderboardHasInventoryPayload\(selectedRow\)/);
-  assert.match(profileSection, /scopedInventoryAvailable \? "Empty" : "Unavailable"/);
+  assert.match(profileSection, /scoped && !scopedInventoryAvailable \? "Unavailable" : "Empty"/);
   assert.match(css, /\.profile-scoped-progression-section/);
   assert.match(scopedProfileSection, /section\.dataset\.profileChannelStats = "present"/);
   assert.doesNotMatch(scopedProfileSection, /Global Stats/);
@@ -645,7 +645,7 @@ test("public scoped platform icons and stable latest stream layout are pinned", 
   assert.match(app, /const icon = create\("img", `\$\{className\}-icon`\)/);
   assert.match(app, /label\.textContent = details\.open \? "Collapse" : "Expand"/);
   assert.match(app, /icon\.src = details\.open \? "\/assets\/icons\/ui\/visible\.svg" : "\/assets\/icons\/ui\/hidden\.svg"/);
-  assert.match(app, /summary\.append\(action, summaryMeta, buildProfileCollapsibleToggle\(details\)\)/);
+  assert.match(app, /summaryControls\.append\(summaryMeta, buildProfileCollapsibleToggle\(details\)\);[\s\S]*summary\.append\(action, summaryControls\)/);
   assert.match(app, /header\.append\(action, scopeWrap\)/);
   assert.doesNotMatch(app, /hasUsableStream \? stream\?\.platformLabel : "No data available"/);
   assert.doesNotMatch(app, /hasUsableStream \? \(stream\?\.isLive \? "Current live" : "Featured source"\) : "Expand for details"/);
@@ -692,23 +692,33 @@ test("public scoped platform icons and stable latest stream layout are pinned", 
   assert.match(css, /\.progression-leaderboard-gallery-top-row/);
 });
 
-test("public profile overview surface uses the same runtime progression summary as games", () => {
+test("public profile overview keeps three primary public metrics over flat account details", () => {
   const app = read("js/public-pages-app.js");
   const overviewSection = app.match(/function buildProfileOverviewPanel\(profile, artifacts, clips, helpers\) \{[\s\S]*?return section;\r?\n  \}/)?.[0] || "";
   assert.ok(overviewSection, "profile overview section should exist");
-  assert.match(overviewSection, /const progression = profile\?\.progression && typeof profile\.progression === "object" \? profile\.progression : null/);
   assert.match(overviewSection, /const economy = profile\?\.economy && typeof profile\.economy === "object" \? profile\.economy : null/);
-  assert.match(overviewSection, /progression\.xp_total \?\? progression\.total_xp \?\? 0/);
-  assert.match(overviewSection, /buildProgressionXpValue\(progression\.xp_total \?\? progression\.total_xp \?\? 0, \{ compact: true \}\)/);
-  assert.match(overviewSection, /buildProgressionLevelChip\(progression, \{ compact: true \}\)/);
-  assert.match(overviewSection, /buildProgressionGlobalRankValue\(progression, \{ compact: true, emptyLabel: "Unranked" \}\)/);
-  assert.match(overviewSection, /addRow\("XP", overviewXpValue, \{ pending: !progression, kind: "xp", emphasis: true \}\)/);
-  assert.match(overviewSection, /addRow\("Level", overviewLevelValue, \{ pending: !progression, kind: "level", emphasis: true \}\)/);
-  assert.match(overviewSection, /addRow\("Global Rank", overviewGlobalRankValue, \{ pending: !progression, kind: "rank", emphasis: true \}\)/);
-  assert.match(overviewSection, /addRow\("Balance", economy \? buildEconomyBalanceValue\(economy, \{ compact: true \}\) : "Unavailable", \{ pending: !economy, kind: "balance" \}\)/);
-  assert.match(overviewSection, /profile\?\.inventoryAvailable[\s\S]*displayInventory\.length \? `\$\{formatNumber\(displayInventory\.length\)\} item type/);
-  assert.doesNotMatch(overviewSection, /addRow\("XP", "Pending", true\)/);
-  assert.doesNotMatch(overviewSection, /addRow\("Rank", "Pending", true\)/);
+  assert.match(overviewSection, /const counts = summarizeProfileArtifactCounts\(artifacts, clips\)/);
+  assert.match(overviewSection, /create\("div", "profile-overview-primary-grid"\)/);
+  assert.match(overviewSection, /addPrimaryMetric\("Artifacts", formatNumber\(counts\.artifactTotal\)/);
+  assert.match(overviewSection, /addPrimaryMetric\("Clips", formatNumber\(counts\.clipTotal\)/);
+  assert.match(overviewSection, /"Inventory"[\s\S]*"Public inventory item types"/);
+  assert.equal((overviewSection.match(/addPrimaryMetric\(/g) || []).length, 3);
+  assert.doesNotMatch(overviewSection, /addPrimaryMetric\("(?:Polls|Tallies)"/);
+  assert.match(overviewSection, /create\("dl", "profile-overview-details"\)/);
+  assert.match(overviewSection, /addDetail\("Profile type"[\s\S]*addDetail\("Tier"[\s\S]*addDetail\("Joined"[\s\S]*addDetail\("Balance"/);
+  assert.doesNotMatch(overviewSection, /buildProgression(?:XpValue|LevelChip|GlobalRankValue)/);
+});
+
+test("profile overview artifact totals include deduplicated clips exactly once", () => {
+  const app = read("js/public-pages-app.js");
+  const source = app.match(/function summarizeProfileArtifactCounts\(artifacts, clips\) \{[\s\S]*?\r?\n  \}/)?.[0] || "";
+  assert.ok(source, "artifact summary helper should exist");
+  const summarize = new Function(`${source}; return summarizeProfileArtifactCounts;`)();
+  const result = summarize(
+    [{ id: "poll-1", type: "polls" }, { id: "wheel-1", type: "wheels" }, { id: "clip-1", type: "clips" }],
+    [{ id: "clip-1" }, { id: "clip-2" }]
+  );
+  assert.deepEqual(result, { artifactTotal: 4, clipTotal: 2, nonClipArtifactTotal: 2 });
 });
 
 test("public level chips include restrained hover sheen without changing compact consumers", () => {
@@ -735,14 +745,14 @@ test("public economy rendering keeps denominations separate from inventory rows"
   assert.match(app, /function resolveEconomyCashComponent\(wallet = \{\}, totalValue = 0\)/);
   assert.match(app, /options\.showCashComponent && cashValue !== null/);
   assert.match(app, /economy-balance-cash-component/);
-  assert.match(app, /walletCard\.appendChild\(buildEconomyDenominationBreakdown\(wallet\)\)/);
+  assert.match(app, /walletExtra\.appendChild\(activeWallet \? buildEconomyDenominationBreakdown\(activeWallet\)/);
   assert.match(app, /icon\.src = economyAssetPath\("\/assets\/games\/sscurrency\.webp"\)/);
   assert.match(app, /function buildInventoryCardLeadValue\(statusText = "Empty"\)/);
   assert.match(app, /economy-balance-value economy-balance-value--prominent profile-game-card-lead profile-game-card-lead--inventory/);
   assert.match(app, /icon\.src = economyAssetPath\("\/assets\/games\/icon-inventory-2\.webp"\)/);
   assert.match(app, /icon\.addEventListener\("error", \(\) => \{[\s\S]*createIcon\("\/assets\/icons\/ui\/moneybag\.svg", "inline-icon-mask economy-balance-icon profile-game-card-lead-icon profile-game-card-lead-icon--fallback profile-game-inventory-lead-icon-fallback"\)[\s\S]*icon\.replaceWith\(fallback\)/);
   assert.match(app, /leadClassName: "profile-game-card-lead profile-game-card-lead--balance"/);
-  assert.match(app, /value: buildInventoryCardLeadValue\(scoped \? scopedInventory\.length \? "Itemized" : scopedInventoryAvailable \? "Empty" : "Unavailable" : displayInventory\.length \? "Itemized" : "Empty"\)/);
+  assert.match(app, /value: buildInventoryCardLeadValue\(activeInventory\.length \? "Itemized" : scoped && !scopedInventoryAvailable \? "Unavailable" : "Empty"\)/);
   assert.doesNotMatch(app, /profile-game-inventory-lead-icon[\s\S]{0,300}(?:□|⬚|blank square)/i);
   assert.match(app, /function economyDenominationIconPath\(item = \{\}\)/);
   assert.match(app, /item\.icon_url \|\|[\s\S]*item\.icon_path \|\|[\s\S]*item\.image_asset_key/);
@@ -1282,17 +1292,16 @@ test("public economy item rows delegate click and keyboard activation to the lig
   assert.equal(opened[2].payload.item_code, "profile.badge");
 });
 
-test("public profile progress meter uses animated electric blue fill", () => {
+test("public profile progress meter uses a static accessible theme-derived fill", () => {
   const app = read("js/public-pages-app.js");
-  const css = read("css/public-shell.css");
+  const css = read("css/public-profile.css");
 
   assert.match(app, /fill\.style\.setProperty\("--profile-progress-target", `\$\{sourceProgressPercent\}%`\)/);
-  assert.match(app, /profile-game-progress-meter profile-game-progress-meter--animated/);
-  assert.match(app, /profile-game-progress-meter-fill profile-game-progress-meter-fill--electric/);
-  assert.match(css, /\.profile-game-progress-meter-fill\s*\{[\s\S]*linear-gradient\(90deg, #0487ff 0%, #18c3ff 52%, #78ecff 100%\)/);
-  assert.match(css, /animation:\s*profile-game-progress-fill 820ms/);
-  assert.match(css, /\.profile-game-preview-card--progress:hover \.profile-game-progress-meter-fill\s*\{[\s\S]*animation:\s*profile-game-progress-refill 620ms/);
-  assert.match(css, /@keyframes profile-game-progress-fill/);
-  assert.match(css, /@keyframes profile-game-progress-refill/);
-  assert.match(css, /prefers-reduced-motion:\s*reduce[\s\S]*profile-game-progress-meter-fill/);
+  assert.match(app, /create\("span", "profile-game-progress-meter"\)/);
+  assert.match(app, /meter\.setAttribute\("role", "progressbar"\)/);
+  assert.match(app, /meter\.setAttribute\("aria-valuenow"/);
+  assert.doesNotMatch(app, /profile-game-progress-meter--animated|profile-game-progress-meter-fill--electric/);
+  assert.match(css, /profile-game-progress-meter-fill,[\s\S]*linear-gradient\(90deg,[\s\S]*var\(--profile-gradient-a\)[\s\S]*var\(--profile-gradient-c\)[\s\S]*var\(--profile-gradient-b\)/);
+  assert.match(css, /profile-game-progress-meter:hover \.profile-game-progress-meter-fill[\s\S]*animation:\s*none/);
+  assert.doesNotMatch(css, /#0487ff|#18c3ff|#78ecff/);
 });

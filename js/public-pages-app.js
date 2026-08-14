@@ -1476,13 +1476,15 @@
     action.appendChild(titleLine);
     const summaryMeta = create("span", "profile-authority-summary-meta");
     if (meta) summaryMeta.appendChild(create("span", "", meta));
+    const summaryControls = create("span", "profile-content-summary-controls");
     const panel = create("div", "profile-content-collapsible-panel");
     panel.id = `${id}-panel`;
     panel.dataset.profileCollapsiblePanel = "true";
     panel.setAttribute("role", "region");
     panel.setAttribute("aria-labelledby", summary.id);
     details.append(summary, panel);
-    summary.append(action, summaryMeta, buildProfileCollapsibleToggle(details));
+    summaryControls.append(summaryMeta, buildProfileCollapsibleToggle(details));
+    summary.append(action, summaryControls);
     details.dispatchEvent(new Event("toggle"));
     return { details, summary, summaryMeta, panel };
   }
@@ -13661,13 +13663,24 @@
     return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
   }
 
-  function countProfileArtifactsByType(artifacts) {
-    return (Array.isArray(artifacts) ? artifacts : []).reduce((acc, item) => {
-      const type = String(item?.type || "artifact").trim().toLowerCase() || "artifact";
-      acc.total += 1;
-      acc[type] = (acc[type] || 0) + 1;
-      return acc;
-    }, { total: 0 });
+  function summarizeProfileArtifactCounts(artifacts, clips) {
+    const identityFor = (item, index, prefix) => String(
+      item?.id || item?.clipId || item?.clip_id || item?.routeId || item?.route_id || item?.href || item?.mediaUrl || item?.url || `${prefix}:${index}`
+    ).trim();
+    const nonClipArtifactIds = new Set();
+    const clipIds = new Set();
+    (Array.isArray(artifacts) ? artifacts : []).forEach((item, index) => {
+      const type = String(item?.type || item?.artifactType || item?.artifact_type || "artifact").trim().toLowerCase() || "artifact";
+      const identity = identityFor(item, index, "artifact");
+      if (/^clips?$/.test(type)) clipIds.add(identity);
+      else nonClipArtifactIds.add(identity);
+    });
+    (Array.isArray(clips) ? clips : []).forEach((item, index) => clipIds.add(identityFor(item, index, "clip")));
+    return {
+      artifactTotal: nonClipArtifactIds.size + clipIds.size,
+      clipTotal: clipIds.size,
+      nonClipArtifactTotal: nonClipArtifactIds.size
+    };
   }
 
   function buildProfileSectionHeading(eyebrowText, titleText, metaText = "") {
@@ -13728,16 +13741,6 @@
     if (aboutVideo) {
       presentation = create("div", "profile-about-video-presentation");
       const meta = create("div", "profile-about-video-meta");
-      const providerBadge = create("span", "profile-about-video-provider");
-      if (aboutVideo.sourceType === "embed") {
-        const providerIcon = create("img", "profile-about-video-provider-icon");
-        providerIcon.src = `/assets/icons/${aboutVideo.provider}.svg`;
-        providerIcon.alt = "";
-        providerIcon.setAttribute("aria-hidden", "true");
-        providerBadge.append(providerIcon);
-      }
-      providerBadge.append(create("span", "", aboutVideo.providerLabel));
-      meta.appendChild(providerBadge);
       if (aboutVideo.title) meta.appendChild(create("h3", "profile-about-video-title", aboutVideo.title));
       const frame = create("div", "profile-about-video-frame is-loading");
       if (aboutVideo.sourceType === "upload") {
@@ -13761,18 +13764,27 @@
           frame.append(loading, iframe);
         }
       }
-      presentation.append(meta, frame);
+      if (meta.childElementCount) presentation.appendChild(meta);
+      presentation.appendChild(frame);
       if (aboutVideo.sourceType === "embed") {
         const sourceLink = create("a", "profile-about-video-source-link", aboutVideo.externalActionLabel);
         sourceLink.href = aboutVideo.sourceUrl;
         sourceLink.target = "_blank";
         sourceLink.rel = "noopener noreferrer";
+        sourceLink.setAttribute("aria-label", aboutVideo.externalActionLabel);
+        const sourceIcon = create("img", "profile-about-video-source-icon");
+        sourceIcon.src = `/assets/icons/${aboutVideo.provider}.svg`;
+        sourceIcon.alt = "";
+        sourceIcon.setAttribute("aria-hidden", "true");
+        sourceLink.prepend(sourceIcon);
         presentation.appendChild(sourceLink);
       }
     }
-    if (presentation) layout.appendChild(presentation);
     if (hasStory) layout.appendChild(story);
-    panel.append(header, layout);
+    if (presentation) layout.appendChild(presentation);
+    const footer = create("div", "profile-about-footer", "PUBLIC IDENTITY / STREAMSUITES");
+    footer.setAttribute("aria-hidden", "true");
+    panel.append(header, layout, footer);
     return section;
   }
 
@@ -13787,7 +13799,7 @@
     if (profileHasRenderableAbout(profile)) items.push(["#profile-about", "ABOUT"]);
     items.push(
       ["#profile-identity", "IDENTITY"],
-      ["#media", "WATCH"],
+      ["#watch", "WATCH"],
       ["#clips", "CLIPS"],
       ["#artifacts", "ARTIFACTS"],
       ["#profile-presence", "PRESENCE"],
@@ -14079,20 +14091,10 @@
   }
 
   function buildProfileOverviewPanel(profile, artifacts, clips, helpers) {
-    const counts = countProfileArtifactsByType(artifacts);
-    const progression = profile?.progression && typeof profile.progression === "object" ? profile.progression : null;
+    const counts = summarizeProfileArtifactCounts(artifacts, clips);
     const economy = profile?.economy && typeof profile.economy === "object" ? profile.economy : null;
     const inventory = Array.isArray(profile?.inventory) ? profile.inventory : [];
     const displayInventory = inventory.filter((item) => !isWalletDenominationInventoryItem(item));
-    const overviewXpValue = progression
-      ? buildProgressionXpValue(progression.xp_total ?? progression.total_xp ?? 0, { compact: true })
-      : "Pending";
-    const overviewLevelValue = progression
-      ? buildProgressionLevelChip(progression, { compact: true })
-      : "Pending";
-    const overviewGlobalRankValue = progression
-      ? buildProgressionGlobalRankValue(progression, { compact: true, emptyLabel: "Unranked" })
-      : "Pending";
     const section = create("section", "profile-utility-section profile-overview-panel");
     section.id = "profile-overview";
     section.setAttribute("aria-labelledby", "profile-overview-title");
@@ -14102,44 +14104,55 @@
     header.querySelector(".profile-section-heading-copy")?.appendChild(create(
       "p",
       "profile-overview-intro",
-      "Identity, activity and progression in one public snapshot."
+      "The public activity and account details that matter most, without repeating the full profile below."
     ));
 
-    const details = create("dl", "profile-overview-definition-list");
-    const addRow = (label, value, { pending = false, kind = "activity", emphasis = false } = {}) => {
-      const row = create("div", `profile-overview-definition-item profile-overview-definition-item--${kind}${emphasis ? " is-emphasis" : ""}`);
-      row.dataset.profileOverviewMetric = kind;
-      if (pending) row.classList.add("is-pending");
-      const valueNode = create("dd", "profile-overview-value");
-      if (value instanceof Node) valueNode.appendChild(value);
-      else valueNode.textContent = String(value || "");
-      row.append(create("dt", "profile-overview-label", label), valueNode);
-      details.appendChild(row);
+    const primaryMetrics = create("div", "profile-overview-primary-grid");
+    primaryMetrics.setAttribute("aria-label", "Primary public profile metrics");
+    const addPrimaryMetric = (label, value, description, kind, pending = false) => {
+      const card = create("article", `profile-overview-primary-card profile-overview-primary-card--${kind}`);
+      card.dataset.profileOverviewPrimaryMetric = kind;
+      if (pending) card.classList.add("is-pending");
+      card.append(
+        create("span", "profile-overview-primary-label", label),
+        create("strong", "profile-overview-primary-value", value),
+        create("span", "profile-overview-primary-description", description)
+      );
+      primaryMetrics.appendChild(card);
     };
-
-    addRow("Tier", buildProfileTierChip(profile?.tier || "core"), { kind: "tier", emphasis: true });
-    addRow("Level", overviewLevelValue, { pending: !progression, kind: "level", emphasis: true });
-    addRow("XP", overviewXpValue, { pending: !progression, kind: "xp", emphasis: true });
-    addRow("Global Rank", overviewGlobalRankValue, { pending: !progression, kind: "rank", emphasis: true });
-    addRow("Artifacts", formatNumber(counts.total), { kind: "artifacts" });
-    addRow("Clips", formatNumber(Array.isArray(clips) ? clips.length : 0), { kind: "clips" });
-    addRow("Polls", formatNumber(counts.polls || 0), { kind: "polls" });
-    addRow(
+    addPrimaryMetric("Artifacts", formatNumber(counts.artifactTotal), "All public artifacts, including clips", "artifacts");
+    addPrimaryMetric("Clips", formatNumber(counts.clipTotal), "First-class public clip subset", "clips");
+    addPrimaryMetric(
       "Inventory",
       profile?.inventoryAvailable
-        ? displayInventory.length ? `${formatNumber(displayInventory.length)} item type${displayInventory.length === 1 ? "" : "s"}` : "Empty"
+        ? displayInventory.length ? `${formatNumber(displayInventory.length)} type${displayInventory.length === 1 ? "" : "s"}` : "Empty"
         : "Unavailable",
-      { pending: !profile?.inventoryAvailable, kind: "inventory" }
+      "Public inventory item types",
+      "inventory",
+      !profile?.inventoryAvailable
     );
-    addRow("Profile type", buildProfileTypeChip(profile), { kind: "profile" });
-    addRow("Joined", formatProfileDate(profile?.joinedAt || profile?.createdAt, helpers) || "Pending public data", { pending: !profile?.joinedAt && !profile?.createdAt, kind: "joined" });
-    addRow("Balance", economy ? buildEconomyBalanceValue(economy, { compact: true }) : "Unavailable", { pending: !economy, kind: "balance" });
 
-    section.append(header, details);
+    const details = create("dl", "profile-overview-details");
+    const addDetail = (label, value, { pending = false, kind = "detail" } = {}) => {
+      const row = create("div", `profile-overview-detail profile-overview-detail--${kind}`);
+      row.dataset.profileOverviewDetail = kind;
+      if (pending) row.classList.add("is-pending");
+      const valueNode = create("dd", "profile-overview-detail-value");
+      if (value instanceof Node) valueNode.appendChild(value);
+      else valueNode.textContent = String(value || "Unavailable");
+      row.append(create("dt", "profile-overview-detail-label", label), valueNode);
+      details.appendChild(row);
+    };
+    addDetail("Profile type", buildProfileTypeChip(profile), { kind: "profile" });
+    addDetail("Tier", buildProfileTierChip(profile?.tier || "core"), { kind: "tier" });
+    addDetail("Joined", formatProfileDate(profile?.joinedAt || profile?.createdAt, helpers) || "Pending public data", { pending: !profile?.joinedAt && !profile?.createdAt, kind: "joined" });
+    addDetail("Balance", economy ? buildEconomyBalanceValue(economy, { compact: true }) : "Unavailable", { pending: !economy, kind: "balance" });
+
+    section.append(header, primaryMetrics, details);
     return section;
   }
 
-  function buildProfileMediaSection(profile, helpers) {
+  function buildProfileWatchSection(profile, helpers) {
     const stream = profile?.latestStream || null;
     const hasUsableStream = Boolean(
       stream &&
@@ -14153,12 +14166,12 @@
     );
     const hasPublishedMedia = hasUsableStream || buildLatestStreamTrayEntries(stream).length > 0;
     const { details, panel } = buildProfileCollapsibleSectionShell({
-      id: "media",
+      id: "watch",
       label: "WATCH",
       icon: "/assets/icons/ui/visible.svg",
       meta: hasPublishedMedia ? (stream?.isLive ? "Live now" : "Latest + recent") : "No media published",
-      className: "profile-stream-collapsible profile-media-section",
-      open: hasPublishedMedia
+      className: "profile-stream-collapsible profile-media-section profile-watch-section",
+      open: true
     });
     panel.classList.add("profile-stream-panel");
     const card = create("article", `profile-latest-stream-card${hasUsableStream && stream?.isLive ? " is-live" : ""}${hasUsableStream ? "" : " is-empty"}`);
@@ -14242,11 +14255,11 @@
     const displayInventory = inventory.filter((item) => !isWalletDenominationInventoryItem(item));
     const exchangeableItems = normalizeExchangeableItems({ exchangeable_items: profile?.exchangeableItems }, inventory);
     const hasGameData = Boolean(progression || economy || profile?.inventoryAvailable || scopedRows.length);
-    const details = create("section", "profile-artifacts-progression profile-game-collapsible");
+    const details = create("section", "profile-artifacts-progression profile-game-collapsible profile-artifacts-dashboard");
     details.dataset.profileProgressionMode = "global";
     details.dataset.profileDataState = hasGameData ? "available" : "empty";
     const header = create("div", "profile-artifacts-subsection-header profile-game-summary");
-    const action = create("h3", "", "Progression & inventory");
+    const action = create("h3", "", "Progression dashboard");
     if (!hasGameData) {
       const emptyMeta = create("span", "profile-authority-summary-meta");
       emptyMeta.appendChild(create("span", "", "No public game data"));
@@ -14256,6 +14269,7 @@
       details.append(header, emptyPanel);
       return details;
     }
+
     const scopeWrap = create("span", "profile-game-scope-compact");
     scopeWrap.dataset.profileScopeSelector = "compact";
     const scopeChip = create("span", "profile-game-scope-chip");
@@ -14273,11 +14287,29 @@
 
     const panel = create("div", "profile-game-panel");
     panel.dataset.profileProgressionMode = "global";
-    const grid = create("div", "profile-game-grid");
-
+    const dashboard = create("div", "profile-game-dashboard");
     const buildUnavailable = (text) => create("div", "profile-game-scoped-unavailable", text);
-    const renderGameCards = (selectedRow = null) => {
-      clear(grid);
+    const appendCardValue = (card, value) => {
+      if (value instanceof Node) {
+        const valueWrap = create("strong", "profile-game-card-value");
+        valueWrap.appendChild(value);
+        card.appendChild(valueWrap);
+      } else {
+        card.appendChild(create("strong", "profile-game-card-value", value));
+      }
+    };
+    const buildDashboardCard = ({ className = "", label, value, note, extra = null, source = null }) => {
+      const card = create("article", `profile-game-preview-card${className ? ` ${className}` : ""}`);
+      if (className.includes("profile-game-preview-card--current-level")) applyProfileCurrentLevelCardTheme(card, source);
+      card.appendChild(create("span", "profile-game-preview-label", label));
+      appendCardValue(card, value);
+      if (note) card.appendChild(create("span", "profile-game-preview-note", note));
+      if (extra instanceof Node) card.appendChild(extra);
+      return card;
+    };
+
+    const renderDashboard = (selectedRow = null) => {
+      clear(dashboard);
       const scoped = Boolean(selectedRow);
       const source = scoped ? selectedRow : progression;
       const sourceRank = source?.rank && typeof source.rank === "object" ? source.rank : {};
@@ -14290,12 +14322,15 @@
       const sourceNextLevelLabel = source ? String(source.next_level_label || sourceRank.next_level_label || sourceNextLevel.level_label || "").trim() : "";
       const sourceXpToNext = Number(source?.xp_to_next_level ?? sourceRank.xp_to_next_level ?? sourceRank.xp_to_next);
       const sourceProgressXp = Number(source?.xp_into_current_level ?? sourceRank.xp_into_current_level ?? sourceRank.progress_xp);
-      const sourceProgressNeededXp = Number(sourceRank.progress_needed_xp);
-      const sourceHasProgressMeter = source && sourceNextLevelLabel && Number.isFinite(sourceProgressXp) && Number.isFinite(sourceProgressNeededXp) && sourceProgressNeededXp > 0;
+      const sourceProgressNeededXp = Number(source?.progress_needed_xp ?? sourceRank.progress_needed_xp);
+      const sourceHasProgressMeter = Boolean(source && Number.isFinite(sourceProgressXp) && Number.isFinite(sourceProgressNeededXp) && sourceProgressNeededXp > 0);
       const sourceProgressPercent = sourceHasProgressMeter ? Math.max(0, Math.min(100, (sourceProgressXp / sourceProgressNeededXp) * 100)) : 0;
       const scopedWallet = scoped ? leaderboardWallet(selectedRow) : null;
       const scopedInventory = scoped ? leaderboardInventoryItems(selectedRow) : [];
       const scopedInventoryAvailable = scoped ? leaderboardHasInventoryPayload(selectedRow) : false;
+      const activeWallet = scoped ? scopedWallet : economy;
+      const activeInventory = scoped ? scopedInventory : displayInventory;
+
       details.dataset.profileProgressionMode = scoped ? "scoped" : "global";
       panel.dataset.profileProgressionMode = scoped ? "scoped" : "global";
       clear(scopeChip);
@@ -14303,36 +14338,37 @@
         createScopedPlatformBrandIcon(scoped ? selectedRow : "global", "profile-game-scope-chip-icon"),
         create("span", "", scoped ? "Channel scope" : "Global default")
       );
-      [
-        {
-          className: "profile-game-preview-card--featured",
+
+      const rankValue = create("span", `profile-game-xp-rank-combo${sourcePlacementRank >= 1 && sourcePlacementRank <= 3 ? ` profile-game-xp-rank-combo--top-${sourcePlacementRank}` : ""}`);
+      rankValue.appendChild(buildProgressionXpValue(sourceXpTotal, { prominent: true }));
+      const rankWrap = create("span", "profile-game-xp-rank-placement");
+      const rankAsset = LEADERBOARD_PLACEMENT_ASSETS[sourcePlacementRank];
+      if (rankAsset) {
+        const image = create("img", "profile-game-xp-rank-placement-icon");
+        image.src = rankAsset;
+        image.alt = "";
+        image.loading = "lazy";
+        image.decoding = "async";
+        rankWrap.appendChild(image);
+      }
+      rankWrap.appendChild(scoped
+        ? create("span", "progression-global-rank-value progression-global-rank-value--prominent", sourcePlacementRank ? `#${formatNumber(sourcePlacementRank)}` : "Unranked")
+        : progression ? buildProgressionGlobalRankValue(progression, { prominent: true, emptyLabel: "Unranked" }) : create("span", "progression-global-rank-value progression-global-rank-value--prominent", "Unranked"));
+      rankValue.appendChild(rankWrap);
+
+      const progressionBand = create("div", "profile-game-progression-band");
+      progressionBand.append(
+        buildDashboardCard({
+          className: "profile-game-preview-card--featured profile-game-preview-card--xp",
           label: scoped ? "Current XP / Scoped rank" : "Current XP / Global rank",
-          value: (() => {
-            const wrap = create("span", `profile-game-xp-rank-combo${sourcePlacementRank >= 1 && sourcePlacementRank <= 3 ? ` profile-game-xp-rank-combo--top-${sourcePlacementRank}` : ""}`);
-            wrap.appendChild(buildProgressionXpValue(sourceXpTotal, { prominent: true }));
-            const rankWrap = create("span", "profile-game-xp-rank-placement");
-            const rankAsset = LEADERBOARD_PLACEMENT_ASSETS[sourcePlacementRank];
-            if (rankAsset) {
-              const img = create("img", "profile-game-xp-rank-placement-icon");
-              img.src = rankAsset;
-              img.alt = "";
-              img.loading = "lazy";
-              img.decoding = "async";
-              rankWrap.appendChild(img);
-            }
-            rankWrap.appendChild(scoped
-              ? create("span", "progression-global-rank-value progression-global-rank-value--prominent", sourcePlacementRank ? `#${formatNumber(sourcePlacementRank)}` : "Unranked")
-              : progression ? buildProgressionGlobalRankValue(progression, { prominent: true, emptyLabel: "Unranked" }) : create("span", "progression-global-rank-value progression-global-rank-value--prominent", "Unranked"));
-            wrap.appendChild(rankWrap);
-            return wrap;
-          })(),
+          value: rankValue,
           note: scoped
             ? `Scoped to ${scopedProgressionScopeLabel(selectedRow)}.`
             : sourcePlacementRank
               ? `Leaderboard placement is separate from ${sourceLevelLabel || "current level"}.`
               : "No global leaderboard placement has been returned for this identity yet."
-        },
-        {
+        }),
+        buildDashboardCard({
           className: "profile-game-preview-card--featured profile-game-preview-card--current-level",
           label: scoped ? "Scoped level" : "Current level",
           value: source ? buildProgressionLevelChip(source, { prominent: true }) : "No level yet",
@@ -14340,88 +14376,84 @@
             ? sourceNextLevelLabel && Number.isFinite(sourceXpToNext)
               ? `${sourceLevelLabel || "Current level"} - ${formatNumber(sourceXpToNext)} XP to ${sourceNextLevelLabel}`
               : `${sourceLevelLabel || (scoped ? "Scoped level" : "Current level")} is the current runtime level.`
-            : "Level appears after the runtime returns progression data."
-        },
-        {
+            : "Level appears after the runtime returns progression data.",
+          source
+        })
+      );
+
+      const progressStrip = create("section", "profile-game-progress-strip");
+      const progressCopy = create("div", "profile-game-progress-copy");
+      progressCopy.append(
+        create("span", "profile-game-preview-label", "Next level progress"),
+        create("strong", "", sourceHasProgressMeter ? `${formatNumber(sourceProgressXp)} / ${formatNumber(sourceProgressNeededXp)} XP` : "Not available"),
+        create("span", "profile-game-preview-note", sourceNextLevelLabel
+          ? `Progress toward ${sourceNextLevelLabel}`
+          : source ? "No higher configured level is exposed in this payload." : "Progress appears with runtime progression data.")
+      );
+      const meter = create("span", "profile-game-progress-meter");
+      meter.setAttribute("role", "progressbar");
+      meter.setAttribute("aria-label", sourceNextLevelLabel ? `Progress toward ${sourceNextLevelLabel}` : "Next level progress");
+      meter.setAttribute("aria-valuemin", "0");
+      meter.setAttribute("aria-valuemax", sourceHasProgressMeter ? String(sourceProgressNeededXp) : "100");
+      meter.setAttribute("aria-valuenow", sourceHasProgressMeter ? String(Math.max(0, sourceProgressXp)) : "0");
+      const fill = create("span", "profile-game-progress-meter-fill");
+      fill.style.setProperty("--profile-progress-target", `${sourceProgressPercent}%`);
+      meter.appendChild(fill);
+      progressStrip.append(progressCopy, meter);
+
+      const breakdownGrid = create("div", "profile-game-breakdown-grid");
+      const walletExtra = create("div", "profile-game-wallet-stack");
+      walletExtra.appendChild(activeWallet ? buildEconomyDenominationBreakdown(activeWallet) : buildUnavailable(scoped ? "No scoped wallet data yet" : "No wallet data yet"));
+      if (!scoped && options.canEdit) {
+        const exchangePanel = buildPublicValueItemExchangePanel(exchangeableItems);
+        if (exchangePanel) walletExtra.appendChild(exchangePanel);
+      }
+      const inventoryExtra = create("div", "profile-game-inventory-stack");
+      inventoryExtra.appendChild(scoped && !scopedInventoryAvailable
+        ? buildUnavailable("No scoped inventory data yet")
+        : buildInventorySummaryList(activeInventory, { context: scoped ? scopedProgressionScopeLabel(selectedRow) : "Global profile inventory" }));
+      breakdownGrid.append(
+        buildDashboardCard({
           className: "profile-game-preview-card--breakdown profile-game-preview-card--balance",
-          label: scoped ? "Scoped balance" : "Current balance",
-          value: scoped
-            ? scopedWallet ? buildEconomyBalanceValue(scopedWallet, { prominent: true, fullColorIcon: true, showCashComponent: true, leadClassName: "profile-game-card-lead profile-game-card-lead--balance" }) : "Unavailable"
-            : buildEconomyBalanceValue(economy || {}, { prominent: true, fullColorIcon: true, showCashComponent: true, leadClassName: "profile-game-card-lead profile-game-card-lead--balance" }),
+          label: scoped ? "Scoped wallet" : "Wallet balance",
+          value: activeWallet
+            ? buildEconomyBalanceValue(activeWallet, { prominent: true, fullColorIcon: true, showCashComponent: true, leadClassName: "profile-game-card-lead profile-game-card-lead--balance" })
+            : "Unavailable",
           note: scoped
-            ? scopedWallet ? "Scoped wallet hydrates from the selected Runtime/Auth scope." : "No scoped wallet data yet"
-            : economy ? `${formatNumber(economy.earned_lifetime || 0)} earned lifetime from the runtime economy wallet` : "No economy events have been recorded yet.",
-          extra: scoped
-            ? scopedWallet ? buildEconomyDenominationBreakdown(scopedWallet || {}) : buildUnavailable("No scoped wallet data yet")
-            : buildEconomyDenominationBreakdown(economy || {})
-        },
-        {
+            ? activeWallet ? "Scoped wallet from the selected Runtime/Auth scope." : "No scoped wallet data yet."
+            : economy ? `${formatNumber(economy.earned_lifetime || 0)} earned lifetime from the runtime economy wallet.` : "No economy events have been recorded yet.",
+          extra: walletExtra
+        }),
+        buildDashboardCard({
           className: "profile-game-preview-card--breakdown profile-game-preview-card--inventory",
           label: scoped ? "Scoped inventory" : "Inventory",
-          value: buildInventoryCardLeadValue(scoped ? scopedInventory.length ? "Itemized" : scopedInventoryAvailable ? "Empty" : "Unavailable" : displayInventory.length ? "Itemized" : "Empty"),
-          note: scoped
-            ? scopedInventory.length ? "Scoped inventory hydrates from the selected Runtime/Auth scope." : scopedInventoryAvailable ? "Scoped inventory is empty for this scope." : "No scoped inventory data yet"
-            : displayInventory.length ? "Current quantities hydrate from runtime inventory state." : "No authority-owned items have been issued yet.",
-          extra: (() => {
-            const wrap = create("div", "profile-game-inventory-stack");
-            if (scoped) {
-              wrap.appendChild(scopedInventoryAvailable ? buildInventorySummaryList(scopedInventory, { context: scopedProgressionScopeLabel(selectedRow) }) : buildUnavailable("No scoped inventory data yet"));
-              return wrap;
-            }
-            wrap.appendChild(buildInventorySummaryList(displayInventory, { context: "Global profile inventory" }));
-            if (options.canEdit) {
-              const panel = buildPublicValueItemExchangePanel(exchangeableItems);
-              if (panel) wrap.appendChild(panel);
-            }
-            return wrap;
-          })()
-        },
-        {
-          className: "profile-game-preview-card--progress",
-          label: "Next level progress",
-          value: sourceHasProgressMeter ? `${formatNumber(sourceProgressXp)} / ${formatNumber(sourceProgressNeededXp)} XP` : "Not available",
-          note: sourceNextLevelLabel
-            ? `Progress toward ${sourceNextLevelLabel}`
-            : source
-              ? "No higher configured level is exposed in this payload."
-              : "Progress appears with runtime progression data.",
-          extra: sourceHasProgressMeter ? (() => {
-            const meter = create("span", "profile-game-progress-meter profile-game-progress-meter--animated");
-            const fill = create("span", "profile-game-progress-meter-fill profile-game-progress-meter-fill--electric");
-            fill.style.setProperty("--profile-progress-target", `${sourceProgressPercent}%`);
-            meter.appendChild(fill);
-            return meter;
-          })() : null
-        },
-        { label: scoped ? "Messages" : "Season standing", value: scoped ? formatNumber(selectedRow.message_count || 0) : "Not seeded", note: scoped ? "Scoped message count when returned by Runtime/Auth." : "Ladders arrive later" }
-      ].forEach((item) => {
-        const card = create("article", `profile-game-preview-card${item.className ? ` ${item.className}` : ""}`);
-        if (item.className?.includes("profile-game-preview-card--current-level")) {
-          applyProfileCurrentLevelCardTheme(card, source);
-        }
-        card.append(
-          create("span", "profile-game-preview-label", item.label),
-          item.value instanceof Node ? (() => {
-            const valueWrap = create("strong", "");
-            valueWrap.appendChild(item.value);
-            return valueWrap;
-          })() : create("strong", "", item.value),
-          create("span", "profile-game-preview-note", item.note)
-        );
-        if (item.extra instanceof Node) card.appendChild(item.extra);
-        grid.appendChild(card);
-      });
+          value: buildInventoryCardLeadValue(activeInventory.length ? "Itemized" : scoped && !scopedInventoryAvailable ? "Unavailable" : "Empty"),
+          note: activeInventory.length
+            ? "Select an item for its full public details."
+            : scoped && !scopedInventoryAvailable ? "No scoped inventory data yet." : "No authority-owned items have been issued yet.",
+          extra: inventoryExtra
+        })
+      );
+
+      const standing = create("div", "profile-game-standing-context");
+      standing.append(
+        create("span", "profile-game-preview-label", scoped ? "Scoped activity" : "Season standing"),
+        create("strong", "", scoped ? `${formatNumber(selectedRow.message_count || 0)} messages` : "Not seeded"),
+        create("span", "profile-game-preview-note", scoped ? "Message count returned for the selected scope." : "Seasonal ladders remain deferred.")
+      );
+      dashboard.append(progressionBand, progressStrip, breakdownGrid, standing);
     };
-    renderGameCards(null);
+
+    renderDashboard(null);
     scopeSelect.addEventListener("change", () => {
       const selected = scopedRows.find((row) => row.scope_key === scopeSelect.value) || null;
-      renderGameCards(selected);
+      renderDashboard(selected);
     });
     panel.append(
-      grid,
+      dashboard,
       create("p", "profile-game-disclaimer", progression
-        ? "XP, level, wallet balance, and inventory hydrate from runtime public authority. Leaderboard rank means placement only. Seasonal standings remain deferred."
-        : "No authoritative XP events have been recorded for this public identity yet. Wallet and inventory can still show real starting state when returned by runtime authority.")
+        ? "XP, level, wallet balance, and inventory hydrate from Runtime/Auth public authority. Leaderboard rank means placement only. Seasonal standings remain deferred."
+        : "No authoritative XP events have been recorded for this public identity yet. Wallet and inventory can still show real starting state when returned by Runtime/Auth.")
     );
     details.append(header, panel);
     return details;
@@ -14496,6 +14528,21 @@
       return section;
     }
 
+    const filters = create("div", "profile-artifact-filters");
+    filters.setAttribute("role", "group");
+    filters.setAttribute("aria-label", "Filter artifact gallery by type");
+    const artifactTypes = [...new Set(publicArtifacts.map((item) => String(item?.type || item?.artifactType || "artifact").trim().toLowerCase() || "artifact"))];
+    let activeType = "all";
+    const filterButtons = ["all", ...artifactTypes].map((type) => {
+      const button = create("button", "profile-artifact-filter", type === "all" ? `All · ${formatNumber(artifactCount)}` : toTitle(type));
+      button.type = "button";
+      button.dataset.artifactFilter = type;
+      button.setAttribute("aria-pressed", type === activeType ? "true" : "false");
+      filters.appendChild(button);
+      return button;
+    });
+    section.appendChild(filters);
+
     const gallery = create("div", "profile-mini-artifact-grid");
     const pagination = create("nav", "profile-artifact-pagination");
     pagination.setAttribute("aria-label", "Artifact gallery pages");
@@ -14509,9 +14556,12 @@
     let page = 1;
     const renderPage = () => {
       clear(gallery);
-      const totalPages = Math.max(1, Math.ceil(publicArtifacts.length / pageSize));
+      const filteredArtifacts = activeType === "all"
+        ? publicArtifacts
+        : publicArtifacts.filter((item) => String(item?.type || item?.artifactType || "artifact").trim().toLowerCase() === activeType);
+      const totalPages = Math.max(1, Math.ceil(filteredArtifacts.length / pageSize));
       page = Math.max(1, Math.min(page, totalPages));
-      publicArtifacts.slice((page - 1) * pageSize, page * pageSize).forEach((item) => {
+      filteredArtifacts.slice((page - 1) * pageSize, page * pageSize).forEach((item) => {
         const wrap = create("article", "profile-mini-artifact-item");
         wrap.appendChild(buildProfileMiniArtifactCard(item, helpers));
         if (ownerMode) {
@@ -14526,6 +14576,12 @@
       status.textContent = `Page ${formatNumber(page)} of ${formatNumber(totalPages)}`;
       pagination.hidden = totalPages <= 1;
     };
+    filterButtons.forEach((button) => button.addEventListener("click", () => {
+      activeType = button.dataset.artifactFilter || "all";
+      page = 1;
+      filterButtons.forEach((candidate) => candidate.setAttribute("aria-pressed", candidate === button ? "true" : "false"));
+      renderPage();
+    }));
     previous.addEventListener("click", () => { page -= 1; renderPage(); gallery.focus?.(); });
     next.addEventListener("click", () => { page += 1; renderPage(); gallery.focus?.(); });
     gallery.tabIndex = -1;
@@ -14723,7 +14779,7 @@
       icon: "/assets/icons/ui/shieldtick.svg",
       meta: authorityContext?.targetIdentityCode ? "Profile controls · authority requests" : "Authority target pending",
       className: "profile-safety-section",
-      open: true
+      open: false
     });
     const header = buildProfileSectionHeading("", "Safety");
     header.querySelector("h2").id = "profile-safety-title";
@@ -14895,15 +14951,15 @@
     );
     profileCard.dataset.profileDensity = isContentRich ? "rich" : "sparse";
 
-    const aboutSection = buildProfileAboutSection(profile, canEdit, options);
-    if (aboutSection) profileCard.appendChild(aboutSection);
-
     const primaryGrid = create("div", "profile-body-grid profile-body-grid--overview-only");
     primaryGrid.appendChild(buildProfileOverviewPanel(profile, profileArtifacts, profileClips.all || [], options.helpers || null));
     profileCard.appendChild(primaryGrid);
 
+    const aboutSection = buildProfileAboutSection(profile, canEdit, options);
+    if (aboutSection) profileCard.appendChild(aboutSection);
+
     profileCard.appendChild(buildProfileBadgeGallerySection(profile));
-    profileCard.appendChild(buildProfileMediaSection(profile, options.helpers || null));
+    profileCard.appendChild(buildProfileWatchSection(profile, options.helpers || null));
     profileCard.appendChild(buildProfileClipsSection(profileClips, options.helpers || null));
     profileCard.appendChild(buildProfileArtifactsSection(profile, profileArtifacts, canEdit, options.helpers || null));
 
@@ -14952,10 +15008,10 @@
 
   function renderStandaloneProfileLoadingUtilityBody(profileCard) {
     clear(profileCard);
-    profileCard.appendChild(buildProfileLoadingSection("About", 3));
     const primaryGrid = create("div", "profile-body-grid profile-body-grid--overview-only");
     primaryGrid.appendChild(buildProfileLoadingSection("Profile overview", 4));
     profileCard.appendChild(primaryGrid);
+    profileCard.appendChild(buildProfileLoadingSection("About", 3));
     profileCard.appendChild(buildProfileLoadingSection("Identity", 3));
     profileCard.appendChild(buildProfileLoadingSection("Watch", 3));
     profileCard.appendChild(buildProfileLoadingSection("Clips", 3));
@@ -14977,10 +15033,13 @@
     const sentinel = shell.querySelector(".profile-section-nav-sentinel");
     const standaloneNav = shell.querySelector('[data-profile-nav-placement="standalone"]');
     const headerNav = shell.querySelector('[data-profile-nav-placement="header"]');
-    const sections = Array.from(shell.querySelectorAll("#profile-bio, #profile-about, #profile-identity, #media, #clips, #artifacts, #profile-presence, #profile-safety"));
+    const sections = Array.from(shell.querySelectorAll("#profile-bio, #profile-about, #profile-identity, #watch, #clips, #artifacts, #profile-presence, #profile-safety"));
     const legacyProfileAnchors = new Map([
-      ["#profile-live", "#media"],
-      ["#stream", "#media"],
+      ["#profile-live", "#watch"],
+      ["#profile-stream", "#watch"],
+      ["#latest-stream", "#watch"],
+      ["#media", "#watch"],
+      ["#stream", "#watch"],
       ["#profile-artifacts", "#artifacts"],
       ["#public-work", "#artifacts"],
       ["#game", "#artifacts"],

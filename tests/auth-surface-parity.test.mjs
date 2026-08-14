@@ -348,12 +348,12 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.doesNotMatch(app, /buildStandaloneProfileReturnFooter/);
   assert.ok(standaloneUtilityBlock, "standalone profile utility body should exist");
   assert.ok(standaloneLoadingBlock, "standalone profile loading utility body should exist");
-  assert.match(standaloneUtilityBlock, /profileCard\.appendChild\(buildProfileMediaSection\(profile, options\.helpers \|\| null\)\)/);
+  assert.match(standaloneUtilityBlock, /profileCard\.appendChild\(buildProfileWatchSection\(profile, options\.helpers \|\| null\)\)/);
   assert.match(standaloneUtilityBlock, /buildProfileOverviewPanel\(profile, profileArtifacts/);
   assert.match(standaloneUtilityBlock, /const aboutSection = buildProfileAboutSection\(profile, canEdit, options\)/);
   assert.match(standaloneUtilityBlock, /buildProfileArtifactsSection\(profile, profileArtifacts, canEdit/);
   assert.match(standaloneUtilityBlock, /buildProfileClipsSection\(profileClips/);
-  assert.match(standaloneUtilityBlock, /buildProfileBadgeGallerySection[\s\S]*buildProfileMediaSection[\s\S]*buildProfileClipsSection[\s\S]*buildProfileArtifactsSection[\s\S]*buildProfileSocialGallerySection/);
+  assert.match(standaloneUtilityBlock, /buildProfileOverviewPanel[\s\S]*buildProfileAboutSection[\s\S]*buildProfileBadgeGallerySection[\s\S]*buildProfileWatchSection[\s\S]*buildProfileClipsSection[\s\S]*buildProfileArtifactsSection[\s\S]*buildProfileSocialGallerySection/);
   assert.match(standaloneUtilityBlock, /const socialGallery = buildProfileSocialGallerySection\(profile\)/);
   assert.match(standaloneUtilityBlock, /profileCard\.appendChild\(socialGallery\)/);
   assert.match(standaloneUtilityBlock, /buildProfileShareSection\(profile, \{ compact: true \}\)/);
@@ -364,10 +364,10 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("Artifacts", 4\)/);
   assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("Clips", 3\)/);
   assert.match(standaloneLoadingBlock, /buildProfileLoadingSection\("Identity", 3\)/);
-  assert.match(standaloneLoadingBlock, /"About"[\s\S]*"Profile overview"[\s\S]*"Identity"[\s\S]*"Watch"[\s\S]*"Clips"[\s\S]*"Artifacts"[\s\S]*"Platform presence"[\s\S]*"Share profile"[\s\S]*"Safety"/);
-  assert.match(profileHtml, /href="#media">Watch<\/a><a href="#clips">Clips<\/a><a href="#artifacts">Artifacts<\/a>/);
+  assert.match(standaloneLoadingBlock, /"Profile overview"[\s\S]*"About"[\s\S]*"Identity"[\s\S]*"Watch"[\s\S]*"Clips"[\s\S]*"Artifacts"[\s\S]*"Platform presence"[\s\S]*"Share profile"[\s\S]*"Safety"/);
+  assert.match(profileHtml, /href="#watch">Watch<\/a><a href="#clips">Clips<\/a><a href="#artifacts">Artifacts<\/a>/);
   assert.match(app, /if \(options\.loadingSections === true\) \{/);
-  assert.match(app, /function buildProfileMediaSection\(profile, helpers\)/);
+  assert.match(app, /function buildProfileWatchSection\(profile, helpers\)/);
   assert.match(app, /alternate_sources|alternateSources/);
   assert.match(app, /const STREAM_SOURCE_PRIORITY = Object\.freeze\(\["kick", "rumble", "youtube", "twitch"\]\)/);
   assert.match(app, /function buildLatestStreamSourceEntries\(profile, stream, hasUsableStream\)/);
@@ -377,7 +377,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /profile-latest-stream-placeholder-card/);
   assert.match(app, /media\.classList\.add\("is-fallback-preview"\)/);
   assert.match(app, /const hasUsableStream = Boolean/);
-  assert.match(app, /id: "media"[\s\S]*label: "WATCH"/);
+  assert.match(app, /id: "watch"[\s\S]*label: "WATCH"/);
   assert.match(app, /profile-media-tray-viewport/);
   assert.match(profileCss, /scroll-snap-type:\s*inline mandatory/);
   assert.match(app, /No livestream data available/);
@@ -422,8 +422,8 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /function buildProfileGameCompetitionSection\(profile = null, options = \{\}\)/);
   assert.match(app, /if \(!label\) return create\("span", className, options\.emptyLabel \|\| "Unranked"\)/);
   assert.match(app, /profile-artifacts-progression profile-game-collapsible/);
-  assert.match(app, /Progression & inventory/);
-  assert.match(app, /XP, level, wallet balance, and inventory hydrate from runtime public authority/);
+  assert.match(app, /Progression dashboard/);
+  assert.match(app, /XP, level, wallet balance, and inventory hydrate from Runtime\/Auth public authority/);
   assert.match(app, /Seasonal standings remain deferred/);
   assert.doesNotMatch(app, /addRow\("StreamSuites"/);
   assert.doesNotMatch(app, /addRow\("FindMeHere"/);
@@ -458,17 +458,17 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(css, /@media \(max-width: 560px\)[\s\S]*\.profile-header-account \.account-text,[\s\S]*\.profile-header-account \.account-name/);
   assert.match(css, /@media \(max-width: 560px\)[\s\S]*\.profile-header-account \.account-pill\s*\{[\s\S]*justify-content:\s*center/);
   assert.match(css, /\.profile-overlay-brand-logo/);
-  assert.match(profileCss, /\.profile-overlay-brand-glyph\s*\{[\s\S]*streamsuites-filled\.svg/);
+  assert.match(profileCss, /\.profile-overlay-brand-glyph::before,[\s\S]*\.profile-overlay-brand-glyph::after\s*\{[\s\S]*streamsuites-filled\.svg/);
   assert.match(profileCss, /\.profile-overlay-brand\s*\{[\s\S]*border:\s*0;[\s\S]*background:\s*transparent/);
   assert.match(profileCss, /\.profile-overlay-brand-text\s*\{[\s\S]*font-weight:\s*800/);
-  assert.match(profileCss, /@keyframes profile-brand-breathe/);
-  assert.match(profileCss, /@keyframes profile-brand-spectrum/);
+  assert.doesNotMatch(profileCss, /@keyframes profile-brand-breathe/);
+  assert.doesNotMatch(profileCss, /@keyframes profile-brand-spectrum/);
   assert.match(profileCss, /--profile-gradient-a:\s*#7468ff/);
   assert.match(profileCss, /--profile-gradient-hover-a:\s*#6aa8ff/);
   assert.match(profileCss, /--profile-gradient-hover-c:\s*#c2a4ff/);
-  assert.match(profileCss, /\.profile-overlay-brand-glyph\s*\{[\s\S]*var\(--profile-gradient-a\)[\s\S]*var\(--profile-gradient-c\)/);
-  assert.match(profileCss, /\.profile-overlay-brand:hover \.profile-overlay-brand-glyph,[\s\S]*var\(--profile-feature-lift\)/);
-  assert.doesNotMatch(profileCss.match(/@keyframes profile-brand-breathe[\s\S]*?\n\}/)?.[0] || "", /profile-gradient-hover-c|white/);
+  assert.match(profileCss, /\.profile-overlay-brand-glyph::before\s*\{[\s\S]*var\(--profile-gradient-c\)[\s\S]*var\(--profile-gradient-a\)[\s\S]*var\(--profile-gradient-b\)/);
+  assert.match(profileCss, /\.profile-overlay-brand-glyph::after\s*\{[\s\S]*var\(--profile-gradient-b\)[\s\S]*var\(--profile-gradient-c\)[\s\S]*var\(--profile-gradient-a\)/);
+  assert.doesNotMatch(profileCss.match(/\.profile-overlay-brand-glyph::before\s*\{[\s\S]*?\n\}/)?.[0] || "", /animation:/);
   assert.match(profileCss, /data-profile-theme="frosted_silver"/);
   assert.match(css, /\.profile-overlay-brand-text\s*\{[\s\S]*letter-spacing:\s*0\.12em/);
   assert.match(css, /\.profile-overlay-brand-text\s*\{[\s\S]*text-transform:\s*none/);
@@ -560,9 +560,9 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(profileCss, /@media \(forced-colors: active\)/);
   assert.doesNotMatch(statusCss, /body\[data-public-page="public-profile-standalone"\] \.profile-footer-status-slot/);
 
-  assert.match(profileHtml, /href="\/css\/public-profile\.css\?v=20260814-profile-restructure"/);
+  assert.match(profileHtml, /href="\/css\/public-profile\.css\?v=20260814-profile-corrective"/);
   assert.match(profileHtml, /href="\/css\/status-widget\.css\?v=20260813-profile-footer"/);
-  assert.match(profileHtml, /src="\/js\/public-pages-app\.js\?v=20260814-profile-restructure"/);
+  assert.match(profileHtml, /src="\/js\/public-pages-app\.js\?v=20260814-profile-corrective"/);
   assert.match(profileHtml, /class="profile-skip-link" href="#profile-main"/);
   assert.match(profileHtml, /<footer class="profile-site-footer" data-profile-shell-footer>/);
   assert.match(profileHtml, /class="profile-site-footer__status" data-status-slot/);
@@ -758,14 +758,14 @@ test("standalone profile detail flow follows the canonical restructured order", 
   const aboutIndex = utilityBody.indexOf("buildProfileAboutSection");
   const overviewIndex = utilityBody.indexOf("buildProfileOverviewPanel");
   const identityIndex = utilityBody.indexOf("buildProfileBadgeGallerySection");
-  const mediaIndex = utilityBody.indexOf("buildProfileMediaSection");
+  const watchIndex = utilityBody.indexOf("buildProfileWatchSection");
   const clipsIndex = utilityBody.indexOf("buildProfileClipsSection");
   const artifactIndex = utilityBody.indexOf("buildProfileArtifactsSection");
   const presenceIndex = utilityBody.indexOf("buildProfileSocialGallerySection");
   const shareIndex = utilityBody.indexOf("buildProfileShareSection");
   const safetyIndex = utilityBody.indexOf("buildProfileSafetySection");
-  assert.ok(aboutIndex >= 0 && overviewIndex > aboutIndex && identityIndex > overviewIndex && mediaIndex > identityIndex);
-  assert.ok(clipsIndex > mediaIndex && artifactIndex > clipsIndex && presenceIndex > artifactIndex && shareIndex > presenceIndex && safetyIndex > shareIndex);
+  assert.ok(overviewIndex >= 0 && aboutIndex > overviewIndex && identityIndex > aboutIndex && watchIndex > identityIndex);
+  assert.ok(clipsIndex > watchIndex && artifactIndex > clipsIndex && presenceIndex > artifactIndex && shareIndex > presenceIndex && safetyIndex > shareIndex);
 });
 
 test("public badge surfaces share the floating badge-tooltip helper", () => {
@@ -836,9 +836,10 @@ test("standalone public profile uses the authoritative restructured section cont
   assert.match(app, /aboutEnabled = firstBoolean\([\s\S]*payload\?\.about_enabled[\s\S]*true/);
   assert.match(app, /about_enabled: aboutVisibilityInput\.checked/);
   assert.match(app, /if \(profile\?\.aboutEnabled === false \|\| !hasPublishedStory\) return null/);
-  assert.match(app, /\["#profile-identity", "IDENTITY"\][\s\S]*\["#media", "WATCH"\][\s\S]*\["#clips", "CLIPS"\][\s\S]*\["#artifacts", "ARTIFACTS"\][\s\S]*\["#profile-presence", "PRESENCE"\][\s\S]*\["#profile-safety", "SAFETY"\]/);
+  assert.match(app, /\["#profile-identity", "IDENTITY"\][\s\S]*\["#watch", "WATCH"\][\s\S]*\["#clips", "CLIPS"\][\s\S]*\["#artifacts", "ARTIFACTS"\][\s\S]*\["#profile-presence", "PRESENCE"\][\s\S]*\["#profile-safety", "SAFETY"\]/);
   assert.match(app, /function buildProfileOverviewPanel\(profile, artifacts, clips, helpers\)/);
-  assert.match(app, /create\("dl", "profile-overview-definition-list"\)/);
+  assert.match(app, /create\("div", "profile-overview-primary-grid"\)/);
+  assert.match(app, /create\("dl", "profile-overview-details"\)/);
   assert.match(app, /currentOverview\.replaceWith\(buildProfileOverviewPanel\(profile, artifacts, clipGallery\?\.all \|\| \[\], helpers\)\)/);
   assert.match(app, /profile-section-eyebrow profile-content-summary-eyebrow/);
   assert.match(app, /profile-content-summary-title/);
@@ -848,7 +849,8 @@ test("standalone public profile uses the authoritative restructured section cont
   assert.match(app, /Channel clips/);
   assert.match(app, /Clips created/);
   assert.match(app, /function profileClipPageCapacity\(\)[\s\S]*return 12[\s\S]*return 9[\s\S]*return 6[\s\S]*return 3/);
-  assert.match(app, /\["#profile-live", "#media"\]/);
+  assert.match(app, /\["#profile-live", "#watch"\]/);
+  assert.match(app, /\["#media", "#watch"\]/);
   assert.match(app, /\["#public-work", "#artifacts"\]/);
   assert.match(app, /panel\.inert = !details\.open/);
   assert.match(app, /querySelectorAll\("video, audio"\)/);
@@ -857,8 +859,9 @@ test("standalone public profile uses the authoritative restructured section cont
   assert.match(css, /\.profile-media-tray-viewport[\s\S]*scroll-snap-type:\s*inline mandatory/);
   assert.match(css, /html\[data-profile-page="active"\] body \.profile-media-tray-viewport[\s\S]*scrollbar-width:\s*none/);
   assert.match(css, /profile-content-summary \.profile-authority-summary-action[\s\S]*border:\s*0/);
-  assert.match(css, /--profile-action-primary-hover-bg:\s*linear-gradient\(315deg,\s*var\(--profile-gradient-a\),\s*var\(--profile-gradient-b\)\)/);
-  assert.match(css, /profile-overlay-brand:hover[\s\S]*profile-overlay-brand-logo[\s\S]*linear-gradient\([\s\S]*315deg[\s\S]*profile-gradient-a[\s\S]*profile-gradient-b/);
+  assert.match(css, /\.profile-content-collapsible:not\(\[open\]\)\s*\{[\s\S]*gap:\s*0;[\s\S]*padding:\s*0/);
+  assert.match(css, /--profile-action-primary-hover-bg:\s*linear-gradient\(128deg,[\s\S]*profile-gradient-b[\s\S]*profile-gradient-c[\s\S]*profile-gradient-a/);
+  assert.match(css, /profile-overlay-brand-glyph::after\s*\{[\s\S]*linear-gradient\(125deg,[\s\S]*profile-gradient-b[\s\S]*profile-gradient-c[\s\S]*profile-gradient-a/);
   assert.match(css, /profile-feature-action--primary:hover[\s\S]*background:\s*var\(--profile-action-primary-hover-bg\)/);
   assert.match(css, /@media \(min-width: 1600px\)[\s\S]*profile-clips-grid/);
 });
@@ -866,15 +869,16 @@ test("standalone public profile uses the authoritative restructured section cont
 test("standalone profile corrective presentation keeps hierarchy, order, and media state deliberate", () => {
   const app = read("js/public-pages-app.js");
   const css = read("css/public-profile.css");
+  const overviewSection = app.match(/function buildProfileOverviewPanel\(profile, artifacts, clips, helpers\) \{[\s\S]*?return section;\r?\n  \}/)?.[0] || "";
 
-  assert.match(app, /const addRow = \(label, value, \{ pending = false, kind = "activity", emphasis = false \} = \{\}\)/);
-  assert.match(app, /profile-overview-definition-item--\$\{kind\}/);
-  assert.match(css, /\.profile-overview-definition-list\s*\{[\s\S]*grid-template-columns:\s*repeat\(12,/);
+  assert.equal((overviewSection.match(/addPrimaryMetric\(/g) || []).length, 3);
+  assert.match(overviewSection, /addPrimaryMetric\("Artifacts"[\s\S]*addPrimaryMetric\("Clips"[\s\S]*"Inventory"/);
+  assert.doesNotMatch(overviewSection, /addPrimaryMetric\("(?:Polls|Tallies)"/);
+  assert.match(css, /\.profile-overview-primary-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(3,/);
   assert.match(css, /\.profile-body-grid\.profile-body-grid--overview-only\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/);
-  assert.match(css, /@media \(max-width: 420px\)[\s\S]*\.profile-overview-definition-list \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
-  assert.match(css, /@media \(max-width: 420px\)[\s\S]*\.profile-overview-definition-item--balance \{ grid-column: span 2; \}/);
-  assert.match(css, /\.profile-overview-definition-item \.profile-overview-value\s*\{[\s\S]*justify-content:\s*flex-start/);
-  assert.match(css, /\.profile-overview-definition-item\.is-emphasis/);
+  assert.match(css, /@media \(max-width: 420px\)[\s\S]*\.profile-overview-primary-description \{ display: none; \}/);
+  assert.match(css, /\.profile-overview-details\s*\{[\s\S]*grid-template-columns:\s*repeat\(4,/);
+  assert.match(css, /\.profile-overview-detail\s*\{[\s\S]*border-right:/);
 
   for (const eyebrow of [
     "Profile story",
@@ -888,19 +892,20 @@ test("standalone profile corrective presentation keeps hierarchy, order, and med
   }
   assert.match(app, /if \(eyebrow\) action\.appendChild/);
 
-  assert.match(app, /if \(presentation\) layout\.appendChild\(presentation\);\s*if \(hasStory\) layout\.appendChild\(story\)/);
+  assert.match(app, /if \(hasStory\) layout\.appendChild\(story\);\s*if \(presentation\) layout\.appendChild\(presentation\)/);
   assert.match(css, /\.profile-about-layout\.has-media\s*\{[\s\S]*grid-template-columns:\s*minmax\(320px, 0\.96fr\) minmax\(0, 1\.14fr\)/);
-  assert.match(css, /\.profile-about-video-presentation\s*\{\s*order:\s*1/);
+  assert.match(css, /@media \(max-width: 900px\)[\s\S]*grid-template-areas:\s*"story" "video"/);
   assert.match(app, /const hasPublishedMedia = hasUsableStream \|\| buildLatestStreamTrayEntries\(stream\)\.length > 0/);
-  assert.match(app, /className: "profile-stream-collapsible profile-media-section",\s*open: hasPublishedMedia/);
+  assert.match(app, /className: "profile-stream-collapsible profile-media-section profile-watch-section",\s*open: true/);
   assert.match(app, /className: "profile-artifacts-section",\s*open: false/);
   assert.match(app, /const activeLine = headerBottom \+ 32;[\s\S]*for \(const section of sections\)[\s\S]*section\.getBoundingClientRect\(\)\.top/);
   assert.doesNotMatch(app, /visibleSections\.get\(section\)\?\.isIntersecting/);
 
   assert.doesNotMatch(app, /profile-about-video-source-link profile-feature-action/);
   assert.match(css, /profile-about-video-source-link\s*\{[\s\S]*background:\s*transparent[\s\S]*font:\s*600/);
-  assert.match(css, /:where\(\.profile-edit-open-button--hero, \.profile-section-edit-button\)[\s\S]*font-family:\s*var\(--public-font-body\)[\s\S]*font-weight:\s*650/);
+  assert.match(css, /:where\(\.profile-edit-open-button--hero, \.profile-section-edit-button\)[\s\S]*font-family:\s*var\(--public-font-body\)[\s\S]*font-weight:\s*500/);
   assert.match(css, /profile-section-nav-link:hover[\s\S]*profile-gradient-b[\s\S]*profile-gradient-a/);
-  assert.match(css, /profile-overlay-brand-glyph\s*\{[\s\S]*linear-gradient\(135deg, var\(--profile-gradient-a\), var\(--profile-gradient-b\)\)/);
-  assert.match(css, /profile-overlay-brand:hover \.profile-overlay-brand-glyph[\s\S]*linear-gradient\(315deg, var\(--profile-gradient-a\), var\(--profile-gradient-b\)\)/);
+  assert.match(css, /profile-overlay-brand-glyph::before\s*\{[\s\S]*linear-gradient\(145deg/);
+  assert.match(css, /profile-overlay-brand-glyph::after\s*\{[\s\S]*linear-gradient\(125deg/);
+  assert.doesNotMatch(css, /@keyframes profile-brand-(?:breathe|spectrum)/);
 });

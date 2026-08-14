@@ -6,6 +6,21 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-14 - Corrected profile hierarchy, theming, and Artifacts dashboard
+
+#### Technical notes
+
+- Replaced the superseded profile order with Overview, optional About, Identity, Watch, Clips, Artifacts, Platform Presence, Share Profile, and Safety. The section rail now uses canonical `#watch`; `#media` and retained stream aliases resolve to it. Watch starts expanded, while Artifacts and Safety start collapsed, and closed panels have no residual padding or bottom gap.
+- Rebuilt Overview as exactly three compact primary metrics for Artifacts, Clips, and Inventory above a flat four-field semantic detail surface for Profile type, Tier, Joined, and Balance. The artifact total combines non-clip artifacts with the deduplicated first-class clip subset exactly once; separate Polls and Tallies cells were removed.
+- Reworked About so story is first in DOM/mobile order, the bulky provider chip is absent, the provider icon prefixes the discreet source link immediately below the player, and the identity label is a real non-colliding footer row. Desktop retains the deliberate player/story split without changing Runtime/Auth media resolution.
+- Replaced the animated header emblem and electric-blue/refilling XP bar with static rest/hover gradients and a static progress fill derived from all selected-theme stops. The Frosted Silver treatment is mixed into the dark shell to avoid near-white endpoints. The authenticated account button, open state, menu border/wash, header, overview, dividers, and item hover now inherit the same active theme while social shortcut borders remain neutral.
+- Redesigned Artifacts into a progression band, accessible XP meter, sibling wallet/inventory panels, separate owner exchange panel, compact standing context, contained scoped-board table, and type-filtered paginated non-clip gallery. Existing Runtime/Auth hydration, level/rank artwork, denomination/inventory assets, singleton item detail/lightbox behavior, exchange wiring, board links, clip provenance, routes, APIs, and permissions remain in place.
+- Updated focused tests for the canonical order and hashes, exact Overview metric contract and real deduplicated count logic, About DOM/link/footer behavior, static theme treatments, redesigned Artifacts hierarchy, and accessible static XP progress. No deployment, version/build change, Runtime/Auth mutation, commit, or push was performed.
+
+#### Human-readable summary
+
+The profile now opens with a concise three-number overview, flows in the requested order, keeps Watch easy to reach, and removes the awkward gaps and provider chip. Theme colours now carry through the logo, main actions, account menu, and XP progress without looping animation, while Artifacts reads as one organized progression, wallet, inventory, boards, and gallery workspace.
+
 ### 2026-08-14 - Public-profile overview and interaction correction
 
 #### Technical notes
