@@ -344,7 +344,9 @@
     streamsuites: "/assets/icons/ui/streamsuitesicon.svg",
     findmehere: "/assets/icons/ui/findmehereicon.svg",
     plus: "/assets/icons/ui/plus.svg",
-    minus: "/assets/icons/ui/minus.svg"
+    minus: "/assets/icons/ui/minus.svg",
+    previous: "/assets/icons/ui/previous.svg",
+    next: "/assets/icons/ui/next.svg"
   });
   const PROFILE_FALLBACK_SLUG = "publicuser";
   const STREAM_PLATFORM_LABELS = Object.freeze({
@@ -12989,7 +12991,7 @@
   }
 
   function getProfileHeaderSocialVisibleLimit() {
-    if (window.matchMedia("(max-width: 520px)").matches) return 2;
+    if (window.matchMedia("(max-width: 820px)").matches) return 1;
     return 3;
   }
 
@@ -13231,8 +13233,9 @@
       brandText
     );
     const headerNav = buildProfileSectionNav(profile, options.profileArtifacts || [], { placement: "header", profileClips: options.profileClips });
+    const headerNavScrollShell = buildProfileSectionNavScrollShell(headerNav);
     setProfileSectionNavInteractive(headerNav, false, { hidden: true });
-    brandGroup.append(left, headerNav);
+    brandGroup.append(left, headerNavScrollShell);
 
     const right = create("div", "profile-overlay-actions");
     const socialRail = buildProfileHeaderSocialRail(profile?.socialLinks);
@@ -13782,9 +13785,7 @@
     }
     if (hasStory) layout.appendChild(story);
     if (presentation) layout.appendChild(presentation);
-    const footer = create("div", "profile-about-footer", "PUBLIC IDENTITY / STREAMSUITES");
-    footer.setAttribute("aria-hidden", "true");
-    panel.append(header, layout, footer);
+    panel.append(header, layout);
     return section;
   }
 
@@ -13860,16 +13861,70 @@
       if (href === activeHref) link.setAttribute("aria-current", "location");
       nav.appendChild(link);
     });
+    nav.dispatchEvent(new Event("profile-section-nav:updated"));
   }
 
   function setProfileSectionNavInteractive(nav, interactive, options = {}) {
     if (!(nav instanceof HTMLElement)) return;
-    nav.hidden = options.hidden === true;
+    const hidden = options.hidden === true;
+    const scrollShell = nav.closest(".profile-section-nav-scroll-shell");
+    nav.hidden = hidden;
     nav.inert = !interactive;
     nav.setAttribute("aria-hidden", interactive ? "false" : "true");
+    if (scrollShell instanceof HTMLElement) {
+      scrollShell.hidden = hidden;
+      scrollShell.inert = !interactive;
+    }
     nav.querySelectorAll("a[href]").forEach((link) => {
       link.tabIndex = interactive ? 0 : -1;
     });
+    nav.dispatchEvent(new Event("profile-section-nav:updated"));
+  }
+
+  function buildProfileSectionNavScrollShell(nav) {
+    const shell = create("div", "profile-section-nav-scroll-shell");
+    const previous = create("button", "profile-section-nav-scroll-button profile-section-nav-scroll-button--previous");
+    previous.type = "button";
+    previous.hidden = true;
+    previous.setAttribute("aria-label", "Previous profile sections");
+    previous.appendChild(createIcon(UI_ICON_MAP.previous, "profile-section-nav-scroll-icon"));
+    const next = create("button", "profile-section-nav-scroll-button profile-section-nav-scroll-button--next");
+    next.type = "button";
+    next.hidden = true;
+    next.setAttribute("aria-label", "Next profile sections");
+    next.appendChild(createIcon(UI_ICON_MAP.next, "profile-section-nav-scroll-icon"));
+
+    if (!nav.id) nav.id = "profile-header-section-nav";
+    previous.setAttribute("aria-controls", nav.id);
+    next.setAttribute("aria-controls", nav.id);
+
+    const syncControls = () => {
+      const overflow = nav.scrollWidth > nav.clientWidth + 2;
+      shell.classList.toggle("has-overflow", overflow);
+      previous.hidden = !overflow;
+      next.hidden = !overflow;
+      previous.disabled = !overflow || nav.scrollLeft <= 2;
+      next.disabled = !overflow || nav.scrollLeft + nav.clientWidth >= nav.scrollWidth - 2;
+    };
+    const scheduleSync = () => window.requestAnimationFrame(syncControls);
+    const move = (direction) => nav.scrollBy({
+      left: direction * Math.max(120, nav.clientWidth * 0.62),
+      behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth"
+    });
+    previous.addEventListener("click", () => move(-1));
+    next.addEventListener("click", () => move(1));
+    nav.addEventListener("scroll", syncControls, { passive: true });
+    nav.addEventListener("profile-section-nav:updated", scheduleSync);
+    const observer = typeof ResizeObserver === "function" ? new ResizeObserver(scheduleSync) : null;
+    observer?.observe(nav);
+    registerStandaloneProfileCleanup(() => {
+      observer?.disconnect();
+      nav.removeEventListener("scroll", syncControls);
+      nav.removeEventListener("profile-section-nav:updated", scheduleSync);
+    });
+    shell.append(previous, nav, next);
+    scheduleSync();
+    return shell;
   }
 
   function buildProfileSectionNav(profile, artifacts = [], options = {}) {

@@ -6,6 +6,20 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-14 - Profile header and card micro-corrections
+
+#### Technical notes
+
+- Reduced only the rounded-square header emblem's themed hover fill and surrounding glow while preserving the accepted regular/hover SVG glyph gradients and all existing button treatments.
+- Exempted only the expanded status widget's internal scroll surface from profile theme colours, restoring its neutral native widget treatment while leaving every other profile scrollbar themed.
+- Removed the redundant About footer identity label and its unused styling. The expanded About card is intentionally shorter; story, video, attribution, edit controls, and Runtime/Auth hydration remain unchanged.
+- Replaced the small-breakpoint header rail scrollbar with compact previous/next SVG controls that appear only when the docked navigation genuinely overflows, track its scroll limits, and retain reduced-motion and keyboard behavior. Mobile headers now keep one social shortcut visible and move all remaining links into the existing overflow tray, preserving more width for the section rail and account control.
+- Nudged only the discreet card-header metadata up by one pixel for optical centre alignment; the already-correct expand/collapse controls were not changed. Updated focused source contracts and profile asset cache keys. No deployment, version/build change, Runtime/Auth mutation, commit, or push was performed.
+
+#### Human-readable summary
+
+The header emblem now keeps its coloured icon legible on hover, the status panel keeps its own neutral scrollbar, About loses the unnecessary footer label, compact navigation uses discreet arrow controls, and card-header metadata sits on the same visual centreline as its toggle.
+
 ### 2026-08-14 - Corrected profile hierarchy, theming, and Artifacts dashboard
 
 #### Technical notes

@@ -334,6 +334,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(app, /buildStandaloneProfileHeader\(profile, authState, options = \{\}\)/);
   assert.match(app, /const socialRail = buildProfileHeaderSocialRail\(profile\?\.socialLinks\)/);
   assert.match(app, /if \(socialRail\) right\.appendChild\(socialRail\)/);
+  assert.match(app, /if \(window\.matchMedia\("\(max-width: 820px\)"\)\.matches\) return 1;/);
   assert.match(app, /buildProfileHeaderAccountWidget\(authState/);
   assert.match(app, /profile-overlay-brand-logo/);
   assert.match(app, /profile-overlay-brand-glyph/);
@@ -469,6 +470,10 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(profileCss, /\.profile-overlay-brand-glyph::before\s*\{[\s\S]*var\(--profile-gradient-c\)[\s\S]*var\(--profile-gradient-a\)[\s\S]*var\(--profile-gradient-b\)/);
   assert.match(profileCss, /\.profile-overlay-brand-glyph::after\s*\{[\s\S]*var\(--profile-gradient-b\)[\s\S]*var\(--profile-gradient-c\)[\s\S]*var\(--profile-gradient-a\)/);
   assert.doesNotMatch(profileCss.match(/\.profile-overlay-brand-glyph::before\s*\{[\s\S]*?\n\}/)?.[0] || "", /animation:/);
+  const profileBrandHover = profileCss.match(/body\[data-public-page="public-profile-standalone"\] \.profile-overlay-brand:hover \.profile-overlay-brand-logo,[\s\S]*?\.profile-overlay-brand-logo\s*\{[\s\S]*?\n\}/)?.[0] || "";
+  assert.match(profileBrandHover, /var\(--profile-gradient-a\) 18%, #10121a/);
+  assert.match(profileBrandHover, /var\(--profile-gradient-b\) 24%, #10121a/);
+  assert.doesNotMatch(profileBrandHover, /var\(--profile-gradient-a\) 34%|var\(--profile-gradient-b\) 42%/);
   assert.match(profileCss, /data-profile-theme="frosted_silver"/);
   assert.match(css, /\.profile-overlay-brand-text\s*\{[\s\S]*letter-spacing:\s*0\.12em/);
   assert.match(css, /\.profile-overlay-brand-text\s*\{[\s\S]*text-transform:\s*none/);
@@ -560,9 +565,9 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(profileCss, /@media \(forced-colors: active\)/);
   assert.doesNotMatch(statusCss, /body\[data-public-page="public-profile-standalone"\] \.profile-footer-status-slot/);
 
-  assert.match(profileHtml, /href="\/css\/public-profile\.css\?v=20260814-profile-corrective"/);
+  assert.match(profileHtml, /href="\/css\/public-profile\.css\?v=20260814-profile-corrective-2"/);
   assert.match(profileHtml, /href="\/css\/status-widget\.css\?v=20260813-profile-footer"/);
-  assert.match(profileHtml, /src="\/js\/public-pages-app\.js\?v=20260814-profile-corrective"/);
+  assert.match(profileHtml, /src="\/js\/public-pages-app\.js\?v=20260814-profile-corrective-2"/);
   assert.match(profileHtml, /class="profile-skip-link" href="#profile-main"/);
   assert.match(profileHtml, /<footer class="profile-site-footer" data-profile-shell-footer>/);
   assert.match(profileHtml, /class="profile-site-footer__status" data-status-slot/);

@@ -66,7 +66,8 @@ test("profile video shell is themed responsive and overflow-safe", () => {
   assert.match(app, /if \(hasStory\) layout\.appendChild\(story\);\s*if \(presentation\) layout\.appendChild\(presentation\)/);
   assert.doesNotMatch(app, /create\("span", "profile-about-video-provider"/);
   assert.match(app, /create\("img", "profile-about-video-source-icon"\)/);
-  assert.match(app, /create\("div", "profile-about-footer", "PUBLIC IDENTITY \/ STREAMSUITES"\)/);
+  assert.doesNotMatch(app, /PUBLIC IDENTITY \/ STREAMSUITES/);
+  assert.doesNotMatch(css, /profile-about-footer|PUBLIC IDENTITY \/ STREAMSUITES/);
   assert.match(css, /\.profile-about-layout\.is-video-only\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/);
   assert.match(css, /\.profile-about-layout--video-only \.profile-about-video-presentation\s*\{[\s\S]*width:\s*min\(100%, 1120px\)/);
   assert.match(css, /@media \(max-width: 900px\)[\s\S]*grid-template-areas:\s*"story" "video"/);
@@ -131,5 +132,13 @@ test("profile chrome uses shared actions, docked navigation, metadata chips, and
   assert.match(css, /--profile-scroll-thumb-hover:/);
   assert.match(css, /--profile-scroll-thumb-active:/);
   assert.match(css, /::-webkit-scrollbar-corner/);
+  assert.match(css, /:is\(\.ss-status-widget-host, \[data-status-widget-host\]\) \.ss-status-widget__scroll\s*\{[\s\S]*scrollbar-color:\s*rgba\(137, 166, 196, 0\.28\) transparent/);
+  assert.match(css, /:is\(\.ss-status-widget-host, \[data-status-widget-host\]\) \.ss-status-widget__scroll::-webkit-scrollbar-thumb\s*\{[\s\S]*border:\s*0;[\s\S]*background:\s*rgba\(137, 166, 196, 0\.28\)/);
+  assert.match(app, /function buildProfileSectionNavScrollShell\(nav\)/);
+  assert.match(app, /aria-label", "Previous profile sections"/);
+  assert.match(app, /aria-label", "Next profile sections"/);
+  assert.match(app, /nav\.scrollBy\(\{[\s\S]*Math\.max\(120, nav\.clientWidth \* 0\.62\)/);
+  assert.match(css, /@media \(max-width: 820px\)[\s\S]*\.profile-section-nav-scroll-shell\.has-overflow[\s\S]*profile-header-section-nav::-webkit-scrollbar\s*\{[\s\S]*display:\s*none/);
+  assert.match(css, /\.profile-content-summary \.profile-authority-summary-meta\s*\{[\s\S]*transform:\s*translateY\(-1px\)/);
   assert.match(app, /clearStandaloneProfileRootTheme\(\)/);
 });
