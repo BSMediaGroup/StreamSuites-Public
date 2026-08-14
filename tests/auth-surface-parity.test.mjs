@@ -474,6 +474,11 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(profileBrandHover, /var\(--profile-gradient-a\) 18%, #10121a/);
   assert.match(profileBrandHover, /var\(--profile-gradient-b\) 24%, #10121a/);
   assert.doesNotMatch(profileBrandHover, /var\(--profile-gradient-a\) 34%|var\(--profile-gradient-b\) 42%/);
+  const signalRedBrandHover = profileCss.match(/\.standalone-profile-shell\[data-profile-theme="signal_red"\] \.profile-overlay-brand:hover \.profile-overlay-brand-logo,[\s\S]*?\.profile-overlay-brand-logo\s*\{[\s\S]*?\n\}/)?.[0] || "";
+  assert.match(signalRedBrandHover, /var\(--profile-gradient-a\) 9%, #10121a/);
+  assert.match(signalRedBrandHover, /var\(--profile-gradient-b\) 12%, #10121a/);
+  assert.match(signalRedBrandHover, /var\(--profile-gradient-a\) 6\.5%, transparent/);
+  assert.doesNotMatch(signalRedBrandHover, /profile-overlay-brand-glyph/);
   assert.match(profileCss, /data-profile-theme="frosted_silver"/);
   assert.match(css, /\.profile-overlay-brand-text\s*\{[\s\S]*letter-spacing:\s*0\.12em/);
   assert.match(css, /\.profile-overlay-brand-text\s*\{[\s\S]*text-transform:\s*none/);
@@ -565,9 +570,9 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(profileCss, /@media \(forced-colors: active\)/);
   assert.doesNotMatch(statusCss, /body\[data-public-page="public-profile-standalone"\] \.profile-footer-status-slot/);
 
-  assert.match(profileHtml, /href="\/css\/public-profile\.css\?v=20260814-profile-corrective-2"/);
+  assert.match(profileHtml, /href="\/css\/public-profile\.css\?v=20260814-profile-corrective-3"/);
   assert.match(profileHtml, /href="\/css\/status-widget\.css\?v=20260813-profile-footer"/);
-  assert.match(profileHtml, /src="\/js\/public-pages-app\.js\?v=20260814-profile-corrective-2"/);
+  assert.match(profileHtml, /src="\/js\/public-pages-app\.js\?v=20260814-profile-corrective-3"/);
   assert.match(profileHtml, /class="profile-skip-link" href="#profile-main"/);
   assert.match(profileHtml, /<footer class="profile-site-footer" data-profile-shell-footer>/);
   assert.match(profileHtml, /class="profile-site-footer__status" data-status-slot/);
@@ -879,7 +884,13 @@ test("standalone profile corrective presentation keeps hierarchy, order, and med
   assert.equal((overviewSection.match(/addPrimaryMetric\(/g) || []).length, 3);
   assert.match(overviewSection, /addPrimaryMetric\("Artifacts"[\s\S]*addPrimaryMetric\("Clips"[\s\S]*"Inventory"/);
   assert.doesNotMatch(overviewSection, /addPrimaryMetric\("(?:Polls|Tallies)"/);
+  assert.match(overviewSection, /UI_ICON_MAP\.overviewArtifacts[\s\S]*UI_ICON_MAP\.overviewClips[\s\S]*UI_ICON_MAP\.overviewInventory/);
+  assert.match(overviewSection, /createIcon\(iconPath, "profile-overview-primary-icon"\)/);
   assert.match(css, /\.profile-overview-primary-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(3,/);
+  assert.match(css, /\.profile-overview-panel\s*\{[\s\S]*gap:\s*0;/);
+  assert.match(css, /\.profile-overview-primary-icon\s*\{[\s\S]*var\(--icon-mask\)/);
+  assert.match(css, /\.profile-overview-detail--joined \.profile-overview-detail-value,[\s\S]*font-size:\s*0\.76rem;[\s\S]*font-weight:\s*560/);
+  assert.match(css, /\.profile-overview-detail--balance \.economy-balance-value\s*\{[\s\S]*font:\s*inherit/);
   assert.match(css, /\.profile-body-grid\.profile-body-grid--overview-only\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/);
   assert.match(css, /@media \(max-width: 420px\)[\s\S]*\.profile-overview-primary-description \{ display: none; \}/);
   assert.match(css, /\.profile-overview-details\s*\{[\s\S]*grid-template-columns:\s*repeat\(4,/);

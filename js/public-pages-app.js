@@ -346,7 +346,10 @@
     plus: "/assets/icons/ui/plus.svg",
     minus: "/assets/icons/ui/minus.svg",
     previous: "/assets/icons/ui/previous.svg",
-    next: "/assets/icons/ui/next.svg"
+    next: "/assets/icons/ui/next.svg",
+    overviewArtifacts: "/assets/icons/ui/package.svg",
+    overviewClips: "/assets/icons/ui/clipcards.svg",
+    overviewInventory: "/assets/icons/ui/box.svg"
   });
   const PROFILE_FALLBACK_SLUG = "publicuser";
   const STREAM_PLATFORM_LABELS = Object.freeze({
@@ -14164,19 +14167,21 @@
 
     const primaryMetrics = create("div", "profile-overview-primary-grid");
     primaryMetrics.setAttribute("aria-label", "Primary public profile metrics");
-    const addPrimaryMetric = (label, value, description, kind, pending = false) => {
+    const addPrimaryMetric = (label, value, description, kind, iconPath, pending = false) => {
       const card = create("article", `profile-overview-primary-card profile-overview-primary-card--${kind}`);
       card.dataset.profileOverviewPrimaryMetric = kind;
       if (pending) card.classList.add("is-pending");
-      card.append(
+      const copy = create("span", "profile-overview-primary-copy");
+      copy.append(
         create("span", "profile-overview-primary-label", label),
         create("strong", "profile-overview-primary-value", value),
         create("span", "profile-overview-primary-description", description)
       );
+      card.append(createIcon(iconPath, "profile-overview-primary-icon"), copy);
       primaryMetrics.appendChild(card);
     };
-    addPrimaryMetric("Artifacts", formatNumber(counts.artifactTotal), "All public artifacts, including clips", "artifacts");
-    addPrimaryMetric("Clips", formatNumber(counts.clipTotal), "First-class public clip subset", "clips");
+    addPrimaryMetric("Artifacts", formatNumber(counts.artifactTotal), "All public artifacts, including clips", "artifacts", UI_ICON_MAP.overviewArtifacts);
+    addPrimaryMetric("Clips", formatNumber(counts.clipTotal), "First-class public clip subset", "clips", UI_ICON_MAP.overviewClips);
     addPrimaryMetric(
       "Inventory",
       profile?.inventoryAvailable
@@ -14184,6 +14189,7 @@
         : "Unavailable",
       "Public inventory item types",
       "inventory",
+      UI_ICON_MAP.overviewInventory,
       !profile?.inventoryAvailable
     );
 

@@ -6,6 +6,19 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-14 - Signal Red and Overview optical correction
+
+#### Technical notes
+
+- Added a Signal Red-only header-emblem hover override that halves the rounded-square wash and shadow intensity. The accepted base treatment for every other theme and the central SVG glyph's regular/hover gradients remain unchanged.
+- Removed the inherited grid gaps between the Public Overview heading, three primary metrics, and four detail cells. Added existing package, clip-card, and box SVG assets to the Artifacts, Clips, and Inventory metrics without changing their authoritative counts.
+- Normalized Joined and Balance to the same readable `0.76rem` value size and lighter `560` weight, including the nested economy balance renderer and its compact currency icon.
+- Measured the Artifacts header metadata against the expand label in Chromium and corrected the remaining half-pixel centre offset with a `-1.5px` optical translation. The expand/collapse button itself remains unchanged. Updated focused contracts and profile asset cache keys; no deployment, version/build change, Runtime/Auth mutation, commit, or push was performed.
+
+#### Human-readable summary
+
+Signal Red now has a calmer header-logo hover without affecting any other theme. The Overview is continuous instead of broken by blank bands, its three key metrics have meaningful icons, Joined and Balance read consistently, and card metadata finally shares the expand/collapse label's visual centreline.
+
 ### 2026-08-14 - Profile header and card micro-corrections
 
 #### Technical notes

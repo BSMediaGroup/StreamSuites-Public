@@ -139,6 +139,6 @@ test("profile chrome uses shared actions, docked navigation, metadata chips, and
   assert.match(app, /aria-label", "Next profile sections"/);
   assert.match(app, /nav\.scrollBy\(\{[\s\S]*Math\.max\(120, nav\.clientWidth \* 0\.62\)/);
   assert.match(css, /@media \(max-width: 820px\)[\s\S]*\.profile-section-nav-scroll-shell\.has-overflow[\s\S]*profile-header-section-nav::-webkit-scrollbar\s*\{[\s\S]*display:\s*none/);
-  assert.match(css, /\.profile-content-summary \.profile-authority-summary-meta\s*\{[\s\S]*transform:\s*translateY\(-1px\)/);
+  assert.match(css, /\.profile-content-summary \.profile-authority-summary-meta\s*\{[\s\S]*transform:\s*translateY\(-1\.5px\)/);
   assert.match(app, /clearStandaloneProfileRootTheme\(\)/);
 });
