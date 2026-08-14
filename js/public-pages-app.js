@@ -356,9 +356,19 @@
     gallery: "/assets/icons/ui/cards.svg",
     list: "/assets/icons/ui/tablechart.svg",
     edit: "/assets/icons/ui/editcon.svg",
+    pageStyle: "/assets/icons/ui/formatpaint.svg",
     share: "/assets/icons/ui/send.svg",
     visibility: "/assets/icons/ui/globe.svg",
     profile: "/assets/icons/ui/profile.svg",
+    accountSettings: "/assets/icons/ui/settingsquare.svg",
+    creatorDashboard: "/assets/icons/ui/ss-creator.svg",
+    adminDashboard: "/assets/icons/ui/ss-admin.svg",
+    developerConsole: "/assets/icons/ui/ss-developer.svg",
+    webStudio: "/assets/icons/icondiag-studioweb.svg",
+    login: "/assets/icons/ui/dooropen.svg",
+    signup: "/assets/icons/ui/addcohost.svg",
+    logout: "/assets/icons/ui/logout.svg",
+    tone: "/assets/icons/ui/lightbulbon.svg",
     community: "/assets/icons/ui/community.svg",
     social: "/assets/icons/ui/integrations.svg",
     streamsuites: "/assets/icons/ui/streamsuitesicon.svg",
@@ -370,6 +380,19 @@
     overviewArtifacts: "/assets/icons/ui/package.svg",
     overviewClips: "/assets/icons/ui/clipcards.svg",
     overviewInventory: "/assets/icons/ui/box.svg"
+  });
+  const PROFILE_ACCOUNT_MENU_ACTION_ICONS = Object.freeze({
+    profile: UI_ICON_MAP.profile,
+    customise_profile: UI_ICON_MAP.pageStyle,
+    account_settings: UI_ICON_MAP.accountSettings,
+    creator_dashboard: UI_ICON_MAP.creatorDashboard,
+    admin_dashboard: UI_ICON_MAP.adminDashboard,
+    developer_console: UI_ICON_MAP.developerConsole,
+    web_studio: UI_ICON_MAP.webStudio,
+    public_login: UI_ICON_MAP.login,
+    creator_login: UI_ICON_MAP.creatorDashboard,
+    public_signup: UI_ICON_MAP.signup,
+    logout: UI_ICON_MAP.logout
   });
   const PROFILE_FALLBACK_SLUG = "publicuser";
   const STREAM_PLATFORM_LABELS = Object.freeze({
@@ -13523,6 +13546,7 @@
     window.requestAnimationFrame(() => {
       modal.scrollTop = 0;
       backdrop.scrollTop = 0;
+      if (options.focusSection && navigateToEditorSection(String(options.focusSection))) return;
       if (options.focusField === "about") {
         const target = initialAboutVideoSource === "embed" ? videoUrlInput : aboutInput;
         const bodyRect = scrollBody.getBoundingClientRect();
@@ -13775,31 +13799,35 @@
     const accountMenu = create("div", "account-menu");
     accountMenu.hidden = true;
     accountMenu.setAttribute("role", "menu");
-    const menuItems = buildAccountMenuItems(authState);
+    const menuItems = buildAccountMenuItems(authState, {
+      customiseProfile: options.canEditProfile === true,
+      webStudio: true
+    });
 
     if (authenticated) {
       const header = create("div", "account-menu-header");
-      header.append(
-        create("div", "account-menu-name", authState.displayName || "User"),
-        create("div", "account-menu-role", authState.accessClass || authState.accountType || "")
-      );
+      header.appendChild(create("div", "account-menu-name", authState.displayName || "User"));
+      const accountEmail = String(authState.email || "").trim();
+      if (accountEmail) header.appendChild(create("div", "account-menu-email", accountEmail));
       accountMenu.appendChild(header);
-      if (authState.accountId || authState.userCode || authState.displayTier) {
-        const overview = create("div", "account-menu-overview");
-        [
-          { label: "User code", value: authState.userCode || "Not available" },
-          { label: "Account type", value: authState.accessClass || authState.accountType || "VIEWER" },
-          { label: "Tier", value: authState.displayTier || authState.tier || "core" }
-        ].forEach((row) => {
-          const item = create("div", "account-menu-overview-row");
-          item.append(
-            create("span", "account-menu-overview-label", row.label),
-            create("span", "account-menu-overview-value", row.value)
-          );
-          overview.appendChild(item);
-        });
-        accountMenu.appendChild(overview);
-      }
+      const overview = create("div", "account-menu-overview");
+      [
+        { label: "Display name", value: authState.displayName || "User" },
+        { label: "User code", value: authState.userCode || "Not available" },
+        { label: "Account type", value: authState.accessClass || authState.accountType || "VIEWER" },
+        { label: "Tier", value: authState.displayTier || authState.tier || "core", tier: true }
+      ].forEach((row) => {
+        const item = create("div", "account-menu-overview-row");
+        const value = create("span", "account-menu-overview-value");
+        if (row.tier) {
+          value.appendChild(buildProfileTierChip(row.value));
+        } else {
+          value.textContent = row.value;
+        }
+        item.append(create("span", "account-menu-overview-label", row.label), value);
+        overview.appendChild(item);
+      });
+      accountMenu.appendChild(overview);
 
       if (options.canEditProfile === true && typeof options.onProfileToneChange === "function") {
         let currentTone = normalizeProfileThemeTone(options.profileTone);
@@ -13808,7 +13836,10 @@
         toneToggle.setAttribute("role", "menuitemcheckbox");
         toneToggle.dataset.profileToneToggle = "true";
         const toneCopy = create("span", "account-menu-tone-copy");
-        toneCopy.append(create("strong", "", "Tone / mode"), create("small", "", "Profile appearance"));
+        const toneText = create("span", "account-menu-tone-text");
+        const toneLabel = create("strong");
+        toneText.append(toneLabel, create("small", "", "Profile appearance"));
+        toneCopy.append(createIcon(UI_ICON_MAP.tone, "account-menu-tone-icon"), toneText);
         const toneControl = create("span", "account-menu-tone-control");
         const toneValue = create("span", "account-menu-tone-value");
         const toneTrack = create("span", "account-menu-tone-track");
@@ -13818,7 +13849,8 @@
         const syncToneToggle = (tone) => {
           currentTone = normalizeProfileThemeTone(tone);
           toneToggle.setAttribute("aria-checked", currentTone === "light" ? "true" : "false");
-          toneToggle.setAttribute("aria-label", `Tone / mode: ${currentTone}. Switch to ${currentTone === "light" ? "dark" : "light"}.`);
+          toneToggle.setAttribute("aria-label", `${currentTone === "light" ? "Light" : "Dark"} mode. Switch to ${currentTone === "light" ? "dark" : "light"} mode.`);
+          toneLabel.textContent = currentTone === "light" ? "LIGHT MODE" : "DARK MODE";
           toneValue.textContent = currentTone === "light" ? "Light" : "Dark";
         };
         syncToneToggle(currentTone);
@@ -13857,7 +13889,11 @@
       }
       const label = String(item.label || "").trim();
       if (!label) return;
-      const menuItem = item.href ? create("a", "account-menu-item", label) : create("button", "account-menu-item", label);
+      const menuItem = item.href ? create("a", "account-menu-item") : create("button", "account-menu-item");
+      const action = String(item.action || "").trim().toLowerCase();
+      const iconPath = PROFILE_ACCOUNT_MENU_ACTION_ICONS[action];
+      if (iconPath) menuItem.appendChild(createIcon(iconPath, "account-menu-item-icon"));
+      menuItem.appendChild(create("span", "account-menu-item-label", label));
       if (item.href) {
         menuItem.href = String(item.href);
         if (item.target) menuItem.target = String(item.target);
@@ -13867,12 +13903,16 @@
       }
       menuItem.setAttribute("role", "menuitem");
       if (item.subtle) menuItem.classList.add("is-subtle");
-      if (String(item.action || "").toLowerCase() === "logout") menuItem.classList.add("is-danger");
+      if (action === "logout") menuItem.classList.add("is-danger");
       menuItem.addEventListener("click", (event) => {
         accountMenu.hidden = true;
         account.classList.remove("is-open");
         account.setAttribute("aria-expanded", "false");
         if (!item.href) event.preventDefault();
+        if (item.action === "customise_profile" && typeof options.onCustomiseProfile === "function") {
+          options.onCustomiseProfile();
+          return;
+        }
         if (typeof options.onMenuAction === "function") {
           options.onMenuAction(String(item.action || ""), item);
           return;
@@ -13937,6 +13977,9 @@
         openAuthModal: options.openAuthModal,
         onMenuAction: options.onMenuAction,
         canEditProfile: options.canEditProfile === true,
+        onCustomiseProfile: options.canEditProfile === true && typeof options.openProfileEditor === "function"
+          ? () => options.openProfileEditor(profile, { focusSection: "profile-edit-style" })
+          : null,
         profileTone: profile?.streamsuitesThemeTone,
         onProfileToneChange: options.onProfileToneChange
       })
@@ -16959,6 +17002,7 @@
         userCode: "public-user",
         publicSlug: "public-user",
         displayName: "Login",
+        email: "",
         avatarUrl: "",
         accountType: "VIEWER",
         tier: "core",
@@ -16982,6 +17026,12 @@
       payload?.name ||
       "User"
     ).trim() || "User";
+    const email = String(
+      payload?.email ||
+      payload?.data?.email ||
+      payload?.user?.email ||
+      ""
+    ).trim();
     const authImage = normalizedImageContract(payload, payload?.user || payload?.data || payload?.creator || {});
     const avatarUrl = authImage.avatarUrl;
     const accountType =
@@ -17033,6 +17083,7 @@
       userCode,
       publicSlug,
       displayName,
+      email,
       avatarUrl,
       rawAvatarUrl: authImage.rawAvatarUrl,
       imageVersion: authImage.imageVersion,
@@ -17069,7 +17120,7 @@
     };
   }
 
-  function buildAccountMenuItems(authState) {
+  function buildAccountMenuItems(authState, options = {}) {
     if (!authState?.authenticated) {
       return [
         { label: "Public Login", action: "public_login" },
@@ -17084,13 +17135,16 @@
       ];
     }
 
-    const items = [
-      {
-        label: "Profile",
-        href: buildProfileHref(authState),
-        action: "profile"
-      }
-    ];
+    const items = [options.customiseProfile === true
+      ? {
+          label: "Customise profile",
+          action: "customise_profile"
+        }
+      : {
+          label: "Profile",
+          href: buildProfileHref(authState),
+          action: "profile"
+        }];
 
     if (authState.accountType === "VIEWER") {
       items.push({
@@ -17122,12 +17176,13 @@
     }
 
     if (authState.developerConsoleAccess?.allowed === true) {
+      const useWebStudio = options.webStudio === true;
       items.push({
-        label: "Developer Console",
-        href: "https://console.streamsuites.app/dashboard/",
+        label: useWebStudio ? "Web Studio" : "Developer Console",
+        href: useWebStudio ? "https://studio.streamsuites.app/" : "https://console.streamsuites.app/dashboard/",
         target: "_blank",
         rel: "noopener noreferrer",
-        action: "developer_console"
+        action: useWebStudio ? "web_studio" : "developer_console"
       });
     }
 

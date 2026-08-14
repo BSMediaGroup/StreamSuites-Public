@@ -6,6 +6,22 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-15 - Profile account-dropdown table and icon polish
+
+#### Technical notes
+
+- Refined only the standalone `/u/*` profile account dropdown: its authenticated identity summary is now a compact table window for Runtime/Auth-projected display name, public user code, account type, and tier. The tier value reuses the existing canonical SVG-backed profile tier chip rather than a plain text value, and the visitor-facing public profile contract remains unchanged.
+- Replaced the duplicated account-type subline beneath the dropdown display name with the signed-in account's Runtime/Auth-projected email when present; the subline is omitted when absent, and another profile's public payload is never used as an email source. Kept the identity-table labels discreet beside their unchanged values. Action labels, the owner tone control, tier-chip text, and all menu spacing remain unchanged.
+- Replaced the redundant `Profile` self-link with `Customise profile` only when the authenticated viewer owns the currently rendered profile. That action uses the existing owner editor and opens its Page style section directly; logged-out views and authenticated views of another person's profile retain the existing `Profile` link.
+- Replaced the developer-capable `Developer Console` destination in the standalone profile dropdown with `Web Studio` at `https://studio.streamsuites.app/`, including its first-party browser-Studio SVG prefix. This is profile-page-scoped; shared account menus on other Public surfaces retain the existing Developer Console action.
+- Added masked SVG prefixes to profile, settings, dashboard, console, login, signup, logout, and owner tone actions using existing first-party assets. Remaining menu destinations, capability gating, tone persistence, logout handling, profile theming, and narrow-screen fixed positioning are preserved.
+- Replaced the owner tone shortcut's generic `Tone / mode` label with the active `DARK MODE` or `LIGHT MODE` state. The existing helper text, right-side value, switch control, persistence path, and styling remain unchanged.
+- Updated focused source coverage and profile asset cache keys, and retained three new rendered checks under `output/playwright/` for dark desktop, light desktop, and 390 px dark mobile. Runtime/Auth's existing authenticated self-identity response gained only the caller's own email field; no new route, product asset, version/build metadata, or deployment behavior was created or changed.
+
+#### Human-readable summary
+
+The profile-page user menu now has a cleaner account-details table, the signed-in user's email instead of a repeated account type beneath the name, smaller supporting labels, the correct styled tier badge, matching action icons, and a tone shortcut labelled directly for the active Dark or Light mode. Owners can jump straight into Page style through `Customise profile`, other-profile views keep the normal `Profile` link, and the developer-capable profile slot now opens Web Studio.
+
 ### 2026-08-15 - Independent Dark and Light profile tones
 
 #### Technical notes
