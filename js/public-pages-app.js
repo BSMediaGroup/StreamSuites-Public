@@ -121,7 +121,7 @@
     Object.freeze({ key: "royal_blue", label: "Royal Blue", description: "Saturated blue with indigo depth", colors: ["#3568ff", "#5398ff", "#634cff"] }),
     Object.freeze({ key: "magenta_violet", label: "Magenta Violet", description: "Electric magenta with rich violet", colors: ["#ed3fd3", "#bc4bff", "#7356ff"] }),
     Object.freeze({ key: "red_gold", label: "Red Gold", description: "Crimson energy with a gold finish", colors: ["#e64149", "#f2783d", "#f5c84f"] }),
-    Object.freeze({ key: "green_gold", label: "Green Gold", description: "Emerald contrast with warm gold", colors: ["#24b879", "#67c45a", "#e4bd47"] }),
+    Object.freeze({ key: "green_gold", label: "Green Gold", description: "Vibrant lime green with warm gold", colors: ["#3acb68", "#78d657", "#e4bd47"] }),
     Object.freeze({ key: "dark_slate", label: "Dark Slate", description: "Deep architectural slate tones", colors: ["#202938", "#3b4658", "#5f6b7a"] }),
     Object.freeze({ key: "neutral_greytone", label: "Neutral Greytone", description: "Balanced graphite and soft grey", colors: ["#565a62", "#858a94", "#afb4bd"] }),
     Object.freeze({ key: "frosted_silver", label: "Frosted Silver", description: "Cool luminous silver and ice", colors: ["#8c9baa", "#c3ced8", "#eef4f7"] })

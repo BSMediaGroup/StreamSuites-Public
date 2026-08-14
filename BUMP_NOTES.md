@@ -6,6 +6,28 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-15 - Green Gold lime-green distinction
+
+#### Technical notes
+
+- Shifted only the Green Gold preset's two green stops and green hover stops from emerald-adjacent hues toward restrained vibrant lime greens. The existing warm-gold stop remains unchanged, and Emerald Cyan plus every other preset retain their exact colours.
+- Updated the editor swatch description, refreshed the profile stylesheet and JavaScript cache keys, and added exact theme-isolation assertions. No theme behavior, layout, profile data, Runtime/Auth authority, deployment, commit, push, or version/build metadata changed.
+
+#### Human-readable summary
+
+Green Gold now reads as a fresher lime-green and gold theme instead of looking like Emerald Cyan, without becoming yellow-heavy.
+
+### 2026-08-15 - Overview flush-spacing regression correction
+
+#### Technical notes
+
+- Removed the generic collapsible-panel inset from Public Overview with a route-scoped zero-gap, zero-margin, zero-padding override that remains authoritative at every breakpoint. The metric and detail rows again meet the card edges and each other exactly as they did before Overview became collapsible.
+- Refreshed only the profile stylesheet cache key and tightened the existing regression assertion. No metric sizing, row content, collapsible behavior, other card spacing, route, data, Runtime/Auth authority, deployment, commit, push, or version/build metadata changed.
+
+#### Human-readable summary
+
+Public Overview is flush again: no padding bands around or between its metric and detail rows.
+
 ### 2026-08-15 - Collapsible Overview and expanded Artifacts defaults
 
 #### Technical notes

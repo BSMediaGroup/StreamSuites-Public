@@ -2619,14 +2619,14 @@ body[data-public-page="public-profile-standalone"] {
 }
 
 :where(body[data-public-page="public-profile-standalone"], .standalone-profile-shell, .profile-edit-modal--profile, .profile-edit-media--hero)[data-profile-theme="green_gold"] {
-  --profile-gradient-a: #24b879;
-  --profile-gradient-b: #67c45a;
+  --profile-gradient-a: #3acb68;
+  --profile-gradient-b: #78d657;
   --profile-gradient-c: #e4bd47;
-  --profile-gradient-hover-a: #5be0a1;
-  --profile-gradient-hover-b: #a8ed83;
+  --profile-gradient-hover-a: #62e485;
+  --profile-gradient-hover-b: #9bea70;
   --profile-gradient-hover-c: #fff6c7;
   --profile-gradient-hover-d: #e4bd47;
-  --profile-gradient-hover-e: #31a879;
+  --profile-gradient-hover-e: #45b85f;
 }
 
 :where(body[data-public-page="public-profile-standalone"], .standalone-profile-shell, .profile-edit-modal--profile, .profile-edit-media--hero)[data-profile-theme="dark_slate"] {
@@ -6077,8 +6077,9 @@ body[data-public-page="public-profile-standalone"] .profile-overview-panel::befo
 }
 
 body[data-public-page="public-profile-standalone"] .profile-overview-panel > .profile-content-collapsible-panel {
-  gap: 0;
-  padding: 0;
+  gap: 0 !important;
+  margin: 0;
+  padding: 0 !important;
 }
 
 .profile-overview-primary-grid {
