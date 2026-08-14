@@ -7245,11 +7245,6 @@
     return label.length > 18 ? `${label.slice(0, 17)}…` : label;
   }
 
-  function shouldFlipSliceLabel(angle) {
-    const normalized = normalizeWheelAngle(angle);
-    return normalized > 90 && normalized < 270;
-  }
-
   function resolveWheelPointerEntry(segments, rotation) {
     if (!Array.isArray(segments) || !segments.length) return null;
     const pointerAngle = normalizeWheelAngle(360 - rotation);
@@ -7288,21 +7283,103 @@
     return luminance > 0.55 ? "dark" : "light";
   }
 
+  function getWheelEntrantAggregationKey(entry, index = 0) {
+    const assignment = entry?.assignment && typeof entry.assignment === "object" ? entry.assignment : {};
+    const identityKey =
+      String(entry?.entrantId || entry?.entrant_id || "").trim() ||
+      String(assignment?.accountId || assignment?.account_id || "").trim() ||
+      String(assignment?.userCode || assignment?.user_code || "").trim() ||
+      String(assignment?.publicSlug || assignment?.public_slug || "").trim();
+    if (identityKey) return `identity:${identityKey.toLowerCase()}`;
+
+    const displayKey = getWheelEntryName(entry).toLocaleLowerCase();
+    const colorKey = String(entry?.color || "").trim().toLowerCase();
+    return `display:${displayKey}|${colorKey || `entry-${index + 1}`}`;
+  }
+
+  function getWheelEntryUnits(entry) {
+    const candidates = [entry?.entryCount, entry?.entry_count, entry?.entries, entry?.count, entry?.share, entry?.weight];
+    for (const candidate of candidates) {
+      const numeric = Number(candidate);
+      if (Number.isFinite(numeric) && numeric > 0) return numeric;
+    }
+    return 1;
+  }
+
+  function aggregateWheelEntrants(entries) {
+    const groups = new Map();
+    (Array.isArray(entries) ? entries : []).forEach((entry, index) => {
+      const key = getWheelEntrantAggregationKey(entry, index);
+      const entryId = String(entry?.entryId || entry?.id || `entry-${index + 1}`);
+      const weight = Math.max(0.0001, Number(entry?.weight) || 0.0001);
+      const entryUnits = getWheelEntryUnits(entry);
+      const current = groups.get(key);
+      if (!current) {
+        groups.set(key, {
+          ...entry,
+          id: entryId,
+          entryId,
+          entrantKey: key,
+          sourceEntryIds: [entryId],
+          sourceEntryCount: 1,
+          entryCount: entryUnits,
+          weight,
+          share: Math.max(0, Number(entry?.share) || weight),
+          value: weight,
+          votes: weight
+        });
+        return;
+      }
+
+      current.sourceEntryIds.push(entryId);
+      current.sourceEntryCount += 1;
+      current.entryCount += entryUnits;
+      current.weight += weight;
+      current.share += Math.max(0, Number(entry?.share) || weight);
+      current.value = current.weight;
+      current.votes = current.weight;
+      if (!current.avatarUrl && entry?.avatarUrl) current.avatarUrl = entry.avatarUrl;
+      if (!current.assignment && entry?.assignment) current.assignment = entry.assignment;
+    });
+
+    const aggregated = Array.from(groups.values());
+    const totalWeight = aggregated.reduce((sum, entry) => sum + Math.max(0, Number(entry?.weight) || 0), 0);
+    return aggregated.map((entry) => {
+      const chance = totalWeight > 0 ? (Math.max(0, Number(entry?.weight) || 0) / totalWeight) * 100 : 0;
+      return {
+        ...entry,
+        percent: Math.round(chance),
+        sharePercent: Math.round(chance)
+      };
+    });
+  }
+
+  function getWheelSliceLabelRotation(angle) {
+    let rotation = normalizeWheelAngle((Number(angle) || 0) + 90);
+    if (rotation > 180) rotation -= 360;
+    if (rotation > 90) rotation -= 180;
+    if (rotation < -90) rotation += 180;
+    return rotation;
+  }
+
   function buildWheelSvg(item) {
     const entries = Array.isArray(item?.entries) ? item.entries : [];
     const palette = item?.palette || {};
     const segments = getWheelSegments(entries);
+    const totalEntryUnits = entries.reduce((sum, entry) => sum + getWheelEntryUnits(entry), 0);
     const graphicIdBase = String(item?.artifactCode || item?.artifact_code || item?.slug || item?.title || "wheel")
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "") || "wheel";
     const glowId = `${graphicIdBase}-center-glow`;
     const centerClipId = `${graphicIdBase}-center-clip`;
+    const glossId = `${graphicIdBase}-disc-gloss`;
+    const vignetteId = `${graphicIdBase}-disc-vignette`;
     const centerImageUrl = String(item?.presentation?.center_image_url || item?.presentation?.centerImageUrl || WHEEL_CENTER_DEFAULT).trim() || WHEEL_CENTER_DEFAULT;
     const svg = createSvgElement("svg", {
       viewBox: "0 0 480 480",
       role: "img",
-      "aria-label": `${item?.title || "Wheel"} artifact viewer`
+      "aria-label": `${item?.title || "Wheel"} weighted wheel with ${formatNumber(entries.length)} unique entrants and ${formatNumber(totalEntryUnits)} total entries`
     });
     svg.classList.add("wheel-svg");
 
@@ -7314,7 +7391,18 @@
     );
     const centerClip = createSvgElement("clipPath", { id: centerClipId });
     centerClip.appendChild(createSvgElement("circle", { cx: 240, cy: 240, r: 48 }));
-    defs.append(glowGradient, centerClip);
+    const glossGradient = createSvgElement("radialGradient", { id: glossId, cx: "30%", cy: "24%", r: "76%" });
+    glossGradient.append(
+      createSvgElement("stop", { offset: "0%", "stop-color": "#ffffff", "stop-opacity": "0.4" }),
+      createSvgElement("stop", { offset: "24%", "stop-color": "#ffffff", "stop-opacity": "0.07" }),
+      createSvgElement("stop", { offset: "62%", "stop-color": "#ffffff", "stop-opacity": "0" })
+    );
+    const vignetteGradient = createSvgElement("radialGradient", { id: vignetteId, cx: "50%", cy: "44%", r: "66%" });
+    vignetteGradient.append(
+      createSvgElement("stop", { offset: "56%", "stop-color": "#000000", "stop-opacity": "0" }),
+      createSvgElement("stop", { offset: "100%", "stop-color": "#000000", "stop-opacity": "0.42" })
+    );
+    defs.append(glowGradient, centerClip, glossGradient, vignetteGradient);
     svg.appendChild(defs);
 
     svg.append(
@@ -7362,10 +7450,7 @@
       if (item?.presentation?.show_entry_labels !== false && segment.sliceAngle >= 8) {
         const labelPoint = polarToCartesian(240, 240, segment.sliceAngle >= 24 ? 136 : 150, segment.midAngle);
         const labelGroup = createSvgElement("g", { class: "wheel-slice-label" });
-        let labelRotation = segment.midAngle - 90;
-        if (shouldFlipSliceLabel(segment.midAngle)) {
-          labelRotation += 180;
-        }
+        const labelRotation = getWheelSliceLabelRotation(segment.midAngle);
         const labelText = getWheelLabelText(entry, item);
         const labelMode = String(item?.presentation?.slice_label_mode || "full_name").trim();
         if (labelMode === "avatar" && segment.sliceAngle >= 12) {
@@ -7404,24 +7489,44 @@
             labelGroup.appendChild(initials);
           }
         } else if (labelText) {
+          labelGroup.setAttribute("transform", `rotate(${labelRotation} ${labelPoint.x} ${labelPoint.y})`);
           const text = createSvgElement("text", {
             x: labelPoint.x,
-            y: labelPoint.y,
+            y: labelPoint.y - (segment.sliceAngle >= 16 ? 5 : 0),
             fill: palette.text_color || "#f8fafc",
             "font-size": segment.sliceAngle >= 22 ? "15" : "12",
             "font-weight": "800",
             "text-anchor": "middle",
-            "dominant-baseline": "middle",
-            transform: `rotate(${labelRotation} ${labelPoint.x} ${labelPoint.y})`
+            "dominant-baseline": "middle"
           });
           text.textContent = labelText;
           labelGroup.appendChild(text);
+          if (segment.sliceAngle >= 16) {
+            const entryCount = getWheelEntryUnits(entry);
+            const countText = createSvgElement("text", {
+              class: "wheel-slice-label-count",
+              x: labelPoint.x,
+              y: labelPoint.y + 13,
+              fill: palette.text_color || "#f8fafc",
+              "font-size": "8",
+              "font-weight": "800",
+              "text-anchor": "middle",
+              "dominant-baseline": "middle"
+            });
+            countText.textContent = `×${formatNumber(entryCount)} ${entryCount === 1 ? "entry" : "entries"}`;
+            labelGroup.appendChild(countText);
+          }
         }
         group.appendChild(labelGroup);
       }
 
       svg.appendChild(group);
     });
+
+    svg.append(
+      createSvgElement("circle", { class: "wheel-disc-gloss", cx: 240, cy: 240, r: 208, fill: `url(#${glossId})` }),
+      createSvgElement("circle", { class: "wheel-disc-vignette", cx: 240, cy: 240, r: 208, fill: `url(#${vignetteId})` })
+    );
 
     svg.append(
       createSvgElement("circle", {
@@ -7466,7 +7571,7 @@
       "font-weight": "700",
       "text-anchor": "middle"
     });
-    subtitle.textContent = `${formatNumber(entries.length)} entrants`;
+    subtitle.textContent = `${formatNumber(entries.length)} entrants · ${formatNumber(totalEntryUnits)} entries`;
     svg.appendChild(subtitle);
     return svg;
   }
@@ -7489,12 +7594,16 @@
     header.append(
       create("span", "", "#"),
       create("span", "", "Entrant"),
-      create("span", "", "Weight"),
+      create("span", "", "Entries"),
       create("span", "", "Chance")
     );
     wrap.appendChild(header);
 
-    const entries = (item?.scoreboardEntries || item?.entries || []).slice(
+    const aggregatedEntries = aggregateWheelEntrants(item?.entries || item?.scoreboardEntries || []);
+    const totalWeight = aggregatedEntries.reduce((sum, entry) => sum + Math.max(0, Number(entry?.weight) || 0), 0) || 1;
+    const entries = aggregatedEntries
+      .sort((left, right) => (Number(right?.weight) || 0) - (Number(left?.weight) || 0) || getWheelEntryName(left).localeCompare(getWheelEntryName(right)))
+      .slice(
       0,
       Math.max(1, Number(options.maxRows) || Number(item?.presentation?.scoreboard_max_rows) || 24)
     );
@@ -7505,20 +7614,43 @@
 
     entries.forEach((entry, index) => {
       const row = create("div", "wheel-scoreboard-row");
+      const entryId = String(entry?.entryId || entry?.id || "");
+      if (options.selectable && typeof options.onSelect === "function") {
+        row.classList.add("is-selectable");
+        row.tabIndex = 0;
+        row.setAttribute("role", "button");
+        row.setAttribute("aria-label", `Inspect ${getWheelEntryName(entry)}`);
+        row.addEventListener("click", () => options.onSelect(entry));
+        row.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          options.onSelect(entry);
+        });
+      }
+      row.dataset.wheelEntryId = entryId;
       const swatch = create("span", "wheel-scoreboard-swatch");
       swatch.style.background = entry?.color || "#64748b";
 
       const entryCell = create("div", "wheel-scoreboard-entry");
-      entryCell.append(swatch, create("strong", "", entry?.label || `Entry ${index + 1}`));
+      entryCell.append(swatch, create("strong", "", getWheelEntryName(entry) || `Entry ${index + 1}`));
       if (entry?.notes) {
         entryCell.appendChild(create("span", "timestamp", entry.notes));
       }
 
+      const chance = totalWeight > 0 ? (Math.max(0, Number(entry?.weight) || 0) / totalWeight) * 100 : 0;
+      const chanceCell = create("span", "wheel-scoreboard-chance");
+      const chanceRail = create("span", "wheel-scoreboard-chance-rail");
+      const chanceFill = create("span", "wheel-scoreboard-chance-fill");
+      chanceFill.style.setProperty("--wheel-entry-chance", `${Math.max(0, Math.min(100, chance))}%`);
+      chanceFill.style.setProperty("--wheel-entry-color", entry?.color || "#64748b");
+      chanceRail.appendChild(chanceFill);
+      chanceCell.append(chanceRail, create("strong", "", `${chance.toFixed(chance < 10 ? 1 : 0)}%`));
+
       row.append(
         create("span", "wheel-scoreboard-rank", String(entry?.rank || index + 1)),
         entryCell,
-        create("span", "", formatNumber(Number(entry?.weight) || 0)),
-        create("span", "", `${Math.max(0, Math.min(100, Number(entry?.percent ?? entry?.sharePercent) || 0))}%`)
+        create("span", "wheel-scoreboard-count", formatNumber(getWheelEntryUnits(entry))),
+        chanceCell
       );
       wrap.appendChild(row);
     });
@@ -7531,20 +7663,60 @@
     const isOwner = isArtifactOwner(authState, item);
     const spinOwnerOnly = item?.presentation?.spin_owner_only === true || item?.presentation?.spinOwnerOnly === true;
     const shareModel = resolveWheelShareModel(item);
+    const wheelEntries = aggregateWheelEntrants(item?.entries || []);
+    const totalEntryUnits = wheelEntries.reduce((sum, entry) => sum + getWheelEntryUnits(entry), 0);
+    const wheelModel = {
+      ...item,
+      entries: wheelEntries,
+      entryCount: wheelEntries.length,
+      totalWeight: wheelEntries.reduce((sum, entry) => sum + Math.max(0, Number(entry?.weight) || 0), 0)
+    };
+    const wheelDomId = String(item?.artifactCode || item?.artifact_code || item?.slug || "wheel")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "wheel";
     const main = create("article", "detail-main wheel-detail-main");
-    const card = create("div", "wheel-detail-card");
+    const card = create("div", "wheel-detail-card wheel-console");
     const wheelView = create("section", "wheel-detail-view");
-    const wheelShell = create("div", "wheel-spin-shell wheel-spin-shell-premium");
-    const wheelStageWrap = create("div", "wheel-stage-wrap");
+    wheelView.setAttribute("aria-label", "Wheel console");
+    const wheelShell = create("div", "wheel-spin-shell wheel-spin-shell-premium wheel-console-workspace");
+
+    const wheelStageWrap = create("section", "wheel-stage-wrap wheel-arena-card");
+    const stageHeader = create("header", "wheel-arena-header");
+    const stageHeading = create("div", "wheel-arena-heading");
+    stageHeading.append(
+      create("span", "wheel-console-eyebrow", "Wheel arena"),
+      create("h2", "wheel-arena-title", spinOwnerOnly ? "Owner-locked public session" : "Public wheel session")
+    );
+    const entrantsJumpButton = create("button", "wheel-console-quiet-button", "Entrants list");
+    entrantsJumpButton.type = "button";
+    entrantsJumpButton.setAttribute("aria-label", "Open the unique entrants list");
+    stageHeader.append(stageHeading, entrantsJumpButton);
+
     const liveLabel = create("div", "wheel-live-selection");
     const liveLabelTitle = create("span", "wheel-live-selection__eyebrow", "Current entrant");
     const liveLabelValue = create("strong", "wheel-live-selection__value", "Ready");
     liveLabel.append(liveLabelTitle, liveLabelValue);
 
     const wheelStage = create("div", "wheel-spin-stage wheel-spin-stage-premium");
+    const arenaAtmosphere = create("div", "wheel-arena-atmosphere");
+    arenaAtmosphere.setAttribute("aria-hidden", "true");
+    const arenaBeamLeft = create("div", "wheel-arena-beam wheel-arena-beam--left");
+    const arenaBeamRight = create("div", "wheel-arena-beam wheel-arena-beam--right");
+    const arenaPylonLeft = create("div", "wheel-arena-pylon wheel-arena-pylon--left");
+    const arenaPylonRight = create("div", "wheel-arena-pylon wheel-arena-pylon--right");
+    const arenaPortal = create("div", "wheel-arena-portal");
+    arenaPortal.append(create("div", "wheel-arena-portal-core"), create("div", "wheel-arena-orbit"));
+    const arenaFloor = create("div", "wheel-arena-floor");
+    const arenaPlinth = create("div", "wheel-arena-plinth");
+    arenaAtmosphere.append(arenaBeamLeft, arenaBeamRight, arenaPylonLeft, arenaPylonRight, arenaPortal, arenaFloor, arenaPlinth);
+    ["a", "b", "c", "d"].forEach((position) => arenaAtmosphere.appendChild(create("i", `wheel-arena-glint wheel-arena-glint--${position}`)));
+
     const celebrationLayer = create("div", "wheel-celebration-layer");
     const stageAssembly = create("div", "wheel-stage-assembly");
     const stageGlow = create("div", "wheel-stage-aura");
+    const stageChassis = create("div", "wheel-stage-chassis");
+    const stageLeds = create("div", "wheel-stage-leds");
     const trimRing = create("div", "wheel-stage-trim");
     const trimNoise = create("div", "wheel-stage-trim-noise");
     const wheelDisc = create("div", "wheel-spin-disc wheel-spin-disc-premium");
@@ -7554,23 +7726,126 @@
     const pointerGlow = create("div", "wheel-spin-pointer-glow");
     trimRing.appendChild(trimNoise);
     hardwarePointer.append(hardwarePointerMount, pointer);
-    stageAssembly.append(stageGlow, trimRing, wheelDisc, hardwarePointer);
+    stageAssembly.append(stageGlow, stageChassis, stageLeds, trimRing, wheelDisc, pointerGlow, hardwarePointer);
     wheelStage.style.setProperty("--wheel-trim-color", item?.palette?.trim_color || item?.palette?.accent_color || "#7c92ff");
     wheelStage.style.setProperty("--wheel-glow-color", item?.palette?.glow_color || item?.palette?.accent_color || "#4de9ff");
-    wheelStage.append(liveLabel, celebrationLayer, stageAssembly, pointerGlow);
-    wheelStageWrap.appendChild(wheelStage);
 
-    const wheelSide = create("details", "wheel-spin-side wheel-session-side");
-    wheelSide.open = true;
-    const sideSummary = create("summary", "wheel-session-side__summary");
-    sideSummary.append(
-      create("span", "wheel-session-side__title", "Wheel details"),
-      create("span", "wheel-session-side__caption", spinOwnerOnly ? "Owner-locked spin" : "Session controls")
+    const winnerOverlay = create("div", "wheel-winner-overlay");
+    winnerOverlay.setAttribute("aria-hidden", "true");
+    const winnerRays = create("div", "wheel-winner-rays");
+    const winnerHalo = create("div", "wheel-winner-halo");
+    const winnerDialog = create("section", "wheel-winner-dialog");
+    winnerDialog.setAttribute("role", "dialog");
+    winnerDialog.setAttribute("aria-modal", "true");
+    const winnerHeadingId = `${wheelDomId}-winner-heading`;
+    winnerDialog.setAttribute("aria-labelledby", winnerHeadingId);
+    const winnerCloseButton = create("button", "wheel-winner-close", "×");
+    winnerCloseButton.type = "button";
+    winnerCloseButton.setAttribute("aria-label", "Close winner announcement");
+    const winnerTrophy = create("span", "wheel-winner-trophy");
+    winnerTrophy.setAttribute("aria-hidden", "true");
+    const winnerKicker = create("span", "wheel-winner-kicker", "The wheel has spoken");
+    const winnerHeading = create("h2", "wheel-winner-name", "Winner");
+    winnerHeading.id = winnerHeadingId;
+    const winnerSubtitle = create("p", "wheel-winner-subtitle", "Selected from this local wheel session.");
+    const winnerStats = create("div", "wheel-winner-stats");
+    const winnerEntriesValue = create("strong", "", "0");
+    const winnerEntriesStat = create("span", "wheel-winner-stat");
+    winnerEntriesStat.append(winnerEntriesValue, document.createTextNode(" entries"));
+    const winnerChanceValue = create("strong", "", "0%");
+    const winnerChanceStat = create("span", "wheel-winner-stat");
+    winnerChanceStat.append(winnerChanceValue, document.createTextNode(" probability"));
+    winnerStats.append(winnerEntriesStat, winnerChanceStat, create("span", "wheel-winner-stat", "Local session result"));
+    const winnerActions = create("div", "wheel-winner-actions");
+    const winnerContinueButton = create("button", "wheel-winner-continue", "Continue");
+    winnerContinueButton.type = "button";
+    const winnerAgainButton = create("button", "wheel-winner-again", "Spin again");
+    winnerAgainButton.type = "button";
+    winnerActions.append(winnerContinueButton, winnerAgainButton);
+    winnerDialog.append(winnerCloseButton, winnerTrophy, winnerKicker, winnerHeading, winnerSubtitle, winnerStats, winnerActions);
+    winnerOverlay.append(celebrationLayer, winnerRays, winnerHalo, winnerDialog);
+    wheelStage.append(arenaAtmosphere, liveLabel, stageAssembly, winnerOverlay);
+
+    const spinDock = create("div", "wheel-spin-dock");
+    const spinDockLeft = create("div", "wheel-spin-dock-side");
+    const sessionSoundState = create(
+      "span",
+      "wheel-console-state-chip",
+      item?.presentation?.sound_enabled === false ? "Sound off" : "Sound ready"
     );
-    const sideBody = create("div", "wheel-session-side__body");
+    spinDockLeft.append(sessionSoundState);
+    const spinButton = create("button", "dashboard-action is-strong wheel-spin-primary", "Spin wheel");
+    spinButton.type = "button";
+    const spinDockRight = create("div", "wheel-spin-dock-side wheel-spin-dock-side--end");
+    const respinButton = create("button", "dashboard-action wheel-console-quiet-button", "Re-spin");
+    respinButton.type = "button";
+    const resetButton = create("button", "dashboard-action wheel-console-quiet-button", "Reset Wheel");
+    resetButton.type = "button";
+    spinDockRight.append(respinButton, resetButton);
+    spinDock.append(spinDockLeft, spinButton, spinDockRight);
+    const stageFooter = create("div", "wheel-stage-foot");
+    const authorityState = create("span", "wheel-stage-foot__authority", "Runtime/Auth data · API first");
+    const localState = create("span", "", "Local result · no backend winner history written");
+    stageFooter.append(authorityState, localState);
+    wheelStageWrap.append(stageHeader, wheelStage, spinDock, stageFooter);
+
+    const wheelSide = create("aside", "wheel-spin-side wheel-console-card");
+    wheelSide.setAttribute("aria-label", "Wheel controls and information");
+    const tabList = create("div", "wheel-console-tabs");
+    tabList.setAttribute("role", "tablist");
+    tabList.setAttribute("aria-label", "Wheel console sections");
+    const panelDefinitions = [
+      ["play", "Play"],
+      ["entrants", "Entrants"],
+      ["details", "Details"],
+      ["share", "Share"]
+    ];
+    const tabButtons = [];
+    const tabPanels = new Map();
+    panelDefinitions.forEach(([key, label], index) => {
+      const button = create("button", "wheel-console-tab", label);
+      button.type = "button";
+      button.id = `${wheelDomId}-tab-${key}`;
+      button.dataset.wheelConsoleTab = key;
+      button.setAttribute("role", "tab");
+      button.setAttribute("aria-selected", index === 0 ? "true" : "false");
+      button.setAttribute("aria-controls", `${wheelDomId}-panel-${key}`);
+      button.tabIndex = index === 0 ? 0 : -1;
+      const panel = create("section", "wheel-console-panel");
+      panel.id = `${wheelDomId}-panel-${key}`;
+      panel.dataset.wheelConsolePanel = key;
+      panel.setAttribute("role", "tabpanel");
+      panel.setAttribute("aria-labelledby", button.id);
+      panel.hidden = index !== 0;
+      tabButtons.push(button);
+      tabPanels.set(key, panel);
+      tabList.appendChild(button);
+    });
+
+    const playPanel = tabPanels.get("play");
+    const entrantsPanel = tabPanels.get("entrants");
+    const detailsPanel = tabPanels.get("details");
+    const sharePanel = tabPanels.get("share");
+
+    const sessionLabel = create("span", "wheel-console-section-label", "Session");
+    const sessionCard = create("div", "wheel-console-session-card");
+    const sessionStateIcon = create("span", "wheel-console-session-icon");
+    sessionStateIcon.setAttribute("aria-hidden", "true");
+    const sessionCopy = create("div", "wheel-console-session-copy");
+    const sessionTitle = create("strong", "", "Ready to spin");
+    const sessionCaption = create(
+      "span",
+      "",
+      spinOwnerOnly ? "The owner session controls this local draw." : "Choose Spin to start a local draw."
+    );
+    sessionCopy.append(sessionTitle, sessionCaption);
+    const sessionPolicy = create("span", "wheel-console-policy-chip", spinOwnerOnly ? "Owner locked" : "Public spin");
+    sessionCard.append(sessionStateIcon, sessionCopy, sessionPolicy);
+
     const emphasis = create("div", "dashboard-chip-row");
     emphasis.append(
-      create("span", "dashboard-chip", `${formatNumber(item.entryCount || (item.entries || []).length)} entrants`),
+      create("span", "dashboard-chip", `${formatNumber(wheelEntries.length)} unique entrants`),
+      create("span", "dashboard-chip", `${formatNumber(totalEntryUnits)} total entries`),
       create("span", "dashboard-chip", item.allowDuplicates ? "Duplicate winners allowed" : "Duplicate winners blocked"),
       create("span", "dashboard-chip", item.autoRemoveWinner ? "Auto-remove after win" : "Winner remains on wheel"),
       create("span", "dashboard-chip", spinOwnerOnly ? "Spin locked to owner" : "Public spin enabled")
@@ -7614,15 +7889,6 @@
     );
     resultBox.append(resultLabel, resultValue, resultMeta);
 
-    const actionRow = create("div", "dashboard-action-row wheel-action-row");
-    const spinButton = create("button", "dashboard-action is-strong", "Spin");
-    spinButton.type = "button";
-    const respinButton = create("button", "dashboard-action", "Re-spin");
-    respinButton.type = "button";
-    const resetButton = create("button", "dashboard-action", "Reset Wheel");
-    resetButton.type = "button";
-    actionRow.append(spinButton, respinButton, resetButton);
-
     const accessNote = create("div", "wheel-access-note");
     accessNote.hidden = !spinOwnerOnly;
     if (spinOwnerOnly) {
@@ -7643,31 +7909,75 @@
     const winnersList = create("div", "wheel-winners-list");
     winnersPanel.append(winnersTitle, winnersList);
 
-    const compactList = create("div", "wheel-inline-list-view");
-    compactList.append(
-      create("div", "detail-subtle-label", "List view preview"),
-      buildWheelScoreboardTable(item, { compact: true, maxRows: 5 })
+    const entrantsHeading = create("div", "wheel-console-panel-heading");
+    entrantsHeading.append(
+      create("div", "wheel-console-section-label", "Unique entrants"),
+      create("span", "wheel-console-count-chip", `${formatNumber(wheelEntries.length)} entrants · ${formatNumber(totalEntryUnits)} entries`)
+    );
+    const entrantsTable = buildWheelScoreboardTable(wheelModel, {
+      maxRows: Number(item?.presentation?.scoreboard_max_rows) || 24,
+      selectable: true,
+      onSelect(entry) {
+        sessionState.selectedEntryId = String(entry?.entryId || entry?.id || "");
+        renderDetailCard(entry);
+        updatePointerState({ forceDetail: true });
+      }
+    });
+    entrantsPanel.append(
+      entrantsHeading,
+      create("p", "wheel-console-panel-copy", "Repeated records are grouped into one entrant. Entry totals retain their combined weight and projected chance."),
+      entrantsTable
     );
 
-    sideBody.append(
-      creatorCard,
-      shareCard,
-      create("p", "dashboard-card-body", item.summary || "This wheel artifact is rendered directly from the authoritative runtime export."),
+    detailsPanel.append(
+      create("div", "wheel-console-section-label", "Wheel details"),
+      create("p", "wheel-console-panel-copy", item.summary || "This wheel artifact is rendered directly from the authoritative Runtime/Auth payload."),
       emphasis,
-      detailCard,
-      resultBox,
-      accessNote,
-      actionRow,
-      winnersPanel,
-      compactList,
-      buildWheelOwnerEditorPanel(item, config),
-      buildCompactWheelAuthorityPanel(item, config)
+      creatorCard
     );
-    wheelSide.append(sideSummary, sideBody);
+    sharePanel.append(create("div", "wheel-console-section-label", "Share this wheel"), shareCard);
+    playPanel.append(sessionLabel, sessionCard, detailCard, resultBox, accessNote, winnersPanel);
+
+    function activateWheelConsoleTab(tabName, options = {}) {
+      const resolvedName = tabPanels.has(tabName) ? tabName : "play";
+      tabButtons.forEach((button) => {
+        const isActive = button.dataset.wheelConsoleTab === resolvedName;
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-selected", isActive ? "true" : "false");
+        button.tabIndex = isActive ? 0 : -1;
+        if (isActive && options.focus) button.focus();
+      });
+      tabPanels.forEach((panel, key) => {
+        panel.hidden = key !== resolvedName;
+      });
+    }
+
+    tabButtons.forEach((button, index) => {
+      button.addEventListener("click", () => activateWheelConsoleTab(button.dataset.wheelConsoleTab || "play"));
+      button.addEventListener("keydown", (event) => {
+        if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+        event.preventDefault();
+        const nextIndex =
+          event.key === "Home" ? 0 :
+          event.key === "End" ? tabButtons.length - 1 :
+          event.key === "ArrowRight" ? (index + 1) % tabButtons.length :
+          (index - 1 + tabButtons.length) % tabButtons.length;
+        activateWheelConsoleTab(tabButtons[nextIndex].dataset.wheelConsoleTab || "play", { focus: true });
+      });
+    });
+    entrantsJumpButton.addEventListener("click", () => {
+      activateWheelConsoleTab("entrants", { focus: true });
+      wheelSide.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+
+    wheelSide.append(tabList, ...panelDefinitions.map(([key]) => tabPanels.get(key)));
     wheelShell.append(wheelStageWrap, wheelSide);
     wheelView.appendChild(wheelShell);
 
-    card.append(wheelView);
+    const toolsDeck = create("section", "wheel-console-drawers");
+    toolsDeck.setAttribute("aria-label", "Wheel support tools");
+    toolsDeck.append(buildWheelOwnerEditorPanel(item, config), buildCompactWheelAuthorityPanel(item, config));
+    card.append(wheelView, toolsDeck);
     main.appendChild(card);
 
     const importNotes = [];
@@ -7688,6 +7998,10 @@
       main.appendChild(notesCard);
     }
 
+    const reducedMotionQuery = typeof window.matchMedia === "function"
+      ? window.matchMedia("(prefers-reduced-motion: reduce)")
+      : { matches: false };
+    let winnerReturnFocus = null;
     const sessionState = {
       winnerLimit: clampNumber(item?.winnerLimit || 1, 1, 100, 1),
       winners: [],
@@ -7698,6 +8012,7 @@
       lastSpinPointerEntryId: "",
       lastClickSoundAt: 0,
       hoverEntryId: "",
+      renderedEntryId: "",
       isHoveringStage: false,
       isSpinning: false,
       rotation: 0,
@@ -7746,7 +8061,7 @@
       if (sessionState.winners.length) {
         const lastWinner = sessionState.winners[sessionState.winners.length - 1];
         resultValue.textContent = getWheelEntryName(lastWinner);
-        resultMeta.textContent = `Local result. Weight ${formatNumber(Number(lastWinner?.weight) || 0)} · ${Math.max(0, Math.min(100, Number(lastWinner?.percent ?? lastWinner?.sharePercent) || 0))}% share. No winner history or backend state is written from this surface.`;
+        resultMeta.textContent = `Local result. ${formatNumber(getWheelEntryUnits(lastWinner))} entries · weight ${formatNumber(Number(lastWinner?.weight) || 0)} · ${Math.max(0, Math.min(100, Number(lastWinner?.percent ?? lastWinner?.sharePercent) || 0))}% chance. No winner history or backend state is written from this surface.`;
       } else {
         resultValue.textContent = "Ready to spin";
         resultMeta.textContent = "Spins are local to this browser session only. No winner history or backend state is written from this surface.";
@@ -7757,13 +8072,13 @@
     }
 
     function getDisplayedEntries() {
-      const base = Array.isArray(item?.entries) ? item.entries : [];
+      const base = wheelEntries;
       if (!item?.autoRemoveWinner) return base.slice();
       return base.filter((entry) => !sessionState.removedEntryIds.has(String(entry?.entryId || entry?.id || "")));
     }
 
     function getEligibleEntries() {
-      const base = Array.isArray(item?.entries) ? item.entries : [];
+      const base = wheelEntries;
       const blockedIds = new Set();
       if (item?.autoRemoveWinner) {
         sessionState.removedEntryIds.forEach((value) => blockedIds.add(value));
@@ -7775,8 +8090,7 @@
     }
 
     function findEntryById(entryId) {
-      const allEntries = Array.isArray(item?.entries) ? item.entries : [];
-      return allEntries.find((entry) => String(entry?.entryId || entry?.id || "") === String(entryId || "")) || null;
+      return wheelEntries.find((entry) => String(entry?.entryId || entry?.id || "") === String(entryId || "")) || null;
     }
 
     function resolveActiveEntry() {
@@ -7785,7 +8099,7 @@
         findEntryById(sessionState.hoverEntryId) ||
         findEntryById(sessionState.pointerEntryId) ||
         sessionState.winners[sessionState.winners.length - 1] ||
-        item?.entries?.[0] ||
+        wheelEntries[0] ||
         null
       );
     }
@@ -7808,7 +8122,9 @@
     }
 
     function renderDetailCard(entry) {
-      const activeEntry = entry || item?.entries?.[0] || null;
+      const activeEntry = entry || wheelEntries[0] || null;
+      sessionState.renderedEntryId = String(activeEntry?.entryId || activeEntry?.id || "");
+      detailCard.style.setProperty("--wheel-entry-color", activeEntry?.color || item?.palette?.accent_color || "#4de9ff");
       clear(detailIdentity);
       clear(detailMeta);
       clear(detailPublic);
@@ -7836,8 +8152,8 @@
       const activeEligible = eligible.find((candidate) => String(candidate?.entryId || candidate?.id || "") === String(activeEntry?.entryId || activeEntry?.id || ""));
       const chance = activeEligible ? ((Math.max(0, Number(activeEntry?.weight) || 0) / eligibleTotal) * 100) : 0;
       const rows = [
+        ["Entries", formatNumber(getWheelEntryUnits(activeEntry))],
         ["Weight", formatNumber(Number(activeEntry?.weight) || 0)],
-        ["Share", formatNumber(Number(activeEntry?.share) || Number(activeEntry?.weight) || 0)],
         ["Win chance", `${chance.toFixed(chance < 10 ? 1 : 0)}%`],
         ["Color", `${String(activeEntry?.color || "").trim() || "Unassigned"}`]
       ];
@@ -7867,7 +8183,7 @@
       );
 
       const stats = activeEntry?.statsStub && typeof activeEntry.statsStub === "object" ? activeEntry.statsStub : {};
-      const hasStats = Object.keys(stats).length > 0;
+      const hasStats = Object.values(stats).some((value) => value !== null && value !== undefined && String(value).trim() !== "");
       detailStats.hidden = !hasStats;
       if (hasStats) {
         const xp = create("div", "wheel-entry-detail-row");
@@ -7900,20 +8216,43 @@
       const remainingSlots = Math.max(0, sessionState.winnerLimit - sessionState.winners.length);
       const canAdvance = !ownerSpinLocked && !sessionState.isSpinning && eligibleEntries.length > 0 && remainingSlots > 0;
       const hasCompletedDraw = sessionState.drawHistory.length > 0;
-      spinButton.textContent = hasCompletedDraw && canAdvance ? "Spin Again" : "Spin";
+      const canRespin = !ownerSpinLocked && !sessionState.isSpinning && hasCompletedDraw;
+      spinButton.textContent = hasCompletedDraw && canAdvance ? "Spin Again" : "Spin wheel";
       spinButton.disabled = !canAdvance;
-      respinButton.disabled = ownerSpinLocked || sessionState.isSpinning || !sessionState.drawHistory.length;
+      respinButton.disabled = !canRespin;
       respinButton.hidden = false;
       resetButton.disabled =
         ownerSpinLocked ||
         sessionState.isSpinning ||
         (!sessionState.drawHistory.length && !sessionState.winners.length && !sessionState.removedEntryIds.size);
+      winnerAgainButton.textContent = canAdvance ? "Spin again" : canRespin ? "Re-spin" : "Spin again";
+      winnerAgainButton.dataset.wheelWinnerAction = canAdvance ? "spin" : canRespin ? "respin" : "";
+      winnerAgainButton.disabled = !canAdvance && !canRespin;
+
+      if (sessionState.isSpinning) {
+        sessionTitle.textContent = "Wheel spinning";
+        sessionCaption.textContent = "The weighted selection is resolving locally in this browser.";
+      } else if (sessionState.winners.length) {
+        const latestWinner = sessionState.winners[sessionState.winners.length - 1];
+        sessionTitle.textContent = "Selection resolved";
+        sessionCaption.textContent = `${getWheelEntryName(latestWinner)} is the latest local-session winner.`;
+      } else if (ownerSpinLocked) {
+        sessionTitle.textContent = "Ready for the owner";
+        sessionCaption.textContent = "Public viewers can inspect the wheel; the signed-in owner controls spins.";
+      } else if (!eligibleEntries.length || remainingSlots <= 0) {
+        sessionTitle.textContent = "Session complete";
+        sessionCaption.textContent = "Reset the local session to make the wheel available again.";
+      } else {
+        sessionTitle.textContent = "Ready to spin";
+        sessionCaption.textContent = "Choose Spin wheel to start a local weighted draw.";
+      }
     }
 
     function flashCelebration() {
       if (item?.presentation?.celebration_enabled === false && item?.presentation?.confetti_enabled !== true) return;
+      if (reducedMotionQuery.matches) return;
       clear(celebrationLayer);
-      const count = 200;
+      const count = 84;
       const bursts = [
         { particleRatio: 0.25, spread: 26, startVelocity: 55, decay: 0.91, scalar: 1 },
         { particleRatio: 0.2, spread: 60, startVelocity: 40, decay: 0.9, scalar: 1 },
@@ -7943,7 +8282,7 @@
           confetti.style.setProperty("--confetti-duration", `${duration}ms`);
           confetti.style.setProperty(
             "--confetti-color",
-            resolveEntryColor(item.entries[colorIndex % Math.max(1, item.entries.length)] || {}, item, colorIndex)
+            resolveEntryColor(wheelEntries[colorIndex % Math.max(1, wheelEntries.length)] || {}, item, colorIndex)
           );
           colorIndex += 1;
           celebrationLayer.appendChild(confetti);
@@ -7981,10 +8320,70 @@
       sessionState.audioUnlocked = true;
     }
 
+    function closeWinnerOverlay(options = {}) {
+      if (winnerOverlay.getAttribute("aria-hidden") === "true") return;
+      const focusTarget = options.restoreFocus === false
+        ? null
+        : [winnerReturnFocus, respinButton, resetButton, spinButton].find(
+          (candidate) =>
+            candidate instanceof HTMLElement &&
+            candidate.isConnected &&
+            candidate.disabled !== true &&
+            !candidate.closest(".wheel-winner-overlay")
+        );
+      if (focusTarget) {
+        focusTarget.focus({ preventScroll: true });
+      }
+      winnerOverlay.classList.remove("is-visible");
+      winnerOverlay.setAttribute("aria-hidden", "true");
+      celebrationLayer.classList.remove("is-active");
+      clear(celebrationLayer);
+      winnerReturnFocus = null;
+    }
+
+    function openWinnerOverlay(winner) {
+      if (!winner) return;
+      if (!(winnerReturnFocus instanceof HTMLElement)) {
+        winnerReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : spinButton;
+      }
+      const chance = Math.max(0, Math.min(100, Number(winner?.percent ?? winner?.sharePercent) || 0));
+      winnerHeading.textContent = getWheelEntryName(winner);
+      winnerSubtitle.textContent = `Selected from ${formatNumber(totalEntryUnits)} total entries in this browser session.`;
+      winnerEntriesValue.textContent = formatNumber(getWheelEntryUnits(winner));
+      winnerChanceValue.textContent = `${chance}%`;
+      winnerOverlay.style.setProperty("--wheel-winner-color", winner?.color || item?.palette?.accent_color || "#ffd56b");
+      winnerOverlay.classList.add("is-visible");
+      winnerOverlay.setAttribute("aria-hidden", "false");
+      winnerDialog.scrollIntoView({ behavior: "auto", block: "center", inline: "nearest" });
+      winnerCloseButton.focus({ preventScroll: true });
+    }
+
+    function handleWinnerKeydown(event) {
+      if (winnerOverlay.getAttribute("aria-hidden") === "true") return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        closeWinnerOverlay();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusable = Array.from(winnerDialog.querySelectorAll("button:not(:disabled), [href], [tabindex]:not([tabindex='-1'])"));
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
     function publishLocalWinner(winner, contextLabel) {
       if (!winner) return;
       resultValue.textContent = getWheelEntryName(winner);
-      resultMeta.textContent = `${contextLabel} Weight ${formatNumber(Number(winner.weight) || 0)} · ${Math.max(0, Math.min(100, Number(winner.percent ?? winner.sharePercent) || 0))}% share. No winner history or backend state is written from this surface.`;
+      resultMeta.textContent = `${contextLabel} ${formatNumber(getWheelEntryUnits(winner))} entries · weight ${formatNumber(Number(winner.weight) || 0)} · ${Math.max(0, Math.min(100, Number(winner.percent ?? winner.sharePercent) || 0))}% chance. No winner history or backend state is written from this surface.`;
       sessionState.selectedEntryId = String(winner?.entryId || winner?.id || "");
       renderDetailCard(winner);
       renderWinnerList();
@@ -7994,7 +8393,7 @@
     function rebuildWheel() {
       clear(wheelDisc);
       const displayEntries = getDisplayedEntries();
-      const wheelSvg = buildWheelSvg({ ...item, entries: displayEntries });
+      const wheelSvg = buildWheelSvg({ ...wheelModel, entries: displayEntries });
       wheelDisc.appendChild(wheelSvg);
       const sliceGroups = Array.from(wheelSvg.querySelectorAll("[data-wheel-entry-id]"));
       sliceGroups.forEach((group) => {
@@ -8003,11 +8402,11 @@
           sessionState.hoverEntryId = entryId;
           sessionState.selectedEntryId = entryId;
           sessionState.isHoveringStage = true;
-          updatePointerState();
+          updatePointerState({ forceDetail: true });
         });
         group.addEventListener("mouseleave", () => {
           sessionState.hoverEntryId = "";
-          updatePointerState();
+          updatePointerState({ forceDetail: true });
         });
         group.addEventListener("click", () => {
           unlockAudio();
@@ -8015,13 +8414,14 @@
           renderDetailCard(findEntryById(entryId));
         });
       });
-      updatePointerState();
+      updatePointerState({ forceDetail: true });
     }
 
     function updatePointerState(options = {}) {
       const segments = getWheelSegments(getDisplayedEntries());
       const pointed = resolveWheelPointerEntry(segments, sessionState.rotation);
       const pointedId = String(pointed?.entry?.entryId || pointed?.entry?.id || "");
+      const pointerChanged = pointedId !== sessionState.pointerEntryId;
       if (options.allowClickSound && sessionState.isSpinning && pointedId && pointedId !== sessionState.lastSpinPointerEntryId) {
         const timestamp = Number(options.timestamp) || performance.now();
         if (timestamp - sessionState.lastClickSoundAt > 48) {
@@ -8031,14 +8431,27 @@
       }
       sessionState.pointerEntryId = pointedId;
       sessionState.lastSpinPointerEntryId = pointedId;
-      liveLabelValue.textContent = pointed?.entry ? getWheelEntryName(pointed.entry) : "Ready";
-      renderDetailCard(resolveActiveEntry());
-      const groups = wheelDisc.querySelectorAll("[data-wheel-entry-id]");
-      groups.forEach((group) => {
-        const entryId = group.getAttribute("data-wheel-entry-id") || "";
-        const isActive = entryId === sessionState.hoverEntryId || entryId === pointedId;
-        group.classList.toggle("is-active", isActive);
-      });
+      if (pointerChanged || options.forceDetail) {
+        liveLabelValue.textContent = pointed?.entry ? getWheelEntryName(pointed.entry) : "Ready";
+      }
+      const activeEntry = resolveActiveEntry();
+      const activeEntryId = String(activeEntry?.entryId || activeEntry?.id || "");
+      if (options.forceDetail || activeEntryId !== sessionState.renderedEntryId) {
+        renderDetailCard(activeEntry);
+      }
+      if (pointerChanged || options.forceDetail) {
+        const groups = wheelDisc.querySelectorAll("[data-wheel-entry-id]");
+        groups.forEach((group) => {
+          const entryId = group.getAttribute("data-wheel-entry-id") || "";
+          const isActive = entryId === sessionState.hoverEntryId || entryId === pointedId;
+          group.classList.toggle("is-active", isActive);
+        });
+        entrantsTable.querySelectorAll("[data-wheel-entry-id]").forEach((row) => {
+          const entryId = row.getAttribute("data-wheel-entry-id") || "";
+          const isActive = entryId === sessionState.selectedEntryId || entryId === sessionState.hoverEntryId || entryId === pointedId;
+          row.classList.toggle("is-active", isActive);
+        });
+      }
       if (!sessionState.isSpinning) {
         setWheelStageState(sessionState.hoverEntryId || sessionState.isHoveringStage ? "hover" : "idle");
       }
@@ -8049,7 +8462,6 @@
       setWheelStageState("winner");
       stopMusic();
       void playSound("winner");
-      flashCelebration();
       if (winner) {
         sessionState.winners.push(winner);
         if (item?.autoRemoveWinner) {
@@ -8062,6 +8474,8 @@
         });
         publishLocalWinner(winner, "Local result.");
         rebuildWheel();
+        openWinnerOverlay(winner);
+        flashCelebration();
       }
       window.clearTimeout(sessionState.pulseTimer);
       sessionState.pulseTimer = window.setTimeout(() => {
@@ -8072,8 +8486,10 @@
     function spinWheel(mode = "spin", context = {}) {
       const eligibleEntries = getEligibleEntries();
       const remainingSlots = Math.max(0, sessionState.winnerLimit - sessionState.winners.length);
-      if (sessionState.isSpinning || !eligibleEntries.length || remainingSlots <= 0) return;
+      if (ownerSpinLocked || sessionState.isSpinning || !eligibleEntries.length || remainingSlots <= 0) return;
+      closeWinnerOverlay({ restoreFocus: false });
       unlockAudio();
+      winnerReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : spinButton;
       const displayEntries = getDisplayedEntries();
       const winner = pickWheelWinner(eligibleEntries);
       if (!winner) return;
@@ -8102,6 +8518,14 @@
         if (audio) sessionState.musicAudio = audio;
       });
 
+      if (reducedMotionQuery.matches || item?.presentation?.animation_enabled === false) {
+        sessionState.rotation = endRotation;
+        wheelDisc.style.transform = `rotate(${sessionState.rotation}deg)`;
+        updatePointerState();
+        finishSpin(winner, { mode, beforeState });
+        return;
+      }
+
       function step(now) {
         const progress = clampNumber((now - startTime) / spinDurationMs, 0, 1, 0);
         const eased = 1 - Math.pow(1 - progress, 4);
@@ -8127,6 +8551,7 @@
     }
 
     function resetSession() {
+      closeWinnerOverlay({ restoreFocus: false });
       stopMusic();
       window.cancelAnimationFrame(sessionState.spinTimer);
       sessionState.isSpinning = false;
@@ -8145,9 +8570,18 @@
     }
 
     function tick(now) {
+      if (reducedMotionQuery.matches || item?.presentation?.animation_enabled === false) {
+        sessionState.frameId = 0;
+        return;
+      }
       const delta = lastFrameTs ? now - lastFrameTs : 16;
       lastFrameTs = now;
-      if (!sessionState.isSpinning && item?.presentation?.slow_drift_enabled !== false && !sessionState.isHoveringStage) {
+      if (
+        !sessionState.isSpinning &&
+        item?.presentation?.slow_drift_enabled !== false &&
+        !sessionState.isHoveringStage &&
+        !document.hidden
+      ) {
         sessionState.rotation += delta * 0.0022;
         wheelDisc.style.transform = `rotate(${sessionState.rotation}deg)`;
         updatePointerState();
@@ -8162,22 +8596,40 @@
     wheelStage.addEventListener("mouseleave", () => {
       sessionState.isHoveringStage = false;
       sessionState.hoverEntryId = "";
-      updatePointerState();
+      updatePointerState({ forceDetail: true });
     });
     spinButton.addEventListener("click", () => spinWheel("spin"));
     respinButton.addEventListener("click", respinWheel);
     resetButton.addEventListener("click", resetSession);
+    winnerCloseButton.addEventListener("click", () => closeWinnerOverlay());
+    winnerContinueButton.addEventListener("click", () => closeWinnerOverlay());
+    winnerAgainButton.addEventListener("click", () => {
+      const action = winnerAgainButton.dataset.wheelWinnerAction || "";
+      closeWinnerOverlay({ restoreFocus: false });
+      if (action === "respin") {
+        respinWheel();
+      } else if (action === "spin") {
+        spinWheel("spin");
+      }
+    });
+    winnerOverlay.addEventListener("click", (event) => {
+      if (event.target === winnerOverlay) closeWinnerOverlay();
+    });
+    window.addEventListener("keydown", handleWinnerKeydown);
 
-    renderDetailCard(item?.entries?.[0] || null);
+    renderDetailCard(wheelEntries[0] || null);
     renderWinnerList();
     rebuildWheel();
     updateControls();
-    sessionState.frameId = window.requestAnimationFrame(tick);
+    if (!reducedMotionQuery.matches && item?.presentation?.animation_enabled !== false) {
+      sessionState.frameId = window.requestAnimationFrame(tick);
+    }
     main._cleanupWheelDetail = () => {
       stopMusic();
       window.cancelAnimationFrame(sessionState.frameId);
       window.cancelAnimationFrame(sessionState.spinTimer);
       window.clearTimeout(sessionState.pulseTimer);
+      window.removeEventListener("keydown", handleWinnerKeydown);
     };
     return main;
   }

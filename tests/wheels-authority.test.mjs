@@ -51,6 +51,14 @@ test("public wheels route preserves the shell and provides clean list/detail art
   assert.match(app, /defaultSidebarState: resolveDefaultSidebarState\(currentConfig\)/);
   assert.match(app, /defaultSidebarState: resolveDefaultSidebarState\(nextConfig\)/);
   assert.match(app, /function buildWheelDetailMain\(item, config\)/);
+  assert.match(app, /function aggregateWheelEntrants\(entries\)/);
+  assert.match(app, /function getWheelSliceLabelRotation\(angle\)/);
+  assert.match(app, /const labelRotation = getWheelSliceLabelRotation\(segment\.midAngle\);/);
+  assert.match(app, /Repeated records are grouped into one entrant/);
+  assert.match(app, /tabList\.setAttribute\("role", "tablist"\)/);
+  assert.match(app, /button\.setAttribute\("aria-selected", index === 0 \? "true" : "false"\)/);
+  assert.match(app, /winnerDialog\.setAttribute\("aria-modal", "true"\)/);
+  assert.match(app, /window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)/);
   assert.match(app, /const PUBLIC_WHEEL_EVENTS_URL = `\$\{AUTH_API_BASE\}\/api\/public\/wheels\/events`;/);
   assert.match(app, /function syncWheelLiveSubscription\(\)/);
   assert.match(app, /wheelEventSource = new EventSource\(PUBLIC_WHEEL_EVENTS_URL, \{ withCredentials: true \}\);/);
@@ -98,6 +106,12 @@ test("public wheels route preserves the shell and provides clean list/detail art
   assert.match(css, /\.wheel-owner-editor-panel/);
   assert.match(css, /\.wheel-scoreboard-table/);
   assert.match(css, /\.wheel-stage-assembly/);
+  assert.match(css, /\.wheel-console-workspace/);
+  assert.match(css, /\.wheel-arena-atmosphere/);
+  assert.match(css, /\.wheel-stage-chassis/);
+  assert.match(css, /\.wheel-console-tabs/);
+  assert.match(css, /\.wheel-winner-overlay/);
+  assert.match(css, /@media \(forced-colors: active\)/);
   assert.match(css, /\.wheel-hardware-pointer/);
   assert.match(css, /\.wheel-share-field/);
   assert.match(css, /\.wheel-entry-detail-color-chip/);

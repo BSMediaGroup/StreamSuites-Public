@@ -6628,6 +6628,1391 @@ body[data-public-page="public-profile-standalone"] .edit-affordance:focus-visibl
   }
 }
 
+/* Approved Wheel Detail POC V3 direction: cinematic arena and compact console.
+   Runtime/Auth hydration, owner gates, local-session draws, and editor contracts remain unchanged. */
+.wheel-detail-main {
+  gap: 14px;
+  padding: 0;
+}
+
+.wheel-detail-card,
+.wheel-detail-view,
+.wheel-console,
+.wheel-console-workspace,
+.wheel-arena-card,
+.wheel-console-card,
+.wheel-console-panel {
+  min-width: 0;
+}
+
+.wheel-console-workspace {
+  grid-template-columns: minmax(610px, 1.38fr) minmax(340px, 0.62fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.wheel-arena-card,
+.wheel-console-card,
+.wheel-console-drawers > :is(.wheel-owner-editor-shell, .wheel-compact-panel) {
+  border: 1px solid rgba(178, 205, 231, 0.15);
+  border-radius: 19px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(74, 176, 226, 0.055), transparent 34%),
+    linear-gradient(155deg, rgba(11, 20, 30, 0.97), rgba(4, 9, 15, 0.99));
+  box-shadow:
+    0 24px 58px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.wheel-arena-card {
+  display: block;
+  overflow: hidden;
+}
+
+.wheel-arena-header {
+  position: relative;
+  z-index: 2;
+  min-height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 11px 16px;
+  border-bottom: 1px solid rgba(178, 205, 231, 0.13);
+  background: rgba(5, 11, 18, 0.68);
+}
+
+.wheel-arena-heading {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.wheel-console-eyebrow,
+.wheel-console-section-label {
+  color: rgba(117, 153, 184, 0.92);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.57rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.wheel-arena-title {
+  margin: 0;
+  color: #f1f8fd;
+  font-size: 0.94rem;
+  line-height: 1.25;
+}
+
+.wheel-console-quiet-button {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid rgba(164, 195, 223, 0.18);
+  border-radius: 10px;
+  background: rgba(16, 27, 40, 0.84);
+  color: rgba(205, 219, 232, 0.88);
+  font: 800 0.61rem/1 "IBM Plex Mono", ui-monospace, monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.wheel-console-quiet-button:hover,
+.wheel-console-quiet-button:focus-visible {
+  border-color: rgba(91, 218, 255, 0.42);
+  color: #f4fbff;
+  outline: none;
+}
+
+.wheel-console-quiet-button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.wheel-spin-stage-premium {
+  position: relative;
+  width: 100%;
+  min-height: 602px;
+  aspect-ratio: auto;
+  display: block;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  isolation: isolate;
+  background:
+    radial-gradient(540px 390px at 50% 48%, rgba(45, 145, 194, 0.12), transparent 68%),
+    linear-gradient(180deg, rgba(3, 8, 14, 0.92), rgba(7, 13, 21, 0.97));
+}
+
+.wheel-spin-stage-premium::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.22;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 42px 42px;
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000, transparent 72%);
+  mask-image: radial-gradient(circle at 50% 50%, #000, transparent 72%);
+}
+
+.wheel-arena-atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.wheel-arena-beam {
+  position: absolute;
+  top: 38px;
+  width: 26%;
+  height: 63%;
+  opacity: 0.38;
+  filter: blur(1px);
+}
+
+.wheel-arena-beam--left {
+  left: 0;
+  clip-path: polygon(0 8%, 68% 0, 100% 100%, 36% 73%);
+  background: linear-gradient(112deg, transparent 20%, rgba(67, 203, 255, 0.08) 52%, rgba(75, 221, 255, 0.22) 68%, transparent 86%);
+}
+
+.wheel-arena-beam--right {
+  right: 0;
+  clip-path: polygon(32% 0, 100% 8%, 64% 73%, 0 100%);
+  background: linear-gradient(248deg, transparent 20%, rgba(137, 91, 255, 0.08) 51%, rgba(114, 104, 255, 0.22) 68%, transparent 86%);
+}
+
+.wheel-arena-pylon {
+  position: absolute;
+  top: 112px;
+  bottom: 102px;
+  width: 54px;
+  border: 1px solid rgba(148, 187, 219, 0.1);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(22, 34, 49, 0.6), rgba(8, 14, 22, 0.16));
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.035), 0 18px 46px rgba(0, 0, 0, 0.2);
+}
+
+.wheel-arena-pylon::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  width: 2px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, transparent, var(--wheel-glow-color, #4de9ff) 24%, var(--wheel-trim-color, #7c92ff) 70%, transparent);
+  opacity: 0.5;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--wheel-glow-color, #4de9ff) 44%, transparent);
+}
+
+.wheel-arena-pylon--left {
+  left: 5%;
+  transform: skewY(-6deg);
+}
+
+.wheel-arena-pylon--left::before {
+  left: 13px;
+}
+
+.wheel-arena-pylon--right {
+  right: 5%;
+  transform: skewY(6deg);
+}
+
+.wheel-arena-pylon--right::before {
+  right: 13px;
+}
+
+.wheel-arena-portal {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  width: min(83%, 690px);
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(15, 31, 48, 0.2) 0 44%, rgba(9, 18, 30, 0.54) 58%, rgba(3, 8, 14, 0.84) 74%, transparent 75%),
+    radial-gradient(circle at 50% 48%, rgba(72, 216, 255, 0.12), transparent 66%);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.45), 0 0 74px rgba(47, 131, 194, 0.08);
+}
+
+.wheel-arena-portal::before,
+.wheel-arena-portal::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+}
+
+.wheel-arena-portal::before {
+  inset: 2.5%;
+  padding: 2px;
+  background: conic-gradient(
+    from 222deg,
+    transparent 0 8%,
+    color-mix(in srgb, var(--wheel-glow-color, #4de9ff) 52%, transparent) 11% 17%,
+    transparent 20% 35%,
+    color-mix(in srgb, var(--wheel-trim-color, #7c92ff) 52%, transparent) 38% 45%,
+    transparent 49% 65%,
+    color-mix(in srgb, var(--wheel-glow-color, #4de9ff) 42%, #bb4df0 36%) 68% 75%,
+    transparent 79% 92%,
+    color-mix(in srgb, var(--wheel-glow-color, #4de9ff) 45%, transparent) 95% 99%,
+    transparent 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.72;
+  filter: drop-shadow(0 0 10px rgba(72, 205, 255, 0.17));
+}
+
+.wheel-arena-portal::after {
+  inset: 10.5%;
+  border: 1px solid rgba(137, 190, 226, 0.1);
+  box-shadow:
+    0 0 0 16px rgba(4, 9, 16, 0.18),
+    0 0 0 17px rgba(95, 209, 255, 0.07),
+    0 0 0 38px rgba(5, 10, 18, 0.12),
+    0 0 0 39px rgba(119, 100, 255, 0.055);
+}
+
+.wheel-arena-portal-core {
+  position: absolute;
+  inset: 20%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgba(77, 215, 255, 0.1), rgba(72, 74, 255, 0.055) 43%, transparent 72%);
+  box-shadow: inset 0 0 70px rgba(0, 0, 0, 0.35);
+}
+
+.wheel-arena-orbit {
+  position: absolute;
+  inset: 6%;
+  border: 1px solid rgba(160, 205, 235, 0.07);
+  border-radius: 50%;
+  transform: rotate(-13deg) scaleY(0.88);
+}
+
+.wheel-arena-floor {
+  position: absolute;
+  bottom: -112px;
+  left: 50%;
+  width: 108%;
+  height: 270px;
+  transform: translateX(-50%) perspective(620px) rotateX(67deg);
+  transform-origin: 50% 100%;
+  background-image:
+    linear-gradient(rgba(83, 210, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(103, 111, 255, 0.11) 1px, transparent 1px);
+  background-size: 44px 36px;
+  -webkit-mask-image: linear-gradient(to top, #000 12%, rgba(0, 0, 0, 0.78) 42%, transparent 88%);
+  mask-image: linear-gradient(to top, #000 12%, rgba(0, 0, 0, 0.78) 42%, transparent 88%);
+  opacity: 0.5;
+}
+
+.wheel-arena-plinth {
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  width: min(74%, 650px);
+  height: 116px;
+  transform: translateX(-50%);
+  border-top: 1px solid rgba(112, 217, 255, 0.18);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 26%, rgba(80, 216, 255, 0.18), rgba(68, 78, 255, 0.08) 36%, rgba(5, 10, 17, 0.82) 62%, transparent 72%);
+  box-shadow: 0 -12px 38px rgba(58, 163, 219, 0.1), inset 0 18px 32px rgba(0, 0, 0, 0.48);
+}
+
+.wheel-arena-plinth::before {
+  content: "";
+  position: absolute;
+  top: 16px;
+  right: 12%;
+  left: 12%;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--wheel-glow-color, #4de9ff), var(--wheel-trim-color, #7c92ff), #bb4df0, transparent);
+  opacity: 0.56;
+  box-shadow: 0 0 16px rgba(80, 205, 255, 0.24);
+}
+
+.wheel-arena-glint {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #dff8ff;
+  box-shadow: 0 0 12px var(--wheel-glow-color, #4de9ff), 0 0 28px color-mix(in srgb, var(--wheel-glow-color, #4de9ff) 60%, transparent);
+  opacity: 0.72;
+}
+
+.wheel-arena-glint--a { top: 29%; left: 12%; }
+.wheel-arena-glint--b { top: 18%; right: 18%; }
+.wheel-arena-glint--c { bottom: 27%; left: 19%; }
+.wheel-arena-glint--d { right: 11%; bottom: 34%; }
+
+.wheel-live-selection {
+  top: 16px;
+  z-index: 12;
+  min-width: min(300px, calc(100% - 48px));
+  padding: 9px 18px 10px;
+  border-radius: 0 0 16px 16px;
+  border-color: rgba(128, 194, 230, 0.2);
+  background: linear-gradient(180deg, rgba(13, 23, 36, 0.96), rgba(7, 13, 21, 0.96));
+}
+
+.wheel-stage-assembly {
+  z-index: 3;
+  width: min(68%, 560px);
+  margin: 62px auto 0;
+  isolation: isolate;
+}
+
+.wheel-stage-aura {
+  inset: 7%;
+  opacity: 0.76;
+  filter: blur(26px) saturate(1.16);
+}
+
+.wheel-stage-chassis {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border: 1px solid rgba(215, 234, 255, 0.16);
+  border-radius: 50%;
+  background: conic-gradient(from 225deg, #202c3b, #0a111b 13%, #263449 22%, #080d15 33%, #1d2b3e 47%, #070c13 60%, #26364c 75%, #09101a 87%, #202d3f);
+  box-shadow:
+    0 0 0 7px #050910,
+    0 0 0 9px color-mix(in srgb, var(--wheel-glow-color, #4de9ff) 26%, transparent),
+    0 26px 60px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.07),
+    inset 0 0 30px rgba(0, 0, 0, 0.82);
+}
+
+.wheel-stage-chassis::before,
+.wheel-stage-chassis::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+}
+
+.wheel-stage-chassis::before {
+  inset: 2.4%;
+  padding: 7px;
+  background: conic-gradient(from 45deg, var(--wheel-glow-color, #4de9ff), var(--wheel-trim-color, #7c92ff), #bb4df0, var(--wheel-trim-color, #7c92ff), var(--wheel-glow-color, #4de9ff));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.88;
+  filter: drop-shadow(0 0 10px rgba(80, 203, 255, 0.32));
+}
+
+.wheel-stage-chassis::after {
+  inset: 5.3%;
+  border: 1px solid rgba(230, 241, 255, 0.22);
+  box-shadow: 0 0 0 5px rgba(4, 8, 14, 0.92), inset 0 0 0 2px rgba(255, 255, 255, 0.08), inset 0 0 28px rgba(0, 0, 0, 0.8);
+}
+
+.wheel-stage-leds {
+  position: absolute;
+  inset: -1.4%;
+  z-index: 2;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    from 0deg,
+    transparent 0deg 10deg,
+    color-mix(in srgb, var(--wheel-glow-color, #4de9ff) 92%, white 8%) 10deg 11.4deg,
+    transparent 11.4deg 20deg,
+    color-mix(in srgb, var(--wheel-trim-color, #7c92ff) 88%, white 12%) 20deg 21.4deg
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
+  opacity: 0.68;
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--wheel-glow-color, #4de9ff) 58%, transparent));
+}
+
+.wheel-stage-trim {
+  inset: 1.6%;
+  z-index: 3;
+  opacity: 0.84;
+  filter: none;
+}
+
+.wheel-stage-trim::before {
+  inset: 1.8%;
+  padding: 5px;
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 6px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 6px));
+  animation: wheelTrimPulse 3.8s ease-in-out infinite alternate;
+}
+
+.wheel-stage-trim::after {
+  inset: 0;
+  padding: 12px;
+  opacity: 0.46;
+  animation: wheelTrimSweep 12s linear infinite;
+}
+
+.wheel-stage-trim-noise {
+  opacity: 0.1;
+  animation-duration: 24s;
+}
+
+.wheel-spin-disc-premium {
+  position: relative;
+  z-index: 4;
+  width: 84.8%;
+  max-width: none;
+  transition: none;
+  filter: drop-shadow(0 18px 34px rgba(0, 0, 0, 0.46));
+}
+
+.wheel-svg {
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.wheel-svg .wheel-disc-gloss,
+.wheel-svg .wheel-disc-vignette {
+  pointer-events: none;
+}
+
+.wheel-svg .wheel-disc-gloss {
+  mix-blend-mode: screen;
+  opacity: 0.58;
+}
+
+.wheel-slice {
+  filter: saturate(0.94) contrast(1.05);
+}
+
+.wheel-slice-sheen {
+  opacity: 0.46;
+}
+
+.wheel-slice-label text {
+  stroke: rgba(4, 8, 13, 0.54);
+  stroke-width: 3px;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.52));
+}
+
+.wheel-slice-label .wheel-slice-label-count {
+  fill: rgba(255, 255, 255, 0.76);
+  stroke-width: 2px;
+  letter-spacing: 0.07em;
+}
+
+.wheel-hardware-pointer {
+  top: -8px;
+  width: 106px;
+  height: 92px;
+  z-index: 8;
+}
+
+.wheel-hardware-pointer-mount {
+  width: 78px;
+  height: 38px;
+  margin-top: 3px;
+  border-radius: 22px 22px 13px 13px;
+  background: linear-gradient(180deg, #34465e 0%, #121c29 45%, #070c13 100%);
+  box-shadow: inset 0 2px rgba(255, 255, 255, 0.12), inset 0 -8px 13px rgba(0, 0, 0, 0.5), 0 0 18px rgba(81, 208, 255, 0.18);
+}
+
+.wheel-spin-pointer-premium {
+  top: 19px;
+  width: 40px;
+  height: 54px;
+  background: linear-gradient(145deg, #f7fbff, #9fe8ff 34%, #5d8cff 66%, #2c315e);
+  filter: drop-shadow(0 5px 3px rgba(0, 0, 0, 0.42)) drop-shadow(0 0 12px rgba(100, 212, 255, 0.46));
+}
+
+.wheel-spin-pointer-glow {
+  top: 7px;
+  z-index: 7;
+  width: 118px;
+  height: 68px;
+  opacity: 0.66;
+}
+
+.wheel-spin-stage-premium[data-state="spinning"] .wheel-spin-pointer-premium {
+  animation: wheelPointerTick 180ms ease-in-out infinite alternate;
+}
+
+@keyframes wheelPointerTick {
+  from { transform: translateX(-50%) rotate(-2deg); }
+  to { transform: translateX(-50%) rotate(2deg); }
+}
+
+.wheel-spin-dock {
+  position: relative;
+  z-index: 4;
+  width: min(94%, 760px);
+  display: grid;
+  grid-template-columns: minmax(96px, auto) minmax(235px, 360px) minmax(150px, auto);
+  align-items: center;
+  gap: 10px;
+  margin: -2px auto 12px;
+  padding: 10px;
+  border: 1px solid rgba(162, 199, 231, 0.18);
+  border-radius: 17px;
+  background: linear-gradient(180deg, rgba(13, 22, 34, 0.97), rgba(7, 13, 21, 0.99));
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.35), inset 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.wheel-spin-dock-side {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.wheel-spin-dock-side--end {
+  justify-content: flex-end;
+}
+
+.wheel-console-state-chip,
+.wheel-console-policy-chip,
+.wheel-console-count-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  padding: 0 8px;
+  border: 1px solid rgba(109, 192, 229, 0.2);
+  border-radius: 999px;
+  background: rgba(38, 103, 132, 0.12);
+  color: rgba(170, 227, 249, 0.9);
+  font: 800 0.51rem/1 "IBM Plex Mono", ui-monospace, monospace;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.wheel-spin-primary {
+  min-height: 48px;
+  border: 0;
+  border-radius: 13px;
+  background: linear-gradient(118deg, #31c8ef 0%, #5b73ff 47%, #b94df2 100%);
+  color: #fff;
+  box-shadow: 0 10px 25px rgba(73, 111, 255, 0.28), inset 0 1px rgba(255, 255, 255, 0.25);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.wheel-spin-primary:hover:not(:disabled),
+.wheel-spin-primary:focus-visible:not(:disabled) {
+  filter: brightness(1.1) saturate(1.08);
+  box-shadow: 0 12px 31px rgba(73, 111, 255, 0.36), inset 0 1px rgba(255, 255, 255, 0.32);
+}
+
+.wheel-spin-primary:disabled {
+  filter: saturate(0.35);
+  opacity: 0.46;
+}
+
+.wheel-stage-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 17px 14px;
+  color: rgba(117, 143, 166, 0.82);
+  font: 700 0.54rem/1.4 "IBM Plex Mono", ui-monospace, monospace;
+}
+
+.wheel-stage-foot__authority::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: #53e6bc;
+  box-shadow: 0 0 9px rgba(83, 230, 188, 0.72);
+}
+
+.wheel-console-card {
+  position: sticky;
+  top: 12px;
+  display: block;
+  min-height: 654px;
+  overflow: hidden;
+}
+
+.wheel-console-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  padding: 8px;
+  border-bottom: 1px solid rgba(178, 205, 231, 0.13);
+  background: rgba(5, 10, 17, 0.58);
+}
+
+.wheel-console-tab {
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: rgba(127, 150, 172, 0.86);
+  cursor: pointer;
+  font: 800 0.53rem/1 "IBM Plex Mono", ui-monospace, monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.wheel-console-tab:hover,
+.wheel-console-tab:focus-visible {
+  color: #eaf9ff;
+  border-color: rgba(81, 214, 255, 0.22);
+  outline: none;
+}
+
+.wheel-console-tab.is-active {
+  color: #eaf9ff;
+  border-color: rgba(81, 214, 255, 0.3);
+  background: linear-gradient(135deg, rgba(54, 190, 239, 0.17), rgba(99, 86, 255, 0.13));
+  box-shadow: inset 0 -2px var(--wheel-glow-color, #4de9ff);
+}
+
+.wheel-console-panel {
+  display: grid;
+  align-content: start;
+  gap: 11px;
+  padding: 15px;
+}
+
+.wheel-console-panel[hidden] {
+  display: none;
+}
+
+.wheel-console-session-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 13px;
+  border: 1px solid rgba(164, 194, 224, 0.14);
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(19, 31, 45, 0.8), rgba(9, 16, 26, 0.82));
+}
+
+.wheel-console-session-icon {
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(101, 220, 255, 0.2);
+  border-radius: 11px;
+  background: rgba(32, 101, 132, 0.13);
+  color: var(--wheel-glow-color, #4de9ff);
+}
+
+.wheel-console-session-icon::before {
+  content: "";
+  width: 20px;
+  height: 20px;
+  display: block;
+  margin: 8px;
+  background: var(--wheel-glow-color, #4de9ff);
+  -webkit-mask: url("/assets/icons/ui/wheelpie.svg") center / contain no-repeat;
+  mask: url("/assets/icons/ui/wheelpie.svg") center / contain no-repeat;
+}
+
+.wheel-console-session-copy {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.wheel-console-session-copy strong {
+  color: #f1f7fc;
+  font-size: 0.79rem;
+}
+
+.wheel-console-session-copy span {
+  color: rgba(142, 160, 178, 0.86);
+  font-size: 0.65rem;
+  line-height: 1.42;
+}
+
+.wheel-console-policy-chip {
+  border-color: rgba(255, 203, 89, 0.22);
+  background: rgba(126, 89, 19, 0.15);
+  color: #ffd988;
+}
+
+.wheel-console-panel .wheel-entry-detail-card,
+.wheel-console-panel .wheel-spin-result,
+.wheel-console-panel .wheel-winners-panel,
+.wheel-console-panel .wheel-meta-card {
+  margin: 0;
+  border-radius: 14px;
+  border-color: rgba(179, 203, 226, 0.14);
+  background: linear-gradient(150deg, rgba(20, 30, 44, 0.92), rgba(8, 14, 23, 0.96));
+  box-shadow: none;
+}
+
+.wheel-console-panel .wheel-entry-detail-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.wheel-console-panel .wheel-entry-detail-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--wheel-entry-color, var(--wheel-glow-color, #4de9ff));
+  box-shadow: 0 0 14px var(--wheel-entry-color, var(--wheel-glow-color, #4de9ff));
+}
+
+.wheel-console-panel .wheel-entry-detail-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+}
+
+.wheel-entry-detail-meta {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.wheel-entry-detail-row {
+  display: grid;
+  justify-content: stretch;
+  gap: 4px;
+  padding: 9px;
+  border-radius: 9px;
+  border-top: 1px solid rgba(169, 197, 225, 0.1);
+}
+
+.wheel-entry-detail-row span {
+  font: 800 0.5rem/1.2 "IBM Plex Mono", ui-monospace, monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.wheel-entry-detail-row strong {
+  font-size: 0.72rem;
+}
+
+.wheel-spin-result {
+  border-color: rgba(95, 224, 181, 0.15);
+  background: rgba(28, 105, 82, 0.09);
+}
+
+.wheel-spin-result__title {
+  font-size: 1rem;
+}
+
+.wheel-access-note {
+  padding: 11px;
+  border: 1px solid rgba(255, 203, 89, 0.14);
+  border-radius: 12px;
+  background: rgba(126, 89, 19, 0.08);
+}
+
+.wheel-console-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.wheel-console-panel-copy {
+  margin: 0;
+  color: rgba(150, 169, 187, 0.86);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.wheel-scoreboard-table {
+  gap: 6px;
+}
+
+.wheel-scoreboard-row {
+  grid-template-columns: 28px minmax(0, 1fr) 58px 86px;
+  gap: 8px;
+  min-width: 0;
+  padding: 9px 10px;
+  border-color: rgba(158, 190, 220, 0.12);
+  border-radius: 11px;
+  background: rgba(7, 13, 21, 0.5);
+}
+
+.wheel-scoreboard-row.is-selectable {
+  cursor: pointer;
+}
+
+.wheel-scoreboard-row.is-selectable:hover,
+.wheel-scoreboard-row.is-selectable:focus-visible,
+.wheel-scoreboard-row.is-selectable.is-active {
+  border-color: rgba(85, 218, 255, 0.34);
+  background: rgba(24, 45, 63, 0.55);
+  outline: none;
+}
+
+.wheel-scoreboard-row-head {
+  padding-inline: 10px;
+  background: transparent;
+}
+
+.wheel-scoreboard-count {
+  display: inline-grid;
+  min-width: 28px;
+  min-height: 25px;
+  place-items: center;
+  justify-self: start;
+  border: 1px solid rgba(154, 191, 221, 0.16);
+  border-radius: 8px;
+  background: rgba(9, 16, 25, 0.62);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-weight: 800;
+}
+
+.wheel-scoreboard-chance {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(28px, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.64rem;
+}
+
+.wheel-scoreboard-chance-rail {
+  position: relative;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.wheel-scoreboard-chance-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--wheel-entry-chance, 0%);
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--wheel-entry-color, #4de9ff), color-mix(in srgb, var(--wheel-entry-color, #4de9ff) 78%, white 22%));
+}
+
+.wheel-console-panel .dashboard-chip-row {
+  gap: 6px;
+}
+
+.wheel-console-panel .dashboard-chip {
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(8, 14, 22, 0.52);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.54rem;
+}
+
+.wheel-console-panel .profile-meta {
+  min-width: 0;
+}
+
+.wheel-console-panel .wheel-meta-card--share {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.wheel-console-panel .wheel-share-field__value {
+  font-size: 0.68rem;
+}
+
+.wheel-console-drawers {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.wheel-console-drawers > .wheel-owner-editor-shell {
+  overflow: hidden;
+}
+
+.wheel-console-drawers .wheel-compact-panel {
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  box-shadow: none;
+}
+
+.wheel-console-drawers > .wheel-compact-panel {
+  overflow: hidden;
+}
+
+.wheel-console-drawers .wheel-compact-panel-summary {
+  min-height: 58px;
+  padding: 13px 15px;
+}
+
+.wheel-console-drawers .wheel-compact-panel-summary::after {
+  content: "+";
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid rgba(154, 189, 220, 0.18);
+  border-radius: 8px;
+  color: #7b91a7;
+}
+
+.wheel-console-drawers details[open] > .wheel-compact-panel-summary::after {
+  content: "−";
+}
+
+.wheel-console-drawers details[open] > .wheel-compact-panel-summary {
+  border-bottom: 1px solid rgba(178, 205, 231, 0.13);
+}
+
+.wheel-winner-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  visibility: hidden;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(37, 85, 127, 0.14), rgba(4, 8, 14, 0.72) 52%, rgba(2, 5, 9, 0.88));
+  backdrop-filter: blur(3px);
+  transition: opacity 220ms ease, visibility 220ms ease;
+}
+
+.wheel-winner-overlay.is-visible {
+  visibility: visible;
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.wheel-winner-rays,
+.wheel-winner-halo {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.wheel-winner-rays {
+  width: min(82%, 620px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 255, 255, 0.085) 0 2deg, transparent 2deg 14deg);
+  -webkit-mask-image: radial-gradient(circle, transparent 0 18%, #000 42%, transparent 73%);
+  mask-image: radial-gradient(circle, transparent 0 18%, #000 42%, transparent 73%);
+  opacity: 0.62;
+  animation: wheelWinnerRays 14s linear infinite;
+}
+
+.wheel-winner-halo {
+  width: min(66%, 500px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--wheel-winner-color, #ffd56b) 52%, transparent), color-mix(in srgb, var(--wheel-winner-color, #ffd56b) 20%, transparent) 38%, transparent 70%);
+  filter: blur(12px);
+  opacity: 0.84;
+}
+
+.wheel-winner-dialog {
+  position: relative;
+  z-index: 3;
+  width: min(92%, 455px);
+  overflow: hidden;
+  padding: 28px 28px 24px;
+  border: 1px solid color-mix(in srgb, var(--wheel-winner-color, #ffd56b) 70%, #dff7ff 30%);
+  border-radius: 23px;
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--wheel-winner-color, #ffd56b) 17%, transparent), transparent 43%),
+    linear-gradient(155deg, rgba(15, 25, 38, 0.97), rgba(5, 10, 17, 0.99));
+  box-shadow:
+    0 28px 75px rgba(0, 0, 0, 0.58),
+    0 0 56px color-mix(in srgb, var(--wheel-winner-color, #ffd56b) 26%, transparent),
+    inset 0 1px rgba(255, 255, 255, 0.08);
+  color: #f7fbff;
+  text-align: center;
+}
+
+.wheel-winner-dialog::before {
+  content: "";
+  position: absolute;
+  top: -55%;
+  right: -25%;
+  left: -25%;
+  height: 80%;
+  background: linear-gradient(115deg, transparent 28%, rgba(255, 255, 255, 0.2) 48%, transparent 67%);
+  transform: rotate(-8deg);
+  animation: wheelWinnerSheen 3.2s ease-in-out infinite;
+}
+
+.wheel-winner-close {
+  position: absolute;
+  top: 11px;
+  right: 11px;
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  background: rgba(7, 13, 21, 0.68);
+  color: #b9c8d5;
+  cursor: pointer;
+}
+
+.wheel-winner-trophy {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 14px;
+  border-radius: 23px;
+  background:
+    radial-gradient(circle at 38% 28%, rgba(255, 255, 255, 0.42), transparent 20%),
+    linear-gradient(145deg, #ffe993, #ffb648 58%, #d77b19);
+  box-shadow: 0 0 0 1px rgba(255, 248, 192, 0.44), 0 0 34px rgba(255, 183, 65, 0.42), inset 0 -14px 24px rgba(116, 55, 0, 0.23);
+  transform: rotate(-3deg);
+}
+
+.wheel-winner-trophy::before {
+  content: "";
+  width: 42px;
+  height: 42px;
+  background: #3a2100;
+  -webkit-mask: url("/assets/icons/ui/star.svg") center / contain no-repeat;
+  mask: url("/assets/icons/ui/star.svg") center / contain no-repeat;
+}
+
+.wheel-winner-kicker {
+  position: relative;
+  color: #ffe290;
+  font: 900 0.59rem/1.2 "IBM Plex Mono", ui-monospace, monospace;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.wheel-winner-name {
+  position: relative;
+  margin: 8px 0 5px;
+  color: #fff;
+  font-size: clamp(1.8rem, 4.2vw, 2.35rem);
+  line-height: 1;
+  letter-spacing: -0.025em;
+  text-shadow: 0 0 24px color-mix(in srgb, var(--wheel-winner-color, #ffd56b) 46%, transparent);
+}
+
+.wheel-winner-subtitle {
+  position: relative;
+  margin: 0;
+  color: rgba(187, 204, 219, 0.9);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.wheel-winner-stats {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 17px 0;
+}
+
+.wheel-winner-stat {
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(5, 10, 17, 0.58);
+  color: rgba(222, 234, 244, 0.94);
+  font: 800 0.55rem/1 "IBM Plex Mono", ui-monospace, monospace;
+}
+
+.wheel-winner-stat strong {
+  color: #fff;
+}
+
+.wheel-winner-actions {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 9px;
+}
+
+.wheel-winner-actions button {
+  min-height: 40px;
+  border-radius: 11px;
+  cursor: pointer;
+  font-weight: 850;
+}
+
+.wheel-winner-continue {
+  border: 1px solid rgba(170, 201, 228, 0.2);
+  background: rgba(22, 34, 49, 0.82);
+  color: #c4d2de;
+}
+
+.wheel-winner-again {
+  border: 0;
+  background: linear-gradient(118deg, #36c9ed, #6375ff 48%, #b94df0);
+  box-shadow: 0 10px 24px rgba(78, 105, 255, 0.28);
+  color: #fff;
+}
+
+.wheel-winner-actions button:focus-visible,
+.wheel-winner-close:focus-visible {
+  outline: 2px solid #ecfaff;
+  outline-offset: 3px;
+}
+
+@keyframes wheelWinnerRays {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes wheelWinnerSheen {
+  0%, 20% { transform: translateX(-34%) rotate(-8deg); opacity: 0; }
+  45% { opacity: 1; }
+  70%, 100% { transform: translateX(34%) rotate(-8deg); opacity: 0; }
+}
+
+@media (max-width: 1220px) {
+  .wheel-console-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .wheel-console-card {
+    position: static;
+    min-height: 0;
+  }
+
+  .wheel-console-panel {
+    min-height: 430px;
+  }
+
+  .wheel-stage-assembly {
+    width: min(68%, 575px);
+  }
+}
+
+@media (max-width: 760px) {
+  .wheel-arena-header {
+    align-items: flex-start;
+  }
+
+  .wheel-spin-stage-premium {
+    min-height: 520px;
+    padding: 0;
+  }
+
+  .wheel-stage-assembly {
+    width: min(94%, 520px);
+    margin-top: 72px;
+  }
+
+  .wheel-arena-pylon {
+    top: 120px;
+    bottom: 86px;
+    width: 38px;
+  }
+
+  .wheel-live-selection {
+    min-width: min(250px, calc(100% - 32px));
+  }
+
+  .wheel-spin-dock {
+    grid-template-columns: 1fr;
+    width: calc(100% - 24px);
+  }
+
+  .wheel-spin-primary {
+    order: -1;
+  }
+
+  .wheel-spin-dock-side,
+  .wheel-spin-dock-side--end {
+    justify-content: center;
+  }
+
+  .wheel-stage-foot {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .wheel-console-panel {
+    min-height: 0;
+  }
+
+  .wheel-console-session-card {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .wheel-console-policy-chip {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .wheel-console-drawers {
+    grid-template-columns: 1fr;
+  }
+
+  .wheel-winner-dialog {
+    padding: 25px 19px 21px;
+  }
+}
+
+@media (max-width: 520px) {
+  .wheel-arena-header {
+    min-height: 58px;
+    padding: 10px 12px;
+  }
+
+  .wheel-arena-title {
+    font-size: 0.82rem;
+  }
+
+  .wheel-console-quiet-button {
+    padding-inline: 9px;
+    font-size: 0.55rem;
+  }
+
+  .wheel-spin-stage-premium {
+    min-height: 440px;
+  }
+
+  .wheel-stage-assembly {
+    width: 98%;
+    margin-top: 76px;
+  }
+
+  .wheel-hardware-pointer {
+    transform: translateX(-50%) scale(0.82);
+    transform-origin: top center;
+  }
+
+  .wheel-arena-pylon {
+    display: none;
+  }
+
+  .wheel-stage-foot {
+    font-size: 0.48rem;
+  }
+
+  .wheel-console-tabs {
+    gap: 3px;
+    padding: 6px;
+  }
+
+  .wheel-console-tab {
+    font-size: 0.48rem;
+  }
+
+  .wheel-console-panel {
+    padding: 12px;
+  }
+
+  .wheel-entry-detail-meta {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .wheel-scoreboard-row {
+    grid-template-columns: 24px minmax(0, 1fr) 46px 62px;
+    gap: 6px;
+    padding-inline: 8px;
+  }
+
+  .wheel-scoreboard-chance-rail {
+    display: none;
+  }
+
+  .wheel-scoreboard-chance {
+    grid-template-columns: 1fr;
+    justify-items: end;
+  }
+
+  .wheel-console-panel-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .wheel-winner-overlay {
+    padding: 14px;
+  }
+
+  .wheel-winner-name {
+    font-size: 1.76rem;
+  }
+
+  .wheel-winner-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wheel-stage-trim::before,
+  .wheel-stage-trim::after,
+  .wheel-stage-trim-noise,
+  .wheel-spin-stage-premium[data-state="spinning"] .wheel-spin-pointer-premium,
+  .wheel-winner-rays,
+  .wheel-winner-dialog::before,
+  .wheel-celebration-layer.is-active .wheel-confetti {
+    animation: none !important;
+  }
+
+  .wheel-winner-rays,
+  .wheel-winner-halo {
+    opacity: 0.28;
+  }
+}
+
+@media (forced-colors: active) {
+  .wheel-arena-card,
+  .wheel-console-card,
+  .wheel-console-drawers > :is(.wheel-owner-editor-shell, .wheel-compact-panel),
+  .wheel-console-session-card,
+  .wheel-entry-detail-card,
+  .wheel-spin-result,
+  .wheel-meta-card,
+  .wheel-winner-dialog {
+    border-color: CanvasText;
+    background: Canvas;
+  }
+
+  .wheel-arena-atmosphere,
+  .wheel-stage-aura,
+  .wheel-stage-leds,
+  .wheel-stage-trim,
+  .wheel-spin-pointer-glow,
+  .wheel-winner-rays,
+  .wheel-winner-halo,
+  .wheel-celebration-layer {
+    display: none;
+  }
+
+  .wheel-console-tab.is-active,
+  .wheel-spin-primary,
+  .wheel-winner-again {
+    border: 2px solid Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .wheel-scoreboard-row.is-selectable:focus-visible,
+  .wheel-console-quiet-button:focus-visible,
+  .wheel-winner-actions button:focus-visible,
+  .wheel-winner-close:focus-visible {
+    outline: 2px solid Highlight;
+  }
+}
+
 .custom-pie-shell {
   position: relative;
   display: inline-grid;

@@ -6,6 +6,19 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-15 - Approved Wheel Console V3 implementation
+
+#### Technical notes
+
+- Rebuilt only the existing public wheel-detail workspace around the approved `wheelpocv3` direction. The unchanged Public shell now contains a cinematic arena backplate, restrained architectural lighting, perspective floor/plinth, premium wheel chassis and pointer, V2/V3 radial label orientation with entry totals, an always-visible spin dock, and a compact Play/Entrants/Details/Share console.
+- Added presentation-only entrant aggregation so repeated identity records become one wheel slice and one keyboard-selectable list row with summed entries/weight and recalculated chance. Runtime/Auth API-first hydration, route aliases, raw owner-editor payloads, share links, live refresh, palette/centre image/sound settings, winner policies, and local-only draw history remain authoritative and unchanged.
+- Replaced the small result treatment with a focus-managed winner dialog, restrained rays/glow, bounded DOM confetti, Continue plus truthful Spin again/Re-spin behavior, and mobile recentering. Reduced motion stops idle drift, skips spin animation/confetti, and suppresses decorative motion; forced-colour rules keep controls and content legible.
+- Reorganized secondary owner editing and authority requests into collapsed support drawers without removing either capability. No Runtime/Auth files, APIs, schemas, wider shell/theme settings, routes, or unrelated community surfaces were changed, and no deployment, commit, push, or version/build mutation was performed.
+
+#### Human-readable summary
+
+The public wheel page now feels like a focused wheel console instead of a long stack of cards. The wheel owns the stage, controls are easier to find, entrants and odds are clearer, repeat entries are no longer shown as confusing duplicates, and winning gets a polished celebration that still respects accessibility and motion preferences.
+
 ### 2026-08-14 - Signal Red and Overview optical correction
 
 #### Technical notes
