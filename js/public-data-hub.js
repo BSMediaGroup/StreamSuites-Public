@@ -35,6 +35,11 @@
     return PROFILE_THEME_PRESET_KEYS.has(normalized) ? normalized : "violet_blue";
   }
 
+  function normalizeProfileThemeTone(value) {
+    const normalized = String(value || "dark").trim().toLowerCase();
+    return normalized === "light" ? "light" : "dark";
+  }
+
   const PLATFORM_ICON_MAP = Object.freeze({
     rumble: "/assets/icons/rumble.svg",
     youtube: "/assets/icons/youtube.svg",
@@ -1149,6 +1154,7 @@
       bio: raw.bio || raw.summary || "",
       about: raw.about || raw.about_story || raw.aboutStory || "",
       streamsuitesThemePreset: normalizeProfileThemePreset(raw.streamsuites_theme_preset || raw.streamsuitesThemePreset),
+      streamsuitesThemeTone: normalizeProfileThemeTone(raw.streamsuites_theme_tone || raw.streamsuitesThemeTone),
       socialLinks,
       customLinks,
       coverImageUrl,

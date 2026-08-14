@@ -155,6 +155,9 @@ function normalizeProfilePayload(payload, slug, requestUrl) {
     .trim()
     .toLowerCase()
     .replace(/-/g, "_");
+  const requestedThemeTone = String(source.streamsuites_theme_tone || source.streamsuitesThemeTone || "dark")
+    .trim()
+    .toLowerCase();
   const canonicalUrl = new URL(`/u/${encodeURIComponent(publicSlug)}`, PUBLIC_ORIGIN).toString();
 
   return {
@@ -184,6 +187,7 @@ function normalizeProfilePayload(payload, slug, requestUrl) {
     aboutVideoUpload: source.about_video_upload && typeof source.about_video_upload === "object" ? source.about_video_upload : source.aboutVideoUpload || null,
     socialLinks: source.social_links && typeof source.social_links === "object" ? source.social_links : source.socialLinks || {},
     streamsuitesThemePreset: allowedThemePresets.has(requestedThemePreset) ? requestedThemePreset : "violet_blue",
+    streamsuitesThemeTone: requestedThemeTone === "light" ? "light" : "dark",
     role: pickString(source.role, source.account_type, source.accountType) || "viewer",
     accountType: pickString(source.account_type, source.accountType),
     tier: pickString(source.tier),
@@ -294,13 +298,25 @@ function injectProfileHead(html, meta, profile) {
 
   if (!profile) return withMeta;
 
+  const profileTheme = escapeHtml(profile.streamsuitesThemePreset || "violet_blue");
+  const profileTone = escapeHtml(profile.streamsuitesThemeTone || "dark");
+  const withAppearance = withMeta
+    .replace(
+      /<html\s+lang="en"[^>]*>/i,
+      `<html lang="en" data-profile-page="active" data-profile-theme="${profileTheme}" data-profile-tone="${profileTone}">`
+    )
+    .replace(
+      /<body\s+data-public-page="public-profile-standalone"[^>]*>/i,
+      `<body data-public-page="public-profile-standalone" data-profile-theme="${profileTheme}" data-profile-tone="${profileTone}">`
+    );
+
   const bootstrap = {
     profile,
     fetchedAt: new Date().toISOString(),
     source: "pages-function"
   };
   const script = `<script id="streamsuites-profile-bootstrap" type="application/json">${escapeJsonForScript(bootstrap)}</script>`;
-  return withMeta.replace("</body>", `  ${script}\n</body>`);
+  return withAppearance.replace("</body>", `  ${script}\n</body>`);
 }
 
 export async function onRequest(context) {

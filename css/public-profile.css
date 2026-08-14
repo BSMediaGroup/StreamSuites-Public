@@ -3654,6 +3654,136 @@ body[data-public-page="public-profile-standalone"] .profile-edit-panel {
   font: 600 0.58rem/1 var(--public-font-mono);
 }
 
+.profile-style-subheading {
+  margin: 10px 0 0;
+}
+
+.profile-tone-picker {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin: 2px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.profile-tone-option {
+  position: relative;
+  min-width: 0;
+  min-height: 74px;
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 10px;
+  overflow: hidden;
+  border: 1px solid rgba(190, 181, 220, 0.13);
+  border-radius: 12px;
+  color: rgba(230, 230, 241, 0.84);
+  background: rgba(8, 10, 16, 0.58);
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.profile-tone-option:hover,
+.profile-tone-option:has(input:focus-visible) {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--profile-gradient-b) 48%, transparent);
+  background: rgba(24, 25, 35, 0.78);
+}
+
+.profile-tone-option:has(input:checked) {
+  border-color: color-mix(in srgb, var(--profile-gradient-b) 62%, white 8%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--profile-gradient-a) 11%, transparent), rgba(22, 23, 33, 0.9));
+  box-shadow: inset 3px 0 var(--profile-gradient-b);
+}
+
+.profile-tone-option > input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.profile-tone-preview {
+  position: relative;
+  width: 54px;
+  height: 44px;
+  display: block;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 9px;
+  background: #0b0d13;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.profile-tone-option[data-tone-option="light"] .profile-tone-preview {
+  border-color: rgba(42, 49, 66, 0.2);
+  background: #edf0f6;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.88);
+}
+
+.profile-tone-preview-header {
+  height: 9px;
+  display: block;
+  border-bottom: 1px solid color-mix(in srgb, var(--profile-gradient-b) 28%, transparent);
+  background: color-mix(in srgb, var(--profile-gradient-a) 12%, #151821);
+}
+
+.profile-tone-option[data-tone-option="light"] .profile-tone-preview-header {
+  background: color-mix(in srgb, var(--profile-gradient-a) 10%, #fff);
+}
+
+.profile-tone-preview-card {
+  width: 36px;
+  height: 21px;
+  display: block;
+  margin: 7px auto 0;
+  border-left: 2px solid var(--profile-gradient-b);
+  border-radius: 4px;
+  background: #1b1e28;
+}
+
+.profile-tone-option[data-tone-option="light"] .profile-tone-preview-card {
+  border-color: var(--profile-gradient-b);
+  background: #fff;
+  box-shadow: 0 2px 7px rgba(39, 45, 60, 0.12);
+}
+
+.profile-tone-option-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.profile-tone-option-copy strong {
+  color: #f1eff8;
+  font-size: 0.7rem;
+}
+
+.profile-tone-option-copy small {
+  color: rgba(190, 193, 211, 0.58);
+  font-size: 0.58rem;
+  line-height: 1.35;
+}
+
+.profile-tone-selected-mark {
+  opacity: 0;
+  padding: 4px 6px;
+  border-radius: 999px;
+  color: #f4f1ff;
+  background: color-mix(in srgb, var(--profile-gradient-b) 28%, rgba(15, 16, 24, 0.9));
+  font: 700 0.5rem/1 var(--public-font-mono);
+  text-transform: uppercase;
+  transition: opacity 160ms ease;
+}
+
+.profile-tone-option:has(input:checked) .profile-tone-selected-mark {
+  opacity: 1;
+}
+
 .profile-theme-picker {
   min-width: 0;
   display: grid;
@@ -4313,6 +4443,7 @@ body[data-public-page="public-profile-standalone"] .profile-edit-button-secondar
     grid-template-columns: 1fr;
   }
 
+  .profile-tone-picker,
   .profile-theme-picker {
     grid-template-columns: 1fr;
   }
@@ -5009,6 +5140,97 @@ body[data-public-page="public-profile-standalone"] .profile-edit-button-secondar
   border: 1px solid color-mix(in srgb, var(--profile-gradient-b) 18%, rgba(224, 217, 243, 0.07));
   border-radius: 10px;
   background: color-mix(in srgb, var(--profile-gradient-c) 5%, rgba(255, 255, 255, 0.018));
+}
+
+.profile-header-account .account-menu-tone-toggle {
+  width: calc(100% - 16px);
+  min-height: 48px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin: 8px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--profile-gradient-b) 18%, rgba(224, 217, 243, 0.07));
+  border-radius: 10px;
+  color: #eeeaf6;
+  background: color-mix(in srgb, var(--profile-gradient-a) 5%, rgba(255, 255, 255, 0.018));
+  font-family: var(--public-font-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.profile-header-account .account-menu-tone-toggle:hover,
+.profile-header-account .account-menu-tone-toggle:focus-visible {
+  border-color: color-mix(in srgb, var(--profile-gradient-b) 42%, transparent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--profile-gradient-b) 13%, transparent), transparent);
+}
+
+.profile-header-account .account-menu-tone-toggle:disabled {
+  opacity: 0.64;
+  cursor: wait;
+}
+
+.account-menu-tone-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.account-menu-tone-copy strong {
+  color: inherit;
+  font-size: 0.69rem;
+  line-height: 1.2;
+}
+
+.account-menu-tone-copy small {
+  color: rgba(188, 185, 202, 0.62);
+  font-size: 0.56rem;
+  line-height: 1.25;
+}
+
+.account-menu-tone-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.account-menu-tone-value {
+  min-width: 26px;
+  color: rgba(222, 218, 232, 0.72);
+  font: 700 0.52rem/1 var(--profile-font-technical);
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.account-menu-tone-track {
+  position: relative;
+  width: 31px;
+  height: 18px;
+  display: block;
+  border: 1px solid color-mix(in srgb, var(--profile-gradient-b) 34%, rgba(224, 217, 243, 0.12));
+  border-radius: 999px;
+  background: rgba(8, 9, 14, 0.72);
+}
+
+.account-menu-tone-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--profile-gradient-b) 66%, white 34%);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--profile-gradient-b) 28%, transparent);
+  transition: transform 160ms ease;
+}
+
+.account-menu-tone-toggle[aria-checked="true"] .account-menu-tone-track {
+  background: color-mix(in srgb, var(--profile-gradient-a) 24%, rgba(238, 241, 247, 0.9));
+}
+
+.account-menu-tone-toggle[aria-checked="true"] .account-menu-tone-thumb {
+  transform: translateX(13px);
 }
 
 .profile-header-account .account-menu-item:hover,
@@ -6798,4 +7020,508 @@ body[data-public-page="public-profile-standalone"] .profile-game-progress-meter:
 
 @media (prefers-reduced-motion: reduce) {
   .profile-media-tray-viewport { scroll-behavior: auto; }
+}
+
+/* Independent light tone. Accent presets remain unchanged and composable. */
+html[data-profile-page="active"][data-profile-tone="light"] {
+  color-scheme: light;
+  --profile-scroll-track: color-mix(in srgb, #edf0f6 92%, var(--profile-gradient-a) 8%);
+  --profile-scroll-thumb: color-mix(in srgb, var(--profile-gradient-b) 58%, #7d8799 42%);
+  --profile-scroll-thumb-hover: color-mix(in srgb, var(--profile-gradient-b) 72%, var(--profile-gradient-c) 28%);
+  --profile-scroll-thumb-active: color-mix(in srgb, var(--profile-gradient-a) 38%, var(--profile-gradient-b) 62%);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] {
+  --profile-ink: #202431;
+  --profile-muted: #667085;
+  --profile-subtle: #7b8495;
+  --profile-line: rgba(55, 64, 82, 0.13);
+  --profile-line-strong: rgba(55, 64, 82, 0.22);
+  --profile-surface: rgba(255, 255, 255, 0.94);
+  --profile-surface-raised: rgba(255, 255, 255, 0.98);
+  --profile-surface-soft: rgba(235, 239, 246, 0.88);
+  --profile-shadow: 0 24px 64px rgba(42, 49, 64, 0.13);
+  --profile-feature-bright: color-mix(in srgb, var(--profile-gradient-b) 58%, #273044 42%);
+  --profile-feature-lift: color-mix(in srgb, var(--profile-gradient-b) 72%, var(--profile-gradient-c) 28%);
+  --profile-feature-wash: color-mix(in srgb, var(--profile-gradient-a) 9%, transparent);
+  --profile-feature-border: color-mix(in srgb, var(--profile-gradient-b) 34%, rgba(55, 64, 82, 0.1));
+  --profile-feature-shadow: 0 0 24px color-mix(in srgb, var(--profile-gradient-a) 14%, transparent);
+  --profile-focus: color-mix(in srgb, var(--profile-gradient-b) 68%, #24304a 32%);
+  --profile-header-control-border: rgba(55, 64, 82, 0.14);
+  --profile-header-control-border-hover: rgba(55, 64, 82, 0.26);
+  --profile-header-control-bg: rgba(255, 255, 255, 0.88);
+  --profile-header-control-bg-hover: #fff;
+  --profile-header-control-shadow: inset 0 1px rgba(255, 255, 255, 0.85), 0 8px 20px rgba(42, 49, 64, 0.1);
+  --profile-action-subtle-border: color-mix(in srgb, var(--profile-gradient-b) 34%, rgba(55, 64, 82, 0.1));
+  --profile-action-subtle-bg: color-mix(in srgb, var(--profile-gradient-a) 8%, rgba(255, 255, 255, 0.92));
+  --profile-action-neutral-border: rgba(55, 64, 82, 0.14);
+  --profile-action-neutral-bg: #f3f5f9;
+  --profile-account-border: color-mix(in srgb, var(--profile-gradient-b) 38%, rgba(55, 64, 82, 0.12));
+  --profile-account-bg: linear-gradient(145deg, color-mix(in srgb, var(--profile-gradient-a) 10%, #fff), color-mix(in srgb, var(--profile-gradient-c) 7%, #fff));
+  --profile-account-hover-bg: linear-gradient(128deg, color-mix(in srgb, var(--profile-gradient-b) 15%, #fff), color-mix(in srgb, var(--profile-gradient-a) 11%, #fff));
+  --profile-account-menu-bg: linear-gradient(145deg, color-mix(in srgb, var(--profile-gradient-a) 5%, rgba(255, 255, 255, 0.99)), color-mix(in srgb, var(--profile-gradient-c) 4%, rgba(247, 249, 252, 0.99)));
+  color: var(--profile-ink);
+  background: #edf0f6;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] :where(
+  .standalone-profile-shell,
+  .profile-edit-modal--profile,
+  .profile-edit-media--hero
+) {
+  --profile-feature-bright: inherit;
+  --profile-feature-lift: inherit;
+  --profile-feature-wash: inherit;
+  --profile-feature-border: inherit;
+  --profile-feature-shadow: inherit;
+  --profile-focus: inherit;
+  --profile-header-control-border: inherit;
+  --profile-header-control-border-hover: inherit;
+  --profile-header-control-bg: inherit;
+  --profile-header-control-bg-hover: inherit;
+  --profile-header-control-shadow: inherit;
+  --profile-action-primary-border: inherit;
+  --profile-action-primary-bg: inherit;
+  --profile-action-primary-hover-bg: inherit;
+  --profile-action-subtle-border: inherit;
+  --profile-action-subtle-bg: inherit;
+  --profile-action-neutral-border: inherit;
+  --profile-action-neutral-bg: inherit;
+  --profile-account-border: inherit;
+  --profile-account-bg: inherit;
+  --profile-account-hover-bg: inherit;
+  --profile-account-menu-bg: inherit;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .standalone-profile-shell {
+  color: var(--profile-ink);
+  background:
+    radial-gradient(1000px 640px at 92% 20%, color-mix(in srgb, var(--profile-gradient-c) 8%, transparent), transparent 68%),
+    radial-gradient(760px 520px at 3% 58%, color-mix(in srgb, var(--profile-gradient-a) 6%, transparent), transparent 72%),
+    linear-gradient(180deg, #f5f7fb 0%, #edf0f6 48%, #f7f8fb 100%);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .standalone-profile-shell::before {
+  opacity: 0.035;
+  filter: grayscale(0.55) saturate(0.6) blur(42px);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] :is(
+  .profile-overlay-brand-text,
+  .profile-hero-name,
+  .profile-status-title,
+  .profile-content-summary,
+  .profile-content-summary-title,
+  .profile-section-heading h2,
+  .profile-about-story h2,
+  .profile-about-story h3,
+  .profile-overview-primary-value,
+  .profile-overview-detail-value,
+  .profile-media-tray-header h3,
+  .profile-artifacts-subsection-header h3,
+  .profile-scoped-progression-header h3,
+  .profile-game-progress-copy strong,
+  .profile-game-standing-context strong,
+  .profile-clip-card-body h3,
+  .profile-mini-artifact-title,
+  .profile-badge-gallery-body strong,
+  .profile-social-gallery-body strong
+) {
+  color: #202431;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] :is(
+  .profile-hero-handle,
+  .profile-hero-bio,
+  .profile-status-detail,
+  .profile-signal-row dt,
+  .profile-content-summary .profile-authority-summary-meta,
+  .profile-overview-primary-label,
+  .profile-overview-detail-label,
+  .profile-overview-primary-description,
+  .profile-pagination-status,
+  .profile-clip-card-facts,
+  .profile-mini-artifact-meta,
+  .profile-badge-gallery-body span,
+  .profile-social-gallery-body span,
+  .profile-game-preview-note,
+  .profile-game-disclaimer
+) {
+  color: #6e7688;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-overlay-brand:hover,
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-overlay-brand:focus-visible {
+  color: #171b26;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-overlay-brand-logo {
+  background:
+    radial-gradient(circle at 34% 20%, color-mix(in srgb, var(--profile-gradient-c) 18%, transparent), transparent 48%),
+    radial-gradient(circle at 74% 80%, color-mix(in srgb, var(--profile-gradient-b) 16%, transparent), transparent 54%),
+    #f8f9fc;
+  box-shadow: inset 0 1px #fff, 0 8px 22px rgba(42, 49, 64, 0.1);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] :is(
+  .profile-header-presence-link,
+  .profile-header-social-btn,
+  .profile-header-social-overflow,
+  .profile-edit-open-button,
+  .profile-header-account .account-pill,
+  .profile-section-nav-scroll-button
+) {
+  border-color: var(--profile-header-control-border);
+  color: #313746;
+  background: var(--profile-header-control-bg);
+  box-shadow: var(--profile-header-control-shadow);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] :is(
+  .profile-header-presence-link,
+  .profile-header-social-btn,
+  .profile-header-social-overflow,
+  .profile-edit-open-button,
+  .profile-header-account .account-pill,
+  .profile-section-nav-scroll-button
+):is(:hover, :focus-visible) {
+  border-color: var(--profile-header-control-border-hover);
+  color: #171b26;
+  background: var(--profile-header-control-bg-hover);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-hero-media {
+  border-color: rgba(55, 64, 82, 0.16);
+  box-shadow: 0 24px 64px rgba(42, 49, 64, 0.18);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-hero-stage {
+  border-color: rgba(55, 64, 82, 0.14);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--profile-gradient-a) 5%, #fff), rgba(255, 255, 255, 0.985) 48%, #f8f9fc);
+  box-shadow: 0 24px 64px rgba(42, 49, 64, 0.16), inset 0 1px #fff;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-hero-avatar.creator-avatar {
+  border-color: #fff;
+  background-color: #e8ebf1;
+  box-shadow: 0 16px 38px rgba(42, 49, 64, 0.18), 0 0 0 1px rgba(55, 64, 82, 0.2);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-action-rail {
+  border-color: rgba(55, 64, 82, 0.12);
+  background: rgba(245, 247, 251, 0.88);
+  box-shadow: inset 0 1px #fff;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-status-icon {
+  color: #747d8f;
+  background: #e5e8ef;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-secondary-action,
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-feature-action--neutral {
+  border-color: rgba(55, 64, 82, 0.14);
+  color: #343a49;
+  background: #f0f2f6;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-secondary-action:is(:hover, :focus-visible),
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-feature-action--neutral:is(:hover, :focus-visible) {
+  border-color: rgba(55, 64, 82, 0.24);
+  color: #171b26;
+  background: #fff;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-signal-row {
+  border-color: rgba(55, 64, 82, 0.1);
+  background: rgba(230, 234, 241, 0.72);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-signal-row dd {
+  color: #2b3140;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-section-nav {
+  border-color: rgba(55, 64, 82, 0.12);
+  background: rgba(250, 251, 253, 0.92);
+  box-shadow: 0 12px 30px rgba(42, 49, 64, 0.1);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-section-nav-link {
+  color: #667085;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-section-nav-link:is(:hover, :focus-visible, .is-active),
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-section-nav-link[aria-current="location"] {
+  color: color-mix(in srgb, var(--profile-gradient-b) 64%, #273044 36%);
+  background: color-mix(in srgb, var(--profile-gradient-a) 9%, #fff);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] :is(
+  .profile-utility-section,
+  .profile-authority-collapsible,
+  .profile-content-collapsible,
+  .profile-overview-panel
+) {
+  border-color: color-mix(in srgb, var(--profile-gradient-b) 16%, rgba(55, 64, 82, 0.12));
+  color: var(--profile-ink);
+  background:
+    radial-gradient(520px 190px at 0 0, color-mix(in srgb, var(--profile-gradient-a) 6%, transparent), transparent 70%),
+    #fff;
+  box-shadow: inset 0 1px #fff, 0 15px 38px rgba(42, 49, 64, 0.08);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-about-section {
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--profile-gradient-a) 7%, transparent), transparent 50%),
+    #fff;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-content-summary {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--profile-gradient-a) 6%, transparent), transparent 44%);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-content-collapsible[open] > .profile-content-summary,
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-overview-primary-grid,
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-artifacts-progression,
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-artifacts-scoped-boards,
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-artifacts-gallery {
+  border-color: rgba(55, 64, 82, 0.1);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-content-summary .profile-collapsible-toggle {
+  color: #6d7484;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-content-summary .profile-collapsible-toggle:is(:hover, :focus-visible) {
+  color: #202431;
+  background: color-mix(in srgb, var(--profile-gradient-a) 7%, #f3f5f9);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-overview-primary-card {
+  border-color: rgba(55, 64, 82, 0.1);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--profile-gradient-a) 5%, transparent), transparent 72%);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-overview-details {
+  background: rgba(235, 238, 244, 0.46);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-overview-detail {
+  border-color: rgba(55, 64, 82, 0.1);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] :is(
+  .profile-mini-artifact-card,
+  .profile-badge-gallery-card,
+  .profile-game-preview-card,
+  .profile-social-gallery-card,
+  .profile-latest-stream-card,
+  .profile-game-progress-strip,
+  .profile-artifact-filter,
+  .profile-clip-card,
+  .profile-media-tray-button,
+  .profile-pagination-button,
+  .profile-clips-tab,
+  .profile-overview-row,
+  .profile-empty-state,
+  .empty-state
+) {
+  border-color: rgba(55, 64, 82, 0.11);
+  color: #2c3241;
+  background: #f4f6f9;
+  box-shadow: inset 0 1px #fff;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] :is(
+  .profile-media-tray-button,
+  .profile-pagination-button,
+  .profile-clips-tab,
+  .profile-artifact-filter
+):is(:hover, :focus-visible, [aria-selected="true"], [aria-pressed="true"]) {
+  color: #202431;
+  background: color-mix(in srgb, var(--profile-gradient-a) 8%, #fff);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-social-gallery-icon-wrap,
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-mini-artifact-preview,
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-game-progress-meter {
+  background-color: #e8ebf1;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-about-story :where(code, pre) {
+  color: #2d3444;
+  background: #eef1f6;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-about-story blockquote {
+  color: #626b7d;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-header-account .account-menu {
+  border-color: color-mix(in srgb, var(--profile-gradient-b) 22%, rgba(55, 64, 82, 0.12));
+  color: #262c3a;
+  background:
+    radial-gradient(240px 140px at 100% 0, color-mix(in srgb, var(--profile-gradient-a) 10%, transparent), transparent 72%),
+    var(--profile-account-menu-bg);
+  box-shadow: 0 24px 60px rgba(42, 49, 64, 0.18), inset 0 1px #fff;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-header-account :is(
+  .account-menu-name,
+  .account-menu-role,
+  .account-menu-overview-label,
+  .account-menu-overview-value,
+  .account-menu-item,
+  .account-menu-tone-toggle
+) {
+  color: #303645;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-header-account :is(
+  .account-menu-overview,
+  .account-menu-tone-toggle
+) {
+  border-color: rgba(55, 64, 82, 0.1);
+  background: rgba(238, 241, 246, 0.72);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .account-menu-tone-copy small,
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .account-menu-tone-value {
+  color: #737b8d;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .account-menu-tone-track {
+  border-color: rgba(55, 64, 82, 0.18);
+  background: #d9dde6;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-site-footer {
+  color: #687184;
+  background:
+    radial-gradient(760px 220px at 18% 0, color-mix(in srgb, var(--profile-gradient-a) 6%, transparent), transparent 72%),
+    #f5f7fa;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-site-footer__wordmark {
+  filter: invert(1) brightness(0.34) saturate(0.3);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-site-footer :is(
+  .profile-site-footer__brand p,
+  .profile-site-footer__links a,
+  .profile-site-footer__copyright,
+  .profile-footer-version
+) {
+  color: #687184;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-site-footer__links strong {
+  color: #2b3140;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-site-footer__bottom {
+  border-color: rgba(55, 64, 82, 0.11);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-edit-modal-backdrop {
+  background:
+    radial-gradient(circle at 18% 12%, color-mix(in srgb, var(--profile-gradient-a) 12%, transparent), transparent 34%),
+    rgba(34, 39, 52, 0.52);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-edit-modal--profile {
+  color: #252b39;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--profile-gradient-c) 5%, rgba(255, 255, 255, 0.99)), rgba(244, 246, 250, 0.99) 46%),
+    #f7f8fb;
+  box-shadow: 0 34px 100px rgba(28, 33, 45, 0.32), 0 0 0 1px color-mix(in srgb, var(--profile-gradient-a) 7%, transparent), inset 0 1px #fff;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-edit-modal-header,
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-edit-footer {
+  border-color: color-mix(in srgb, var(--profile-gradient-b) 12%, rgba(55, 64, 82, 0.1));
+  background: rgba(250, 251, 253, 0.94);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] :is(
+  .profile-edit-title,
+  .profile-edit-panel h3,
+  .profile-tone-option-copy strong,
+  .profile-theme-option-copy strong
+) {
+  color: #252b39;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] :is(
+  .profile-edit-subtitle,
+  .profile-edit-section-copy,
+  .profile-tone-option-copy small,
+  .profile-theme-option-copy small,
+  .profile-edit-character-count
+) {
+  color: #6f7789;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-edit-modal-close,
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-edit-nav,
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-edit-panel,
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-tone-option,
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-theme-option,
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-about-mode-option,
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-about-provider-option,
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-edit-input,
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-link-editor-card,
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-link-add-menu {
+  border-color: rgba(55, 64, 82, 0.12);
+  color: #303645;
+  background: #fff;
+  box-shadow: inset 0 1px #fff;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] :is(
+  .profile-tone-option,
+  .profile-theme-option,
+  .profile-about-mode-option,
+  .profile-about-provider-option
+):has(input:checked) {
+  border-color: color-mix(in srgb, var(--profile-gradient-b) 54%, rgba(55, 64, 82, 0.12));
+  background: color-mix(in srgb, var(--profile-gradient-a) 7%, #fff);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-edit-nav-link {
+  color: #626b7d;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-edit-nav-link:is(:hover, :focus-visible, .is-active) {
+  color: #242a38;
+  background: color-mix(in srgb, var(--profile-gradient-a) 9%, #fff);
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-edit-scrollbody {
+  scrollbar-color: color-mix(in srgb, var(--profile-gradient-b) 48%, #8a93a3) #edf0f5;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] .profile-edit-button-secondary {
+  border-color: rgba(55, 64, 82, 0.12);
+  color: #343a49;
+  background: #eef1f5;
+}
+
+body[data-public-page="public-profile-standalone"][data-profile-tone="light"] :is(
+  .ss-badge-floating-tooltip,
+  .item-info-popover
+) {
+  color: #282e3d;
+  background:
+    radial-gradient(260px 150px at 0 0, color-mix(in srgb, var(--profile-gradient-a) 8%, transparent), transparent 70%),
+    rgba(255, 255, 255, 0.99);
+  box-shadow: 0 20px 54px rgba(42, 49, 64, 0.2), inset 0 1px #fff;
+}
+
+@media (forced-colors: active) {
+  body[data-public-page="public-profile-standalone"][data-profile-tone="light"] {
+    forced-color-adjust: auto;
+  }
 }

@@ -127,10 +127,19 @@
     Object.freeze({ key: "frosted_silver", label: "Frosted Silver", description: "Cool luminous silver and ice", colors: ["#8c9baa", "#c3ced8", "#eef4f7"] })
   ]);
   const PROFILE_THEME_PRESET_KEYS = new Set(PROFILE_THEME_PRESETS.map((preset) => preset.key));
+  const PROFILE_THEME_TONES = Object.freeze([
+    Object.freeze({ key: "dark", label: "Dark", description: "Deep neutral surfaces with high-contrast light type" }),
+    Object.freeze({ key: "light", label: "Light", description: "Soft pale surfaces with crisp dark type" })
+  ]);
 
   function normalizeProfileThemePreset(value) {
     const normalized = String(value || "violet_blue").trim().toLowerCase().replace(/-/g, "_");
     return PROFILE_THEME_PRESET_KEYS.has(normalized) ? normalized : "violet_blue";
+  }
+
+  function normalizeProfileThemeTone(value) {
+    const normalized = String(value || "dark").trim().toLowerCase();
+    return normalized === "light" ? "light" : "dark";
   }
 
   function applyStandaloneProfileRootTheme(value) {
@@ -146,11 +155,22 @@
     return theme;
   }
 
+  function applyStandaloneProfileRootTone(value) {
+    const tone = normalizeProfileThemeTone(value);
+    const root = document.documentElement;
+    root.dataset.profilePage = "active";
+    root.dataset.profileTone = tone;
+    document.body.dataset.profileTone = tone;
+    return tone;
+  }
+
   function clearStandaloneProfileRootTheme() {
     const root = document.documentElement;
     delete root.dataset.profilePage;
     delete root.dataset.profileTheme;
+    delete root.dataset.profileTone;
     delete document.body.dataset.profileTheme;
+    delete document.body.dataset.profileTone;
     ["a", "b", "c"].forEach((key) => root.style.removeProperty(`--profile-gradient-${key}`));
   }
   const ABOUT_VIDEO_PROVIDER_FALLBACKS = Object.freeze([
@@ -12031,6 +12051,9 @@
     const streamsuitesThemePreset = normalizeProfileThemePreset(
       payload?.streamsuites_theme_preset || payload?.streamsuitesThemePreset || fallbackProfile?.streamsuitesThemePreset || fallbackProfile?.streamsuites_theme_preset
     );
+    const streamsuitesThemeTone = normalizeProfileThemeTone(
+      payload?.streamsuites_theme_tone || payload?.streamsuitesThemeTone || fallbackProfile?.streamsuitesThemeTone || fallbackProfile?.streamsuites_theme_tone
+    );
     const joinedAt = String(
       payload?.joined_at ||
       payload?.joinedAt ||
@@ -12168,6 +12191,7 @@
       aboutVideoProviders,
       aboutVideoUpload,
       streamsuitesThemePreset,
+      streamsuitesThemeTone,
       socialLinks,
       customLinks,
       coverImageUrl,
@@ -12650,6 +12674,7 @@
   function openPublicProfileEditModal(profile, options = {}) {
     const restoreFocusTo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const selectedTheme = normalizeProfileThemePreset(profile.streamsuitesThemePreset);
+    const selectedTone = normalizeProfileThemeTone(profile.streamsuitesThemeTone);
     const socialLinkDraft = { ...normalizeSocialLinks(profile.socialLinks) };
     let customLinkDrafts = normalizePublicCustomLinks(profile.customLinks).map((item, index) => ({
       ...item,
@@ -12660,7 +12685,9 @@
     const backdrop = create("div", "profile-edit-modal-backdrop is-open");
     const modal = create("section", "profile-edit-modal profile-edit-modal--profile");
     modal.dataset.profileTheme = selectedTheme;
+    modal.dataset.profileTone = selectedTone;
     applyStandaloneProfileRootTheme(selectedTheme);
+    applyStandaloneProfileRootTone(selectedTone);
     modal.setAttribute("role", "dialog");
     modal.setAttribute("aria-modal", "true");
     modal.setAttribute("aria-labelledby", "profile-edit-modal-title");
@@ -12692,6 +12719,7 @@
     const media = create("section", "profile-edit-media profile-edit-media--hero");
     media.setAttribute("aria-label", "Profile media preview");
     media.dataset.profileTheme = selectedTheme;
+    media.dataset.profileTone = selectedTone;
     const cover = create("label", "profile-edit-cover");
     const coverImg = create("img");
     applyProfileImageElementRecovery(coverImg, profile.coverImageUrl || profile.bannerImageUrl, DEFAULT_PROFILE_COVER);
@@ -12895,8 +12923,35 @@
     styleSection.tabIndex = -1;
     styleSection.append(
       create("p", "profile-edit-section-eyebrow", "03 / Style"),
-      create("h3", "", "Feature gradient"),
-      create("p", "profile-edit-section-copy", "Choose the accent system used across this page, including the StreamSuites header emblem, hero spine, highlights, and primary actions.")
+      create("h3", "", "Tone / mode"),
+      create("p", "profile-edit-section-copy", "Choose the neutral surface system independently from the accent theme. Dark is the default.")
+    );
+    const toneFieldset = create("fieldset", "profile-tone-picker");
+    toneFieldset.dataset.profileTonePicker = "true";
+    const toneLegend = create("legend", "sr-only", "Public profile tone or mode");
+    toneFieldset.appendChild(toneLegend);
+    PROFILE_THEME_TONES.forEach((tone) => {
+      const option = create("label", "profile-tone-option");
+      option.dataset.toneOption = tone.key;
+      const input = create("input");
+      input.type = "radio";
+      input.name = "streamsuites_theme_tone";
+      input.value = tone.key;
+      input.checked = tone.key === selectedTone;
+      input.dataset.profileToneOption = tone.key;
+      const preview = create("span", "profile-tone-preview");
+      preview.setAttribute("aria-hidden", "true");
+      preview.append(create("span", "profile-tone-preview-header"), create("span", "profile-tone-preview-card"));
+      const copy = create("span", "profile-tone-option-copy");
+      copy.append(create("strong", "", tone.label), create("small", "", tone.description));
+      const selectedMark = create("span", "profile-tone-selected-mark", "Selected");
+      option.append(input, preview, copy, selectedMark);
+      toneFieldset.appendChild(option);
+    });
+    styleSection.append(
+      toneFieldset,
+      create("h3", "profile-style-subheading", "Theme"),
+      create("p", "profile-edit-section-copy", "Choose the accent system used across this page. Every theme works with both tones.")
     );
     const themeFieldset = create("fieldset", "profile-theme-picker");
     themeFieldset.dataset.profileThemePicker = "true";
@@ -13256,6 +13311,16 @@
         if (pageShell instanceof HTMLElement) pageShell.dataset.profileTheme = nextTheme;
       }
     });
+    toneFieldset.addEventListener("change", (event) => {
+      const input = event.target;
+      if (input instanceof HTMLInputElement && input.matches("[data-profile-tone-option]")) {
+        const nextTone = normalizeProfileThemeTone(input.value);
+        media.dataset.profileTone = nextTone;
+        modal.dataset.profileTone = nextTone;
+        applyStandaloneProfileRootTone(nextTone);
+        if (pageShell instanceof HTMLElement) pageShell.dataset.profileTone = nextTone;
+      }
+    });
     syncStoryPreview();
     const handleModalKeydown = (event) => {
       if (!backdrop.parentElement) return;
@@ -13284,8 +13349,12 @@
       stagedImageUrls.clear();
       if (closeOptions.restoreTheme !== false && pageShell instanceof HTMLElement) {
         pageShell.dataset.profileTheme = selectedTheme;
+        pageShell.dataset.profileTone = selectedTone;
       }
-      if (closeOptions.restoreTheme !== false) applyStandaloneProfileRootTheme(selectedTheme);
+      if (closeOptions.restoreTheme !== false) {
+        applyStandaloneProfileRootTheme(selectedTheme);
+        applyStandaloneProfileRootTone(selectedTone);
+      }
       closePublicProfileEditModal(backdrop, restoreFocusTo);
     };
     closeButton.addEventListener("click", close);
@@ -13394,6 +13463,9 @@
           about_enabled: aboutVisibilityInput.checked,
           streamsuites_theme_preset: normalizeProfileThemePreset(
             form.querySelector('input[name="streamsuites_theme_preset"]:checked')?.value
+          ),
+          streamsuites_theme_tone: normalizeProfileThemeTone(
+            form.querySelector('input[name="streamsuites_theme_tone"]:checked')?.value
           ),
           anonymous: visibilityInput.checked,
           social_links: collectPublicProfileEditorSocialLinks(socialLinkDraft),
@@ -13728,6 +13800,53 @@
         });
         accountMenu.appendChild(overview);
       }
+
+      if (options.canEditProfile === true && typeof options.onProfileToneChange === "function") {
+        let currentTone = normalizeProfileThemeTone(options.profileTone);
+        const toneToggle = create("button", "account-menu-tone-toggle");
+        toneToggle.type = "button";
+        toneToggle.setAttribute("role", "menuitemcheckbox");
+        toneToggle.dataset.profileToneToggle = "true";
+        const toneCopy = create("span", "account-menu-tone-copy");
+        toneCopy.append(create("strong", "", "Tone / mode"), create("small", "", "Profile appearance"));
+        const toneControl = create("span", "account-menu-tone-control");
+        const toneValue = create("span", "account-menu-tone-value");
+        const toneTrack = create("span", "account-menu-tone-track");
+        toneTrack.appendChild(create("span", "account-menu-tone-thumb"));
+        toneControl.append(toneValue, toneTrack);
+        toneToggle.append(toneCopy, toneControl);
+        const syncToneToggle = (tone) => {
+          currentTone = normalizeProfileThemeTone(tone);
+          toneToggle.setAttribute("aria-checked", currentTone === "light" ? "true" : "false");
+          toneToggle.setAttribute("aria-label", `Tone / mode: ${currentTone}. Switch to ${currentTone === "light" ? "dark" : "light"}.`);
+          toneValue.textContent = currentTone === "light" ? "Light" : "Dark";
+        };
+        syncToneToggle(currentTone);
+        toneToggle.addEventListener("click", async (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (toneToggle.disabled) return;
+          const previousTone = currentTone;
+          const nextTone = previousTone === "light" ? "dark" : "light";
+          const pageShell = document.querySelector(".standalone-profile-shell");
+          syncToneToggle(nextTone);
+          applyStandaloneProfileRootTone(nextTone);
+          if (pageShell instanceof HTMLElement) pageShell.dataset.profileTone = nextTone;
+          toneToggle.disabled = true;
+          toneToggle.setAttribute("aria-busy", "true");
+          try {
+            await options.onProfileToneChange(nextTone);
+          } catch (_error) {
+            syncToneToggle(previousTone);
+            applyStandaloneProfileRootTone(previousTone);
+            if (pageShell instanceof HTMLElement) pageShell.dataset.profileTone = previousTone;
+          } finally {
+            toneToggle.disabled = false;
+            toneToggle.removeAttribute("aria-busy");
+          }
+        });
+        accountMenu.appendChild(toneToggle);
+      }
     }
 
     menuItems.forEach((item) => {
@@ -13816,7 +13935,10 @@
     right.appendChild(
       buildProfileHeaderAccountWidget(authState, {
         openAuthModal: options.openAuthModal,
-        onMenuAction: options.onMenuAction
+        onMenuAction: options.onMenuAction,
+        canEditProfile: options.canEditProfile === true,
+        profileTone: profile?.streamsuitesThemeTone,
+        onProfileToneChange: options.onProfileToneChange
       })
     );
 
@@ -15820,8 +15942,11 @@
     shell.dataset.profileArtifactKey = String(options.artifactKey || "");
     shell.dataset.profileCanEdit = canEdit ? "true" : "false";
     const profileTheme = normalizeProfileThemePreset(profile?.streamsuitesThemePreset);
+    const profileTone = normalizeProfileThemeTone(profile?.streamsuitesThemeTone);
     shell.dataset.profileTheme = profileTheme;
+    shell.dataset.profileTone = profileTone;
     applyStandaloneProfileRootTheme(profileTheme);
+    applyStandaloneProfileRootTone(profileTone);
     const atmosphereUrl = String(profile?.backgroundImageUrl || profile?.bannerImageUrl || profile?.coverImageUrl || "").trim();
     shell.style.setProperty("--profile-atmosphere-image", atmosphereUrl ? `url("${atmosphereUrl.replace(/"/g, "%22")}")` : "none");
     shell.appendChild(buildStandaloneProfileHero(profile, options.authState || null, { ...options, canEditProfile: canEdit }));
@@ -15864,6 +15989,7 @@
       badges: []
     };
     applyStandaloneProfileRootTheme("violet_blue");
+    applyStandaloneProfileRootTone("dark");
     cleanupStandaloneProfileInteractions();
     clear(host);
     const shell = create("div", "standalone-profile-shell standalone-profile-shell--message");
@@ -16346,7 +16472,14 @@
               profile = normalizeProfilePayload(updatedPayload, profile, profileCode);
               renderResolvedProfile(profile);
             }
-          })
+          }),
+          onProfileToneChange: async (nextTone) => {
+            const updatedPayload = await saveMyPublicProfile({
+              streamsuites_theme_tone: normalizeProfileThemeTone(nextTone)
+            });
+            profile = normalizeProfilePayload(updatedPayload, profile, profileCode);
+            renderResolvedProfile(profile);
+          }
         });
       };
       renderResolvedProfile(profile);

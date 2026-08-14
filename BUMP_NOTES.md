@@ -6,6 +6,18 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-15 - Independent Dark and Light profile tones
+
+#### Technical notes
+
+- Split standalone profile appearance into two Runtime-backed settings: a `dark` or `light` neutral tone and the existing twelve accent themes. Missing values remain Dark plus Violet Blue, and changing either axis leaves the other unchanged across SSR hydration, client rendering, editor preview, save, and account-menu shortcut updates.
+- Added the tone selector to the existing Page style editor and an owner-only Dark/Light switch inside the existing user dropdown. No separate header toggle was added. The light composition covers profile chrome, hero, cards, navigation, editor, menus, controls, nested content, footer, tooltips, and page scrollbars while preserving every theme's accent gradients; the detached status widget retains its fixed neutral scrollbar.
+- Desktop and 390 px Chromium checks confirmed dark/light rendering, owner-dropdown persistence, separate editor selections, one mobile social button plus overflow tray, zero page/modal horizontal overflow, and the status-widget scrollbar exemption. The complete Public Node suite passed 182/182; no deployment, Runtime restart, version/build change, commit, or push was performed.
+
+#### Human-readable summary
+
+Every profile theme now works in either Dark or Light mode. Dark with Violet Blue remains the default, and profile owners can change the mode from the editor or their existing account dropdown without adding another header control.
+
 ### 2026-08-15 - Green Gold lime-green distinction
 
 #### Technical notes

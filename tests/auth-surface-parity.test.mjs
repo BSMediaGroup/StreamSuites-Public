@@ -321,6 +321,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   const profileCss = read("css/public-profile.css");
   const statusCss = read("css/status-widget.css");
   const profileHtml = read("u/index.html");
+  const profileThemePresetBlock = app.match(/const PROFILE_THEME_PRESETS = Object\.freeze\(\[[\s\S]*?\]\);\r?\n  const PROFILE_THEME_PRESET_KEYS/)?.[0] || "";
   const standaloneUtilityBlock = app.match(/function renderStandaloneProfileUtilityBody\(profileCard, profile, canEdit, options = \{\}\) \{[\s\S]*?\r?\n  \}\r?\n\r?\n  function buildProfileLoadingSection/)?.[0] || "";
   const standaloneLoadingBlock = app.match(/function renderStandaloneProfileLoadingUtilityBody\(profileCard\) \{[\s\S]*?\r?\n  \}\r?\n\r?\n  function renderStandaloneProfilePage/)?.[0] || "";
 
@@ -480,6 +481,22 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(signalRedBrandHover, /var\(--profile-gradient-a\) 6\.5%, transparent/);
   assert.doesNotMatch(signalRedBrandHover, /profile-overlay-brand-glyph/);
   assert.match(profileCss, /data-profile-theme="frosted_silver"/);
+  assert.match(app, /Object\.freeze\(\{ key: "dark", label: "Dark"/);
+  assert.match(app, /Object\.freeze\(\{ key: "light", label: "Light"/);
+  assert.match(app, /function normalizeProfileThemeTone\(value\)/);
+  assert.match(app, /streamsuites_theme_tone:\s*normalizeProfileThemeTone/);
+  assert.match(app, /profile-tone-picker/);
+  assert.match(app, /dataset\.profileToneToggle = "true"/);
+  assert.match(app, /toneToggle\.append\(toneCopy, toneControl\)/);
+  assert.match(profileCss, /html\[data-profile-page="active"\]\[data-profile-tone="light"\]/);
+  assert.match(profileCss, /body\[data-public-page="public-profile-standalone"\]\[data-profile-tone="light"\] \.standalone-profile-shell/);
+  assert.match(profileCss, /\.profile-tone-picker\s*\{[\s\S]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(profileCss, /\.profile-header-account \.account-menu-tone-toggle/);
+  assert.deepEqual(
+    Array.from(profileThemePresetBlock.matchAll(/key: "([a-z_]+)"/g), (match) => match[1]),
+    ["violet_blue", "crimson_magenta", "signal_red", "emerald_cyan", "gold_amber", "royal_blue", "magenta_violet", "red_gold", "green_gold", "dark_slate", "neutral_greytone", "frosted_silver"]
+  );
+  assert.doesNotMatch(profileCss, /data-profile-tone="light"[^\n{]*data-profile-theme|data-profile-theme[^\n{]*data-profile-tone="light"/);
   assert.match(app, /key: "green_gold", label: "Green Gold", description: "Vibrant lime green with warm gold", colors: \["#3acb68", "#78d657", "#e4bd47"\]/);
   assert.match(profileCss, /data-profile-theme="green_gold"\][\s\S]*--profile-gradient-a:\s*#3acb68;[\s\S]*--profile-gradient-b:\s*#78d657;[\s\S]*--profile-gradient-c:\s*#e4bd47;[\s\S]*--profile-gradient-hover-a:\s*#62e485;[\s\S]*--profile-gradient-hover-b:\s*#9bea70;[\s\S]*--profile-gradient-hover-e:\s*#45b85f/);
   assert.doesNotMatch(profileCss.match(/data-profile-theme="green_gold"\][\s\S]*?\n\}/)?.[0] || "", /#16b878|#28d7aa|#36bce8/);
@@ -573,10 +590,12 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(profileCss, /@media \(forced-colors: active\)/);
   assert.doesNotMatch(statusCss, /body\[data-public-page="public-profile-standalone"\] \.profile-footer-status-slot/);
 
-  assert.match(profileHtml, /href="\/css\/public-profile\.css\?v=20260815-green-gold-lime"/);
+  assert.match(profileHtml, /href="\/css\/public-profile\.css\?v=20260815-profile-tone-modes"/);
   assert.match(profileHtml, /href="\/css\/public-shell\.css\?v=20260815-account-widget-fonts"/);
   assert.match(profileHtml, /href="\/css\/status-widget\.css\?v=20260813-profile-footer"/);
-  assert.match(profileHtml, /src="\/js\/public-pages-app\.js\?v=20260815-green-gold-lime"/);
+  assert.match(profileHtml, /src="\/js\/public-data-hub\.js\?v=20260815-profile-tone-modes"/);
+  assert.match(profileHtml, /src="\/js\/public-pages-app\.js\?v=20260815-profile-tone-modes"/);
+  assert.match(profileHtml, /<html lang="en" data-profile-page="active" data-profile-theme="violet_blue" data-profile-tone="dark">/);
   assert.match(profileHtml, /class="profile-skip-link" href="#profile-main"/);
   assert.match(profileHtml, /<footer class="profile-site-footer" data-profile-shell-footer>/);
   assert.match(profileHtml, /class="profile-site-footer__status" data-status-slot/);
@@ -622,6 +641,8 @@ test("standalone /u profile hydration keeps runtime profile media ahead of local
   assert.match(normalizeProfilePayloadBlock, /payload\?\.account_user_code/);
   assert.match(normalizeProfilePayloadBlock, /authorityIdentity\?\.account_user_code/);
   assert.match(normalizeProfilePayloadBlock, /const tier = resolveProfileTier\(payload\?\.tier \|\| fallbackProfile\?\.tier \|\| "", accountType\)/);
+  assert.match(normalizeProfilePayloadBlock, /const streamsuitesThemeTone = normalizeProfileThemeTone/);
+  assert.match(normalizeProfilePayloadBlock, /streamsuitesThemeTone,/);
   assert.match(normalizeProfilePayloadBlock, /accountType,/);
   assert.doesNotMatch(app, /function buildStandaloneRoleChips/);
   assert.match(actionRailBlock, /addSignal\("Identity", buildProfileTypeChip\(profile\)\)/);
@@ -673,6 +694,9 @@ test("standalone /u profile hydration keeps runtime profile media ahead of local
   assert.match(profileFunction, /Cache-Control/);
   assert.match(profileFunction, /aboutVideo:/);
   assert.match(profileFunction, /backgroundImageUrl/);
+  assert.match(profileFunction, /streamsuitesThemeTone/);
+  assert.match(profileFunction, /const profileTone = escapeHtml\(profile\.streamsuitesThemeTone \|\| "dark"\)/);
+  assert.match(profileFunction, /data-profile-tone="\$\{profileTone\}"/);
   assert.match(profileFunction, /latestStream:/);
   assert.match(profileFunction, /scopedProgression:/);
 });
