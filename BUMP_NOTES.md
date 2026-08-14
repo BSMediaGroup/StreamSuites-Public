@@ -6,16 +6,16 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
-### 2026-08-15 - Profile primary-action text contrast
+### 2026-08-15 - Profile primary-action text legibility
 
 #### Technical notes
 
-- Changed only the standalone public-profile primary-action foreground from white to the existing dark `#07121d` contrast colour. The shared themed primary actions and editor-only primary buttons now agree in regular, hover, and focus states; secondary controls, gradients, borders, shadows, routes, data, and Runtime/Auth behavior remain unchanged.
+- Retained white text on standalone public-profile primary actions and added a restrained `0 1px 2px` dark text shadow beneath it for legibility on bright theme gradients. The shared themed primary actions and editor-only primary buttons now agree in regular, hover, and focus states; secondary controls, gradients, borders, routes, data, and Runtime/Auth behavior remain unchanged.
 - Refreshed the profile stylesheet cache key and added route-scoped contract assertions. No deployment, commit, push, version/build change, or Runtime/Auth mutation was performed.
 
 #### Human-readable summary
 
-Primary buttons on public profiles now use clear dark text against their bright themed backgrounds.
+Primary buttons on public profiles keep their intended white text, with a subtle shadow that helps it remain readable across brighter theme colours.
 
 ### 2026-08-15 - Approved Wheel Console V3 implementation
 

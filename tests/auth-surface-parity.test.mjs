@@ -570,7 +570,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(profileCss, /@media \(forced-colors: active\)/);
   assert.doesNotMatch(statusCss, /body\[data-public-page="public-profile-standalone"\] \.profile-footer-status-slot/);
 
-  assert.match(profileHtml, /href="\/css\/public-profile\.css\?v=20260815-profile-primary-text"/);
+  assert.match(profileHtml, /href="\/css\/public-profile\.css\?v=20260815-profile-primary-text-shadow"/);
   assert.match(profileHtml, /href="\/css\/status-widget\.css\?v=20260813-profile-footer"/);
   assert.match(profileHtml, /src="\/js\/public-pages-app\.js\?v=20260814-profile-corrective-3"/);
   assert.match(profileHtml, /class="profile-skip-link" href="#profile-main"/);
@@ -873,8 +873,8 @@ test("standalone public profile uses the authoritative restructured section cont
   assert.match(css, /--profile-action-primary-hover-bg:\s*linear-gradient\(128deg,[\s\S]*profile-gradient-b[\s\S]*profile-gradient-c[\s\S]*profile-gradient-a/);
   assert.match(css, /profile-overlay-brand-glyph::after\s*\{[\s\S]*linear-gradient\(125deg,[\s\S]*profile-gradient-b[\s\S]*profile-gradient-c[\s\S]*profile-gradient-a/);
   assert.match(css, /profile-feature-action--primary:hover[\s\S]*background:\s*var\(--profile-action-primary-hover-bg\)/);
-  assert.match(css, /body\[data-public-page="public-profile-standalone"\] \.profile-edit-button-primary\s*\{[\s\S]*color:\s*#07121d/);
-  assert.match(css, /\.profile-feature-action--primary\s*\{[\s\S]*color:\s*#07121d/);
+  assert.match(css, /body\[data-public-page="public-profile-standalone"\] \.profile-edit-button-primary\s*\{[\s\S]*color:\s*#fff;[\s\S]*text-shadow:\s*0 1px 2px rgba\(4, 7, 12, 0\.42\)/);
+  assert.match(css, /\.profile-feature-action--primary\s*\{[\s\S]*color:\s*#fff;[\s\S]*text-shadow:\s*0 1px 2px rgba\(4, 7, 12, 0\.42\)/);
   assert.match(css, /@media \(min-width: 1600px\)[\s\S]*profile-clips-grid/);
 });
 
