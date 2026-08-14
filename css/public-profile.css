@@ -4110,6 +4110,7 @@ body[data-public-page="public-profile-standalone"] .profile-edit-button {
 
 body[data-public-page="public-profile-standalone"] .profile-edit-button-primary {
   border-color: color-mix(in srgb, var(--profile-gradient-b) 56%, white 8%);
+  color: #07121d;
   background: linear-gradient(135deg, var(--profile-gradient-a), var(--profile-gradient-b));
   box-shadow: 0 10px 24px color-mix(in srgb, var(--profile-gradient-a) 22%, transparent);
 }
@@ -5652,7 +5653,7 @@ body[data-public-page="public-profile-standalone"] .profile-header-account .acco
 
 .profile-feature-action--primary {
   border-color: var(--profile-action-primary-border);
-  color: #fff;
+  color: #07121d;
   background: var(--profile-action-primary-bg);
   box-shadow: 0 10px 25px color-mix(in srgb, var(--profile-gradient-a) 19%, transparent), inset 0 1px rgba(255, 255, 255, 0.18);
 }
