@@ -6,6 +6,17 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-15 - Shared account-widget typography correction
+
+#### Technical notes
+
+- Replaced the shared account widget's remaining legacy `SuiGeneris` catch-all with the approved `--public-font-body` token. The header account button, account name and role, overview labels and values, dashboard links, and logout action now resolve to the locally bundled Blinker family on standalone `/u/*` profiles as well as standard Public shell pages.
+- Refreshed the standalone-profile public-shell cache key and added focused typography/route assertions. Layout, theme gradients, account data, menu behavior, routes, Runtime/Auth authority, and the separate display/monospace typography roles remain unchanged. No deployment, commit, push, version/build change, or Runtime/Auth mutation was performed.
+
+#### Human-readable summary
+
+The profile header's user button and complete dropdown now use the same updated Blinker UI font as the rest of the Public interface.
+
 ### 2026-08-15 - Wheel Console V3 stage and celebration correction
 
 #### Technical notes

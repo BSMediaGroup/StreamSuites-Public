@@ -571,6 +571,7 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.doesNotMatch(statusCss, /body\[data-public-page="public-profile-standalone"\] \.profile-footer-status-slot/);
 
   assert.match(profileHtml, /href="\/css\/public-profile\.css\?v=20260815-profile-primary-text-shadow"/);
+  assert.match(profileHtml, /href="\/css\/public-shell\.css\?v=20260815-account-widget-fonts"/);
   assert.match(profileHtml, /href="\/css\/status-widget\.css\?v=20260813-profile-footer"/);
   assert.match(profileHtml, /src="\/js\/public-pages-app\.js\?v=20260814-profile-corrective-3"/);
   assert.match(profileHtml, /class="profile-skip-link" href="#profile-main"/);

@@ -776,7 +776,7 @@ body.public-standalone-page {
 
 .account-widget,
 .account-widget * {
-  font-family: "SuiGenerisRg", "SuiGeneris", sans-serif;
+  font-family: var(--public-font-body);
 }
 
 .account-menu-item:hover,

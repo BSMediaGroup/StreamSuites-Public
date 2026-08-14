@@ -337,6 +337,7 @@ test("approved typography is centralized without external font requests", () => 
   assert.match(fonts, /--public-font-display:\s*"Tektur"/);
   assert.match(fonts, /--public-font-body:\s*"Blinker"/);
   assert.match(fonts, /--public-font-mono:\s*"IBM Plex Mono"/);
+  assert.match(shell, /\.account-widget,\s*\r?\n\.account-widget \*\s*\{\s*\r?\n\s*font-family:\s*var\(--public-font-body\)/);
   [fonts, landing, shell, shared, download].forEach((css) => {
     assert.doesNotMatch(css, /https?:\/\/[^)"']+\.(?:woff2?|ttf|otf)/i);
   });
