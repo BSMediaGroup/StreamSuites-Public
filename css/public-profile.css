@@ -6076,20 +6076,9 @@ body[data-public-page="public-profile-standalone"] .profile-overview-panel::befo
   pointer-events: none;
 }
 
-.profile-overview-heading {
-  position: relative;
-  z-index: 1;
-  align-items: end;
-  padding: 19px 20px 16px;
-  border-bottom: 1px solid rgba(224, 217, 243, 0.1);
-}
-
-.profile-overview-intro {
-  max-width: 56ch;
-  margin: 7px 0 0;
-  color: rgba(211, 207, 220, 0.62);
-  font-size: 0.78rem;
-  line-height: 1.45;
+body[data-public-page="public-profile-standalone"] .profile-overview-panel > .profile-content-collapsible-panel {
+  gap: 0;
+  padding: 0;
 }
 
 .profile-overview-primary-grid {
@@ -6773,7 +6762,6 @@ body[data-public-page="public-profile-standalone"] .profile-game-progress-meter:
     padding: 15px;
   }
 
-  .profile-overview-heading { padding: 19px 17px 17px; }
   .profile-overview-primary-card { min-height: 90px; padding: 14px 12px; }
   .profile-overview-detail { padding-inline: 14px; }
   .profile-game-progression-band { grid-template-columns: minmax(0, 1fr); }

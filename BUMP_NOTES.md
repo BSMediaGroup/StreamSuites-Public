@@ -6,6 +6,18 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-15 - Collapsible Overview and expanded Artifacts defaults
+
+#### Technical notes
+
+- Replaced the standalone Public Overview's bespoke heading block with the shared accessible profile-collapsible shell. Removed the redundant explanatory sentence below its heading while retaining the three authoritative public metrics and four account facts in the existing edge-to-edge Overview composition.
+- Public Overview and Artifacts now both start expanded. Late artifact hydration preserves either section's current user-selected open or collapsed state instead of forcing the default again. Shared toggle labels, visibility icons, ARIA controls, focus handling, media safeguards, routes, data, and Runtime/Auth authority remain unchanged.
+- Removed the now-unused Overview intro/header CSS, refreshed profile CSS/JavaScript cache keys, and updated focused contracts. No deployment, commit, push, version/build change, or Runtime/Auth mutation was performed.
+
+#### Human-readable summary
+
+Public Overview now behaves like the other profile cards, without the unnecessary sentence under its title. Both Overview and Artifacts are open when the profile first loads and can be collapsed normally.
+
 ### 2026-08-15 - Shared account-widget typography correction
 
 #### Technical notes

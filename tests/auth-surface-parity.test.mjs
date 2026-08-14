@@ -570,10 +570,10 @@ test("standalone /u profile pages own the cinematic header and hero treatment", 
   assert.match(profileCss, /@media \(forced-colors: active\)/);
   assert.doesNotMatch(statusCss, /body\[data-public-page="public-profile-standalone"\] \.profile-footer-status-slot/);
 
-  assert.match(profileHtml, /href="\/css\/public-profile\.css\?v=20260815-profile-primary-text-shadow"/);
+  assert.match(profileHtml, /href="\/css\/public-profile\.css\?v=20260815-profile-overview-collapse"/);
   assert.match(profileHtml, /href="\/css\/public-shell\.css\?v=20260815-account-widget-fonts"/);
   assert.match(profileHtml, /href="\/css\/status-widget\.css\?v=20260813-profile-footer"/);
-  assert.match(profileHtml, /src="\/js\/public-pages-app\.js\?v=20260814-profile-corrective-3"/);
+  assert.match(profileHtml, /src="\/js\/public-pages-app\.js\?v=20260815-profile-overview-collapse"/);
   assert.match(profileHtml, /class="profile-skip-link" href="#profile-main"/);
   assert.match(profileHtml, /<footer class="profile-site-footer" data-profile-shell-footer>/);
   assert.match(profileHtml, /class="profile-site-footer__status" data-status-slot/);
@@ -848,10 +848,10 @@ test("standalone public profile uses the authoritative restructured section cont
   assert.match(app, /about_enabled: aboutVisibilityInput\.checked/);
   assert.match(app, /if \(profile\?\.aboutEnabled === false \|\| !hasPublishedStory\) return null/);
   assert.match(app, /\["#profile-identity", "IDENTITY"\][\s\S]*\["#watch", "WATCH"\][\s\S]*\["#clips", "CLIPS"\][\s\S]*\["#artifacts", "ARTIFACTS"\][\s\S]*\["#profile-presence", "PRESENCE"\][\s\S]*\["#profile-safety", "SAFETY"\]/);
-  assert.match(app, /function buildProfileOverviewPanel\(profile, artifacts, clips, helpers\)/);
+  assert.match(app, /function buildProfileOverviewPanel\(profile, artifacts, clips, helpers, options = \{\}\)/);
   assert.match(app, /create\("div", "profile-overview-primary-grid"\)/);
   assert.match(app, /create\("dl", "profile-overview-details"\)/);
-  assert.match(app, /currentOverview\.replaceWith\(buildProfileOverviewPanel\(profile, artifacts, clipGallery\?\.all \|\| \[\], helpers\)\)/);
+  assert.match(app, /currentOverview\.replaceWith\(buildProfileOverviewPanel\(profile, artifacts, clipGallery\?\.all \|\| \[\], helpers, \{[\s\S]*currentOverview\.open/);
   assert.match(app, /profile-section-eyebrow profile-content-summary-eyebrow/);
   assert.match(app, /profile-content-summary-title/);
   assert.match(app, /function buildSecondaryMediaTray/);
@@ -882,8 +882,11 @@ test("standalone public profile uses the authoritative restructured section cont
 test("standalone profile corrective presentation keeps hierarchy, order, and media state deliberate", () => {
   const app = read("js/public-pages-app.js");
   const css = read("css/public-profile.css");
-  const overviewSection = app.match(/function buildProfileOverviewPanel\(profile, artifacts, clips, helpers\) \{[\s\S]*?return section;\r?\n  \}/)?.[0] || "";
+  const overviewSection = app.match(/function buildProfileOverviewPanel\(profile, artifacts, clips, helpers, options = \{\}\) \{[\s\S]*?return section;\r?\n  \}/)?.[0] || "";
 
+  assert.match(overviewSection, /buildProfileCollapsibleSectionShell\(\{[\s\S]*id: "profile-overview"[\s\S]*label: "PUBLIC OVERVIEW"[\s\S]*className: "profile-overview-panel"[\s\S]*open: options\.open !== false/);
+  assert.doesNotMatch(overviewSection, /profile-overview-intro|The public activity and account details that matter most/);
+  assert.match(overviewSection, /panel\.append\(primaryMetrics, details\)/);
   assert.equal((overviewSection.match(/addPrimaryMetric\(/g) || []).length, 3);
   assert.match(overviewSection, /addPrimaryMetric\("Artifacts"[\s\S]*addPrimaryMetric\("Clips"[\s\S]*"Inventory"/);
   assert.doesNotMatch(overviewSection, /addPrimaryMetric\("(?:Polls|Tallies)"/);
@@ -891,6 +894,7 @@ test("standalone profile corrective presentation keeps hierarchy, order, and med
   assert.match(overviewSection, /createIcon\(iconPath, "profile-overview-primary-icon"\)/);
   assert.match(css, /\.profile-overview-primary-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(3,/);
   assert.match(css, /\.profile-overview-panel\s*\{[\s\S]*gap:\s*0;/);
+  assert.match(css, /\.profile-overview-panel > \.profile-content-collapsible-panel\s*\{[\s\S]*gap:\s*0;[\s\S]*padding:\s*0/);
   assert.match(css, /\.profile-overview-primary-icon\s*\{[\s\S]*var\(--icon-mask\)/);
   assert.match(css, /\.profile-overview-detail--joined \.profile-overview-detail-value,[\s\S]*font-size:\s*0\.76rem;[\s\S]*font-weight:\s*560/);
   assert.match(css, /\.profile-overview-detail--balance \.economy-balance-value\s*\{[\s\S]*font:\s*inherit/);
@@ -916,7 +920,8 @@ test("standalone profile corrective presentation keeps hierarchy, order, and med
   assert.match(css, /@media \(max-width: 900px\)[\s\S]*grid-template-areas:\s*"story" "video"/);
   assert.match(app, /const hasPublishedMedia = hasUsableStream \|\| buildLatestStreamTrayEntries\(stream\)\.length > 0/);
   assert.match(app, /className: "profile-stream-collapsible profile-media-section profile-watch-section",\s*open: true/);
-  assert.match(app, /className: "profile-artifacts-section",\s*open: false/);
+  assert.match(app, /className: "profile-artifacts-section",\s*open: options\.open !== false/);
+  assert.match(app, /currentArtifacts\.replaceWith\(buildProfileArtifactsSection\(profile, artifacts, canEdit, helpers, \{[\s\S]*currentArtifacts\.open/);
   assert.match(app, /const activeLine = headerBottom \+ 32;[\s\S]*for \(const section of sections\)[\s\S]*section\.getBoundingClientRect\(\)\.top/);
   assert.doesNotMatch(app, /visibleSections\.get\(section\)\?\.isIntersecting/);
 

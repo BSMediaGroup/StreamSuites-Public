@@ -14718,22 +14718,19 @@
     return section;
   }
 
-  function buildProfileOverviewPanel(profile, artifacts, clips, helpers) {
+  function buildProfileOverviewPanel(profile, artifacts, clips, helpers, options = {}) {
     const counts = summarizeProfileArtifactCounts(artifacts, clips);
     const economy = profile?.economy && typeof profile.economy === "object" ? profile.economy : null;
     const inventory = Array.isArray(profile?.inventory) ? profile.inventory : [];
     const displayInventory = inventory.filter((item) => !isWalletDenominationInventoryItem(item));
-    const section = create("section", "profile-utility-section profile-overview-panel");
-    section.id = "profile-overview";
-    section.setAttribute("aria-labelledby", "profile-overview-title");
-    const header = buildProfileSectionHeading("At a glance", "Public overview");
-    header.classList.add("profile-overview-heading");
-    header.querySelector("h2").id = "profile-overview-title";
-    header.querySelector(".profile-section-heading-copy")?.appendChild(create(
-      "p",
-      "profile-overview-intro",
-      "The public activity and account details that matter most, without repeating the full profile below."
-    ));
+    const { details: section, panel } = buildProfileCollapsibleSectionShell({
+      id: "profile-overview",
+      label: "PUBLIC OVERVIEW",
+      icon: "/assets/icons/ui/profilecard.svg",
+      meta: "At a glance",
+      className: "profile-overview-panel",
+      open: options.open !== false
+    });
 
     const primaryMetrics = create("div", "profile-overview-primary-grid");
     primaryMetrics.setAttribute("aria-label", "Primary public profile metrics");
@@ -14779,7 +14776,7 @@
     addDetail("Joined", formatProfileDate(profile?.joinedAt || profile?.createdAt, helpers) || "Pending public data", { pending: !profile?.joinedAt && !profile?.createdAt, kind: "joined" });
     addDetail("Balance", economy ? buildEconomyBalanceValue(economy, { compact: true }) : "Unavailable", { pending: !economy, kind: "balance" });
 
-    section.append(header, primaryMetrics, details);
+    panel.append(primaryMetrics, details);
     return section;
   }
 
@@ -15222,7 +15219,7 @@
     return section;
   }
 
-  function buildProfileArtifactsSection(profile, artifacts, canEdit, helpers) {
+  function buildProfileArtifactsSection(profile, artifacts, canEdit, helpers, options = {}) {
     const publicArtifacts = (Array.isArray(artifacts) ? artifacts : []).filter((item) => String(item?.type || "").toLowerCase() !== "clips");
     const scopedCount = normalizeScopedProgressionRows(profile?.scopedProgression || profile?.scoped_progression || []).length;
     const { details, panel } = buildProfileCollapsibleSectionShell({
@@ -15231,7 +15228,7 @@
       icon: UI_ICON_MAP.gallery,
       meta: `${formatNumber(publicArtifacts.length)} published · ${formatNumber(scopedCount)} scoped board${scopedCount === 1 ? "" : "s"}`,
       className: "profile-artifacts-section",
-      open: false
+      open: options.open !== false
     });
     panel.append(
       buildProfileGameCompetitionSection(profile, { canEdit }),
@@ -16179,8 +16176,12 @@
         hidden: nav.dataset.profileNavPlacement === "header" && !interactive
       });
     });
-    if (currentOverview) currentOverview.replaceWith(buildProfileOverviewPanel(profile, artifacts, clipGallery?.all || [], helpers));
-    if (currentArtifacts) currentArtifacts.replaceWith(buildProfileArtifactsSection(profile, artifacts, canEdit, helpers));
+    if (currentOverview) currentOverview.replaceWith(buildProfileOverviewPanel(profile, artifacts, clipGallery?.all || [], helpers, {
+      open: currentOverview instanceof HTMLDetailsElement ? currentOverview.open : true
+    }));
+    if (currentArtifacts) currentArtifacts.replaceWith(buildProfileArtifactsSection(profile, artifacts, canEdit, helpers, {
+      open: currentArtifacts instanceof HTMLDetailsElement ? currentArtifacts.open : true
+    }));
     if (currentClips) currentClips.replaceWith(buildProfileClipsSection(clipGallery, helpers));
     currentShell.dataset.profileArtifactKey = artifactKey;
   }

@@ -694,7 +694,7 @@ test("public scoped platform icons and stable latest stream layout are pinned", 
 
 test("public profile overview keeps three primary public metrics over flat account details", () => {
   const app = read("js/public-pages-app.js");
-  const overviewSection = app.match(/function buildProfileOverviewPanel\(profile, artifacts, clips, helpers\) \{[\s\S]*?return section;\r?\n  \}/)?.[0] || "";
+  const overviewSection = app.match(/function buildProfileOverviewPanel\(profile, artifacts, clips, helpers, options = \{\}\) \{[\s\S]*?return section;\r?\n  \}/)?.[0] || "";
   assert.ok(overviewSection, "profile overview section should exist");
   assert.match(overviewSection, /const economy = profile\?\.economy && typeof profile\.economy === "object" \? profile\.economy : null/);
   assert.match(overviewSection, /const counts = summarizeProfileArtifactCounts\(artifacts, clips\)/);
