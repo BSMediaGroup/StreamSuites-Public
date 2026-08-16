@@ -6,6 +6,21 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-17 - Public shell redesign, persistent appearance, and real statistics
+
+#### Technical notes
+
+- Redesigned the persistent Public shell in place across its dashboard, artifact, leaderboard, economy, live/community, account, and detail renderers with semantic dark/light tokens, the twelve established accent presets, a denser desktop/sidebar/topbar/footer composition, deliberate light surfaces, route-specific layout hooks, reduced-motion handling, and forced-colour fallbacks. Existing routes, API/data hydration, dialogs, filters, ownership controls, and Wheel Detail V3 weighted/local-session behavior remain intact.
+- Added `js/public-ui-preferences.js` as the shared no-flash preference controller. Signed-out state is versioned in browser storage; signed-in hydration and saves use Runtime/Auth's `/api/public/me` projection and `POST /api/public/me/preferences`, with optimistic preview rollback on write failure. Added a compact Dark/Light account-menu control and a complete Appearance panel to Settings for Viewer, Creator, and Admin accounts. The shell preference remains independent from standalone profile owner appearance.
+- Replaced the old placeholder-heavy `stats.html` scaffold with a smaller real-data statistics surface, plus `css/stats-page.css` and `js/stats-page.js`. The page consumes only the bounded `/api/public/stats` aggregate contract, displays explicit generated/coverage metadata, uses finite on-entry graph drawing with reduced-motion support, and retains unavailable placeholders rather than fabricating zeros on failure.
+- Added `tests/public-shell-modernization.test.mjs` to pin early theme application, blocked-storage safety, authenticated authority and rollback behavior, all shell entry documents, route-specific design coverage, settings/menu/preset wiring, Wheel V3 preservation, and the real statistics contract. Updated the README authority, route, and repository-tree documentation for all three created production files and the created test.
+- Completed local Chromium acceptance across all 23 shell renderers in Dark and Light at 1366×768, plus 1920×1080, 1024×768, 768×1024, and 390×844 representative states; four non-default theme combinations; guest/authenticated dropdown and preference-save flows; collapsed/mobile sidebar states; and Stats desktop/mobile/reduced-motion/keyboard-tooltip behavior. Rendered QA caught and corrected legacy high-specificity dark-card rules in Light mode and added trigger-to-menu Arrow-key focus transfer. Evidence is retained under `output/playwright/public-shell-20260817/`; deterministic local API/session fixtures are not deployed-service proof.
+- No profile authority, route, API proxy, version/build metadata, deployment, production process, commit, or push was changed. The old inline statistics demo data and permanently looping chart scaffold were removed because the route now renders Runtime/Auth aggregates; `stats.html` is intentionally shorter.
+
+#### Human-readable summary
+
+The Public dashboard family now has a cohesive premium shell in Dark or Light mode with twelve accent themes, persistent account-aware settings, a richer account menu, and a real privacy-bounded Stats page. Existing data and Wheel behavior stay intact, and signed-in preferences remain owned by Runtime/Auth.
+
 ### 2026-08-15 - Profile account-dropdown table and icon polish
 
 #### Technical notes

@@ -16534,34 +16534,155 @@
     })();
   }
 
+  function buildPublicAppearanceSettings(authState) {
+    const preferences = window.StreamSuitesPublicUiPreferences;
+    const panel = create("section", "appearance-settings");
+    panel.setAttribute("aria-labelledby", "public-appearance-title");
+    if (!preferences) {
+      panel.appendChild(create("div", "empty-state", "Appearance controls are temporarily unavailable."));
+      return panel;
+    }
+
+    const heading = create("div", "appearance-settings__heading");
+    const headingCopy = create("div", "appearance-settings__heading-copy");
+    const title = create("h2", "appearance-settings__title", "Appearance");
+    title.id = "public-appearance-title";
+    headingCopy.append(
+      create("p", "dashboard-eyebrow", "Interface preferences"),
+      title,
+      create("p", "appearance-settings__copy", "Tune the Public shell independently from creator-controlled profile themes.")
+    );
+    const status = create("p", "appearance-settings__status");
+    status.setAttribute("role", "status");
+    status.setAttribute("aria-live", "polite");
+    heading.append(headingCopy, status);
+
+    const appearanceGroup = create("fieldset", "appearance-choice-group");
+    const appearanceLegend = create("legend", "appearance-settings__legend", "Appearance");
+    appearanceGroup.appendChild(appearanceLegend);
+    const appearanceGrid = create("div", "appearance-choice-grid");
+    const appearanceInputs = new Map();
+    [
+      { key: "dark", title: "Dark", description: "Deep graphite surfaces with luminous themed accents." },
+      { key: "light", title: "Light", description: "Cool near-white surfaces with crisp, restrained contrast." }
+    ].forEach((option) => {
+      const label = create("label", `appearance-choice appearance-choice--${option.key}`);
+      const input = create("input");
+      input.type = "radio";
+      input.name = "public-ui-appearance";
+      input.value = option.key;
+      const preview = create("span", "appearance-choice__preview");
+      preview.setAttribute("aria-hidden", "true");
+      const copy = create("span", "appearance-choice__copy");
+      copy.append(create("strong", "", option.title), create("small", "", option.description));
+      const selected = create("span", "appearance-choice__selected", "Selected");
+      label.append(input, preview, copy, selected);
+      input.addEventListener("change", () => {
+        if (input.checked) preferences.setAppearance(option.key);
+      });
+      appearanceInputs.set(option.key, { input, label });
+      appearanceGrid.appendChild(label);
+    });
+    appearanceGroup.appendChild(appearanceGrid);
+
+    const themeGroup = create("fieldset", "theme-preset-group");
+    themeGroup.appendChild(create("legend", "appearance-settings__legend", "Accent theme"));
+    const themeGrid = create("div", "theme-preset-grid");
+    const themeInputs = new Map();
+    preferences.PRESETS.forEach((preset) => {
+      const label = create("label", "theme-preset-card");
+      const input = create("input");
+      input.type = "radio";
+      input.name = "public-ui-theme-preset";
+      input.value = preset.key;
+      const swatches = create("span", "theme-preset-card__swatches");
+      preset.colors.forEach((color) => {
+        const swatch = create("span", "theme-preset-card__swatch");
+        swatch.style.setProperty("--swatch", color);
+        swatches.appendChild(swatch);
+      });
+      const copy = create("span", "theme-preset-card__copy");
+      copy.append(create("strong", "", preset.label), create("small", "", preset.description));
+      const tick = create("span", "theme-preset-card__tick", "✓");
+      tick.setAttribute("aria-hidden", "true");
+      label.append(input, swatches, copy, tick);
+      input.addEventListener("change", () => {
+        if (input.checked) preferences.setThemePreset(preset.key);
+      });
+      themeInputs.set(preset.key, { input, label });
+      themeGrid.appendChild(label);
+    });
+    themeGroup.appendChild(themeGrid);
+
+    const footer = create("div", "appearance-settings__footer");
+    const persistenceCopy = create(
+      "p",
+      "appearance-settings__persistence",
+      authState?.authenticated
+        ? "Saved to your StreamSuites account and mirrored on this device for the next early paint."
+        : "Saved only in this browser until you sign in. Clearing browser storage resets the choice."
+    );
+    const resetButton = create("button", "dashboard-action appearance-settings__reset", "Reset to default");
+    resetButton.type = "button";
+    resetButton.addEventListener("click", () => preferences.reset());
+    footer.append(persistenceCopy, resetButton);
+
+    panel.append(heading, appearanceGroup, themeGroup, footer);
+
+    panel.preferenceCleanup = preferences.subscribe((next) => {
+      appearanceInputs.forEach(({ input, label }, key) => {
+        input.checked = key === next.appearance;
+        label.classList.toggle("is-selected", input.checked);
+      });
+      themeInputs.forEach(({ input, label }, key) => {
+        input.checked = key === next.themePreset;
+        label.classList.toggle("is-selected", input.checked);
+      });
+      status.className = `appearance-settings__status is-${next.status || "local"}`;
+      status.textContent = next.status === "saving"
+        ? "Saving…"
+        : next.status === "error"
+          ? (next.error || "Save failed; the previous account preference was restored.")
+          : next.authenticated
+            ? "Saved to account"
+            : "Saved in this browser";
+    });
+    return panel;
+  }
+
   function renderCommunitySettings(ctx) {
     const { host, authState } = ctx;
+    if (typeof host.publicAppearanceCleanup === "function") host.publicAppearanceCleanup();
+    host.publicAppearanceCleanup = null;
     clear(host);
     host.appendChild(
       buildDashboardHero({
-        eyebrow: "Account workspace",
-        title: "Settings",
-        body: "Viewer/public settings now sit inside the same dashboard system as media and community. Writable fields remain limited to the existing authoritative public-profile endpoint, and future controls stay clearly marked as inactive.",
-        tone: "preview",
+        eyebrow: "Public experience",
+        title: "Appearance & account settings",
+        body: "Choose a deliberate light or dark canvas and one of the established StreamSuites accent palettes. Signed-in preferences follow your account; guest choices stay in this browser.",
+        tone: "active",
         actions: [
           { label: "Open my data", href: "/community/my-data.html", emphasis: "strong" },
           { label: "Back to community", href: "/community" }
         ],
         stats: [
-          { label: "Writable today", value: "Profile", note: "Existing public profile endpoint" },
-          { label: "Future controls", value: "Planned", note: "Notifications, exports, privacy expansions" }
+          { label: "Appearance", value: "Dark / Light", note: "Applied without rebuilding the page" },
+          { label: "Accent themes", value: "12", note: "Shared StreamSuites palette family" }
         ]
       })
     );
+    const appearancePanel = buildPublicAppearanceSettings(authState);
+    host.appendChild(appearancePanel);
+    host.publicAppearanceCleanup = appearancePanel.preferenceCleanup || null;
 
     if (!authState?.authenticated) {
-      host.appendChild(create("div", "empty-state", "Log in to access Public Account Settings."));
+      host.appendChild(create("div", "empty-state", "Appearance is saved in this browser. Sign in when you want it to follow your StreamSuites account across devices."));
       return;
     }
 
     const accountType = String(authState.accountType || "").toUpperCase();
     if (accountType !== "VIEWER") {
-      host.appendChild(create("div", "empty-state", "This settings view is available for Viewer/Public accounts only."));
+      host.appendChild(create("div", "empty-state", "Public appearance is saved for this account. Creator, Admin, and Developer account controls remain on their authoritative product surfaces."));
       return;
     }
 
@@ -17006,6 +17127,7 @@
         avatarUrl: "",
         accountType: "VIEWER",
         tier: "core",
+        publicUiPreferences: null,
         badges: []
       };
     }
@@ -17116,6 +17238,7 @@
         payload?.creatorWorkspaceAccess?.allowed === true ||
         payload?.creator_capable === true ||
         payload?.creatorCapable === true,
+      publicUiPreferences: payload?.public_ui_preferences || payload?.publicUiPreferences || null,
       badges: normalizeAuthoritativeBadges(payload?.badges, accountType, tier)
     };
   }
@@ -17131,7 +17254,9 @@
           rel: "noopener noreferrer",
           action: "creator_login"
         },
-        { label: "Sign up", action: "public_signup", subtle: true }
+        { label: "Sign up", action: "public_signup", subtle: true },
+        { separator: true },
+        { label: "Settings", href: "/community/settings.html", action: "account_settings" }
       ];
     }
 
@@ -17146,13 +17271,11 @@
           action: "profile"
         }];
 
-    if (authState.accountType === "VIEWER") {
-      items.push({
-        label: "Account Settings",
-        href: "/community/settings.html",
-        action: "account_settings"
-      });
-    }
+    items.push({
+      label: "Settings",
+      href: "/community/settings.html",
+      action: "account_settings"
+    });
 
     if (authState.creatorWorkspaceAccess?.allowed === true || authState.creatorCapable === true) {
       items.push({ separator: true });
@@ -17415,6 +17538,10 @@
       authRefreshPromise = (async () => {
         try {
           authState = await fetchAuthState();
+          window.StreamSuitesPublicUiPreferences?.hydrate?.({
+            authenticated: authState.authenticated,
+            public_ui_preferences: authState.publicUiPreferences
+          });
         } catch (error) {
           authState = normalizeAuthState(null);
           console.warn("[StreamSuites Public] Auth API unavailable; falling back to Guest widget.");

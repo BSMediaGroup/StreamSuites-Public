@@ -1228,17 +1228,84 @@
       account.setAttribute("aria-expanded", "true");
     }
 
+    function getAccountMenuControls() {
+      return Array.from(accountMenu.querySelectorAll('a[href], button:not(:disabled)'));
+    }
+
+    let accountAppearanceButtons = [];
+
+    function syncAccountAppearanceControl() {
+      const appearance = window.StreamSuitesPublicUiPreferences?.getState?.().appearance || "dark";
+      accountAppearanceButtons.forEach((button) => {
+        const selected = button.dataset.appearance === appearance;
+        button.classList.toggle("is-selected", selected);
+        button.setAttribute("aria-pressed", selected ? "true" : "false");
+      });
+    }
+
+    function buildAccountAppearanceControl() {
+      const section = create("section", "account-menu-appearance");
+      const heading = create("div", "account-menu-appearance__heading");
+      heading.append(
+        create("span", "account-menu-appearance__label", "Appearance"),
+        create("span", "account-menu-appearance__hint", "Public shell")
+      );
+      const toggle = create("div", "account-menu-appearance__toggle");
+      toggle.setAttribute("role", "group");
+      toggle.setAttribute("aria-label", "Public shell appearance");
+      accountAppearanceButtons = ["dark", "light"].map((appearance) => {
+        const button = create("button", "account-menu-appearance__option", appearance === "dark" ? "Dark" : "Light");
+        button.type = "button";
+        button.dataset.appearance = appearance;
+        button.addEventListener("click", (event) => {
+          event.stopPropagation();
+          window.StreamSuitesPublicUiPreferences?.setAppearance?.(appearance);
+          syncAccountAppearanceControl();
+        });
+        toggle.appendChild(button);
+        return button;
+      });
+      const settings = create("a", "account-menu-theme-link", "Theme settings");
+      settings.href = "/community/settings.html";
+      settings.addEventListener("click", closeAccountMenu);
+      section.append(heading, toggle, settings);
+      syncAccountAppearanceControl();
+      return section;
+    }
+
     function setAccountMenuItems(items = []) {
       options.accountMenuItems = Array.isArray(items) ? items.slice() : [];
       accountMenu.innerHTML = "";
       if (options.accountAuthenticated) {
         const header = create("div", "account-menu-header");
         const roleChip = (options.accountBadges || []).find((badge) => String(badge?.kind || "") === "role-chip");
-        header.append(
+        const headerAvatar = create("span", "account-menu-avatar");
+        if (options.accountAvatar) {
+          headerAvatar.style.backgroundImage = `url(${options.accountAvatar})`;
+          headerAvatar.classList.add("has-image");
+        } else {
+          headerAvatar.appendChild(createIcon(UI_ICON_MAP.profile, "account-avatar-icon"));
+        }
+        const identity = create("div", "account-menu-identity");
+        const userCode = (options.accountOverview?.rows || []).find((row) => row?.label === "User code")?.value || "";
+        identity.append(
           create("div", "account-menu-name", accountName.textContent || "User"),
+          create("div", "account-menu-handle", userCode ? `@${userCode}` : "StreamSuites account"),
           create("div", "account-menu-role", String(roleChip?.label || "").trim())
         );
+        header.append(headerAvatar, identity);
         accountMenu.appendChild(header);
+      } else {
+        const guestHeader = create("div", "account-menu-header account-menu-header--guest");
+        const guestAvatar = create("span", "account-menu-avatar");
+        guestAvatar.appendChild(createIcon(UI_ICON_MAP.profile, "account-avatar-icon"));
+        const guestIdentity = create("div", "account-menu-identity");
+        guestIdentity.append(
+          create("div", "account-menu-name", "Welcome"),
+          create("div", "account-menu-handle", "Sign in or browse as a guest")
+        );
+        guestHeader.append(guestAvatar, guestIdentity);
+        accountMenu.appendChild(guestHeader);
       }
 
       if (options.accountAuthenticated && options.accountOverview && Array.isArray(options.accountOverview.rows)) {
@@ -1259,6 +1326,8 @@
           accountMenu.appendChild(overview);
         }
       }
+
+      accountMenu.appendChild(buildAccountAppearanceControl());
 
       options.accountMenuItems.forEach((item) => {
         if (!item || typeof item !== "object") return;
@@ -1783,6 +1852,16 @@
       }
     });
 
+    account.addEventListener("keydown", (event) => {
+      if (!['ArrowDown', 'ArrowUp'].includes(event.key)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (accountMenu.hidden) openAccountMenu();
+      const controls = getAccountMenuControls();
+      if (!controls.length) return;
+      controls[event.key === 'ArrowDown' ? 0 : controls.length - 1].focus();
+    });
+
     document.addEventListener("click", (event) => {
       if (!accountWidget.contains(event.target)) {
         closeAccountMenu();
@@ -1791,8 +1870,10 @@
 
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
+        const accountMenuWasOpen = !accountMenu.hidden;
         closeAuthModal();
         closeAccountMenu();
+        if (accountMenuWasOpen) account.focus();
         return;
       }
       if ((event.ctrlKey || event.metaKey) && String(event.key || "").toLowerCase() === "k") {
@@ -1803,6 +1884,24 @@
         searchInput.select();
       }
     });
+
+    accountMenu.addEventListener("keydown", (event) => {
+      if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+      const controls = getAccountMenuControls();
+      if (!controls.length) return;
+      event.preventDefault();
+      const currentIndex = controls.indexOf(document.activeElement);
+      const nextIndex = event.key === 'Home'
+        ? 0
+        : event.key === 'End'
+          ? controls.length - 1
+          : event.key === 'ArrowDown'
+            ? (currentIndex + 1 + controls.length) % controls.length
+            : (currentIndex - 1 + controls.length) % controls.length;
+      controls[nextIndex].focus();
+    });
+
+    window.addEventListener("streamsuites:public-ui-preference-change", syncAccountAppearanceControl);
 
     window.addEventListener(
       "resize",

@@ -117,6 +117,15 @@ flowchart TD
 - `/live` is the dedicated public live view and only lists creators whose StreamSuites public profile is currently eligible and visible.
 - Reserved media fields are reflected from the authoritative payload, including cover or banner usage plus reserved `background_image_url`.
 
+### Public shell appearance and statistics
+
+- Every route rendered by the persistent Public application shell now shares one semantic surface/text/border/accent/state token system, a compact desktop sidebar, icon-only collapsed rail, compact top bar/footer, and route-specific composition for dashboard, artifact, leaderboard, economy, live/community, settings, my-data, and non-wheel detail views. Existing route resolution, API/data hydration, filters, dialogs, ownership gates, and Wheel Detail V3 behavior remain in their established renderers.
+- Shell appearance has two independent axes: `dark` or `light`, plus one of the twelve established StreamSuites accent presets. `js/public-ui-preferences.js` applies the versioned browser mirror before shell CSS loads to avoid a default-theme flash. Signed-out visitors use that local preference; after authentication, Runtime/Auth's `/api/public/me` projection is authoritative and `POST /api/public/me/preferences` is the only signed-in save path. Failed authenticated writes roll back the optimistic preview and do not replace the last authoritative browser mirror.
+- The shared account dropdown exposes a compact Dark/Light control and links to the full Appearance panel on `/community/settings.html`. The Settings panel is available to Viewer, Creator, and Admin accounts without moving profile fields or account authority into Public.
+- Shell appearance is deliberately separate from the standalone `/u/*` profile's owner-configured tone and theme. Visiting or editing a profile does not overwrite the viewer's Public-shell preference, and changing the shell does not mutate a profile presentation.
+- `/stats` is a real aggregate view backed by `GET /api/public/stats`. It renders only bounded account/profile/artifact totals and UTC monthly account/artifact creation series supplied by Runtime/Auth, reports freshness and coverage explicitly, and shows Unavailable rather than substituting sample numbers when the contract cannot be loaded. Graph entry motion is finite and disabled by reduced-motion preferences.
+- Local browser evidence for this milestone is retained under `output/playwright/public-shell-20260817/`: all 23 shell renderers in both appearances at 1366×768, representative 1920×1080/1024×768/768×1024/390×844 captures, four non-default theme combinations, signed-out and authenticated account menus/settings, collapsed/mobile sidebar states, Stats desktop/mobile/reduced-motion/keyboard-tooltip states, and the three Production navigation targets. Runtime/API values used for local visual verification are deterministic aggregate/session fixtures; those captures are not deployed Runtime or production-write evidence.
+
 ### Route treatment for this milestone
 
 - Fully redesigned expressive surfaces: `/`, `/about.html`, `/donate.html`, `/support.html`, `/privacy.html`, `/roadmap`, `/version`, `/accessibility.html`, and the presentation-only `404.html`. Download implementations remain visually protected reference surfaces.
@@ -351,6 +360,7 @@ StreamSuites-Public/
 │   ├── public-data-hub.js
 │   ├── public-pages-app.js
 │   ├── public-page-visit.js
+│   ├── public-ui-preferences.js
 │   ├── public-donate.js
 │   ├── public-roadmap.js
 │   ├── public-version.js
@@ -360,6 +370,7 @@ StreamSuites-Public/
 │   ├── status-data.js
 │   ├── status-page.js
 │   ├── status-report.js
+│   ├── stats-page.js
 │   ├── public-toast.js
 │   ├── studioapp-extensions.js
 │   ├── studioapp-download.js
@@ -390,6 +401,7 @@ StreamSuites-Public/
 │   ├── standalone-pages.css
 │   ├── status-page.css
 │   ├── status-report.css
+│   ├── stats-page.css
 │   ├── version-page.css
 │   └── status-widget.css
 ├── tests/
@@ -401,6 +413,7 @@ StreamSuites-Public/
 │   ├── live-status-authority.test.mjs
 │   ├── public-authority-wiring.test.mjs
 │   ├── public-feature-edges.test.mjs
+│   ├── public-shell-modernization.test.mjs
 │   ├── studioapp-download-gate.test.mjs
 │   ├── studioapp-extensions.test.mjs
 │   ├── studio-first-public-experience.test.mjs
