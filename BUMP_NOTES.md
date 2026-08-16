@@ -6,6 +6,21 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-17 - Milestone 2 multi-wheel production workspace and shell-free Stage
+
+#### Technical notes
+
+- Added one shared `js/wheel-workspace.js` implementation for normal Wheel Detail and `/wheels/<artifact>/stage`, with a stable-ID deck, Focus/Grid/Results views, visible-page-only grid rendering, per-wheel local result history, weighted `entries × weight` draws, reset/re-spin actions, and authoritative staggered Spin All scheduling with stale-run cancellation and final-result-only celebration.
+- Removed the obsolete in-file Wheel Detail renderer, editor, and wheel-SVG helper fallback from `js/public-pages-app.js` after both live entrypoints moved to the shared module. That file is intentionally shorter; route orchestration, ownership resolution, cleanup wiring, and all replacement wheel behavior remain live, with no feature removed from the rendered page.
+- Added owner-gated Manage Wheels plus dedicated accessible entrant, appearance, celebration, sound, rules, and share/presentation lightboxes. Centre-image selection previews locally, then persists only through the authenticated Runtime/Auth upload route; Public never stores blob/data URLs as canonical wheel configuration.
+- Added the shell-free Stage document and route branch, named single-popup/dock lifecycle, parent gameplay lockout, blocked/manual-close recovery, and same-session `BroadcastChannel` synchronization keyed by artifact and random session ID. Direct Stage/OBS/iframe instances truthfully remain independent browser-local result sessions.
+- Verified the real local Stage response has neither `X-Frame-Options` nor a CSP `frame-ancestors` restriction and rendered it in same-origin and different-port cross-origin iframes. No site-wide frame policy was relaxed; the existing Public CSP and all non-Stage route behavior remain unchanged.
+- Added focused contract tests and rendered desktop/mobile evidence under `output/playwright/wheel-milestone2-20260817/`. No Public route alias, shell behavior outside Wheel Detail, canonical version, deployment, commit, or push changed.
+
+#### Human-readable summary
+
+One wheel link is now a production deck: switch among wheels, spin them together, review combined local results, open focused editing workspaces, or move gameplay into a clean Stage window/browser source. Saved wheel configuration still comes from Runtime/Auth, while independently opened Stage results remain local until a future authoritative synchronized-session milestone.
+
 ### 2026-08-17 - Multi-wheel authority compatibility foundation
 
 #### Technical notes

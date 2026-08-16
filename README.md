@@ -109,9 +109,11 @@ flowchart TD
 - `/community/settings.html` is the viewer/public account profile settings surface and loads or saves supported authoritative fields through the public profile API.
 - `/community/my-data.html` now reads the signed-in user’s real public XP/level progression from `/api/public/progression/me`, wallet/inventory state from `/api/public/economy/me`, and public-authority request history from the authoritative `/api/public/authority/requests/mine` contract.
 - `/wheels` remains the canonical public route for Runtime/Auth-owned wheel artifacts and wheel sets; `/scoreboards` remains the legacy list-view lens over that same authority, while `/leaderboards` reads the public progression leaderboard. Public hydration stays API-first against `/api/public/wheels`, with shared-state/runtime-export copies only as fallback mirrors and the existing single artifact-level `wheel.changed` SSE subscription driving refetches—never one stream or polling loop per child wheel.
-- Public now understands the versioned multi-wheel projection as `wheelSet` plus `activeWheel`. Wheel Detail V3 selects Runtime/Auth's stable `active_wheel_id` or safely falls back to the first ordered child, then renders exactly that one child through the accepted V3 arena. A one-wheel legacy payload produces the same title, controls, tabs, winner dialog, celebration, owner gate, and artifact-level share URL. No Focus/Grid/Results selector, wheel deck, Spin All control, synchronized audience result, or backend winner history is exposed in this milestone; those remain Milestone 2/session work.
+- Public now renders the versioned multi-wheel projection through `js/wheel-workspace.js`, the single shared implementation used by both the normal detail route and shell-free Stage route. Runtime/Auth's stable `active_wheel_id` selects the initial child, the ordered deck supports keyboard selection, and Focus, paged Grid, and combined Results views render only the visible wheel presentation. Spin All schedules the authoritative bounded stagger delay, guards stale runs, and produces one final celebration after every child result is ready. The obsolete embedded Wheel Detail renderer/editor fallback was removed from `js/public-pages-app.js`; the Public app now only orchestrates the shared workspace.
 - Canonical child entrants use separate ticket `entries` and independent `weight`; eligible probability is `entries × weight` over the eligible total, and disabled entrants do not enter the draw. The owner editor writes the active child's settings back inside the existing authoritative wheel-set PATCH document while artifact title/description/default view/share slug remain artifact-level. Temporary result state is keyed by the stable child wheel ID and stays browser-session-local.
-- The accepted `wheelpocv3` presentation remains intact: cinematic bounded arena, compact title/description header, premium chassis/pointer/hub treatment, radial labels, primary spin dock, accessible Play/Entrants/Details/Share tabs, compact owner/authority drawers, and focus-managed winner reveal with confetti/fireworks. The next customization UX is deliberately split: production/play controls stay outside the inspector; the compact inspector holds only frequent settings and launchers; full entrant, appearance, celebration, sound, advanced-rules, and share/presentation editing belongs in dedicated lightbox workspaces. Those modal workspaces are design-locked but not yet shipped.
+- The accepted `wheelpocv3` presentation remains intact inside the multi-wheel workspace: cinematic bounded arena, premium chassis/pointer/hub treatment, radial labels, production controls outside the compact inspector, and focus-managed winner reveals. Owner-only dedicated lightbox workspaces now handle wheel management, entrants, appearance and canonical centre-image upload, celebration, sound, rules, and share/presentation settings without moving authority into Public.
+- `/wheels/<artifact>/stage` is a purpose-built shell-free presentation route with no Public navigation, account chrome, footer, status widget, or owner editors. A parent-opened named Stage popup shares one browser-local session through an artifact/session-keyed `BroadcastChannel`; the parent disables competing play controls, restores them on Dock or manual popup close, and leaves blocked popups safely docked. Directly opened or independently embedded Stage instances remain independent local sessions; results are not backend history or cross-device synchronization. Cross-process/OBS/Studio synchronization is reserved for a future authoritative synchronized-session milestone.
+- Local browser evidence for this milestone is retained under `output/playwright/wheel-milestone2-20260817/`, covering Focus/Grid/Results, staggered Spin All, editor lightboxes, desktop/mobile Stage, popup/dock behavior, and same-origin plus cross-origin iframe rendering. Deterministic API fixtures were used for local rendering; this is not deployed Runtime or production-write evidence.
 - Standalone and in-shell public profile surfaces now consume the runtime-published public authority identity summaries so profile claim, assignment, issue, and removal requests submit against real `identity_code` targets instead of placeholder payloads.
 - Public profiles render dual share behavior truthfully: StreamSuites links always use the canonical slug URL, and FindMeHere links render only when the authoritative payload marks the account eligible and visible there.
 - Live badge, live ring, live-directory cards, and live profile-banner treatment consume the centralized runtime `live_status` export first. Individual `/u/*` profiles render the normalized latest/current livestream in the PlayViewer area when Runtime provides safe embed/source fields, and render the slim recent stream tray from real recent rows, Runtime `tray_sources`, or the current/latest source record. Ended Kick evidence stays a recent poster/source-card fallback without a live-only `player.kick.com` iframe. Optional Rumble discovery enrichment is used only when the existing UI needs missing watch/title metadata.
@@ -340,7 +342,8 @@ StreamSuites-Public/
 ├── tallies/
 │   └── detail.html
 ├── wheels/
-│   └── detail.html
+│   ├── detail.html
+│   └── stage.html
 ├── data/
 │   ├── changelog.json
 │   ├── changelog.runtime.json
@@ -373,6 +376,8 @@ StreamSuites-Public/
 │   ├── status-report.js
 │   ├── stats-page.js
 │   ├── public-toast.js
+│   ├── wheel-stage-app.js
+│   ├── wheel-workspace.js
 │   ├── studioapp-extensions.js
 │   ├── studioapp-download.js
 │   ├── status-widget.js
@@ -394,6 +399,7 @@ StreamSuites-Public/
 │   ├── public-pages-v2.css
 │   ├── public-profile.css
 │   ├── public-shell.css
+│   ├── wheel-workspace.css
 │   ├── requests-auth.css
 │   ├── requests.css
 │   ├── studioapp-extensions.css
@@ -422,6 +428,7 @@ StreamSuites-Public/
 │   ├── status-center.test.mjs
 │   ├── status-report.test.mjs
 │   ├── version-page.test.mjs
+│   ├── wheel-workspace.test.mjs
 │   └── wheels-authority.test.mjs
 ├── output/
 │   └── playwright/           # Local profile and browser validation evidence; not deployed runtime assets

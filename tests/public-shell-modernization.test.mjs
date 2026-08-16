@@ -11,6 +11,8 @@ const preferencesSource = read("js/public-ui-preferences.js");
 const shellSource = read("js/public-shell.js");
 const appSource = read("js/public-pages-app.js");
 const shellCss = read("css/public-shell.css");
+const wheelWorkspaceSource = read("js/wheel-workspace.js");
+const wheelWorkspaceCss = read("css/wheel-workspace.css");
 const statsHtml = read("stats.html");
 const statsSource = read("js/stats-page.js");
 const statsCss = read("css/stats-page.css");
@@ -147,9 +149,9 @@ test("settings, account menu, semantic tokens, and established presets share one
   assert.match(shellCss, /Light mode must outrank route-local legacy dark surfaces/);
 });
 
-test("Wheel Detail V3 behavior markers survive shell modernization", () => {
-  for (const marker of ["wheel-arena-card", "wheel-console-workspace", "aggregateWheelEntrants", "pickWheelWinner", "wheel-winner-overlay", "wheel-celebration-layer", "spin_owner_only", "Spins are local to this browser session only", "prefers-reduced-motion"]) {
-    assert.match(`${appSource}\n${shellCss}`, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+test("the shared wheel workspace behavior survives shell modernization", () => {
+  for (const marker of ["wheel-arena-card", "wheel-workspace", "weightedWinner", "wheel-winner-overlay", "spin_owner_only", "local session result", "prefers-reduced-motion"]) {
+    assert.match(`${appSource}\n${shellCss}\n${wheelWorkspaceSource}\n${wheelWorkspaceCss}`, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
 });
 
