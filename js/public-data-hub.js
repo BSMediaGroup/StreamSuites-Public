@@ -1434,16 +1434,29 @@
         ];
 
     const totalWeight = fallback.reduce((sum, entry) => {
-      const weight = Number(entry?.weight ?? entry?.value ?? 1);
-      return sum + (Number.isFinite(weight) && weight > 0 ? weight : 1);
+      if (entry?.enabled === false) return sum;
+      const entries = Number(entry?.entries ?? entry?.entry_count ?? entry?.entryCount ?? 1);
+      const unitWeight = Number(entry?.unit_weight ?? entry?.unitWeight ?? entry?.weight ?? entry?.value ?? 1);
+      const effectiveWeight = Number(entry?.effective_weight ?? entry?.effectiveWeight);
+      return sum + (Number.isFinite(effectiveWeight) && effectiveWeight >= 0
+        ? effectiveWeight
+        : Math.max(1, entries) * (Number.isFinite(unitWeight) && unitWeight > 0 ? unitWeight : 1));
     }, 0);
 
     return fallback.map((entry, index) => {
-      const weight = Number(entry?.weight ?? entry?.value ?? 1);
+      const entries = Number(entry?.entries ?? entry?.entry_count ?? entry?.entryCount ?? 1);
+      const resolvedEntries = Number.isFinite(entries) && entries > 0 ? Math.max(1, Math.round(entries)) : 1;
+      const weight = Number(entry?.unit_weight ?? entry?.unitWeight ?? entry?.weight ?? entry?.value ?? 1);
       const resolvedWeight = Number.isFinite(weight) && weight > 0 ? weight : 1;
+      const enabled = entry?.enabled !== false;
+      const suppliedEffectiveWeight = Number(entry?.effective_weight ?? entry?.effectiveWeight);
+      const effectiveWeight = enabled
+        ? (Number.isFinite(suppliedEffectiveWeight) && suppliedEffectiveWeight >= 0
+          ? suppliedEffectiveWeight
+          : resolvedEntries * resolvedWeight)
+        : 0;
       const share = Number(entry?.share);
-      const resolvedShare = Number.isFinite(share) && share > 0 ? share : resolvedWeight;
-      const percent = totalWeight > 0 ? Math.round((resolvedWeight / totalWeight) * 100) : 0;
+      const percent = totalWeight > 0 ? Math.round((effectiveWeight / totalWeight) * 100) : 0;
       const assignment = entry?.assignment && typeof entry.assignment === "object" ? entry.assignment : null;
       const displayName = String(entry?.display_name || entry?.label || entry?.name || `Entry ${index + 1}`).trim() || `Entry ${index + 1}`;
       return {
@@ -1453,9 +1466,13 @@
         displayName,
         avatarUrl: String(entry?.avatar_url || assignment?.avatar_url || "").trim(),
         weight: resolvedWeight,
-        share: resolvedShare,
-        value: resolvedWeight,
-        votes: resolvedWeight,
+        entries: resolvedEntries,
+        entryCount: resolvedEntries,
+        enabled,
+        effectiveWeight,
+        share: Number.isFinite(share) && share >= 0 ? share : effectiveWeight,
+        value: effectiveWeight,
+        votes: effectiveWeight,
         percent,
         sharePercent: percent,
         color: entry?.color || ["#ff6b6b", "#ffd166", "#06d6a0", "#118ab2", "#9b5de5", "#f15bb5"][index % 6],
@@ -1502,16 +1519,76 @@
         : raw?.creator;
     const profile = resolveProfileRef(creatorRef, profiles);
     const removal = resolveRemovalState(raw);
-    const entries = normalizeWheelEntries(raw?.entries);
-    const totalWeight = entries.reduce((sum, entry) => sum + (Number(entry?.weight) || 0), 0);
+    const rawWheelSet = raw?.wheel_set && typeof raw.wheel_set === "object"
+      ? raw.wheel_set
+      : raw?.wheelSet && typeof raw.wheelSet === "object"
+        ? raw.wheelSet
+        : null;
+    const rawChildWheels = Array.isArray(rawWheelSet?.wheels) && rawWheelSet.wheels.length ? rawWheelSet.wheels : [raw];
+    const normalizedChildren = rawChildWheels.map((child, childIndex) => {
+      const childEntries = normalizeWheelEntries(child?.entries);
+      const childPalette = child?.palette && typeof child.palette === "object" ? child.palette : {};
+      const childPresentation = child?.presentation && typeof child.presentation === "object" ? child.presentation : {};
+      return {
+        wheelId: String(child?.wheel_id || child?.wheelId || `legacy-${artifactCode}-${childIndex + 1}`).trim(),
+        name: String(child?.name || child?.title || raw?.title || `Wheel ${childIndex + 1}`).trim() || `Wheel ${childIndex + 1}`,
+        winnerLimit: Number.isFinite(Number(child?.winner_limit ?? child?.winnerLimit ?? child?.max_winners))
+          ? Math.max(1, Math.min(100, Number(child?.winner_limit ?? child?.winnerLimit ?? child?.max_winners)))
+          : 1,
+        allowDuplicates: child?.allow_duplicates !== false && child?.allowDuplicates !== false,
+        autoRemoveWinner: child?.auto_remove_winner === true || child?.autoRemoveWinner === true,
+        entries: childEntries,
+        entryCount: childEntries.length,
+        totalWeight: childEntries.reduce((sum, entry) => sum + (Number(entry?.effectiveWeight) || 0), 0),
+        palette: {
+          segment_colors: Array.isArray(childPalette.segment_colors) ? childPalette.segment_colors : [],
+          background_color: String(childPalette.background_color || "#0f172a").trim() || "#0f172a",
+          text_color: String(childPalette.text_color || "#f8fafc").trim() || "#f8fafc",
+          accent_color: String(childPalette.accent_color || "#38bdf8").trim() || "#38bdf8",
+          trim_color: String(childPalette.trim_color || childPalette.accent_color || "#7c92ff").trim() || "#7c92ff",
+          glow_color: String(childPalette.glow_color || childPalette.accent_color || "#4de9ff").trim() || "#4de9ff"
+        },
+        presentation: {
+          animation_enabled: childPresentation.animation_enabled !== false,
+          sound_enabled: childPresentation.sound_enabled !== false,
+          celebration_enabled: childPresentation.celebration_enabled !== false,
+          confetti_enabled: childPresentation.confetti_enabled === true || childPresentation.celebration_enabled === true,
+          show_entry_labels: childPresentation.show_entry_labels !== false,
+          show_display_names_on_slices: childPresentation.show_display_names_on_slices !== false,
+          slice_label_mode: ["full_name", "initials", "avatar"].includes(String(childPresentation.slice_label_mode || "").trim())
+            ? String(childPresentation.slice_label_mode).trim()
+            : "full_name",
+          center_image_url: String(childPresentation.center_image_url || childPresentation.centerImageUrl || "/assets/placeholders/wheelcenterdefault.webp").trim() || "/assets/placeholders/wheelcenterdefault.webp",
+          spin_owner_only: childPresentation.spin_owner_only === true || childPresentation.spinOwnerOnly === true || childPresentation.owner_spin_only === true || childPresentation.ownerSpinOnly === true,
+          slow_drift_enabled: childPresentation.slow_drift_enabled !== false,
+          spin_duration_ms: Number.isFinite(Number(childPresentation.spin_duration_ms)) ? Number(childPresentation.spin_duration_ms) : 8500,
+          scoreboard_max_rows: Number.isFinite(Number(childPresentation.scoreboard_max_rows)) ? Number(childPresentation.scoreboard_max_rows) : 24,
+          sound: childPresentation.sound && typeof childPresentation.sound === "object"
+            ? childPresentation.sound
+            : childPresentation.sound_config && typeof childPresentation.sound_config === "object"
+              ? childPresentation.sound_config
+              : {}
+        }
+      };
+    });
+    const requestedActiveWheelId = String(rawWheelSet?.active_wheel_id || rawWheelSet?.activeWheelId || "").trim();
+    const activeWheel = normalizedChildren.find((wheel) => wheel.wheelId === requestedActiveWheelId) || normalizedChildren[0];
+    const wheelSet = {
+      activeWheelId: activeWheel.wheelId,
+      spinAll: {
+        mode: String(rawWheelSet?.spin_all?.mode || rawWheelSet?.spinAll?.mode || "staggered").trim() || "staggered",
+        delayMs: Number(rawWheelSet?.spin_all?.delay_ms ?? rawWheelSet?.spinAll?.delayMs ?? 250) || 250
+      },
+      wheels: normalizedChildren
+    };
+    const entries = activeWheel.entries;
+    const totalWeight = activeWheel.totalWeight;
     const scoreboardEntries = [...entries]
-      .sort((left, right) => (Number(right?.weight) || 0) - (Number(left?.weight) || 0) || String(left?.label || "").localeCompare(String(right?.label || "")))
+      .sort((left, right) => (Number(right?.effectiveWeight) || 0) - (Number(left?.effectiveWeight) || 0) || String(left?.label || "").localeCompare(String(right?.label || "")))
       .map((entry, position) => ({
         ...entry,
         rank: position + 1
       }));
-    const palette = raw?.palette && typeof raw.palette === "object" ? raw.palette : {};
-    const presentation = raw?.presentation && typeof raw.presentation === "object" ? raw.presentation : {};
 
     return {
       id: artifactCode,
@@ -1521,59 +1598,25 @@
       viewFamily: "wheel",
       type: "wheels",
       title: raw?.title || raw?.name || `Wheel ${index + 1}`,
+      schemaVersion: String(raw?.schema_version || raw?.schemaVersion || "streamsuites.wheel-set.v2").trim(),
+      wheelSet,
+      activeWheel,
+      activeWheelId: activeWheel.wheelId,
+      activeWheelName: activeWheel.name,
       summary: raw?.summary || raw?.description || raw?.notes || "Portable wheel artifact.",
       description: raw?.description || "",
       notes: raw?.notes || "",
       status: removal.isRemoved ? "Removed" : toTitle(raw?.status || raw?.state || "active"),
       defaultDisplayMode: String(raw?.default_display_mode || raw?.defaultDisplayMode || "wheel").trim().toLowerCase() === "scoreboard" ? "scoreboard" : "wheel",
-      winnerLimit: Number.isFinite(Number(raw?.winner_limit ?? raw?.max_winners))
-        ? Math.max(1, Math.min(100, Number(raw?.winner_limit ?? raw?.max_winners)))
-        : 1,
-      allowDuplicates: raw?.allow_duplicates !== false && raw?.allowDuplicates !== false,
-      autoRemoveWinner: raw?.auto_remove_winner === true || raw?.autoRemoveWinner === true,
+      winnerLimit: activeWheel.winnerLimit,
+      allowDuplicates: activeWheel.allowDuplicates,
+      autoRemoveWinner: activeWheel.autoRemoveWinner,
       entries,
       scoreboardEntries,
       entryCount: entries.length,
       totalWeight,
-      palette: {
-        segment_colors: Array.isArray(palette.segment_colors) ? palette.segment_colors : [],
-        background_color: String(palette.background_color || "#0f172a").trim() || "#0f172a",
-        text_color: String(palette.text_color || "#f8fafc").trim() || "#f8fafc",
-        accent_color: String(palette.accent_color || "#38bdf8").trim() || "#38bdf8",
-        trim_color: String(palette.trim_color || palette.accent_color || "#7c92ff").trim() || "#7c92ff",
-        glow_color: String(palette.glow_color || palette.accent_color || "#4de9ff").trim() || "#4de9ff"
-      },
-      presentation: {
-        animation_enabled: presentation.animation_enabled !== false,
-        sound_enabled: presentation.sound_enabled !== false,
-        celebration_enabled: presentation.celebration_enabled !== false,
-        confetti_enabled: presentation.confetti_enabled === true || presentation.celebration_enabled === true,
-        show_entry_labels: presentation.show_entry_labels !== false,
-        show_display_names_on_slices: presentation.show_display_names_on_slices !== false,
-        slice_label_mode: ["full_name", "initials", "avatar"].includes(String(presentation.slice_label_mode || "").trim())
-          ? String(presentation.slice_label_mode).trim()
-          : "full_name",
-        center_image_url:
-          String(
-            presentation.center_image_url ||
-              presentation.centerImageUrl ||
-              "/assets/placeholders/wheelcenterdefault.webp"
-          ).trim() || "/assets/placeholders/wheelcenterdefault.webp",
-        spin_owner_only:
-          presentation.spin_owner_only === true ||
-          presentation.spinOwnerOnly === true ||
-          presentation.owner_spin_only === true ||
-          presentation.ownerSpinOnly === true,
-        slow_drift_enabled: presentation.slow_drift_enabled !== false,
-        spin_duration_ms: Number.isFinite(Number(presentation.spin_duration_ms)) ? Number(presentation.spin_duration_ms) : 8500,
-        scoreboard_max_rows: Number.isFinite(Number(presentation.scoreboard_max_rows)) ? Number(presentation.scoreboard_max_rows) : 24,
-        sound:
-          presentation.sound && typeof presentation.sound === "object"
-            ? presentation.sound
-            : presentation.sound_config && typeof presentation.sound_config === "object"
-              ? presentation.sound_config
-              : {}
-      },
+      palette: activeWheel.palette,
+      presentation: activeWheel.presentation,
       unsupportedImportFields: Array.isArray(raw?.unsupported_import_fields)
         ? raw.unsupported_import_fields.map((value) => String(value || "").trim()).filter(Boolean)
         : [],

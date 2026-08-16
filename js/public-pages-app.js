@@ -7250,10 +7250,10 @@
 
   function getWheelSegments(entries) {
     const list = Array.isArray(entries) ? entries : [];
-    const totalWeight = list.reduce((sum, entry) => sum + Math.max(0, Number(entry?.weight) || 0), 0) || 1;
+    const totalWeight = list.reduce((sum, entry) => sum + Math.max(0, Number(entry?.effectiveWeight ?? entry?.effective_weight) || 0), 0) || 1;
     let cursor = 0;
     return list.map((entry) => {
-      const weight = Math.max(0.0001, Number(entry?.weight) || 0.0001);
+      const weight = Math.max(0.0001, Number(entry?.effectiveWeight ?? entry?.effective_weight) || 0.0001);
       const sliceAngle = (weight / totalWeight) * 360;
       const startAngle = cursor;
       const endAngle = cursor + sliceAngle;
@@ -7330,6 +7330,7 @@
     const assignment = entry?.assignment && typeof entry.assignment === "object" ? entry.assignment : {};
     const identityKey =
       String(entry?.entrantId || entry?.entrant_id || "").trim() ||
+      String(entry?.entryId || entry?.entry_id || entry?.id || "").trim() ||
       String(assignment?.accountId || assignment?.account_id || "").trim() ||
       String(assignment?.userCode || assignment?.user_code || "").trim() ||
       String(assignment?.publicSlug || assignment?.public_slug || "").trim();
@@ -7354,8 +7355,11 @@
     (Array.isArray(entries) ? entries : []).forEach((entry, index) => {
       const key = getWheelEntrantAggregationKey(entry, index);
       const entryId = String(entry?.entryId || entry?.id || `entry-${index + 1}`);
-      const weight = Math.max(0.0001, Number(entry?.weight) || 0.0001);
+      const weight = Math.max(0.0001, Number(entry?.weight ?? entry?.unitWeight ?? entry?.unit_weight) || 1);
       const entryUnits = getWheelEntryUnits(entry);
+      const effectiveWeight = entry?.enabled === false
+        ? 0
+        : Math.max(0, Number(entry?.effectiveWeight ?? entry?.effective_weight) || (entryUnits * weight));
       const current = groups.get(key);
       if (!current) {
         groups.set(key, {
@@ -7367,9 +7371,10 @@
           sourceEntryCount: 1,
           entryCount: entryUnits,
           weight,
-          share: Math.max(0, Number(entry?.share) || weight),
-          value: weight,
-          votes: weight
+          effectiveWeight,
+          share: effectiveWeight,
+          value: effectiveWeight,
+          votes: effectiveWeight
         });
         return;
       }
@@ -7377,18 +7382,18 @@
       current.sourceEntryIds.push(entryId);
       current.sourceEntryCount += 1;
       current.entryCount += entryUnits;
-      current.weight += weight;
-      current.share += Math.max(0, Number(entry?.share) || weight);
-      current.value = current.weight;
-      current.votes = current.weight;
+      current.effectiveWeight += effectiveWeight;
+      current.share += effectiveWeight;
+      current.value = current.effectiveWeight;
+      current.votes = current.effectiveWeight;
       if (!current.avatarUrl && entry?.avatarUrl) current.avatarUrl = entry.avatarUrl;
       if (!current.assignment && entry?.assignment) current.assignment = entry.assignment;
     });
 
     const aggregated = Array.from(groups.values());
-    const totalWeight = aggregated.reduce((sum, entry) => sum + Math.max(0, Number(entry?.weight) || 0), 0);
+    const totalWeight = aggregated.reduce((sum, entry) => sum + Math.max(0, Number(entry?.effectiveWeight) || 0), 0);
     return aggregated.map((entry) => {
-      const chance = totalWeight > 0 ? (Math.max(0, Number(entry?.weight) || 0) / totalWeight) * 100 : 0;
+      const chance = totalWeight > 0 ? (Math.max(0, Number(entry?.effectiveWeight) || 0) / totalWeight) * 100 : 0;
       return {
         ...entry,
         percent: Math.round(chance),
@@ -7621,11 +7626,11 @@
 
   function pickWheelWinner(entries) {
     const list = Array.isArray(entries) ? entries : [];
-    const totalWeight = list.reduce((sum, entry) => sum + (Number(entry?.weight) || 0), 0);
+    const totalWeight = list.reduce((sum, entry) => sum + (Number(entry?.effectiveWeight ?? entry?.effective_weight) || 0), 0);
     if (!list.length || totalWeight <= 0) return null;
     let cursor = Math.random() * totalWeight;
     for (const entry of list) {
-      cursor -= Number(entry?.weight) || 0;
+      cursor -= Number(entry?.effectiveWeight ?? entry?.effective_weight) || 0;
       if (cursor <= 0) return entry;
     }
     return list[list.length - 1] || null;
@@ -7642,10 +7647,12 @@
     );
     wrap.appendChild(header);
 
-    const aggregatedEntries = aggregateWheelEntrants(item?.entries || item?.scoreboardEntries || []);
-    const totalWeight = aggregatedEntries.reduce((sum, entry) => sum + Math.max(0, Number(entry?.weight) || 0), 0) || 1;
+    const aggregatedEntries = aggregateWheelEntrants(item?.entries || item?.scoreboardEntries || []).filter(
+      (entry) => entry?.enabled !== false && Math.max(0, Number(entry?.effectiveWeight) || 0) > 0
+    );
+    const totalWeight = aggregatedEntries.reduce((sum, entry) => sum + Math.max(0, Number(entry?.effectiveWeight) || 0), 0) || 1;
     const entries = aggregatedEntries
-      .sort((left, right) => (Number(right?.weight) || 0) - (Number(left?.weight) || 0) || getWheelEntryName(left).localeCompare(getWheelEntryName(right)))
+      .sort((left, right) => (Number(right?.effectiveWeight) || 0) - (Number(left?.effectiveWeight) || 0) || getWheelEntryName(left).localeCompare(getWheelEntryName(right)))
       .slice(
       0,
       Math.max(1, Number(options.maxRows) || Number(item?.presentation?.scoreboard_max_rows) || 24)
@@ -7680,7 +7687,7 @@
         entryCell.appendChild(create("span", "timestamp", entry.notes));
       }
 
-      const chance = totalWeight > 0 ? (Math.max(0, Number(entry?.weight) || 0) / totalWeight) * 100 : 0;
+      const chance = totalWeight > 0 ? (Math.max(0, Number(entry?.effectiveWeight) || 0) / totalWeight) * 100 : 0;
       const chanceCell = create("span", "wheel-scoreboard-chance");
       const chanceRail = create("span", "wheel-scoreboard-chance-rail");
       const chanceFill = create("span", "wheel-scoreboard-chance-fill");
@@ -7702,17 +7709,30 @@
   }
 
   function buildWheelDetailMain(item, config) {
+    const artifactItem = item;
+    const wheelSet = item?.wheelSet && typeof item.wheelSet === "object" ? item.wheelSet : null;
+    const activeWheel = item?.activeWheel && typeof item.activeWheel === "object" ? item.activeWheel : item;
+    item = {
+      ...item,
+      ...activeWheel,
+      title: activeWheel?.name || item?.title || "Wheel",
+      artifactTitle: artifactItem?.title || "",
+      wheelSet,
+      activeWheel
+    };
     const authState = config?.authState || null;
     const isOwner = isArtifactOwner(authState, item);
     const spinOwnerOnly = item?.presentation?.spin_owner_only === true || item?.presentation?.spinOwnerOnly === true;
     const shareModel = resolveWheelShareModel(item);
-    const wheelEntries = aggregateWheelEntrants(item?.entries || []);
+    const wheelEntries = aggregateWheelEntrants(item?.entries || []).filter(
+      (entry) => entry?.enabled !== false && Math.max(0, Number(entry?.effectiveWeight) || 0) > 0
+    );
     const totalEntryUnits = wheelEntries.reduce((sum, entry) => sum + getWheelEntryUnits(entry), 0);
     const wheelModel = {
       ...item,
       entries: wheelEntries,
       entryCount: wheelEntries.length,
-      totalWeight: wheelEntries.reduce((sum, entry) => sum + Math.max(0, Number(entry?.weight) || 0), 0)
+      totalWeight: wheelEntries.reduce((sum, entry) => sum + Math.max(0, Number(entry?.effectiveWeight) || 0), 0)
     };
     const wheelDomId = String(item?.artifactCode || item?.artifact_code || item?.slug || "wheel")
       .toLowerCase()
@@ -8033,7 +8053,7 @@
 
     const toolsDeck = create("section", "wheel-console-drawers");
     toolsDeck.setAttribute("aria-label", "Wheel support tools");
-    toolsDeck.append(buildWheelOwnerEditorPanel(item, config), buildCompactWheelAuthorityPanel(item, config));
+    toolsDeck.append(buildWheelOwnerEditorPanel(artifactItem, config), buildCompactWheelAuthorityPanel(artifactItem, config));
     card.append(wheelView, toolsDeck);
     main.appendChild(card);
 
@@ -8060,6 +8080,7 @@
       : { matches: false };
     let winnerReturnFocus = null;
     const sessionState = {
+      wheelId: String(activeWheel?.wheelId || activeWheel?.wheel_id || "legacy-wheel"),
       winnerLimit: clampNumber(item?.winnerLimit || 1, 1, 100, 1),
       winners: [],
       drawHistory: [],
@@ -8207,9 +8228,9 @@
       }
 
       const eligible = getEligibleEntries();
-      const eligibleTotal = eligible.reduce((sum, candidate) => sum + Math.max(0, Number(candidate?.weight) || 0), 0) || 1;
+      const eligibleTotal = eligible.reduce((sum, candidate) => sum + Math.max(0, Number(candidate?.effectiveWeight) || 0), 0) || 1;
       const activeEligible = eligible.find((candidate) => String(candidate?.entryId || candidate?.id || "") === String(activeEntry?.entryId || activeEntry?.id || ""));
-      const chance = activeEligible ? ((Math.max(0, Number(activeEntry?.weight) || 0) / eligibleTotal) * 100) : 0;
+      const chance = activeEligible ? ((Math.max(0, Number(activeEntry?.effectiveWeight) || 0) / eligibleTotal) * 100) : 0;
       const rows = [
         ["Entries", formatNumber(getWheelEntryUnits(activeEntry))],
         ["Weight", formatNumber(Number(activeEntry?.weight) || 0)],
@@ -8793,7 +8814,12 @@
   }
 
   function buildWheelEditorDraft(item) {
+    const activeWheel = item?.activeWheel && typeof item.activeWheel === "object" ? item.activeWheel : item;
     return {
+      wheel_set: item?.wheelSet && typeof item.wheelSet === "object"
+        ? JSON.parse(JSON.stringify(item.wheelSet))
+        : null,
+      active_wheel_id: String(activeWheel?.wheelId || activeWheel?.wheel_id || "").trim(),
       slug: String(item?.slug || item?.defaultSlug || "").trim(),
       default_slug: String(item?.defaultSlug || item?.slug || "").trim(),
       custom_slug: String(item?.customSlug || item?.custom_slug || "").trim(),
@@ -8805,35 +8831,35 @@
       description: String(item?.description || "").trim(),
       notes: String(item?.notes || "").trim(),
       default_display_mode: item?.defaultDisplayMode === "scoreboard" ? "scoreboard" : "wheel",
-      winner_limit: clampNumber(item?.winnerLimit || 1, 1, 100, 1),
-      allow_duplicates: item?.allowDuplicates !== false,
-      auto_remove_winner: item?.autoRemoveWinner === true,
+      winner_limit: clampNumber(activeWheel?.winnerLimit || 1, 1, 100, 1),
+      allow_duplicates: activeWheel?.allowDuplicates !== false,
+      auto_remove_winner: activeWheel?.autoRemoveWinner === true,
       palette: {
-        segment_colors: Array.isArray(item?.palette?.segment_colors) ? item.palette.segment_colors.slice(0, 16) : [],
-        background_color: String(item?.palette?.background_color || "#08111f").trim() || "#08111f",
-        text_color: String(item?.palette?.text_color || "#f8fafc").trim() || "#f8fafc",
-        accent_color: String(item?.palette?.accent_color || "#38bdf8").trim() || "#38bdf8",
-        trim_color: String(item?.palette?.trim_color || item?.palette?.accent_color || "#7c92ff").trim() || "#7c92ff",
-        glow_color: String(item?.palette?.glow_color || item?.palette?.accent_color || "#4de9ff").trim() || "#4de9ff"
+        segment_colors: Array.isArray(activeWheel?.palette?.segment_colors) ? activeWheel.palette.segment_colors.slice(0, 16) : [],
+        background_color: String(activeWheel?.palette?.background_color || "#08111f").trim() || "#08111f",
+        text_color: String(activeWheel?.palette?.text_color || "#f8fafc").trim() || "#f8fafc",
+        accent_color: String(activeWheel?.palette?.accent_color || "#38bdf8").trim() || "#38bdf8",
+        trim_color: String(activeWheel?.palette?.trim_color || activeWheel?.palette?.accent_color || "#7c92ff").trim() || "#7c92ff",
+        glow_color: String(activeWheel?.palette?.glow_color || activeWheel?.palette?.accent_color || "#4de9ff").trim() || "#4de9ff"
       },
       presentation: {
-        animation_enabled: item?.presentation?.animation_enabled !== false,
-        sound_enabled: item?.presentation?.sound_enabled !== false,
-        celebration_enabled: item?.presentation?.celebration_enabled !== false,
-        show_entry_labels: item?.presentation?.show_entry_labels !== false,
-        show_display_names_on_slices: item?.presentation?.show_display_names_on_slices !== false,
-        slice_label_mode: String(item?.presentation?.slice_label_mode || "full_name").trim() || "full_name",
-        center_image_url: String(item?.presentation?.center_image_url || item?.presentation?.centerImageUrl || WHEEL_CENTER_DEFAULT).trim() || WHEEL_CENTER_DEFAULT,
+        animation_enabled: activeWheel?.presentation?.animation_enabled !== false,
+        sound_enabled: activeWheel?.presentation?.sound_enabled !== false,
+        celebration_enabled: activeWheel?.presentation?.celebration_enabled !== false,
+        show_entry_labels: activeWheel?.presentation?.show_entry_labels !== false,
+        show_display_names_on_slices: activeWheel?.presentation?.show_display_names_on_slices !== false,
+        slice_label_mode: String(activeWheel?.presentation?.slice_label_mode || "full_name").trim() || "full_name",
+        center_image_url: String(activeWheel?.presentation?.center_image_url || activeWheel?.presentation?.centerImageUrl || WHEEL_CENTER_DEFAULT).trim() || WHEEL_CENTER_DEFAULT,
         spin_owner_only:
-          item?.presentation?.spin_owner_only === true ||
-          item?.presentation?.spinOwnerOnly === true ||
-          item?.presentation?.owner_spin_only === true ||
-          item?.presentation?.ownerSpinOnly === true,
-        slow_drift_enabled: item?.presentation?.slow_drift_enabled !== false,
-        spin_duration_ms: clampNumber(item?.presentation?.spin_duration_ms || 8500, 2000, 60000, 8500),
-        scoreboard_max_rows: clampNumber(item?.presentation?.scoreboard_max_rows || 24, 3, 100, 24),
+          activeWheel?.presentation?.spin_owner_only === true ||
+          activeWheel?.presentation?.spinOwnerOnly === true ||
+          activeWheel?.presentation?.owner_spin_only === true ||
+          activeWheel?.presentation?.ownerSpinOnly === true,
+        slow_drift_enabled: activeWheel?.presentation?.slow_drift_enabled !== false,
+        spin_duration_ms: clampNumber(activeWheel?.presentation?.spin_duration_ms || 8500, 2000, 60000, 8500),
+        scoreboard_max_rows: clampNumber(activeWheel?.presentation?.scoreboard_max_rows || 24, 3, 100, 24),
         sound: Object.keys(WHEEL_SOUND_LIBRARY).reduce((acc, category) => {
-          const resolved = resolveWheelSoundConfig(item, category);
+          const resolved = resolveWheelSoundConfig(activeWheel, category);
           acc[category] = {
             enabled: resolved.enabled,
             asset_id: resolved.assetId
@@ -8841,13 +8867,14 @@
           return acc;
         }, {})
       },
-      entries: (Array.isArray(item?.entries) ? item.entries : []).map((entry) => ({
+      entries: (Array.isArray(activeWheel?.entries) ? activeWheel.entries : []).map((entry) => ({
         entry_id: String(entry?.entryId || entry?.id || "").trim(),
         label: String(entry?.label || getWheelEntryName(entry)).trim(),
         display_name: String(entry?.displayName || getWheelEntryName(entry)).trim(),
         avatar_url: String(entry?.avatarUrl || "").trim(),
         weight: Math.max(0.1, Number(entry?.weight) || 1),
-        share: Math.max(0.1, Number(entry?.share) || Number(entry?.weight) || 1),
+        entries: Math.max(1, Math.round(Number(entry?.entries ?? entry?.entryCount) || 1)),
+        enabled: entry?.enabled !== false,
         color: String(entry?.color || "#64748b").trim(),
         notes: String(entry?.notes || "").trim(),
         assignment: entry?.assignment ? { ...entry.assignment } : null,
@@ -8858,12 +8885,11 @@
   }
 
   function buildWheelEditorPayload(draft) {
-    return {
-      title: draft.title,
-      custom_slug: draft.custom_slug,
-      description: draft.description,
-      notes: draft.notes,
-      default_display_mode: draft.default_display_mode,
+    const childPayload = {
+      wheel_id: draft.active_wheel_id,
+      name: draft.wheel_set?.wheels?.length === 1
+        ? draft.title
+        : String(draft.wheel_set?.wheels?.find((wheel) => wheel.wheelId === draft.active_wheel_id)?.name || "Wheel"),
       winner_limit: draft.winner_limit,
       allow_duplicates: draft.allow_duplicates,
       auto_remove_winner: draft.auto_remove_winner,
@@ -8873,6 +8899,36 @@
         confetti_enabled: draft.presentation.celebration_enabled === true
       },
       entries: draft.entries
+    };
+    const wheelSetPayload = draft.wheel_set
+      ? {
+          active_wheel_id: draft.active_wheel_id,
+          spin_all: {
+            mode: draft.wheel_set.spinAll?.mode || "staggered",
+            delay_ms: draft.wheel_set.spinAll?.delayMs || 250
+          },
+          wheels: draft.wheel_set.wheels.map((wheel) => {
+            if (wheel.wheelId === draft.active_wheel_id) return childPayload;
+            return {
+              wheel_id: wheel.wheelId,
+              name: wheel.name,
+              winner_limit: wheel.winnerLimit,
+              allow_duplicates: wheel.allowDuplicates,
+              auto_remove_winner: wheel.autoRemoveWinner,
+              entries: wheel.entries,
+              palette: wheel.palette,
+              presentation: wheel.presentation
+            };
+          })
+        }
+      : null;
+    return {
+      title: draft.title,
+      custom_slug: draft.custom_slug,
+      description: draft.description,
+      notes: draft.notes,
+      default_display_mode: draft.default_display_mode,
+      ...(wheelSetPayload ? { wheel_set: wheelSetPayload } : childPayload)
     };
   }
 
@@ -9125,8 +9181,12 @@
                     <input type="number" min="0.1" step="0.1" data-entry-index="${index}" data-entry-field="weight" value="${escapeHtml(String(entry.weight))}" />
                   </label>
                   <label class="wheel-owner-field wheel-owner-field--compact">
-                    <span>Share</span>
-                    <input type="number" min="0.1" step="0.1" data-entry-index="${index}" data-entry-field="share" value="${escapeHtml(String(entry.share))}" />
+                    <span>Entries</span>
+                    <input type="number" min="1" max="1000000" step="1" data-entry-index="${index}" data-entry-field="entries" value="${escapeHtml(String(entry.entries))}" />
+                  </label>
+                  <label class="wheel-owner-toggle">
+                    <input type="checkbox" data-entry-index="${index}" data-entry-field="enabled" ${entry.enabled ? "checked" : ""} />
+                    <span>Enabled</span>
                   </label>
                   <label class="wheel-owner-field wheel-owner-field--compact">
                     <span>Color</span>
@@ -9219,9 +9279,12 @@
         const field = String(target.dataset.entryField || "");
         const entry = draft.entries[index];
         if (!entry) return;
-        entry[field] =
-          target instanceof HTMLInputElement && target.type === "number"
-            ? Math.max(0.1, Number(target.value) || 1)
+        entry[field] = target instanceof HTMLInputElement && target.type === "checkbox"
+          ? target.checked
+          : target instanceof HTMLInputElement && target.type === "number"
+            ? field === "entries"
+              ? Math.max(1, Math.round(Number(target.value) || 1))
+              : Math.max(0.1, Number(target.value) || 1)
             : target.value;
         return;
       }

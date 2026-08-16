@@ -6,6 +6,19 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-17 - Multi-wheel authority compatibility foundation
+
+#### Technical notes
+
+- Extended the Public wheel normalizer to understand Runtime/Auth's versioned `wheelSet`, ordered stable child IDs, active-child selection, bounded staggered Spin All configuration, and unique entrant `entries` versus independent `weight` semantics. The accepted Wheel Detail V3 renderer now consumes `wheelSet` and exactly one `activeWheel`, falling back to the first child only when the authority-selected ID is absent.
+- Preserved the existing `/wheels/<slug>` artifact route, artifact-level title/share identity, owner gate, Play/Entrants/Details/Share tabs, winner dialog, celebration, sounds, and one artifact-level `wheel.changed` SSE refetch. Disabled entrants are excluded and drawing uses `effectiveWeight = entries × weight`; temporary session state is keyed by stable child wheel ID and no result is written to Runtime/Auth.
+- Updated the existing owner editor's compatibility save seam so artifact fields stay artifact-level and active-child entrants/rules/palette/presentation save inside the wheel-set document. Entry count and enabled state replace the old conflated Share input. No wheel deck, switching UI, Focus/Grid/Results workspace, Spin All control, synchronized gameplay, or backend winner history was added.
+- Design-locked the next customization boundary: primary production/play controls stay outside the inspector, quick settings remain compact, and full entrant, appearance, celebration, sound, advanced-rule, and share/presentation workflows belong in dedicated lightbox editors. Those editors remain future work rather than falsely shipped controls.
+
+#### Human-readable summary
+
+Public can now safely read a multi-wheel artifact while continuing to show one active wheel through the familiar V3 experience. Old single wheels keep working, entrants have clear ticket and weight values, share links still identify the overall artifact, and advanced editing will use full modal workspaces instead of overcrowding the inspector.
+
 ### 2026-08-17 - Statistics chrome and Public sidebar-control correction
 
 #### Technical notes
