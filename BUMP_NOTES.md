@@ -6,6 +6,21 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-17 - Statistics observability hero and header appearance control
+
+#### Technical notes
+
+- Rebuilt the compact Stats hero around the established Status/Health blue and cyan observability palette. The page no longer derives its feature colour from Public-shell accent presets; Dark/Light remains independent and continues through the existing Public preference controller.
+- Added a bounded Runtime/Auth aggregate topology to the hero using the existing StreamSuites SVG mark, three real account/profile/artifact totals, dashed authority routes, sequenced signal traces, rotating rings, ambient grid/scan decoration, and a finite-height responsive frame. No visits, installations, event volume, milestone, health, or availability value is inferred by this visualization.
+- Added animated blue/cyan feature text, layered atmospheric depth, restrained hover response, and semantic loading/ready/error freshness treatment. All continuous decorative motion becomes a complete static composition under `prefers-reduced-motion`.
+- Replaced the two labelled Dark/Light controls in the hero with one slim icon-only sun/moon control in the shared header. Its accessible name exposes the next action, its pressed state represents Light appearance, and the control remains visible beside the responsive navigation while the existing version/Open Studio actions retain their behavior.
+- Preserved the complete current aggregate row, restored metric scaffolds, historical graphs, artifact breakdown, methodology, routes, Runtime/Auth contract, failure semantics, header/footer structure, and first-viewport desktop and phone access to the metric row. No Runtime/Auth, version/build metadata, deployment, commit, or push was changed.
+- Retained deterministic local Dark desktop, Light desktop, and Light phone captures under `output/playwright/stats-hero-polish-20260817/`; their `public-stats-v1` fixture is visual-validation data and not deployed-service proof.
+
+#### Human-readable summary
+
+Statistics now opens with a compact animated blue observability scene that matches Status and Health, including a real aggregate topology rather than empty decoration. Dark/Light is controlled by a discreet sun/moon button in the header.
+
 ### 2026-08-17 - Milestone 2 multi-wheel production workspace and shell-free Stage
 
 #### Technical notes

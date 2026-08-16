@@ -39,6 +39,15 @@
         <a class="is-current" href="#stats-main" aria-current="page">Statistics</a>
       </nav>
       <div class="header-actions">
+        <button class="stats-theme-toggle" type="button" data-stats-theme-toggle aria-label="Switch to light mode" title="Switch to light mode" aria-pressed="false">
+          <svg class="stats-theme-toggle__icon stats-theme-toggle__icon--sun" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="3.25"></circle>
+            <path d="M12 2.25v2.1M12 19.65v2.1M2.25 12h2.1M19.65 12h2.1M5.1 5.1l1.48 1.48M17.42 17.42l1.48 1.48M18.9 5.1l-1.48 1.48M6.58 17.42 5.1 18.9"></path>
+          </svg>
+          <svg class="stats-theme-toggle__icon stats-theme-toggle__icon--moon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M19.1 15.45A7.8 7.8 0 0 1 8.55 4.9 8.1 8.1 0 1 0 19.1 15.45Z"></path>
+          </svg>
+        </button>
         <a class="standalone-version-badge footer-version button button--quiet button--small" href="/version">Loading version…</a>
         <a class="button button--primary button--small" href="https://studio.streamsuites.app">Open Studio</a>
       </div>
@@ -47,23 +56,54 @@
 
   <main id="stats-main" class="stats-main">
     <section class="stats-hero" aria-labelledby="stats-title">
+      <div class="stats-hero__atmosphere" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
       <div class="stats-hero__copy">
-        <p class="stats-eyebrow">Runtime/Auth authority · Aggregate only</p>
-        <h1 id="stats-title">The public shape of StreamSuites.</h1>
+        <p class="stats-eyebrow"><span></span>Runtime/Auth authority · Aggregate only</p>
+        <h1 id="stats-title">The public shape<br /><span class="stats-hero__feature-line">of StreamSuites.</span></h1>
         <p>Real account, visible-profile, and published-artifact totals—derived from canonical Runtime/Auth storage without exposing people, identifiers, or private activity.</p>
         <div class="stats-hero__actions">
           <a class="stats-button stats-button--primary" href="/home">Explore the Public dashboard</a>
           <button class="stats-button" type="button" data-stats-refresh>Refresh snapshot</button>
-          <div class="stats-appearance" role="group" aria-label="Page appearance">
-            <button type="button" data-stats-appearance="dark" aria-pressed="false">Dark</button>
-            <button type="button" data-stats-appearance="light" aria-pressed="false">Light</button>
-          </div>
         </div>
       </div>
-      <div class="stats-freshness" data-stats-state="loading" aria-live="polite">
-        <span class="stats-freshness__pulse" aria-hidden="true"></span>
-        <span><strong data-stats-state-label>Loading authoritative snapshot</strong><small data-stats-generated>Waiting for Runtime/Auth…</small></span>
-      </div>
+
+      <aside class="stats-constellation" data-stats-constellation data-state="loading" aria-label="Runtime/Auth public aggregate topology">
+        <header class="stats-constellation__header">
+          <span><small>Public aggregate topology</small><strong>Canonical projection</strong></span>
+          <span class="stats-constellation__scope"><i></i>Privacy bounded</span>
+        </header>
+        <div class="stats-constellation__stage">
+          <div class="stats-constellation__rings" aria-hidden="true"><span></span><span></span><span></span></div>
+          <svg class="stats-constellation__routes" viewBox="0 0 480 220" preserveAspectRatio="none" aria-hidden="true">
+            <path pathLength="1" d="M240 111 C190 88 156 66 98 55" class="stats-constellation__route"></path>
+            <path pathLength="1" d="M240 111 C290 88 324 66 382 55" class="stats-constellation__route"></path>
+            <path pathLength="1" d="M240 111 C240 143 240 165 240 196" class="stats-constellation__route"></path>
+            <path pathLength="1" d="M240 111 C190 88 156 66 98 55" class="stats-constellation__signal stats-constellation__signal--one"></path>
+            <path pathLength="1" d="M240 111 C290 88 324 66 382 55" class="stats-constellation__signal stats-constellation__signal--two"></path>
+            <path pathLength="1" d="M240 111 C240 143 240 165 240 196" class="stats-constellation__signal stats-constellation__signal--three"></path>
+          </svg>
+          <div class="stats-constellation__core" aria-hidden="true">
+            <span class="stats-constellation__mark"></span>
+            <small>Runtime/Auth</small>
+            <strong>Aggregate</strong>
+          </div>
+          <article class="stats-constellation__node stats-constellation__node--accounts">
+            <small>Accounts</small><strong data-stats-orbit-value="active_accounts">—</strong>
+          </article>
+          <article class="stats-constellation__node stats-constellation__node--profiles">
+            <small>Profiles</small><strong data-stats-orbit-value="listed_public_profiles">—</strong>
+          </article>
+          <article class="stats-constellation__node stats-constellation__node--artifacts">
+            <small>Artifacts</small><strong data-stats-orbit-value="public_artifacts">—</strong>
+          </article>
+        </div>
+        <div class="stats-freshness" data-stats-state="loading" aria-live="polite">
+          <span class="stats-freshness__pulse" aria-hidden="true"></span>
+          <span><strong data-stats-state-label>Loading authoritative snapshot</strong><small data-stats-generated>Waiting for Runtime/Auth…</small></span>
+        </div>
+      </aside>
     </section>
 
     <section class="stats-metrics" aria-label="Current aggregate totals">

@@ -78,6 +78,8 @@
   function setState(kind, label, detail) {
     const container = document.querySelector("[data-stats-state]");
     if (container) container.dataset.statsState = kind;
+    const constellation = document.querySelector("[data-stats-constellation]");
+    if (constellation) constellation.dataset.state = kind;
     const labelNode = document.querySelector("[data-stats-state-label]");
     const detailNode = document.querySelector("[data-stats-generated]");
     if (labelNode) labelNode.textContent = label;
@@ -222,7 +224,10 @@
   }
 
   function render(model) {
-    Object.entries(model.totals).forEach(([key, value]) => animateNumber(document.querySelector(`[data-stat-total="${key}"]`), value));
+    Object.entries(model.totals).forEach(([key, value]) => {
+      animateNumber(document.querySelector(`[data-stat-total="${key}"]`), value);
+      animateNumber(document.querySelector(`[data-stats-orbit-value="${key}"]`), value);
+    });
     const scaffoldValues = {
       active_accounts: model.totals.active_accounts,
       creator_accounts: model.accountRoles ? (model.accountRoles.creator || 0) : null,
@@ -248,7 +253,7 @@
   }
 
   function setError(error) {
-    document.querySelectorAll("[data-stat-total], [data-scaffold-stat]").forEach((node) => { node.textContent = "—"; });
+    document.querySelectorAll("[data-stat-total], [data-scaffold-stat], [data-stats-orbit-value]").forEach((node) => { node.textContent = "—"; });
     document.querySelectorAll("[data-graph-host]").forEach((host) => {
       host.replaceChildren(element("div", "stats-graph__empty", "Authoritative history unavailable."));
       host.className = "stats-graph";
@@ -277,11 +282,16 @@
     }
   }
 
-  function syncAppearanceButtons() {
+  function syncAppearanceToggle() {
     const appearance = window.StreamSuitesPublicUiPreferences?.getState?.().appearance || "dark";
-    document.querySelectorAll("[data-stats-appearance]").forEach((button) => {
-      button.setAttribute("aria-pressed", button.dataset.statsAppearance === appearance ? "true" : "false");
-    });
+    const toggle = document.querySelector("[data-stats-theme-toggle]");
+    if (!toggle) return;
+    const nextAppearance = appearance === "light" ? "dark" : "light";
+    const label = `Switch to ${nextAppearance} mode`;
+    toggle.dataset.appearance = appearance;
+    toggle.setAttribute("aria-label", label);
+    toggle.setAttribute("title", label);
+    toggle.setAttribute("aria-pressed", appearance === "light" ? "true" : "false");
   }
 
   function initNavigation() {
@@ -305,10 +315,11 @@
     });
   }
 
-  document.querySelectorAll("[data-stats-appearance]").forEach((button) => {
-    button.addEventListener("click", () => window.StreamSuitesPublicUiPreferences?.setAppearance?.(button.dataset.statsAppearance));
+  document.querySelector("[data-stats-theme-toggle]")?.addEventListener("click", () => {
+    const appearance = window.StreamSuitesPublicUiPreferences?.getState?.().appearance || "dark";
+    window.StreamSuitesPublicUiPreferences?.setAppearance?.(appearance === "light" ? "dark" : "light");
   });
-  window.StreamSuitesPublicUiPreferences?.subscribe?.(syncAppearanceButtons);
+  window.StreamSuitesPublicUiPreferences?.subscribe?.(syncAppearanceToggle);
   document.querySelectorAll("[data-stats-refresh], [data-stats-retry]").forEach((button) => button.addEventListener("click", loadStats));
   initNavigation();
 
@@ -316,7 +327,7 @@
     .then((response) => response.ok ? response.json() : null)
     .then((payload) => { if (payload) window.StreamSuitesPublicUiPreferences?.hydrate?.(payload); })
     .catch(() => {});
-  syncAppearanceButtons();
+  syncAppearanceToggle();
   loadStats();
 
   window.StreamSuitesStatsPage = Object.freeze({ normalizeStats, normalizeSeries });
