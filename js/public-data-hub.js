@@ -1559,6 +1559,9 @@
             ? String(childPresentation.slice_label_mode).trim()
             : "full_name",
           center_image_url: String(childPresentation.center_image_url || childPresentation.centerImageUrl || "/assets/placeholders/wheelcenterdefault.webp").trim() || "/assets/placeholders/wheelcenterdefault.webp",
+          stage_background_preset: String(childPresentation.stage_background_preset || childPresentation.stageBackgroundPreset || "cinematic_chamber").trim() || "cinematic_chamber",
+          stage_background_color: String(childPresentation.stage_background_color || childPresentation.stageBackgroundColor || "#38bdf8").trim() || "#38bdf8",
+          stage_background_image_url: String(childPresentation.stage_background_image_url || childPresentation.stageBackgroundImageUrl || "").trim(),
           spin_owner_only: childPresentation.spin_owner_only === true || childPresentation.spinOwnerOnly === true || childPresentation.owner_spin_only === true || childPresentation.ownerSpinOnly === true,
           slow_drift_enabled: childPresentation.slow_drift_enabled !== false,
           spin_duration_ms: Number.isFinite(Number(childPresentation.spin_duration_ms)) ? Number(childPresentation.spin_duration_ms) : 8500,

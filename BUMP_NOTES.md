@@ -6,6 +6,21 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-17 - Milestone 2.2 corrective premium wheel and Stage restoration
+
+#### Technical notes
+
+- Restored the accepted `wheelpocv3` visual depth inside the shared multi-wheel workspace: layered chassis/bezel/groove/marker/light/reflective trim, dimensional hub and pointer mount, per-slice depth, restrained arena atmosphere, and a lightweight matching Grid signature. Slice labels now use the approved V3 `midAngle + 90°` radial transform with upright-half normalization, so names run lengthways inside their wedges instead of tangentially across them. The wheel, disc, pointer, hub, and chamber share the same horizontal axis in every title/inspector state.
+- Moved the wheel title into a collapsible Stage overlay and made the quick inspector a real 320px-to-44px collapsible rail, recovering the released width for the arena. Added a top-centre current-entrant overlay, neutral/selected/spinning/winner entrant detail, and responsive inspector launcher without changing weighted drawing, owner gates, routes, or local-only result semantics.
+- Eliminated the separate 52px wheel-selector deck and consolidated stable-ID child selection into the Stage title card whenever multiple wheels exist. The title dropdown preserves default/result context, Arrow/Home/End/Escape keyboard operation, outside-click dismissal, Focus and shell-free Stage parity, while single-wheel cards remain non-interactive. The recovered row is now arena space rather than another control band.
+- Rebuilt Appearance around exactly four distinct system backgrounds plus one Custom image choice, colour tint controls, full-Stage preview, drag/drop or picker upload, remove/replace, object-URL cleanup, and rehydration through Runtime/Auth's authenticated Stage-background media route. Custom images use cover framing, readability wash, vignette, and tint while canonical state remains query-free Runtime media.
+- Applied Blinker through the existing Public typography token to wheel controls, labels, inspector, entrant detail, cards, dialogs, and utility copy while retaining Tektur for established display headings and wheel-slice-specific text treatment. Ambient motion is bounded and becomes static under reduced motion.
+- Added structural contract coverage plus deterministic installed-Edge evidence under `output/playwright/wheel-milestone22-20260817/`. The browser matrix covers title/inspector combinations, 1920/1600/1440/1024/768/390 widths, Focus/Grid, all four presets, custom image preview, entrant selection/spin/winner, collapse states, reduced motion, popup/dock, shell-free Stage, and `/`, `/wheels`, detail, and Stage smoke routes. No route, shell outside Wheel Detail, Runtime authority, canonical version, deployment, commit, or push changed.
+
+#### Human-readable summary
+
+Wheel Detail once again reads as a premium production instrument instead of a flat disc in a boxed layout. The old selector row is gone: when an artifact has several wheels, its Stage title card switches between them and leaves more room for the arena. The stage stays centred as panels collapse, owners can set a real background safely, and current/winning entrant context is visible without inventing shared gameplay state.
+
 ### 2026-08-17 - Milestone 2.1 wheel production-deck compaction
 
 #### Technical notes

@@ -25,6 +25,9 @@ test("public data hub hydrates wheels from the authoritative live API first and 
   assert.match(source, /wheelSet,/);
   assert.match(source, /activeWheel,/);
   assert.match(source, /activeWheelId: activeWheel\.wheelId/);
+  assert.match(source, /stage_background_preset:/);
+  assert.match(source, /stage_background_color:/);
+  assert.match(source, /stage_background_image_url:/);
   assert.match(source, /effectiveWeight/);
   assert.match(source, /resolvedEntries \* resolvedWeight/);
   assert.match(source, /const wheels = sortByUpdated\(toArray\(wheelsPayload\)\.map\(\(item, index\) => normalizeWheel\(item, index, profilesMap, authorityArtifacts\)\)\);/);
@@ -85,6 +88,9 @@ test("public wheels route preserves the shell and provides clean list/detail art
   assert.match(workspace, /winnerLimit/);
   assert.match(workspace, /spin_owner_only/);
   assert.match(workspace, /center_image_url/);
+  assert.match(workspace, /stage_background_preset/);
+  assert.match(workspace, /stage_background_color/);
+  assert.match(workspace, /stage_background_image_url/);
   assert.match(workspace, /shortlinkSlug/);
   assert.match(workspace, /slice_label_mode/);
   assert.match(workspace, /Re-spin/);

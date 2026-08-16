@@ -1,0 +1,751 @@
+{
+  "geometry": [
+    {
+      "label": "inspector-open-title-open-1440x900",
+      "viewport": "1440x900",
+      "arena": {
+        "x": 101,
+        "y": 128,
+        "width": 956,
+        "height": 760,
+        "centerX": 579,
+        "centerY": 508
+      },
+      "wheel": {
+        "x": 274,
+        "y": 213,
+        "width": 610,
+        "height": 610,
+        "centerX": 579,
+        "centerY": 518
+      },
+      "disc": {
+        "x": 329.5,
+        "y": 268.5,
+        "width": 499,
+        "height": 499,
+        "centerX": 579,
+        "centerY": 518
+      },
+      "pointer": {
+        "x": 558,
+        "y": 227,
+        "width": 42,
+        "height": 58,
+        "centerX": 579,
+        "centerY": 256
+      },
+      "hub": {
+        "x": 523.9,
+        "y": 462.9,
+        "width": 110.2,
+        "height": 110.2,
+        "centerX": 579,
+        "centerY": 518
+      },
+      "chamber": {
+        "x": 214,
+        "y": 173.59,
+        "width": 730,
+        "height": 730,
+        "centerX": 579,
+        "centerY": 538.59
+      },
+      "entrant": {
+        "x": 436,
+        "y": 144,
+        "width": 286,
+        "height": 51,
+        "centerX": 579,
+        "centerY": 169.5
+      },
+      "inspector": {
+        "x": 1074,
+        "y": 127,
+        "width": 320,
+        "height": 454.13,
+        "centerX": 1234,
+        "centerY": 354.06
+      },
+      "centerDelta": {
+        "wheel": 0,
+        "disc": 0,
+        "pointer": 0,
+        "hub": 0,
+        "chamber": 0
+      },
+      "documentOverflowX": 0
+    },
+    {
+      "label": "inspector-closed-title-open-1440x900",
+      "viewport": "1440x900",
+      "arena": {
+        "x": 101,
+        "y": 128,
+        "width": 1232,
+        "height": 760,
+        "centerX": 717,
+        "centerY": 508
+      },
+      "wheel": {
+        "x": 412,
+        "y": 213,
+        "width": 610,
+        "height": 610,
+        "centerX": 717,
+        "centerY": 518
+      },
+      "disc": {
+        "x": 467.5,
+        "y": 268.5,
+        "width": 499,
+        "height": 499,
+        "centerX": 717,
+        "centerY": 518
+      },
+      "pointer": {
+        "x": 696,
+        "y": 227,
+        "width": 42,
+        "height": 58,
+        "centerX": 717,
+        "centerY": 256
+      },
+      "hub": {
+        "x": 661.9,
+        "y": 462.9,
+        "width": 110.2,
+        "height": 110.2,
+        "centerX": 717,
+        "centerY": 518
+      },
+      "chamber": {
+        "x": 352,
+        "y": 173.59,
+        "width": 730,
+        "height": 730,
+        "centerX": 717,
+        "centerY": 538.59
+      },
+      "entrant": {
+        "x": 574,
+        "y": 144,
+        "width": 286,
+        "height": 51,
+        "centerX": 717,
+        "centerY": 169.5
+      },
+      "inspector": {
+        "x": 1350,
+        "y": 127,
+        "width": 44,
+        "height": 190,
+        "centerX": 1372,
+        "centerY": 222
+      },
+      "centerDelta": {
+        "wheel": 0,
+        "disc": 0,
+        "pointer": 0,
+        "hub": 0,
+        "chamber": 0
+      },
+      "documentOverflowX": 0
+    },
+    {
+      "label": "inspector-closed-title-closed-1440x900",
+      "viewport": "1440x900",
+      "arena": {
+        "x": 101,
+        "y": 128,
+        "width": 1232,
+        "height": 760,
+        "centerX": 717,
+        "centerY": 508
+      },
+      "wheel": {
+        "x": 412,
+        "y": 213,
+        "width": 610,
+        "height": 610,
+        "centerX": 717,
+        "centerY": 518
+      },
+      "disc": {
+        "x": 467.5,
+        "y": 268.5,
+        "width": 499,
+        "height": 499,
+        "centerX": 717,
+        "centerY": 518
+      },
+      "pointer": {
+        "x": 696,
+        "y": 227,
+        "width": 42,
+        "height": 58,
+        "centerX": 717,
+        "centerY": 256
+      },
+      "hub": {
+        "x": 661.9,
+        "y": 462.9,
+        "width": 110.2,
+        "height": 110.2,
+        "centerX": 717,
+        "centerY": 518
+      },
+      "chamber": {
+        "x": 352,
+        "y": 173.59,
+        "width": 730,
+        "height": 730,
+        "centerX": 717,
+        "centerY": 538.59
+      },
+      "entrant": {
+        "x": 574,
+        "y": 144,
+        "width": 286,
+        "height": 51,
+        "centerX": 717,
+        "centerY": 169.5
+      },
+      "inspector": {
+        "x": 1350,
+        "y": 127,
+        "width": 44,
+        "height": 190,
+        "centerX": 1372,
+        "centerY": 222
+      },
+      "centerDelta": {
+        "wheel": 0,
+        "disc": 0,
+        "pointer": 0,
+        "hub": 0,
+        "chamber": 0
+      },
+      "documentOverflowX": 0
+    },
+    {
+      "label": "inspector-open-title-closed-1440x900",
+      "viewport": "1440x900",
+      "arena": {
+        "x": 101,
+        "y": 128,
+        "width": 956,
+        "height": 760,
+        "centerX": 579,
+        "centerY": 508
+      },
+      "wheel": {
+        "x": 274,
+        "y": 213,
+        "width": 610,
+        "height": 610,
+        "centerX": 579,
+        "centerY": 518
+      },
+      "disc": {
+        "x": 329.5,
+        "y": 268.5,
+        "width": 499,
+        "height": 499,
+        "centerX": 579,
+        "centerY": 518
+      },
+      "pointer": {
+        "x": 558,
+        "y": 227,
+        "width": 42,
+        "height": 58,
+        "centerX": 579,
+        "centerY": 256
+      },
+      "hub": {
+        "x": 523.9,
+        "y": 462.9,
+        "width": 110.2,
+        "height": 110.2,
+        "centerX": 579,
+        "centerY": 518
+      },
+      "chamber": {
+        "x": 214,
+        "y": 173.59,
+        "width": 730,
+        "height": 730,
+        "centerX": 579,
+        "centerY": 538.59
+      },
+      "entrant": {
+        "x": 436,
+        "y": 144,
+        "width": 286,
+        "height": 51,
+        "centerX": 579,
+        "centerY": 169.5
+      },
+      "inspector": {
+        "x": 1074,
+        "y": 127,
+        "width": 320,
+        "height": 454.13,
+        "centerX": 1234,
+        "centerY": 354.06
+      },
+      "centerDelta": {
+        "wheel": 0,
+        "disc": 0,
+        "pointer": 0,
+        "hub": 0,
+        "chamber": 0
+      },
+      "documentOverflowX": 0
+    },
+    {
+      "label": "responsive-1920x1080",
+      "viewport": "1920x1080",
+      "arena": {
+        "x": 218,
+        "y": 128,
+        "width": 1202,
+        "height": 760,
+        "centerX": 819,
+        "centerY": 508
+      },
+      "wheel": {
+        "x": 514,
+        "y": 213,
+        "width": 610,
+        "height": 610,
+        "centerX": 819,
+        "centerY": 518
+      },
+      "disc": {
+        "x": 569.5,
+        "y": 268.5,
+        "width": 499,
+        "height": 499,
+        "centerX": 819,
+        "centerY": 518
+      },
+      "pointer": {
+        "x": 798,
+        "y": 227,
+        "width": 42,
+        "height": 58,
+        "centerX": 819,
+        "centerY": 256
+      },
+      "hub": {
+        "x": 763.9,
+        "y": 462.9,
+        "width": 110.2,
+        "height": 110.2,
+        "centerX": 819,
+        "centerY": 518
+      },
+      "chamber": {
+        "x": 454,
+        "y": 173.59,
+        "width": 730,
+        "height": 730,
+        "centerX": 819,
+        "centerY": 538.59
+      },
+      "entrant": {
+        "x": 676,
+        "y": 144,
+        "width": 286,
+        "height": 51,
+        "centerX": 819,
+        "centerY": 169.5
+      },
+      "inspector": {
+        "x": 1437,
+        "y": 127,
+        "width": 320,
+        "height": 454.13,
+        "centerX": 1597,
+        "centerY": 354.06
+      },
+      "centerDelta": {
+        "wheel": 0,
+        "disc": 0,
+        "pointer": 0,
+        "hub": 0,
+        "chamber": 0
+      },
+      "documentOverflowX": 0
+    },
+    {
+      "label": "responsive-1600x1000",
+      "viewport": "1600x1000",
+      "arena": {
+        "x": 105,
+        "y": 128,
+        "width": 1108,
+        "height": 760,
+        "centerX": 659,
+        "centerY": 508
+      },
+      "wheel": {
+        "x": 354,
+        "y": 213,
+        "width": 610,
+        "height": 610,
+        "centerX": 659,
+        "centerY": 518
+      },
+      "disc": {
+        "x": 409.5,
+        "y": 268.5,
+        "width": 499,
+        "height": 499,
+        "centerX": 659,
+        "centerY": 518
+      },
+      "pointer": {
+        "x": 638,
+        "y": 227,
+        "width": 42,
+        "height": 58,
+        "centerX": 659,
+        "centerY": 256
+      },
+      "hub": {
+        "x": 603.9,
+        "y": 462.9,
+        "width": 110.2,
+        "height": 110.2,
+        "centerX": 659,
+        "centerY": 518
+      },
+      "chamber": {
+        "x": 294,
+        "y": 173.59,
+        "width": 730,
+        "height": 730,
+        "centerX": 659,
+        "centerY": 538.59
+      },
+      "entrant": {
+        "x": 516,
+        "y": 144,
+        "width": 286,
+        "height": 51,
+        "centerX": 659,
+        "centerY": 169.5
+      },
+      "inspector": {
+        "x": 1230,
+        "y": 127,
+        "width": 320,
+        "height": 454.13,
+        "centerX": 1390,
+        "centerY": 354.06
+      },
+      "centerDelta": {
+        "wheel": 0,
+        "disc": 0,
+        "pointer": 0,
+        "hub": 0,
+        "chamber": 0
+      },
+      "documentOverflowX": 0
+    },
+    {
+      "label": "responsive-1024x768",
+      "viewport": "1024x768",
+      "arena": {
+        "x": 90.59,
+        "y": 128,
+        "width": 598.81,
+        "height": 655.36,
+        "centerX": 390,
+        "centerY": 455.68
+      },
+      "wheel": {
+        "x": 153.47,
+        "y": 229.16,
+        "width": 473.05,
+        "height": 473.05,
+        "centerX": 389.99,
+        "centerY": 465.68
+      },
+      "disc": {
+        "x": 196.52,
+        "y": 272.2,
+        "width": 386.95,
+        "height": 386.95,
+        "centerX": 389.99,
+        "centerY": 465.68
+      },
+      "pointer": {
+        "x": 368.98,
+        "y": 243.16,
+        "width": 42,
+        "height": 58,
+        "centerX": 389.98,
+        "centerY": 272.16
+      },
+      "hub": {
+        "x": 347.27,
+        "y": 422.95,
+        "width": 85.45,
+        "height": 85.45,
+        "centerX": 389.99,
+        "centerY": 465.68
+      },
+      "chamber": {
+        "x": 144.49,
+        "y": 167.31,
+        "width": 491.02,
+        "height": 491.02,
+        "centerX": 390,
+        "centerY": 412.82
+      },
+      "entrant": {
+        "x": 247,
+        "y": 144,
+        "width": 286,
+        "height": 51,
+        "centerX": 390,
+        "centerY": 169.5
+      },
+      "inspector": {
+        "x": 706.41,
+        "y": 127,
+        "width": 282,
+        "height": 454.13,
+        "centerX": 847.41,
+        "centerY": 354.06
+      },
+      "centerDelta": {
+        "wheel": -0.01,
+        "disc": -0.01,
+        "pointer": -0.02,
+        "hub": -0.01,
+        "chamber": 0
+      },
+      "documentOverflowX": 0
+    },
+    {
+      "label": "responsive-768x1024",
+      "viewport": "768x1024",
+      "arena": {
+        "x": 84.19,
+        "y": 174,
+        "width": 653.63,
+        "height": 680,
+        "centerX": 411,
+        "centerY": 514
+      },
+      "wheel": {
+        "x": 151,
+        "y": 267,
+        "width": 520,
+        "height": 520,
+        "centerX": 411,
+        "centerY": 527
+      },
+      "disc": {
+        "x": 198.31,
+        "y": 314.31,
+        "width": 425.38,
+        "height": 425.38,
+        "centerX": 411,
+        "centerY": 527
+      },
+      "pointer": {
+        "x": 390,
+        "y": 281,
+        "width": 42,
+        "height": 58,
+        "centerX": 411,
+        "centerY": 310
+      },
+      "hub": {
+        "x": 364.03,
+        "y": 480.03,
+        "width": 93.94,
+        "height": 93.94,
+        "centerX": 411,
+        "centerY": 527
+      },
+      "chamber": {
+        "x": 143.02,
+        "y": 214.8,
+        "width": 535.97,
+        "height": 535.97,
+        "centerX": 411,
+        "centerY": 482.78
+      },
+      "entrant": {
+        "x": 301,
+        "y": 190,
+        "width": 220,
+        "height": 51,
+        "centerX": 411,
+        "centerY": 215.5
+      },
+      "inspector": {
+        "x": 83.19,
+        "y": 871,
+        "width": 655.63,
+        "height": 436.86,
+        "centerX": 411,
+        "centerY": 1089.43
+      },
+      "centerDelta": {
+        "wheel": 0,
+        "disc": 0,
+        "pointer": 0,
+        "hub": 0,
+        "chamber": 0
+      },
+      "documentOverflowX": 0
+    },
+    {
+      "label": "responsive-390x844",
+      "viewport": "390x844",
+      "arena": {
+        "x": 79,
+        "y": 164,
+        "width": 286,
+        "height": 470,
+        "centerX": 222,
+        "centerY": 399
+      },
+      "wheel": {
+        "x": 89.02,
+        "y": 282.02,
+        "width": 265.97,
+        "height": 265.97,
+        "centerX": 222,
+        "centerY": 415
+      },
+      "disc": {
+        "x": 113.22,
+        "y": 306.22,
+        "width": 217.56,
+        "height": 217.56,
+        "centerX": 222,
+        "centerY": 415
+      },
+      "pointer": {
+        "x": 201,
+        "y": 296.02,
+        "width": 42,
+        "height": 58,
+        "centerX": 222,
+        "centerY": 325.02
+      },
+      "hub": {
+        "x": 197.98,
+        "y": 390.98,
+        "width": 48.05,
+        "height": 48.05,
+        "centerX": 222,
+        "centerY": 415
+      },
+      "chamber": {
+        "x": 104.74,
+        "y": 192.19,
+        "width": 234.52,
+        "height": 234.52,
+        "centerX": 222,
+        "centerY": 309.45
+      },
+      "entrant": {
+        "x": 138,
+        "y": 228,
+        "width": 168,
+        "height": 42,
+        "centerX": 222,
+        "centerY": 249
+      },
+      "inspector": {
+        "x": 78,
+        "y": 651,
+        "width": 288,
+        "height": 454.13,
+        "centerX": 222,
+        "centerY": 878.06
+      },
+      "centerDelta": {
+        "wheel": 0,
+        "disc": 0,
+        "pointer": 0,
+        "hub": 0,
+        "chamber": 0
+      },
+      "documentOverflowX": 0
+    }
+  ],
+  "checks": {
+    "titleSelector": {
+      "separateDeckRows": 0,
+      "trigger": 1,
+      "options": 6,
+      "switchedTo": "VIP Draw",
+      "keyboardSwitchedTo": "Bonus Round",
+      "singleWheelTrigger": 0
+    },
+    "collapsedInspectorWidth": 44,
+    "appearancePresetCards": 5,
+    "gridHardware": 4,
+    "spinningEntrant": "Marisol",
+    "winnerOverlay": 1,
+    "mobileCollapsedInspectorHidden": true,
+    "mobileInspectorLauncher": true,
+    "reducedMotion": {
+      "ambient": "1e-05s",
+      "trim": "1e-05s",
+      "transition": "1e-05s"
+    },
+    "popout": {
+      "placeholder": 1,
+      "sharedChassis": 1,
+      "currentEntrant": 1,
+      "docked": true
+    },
+    "stageParity": {
+      "chassis": 1,
+      "currentEntrant": 1,
+      "titleOverlay": 1,
+      "inspector": 0,
+      "preset": "prism_grid",
+      "overflowX": 0
+    },
+    "stageMobileOverflowX": 0,
+    "smokeRoutes": {
+      "/": {
+        "status": 200,
+        "rendered": true
+      },
+      "/wheels": {
+        "status": 200,
+        "rendered": true
+      },
+      "/wheels/qa-wheel-set": {
+        "status": 200,
+        "rendered": true
+      },
+      "/wheels/qa-wheel-set/stage": {
+        "status": 200,
+        "rendered": true
+      }
+    }
+  },
+  "performance": {
+    "focusDom": 226,
+    "hardwareElements": 11,
+    "ambientElements": 7,
+    "titleToggleMs": 100.5,
+    "modeSwitchMs": 14.9
+  },
+  "errors": []
+}

@@ -4,6 +4,14 @@
   const DEFAULT_CENTER_IMAGE = "/assets/placeholders/wheelcenterdefault.webp";
   const API_BASE = String(window.StreamSuitesPublicConfig?.AUTH_API_BASE || "https://api.streamsuites.app").replace(/\/$/, "");
   const VIEW_MODES = new Set(["focus", "grid", "results"]);
+  const STAGE_BACKGROUND_PRESETS = Object.freeze([
+    Object.freeze({ id: "cinematic_chamber", name: "Cinematic Chamber" }),
+    Object.freeze({ id: "aurora_vault", name: "Aurora Vault" }),
+    Object.freeze({ id: "prism_grid", name: "Prism Grid" }),
+    Object.freeze({ id: "eclipse_halo", name: "Eclipse Halo" })
+  ]);
+  const STAGE_BACKGROUND_PRESET_IDS = new Set(STAGE_BACKGROUND_PRESETS.map((preset) => preset.id));
+  let wheelGraphicSequence = 0;
   const SOUND_LIBRARY = Object.freeze({
     music: ["music0.mp3", "music1.mp3", "music2.mp3", "music3.mp3", "music4.mp3", "music5.mp3", "music6.mp3"],
     startspin: ["startspin0.mp3", "startspin1.mp3", "startspin2.mp3"],
@@ -32,6 +40,45 @@
 
   function text(value, fallback = "") {
     return String(value ?? "").trim() || fallback;
+  }
+
+  function normalizedColor(value, fallback) {
+    const candidate = text(value);
+    return /^#[0-9a-f]{6}$/i.test(candidate) ? candidate.toLowerCase() : fallback;
+  }
+
+  function safeStageImageUrl(value) {
+    const candidate = text(value);
+    if (!candidate || /[?#]/.test(candidate) || /^(?:blob:|data:|javascript:)/i.test(candidate)) return "";
+    if (/^\/api\/public\/wheel-media\/[A-Za-z0-9_-]+\/whl_[A-Za-z0-9_-]+\/[a-f0-9]{32}\.webp$/i.test(candidate)) return candidate;
+    try {
+      const parsed = new URL(candidate);
+      return parsed.protocol === "https:" && /^\/api\/public\/wheel-media\/[A-Za-z0-9_-]+\/whl_[A-Za-z0-9_-]+\/[a-f0-9]{32}\.webp$/i.test(parsed.pathname)
+        ? candidate
+        : "";
+    } catch (_error) {
+      return "";
+    }
+  }
+
+  function shadeHex(value, amount) {
+    const hex = normalizedColor(value, "#64748b").slice(1);
+    const channels = [0, 2, 4].map((offset) => parseInt(hex.slice(offset, offset + 2), 16));
+    const shifted = channels.map((channel) => Math.max(0, Math.min(255, Math.round(channel + (amount * 255)))));
+    return `#${shifted.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
+  }
+
+  function readLocalFlag(key, fallback = false) {
+    try {
+      const value = window.localStorage.getItem(key);
+      return value === null ? fallback : value === "true";
+    } catch (_error) {
+      return fallback;
+    }
+  }
+
+  function writeLocalFlag(key, value) {
+    try { window.localStorage.setItem(key, value ? "true" : "false"); } catch (_error) { /* Presentation state remains optional. */ }
   }
 
   function entryName(entry) {
@@ -98,6 +145,11 @@
         show_display_names_on_slices: presentation.show_display_names_on_slices !== false,
         slice_label_mode: ["full_name", "initials", "avatar"].includes(text(presentation.slice_label_mode)) ? text(presentation.slice_label_mode) : "full_name",
         center_image_url: text(presentation.center_image_url || presentation.centerImageUrl, DEFAULT_CENTER_IMAGE),
+        stage_background_preset: STAGE_BACKGROUND_PRESET_IDS.has(text(presentation.stage_background_preset || presentation.stageBackgroundPreset))
+          ? text(presentation.stage_background_preset || presentation.stageBackgroundPreset)
+          : "cinematic_chamber",
+        stage_background_color: normalizedColor(presentation.stage_background_color || presentation.stageBackgroundColor, "#38bdf8"),
+        stage_background_image_url: safeStageImageUrl(presentation.stage_background_image_url || presentation.stageBackgroundImageUrl),
         spin_owner_only: presentation.spin_owner_only === true || presentation.spinOwnerOnly === true,
         slow_drift_enabled: presentation.slow_drift_enabled !== false,
         spin_duration_ms: clamp(presentation.spin_duration_ms, 2000, 60000, 8500),
@@ -166,7 +218,7 @@
   }
 
   function createResultState() {
-    return { latestResult: null, history: [], excludedEntrants: new Set(), spinState: "idle", rotation: 0 };
+    return { latestResult: null, history: [], excludedEntrants: new Set(), spinState: "idle", rotation: 0, currentEntrantId: "", traversalTimer: 0 };
   }
 
   function serializeResultState(result) {
@@ -175,7 +227,8 @@
       history: result.history.map((entry) => ({ ...entry })),
       excludedEntrants: [...result.excludedEntrants],
       spinState: result.spinState,
-      rotation: result.rotation
+      rotation: result.rotation,
+      currentEntrantId: result.currentEntrantId
     };
   }
 
@@ -185,7 +238,9 @@
       history: Array.isArray(value?.history) ? value.history.map((entry) => ({ ...entry })) : [],
       excludedEntrants: new Set(Array.isArray(value?.excludedEntrants) ? value.excludedEntrants : []),
       spinState: text(value?.spinState, "idle"),
-      rotation: Number(value?.rotation) || 0
+      rotation: Number(value?.rotation) || 0,
+      currentEntrantId: text(value?.currentEntrantId),
+      traversalTimer: 0
     };
   }
 
@@ -206,6 +261,14 @@
     return { x: cx + radius * Math.cos(radians), y: cy + radius * Math.sin(radians) };
   }
 
+  function radialLabelRotation(angle) {
+    let rotation = (((Number(angle) || 0) + 90) % 360 + 360) % 360;
+    if (rotation > 180) rotation -= 360;
+    if (rotation > 90) rotation -= 180;
+    if (rotation < -90) rotation += 180;
+    return rotation;
+  }
+
   function slicePath(start, end) {
     const from = polar(240, 240, 214, start);
     const to = polar(240, 240, 214, end);
@@ -217,18 +280,46 @@
     const total = entries.reduce((sum, entry) => sum + effectiveWeight(entry), 0) || 1;
     const svg = svgElement("svg", { viewBox: "0 0 480 480", role: "img", "aria-label": `${wheel.name}, ${entries.length} eligible entrants` });
     svg.classList.add("wheel-svg");
+    const graphicId = `wheel-${++wheelGraphicSequence}`;
+    const defs = svgElement("defs");
+    const gloss = svgElement("radialGradient", { id: `${graphicId}-gloss`, cx: "34%", cy: "22%", r: "78%" });
+    gloss.append(
+      svgElement("stop", { offset: "0%", "stop-color": "#ffffff", "stop-opacity": "0.34" }),
+      svgElement("stop", { offset: "42%", "stop-color": "#ffffff", "stop-opacity": "0.04" }),
+      svgElement("stop", { offset: "100%", "stop-color": "#02050b", "stop-opacity": "0.42" })
+    );
+    defs.appendChild(gloss);
+    const centerClip = svgElement("clipPath", { id: `${graphicId}-center-clip` });
+    centerClip.appendChild(svgElement("circle", { cx: 240, cy: 240, r: compact ? 37 : 45 }));
+    defs.appendChild(centerClip);
+    svg.append(defs, svgElement("circle", { cx: 240, cy: 240, r: 220, fill: "#050a12" }));
     let angle = 0;
     entries.forEach((entry, index) => {
       const sweep = (effectiveWeight(entry) / total) * 360;
       const group = svgElement("g", { "data-wheel-entry-id": entry.entryId });
       group.classList.add("wheel-slice-group");
-      const path = svgElement("path", { d: slicePath(angle, angle + sweep), fill: entry.color || wheel.palette.segment_colors[index % Math.max(1, wheel.palette.segment_colors.length)] || "#64748b" });
+      const sliceColor = normalizedColor(entry.color || wheel.palette.segment_colors[index % Math.max(1, wheel.palette.segment_colors.length)], "#64748b");
+      const gradientId = `${graphicId}-slice-${index}`;
+      const gradient = svgElement("radialGradient", { id: gradientId, cx: "38%", cy: "28%", r: "82%" });
+      gradient.append(
+        svgElement("stop", { offset: "0%", "stop-color": shadeHex(sliceColor, 0.16) }),
+        svgElement("stop", { offset: "55%", "stop-color": sliceColor }),
+        svgElement("stop", { offset: "100%", "stop-color": shadeHex(sliceColor, -0.24) })
+      );
+      defs.appendChild(gradient);
+      const path = svgElement("path", {
+        d: slicePath(angle, angle + sweep),
+        fill: `url(#${gradientId})`,
+        stroke: "rgba(3, 8, 15, 0.64)",
+        "stroke-width": compact ? 2.4 : 3.2,
+        "stroke-linejoin": "round"
+      });
       path.classList.add("wheel-slice");
       group.appendChild(path);
       if (!compact && wheel.presentation.show_display_names_on_slices !== false && sweep >= 9) {
         const mid = angle + sweep / 2;
         const labelPoint = polar(240, 240, 145, mid);
-        const label = svgElement("text", { x: labelPoint.x, y: labelPoint.y, fill: wheel.palette.text_color, "text-anchor": "middle", transform: `rotate(${mid} ${labelPoint.x} ${labelPoint.y})` });
+        const label = svgElement("text", { x: labelPoint.x, y: labelPoint.y, fill: wheel.palette.text_color, "text-anchor": "middle", transform: `rotate(${radialLabelRotation(mid)} ${labelPoint.x} ${labelPoint.y})` });
         const name = wheel.presentation.slice_label_mode === "initials"
           ? entryName(entry).split(/\s+/).map((part) => part[0]).join("").slice(0, 3).toUpperCase()
           : entryName(entry).slice(0, compact ? 8 : 16);
@@ -238,13 +329,28 @@
       svg.appendChild(group);
       angle += sweep;
     });
-    svg.appendChild(svgElement("circle", { cx: 240, cy: 240, r: 218, fill: "none", stroke: wheel.palette.trim_color, "stroke-width": compact ? 8 : 12 }));
-    const center = svgElement("circle", { cx: 240, cy: 240, r: compact ? 46 : 54, fill: wheel.palette.background_color, stroke: wheel.palette.accent_color, "stroke-width": 8 });
-    svg.appendChild(center);
+    svg.append(
+      svgElement("circle", { class: "wheel-disc-gloss", cx: 240, cy: 240, r: 214, fill: `url(#${graphicId}-gloss)` }),
+      svgElement("circle", { class: "wheel-disc-vignette", cx: 240, cy: 240, r: 215, fill: "none", stroke: "rgba(2, 6, 12, 0.7)", "stroke-width": compact ? 14 : 18 }),
+      svgElement("circle", { cx: 240, cy: 240, r: 218, fill: "none", stroke: wheel.palette.trim_color, "stroke-width": compact ? 7 : 10 }),
+      svgElement("circle", { cx: 240, cy: 240, r: 211, fill: "none", stroke: "rgba(255,255,255,0.24)", "stroke-width": 2 }),
+      svgElement("circle", { class: "wheel-hub-shadow", cx: 240, cy: 240, r: compact ? 48 : 58, fill: "#02050a", stroke: "rgba(0,0,0,0.72)", "stroke-width": 10 }),
+      svgElement("circle", { class: "wheel-hub-bezel", cx: 240, cy: 240, r: compact ? 44 : 53, fill: wheel.palette.background_color, stroke: wheel.palette.accent_color, "stroke-width": compact ? 5 : 7 }),
+      svgElement("circle", { cx: 240, cy: 240, r: compact ? 39 : 47, fill: "rgba(7,12,21,0.88)", stroke: "rgba(255,255,255,0.18)", "stroke-width": 2 })
+    );
     if (wheel.presentation.center_image_url) {
-      const image = svgElement("image", { href: wheel.presentation.center_image_url, x: compact ? 202 : 194, y: compact ? 202 : 194, width: compact ? 76 : 92, height: compact ? 76 : 92, preserveAspectRatio: "xMidYMid slice" });
+      const image = svgElement("image", {
+        href: wheel.presentation.center_image_url,
+        x: compact ? 203 : 195,
+        y: compact ? 203 : 195,
+        width: compact ? 74 : 90,
+        height: compact ? 74 : 90,
+        preserveAspectRatio: "xMidYMid slice",
+        "clip-path": `url(#${graphicId}-center-clip)`
+      });
       svg.appendChild(image);
     }
+    svg.appendChild(svgElement("circle", { class: "wheel-hub-highlight", cx: 226, cy: 224, r: compact ? 17 : 21, fill: "rgba(255,255,255,0.1)" }));
     return svg;
   }
 
@@ -254,6 +360,7 @@
     const isOwner = options.isOwner === true;
     const sessionId = text(options.sessionId || new URLSearchParams(window.location.search).get("session"));
     const sourceId = crypto.randomUUID?.() || `src-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const presentationStateKey = `streamsuites.wheel.presentation.${artifact.artifactCode}`;
     const root = element("article", `wheel-workspace${stageMode ? " wheel-workspace--stage" : ""}`);
     root.dataset.wheelWorkspace = stageMode ? "stage" : "detail";
     root.dataset.artifactCode = artifact.artifactCode;
@@ -276,7 +383,9 @@
       destroyed: false,
       modalCleanup: null,
       lastFocus: null,
-      renderCleanups: []
+      renderCleanups: [],
+      inspectorCollapsed: readLocalFlag(`${presentationStateKey}.inspector`, false),
+      titleCollapsed: readLocalFlag(`${presentationStateKey}.title`, false)
     };
     artifact.wheelSet.wheels.forEach((wheel) => state.resultsByWheel.set(wheel.wheelId, createResultState()));
 
@@ -389,6 +498,10 @@
     function clearScheduledTimers() {
       state.timers.forEach((timer) => window.clearTimeout(timer));
       state.timers.clear();
+      state.resultsByWheel.forEach((result) => {
+        if (result.traversalTimer) window.clearTimeout(result.traversalTimer);
+        result.traversalTimer = 0;
+      });
     }
 
     function eligibleEntries(wheel) {
@@ -409,6 +522,41 @@
       if (result.spinState === "spinning") return false;
       if (result.history.length >= wheel.winnerLimit) return false;
       return eligibleEntries(wheel).length > 0;
+    }
+
+    function entrantForState(wheel, result) {
+      const entrantIdValue = result.currentEntrantId || result.latestResult?.entryId || "";
+      return wheel.entries.find((entry) => entry.entryId === entrantIdValue) || null;
+    }
+
+    function updateCurrentEntrantSurfaces(wheel) {
+      const result = resultFor(wheel.wheelId);
+      const entrant = entrantForState(wheel, result);
+      root.querySelectorAll(`[data-wheel-render-id="${CSS.escape(wheel.wheelId)}"]`).forEach((surface) => {
+        const value = surface.querySelector(".wheel-current-entrant__value");
+        if (value) value.textContent = result.spinState === "idle" && !entrant ? "Ready" : entrant ? entryName(entrant) : "Ready";
+        const card = surface.querySelector(".wheel-entry-detail-card");
+        if (card) renderEntrantDetailCard(card, wheel, entrant, result);
+      });
+      root.querySelectorAll(`.wheel-quick-inspector[data-wheel-id="${CSS.escape(wheel.wheelId)}"] .wheel-entry-detail-card`).forEach((card) => {
+        renderEntrantDetailCard(card, wheel, entrant, result);
+      });
+    }
+
+    function startEntrantTraversal(wheel, duration) {
+      const result = resultFor(wheel.wheelId);
+      const entries = eligibleEntries(wheel);
+      if (!entries.length || duration <= 0) return;
+      let index = Math.max(0, entries.findIndex((entry) => entry.entryId === result.currentEntrantId));
+      const cadence = Math.max(110, Math.min(220, Math.round(duration / Math.max(18, entries.length * 4))));
+      const tick = () => {
+        if (result.spinState !== "spinning") return;
+        result.currentEntrantId = entries[index % entries.length].entryId;
+        index += 1;
+        updateCurrentEntrantSurfaces(wheel);
+        result.traversalTimer = window.setTimeout(tick, cadence);
+      };
+      tick();
     }
 
     function recordWinner(wheel, winner, runId, mode) {
@@ -433,6 +581,9 @@
       result.history.push(record);
       if (wheel.autoRemoveWinner) result.excludedEntrants.add(winner.entryId);
       result.spinState = "winner";
+      result.currentEntrantId = winner.entryId;
+      if (result.traversalTimer) window.clearTimeout(result.traversalTimer);
+      result.traversalTimer = 0;
       return record;
     }
 
@@ -443,6 +594,7 @@
       if (!winner) return false;
       result.spinState = "spinning";
       const entries = eligibleEntries(wheel);
+      result.currentEntrantId = entries[0]?.entryId || "";
       const total = entries.reduce((sum, entry) => sum + effectiveWeight(entry), 0) || 1;
       let cursor = 0;
       let winnerMid = 0;
@@ -459,6 +611,7 @@
       announce(`${wheel.name} is spinning.`);
       const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches || wheel.presentation.animation_enabled === false;
       const duration = reduced ? 0 : clamp(wheel.presentation.spin_duration_ms, 2000, 12000, 8500);
+      startEntrantTraversal(wheel, duration);
       if (!reduced) {
         const selector = `[data-wheel-render-id="${CSS.escape(wheel.wheelId)}"] .wheel-spin-disc, [data-wheel-render-id="${CSS.escape(wheel.wheelId)}"] .wheel-grid-disc`;
         root.querySelectorAll(selector).forEach((disc) => {
@@ -490,6 +643,7 @@
       clearScheduledTimers();
       state.resultsByWheel.forEach((result) => {
         if (result.spinState === "spinning") result.spinState = result.latestResult ? "winner" : "idle";
+        if (result.spinState === "idle") result.currentEntrantId = "";
       });
     }
 
@@ -547,11 +701,11 @@
       publish("state");
     }
 
-    function selectWheel(wheelId, focusCard = false) {
+    function selectWheel(wheelId, focusSelector = false) {
       if (!state.authoritativeWheelSet.wheels.some((wheel) => wheel.wheelId === wheelId)) return;
       state.selectedWheelId = wheelId;
       render();
-      if (focusCard) root.querySelector(`[data-wheel-deck-id="${CSS.escape(wheelId)}"]`)?.focus();
+      if (focusSelector) root.querySelector(".wheel-title-selector")?.focus();
       publish("state");
     }
 
@@ -603,83 +757,6 @@
         tabs.appendChild(button);
       });
       return tabs;
-    }
-
-    function buildDeck() {
-      const section = element("section", "wheel-deck has-overflow");
-      section.setAttribute("aria-label", "Wheel deck");
-      const previous = element("button", "wheel-deck-nav", "‹");
-      previous.type = "button";
-      previous.setAttribute("aria-label", "Scroll wheel deck left");
-      const viewport = element("div", "wheel-deck-viewport");
-      viewport.setAttribute("role", "listbox");
-      viewport.setAttribute("aria-label", "Select a wheel to view");
-      state.authoritativeWheelSet.wheels.forEach((wheel, index) => {
-        const result = resultFor(wheel.wheelId);
-        const card = element("button", `wheel-deck-card${state.selectedWheelId === wheel.wheelId ? " is-selected" : ""}`);
-        card.type = "button";
-        card.dataset.wheelDeckId = wheel.wheelId;
-        card.setAttribute("role", "option");
-        card.setAttribute("aria-selected", state.selectedWheelId === wheel.wheelId ? "true" : "false");
-        card.tabIndex = state.selectedWheelId === wheel.wheelId ? 0 : -1;
-        const signature = element("span", "wheel-deck-signature");
-        signature.style.background = `linear-gradient(135deg, ${wheel.palette.accent_color}, ${wheel.palette.glow_color})`;
-        const copy = element("span", "wheel-deck-copy");
-        copy.append(element("strong", "", wheel.name), element("small", "", `${wheel.entries.length} entrants${result.latestResult ? ` · ${result.latestResult.winner}` : ""}`));
-        card.append(signature, copy);
-        if (state.authorityDefaultWheelId === wheel.wheelId) {
-          const marker = element("span", "wheel-deck-default", "★");
-          marker.setAttribute("aria-label", "Saved default wheel");
-          marker.title = "Saved default wheel";
-          card.appendChild(marker);
-        }
-        if (result.latestResult) {
-          const marker = element("span", "wheel-deck-result");
-          marker.setAttribute("aria-label", "Has a local result");
-          marker.title = "Has a local result";
-          card.appendChild(marker);
-        }
-        card.addEventListener("click", () => selectWheel(wheel.wheelId));
-        card.addEventListener("keydown", (event) => {
-          const last = state.authoritativeWheelSet.wheels.length - 1;
-          let target = index;
-          if (event.key === "ArrowRight") target = Math.min(last, index + 1);
-          else if (event.key === "ArrowLeft") target = Math.max(0, index - 1);
-          else if (event.key === "Home") target = 0;
-          else if (event.key === "End") target = last;
-          else return;
-          event.preventDefault();
-          selectWheel(state.authoritativeWheelSet.wheels[target].wheelId, true);
-        });
-        viewport.appendChild(card);
-      });
-      const next = element("button", "wheel-deck-nav", "›");
-      next.type = "button";
-      next.setAttribute("aria-label", "Scroll wheel deck right");
-      const syncOverflow = () => {
-        const overflow = viewport.scrollWidth > viewport.clientWidth + 2;
-        section.classList.toggle("has-overflow", overflow);
-        previous.hidden = !overflow;
-        next.hidden = !overflow;
-        previous.disabled = !overflow || viewport.scrollLeft <= 2;
-        next.disabled = !overflow || viewport.scrollLeft + viewport.clientWidth >= viewport.scrollWidth - 2;
-      };
-      let settleTimer = 0;
-      const scheduleOverflowSync = () => {
-        window.clearTimeout(settleTimer);
-        settleTimer = window.setTimeout(syncOverflow, 260);
-      };
-      previous.addEventListener("click", () => { viewport.scrollBy({ left: -240, behavior: "smooth" }); scheduleOverflowSync(); });
-      next.addEventListener("click", () => { viewport.scrollBy({ left: 240, behavior: "smooth" }); scheduleOverflowSync(); });
-      viewport.addEventListener("scrollend", syncOverflow, { passive: true });
-      section.append(previous, viewport, next);
-      const frame = window.requestAnimationFrame(syncOverflow);
-      registerRenderCleanup(() => {
-        window.cancelAnimationFrame(frame);
-        window.clearTimeout(settleTimer);
-        viewport.removeEventListener("scrollend", syncOverflow);
-      });
-      return section;
     }
 
     function productionIcon(asset) {
@@ -837,33 +914,190 @@
       return toolbar;
     }
 
+    function applyStageAppearance(node, wheel) {
+      node.dataset.stagePreset = wheel.presentation.stage_background_preset;
+      node.classList.toggle("has-custom-stage-image", Boolean(wheel.presentation.stage_background_image_url));
+      node.style.setProperty("--wheel-trim-color", wheel.palette.trim_color);
+      node.style.setProperty("--wheel-glow-color", wheel.palette.glow_color);
+      node.style.setProperty("--wheel-stage-color", wheel.presentation.stage_background_color);
+    }
+
+    function buildStageAtmosphere(wheel) {
+      const atmosphere = element("div", "wheel-arena-atmosphere");
+      atmosphere.setAttribute("aria-hidden", "true");
+      const customImage = element("div", "wheel-stage-custom-image");
+      if (wheel.presentation.stage_background_image_url) {
+        customImage.style.backgroundImage = `url("${wheel.presentation.stage_background_image_url.replace(/["\\]/g, "")}")`;
+      }
+      atmosphere.append(
+        customImage,
+        element("div", "wheel-arena-backplate"),
+        element("div", "wheel-arena-beam wheel-arena-beam--left"),
+        element("div", "wheel-arena-beam wheel-arena-beam--right"),
+        element("div", "wheel-arena-portal"),
+        element("div", "wheel-arena-floor"),
+        element("div", "wheel-arena-reflection")
+      );
+      return atmosphere;
+    }
+
+    function buildWheelAssembly(wheel, result, compact = false) {
+      const assembly = element("div", compact ? "wheel-grid-assembly" : "wheel-stage-assembly");
+      const trim = element("div", compact ? "wheel-grid-trim" : "wheel-stage-trim");
+      trim.dataset.state = result.spinState;
+      const disc = element("div", compact ? "wheel-grid-disc" : "wheel-spin-disc wheel-spin-disc-premium");
+      disc.style.transform = `rotate(${result.rotation}deg)`;
+      disc.appendChild(buildWheelGraphic(wheel, compact));
+      const pointer = element("div", compact ? "wheel-grid-pointer-hardware" : "wheel-hardware-pointer");
+      pointer.append(element("span", "wheel-pointer-mount"), element("span", "wheel-pointer-tip"));
+      assembly.append(
+        element("div", compact ? "wheel-grid-shadow" : "wheel-stage-ground-shadow"),
+        element("div", compact ? "wheel-grid-chassis" : "wheel-stage-aura"),
+        ...(compact ? [] : [
+          element("div", "wheel-stage-chassis"),
+          element("div", "wheel-stage-outer-groove"),
+          element("div", "wheel-stage-marker-ring"),
+          element("div", "wheel-stage-light-ring"),
+          element("div", "wheel-stage-reflective-edge")
+        ]),
+        trim,
+        ...(compact ? [] : [element("div", "wheel-stage-inner-bezel")]),
+        disc,
+        pointer
+      );
+      return assembly;
+    }
+
+    function buildTitleOverlay(wheel) {
+      const overlay = element("section", `wheel-title-overlay${state.titleCollapsed ? " is-collapsed" : ""}`);
+      overlay.id = `wheel-stage-title-${sourceId}`;
+      const multipleWheels = state.authoritativeWheelSet.wheels.length > 1;
+      const copy = element(multipleWheels ? "button" : "div", `wheel-title-overlay__copy${multipleWheels ? " wheel-title-selector" : ""}`);
+      if (multipleWheels) {
+        copy.type = "button";
+        copy.setAttribute("aria-haspopup", "listbox");
+        copy.setAttribute("aria-expanded", "false");
+        copy.setAttribute("aria-controls", `${overlay.id}-selector`);
+        copy.setAttribute("aria-label", `Select wheel. Current wheel: ${wheel.name}`);
+      }
+      const heading = element("span", "wheel-arena-title", wheel.name);
+      heading.setAttribute("role", "heading");
+      heading.setAttribute("aria-level", "1");
+      copy.append(
+        element("span", "wheel-console-eyebrow", multipleWheels ? "Select wheel" : "Wheel arena"),
+        heading,
+        element("small", "", wheel.presentation.spin_owner_only ? "Owner controls spins" : "Public local session")
+      );
+      if (multipleWheels) copy.appendChild(element("span", "wheel-title-selector__chevron"));
+      const toggle = element("button", "wheel-title-overlay__toggle", state.titleCollapsed ? "Expand title" : "Collapse title");
+      toggle.type = "button";
+      toggle.setAttribute("aria-expanded", state.titleCollapsed ? "false" : "true");
+      toggle.setAttribute("aria-controls", overlay.id);
+      toggle.addEventListener("click", () => {
+        state.titleCollapsed = !state.titleCollapsed;
+        writeLocalFlag(`${presentationStateKey}.title`, state.titleCollapsed);
+        render();
+      });
+      overlay.append(copy, toggle);
+      if (multipleWheels) {
+        const listbox = element("div", "wheel-title-selector__menu");
+        listbox.id = `${overlay.id}-selector`;
+        listbox.setAttribute("role", "listbox");
+        listbox.setAttribute("aria-label", "Select a wheel to view");
+        listbox.hidden = true;
+        const options = [];
+        state.authoritativeWheelSet.wheels.forEach((candidate) => {
+          const result = resultFor(candidate.wheelId);
+          const option = element("button", `wheel-title-selector__option${candidate.wheelId === state.selectedWheelId ? " is-selected" : ""}`);
+          option.type = "button";
+          option.setAttribute("role", "option");
+          option.setAttribute("aria-selected", candidate.wheelId === state.selectedWheelId ? "true" : "false");
+          option.tabIndex = -1;
+          const signature = element("span", "wheel-title-selector__signature");
+          signature.style.background = `linear-gradient(135deg, ${candidate.palette.accent_color}, ${candidate.palette.glow_color})`;
+          const optionCopy = element("span", "wheel-title-selector__option-copy");
+          optionCopy.append(
+            element("strong", "", candidate.name),
+            element("small", "", `${candidate.entries.length} entrants${result.latestResult ? ` · ${result.latestResult.winner}` : ""}`)
+          );
+          const markers = element("span", "wheel-title-selector__markers");
+          if (state.authorityDefaultWheelId === candidate.wheelId) markers.appendChild(element("span", "", "Default"));
+          if (result.latestResult) {
+            const resultMarker = element("i");
+            resultMarker.setAttribute("aria-label", "Has a local result");
+            resultMarker.title = "Has a local result";
+            markers.appendChild(resultMarker);
+          }
+          option.append(signature, optionCopy, markers);
+          option.addEventListener("click", () => {
+            selectWheel(candidate.wheelId, true);
+            announce(`${candidate.name} selected.`);
+          });
+          options.push(option);
+          listbox.appendChild(option);
+        });
+        const closeSelector = (restoreFocus = false) => {
+          listbox.hidden = true;
+          copy.setAttribute("aria-expanded", "false");
+          overlay.classList.remove("is-selector-open");
+          if (restoreFocus) copy.focus();
+        };
+        const openSelector = (focusIndex = state.authoritativeWheelSet.wheels.findIndex((candidate) => candidate.wheelId === state.selectedWheelId)) => {
+          listbox.hidden = false;
+          copy.setAttribute("aria-expanded", "true");
+          overlay.classList.add("is-selector-open");
+          options[Math.max(0, Math.min(options.length - 1, focusIndex))]?.focus();
+        };
+        copy.addEventListener("click", () => listbox.hidden ? openSelector() : closeSelector(false));
+        copy.addEventListener("keydown", (event) => {
+          if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+          event.preventDefault();
+          openSelector(event.key === "ArrowUp" || event.key === "End" ? options.length - 1 : 0);
+        });
+        options.forEach((option, index) => option.addEventListener("keydown", (event) => {
+          let target = index;
+          if (event.key === "ArrowDown" || event.key === "ArrowRight") target = (index + 1) % options.length;
+          else if (event.key === "ArrowUp" || event.key === "ArrowLeft") target = (index - 1 + options.length) % options.length;
+          else if (event.key === "Home") target = 0;
+          else if (event.key === "End") target = options.length - 1;
+          else if (event.key === "Escape" || event.key === "Tab") { closeSelector(event.key === "Escape"); return; }
+          else return;
+          event.preventDefault();
+          options[target]?.focus();
+        }));
+        const outside = (event) => { if (!overlay.contains(event.target)) closeSelector(false); };
+        document.addEventListener("pointerdown", outside);
+        registerRenderCleanup(() => document.removeEventListener("pointerdown", outside));
+        overlay.appendChild(listbox);
+      }
+      return overlay;
+    }
+
+    function buildCurrentEntrantIndicator(wheel, result) {
+      const entrant = entrantForState(wheel, result);
+      const indicator = element("div", "wheel-current-entrant");
+      indicator.append(
+        element("span", "wheel-current-entrant__eyebrow", "Current entrant"),
+        element("strong", "wheel-current-entrant__value", result.spinState === "idle" && !entrant ? "Ready" : entrant ? entryName(entrant) : "Ready")
+      );
+      return indicator;
+    }
+
     function buildFocus() {
       const wheel = selectedWheel();
       const result = resultFor(wheel.wheelId);
       const arena = element("section", "wheel-arena-card wheel-focus-arena");
       arena.dataset.wheelRenderId = wheel.wheelId;
-      arena.style.setProperty("--wheel-trim-color", wheel.palette.trim_color);
-      arena.style.setProperty("--wheel-glow-color", wheel.palette.glow_color);
-      const header = element("header", "wheel-arena-header");
-      const heading = element("div", "wheel-arena-heading");
-      heading.append(element("span", "wheel-console-eyebrow", "Wheel arena"), element("h1", "wheel-arena-title", wheel.name));
-      header.append(heading, element("span", "wheel-console-policy-chip", wheel.presentation.spin_owner_only ? "Owner controls spins" : "Public local session"));
+      applyStageAppearance(arena, wheel);
       const stage = element("div", "wheel-spin-stage wheel-spin-stage-premium");
       stage.dataset.state = result.spinState;
-      const atmosphere = element("div", "wheel-arena-atmosphere");
-      atmosphere.setAttribute("aria-hidden", "true");
-      atmosphere.append(element("div", "wheel-arena-beam wheel-arena-beam--left"), element("div", "wheel-arena-beam wheel-arena-beam--right"), element("div", "wheel-arena-portal"), element("div", "wheel-arena-floor"));
-      const assembly = element("div", "wheel-stage-assembly");
-      const trim = element("div", "wheel-stage-trim");
-      trim.dataset.state = result.spinState;
-      const disc = element("div", "wheel-spin-disc wheel-spin-disc-premium");
-      disc.style.transform = `rotate(${result.rotation}deg)`;
-      disc.appendChild(buildWheelGraphic(wheel));
-      assembly.append(element("div", "wheel-stage-aura"), element("div", "wheel-stage-chassis"), trim, disc, element("div", "wheel-hardware-pointer"));
-      stage.append(atmosphere, assembly);
-      const summary = element("div", "wheel-focus-summary");
-      summary.append(element("strong", "", result.spinState === "spinning" ? "Spinning…" : result.latestResult?.winner || "Ready to spin"), element("span", "", result.latestResult ? `${(result.latestResult.probability * 100).toFixed(1)}% at selection · local result` : `${wheel.entries.length} unique entrants · no backend winner history`));
-      arena.append(header, stage, summary);
+      const summary = element("div", "wheel-focus-summary wheel-stage-status");
+      summary.append(
+        element("strong", "", result.spinState === "spinning" ? "Spinning…" : result.latestResult?.winner || "Ready to spin"),
+        element("span", "", result.latestResult ? `${(result.latestResult.probability * 100).toFixed(1)}% at selection · local result` : `${wheel.entries.length} unique entrants · no backend winner history`)
+      );
+      stage.append(buildStageAtmosphere(wheel), buildCurrentEntrantIndicator(wheel, result), buildWheelAssembly(wheel, result), summary);
+      arena.append(buildTitleOverlay(wheel), stage);
       return arena;
     }
 
@@ -884,10 +1118,10 @@
         const card = element("article", `wheel-grid-card${wheel.wheelId === state.selectedWheelId ? " is-selected" : ""}`);
         card.dataset.wheelRenderId = wheel.wheelId;
         const graphic = element("div", "wheel-grid-graphic");
-        const disc = element("div", "wheel-grid-disc");
-        disc.style.transform = `rotate(${result.rotation}deg)`;
-        disc.appendChild(buildWheelGraphic(wheel, true));
-        graphic.append(disc, element("span", "wheel-grid-pointer"));
+        applyStageAppearance(graphic, wheel);
+        const signature = element("div", "wheel-grid-background-signature");
+        if (wheel.presentation.stage_background_image_url) signature.style.backgroundImage = `url("${wheel.presentation.stage_background_image_url.replace(/["\\]/g, "")}")`;
+        graphic.append(signature, buildWheelAssembly(wheel, result, true));
         const copy = element("div", "wheel-grid-copy");
         copy.append(element("h2", "", wheel.name), element("p", "", `${wheel.entries.length} entrants`), element("strong", "", result.spinState === "spinning" ? "Spinning…" : result.latestResult?.winner || "No local result"));
         const focus = element("button", "wheel-production-secondary", "Select and focus");
@@ -1169,13 +1403,39 @@
     function appearanceModal() {
       const wheel = selectedWheel();
       const draft = structuredClone(wheel);
-      let objectUrl = "";
-      let selectedFile = null;
+      const existingStageImageUrl = wheel.presentation.stage_background_image_url;
+      let centerObjectUrl = "";
+      let stageObjectUrl = "";
+      let selectedCenterFile = null;
+      let selectedStageFile = null;
+      let useCustomBackground = Boolean(existingStageImageUrl);
       openModal("Wheel appearance", `Edit the currently authoritative appearance fields for ${wheel.name}.`, (body) => {
         const layout = element("div", "wheel-appearance-editor");
         const preview = element("div", "wheel-appearance-preview");
         const controls = element("div", "wheel-appearance-controls");
-        function refreshPreview() { preview.replaceChildren(buildWheelGraphic(draft)); }
+        const backgroundStatus = element("p", "wheel-editor-status", "Four system environments are available. Custom images are normalized by Runtime/Auth.");
+        const presetGrid = element("div", "wheel-stage-preset-grid");
+        const customPreset = element("button", "wheel-stage-preset-card wheel-stage-preset-card--custom", "Custom image");
+        customPreset.type = "button";
+
+        function refreshPresetSelection() {
+          presetGrid.querySelectorAll("button[data-preset]").forEach((button) => button.classList.toggle("is-selected", !useCustomBackground && button.dataset.preset === draft.presentation.stage_background_preset));
+          customPreset.classList.toggle("is-selected", useCustomBackground);
+        }
+
+        function refreshPreview() {
+          const arena = element("div", "wheel-appearance-stage-preview");
+          arena.dataset.wheelRenderId = draft.wheelId;
+          applyStageAppearance(arena, draft);
+          const stage = element("div", "wheel-spin-stage wheel-spin-stage-premium");
+          stage.dataset.state = "idle";
+          const previewResult = { spinState: "idle", rotation: 0, latestResult: null, currentEntrantId: "" };
+          stage.append(buildStageAtmosphere(draft), buildCurrentEntrantIndicator(draft, previewResult), buildWheelAssembly(draft, previewResult));
+          arena.appendChild(stage);
+          preview.replaceChildren(arena);
+          refreshPresetSelection();
+        }
+
         [["Accent", "accent_color"], ["Trim", "trim_color"], ["Glow", "glow_color"], ["Background", "background_color"], ["Labels", "text_color"]].forEach(([label, key]) => {
           const field = element("label", "wheel-editor-field");
           const input = element("input"); input.type = "color"; input.value = draft.palette[key];
@@ -1186,26 +1446,104 @@
         ["full_name", "initials", "avatar"].forEach((value) => { const option = element("option", "", value.replace("_", " ")); option.value = value; option.selected = draft.presentation.slice_label_mode === value; labelMode.appendChild(option); });
         labelMode.addEventListener("change", () => { draft.presentation.slice_label_mode = labelMode.value; refreshPreview(); });
         const labelField = element("label", "wheel-editor-field"); labelField.append(element("span", "", "Slice label mode"), labelMode); controls.appendChild(labelField);
+
+        const backgroundHeading = element("div", "wheel-appearance-section-heading");
+        backgroundHeading.append(element("strong", "", "Stage background"), element("span", "", "Child-wheel presentation"));
+        STAGE_BACKGROUND_PRESETS.forEach((preset) => {
+          const card = element("button", "wheel-stage-preset-card");
+          card.type = "button";
+          card.dataset.preset = preset.id;
+          const swatch = element("span", "wheel-stage-preset-card__preview");
+          swatch.dataset.stagePreset = preset.id;
+          swatch.style.setProperty("--wheel-stage-color", draft.presentation.stage_background_color);
+          card.append(swatch, element("strong", "", preset.name));
+          card.addEventListener("click", () => {
+            useCustomBackground = false;
+            draft.presentation.stage_background_preset = preset.id;
+            draft.presentation.stage_background_image_url = "";
+            refreshPreview();
+          });
+          presetGrid.appendChild(card);
+        });
+        customPreset.prepend(element("span", "wheel-stage-preset-card__preview wheel-stage-preset-card__preview--custom"));
+        customPreset.addEventListener("click", () => {
+          useCustomBackground = true;
+          draft.presentation.stage_background_image_url = stageObjectUrl || existingStageImageUrl;
+          refreshPreview();
+        });
+        presetGrid.appendChild(customPreset);
+
+        const stageColourField = element("label", "wheel-editor-field wheel-stage-colour-field");
+        const stageColourPicker = element("input"); stageColourPicker.type = "color"; stageColourPicker.value = draft.presentation.stage_background_color;
+        const stageColourText = element("input"); stageColourText.type = "text"; stageColourText.value = draft.presentation.stage_background_color; stageColourText.pattern = "#[0-9A-Fa-f]{6}"; stageColourText.maxLength = 7;
+        const updateStageColour = (value) => {
+          const normalized = normalizedColor(value, "");
+          if (!normalized) return;
+          draft.presentation.stage_background_color = normalized;
+          stageColourPicker.value = normalized;
+          stageColourText.value = normalized;
+          refreshPreview();
+        };
+        stageColourPicker.addEventListener("input", () => updateStageColour(stageColourPicker.value));
+        stageColourText.addEventListener("change", () => updateStageColour(stageColourText.value));
+        const stageColourControls = element("span", "wheel-stage-colour-controls");
+        stageColourControls.append(stageColourPicker, stageColourText);
+        stageColourField.append(element("span", "", "Stage colour / tint"), stageColourControls);
+
+        const stageDrop = element("label", "wheel-stage-image-drop");
+        const stageFile = element("input"); stageFile.type = "file"; stageFile.accept = "image/png,image/jpeg,image/webp";
+        stageDrop.append(element("strong", "", "Browse or drop a Stage image"), element("span", "", "PNG, JPEG, or WebP · max 5 MiB · landscape preserved"), stageFile);
+        const selectStageFile = (candidate) => {
+          if (!candidate) return;
+          if (candidate.size > 5 * 1024 * 1024 || !["image/png", "image/jpeg", "image/webp"].includes(candidate.type)) {
+            backgroundStatus.textContent = "Choose a decoded PNG, JPEG, or WebP no larger than 5 MiB.";
+            return;
+          }
+          selectedStageFile = candidate;
+          if (stageObjectUrl) URL.revokeObjectURL(stageObjectUrl);
+          stageObjectUrl = URL.createObjectURL(candidate);
+          useCustomBackground = true;
+          draft.presentation.stage_background_image_url = stageObjectUrl;
+          backgroundStatus.textContent = `${candidate.name} is staged locally. Save to upload through Runtime/Auth.`;
+          refreshPreview();
+        };
+        stageFile.addEventListener("change", () => selectStageFile(stageFile.files?.[0]));
+        stageDrop.addEventListener("dragover", (event) => { event.preventDefault(); stageDrop.classList.add("is-dragging"); });
+        stageDrop.addEventListener("dragleave", () => stageDrop.classList.remove("is-dragging"));
+        stageDrop.addEventListener("drop", (event) => { event.preventDefault(); stageDrop.classList.remove("is-dragging"); selectStageFile(event.dataTransfer?.files?.[0]); });
+        const removeStageImage = element("button", "wheel-production-secondary", "Remove custom Stage image");
+        removeStageImage.type = "button";
+        removeStageImage.addEventListener("click", () => {
+          selectedStageFile = null;
+          if (stageObjectUrl) URL.revokeObjectURL(stageObjectUrl);
+          stageObjectUrl = "";
+          useCustomBackground = false;
+          draft.presentation.stage_background_image_url = "";
+          backgroundStatus.textContent = "Custom image removed from the draft. Save to apply the selected system preset.";
+          refreshPreview();
+        });
+
         const fileField = element("label", "wheel-editor-field");
         const file = element("input"); file.type = "file"; file.accept = "image/png,image/jpeg,image/webp";
         file.addEventListener("change", () => {
-          selectedFile = file.files?.[0] || null;
-          if (objectUrl) URL.revokeObjectURL(objectUrl);
-          objectUrl = selectedFile ? URL.createObjectURL(selectedFile) : "";
-          draft.presentation.center_image_url = objectUrl || wheel.presentation.center_image_url;
+          selectedCenterFile = file.files?.[0] || null;
+          if (centerObjectUrl) URL.revokeObjectURL(centerObjectUrl);
+          centerObjectUrl = selectedCenterFile ? URL.createObjectURL(selectedCenterFile) : "";
+          draft.presentation.center_image_url = centerObjectUrl || wheel.presentation.center_image_url;
           refreshPreview();
         });
-        fileField.append(element("span", "", "Centre image · PNG, JPEG, or WebP · max 5 MiB"), file); controls.appendChild(fileField);
+        fileField.append(element("span", "", "Centre image · PNG, JPEG, or WebP · max 5 MiB"), file);
         const urlField = element("label", "wheel-editor-field");
         const url = element("input"); url.type = "url"; url.value = wheel.presentation.center_image_url; url.placeholder = "Existing safe image URL";
-        url.addEventListener("input", () => { if (!selectedFile) { draft.presentation.center_image_url = url.value || DEFAULT_CENTER_IMAGE; refreshPreview(); } });
-        urlField.append(element("span", "", "Centre image URL"), url); controls.appendChild(urlField);
+        url.addEventListener("input", () => { if (!selectedCenterFile) { draft.presentation.center_image_url = url.value || DEFAULT_CENTER_IMAGE; refreshPreview(); } });
+        urlField.append(element("span", "", "Centre image URL"), url);
+        controls.append(backgroundHeading, presetGrid, stageColourField, stageDrop, removeStageImage, backgroundStatus, fileField, urlField);
         const save = element("button", "wheel-production-primary", "Save appearance");
         save.addEventListener("click", async () => {
           const status = modalStatus(body); status.textContent = "Saving…";
           try {
-            if (selectedFile) {
-              const form = new FormData(); form.append("file", selectedFile);
+            if (selectedCenterFile) {
+              const form = new FormData(); form.append("file", selectedCenterFile);
               const response = await fetch(`${API_BASE}/api/creator/wheels/${encodeURIComponent(artifact.artifactCode)}/wheels/${encodeURIComponent(wheel.wheelId)}/center-image`, { method: "POST", credentials: "include", cache: "no-store", headers: { Accept: "application/json" }, body: form });
               const payload = await parseResponse(response);
               if (!response.ok || payload?.success === false) throw new Error(text(payload?.error, `Upload failed (${response.status})`));
@@ -1215,14 +1553,29 @@
             } else {
               draft.presentation.center_image_url = url.value || DEFAULT_CENTER_IMAGE;
             }
+            if (selectedStageFile) {
+              const form = new FormData(); form.append("file", selectedStageFile);
+              const response = await fetch(`${API_BASE}/api/creator/wheels/${encodeURIComponent(artifact.artifactCode)}/wheels/${encodeURIComponent(wheel.wheelId)}/stage-background-image`, { method: "POST", credentials: "include", cache: "no-store", headers: { Accept: "application/json" }, body: form });
+              const payload = await parseResponse(response);
+              if (!response.ok || payload?.success === false) throw new Error(text(payload?.error, `Stage upload failed (${response.status})`));
+              rehydrateCanonical(payload);
+              const hydrated = state.authoritativeWheelSet.wheels.find((entry) => entry.wheelId === wheel.wheelId);
+              draft.presentation.stage_background_image_url = hydrated?.presentation.stage_background_image_url || draft.presentation.stage_background_image_url;
+            } else if (!useCustomBackground) {
+              draft.presentation.stage_background_image_url = "";
+            }
             await mutate({ type: "update", wheel_id: wheel.wheelId, wheel: serializeChild(draft) });
             status.textContent = "Saved and rehydrated from Runtime/Auth.";
-            if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = ""; }
+            if (centerObjectUrl) { URL.revokeObjectURL(centerObjectUrl); centerObjectUrl = ""; }
+            if (stageObjectUrl) { URL.revokeObjectURL(stageObjectUrl); stageObjectUrl = ""; }
           } catch (error) { status.textContent = error instanceof Error ? error.message : "Save failed."; }
         });
         controls.appendChild(save);
         layout.append(preview, controls); body.appendChild(layout); refreshPreview();
-        return () => { if (objectUrl) URL.revokeObjectURL(objectUrl); };
+        return () => {
+          if (centerObjectUrl) URL.revokeObjectURL(centerObjectUrl);
+          if (stageObjectUrl) URL.revokeObjectURL(stageObjectUrl);
+        };
       });
     }
 
@@ -1290,11 +1643,77 @@
       });
     }
 
+    function renderEntrantDetailCard(card, wheel, entrant, result) {
+      card.replaceChildren();
+      card.style.setProperty("--wheel-entry-color", entrant?.color || wheel.palette.accent_color);
+      if (!entrant) {
+        card.classList.add("is-empty");
+        card.append(
+          element("span", "wheel-entry-detail-card__eyebrow", "Selected entrant"),
+          element("strong", "wheel-entry-detail-card__empty-title", "No entrant selected"),
+          element("p", "", "Spin the wheel to follow the current entrant. A winner remains selected after the result.")
+        );
+        return;
+      }
+      card.classList.remove("is-empty");
+      const heading = element("div", "wheel-entry-detail-heading");
+      const avatar = element("div", "wheel-entry-detail-avatar");
+      const avatarUrl = text(entrant.avatarUrl || entrant.avatar_url || entrant.assignment?.avatarUrl || entrant.assignment?.avatar_url);
+      if (avatarUrl) {
+        const image = element("img"); image.src = avatarUrl; image.alt = ""; avatar.appendChild(image);
+      } else {
+        avatar.appendChild(element("span", "", entryName(entrant).slice(0, 1).toUpperCase()));
+      }
+      const identity = element("div", "wheel-entry-detail-identity");
+      identity.append(
+        element("span", "wheel-entry-detail-card__eyebrow", result.spinState === "spinning" ? "Current traversal" : result.latestResult?.entryId === entrant.entryId ? "Selected winner" : "Selected entrant"),
+        element("strong", "", entryName(entrant))
+      );
+      const identityState = text(entrant.assignment?.publicSlug || entrant.assignment?.public_slug || entrant.assignment?.userCode || entrant.assignment?.user_code);
+      identity.appendChild(element("small", "", identityState ? `Public identity · ${identityState}` : "Wheel entrant · no linked public identity"));
+      heading.append(avatar, identity);
+      const enabledEntries = eligibleEntries(wheel);
+      const total = enabledEntries.reduce((sum, entry) => sum + effectiveWeight(entry), 0) || 1;
+      const probability = entrant.enabled === false ? 0 : effectiveWeight(entrant) / total;
+      const stats = element("div", "wheel-entry-detail-meta");
+      [
+        ["Entries", String(entryUnits(entrant))],
+        ["Weight", String(Number(entrant.weight) || 1)],
+        ["Effective probability", `${(probability * 100).toFixed(probability < 0.1 ? 1 : 0)}%`],
+        ["Enabled", entrant.enabled === false ? "No" : "Yes"]
+      ].forEach(([label, value]) => {
+        const row = element("div", "wheel-entry-detail-row");
+        row.append(element("span", "", label), element("strong", "", value));
+        stats.appendChild(row);
+      });
+      const colour = element("div", "wheel-entry-detail-colour");
+      const swatch = element("span"); swatch.style.background = entrant.color;
+      colour.append(element("span", "", "Colour"), swatch, element("strong", "", entrant.color));
+      card.append(heading, stats, colour);
+    }
+
     function buildInspector() {
       const wheel = selectedWheel();
       const result = resultFor(wheel.wheelId);
-      const aside = element("aside", "wheel-quick-inspector");
+      const aside = element("aside", `wheel-quick-inspector${state.inspectorCollapsed ? " is-collapsed" : ""}`);
+      aside.dataset.wheelId = wheel.wheelId;
+      aside.id = `wheel-inspector-${sourceId}`;
       aside.setAttribute("aria-label", "Quick inspector");
+      const inspectorHeader = element("div", "wheel-inspector-header");
+      inspectorHeader.appendChild(element("strong", "", "Inspector"));
+      const collapse = element("button", "wheel-inspector-collapse", state.inspectorCollapsed ? "Open inspector" : "Collapse inspector");
+      collapse.type = "button";
+      collapse.setAttribute("aria-expanded", state.inspectorCollapsed ? "false" : "true");
+      collapse.setAttribute("aria-controls", `${aside.id}-body`);
+      collapse.addEventListener("click", () => {
+        state.inspectorCollapsed = !state.inspectorCollapsed;
+        writeLocalFlag(`${presentationStateKey}.inspector`, state.inspectorCollapsed);
+        render();
+      });
+      inspectorHeader.appendChild(collapse);
+      const inspectorBody = element("div", "wheel-inspector-body");
+      inspectorBody.id = `${aside.id}-body`;
+      inspectorBody.hidden = state.inspectorCollapsed;
       const tabs = element("div", "wheel-inspector-tabs");
       tabs.setAttribute("role", "tablist");
       tabs.setAttribute("aria-label", "Wheel inspector sections");
@@ -1303,6 +1722,9 @@
         ["entries", "Entries", () => {
           const panel = element("section", "wheel-inspector-panel");
           const enabled = wheel.entries.filter((entry) => entry.enabled !== false);
+          const detailCard = element("div", "wheel-entry-detail-card");
+          renderEntrantDetailCard(detailCard, wheel, entrantForState(wheel, result), result);
+          panel.appendChild(detailCard);
           panel.append(element("strong", "", `${wheel.entries.length} unique · ${wheel.entries.reduce((sum, entry) => sum + entryUnits(entry), 0)} total tickets · ${enabled.length} enabled`));
           wheel.entries.slice(0, 5).forEach((entry) => panel.appendChild(element("p", "", `${entryName(entry)} · ${entryUnits(entry)} × ${entry.weight} · ${((effectiveWeight(entry) / (wheel.entries.reduce((sum, item) => sum + effectiveWeight(item), 0) || 1)) * 100).toFixed(1)}%`)));
           if (isOwner) { const button = element("button", "wheel-production-secondary", "Manage entrants"); button.addEventListener("click", entrantManagerModal); panel.appendChild(button); }
@@ -1332,9 +1754,23 @@
         [...panels.children].forEach((panel) => { panel.hidden = panel.dataset.key !== key; });
       }
       definitions.forEach(([key, label, builder], index) => { const button = element("button", `wheel-inspector-tab${index === 0 ? " is-active" : ""}`, label); const tabId = `wheel-inspector-${sourceId}-${index}`; const panelId = `${tabId}-panel`; button.type = "button"; button.id = tabId; button.dataset.key = key; button.setAttribute("role", "tab"); button.setAttribute("aria-controls", panelId); button.setAttribute("aria-selected", index === 0 ? "true" : "false"); button.addEventListener("click", () => select(key)); tabs.appendChild(button); const panel = builder(); panel.id = panelId; panel.dataset.key = key; panel.setAttribute("role", "tabpanel"); panel.setAttribute("aria-labelledby", tabId); panel.hidden = index !== 0; panels.appendChild(panel); });
-      aside.append(tabs, panels);
-      if (result.latestResult) aside.appendChild(element("div", "wheel-inspector-result", `Latest: ${result.latestResult.winner}`));
+      inspectorBody.append(tabs, panels);
+      if (result.latestResult) inspectorBody.appendChild(element("div", "wheel-inspector-result", `Latest: ${result.latestResult.winner}`));
+      aside.append(inspectorHeader, inspectorBody);
       return aside;
+    }
+
+    function buildMobileInspectorLauncher() {
+      const launcher = element("button", "wheel-mobile-inspector-launcher", "Open inspector");
+      launcher.type = "button";
+      launcher.setAttribute("aria-expanded", "false");
+      launcher.setAttribute("aria-controls", `wheel-inspector-${sourceId}`);
+      launcher.addEventListener("click", () => {
+        state.inspectorCollapsed = false;
+        writeLocalFlag(`${presentationStateKey}.inspector`, false);
+        render();
+      });
+      return launcher;
     }
 
     function buildPoppedOutPlaceholder() {
@@ -1350,9 +1786,11 @@
     function render() {
       if (state.destroyed) return;
       const savedScroll = window.scrollY;
+      root.classList.toggle("is-inspector-collapsed", state.inspectorCollapsed && !stageMode);
+      root.classList.toggle("is-title-collapsed", state.titleCollapsed);
       clearRenderCleanups();
       [...root.children].forEach((child) => { if (child !== live && !child.classList.contains("wheel-editor-backdrop") && !child.classList.contains("wheel-winner-overlay")) child.remove(); });
-      root.append(buildProductionToolbar(), buildDeck());
+      root.append(buildProductionToolbar());
       const content = element("div", "wheel-workspace-content");
       const primary = element("div", "wheel-workspace-primary");
       if (state.popupOpen && !stageMode) primary.appendChild(buildPoppedOutPlaceholder());
@@ -1360,7 +1798,10 @@
       else if (state.viewMode === "results") primary.appendChild(buildResults());
       else primary.appendChild(buildFocus());
       content.appendChild(primary);
-      if (!stageMode) content.appendChild(buildInspector());
+      if (!stageMode) {
+        if (state.inspectorCollapsed) content.appendChild(buildMobileInspectorLauncher());
+        content.appendChild(buildInspector());
+      }
       root.appendChild(content);
       window.scrollTo({ top: savedScroll, behavior: "instant" });
     }
@@ -1419,7 +1860,8 @@
     createWorkspace,
     normalizeArtifact,
     weightedWinner,
+    radialLabelRotation,
     serializeChild,
-    constants: Object.freeze({ DEFAULT_CENTER_IMAGE, VIEW_MODES: [...VIEW_MODES], API_BASE })
+    constants: Object.freeze({ DEFAULT_CENTER_IMAGE, VIEW_MODES: [...VIEW_MODES], STAGE_BACKGROUND_PRESETS, API_BASE })
   });
 })();
