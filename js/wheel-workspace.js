@@ -275,7 +275,8 @@
       spinAllScheduledCount: 0,
       destroyed: false,
       modalCleanup: null,
-      lastFocus: null
+      lastFocus: null,
+      renderCleanups: []
     };
     artifact.wheelSet.wheels.forEach((wheel) => state.resultsByWheel.set(wheel.wheelId, createResultState()));
 
@@ -287,6 +288,16 @@
     function announce(message) {
       live.textContent = "";
       window.requestAnimationFrame(() => { live.textContent = message; });
+    }
+
+    function registerRenderCleanup(cleanup) {
+      if (typeof cleanup === "function") state.renderCleanups.push(cleanup);
+    }
+
+    function clearRenderCleanups() {
+      state.renderCleanups.splice(0).forEach((cleanup) => {
+        try { cleanup(); } catch (_error) { /* Render cleanup is best-effort. */ }
+      });
     }
 
     function selectedWheel() {
@@ -595,7 +606,7 @@
     }
 
     function buildDeck() {
-      const section = element("section", "wheel-deck");
+      const section = element("section", "wheel-deck has-overflow");
       section.setAttribute("aria-label", "Wheel deck");
       const previous = element("button", "wheel-deck-nav", "‹");
       previous.type = "button";
@@ -616,8 +627,18 @@
         const copy = element("span", "wheel-deck-copy");
         copy.append(element("strong", "", wheel.name), element("small", "", `${wheel.entries.length} entrants${result.latestResult ? ` · ${result.latestResult.winner}` : ""}`));
         card.append(signature, copy);
-        if (state.authorityDefaultWheelId === wheel.wheelId) card.appendChild(element("span", "wheel-deck-default", "Default"));
-        if (result.latestResult) card.appendChild(element("span", "wheel-deck-result", "Result"));
+        if (state.authorityDefaultWheelId === wheel.wheelId) {
+          const marker = element("span", "wheel-deck-default", "★");
+          marker.setAttribute("aria-label", "Saved default wheel");
+          marker.title = "Saved default wheel";
+          card.appendChild(marker);
+        }
+        if (result.latestResult) {
+          const marker = element("span", "wheel-deck-result");
+          marker.setAttribute("aria-label", "Has a local result");
+          marker.title = "Has a local result";
+          card.appendChild(marker);
+        }
         card.addEventListener("click", () => selectWheel(wheel.wheelId));
         card.addEventListener("keydown", (event) => {
           const last = state.authoritativeWheelSet.wheels.length - 1;
@@ -635,58 +656,185 @@
       const next = element("button", "wheel-deck-nav", "›");
       next.type = "button";
       next.setAttribute("aria-label", "Scroll wheel deck right");
-      previous.addEventListener("click", () => viewport.scrollBy({ left: -320, behavior: "smooth" }));
-      next.addEventListener("click", () => viewport.scrollBy({ left: 320, behavior: "smooth" }));
+      const syncOverflow = () => {
+        const overflow = viewport.scrollWidth > viewport.clientWidth + 2;
+        section.classList.toggle("has-overflow", overflow);
+        previous.hidden = !overflow;
+        next.hidden = !overflow;
+        previous.disabled = !overflow || viewport.scrollLeft <= 2;
+        next.disabled = !overflow || viewport.scrollLeft + viewport.clientWidth >= viewport.scrollWidth - 2;
+      };
+      let settleTimer = 0;
+      const scheduleOverflowSync = () => {
+        window.clearTimeout(settleTimer);
+        settleTimer = window.setTimeout(syncOverflow, 260);
+      };
+      previous.addEventListener("click", () => { viewport.scrollBy({ left: -240, behavior: "smooth" }); scheduleOverflowSync(); });
+      next.addEventListener("click", () => { viewport.scrollBy({ left: 240, behavior: "smooth" }); scheduleOverflowSync(); });
+      viewport.addEventListener("scrollend", syncOverflow, { passive: true });
       section.append(previous, viewport, next);
+      const frame = window.requestAnimationFrame(syncOverflow);
+      registerRenderCleanup(() => {
+        window.cancelAnimationFrame(frame);
+        window.clearTimeout(settleTimer);
+        viewport.removeEventListener("scrollend", syncOverflow);
+      });
       return section;
     }
 
-    function buildControlRail() {
+    function productionIcon(asset) {
+      const icon = element("span", "wheel-production-icon");
+      icon.setAttribute("aria-hidden", "true");
+      icon.style.setProperty("--wheel-production-icon", `url('/assets/icons/ui/${asset}.svg')`);
+      return icon;
+    }
+
+    function buildProductionToolbar() {
       const wheel = selectedWheel();
       const result = resultFor(wheel.wheelId);
-      const rail = element("section", "wheel-production-rail");
-      rail.setAttribute("aria-label", "Wheel production controls");
-      const selection = element("div", "wheel-production-selection");
-      selection.append(element("span", "", "Selected wheel"), element("strong", "", wheel.name));
+      const toolbar = element("section", "wheel-production-toolbar");
+      toolbar.setAttribute("aria-label", "Wheel production controls");
+      const selection = element("div", "wheel-production-identity");
+      const titleRow = element("span", "wheel-production-title");
+      titleRow.appendChild(element("strong", "", wheel.name));
+      if (state.authorityDefaultWheelId === wheel.wheelId) {
+        const marker = element("span", "wheel-production-default", "Default");
+        marker.title = "Saved default wheel";
+        titleRow.appendChild(marker);
+      }
+      selection.append(titleRow, element("small", "", `${artifact.title} · ${wheel.entries.length} entrants`));
+      const play = element("div", "wheel-production-play");
       const spin = element("button", "wheel-production-primary", "Spin");
       spin.type = "button";
       spin.disabled = !canSpin(wheel);
       spin.addEventListener("click", () => performSpin(wheel));
+      play.appendChild(spin);
       const spinAllButton = element("button", "wheel-production-primary wheel-production-primary--all", state.currentSpinAll ? `Spin All ${state.currentSpinAll.completed}/${state.currentSpinAll.total}` : "Spin All");
       spinAllButton.type = "button";
       spinAllButton.disabled = Boolean(state.currentSpinAll) || (state.popupOpen && !stageMode) || !state.authoritativeWheelSet.wheels.some(canSpin);
       spinAllButton.addEventListener("click", spinAll);
-      const respin = element("button", "wheel-production-secondary", "Re-spin");
+      if (state.authoritativeWheelSet.wheels.length > 1) play.appendChild(spinAllButton);
+      const respin = element("button", "wheel-production-secondary wheel-production-respin", "Re-spin");
       respin.type = "button";
       respin.disabled = !result.latestResult || !canSpin(wheel);
       respin.addEventListener("click", () => performSpin(wheel, { mode: "respin" }));
-      const reset = element("button", "wheel-production-secondary", "Reset wheel");
-      reset.type = "button";
-      reset.disabled = !result.history.length && result.spinState !== "spinning";
-      reset.addEventListener("click", () => resetWheel(wheel.wheelId));
-      const resetEverything = element("button", "wheel-production-secondary", "Reset all");
-      resetEverything.type = "button";
-      resetEverything.disabled = ![...state.resultsByWheel.values()].some((entry) => entry.history.length || entry.spinState === "spinning");
-      resetEverything.addEventListener("click", resetAll);
-      rail.append(selection, spin, spinAllButton, respin, reset, resetEverything);
+      if (result.latestResult) play.appendChild(respin);
+      const utilities = element("div", "wheel-production-utilities");
+      utilities.appendChild(buildViewSelector());
       if (!stageMode) {
-        const popout = element("button", "wheel-production-secondary", state.popupOpen ? "Focus stage window" : "Pop out stage");
+        const popout = element("button", "wheel-production-secondary wheel-production-presentation", state.popupOpen ? "Focus stage" : "Pop out");
         popout.type = "button";
-        popout.addEventListener("click", openPopout);
-        rail.appendChild(popout);
+        popout.title = state.popupOpen ? "Focus stage window" : "Pop out Stage";
+        popout.prepend(productionIcon("popout"));
+        popout.addEventListener("click", state.popupOpen ? () => state.popup?.focus?.() : openPopout);
+        utilities.appendChild(popout);
+        if (state.popupOpen) {
+          const dock = element("button", "wheel-production-secondary wheel-production-presentation", "Dock");
+          dock.type = "button";
+          dock.title = "Dock Stage";
+          dock.prepend(productionIcon("restoredock"));
+          dock.addEventListener("click", () => { publish("dock"); state.popup?.close?.(); restoreDockedStage(true); });
+          utilities.appendChild(dock);
+        }
       } else if (sessionId) {
-        const dock = element("button", "wheel-production-secondary", "Dock stage");
+        const dock = element("button", "wheel-production-secondary wheel-production-presentation", "Dock");
         dock.type = "button";
+        dock.title = "Dock Stage";
+        dock.prepend(productionIcon("restoredock"));
         dock.addEventListener("click", requestDock);
-        rail.appendChild(dock);
+        utilities.appendChild(dock);
       } else {
-        const full = element("a", "wheel-production-secondary", "Open full page");
+        const full = element("a", "wheel-production-secondary wheel-production-presentation", "Full page");
         full.href = publicUrl();
         full.target = "_blank";
         full.rel = "noopener noreferrer";
-        rail.appendChild(full);
+        full.title = "Open full Wheel page";
+        full.prepend(productionIcon("fullwindow"));
+        utilities.appendChild(full);
       }
-      return rail;
+      if (!stageMode) {
+        const more = element("div", "wheel-production-more");
+        const trigger = element("button", "wheel-production-more-trigger");
+        trigger.type = "button";
+        trigger.setAttribute("aria-label", "More wheel actions");
+        trigger.setAttribute("aria-haspopup", "menu");
+        trigger.setAttribute("aria-expanded", "false");
+        trigger.title = "More wheel actions";
+        trigger.appendChild(productionIcon("moremenu"));
+        const menu = element("div", "wheel-production-menu");
+        menu.setAttribute("role", "menu");
+        menu.setAttribute("aria-label", "More wheel actions");
+        menu.hidden = true;
+        let open = false;
+        const items = () => [...menu.querySelectorAll('[role="menuitem"]:not(:disabled)')];
+        const closeMenu = (restoreFocus = false) => {
+          open = false;
+          menu.hidden = true;
+          trigger.setAttribute("aria-expanded", "false");
+          if (restoreFocus) trigger.focus();
+        };
+        const openMenu = (focusFirst = false) => {
+          open = true;
+          menu.hidden = false;
+          trigger.setAttribute("aria-expanded", "true");
+          if (focusFirst) items()[0]?.focus();
+        };
+        const addHeading = (label) => menu.appendChild(element("span", "wheel-production-menu-heading", label));
+        const addAction = (label, handler, actionOptions = {}) => {
+          const button = element("button", `wheel-production-menu-item${actionOptions.danger ? " is-danger" : ""}`, label);
+          button.type = "button";
+          button.setAttribute("role", "menuitem");
+          button.disabled = actionOptions.disabled === true;
+          button.addEventListener("click", () => {
+            closeMenu(false);
+            trigger.focus();
+            handler();
+          });
+          menu.appendChild(button);
+        };
+        if (isOwner) {
+          addHeading("Wheel management");
+          addAction("Add wheel", async () => {
+            try { await mutate({ type: "add", wheel: { name: `Wheel ${state.authoritativeWheelSet.wheels.length + 1}`, entries: ["Entry 1", "Entry 2"] } }); announce("Wheel added."); }
+            catch (error) { announce(error instanceof Error ? error.message : "Add failed."); }
+          });
+          addAction("Manage wheels", manageWheelsModal);
+          if (state.selectedWheelId !== state.authorityDefaultWheelId) {
+            addAction("Set as default", async () => {
+              try { await mutate({ type: "set_active", wheel_id: state.selectedWheelId }); announce(`${selectedWheel().name} is now the saved default.`); }
+              catch (error) { announce(error instanceof Error ? error.message : "Default update failed."); }
+            });
+          }
+        }
+        addHeading("Local session");
+        addAction("Reset wheel", () => resetWheel(wheel.wheelId), { disabled: !result.history.length && result.spinState !== "spinning" });
+        addAction("Reset all", resetAll, { disabled: ![...state.resultsByWheel.values()].some((entry) => entry.history.length || entry.spinState === "spinning") });
+        trigger.addEventListener("click", () => { if (open) closeMenu(true); else openMenu(false); });
+        trigger.addEventListener("keydown", (event) => {
+          if (event.key === "ArrowDown") { event.preventDefault(); openMenu(true); }
+        });
+        menu.addEventListener("keydown", (event) => {
+          const available = items();
+          const index = available.indexOf(document.activeElement);
+          if (event.key === "Escape") { event.preventDefault(); closeMenu(true); }
+          else if (event.key === "Tab") closeMenu(false);
+          else if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+            event.preventDefault();
+            const target = event.key === "Home" ? 0 : event.key === "End" ? available.length - 1 : event.key === "ArrowDown" ? (index + 1) % available.length : (index - 1 + available.length) % available.length;
+            available[target]?.focus();
+          }
+        });
+        const abort = new AbortController();
+        document.addEventListener("pointerdown", (event) => { if (open && !more.contains(event.target)) closeMenu(false); }, { signal: abort.signal });
+        document.addEventListener("keydown", (event) => {
+          if (open && event.key === "Escape") { event.preventDefault(); closeMenu(true); }
+        }, { signal: abort.signal });
+        registerRenderCleanup(() => abort.abort());
+        more.append(trigger, menu);
+        utilities.appendChild(more);
+      }
+      toolbar.append(selection, play, utilities);
+      return toolbar;
     }
 
     function buildFocus() {
@@ -1148,6 +1296,8 @@
       const aside = element("aside", "wheel-quick-inspector");
       aside.setAttribute("aria-label", "Quick inspector");
       const tabs = element("div", "wheel-inspector-tabs");
+      tabs.setAttribute("role", "tablist");
+      tabs.setAttribute("aria-label", "Wheel inspector sections");
       const panels = element("div", "wheel-inspector-panels");
       const definitions = [
         ["entries", "Entries", () => {
@@ -1181,19 +1331,10 @@
         tabs.querySelectorAll("button").forEach((button) => { const selected = button.dataset.key === key; button.classList.toggle("is-active", selected); button.setAttribute("aria-selected", selected ? "true" : "false"); });
         [...panels.children].forEach((panel) => { panel.hidden = panel.dataset.key !== key; });
       }
-      definitions.forEach(([key, label, builder], index) => { const button = element("button", `wheel-inspector-tab${index === 0 ? " is-active" : ""}`, label); button.dataset.key = key; button.setAttribute("role", "tab"); button.setAttribute("aria-selected", index === 0 ? "true" : "false"); button.addEventListener("click", () => select(key)); tabs.appendChild(button); const panel = builder(); panel.dataset.key = key; panel.hidden = index !== 0; panels.appendChild(panel); });
+      definitions.forEach(([key, label, builder], index) => { const button = element("button", `wheel-inspector-tab${index === 0 ? " is-active" : ""}`, label); const tabId = `wheel-inspector-${sourceId}-${index}`; const panelId = `${tabId}-panel`; button.type = "button"; button.id = tabId; button.dataset.key = key; button.setAttribute("role", "tab"); button.setAttribute("aria-controls", panelId); button.setAttribute("aria-selected", index === 0 ? "true" : "false"); button.addEventListener("click", () => select(key)); tabs.appendChild(button); const panel = builder(); panel.id = panelId; panel.dataset.key = key; panel.setAttribute("role", "tabpanel"); panel.setAttribute("aria-labelledby", tabId); panel.hidden = index !== 0; panels.appendChild(panel); });
       aside.append(tabs, panels);
       if (result.latestResult) aside.appendChild(element("div", "wheel-inspector-result", `Latest: ${result.latestResult.winner}`));
       return aside;
-    }
-
-    function buildOwnerBar() {
-      const bar = element("div", "wheel-owner-bar");
-      const add = element("button", "wheel-production-secondary", "Add wheel"); add.addEventListener("click", async () => { try { await mutate({ type: "add", wheel: { name: `Wheel ${state.authoritativeWheelSet.wheels.length + 1}`, entries: ["Entry 1", "Entry 2"] } }); announce("Wheel added."); } catch (error) { announce(error instanceof Error ? error.message : "Add failed."); } });
-      const manage = element("button", "wheel-production-secondary", "Manage wheels"); manage.addEventListener("click", manageWheelsModal);
-      const makeDefault = element("button", "wheel-production-secondary", "Set as default"); makeDefault.disabled = state.selectedWheelId === state.authorityDefaultWheelId; makeDefault.addEventListener("click", async () => { try { await mutate({ type: "set_active", wheel_id: state.selectedWheelId }); announce(`${selectedWheel().name} is now the saved default.`); } catch (error) { announce(error instanceof Error ? error.message : "Default update failed."); } });
-      bar.append(add, manage, makeDefault);
-      return bar;
     }
 
     function buildPoppedOutPlaceholder() {
@@ -1209,14 +1350,9 @@
     function render() {
       if (state.destroyed) return;
       const savedScroll = window.scrollY;
+      clearRenderCleanups();
       [...root.children].forEach((child) => { if (child !== live && !child.classList.contains("wheel-editor-backdrop") && !child.classList.contains("wheel-winner-overlay")) child.remove(); });
-      const header = element("header", "wheel-workspace-header");
-      const heading = element("div");
-      heading.append(element("span", "wheel-console-eyebrow", stageMode ? "Shell-free Stage" : "Multi-wheel workspace"), element(stageMode ? "h1" : "h2", "", artifact.title), element("p", "", stageMode ? "Browser-local presentation session" : `${state.authoritativeWheelSet.wheels.length} authoritative wheels · local gameplay state`));
-      header.append(heading, buildViewSelector());
-      root.append(header, buildDeck());
-      if (isOwner && !stageMode) root.appendChild(buildOwnerBar());
-      root.appendChild(buildControlRail());
+      root.append(buildProductionToolbar(), buildDeck());
       const content = element("div", "wheel-workspace-content");
       const primary = element("div", "wheel-workspace-primary");
       if (state.popupOpen && !stageMode) primary.appendChild(buildPoppedOutPlaceholder());
@@ -1247,7 +1383,7 @@
       state.popup = null;
       state.popupOpen = false;
       render();
-      if (restoreFocus) root.querySelector(".wheel-production-rail button:last-child")?.focus();
+      if (restoreFocus) root.querySelector(".wheel-production-presentation")?.focus();
       announce("Stage docked. Parent gameplay controls restored.");
     }
 
@@ -1258,6 +1394,7 @@
 
     function destroy() {
       state.destroyed = true;
+      clearRenderCleanups();
       cancelSpinAll("destroyed");
       closeModal();
       if (state.popupMonitor) window.clearInterval(state.popupMonitor);

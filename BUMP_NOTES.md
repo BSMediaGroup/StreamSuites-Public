@@ -6,6 +6,23 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-17 - Milestone 2.1 wheel production-deck compaction
+
+#### Technical notes
+
+- Removed the oversized multi-wheel workspace hero and the permanent Add Wheel / Manage Wheels / Set as Default management row. Wheel Detail now begins with one slim production toolbar containing compact selected-wheel identity, primary Spin/Spin All, contextual Re-spin, Focus/Grid/Results, immediate Pop Out/Focus/Dock presentation actions, and one accessible More menu.
+- Moved owner-only Add Wheel and Manage Wheels, context-only Set as Default, and browser-local Reset Wheel/Reset All into the keyboard-accessible production overflow. The menu closes on Escape or outside pointer input, returns focus correctly, keeps disabled reset state truthful, and is absent from the Stage route. Visitors never receive owner actions; one-wheel sets omit Spin All; popped-out state exposes Focus Stage plus Dock.
+- Compressed the wheel selector into a 52px desktop deck with smaller palette previews, compact default/result markers, stable-ID selection, retained Arrow/Home/End keyboard behavior, hidden native scrollbar, and previous/next controls only for measured overflow. The layout remains CSS Grid/Flex driven; only bounded post-render and scroll-end overflow checks were added, with listener cleanup on every render.
+- Recovered stage space with a 54px desktop toolbar, 52px deck, 8px workspace gaps, non-stretching detail rows, and compact inspector tabs/panels. At 1440×900 the stabilized shell-to-stage measurement fell from 423px to 138px; the same 138px held at 1600×1000 and 1920×1080. Grid wheel graphics begin 172px below the shell, while Focus wheel geometry begins 280.5px below it and remains materially visible in the initial viewport.
+- Added explicit two-row tablet/phone toolbar composition and retained horizontal deck scrolling without document overflow. At 768×1024 stage content begins 184px below the shell; at 390×844 it begins 174px below the shell and the wheel begins at 310.2px, with most of the wheel visible before the viewport ends. The shell-free Stage uses the reduced selected wheel / Spin / Spin All / contextual Re-spin / view / Dock-or-Full-Page control set and no inspector, owner editor, or management overflow.
+- Preserved Runtime/Auth multi-wheel authority, stable child IDs, authoritative stagger delay, wheel-keyed local result maps, stale-run cancellation, winner celebration, combined Results, all inspector/editor lightboxes, centre-image upload boundary, popup/dock and `BroadcastChannel` coordination, blocked-popup recovery, reduced motion, owner permissions, and the accepted V3 renderer. No Runtime/Auth contract, version/build metadata, deployment, commit, push, or normal Runtime process changed.
+- Extended focused structural tests for the compact toolbar, removed rows, contextual action reachability, owner/stage gates, deck overflow behavior, keyboard semantics, and desktop/tablet/mobile composition. All 199 Public Node tests passed, changed JavaScript and the retained browser harness passed syntax checks, CSS delimiters and `git diff --check` passed, and local Pages returned HTTP 200 for `/`, `/wheels`, `/wheels/test-wheel`, and `/wheels/test-wheel/stage`.
+- Retained deterministic installed-Edge evidence and the rerunnable browser harness under `output/playwright/wheel-compaction-20260817/`. It covers the required six viewports, Focus/Grid/Results, owner and visitor, 1/6/12 wheels, contextual overflow, reduced-motion Spin All, popup/dock, and desktop/mobile Stage with zero document horizontal overflow. Expected local-only missing API/analytics resources and the intentionally unresolved static popup URL were resource-console noise; no page-script exception was recorded and no deployed-service claim is made.
+
+#### Human-readable summary
+
+Wheels now appear much higher in the viewport, and the controls feel like a compact professional production deck instead of four stacked setup bars. Spin and wheel switching stay immediate, while advanced management remains easy to reach without dominating the stage on desktop, tablet, or phone.
+
 ### 2026-08-17 - Statistics observability hero and header appearance control
 
 #### Technical notes

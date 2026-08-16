@@ -75,6 +75,51 @@ test("complex owner editors remain lightboxes and the quick inspector only launc
   assert.match(source, /Share settings/);
 });
 
+test("production chrome is one compact toolbar and deck with secondary actions in an accessible overflow", () => {
+  const source = read("js/wheel-workspace.js");
+  const toolbar = source.slice(source.indexOf("function buildProductionToolbar"), source.indexOf("function buildFocus"));
+  assert.match(toolbar, /wheel-production-toolbar/);
+  assert.match(toolbar, /wheel-production-identity/);
+  assert.match(toolbar, /Spin All/);
+  assert.match(toolbar, /if \(result\.latestResult\) play\.appendChild\(respin\)/);
+  assert.match(toolbar, /buildViewSelector\(\)/);
+  assert.match(toolbar, /Pop out/);
+  assert.match(toolbar, /aria-haspopup", "menu/);
+  assert.match(toolbar, /event\.key === "Escape"/);
+  assert.match(toolbar, /document\.addEventListener\("pointerdown"/);
+  for (const action of ["Add wheel", "Manage wheels", "Set as default", "Reset wheel", "Reset all"]) {
+    assert.match(toolbar, new RegExp(action));
+  }
+  assert.match(toolbar, /if \(isOwner\)[\s\S]*Add wheel[\s\S]*Manage wheels/);
+  assert.match(toolbar, /if \(state\.selectedWheelId !== state\.authorityDefaultWheelId\)[\s\S]*Set as default/);
+  assert.match(toolbar, /if \(!stageMode\)[\s\S]*wheel-production-more/);
+  assert.doesNotMatch(source, /wheel-workspace-header|wheel-owner-bar|wheel-production-rail/);
+  assert.match(source, /root\.append\(buildProductionToolbar\(\), buildDeck\(\)\)/);
+});
+
+test("compact deck preserves keyboard selection and only exposes navigation for real overflow", () => {
+  const source = read("js/wheel-workspace.js");
+  assert.match(source, /role", "listbox/);
+  assert.match(source, /role", "option/);
+  assert.match(source, /event\.key === "Home"/);
+  assert.match(source, /event\.key === "End"/);
+  assert.match(source, /viewport\.scrollWidth > viewport\.clientWidth/);
+  assert.match(source, /previous\.hidden = !overflow/);
+  assert.match(source, /next\.hidden = !overflow/);
+  assert.match(source, /aria-label", "Saved default wheel/);
+});
+
+test("responsive workspace contracts keep desktop, tablet, and mobile stage-first", () => {
+  const css = read("css/wheel-workspace.css");
+  assert.match(css, /\.wheel-production-toolbar\s*\{[\s\S]*grid-template-columns/);
+  assert.match(css, /\.wheel-deck-card\s*\{[\s\S]*flex:\s*0 0/);
+  assert.match(css, /@media \(max-width: 820px\)[\s\S]*grid-template-areas:[\s\S]*"identity play"[\s\S]*"utilities utilities"/);
+  assert.match(css, /@media \(max-width: 820px\)[\s\S]*\.wheel-workspace-content\s*\{\s*grid-template-columns:\s*1fr/);
+  assert.match(css, /@media \(max-width: 520px\)[\s\S]*\.wheel-production-presentation/);
+  assert.match(css, /@media \(max-width: 520px\)[\s\S]*\.wheel-deck-card/);
+  assert.match(css, /overflow-x:\s*hidden/);
+});
+
 test("stage route is shell-free and uses the shared workspace implementation", () => {
   const html = read("wheels/stage.html");
   const detail = read("wheels/detail.html");
@@ -88,6 +133,7 @@ test("stage route is shell-free and uses the shared workspace implementation", (
   assert.match(route, /stageRoute = \/\^\\\/wheels\\\/\[\^\/\]\+\\\/stage\$\/i/);
   assert.match(route, /stageRoute \? "\/wheels\/stage\.html" : "\/wheels\/detail\.html"/);
   assert.match(stageApp, /stageMode: true/);
+  assert.match(read("js/wheel-workspace.js"), /stageMode[\s\S]*Dock[\s\S]*Open full page|stageMode[\s\S]*Dock[\s\S]*Full page/);
 });
 
 test("popout coordination is same-origin, session-keyed, revisioned, and bounded", () => {
