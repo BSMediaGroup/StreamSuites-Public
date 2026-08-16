@@ -9,9 +9,9 @@
   });
 
   const PUBLIC_DASHBOARD_NAV = [
-    { href: "https://studio.streamsuites.app", label: "Browser Studio", icon: "/assets/icons/ui/browser.svg", group: "products" },
-    { href: "/downloads/studioapp/", label: "StudioApp", icon: "/assets/icons/ui/exitapp.svg", group: "products" },
-    { href: "/downloads/obs-plugin/", label: "Studio for OBS", icon: "/assets/icons/obs.svg", group: "products" },
+    { href: "https://studio.streamsuites.app", label: "Browser Studio", icon: "/assets/icons/icondiag-studioweb.svg", group: "products" },
+    { href: "/downloads/studioapp/", label: "StudioApp", icon: "/assets/icons/icondiag-studioapp.svg", group: "products" },
+    { href: "/downloads/obs-plugin/", label: "Studio for OBS", icon: "/assets/icons/obs-0.svg", group: "products" },
     { href: "/home", label: "Home", icon: "/assets/icons/ui/home.svg", group: "dashboard" },
     { href: "/clips", label: "Clips", icon: "/assets/icons/ui/clipcards.svg", group: "dashboard" },
     { href: "/polls", label: "Polls", icon: "/assets/icons/ui/vote.svg", group: "dashboard" },
@@ -75,9 +75,9 @@
     ...TIER_ICON_MAP
   });
   const UI_ICON_MAP = Object.freeze({
-    menu: "/assets/icons/ui/sidebar.svg",
-    hideVisible: "/assets/icons/ui/sidebarclose.svg",
-    hideHidden: "/assets/icons/ui/sidebaropen.svg",
+    sidebarExpanded: "/assets/icons/ui/sidebar.svg",
+    sidebarIcon: "/assets/icons/ui/sidebarclose.svg",
+    sidebarHidden: "/assets/icons/ui/sidebaropen.svg",
     close: "/assets/icons/ui/close.svg",
     info: "/assets/icons/ui/info.svg",
     profile: "/assets/icons/ui/profile.svg",
@@ -577,9 +577,10 @@
     const sidebarTop = create("div", "sidebar-top");
     const brand = create("a", "sidebar-brand");
     brand.href = "/";
-    const logo = create("img");
-    logo.src = "/assets/logos/ssmainlogosq.webp";
-    logo.alt = "StreamSuites";
+    brand.setAttribute("aria-label", "StreamSuites home");
+    const logo = create("span", "sidebar-brand-logo");
+    logo.setAttribute("aria-hidden", "true");
+    logo.appendChild(create("span", "sidebar-brand-glyph"));
     const labels = create("span", "sidebar-brand-label");
     const brandSubheading = create("span", "sidebar-brand-subheading");
     const brandSubheadingText = create("span", "sidebar-brand-subheading-text", shellSubheading(options.shellKind));
@@ -602,20 +603,16 @@
     const topbarMain = create("div", "topbar-main");
     const topbarLeft = create("div", "topbar-left");
 
-    const modeBtn = create("button", "topbar-menu-btn");
-    modeBtn.type = "button";
-    modeBtn.setAttribute("aria-label", "Toggle sidebar size");
-    const modeBtnIcon = createIcon(UI_ICON_MAP.menu, "topbar-btn-icon");
-    modeBtn.appendChild(modeBtnIcon);
-
-    const hideBtn = create("button", "topbar-hide-btn");
-    hideBtn.type = "button";
-    hideBtn.setAttribute("aria-label", "Hide sidebar");
-    const hideBtnIcon = createIcon(UI_ICON_MAP.hideVisible, "topbar-btn-icon");
-    hideBtn.appendChild(hideBtnIcon);
+    const sidebarStateBtn = create("button", "sidebar-state-btn");
+    sidebarStateBtn.type = "button";
+    sidebarStateBtn.setAttribute("aria-controls", "public-sidebar");
+    const sidebarStateBtnIcon = createIcon(UI_ICON_MAP.sidebarExpanded, "topbar-btn-icon");
+    const sidebarStateBtnLabel = create("span", "sidebar-state-btn__label", "Collapse");
+    sidebarStateBtn.append(sidebarStateBtnIcon, sidebarStateBtnLabel);
+    sidebar.id = "public-sidebar";
 
     const topbarTitle = create("span", "topbar-title", options.topbarLabel || "Media Gallery");
-    topbarLeft.append(modeBtn, hideBtn, topbarTitle);
+    topbarLeft.append(sidebarStateBtn, topbarTitle);
 
     const topbarCenter = create("div", "topbar-center");
     const searchShell = create("label", "search-shell");
@@ -1415,11 +1412,16 @@
         lastVisibleSidebarState = state;
       }
 
-      modeBtn.setAttribute("aria-label", state === SIDEBAR_STATES.expanded ? "Collapse sidebar" : "Expand sidebar");
-      hideBtn.setAttribute("aria-label", state === SIDEBAR_STATES.hidden ? "Show sidebar" : "Hide sidebar");
-      hideBtn.classList.toggle("is-hidden-state", state === SIDEBAR_STATES.hidden);
-      setIconMask(modeBtnIcon, UI_ICON_MAP.menu);
-      setIconMask(hideBtnIcon, state === SIDEBAR_STATES.hidden ? UI_ICON_MAP.hideHidden : UI_ICON_MAP.hideVisible);
+      const nextAction = state === SIDEBAR_STATES.expanded
+        ? { label: "Collapse", description: "Collapse sidebar to icons", icon: UI_ICON_MAP.sidebarExpanded }
+        : state === SIDEBAR_STATES.icon
+          ? { label: "Hide", description: "Hide sidebar", icon: UI_ICON_MAP.sidebarIcon }
+          : { label: "Show", description: "Show expanded sidebar", icon: UI_ICON_MAP.sidebarHidden };
+      sidebarStateBtn.dataset.sidebarState = state;
+      sidebarStateBtn.setAttribute("aria-label", nextAction.description);
+      sidebarStateBtn.title = nextAction.description;
+      sidebarStateBtnLabel.textContent = nextAction.label;
+      setIconMask(sidebarStateBtnIcon, nextAction.icon);
 
       if (persist) {
         useAutoSidebarState = false;
@@ -1513,28 +1515,17 @@
       return layout.dataset.sidebarState || SIDEBAR_STATES.expanded;
     }
 
-    function toggleSidebarMode() {
+    function advanceSidebarState() {
       const current = getSidebarState();
       if (current === SIDEBAR_STATES.expanded) {
         setSidebarState(SIDEBAR_STATES.icon, true);
         return;
       }
       if (current === SIDEBAR_STATES.icon) {
-        setSidebarState(SIDEBAR_STATES.expanded, true);
+        setSidebarState(SIDEBAR_STATES.hidden, true);
         return;
       }
-      setSidebarState(lastVisibleSidebarState || SIDEBAR_STATES.icon, true);
-    }
-
-    function toggleSidebarVisibility() {
-      const current = getSidebarState();
-      if (current === SIDEBAR_STATES.hidden) {
-        setSidebarState(lastVisibleSidebarState || SIDEBAR_STATES.icon, true);
-        return;
-      }
-      const nextVisible = current === SIDEBAR_STATES.expanded ? SIDEBAR_STATES.expanded : SIDEBAR_STATES.icon;
-      lastVisibleSidebarState = nextVisible;
-      setSidebarState(SIDEBAR_STATES.hidden, true);
+      setSidebarState(SIDEBAR_STATES.expanded, true);
     }
 
     function setLoading(active) {
@@ -1767,12 +1758,8 @@
       }
     }
 
-    modeBtn.addEventListener("click", () => {
-      toggleSidebarMode();
-    });
-
-    hideBtn.addEventListener("click", () => {
-      toggleSidebarVisibility();
+    sidebarStateBtn.addEventListener("click", () => {
+      advanceSidebarState();
     });
 
     searchInput.addEventListener("input", () => {

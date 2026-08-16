@@ -112,6 +112,19 @@ test("shell registry and route-specific modernization retain every current rende
   assert.match(shellSource, /expanded:\s*"expanded"/);
   assert.match(shellSource, /icon:\s*"icon"/);
   assert.match(shellSource, /hidden:\s*"hidden"/);
+  assert.match(shellSource, /create\("button", "sidebar-state-btn"\)/);
+  assert.match(shellSource, /function advanceSidebarState\(\)/);
+  assert.match(shellSource, /Collapse sidebar to icons/);
+  assert.match(shellSource, /Hide sidebar/);
+  assert.match(shellSource, /Show expanded sidebar/);
+  assert.doesNotMatch(shellSource, /topbar-hide-btn|toggleSidebarVisibility/);
+  assert.match(shellSource, /Browser Studio", icon: "\/assets\/icons\/icondiag-studioweb\.svg"/);
+  assert.match(shellSource, /StudioApp", icon: "\/assets\/icons\/icondiag-studioapp\.svg"/);
+  assert.match(shellSource, /Studio for OBS", icon: "\/assets\/icons\/obs-0\.svg"/);
+  assert.match(shellSource, /sidebar-brand-glyph/);
+  assert.doesNotMatch(shellSource, /logo\.src = "\/assets\/logos\/ssmainlogosq\.webp"/);
+  assert.match(shellCss, /\.sidebar-brand-glyph::before,[\s\S]*streamsuites-filled\.svg/);
+  assert.match(shellCss, /\.sidebar-brand:hover \.sidebar-brand-logo/);
 });
 
 test("settings, account menu, semantic tokens, and established presets share one Public preference path", () => {
@@ -141,16 +154,34 @@ test("Wheel Detail V3 behavior markers survive shell modernization", () => {
 });
 
 test("stats uses the public aggregate contract and retains finite graph-entry motion", () => {
-  assert.doesNotMatch(`${statsHtml}\n${statsSource}`, /STATS_PLACEHOLDER|89400|3248000|Live placeholder|bragging rights/i);
+  assert.doesNotMatch(`${statsHtml}\n${statsSource}`, /STATS_PLACEHOLDER|89400|3248000|Live placeholder/i);
   assert.match(statsSource, /\/api\/public\/stats/);
   assert.match(statsSource, /schema_version\s*!==\s*"public-stats-v1"/);
   assert.match(statsSource, /is-plot-primed/);
   assert.match(statsSource, /IntersectionObserver/);
   assert.match(statsSource, /prefers-reduced-motion/);
   assert.match(statsSource, /No totals have been substituted or treated as zero/);
+  for (const heading of ["Total Site Visits", "Runtime Event Breakdown", "Total Users", "Active Installations", "Runtime Events", "Performance Analytics", "Milestones &amp; Bragging Rights"]) {
+    assert.match(statsHtml, new RegExp(heading));
+  }
+  assert.match(statsHtml, /No authoritative visits aggregate is published/);
+  assert.match(statsHtml, /No public installation aggregate is published/);
+  assert.match(statsHtml, /No public event-volume aggregate is published/);
+  assert.match(statsSource, /payload\.account_roles/);
+  assert.match(statsSource, /data-scaffold-stat/);
   assert.match(statsCss, /stroke-dashoffset:\s*1/);
   assert.match(statsCss, /stroke-dashoffset 1500ms/);
   assert.match(statsCss, /data-public-appearance="light"/);
   assert.match(statsCss, /body\.stats-page \.stats-hero h1/);
   assert.match(statsCss, /max-width:\s*100%;\s*font-size:\s*clamp\(2\.15rem/);
+  assert.match(statsCss, /min-height:\s*280px/);
+  assert.match(statsCss, /clamp\(2\.2rem, 4\.4vw, 4\.8rem\)/);
+  assert.match(statsHtml, /\/css\/status-page\.css/);
+  assert.match(statsHtml, /<header class="site-header" data-site-header>/);
+  assert.match(statsHtml, /<footer class="site-footer">/);
+  assert.match(statsHtml, /class="brand__mark" src="\/assets\/logos\/ssmainlogosq\.webp"/);
+  assert.match(statsHtml, /class="brand__wordmark" src="\/assets\/logos\/wmnew\.webp"/);
+  assert.doesNotMatch(statsHtml, /class="stats-header"|class="stats-footer/);
+  assert.match(statsSource, /function initNavigation\(\)/);
+  assert.match(statsSource, /event\.key === "Escape"/);
 });

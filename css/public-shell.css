@@ -399,19 +399,26 @@ body.public-standalone-page {
   margin-left: 0;
 }
 
-.topbar-menu-btn,
-.topbar-hide-btn {
-  display: inline-grid;
-  place-items: center;
+.sidebar-state-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   border: 1px solid rgba(188, 202, 226, 0.24);
   background: rgba(30, 40, 58, 0.72);
   color: #edf3ff;
   height: 30px;
-  width: 30px;
   min-width: 30px;
+  padding: 0 9px 0 7px;
   border-radius: 9px;
   cursor: pointer;
   transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+}
+
+.sidebar-state-btn__label {
+  font-size: .62rem;
+  font-weight: 650;
+  letter-spacing: .02em;
 }
 
 .topbar-btn-icon {
@@ -428,17 +435,15 @@ body.public-standalone-page {
   mask-size: contain;
 }
 
-.topbar-menu-btn:hover,
-.topbar-hide-btn:hover,
-.topbar-menu-btn:focus-visible,
-.topbar-hide-btn:focus-visible {
+.sidebar-state-btn:hover,
+.sidebar-state-btn:focus-visible {
   border-color: rgba(154, 209, 255, 0.65);
   background: rgba(38, 57, 85, 0.78);
   color: var(--ps-link-primary);
   outline: none;
 }
 
-.topbar-hide-btn.is-hidden-state {
+.sidebar-state-btn[data-sidebar-state="hidden"] {
   color: var(--ps-link-primary);
   border-color: rgba(154, 209, 255, 0.58);
 }
@@ -8115,6 +8120,72 @@ body.public-shell-page .public-sidebar {
 }
 
 body.public-shell-page .sidebar-top { padding: 10px 9px 8px; border-bottom-color: var(--ss-border-soft); }
+body.public-shell-page .sidebar-brand-logo {
+  position: relative;
+  isolation: isolate;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--ss-accent-border);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 34% 20%, color-mix(in srgb, var(--ss-accent-tertiary) 18%, transparent), transparent 48%),
+    radial-gradient(circle at 74% 80%, color-mix(in srgb, var(--ss-accent-secondary) 18%, transparent), transparent 54%),
+    var(--ss-surface-card);
+  box-shadow: inset 0 1px color-mix(in srgb, white 12%, transparent), inset 0 0 18px var(--ss-accent-wash), var(--ss-accent-glow);
+  transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease, background 200ms ease;
+}
+body.public-shell-page .sidebar-brand-logo::after {
+  position: absolute;
+  z-index: 1;
+  inset: 3px;
+  border: 1px solid color-mix(in srgb, var(--ss-text-primary) 7%, transparent);
+  border-radius: 9px;
+  content: "";
+  pointer-events: none;
+}
+body.public-shell-page .sidebar-brand-glyph {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 26px;
+  height: 24px;
+}
+body.public-shell-page .sidebar-brand-glyph::before,
+body.public-shell-page .sidebar-brand-glyph::after {
+  position: absolute;
+  inset: 0;
+  background-size: 100% 100%;
+  -webkit-mask: url("/assets/icons/ui/streamsuites-filled.svg") center / contain no-repeat;
+  mask: url("/assets/icons/ui/streamsuites-filled.svg") center / contain no-repeat;
+  content: "";
+  transition: opacity 220ms ease, filter 220ms ease, transform 220ms ease;
+}
+body.public-shell-page .sidebar-brand-glyph::before {
+  opacity: 1;
+  background-image: linear-gradient(145deg, color-mix(in srgb, var(--ss-accent-tertiary) 58%, var(--ss-surface-card)), color-mix(in srgb, var(--ss-accent-primary) 72%, var(--ss-surface-card)) 52%, color-mix(in srgb, var(--ss-accent-secondary) 66%, var(--ss-surface-card)));
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--ss-accent-primary) 26%, transparent));
+}
+body.public-shell-page .sidebar-brand-glyph::after {
+  opacity: 0;
+  background-image: linear-gradient(125deg, color-mix(in srgb, var(--ss-accent-secondary) 78%, var(--ss-surface-card)), color-mix(in srgb, var(--ss-accent-tertiary) 72%, var(--ss-surface-card)) 48%, color-mix(in srgb, var(--ss-accent-primary) 76%, var(--ss-surface-card)));
+  filter: drop-shadow(0 0 9px color-mix(in srgb, var(--ss-accent-secondary) 38%, transparent));
+  transform: scale(1.035);
+}
+body.public-shell-page .sidebar-brand:hover .sidebar-brand-logo,
+body.public-shell-page .sidebar-brand:focus-visible .sidebar-brand-logo {
+  border-color: color-mix(in srgb, var(--ss-accent-secondary) 68%, var(--ss-accent-primary));
+  background: linear-gradient(315deg, color-mix(in srgb, var(--ss-accent-primary) 18%, var(--ss-surface-card)), color-mix(in srgb, var(--ss-accent-secondary) 24%, var(--ss-surface-card)));
+  box-shadow: inset 0 1px color-mix(in srgb, white 16%, transparent), inset 0 0 20px var(--ss-accent-wash), var(--ss-accent-glow);
+  transform: translateY(-1px) scale(1.025);
+}
+body.public-shell-page .sidebar-brand:hover .sidebar-brand-glyph::before,
+body.public-shell-page .sidebar-brand:focus-visible .sidebar-brand-glyph::before { opacity: 0; }
+body.public-shell-page .sidebar-brand:hover .sidebar-brand-glyph::after,
+body.public-shell-page .sidebar-brand:focus-visible .sidebar-brand-glyph::after { opacity: 1; }
 body.public-shell-page .sidebar-scroll { padding: 8px 7px 10px; scrollbar-width: thin; }
 body.public-shell-page .sidebar-group { gap: 3px; }
 body.public-shell-page .sidebar-group + .sidebar-group { margin-top: 10px; padding-top: 9px; border-top-color: var(--ss-border-soft); }
@@ -10012,8 +10083,7 @@ body.public-shell-page .footer-bar {
   border-color: rgba(188, 207, 237, 0.14);
 }
 
-body.public-shell-page .topbar-menu-btn,
-body.public-shell-page .topbar-hide-btn,
+body.public-shell-page .sidebar-state-btn,
 body.public-shell-page .filter-toggle,
 body.public-shell-page .account-pill {
   border-color: rgba(225, 232, 244, 0.16);
@@ -10021,10 +10091,8 @@ body.public-shell-page .account-pill {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 22px rgba(0, 0, 0, 0.2);
 }
 
-body.public-shell-page .topbar-menu-btn:hover,
-body.public-shell-page .topbar-hide-btn:hover,
-body.public-shell-page .topbar-menu-btn:focus-visible,
-body.public-shell-page .topbar-hide-btn:focus-visible,
+body.public-shell-page .sidebar-state-btn:hover,
+body.public-shell-page .sidebar-state-btn:focus-visible,
 body.public-shell-page .filter-toggle:hover,
 body.public-shell-page .filter-toggle:focus-visible,
 body.public-shell-page .account-pill:hover,
@@ -14765,4 +14833,28 @@ body.public-shell-page .dashboard-action.is-strong {
   background: var(--ss-control-neutral);
   color: var(--ss-text-primary);
   box-shadow: none;
+}
+
+@media (max-width: 700px) {
+  body.public-shell-page .sidebar-state-btn {
+    width: 32px;
+    padding-inline: 7px;
+  }
+
+  body.public-shell-page .sidebar-state-btn__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.public-shell-page .sidebar-brand-logo,
+  body.public-shell-page .sidebar-brand-glyph::before,
+  body.public-shell-page .sidebar-brand-glyph::after {
+    transition: none;
+  }
 }

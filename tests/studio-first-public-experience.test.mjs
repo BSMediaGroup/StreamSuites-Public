@@ -383,8 +383,9 @@ test("functional shell connects to real product routes without changing route co
   assert.match(shell, /https:\/\/studio\.streamsuites\.app/);
   assert.match(shell, /\/downloads\/studioapp\//);
   assert.match(shell, /\/downloads\/obs-plugin\//);
-  assert.match(shell, /\/assets\/logos\/ssmainlogosq\.webp/);
-  assert.match(shell, /logo\.src = "\/assets\/logos\/ssmainlogosq\.webp"/);
+  assert.match(shell, /sidebar-brand-glyph/);
+  assert.doesNotMatch(shell, /logo\.src = "\/assets\/logos\/ssmainlogosq\.webp"/);
+  assert.match(read("css/public-shell.css"), /\.sidebar-brand-glyph::before,[\s\S]*streamsuites-filled\.svg/);
   assert.match(read("css/public-shell.css"), /body\.public-shell-page \.sidebar-brand-title\s*\{[\s\S]*font-weight:\s*700/);
   assert.match(read("css/public-shell.css"), /body\.public-shell-page \.sidebar-brand-subheading-text\s*\{[\s\S]*font-weight:\s*400/);
   assert.match(read("css/public-shell.css"), /body\.public-shell-page \.account-menu-overview-value\s*\{[\s\S]*font-family:\s*ui-monospace/);

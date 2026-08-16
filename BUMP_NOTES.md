@@ -6,6 +6,22 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-17 - Statistics chrome and Public sidebar-control correction
+
+#### Technical notes
+
+- Replaced the Stats-only compact header/footer with the same `site-header` and full `site-footer` structure, first-party mark/wordmark, navigation behavior, version action, product/public/operations/resource link groups, and responsive mobile navigation used by the newer Status and Health surfaces. The real aggregate content, Runtime/Auth statistics contract, Dark/Light control, theme presets, finite graph motion, and unavailable-data semantics remain unchanged.
+- Restored the previous Stats scaffold groups for Total Site Visits, Runtime Event Breakdown, Total Users, Active Installations, Runtime Events, Performance Analytics, and Milestones & Bragging Rights alongside the new real aggregates. Active-account and account-role values hydrate from `public-stats-v1`; visits, installations, event volume/categories, activity series, and milestones remain explicitly unavailable instead of reviving the removed sample numbers. Reduced the hero height, title scale, spacing, and copy density so the aggregate cards enter the initial desktop viewport instead of the hero consuming the page.
+- Consolidated the Public shell's separate resize and visibility buttons into one state-aware sidebar control. It progresses through Expanded, Icon-only, and Hidden with an explicit next-action label, state-specific icon, persisted state, accessible name, tooltip, mobile compact treatment, and unchanged responsive shell geometry.
+- Replaced the shell's raster square mark with the standalone-profile-derived SVG mask and CSS gradient treatment, mapped to the separate Public-shell theme tokens. Hover/focus gradients, glow, Light appearance, and reduced-motion behavior follow the active shell session/account preference without reading or changing profile-owner appearance.
+- Corrected Production navigation assets: Browser Studio now uses `assets/icons/icondiag-studioweb.svg`, StudioApp uses `assets/icons/icondiag-studioapp.svg`, and Studio for OBS uses the mask-safe `assets/icons/obs-0.svg` so the real OBS mark renders instead of a filled circle.
+- Extended the focused shell test to pin the unified three-state control, exact product-icon mapping, theme-aware SVG brand treatment, and Stats chrome parity. No route, Runtime/Auth contract, profile preference, version/build metadata, deployment, commit, or production process was changed.
+- Retained rendered desktop and mobile evidence for the compact Stats hero, restored scaffold groups, Light appearance, expanded shell, and icon-only shell under `output/playwright/public-shell-followup-20260817/`; the Stats captures use a deterministic local `public-stats-v1` fixture and are not deployed-service proof.
+
+#### Human-readable summary
+
+Statistics now uses the same modern StreamSuites header and footer as Status and Health. The Public sidebar has one clear control for all three layouts, a theme-aware StreamSuites SVG mark, and corrected Browser Studio, StudioApp, and OBS icons.
+
 ### 2026-08-17 - Public shell redesign, persistent appearance, and real statistics
 
 #### Technical notes

@@ -49,10 +49,18 @@
         .filter(([key, value]) => key && value !== null)
         .sort(([left], [right]) => left.localeCompare(right))
     );
+    const accountRoles = payload.account_roles && typeof payload.account_roles === "object"
+      ? Object.fromEntries(
+        Object.entries(payload.account_roles)
+          .map(([key, value]) => [String(key || "").trim().toLowerCase(), finiteCount(value)])
+          .filter(([key, value]) => key && value !== null)
+      )
+      : null;
     return {
       generatedAt: String(payload.generated_at || ""),
       coverage: payload.coverage && typeof payload.coverage === "object" ? payload.coverage : {},
       totals,
+      accountRoles,
       artifactsByType,
       series: {
         account_creations: normalizeSeries(payload?.series?.account_creations),
@@ -215,6 +223,17 @@
 
   function render(model) {
     Object.entries(model.totals).forEach(([key, value]) => animateNumber(document.querySelector(`[data-stat-total="${key}"]`), value));
+    const scaffoldValues = {
+      active_accounts: model.totals.active_accounts,
+      creator_accounts: model.accountRoles ? (model.accountRoles.creator || 0) : null,
+      public_accounts: model.accountRoles ? (model.accountRoles.public || 0) : null
+    };
+    Object.entries(scaffoldValues).forEach(([key, value]) => {
+      const node = document.querySelector(`[data-scaffold-stat="${key}"]`);
+      if (!node) return;
+      if (value === null) node.textContent = "—";
+      else animateNumber(node, value);
+    });
     renderGraph("account_creations", model.series.account_creations);
     renderGraph("artifact_creations", model.series.artifact_creations);
     renderArtifactBars(Object.entries(model.artifactsByType));
@@ -229,7 +248,7 @@
   }
 
   function setError(error) {
-    document.querySelectorAll("[data-stat-total]").forEach((node) => { node.textContent = "—"; });
+    document.querySelectorAll("[data-stat-total], [data-scaffold-stat]").forEach((node) => { node.textContent = "—"; });
     document.querySelectorAll("[data-graph-host]").forEach((host) => {
       host.replaceChildren(element("div", "stats-graph__empty", "Authoritative history unavailable."));
       host.className = "stats-graph";
@@ -265,11 +284,33 @@
     });
   }
 
+  function initNavigation() {
+    const toggle = document.querySelector("[data-nav-toggle]");
+    const nav = document.querySelector("[data-primary-nav]");
+    if (!toggle || !nav) return;
+    const setOpen = (open) => {
+      nav.classList.toggle("is-open", open);
+      toggle.setAttribute("aria-expanded", String(open));
+      toggle.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
+    };
+    toggle.addEventListener("click", () => setOpen(toggle.getAttribute("aria-expanded") !== "true"));
+    nav.addEventListener("click", (event) => {
+      if (event.target.closest("a")) setOpen(false);
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && nav.classList.contains("is-open")) {
+        setOpen(false);
+        toggle.focus();
+      }
+    });
+  }
+
   document.querySelectorAll("[data-stats-appearance]").forEach((button) => {
     button.addEventListener("click", () => window.StreamSuitesPublicUiPreferences?.setAppearance?.(button.dataset.statsAppearance));
   });
   window.StreamSuitesPublicUiPreferences?.subscribe?.(syncAppearanceButtons);
   document.querySelectorAll("[data-stats-refresh], [data-stats-retry]").forEach((button) => button.addEventListener("click", loadStats));
+  initNavigation();
 
   fetch(AUTH_ME_ENDPOINT, { cache: "no-store", credentials: "include", headers: { Accept: "application/json" } })
     .then((response) => response.ok ? response.json() : null)

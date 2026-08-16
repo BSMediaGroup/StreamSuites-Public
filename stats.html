@@ -14,6 +14,7 @@
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <script src="/js/public-ui-preferences.js"></script>
   <link rel="stylesheet" href="/css/theme-dark.css" />
+  <link rel="stylesheet" href="/css/status-page.css?v=20260811-history-polish" />
   <link rel="stylesheet" href="/css/stats-page.css" />
   <link rel="stylesheet" href="/css/status-widget.css" />
 </head>
@@ -21,20 +22,26 @@
   <a class="stats-skip" href="#stats-main">Skip to statistics</a>
   <div class="stats-atmosphere" aria-hidden="true"></div>
 
-  <header class="stats-header">
-    <a class="stats-brand" href="/" aria-label="StreamSuites home">
-      <img src="/assets/logos/logo.png" alt="" />
-      <span><strong>StreamSuites™</strong><small>Public statistics</small></span>
-    </a>
-    <nav class="stats-nav" aria-label="Statistics navigation">
-      <a href="/home">Public dashboard</a>
-      <a href="/status">Status</a>
-      <a href="/health">Health</a>
-      <a href="/version">Version</a>
-    </nav>
-    <div class="stats-appearance" role="group" aria-label="Page appearance">
-      <button type="button" data-stats-appearance="dark" aria-pressed="false">Dark</button>
-      <button type="button" data-stats-appearance="light" aria-pressed="false">Light</button>
+  <header class="site-header" data-site-header>
+    <div class="shell site-header__inner">
+      <a class="brand" href="/" aria-label="StreamSuites home">
+        <img class="brand__mark" src="/assets/logos/ssmainlogosq.webp" alt="" width="38" height="38" />
+        <img class="brand__wordmark" src="/assets/logos/wmnew.webp" alt="StreamSuites" />
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="Open navigation" data-nav-toggle>
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="primary-nav" id="primary-nav" aria-label="Primary navigation" data-primary-nav>
+        <a href="/#products">Products</a>
+        <a href="/home">Public dashboard</a>
+        <a href="/status">Status</a>
+        <a href="/health">Health</a>
+        <a class="is-current" href="#stats-main" aria-current="page">Statistics</a>
+      </nav>
+      <div class="header-actions">
+        <a class="standalone-version-badge footer-version button button--quiet button--small" href="/version">Loading version…</a>
+        <a class="button button--primary button--small" href="https://studio.streamsuites.app">Open Studio</a>
+      </div>
     </div>
   </header>
 
@@ -47,6 +54,10 @@
         <div class="stats-hero__actions">
           <a class="stats-button stats-button--primary" href="/home">Explore the Public dashboard</a>
           <button class="stats-button" type="button" data-stats-refresh>Refresh snapshot</button>
+          <div class="stats-appearance" role="group" aria-label="Page appearance">
+            <button type="button" data-stats-appearance="dark" aria-pressed="false">Dark</button>
+            <button type="button" data-stats-appearance="light" aria-pressed="false">Light</button>
+          </div>
         </div>
       </div>
       <div class="stats-freshness" data-stats-state="loading" aria-live="polite">
@@ -74,6 +85,62 @@
         <strong data-stat-total="public_artifacts">—</strong>
         <small>Listed, active artifacts in Runtime/Auth authority.</small>
       </article>
+    </section>
+
+    <section class="stats-telemetry" aria-labelledby="stats-telemetry-title">
+      <header class="stats-section-heading">
+        <div><p class="stats-eyebrow">Extended metric coverage</p><h2 id="stats-telemetry-title">Platform telemetry scaffolds</h2></div>
+        <p>The previous metric groups remain visible. Values render only where Runtime/Auth currently publishes an authoritative aggregate.</p>
+      </header>
+
+      <div class="stats-telemetry__highlights">
+        <article class="stats-legacy-card stats-legacy-card--spotlight">
+          <div>
+            <p class="stats-eyebrow">Spotlight metric</p>
+            <h3>Total Site Visits</h3>
+            <strong class="stats-unavailable-value">Unavailable</strong>
+            <span class="stats-source-state">No authoritative visits aggregate is published</span>
+          </div>
+          <p>Cross-platform traffic remains scaffolded here without substituting browser-local, sample, or invented analytics.</p>
+        </article>
+
+        <article class="stats-legacy-card">
+          <div class="stats-legacy-card__heading"><div><h3>Runtime Event Breakdown</h3><p>Total Runtime events across automation modules.</p></div><span class="stats-source-state">Awaiting authority</span></div>
+          <strong class="stats-unavailable-value">Unavailable</strong>
+          <div class="stats-empty-bars" role="img" aria-label="Runtime event categories are not currently published">
+            <span>Triggers</span><span>Clips</span><span>Exports</span><span>Automations</span><span>Bot actions</span><span>Notifications</span>
+          </div>
+        </article>
+      </div>
+
+      <div class="stats-telemetry__compact" aria-label="Platform metric cards">
+        <article class="stats-legacy-card stats-legacy-card--compact"><p>Total Users</p><strong data-scaffold-stat="active_accounts">—</strong><small>Current active accounts · Runtime/Auth</small></article>
+        <article class="stats-legacy-card stats-legacy-card--compact"><p>Active Installations</p><strong class="stats-unavailable-value">Unavailable</strong><small>No public installation aggregate is published</small></article>
+        <article class="stats-legacy-card stats-legacy-card--compact"><p>Runtime Events</p><strong class="stats-unavailable-value">Unavailable</strong><small>No public event-volume aggregate is published</small></article>
+      </div>
+
+      <div class="stats-telemetry__details">
+        <article class="stats-legacy-card stats-performance">
+          <div class="stats-legacy-card__heading"><h3>Performance Analytics</h3><span class="stats-source-state">Account roles live</span></div>
+          <div class="stats-performance__accounts">
+            <div><p>Total creators</p><strong data-scaffold-stat="creator_accounts">—</strong><small>Active creator-role accounts</small></div>
+            <div><p>Viewer accounts</p><strong data-scaffold-stat="public_accounts">—</strong><small>Active public-role accounts</small></div>
+          </div>
+          <div class="stats-performance__unavailable"><strong>Seven-day Runtime activity</strong><span>Not currently measured by the public statistics contract.</span></div>
+        </article>
+
+        <article class="stats-legacy-card stats-milestones">
+          <div class="stats-legacy-card__heading"><h3>Milestones &amp; Bragging Rights</h3><span class="stats-source-state">Scaffold retained</span></div>
+          <p>These established milestone slots remain present without claiming thresholds Runtime/Auth does not publish.</p>
+          <ul>
+            <li><span>Launch-week streak</span><strong>Not published</strong></li>
+            <li><span>Automation workflows activated</span><strong>Not published</strong></li>
+            <li><span>Creator clip milestones</span><strong>Not published</strong></li>
+            <li><span>Public shell and community progress</span><strong>Not published</strong></li>
+            <li><span>OAuth reliability milestone</span><strong>Not published</strong></li>
+          </ul>
+        </article>
+      </div>
     </section>
 
     <section class="stats-dashboard" aria-label="Historical aggregate graphs">
@@ -118,15 +185,27 @@
     </section>
   </main>
 
-  <footer class="stats-footer footer-bar">
-    <span>StreamSuites™ · Public aggregate view</span>
-    <nav aria-label="Statistics footer">
-      <a href="/about.html">About</a>
-      <a href="/support.html">Support</a>
-      <a href="/privacy.html">Privacy</a>
-      <a href="/accessibility.html">Accessibility</a>
-    </nav>
-    <span class="version-pill">Loading version…</span>
+  <footer class="site-footer">
+    <div class="shell site-footer__top">
+      <div class="site-footer__brand">
+        <a class="brand brand--footer" href="/" aria-label="StreamSuites home">
+          <img class="brand__mark" src="/assets/logos/ssmainlogosq.webp" alt="" width="38" height="38" />
+          <img class="brand__wordmark" src="/assets/logos/wmnew.webp" alt="StreamSuites" />
+        </a>
+        <p>Connected livestream production for browser, Windows, and OBS workflows.</p>
+      </div>
+      <div class="site-footer__links">
+        <div><strong>Products</strong><a href="https://studio.streamsuites.app">Browser Studio</a><a href="/downloads/studioapp/">StudioApp</a><a href="/downloads/obs-plugin/">Studio for OBS</a></div>
+        <div><strong>Public</strong><a href="/home.html">Dashboard</a><a href="/community">Community</a><a href="/live">Live</a><a href="/clips">Clips</a></div>
+        <div><strong>Operations</strong><a href="/status">Status &amp; incidents</a><a href="/health">System health</a><a href="/version">Version authority</a><a href="#stats-main" aria-current="page">Statistics</a></div>
+        <div><strong>Resources</strong><a href="/about.html">About</a><a href="/support.html">Support</a><a href="/privacy.html">Privacy</a><a href="/accessibility.html">Accessibility</a></div>
+      </div>
+    </div>
+    <div class="shell site-footer__bottom">
+      <a class="footer-copyright" href="https://brainstream.media" target="_blank" rel="noopener noreferrer">© 2026 Brainstream Media Group</a>
+      <span>Runtime/Auth aggregates · public-safe presentation</span>
+      <a href="/status">Service status</a>
+    </div>
   </footer>
 
   <script src="/js/stats-page.js" defer></script>
