@@ -2,7 +2,10 @@
   "use strict";
 
   const DEFAULT_CENTER_IMAGE = "/assets/placeholders/wheelcenterdefault.webp";
-  const API_BASE = String(window.StreamSuitesPublicConfig?.AUTH_API_BASE || "https://api.streamsuites.app").replace(/\/$/, "");
+  const localApiBase = ["127.0.0.1", "localhost"].includes(String(window.location?.hostname || "").toLowerCase())
+    ? "http://127.0.0.1:18087"
+    : "https://api.streamsuites.app";
+  const API_BASE = String(window.StreamSuitesPublicConfig?.AUTH_API_BASE || localApiBase).replace(/\/$/, "");
   const VIEW_MODES = new Set(["focus", "grid", "results"]);
   const STAGE_BACKGROUND_PRESETS = Object.freeze([
     Object.freeze({ id: "cinematic_chamber", name: "Cinematic Chamber" }),
@@ -53,7 +56,9 @@
     if (/^\/api\/public\/wheel-media\/[A-Za-z0-9_-]+\/whl_[A-Za-z0-9_-]+\/[a-f0-9]{32}\.webp$/i.test(candidate)) return candidate;
     try {
       const parsed = new URL(candidate);
-      return parsed.protocol === "https:" && /^\/api\/public\/wheel-media\/[A-Za-z0-9_-]+\/whl_[A-Za-z0-9_-]+\/[a-f0-9]{32}\.webp$/i.test(parsed.pathname)
+      const allowedProtocol = parsed.protocol === "https:"
+        || (parsed.protocol === "http:" && ["127.0.0.1", "localhost"].includes(parsed.hostname));
+      return allowedProtocol && /^\/api\/public\/wheel-media\/[A-Za-z0-9_-]+\/whl_[A-Za-z0-9_-]+\/[a-f0-9]{32}\.webp$/i.test(parsed.pathname)
         ? candidate
         : "";
     } catch (_error) {
@@ -182,6 +187,11 @@
       customSlug: text(item?.customSlug || item?.custom_slug),
       shortlinkSlug: text(item?.shortlinkSlug || item?.shortlink_slug),
       slugAliases: Array.isArray(item?.slugAliases || item?.slug_aliases) ? [...(item.slugAliases || item.slug_aliases)] : [],
+      wheelService: item?.wheelService && typeof item.wheelService === "object"
+        ? structuredClone(item.wheelService)
+        : item?.wheel_service && typeof item.wheel_service === "object"
+          ? structuredClone(item.wheel_service)
+          : null,
       wheelSet: {
         activeWheelId: active.wheelId,
         spinAll: {
@@ -358,6 +368,10 @@
     let artifact = normalizeArtifact(rawItem);
     const stageMode = options.stageMode === true;
     const isOwner = options.isOwner === true;
+    const serviceFeatures = artifact.wheelService?.features && typeof artifact.wheelService.features === "object"
+      ? artifact.wheelService.features
+      : {};
+    const canEdit = isOwner && artifact.wheelService?.schema_version === "streamsuites.wheel-set.v2" && serviceFeatures.update === true && serviceFeatures.child_operations === true;
     const sessionId = text(options.sessionId || new URLSearchParams(window.location.search).get("session"));
     const sourceId = crypto.randomUUID?.() || `src-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const presentationStateKey = `streamsuites.wheel.presentation.${artifact.artifactCode}`;
@@ -382,6 +396,7 @@
       spinAllScheduledCount: 0,
       destroyed: false,
       modalCleanup: null,
+      pendingCanonicalRender: false,
       lastFocus: null,
       renderCleanups: [],
       inspectorCollapsed: readLocalFlag(`${presentationStateKey}.inspector`, false),
@@ -869,19 +884,28 @@
           });
           menu.appendChild(button);
         };
-        if (isOwner) {
+        if (canEdit) {
           addHeading("Wheel management");
           addAction("Add wheel", async () => {
             try { await mutate({ type: "add", wheel: { name: `Wheel ${state.authoritativeWheelSet.wheels.length + 1}`, entries: ["Entry 1", "Entry 2"] } }); announce("Wheel added."); }
             catch (error) { announce(error instanceof Error ? error.message : "Add failed."); }
           });
           addAction("Manage wheels", manageWheelsModal);
+          if (serviceFeatures.export === true) {
+            addAction("Export wheel set (.sswheel)", async () => {
+              try { await exportWheelSet(); announce("Canonical wheel-set export downloaded."); }
+              catch (error) { announce(error instanceof Error ? error.message : "Export failed."); }
+            });
+          }
           if (state.selectedWheelId !== state.authorityDefaultWheelId) {
             addAction("Set as default", async () => {
               try { await mutate({ type: "set_active", wheel_id: state.selectedWheelId }); announce(`${selectedWheel().name} is now the saved default.`); }
               catch (error) { announce(error instanceof Error ? error.message : "Default update failed."); }
             });
           }
+        } else if (isOwner) {
+          addHeading("Compatibility");
+          addAction("Wheel editing requires the current Runtime wheel service", () => {}, { disabled: true });
         }
         addHeading("Local session");
         addAction("Reset wheel", () => resetWheel(wheel.wheelId), { disabled: !result.history.length && result.spinState !== "spinning" });
@@ -1210,12 +1234,19 @@
       backdrop.appendChild(dialog);
       document.body.appendChild(backdrop);
       document.body.classList.add("modal-open");
+      document.body.classList.add("wheel-editor-open");
       const dismiss = () => {
         cleanup();
         backdrop.remove();
         document.body.classList.remove("modal-open");
+        document.body.classList.remove("wheel-editor-open");
         state.modalCleanup = null;
         state.lastFocus?.focus?.();
+        if (state.pendingCanonicalRender) {
+          state.pendingCanonicalRender = false;
+          render();
+        }
+        document.dispatchEvent(new CustomEvent("streamsuites:wheel-editor-closed"));
       };
       const keydown = (event) => {
         if (event.key === "Escape") { event.preventDefault(); dismiss(); return; }
@@ -1239,32 +1270,81 @@
       try { return await response.json(); } catch (_error) { return {}; }
     }
 
+    function responseErrorMessage(payload, status, fallback = "Wheel request failed") {
+      if (payload?.error && typeof payload.error === "object") {
+        return text(payload.error.message, `${fallback} (${status})`);
+      }
+      return text(payload?.error, `${fallback} (${status})`);
+    }
+
     function rehydrateCanonical(payload) {
       const canonical = payload?.wheel || payload;
       if (!canonical || typeof canonical !== "object") return;
       const previousSelection = state.selectedWheelId;
-      artifact = normalizeArtifact({ ...artifact, ...canonical });
+      artifact = normalizeArtifact({
+        ...canonical,
+        wheelService: canonical.wheelService || canonical.wheel_service || payload?.wheel_service || artifact.wheelService
+      });
       state.authoritativeWheelSet = artifact.wheelSet;
       state.authorityDefaultWheelId = artifact.wheelSet.activeWheelId;
       state.selectedWheelId = artifact.wheelSet.wheels.some((wheel) => wheel.wheelId === previousSelection) ? previousSelection : artifact.wheelSet.activeWheelId;
       const validIds = new Set(artifact.wheelSet.wheels.map((wheel) => wheel.wheelId));
       [...state.resultsByWheel.keys()].forEach((id) => { if (!validIds.has(id)) state.resultsByWheel.delete(id); });
       artifact.wheelSet.wheels.forEach((wheel) => resultFor(wheel.wheelId));
-      render();
+      if (state.modalCleanup) state.pendingCanonicalRender = true;
+      else render();
       publish("state");
     }
 
-    async function mutate(operation) {
+    async function mutatePayload(body) {
+      if (!canEdit) throw new Error("Wheel editing requires the current Runtime wheel service");
       const response = await fetch(`${API_BASE}/api/creator/wheels/${encodeURIComponent(artifact.artifactCode)}`, {
         method: "PATCH",
         cache: "no-store",
         credentials: "include",
         headers: { Accept: "application/json", "Content-Type": "application/json" },
-        body: JSON.stringify({ operation })
+        body: JSON.stringify(body)
       });
       const payload = await parseResponse(response);
-      if (!response.ok || payload?.success === false) throw new Error(text(payload?.error, `Save failed (${response.status})`));
+      if (!response.ok || payload?.success === false) throw new Error(responseErrorMessage(payload, response.status, "Save failed"));
       rehydrateCanonical(payload);
+      const warning = Array.isArray(payload?.warnings) ? payload.warnings.find((item) => item?.message) : null;
+      if (warning?.message) announce(warning.message);
+      return payload;
+    }
+
+    async function mutate(operation) {
+      return mutatePayload({ operation });
+    }
+
+    async function mutateArtifact(updates) {
+      return mutatePayload(updates && typeof updates === "object" ? updates : {});
+    }
+
+    async function exportWheelSet() {
+      if (!canEdit || serviceFeatures.export !== true) throw new Error("Wheel export requires the current Runtime wheel service");
+      const response = await fetch(`${API_BASE}/api/creator/wheels/${encodeURIComponent(artifact.artifactCode)}/export`, {
+        method: "GET",
+        cache: "no-store",
+        credentials: "include",
+        headers: { Accept: "application/json" }
+      });
+      const payload = await parseResponse(response);
+      if (!response.ok || payload?.success === false) throw new Error(responseErrorMessage(payload, response.status, "Export failed"));
+      const portable = payload?.export?.payload;
+      if (!portable || typeof portable !== "object") throw new Error("Runtime returned no portable wheel document");
+      const blob = new Blob([JSON.stringify(portable, null, 2)], { type: "application/json" });
+      const href = URL.createObjectURL(blob);
+      try {
+        const anchor = element("a");
+        anchor.href = href;
+        anchor.download = text(payload?.export?.filename, `${artifact.slug || "wheel-set"}.sswheel`);
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+      } finally {
+        URL.revokeObjectURL(href);
+      }
       return payload;
     }
 
@@ -1546,7 +1626,7 @@
               const form = new FormData(); form.append("file", selectedCenterFile);
               const response = await fetch(`${API_BASE}/api/creator/wheels/${encodeURIComponent(artifact.artifactCode)}/wheels/${encodeURIComponent(wheel.wheelId)}/center-image`, { method: "POST", credentials: "include", cache: "no-store", headers: { Accept: "application/json" }, body: form });
               const payload = await parseResponse(response);
-              if (!response.ok || payload?.success === false) throw new Error(text(payload?.error, `Upload failed (${response.status})`));
+              if (!response.ok || payload?.success === false) throw new Error(responseErrorMessage(payload, response.status, "Upload failed"));
               rehydrateCanonical(payload);
               const hydrated = state.authoritativeWheelSet.wheels.find((entry) => entry.wheelId === wheel.wheelId);
               draft.presentation.center_image_url = hydrated?.presentation.center_image_url || draft.presentation.center_image_url;
@@ -1557,7 +1637,7 @@
               const form = new FormData(); form.append("file", selectedStageFile);
               const response = await fetch(`${API_BASE}/api/creator/wheels/${encodeURIComponent(artifact.artifactCode)}/wheels/${encodeURIComponent(wheel.wheelId)}/stage-background-image`, { method: "POST", credentials: "include", cache: "no-store", headers: { Accept: "application/json" }, body: form });
               const payload = await parseResponse(response);
-              if (!response.ok || payload?.success === false) throw new Error(text(payload?.error, `Stage upload failed (${response.status})`));
+              if (!response.ok || payload?.success === false) throw new Error(responseErrorMessage(payload, response.status, "Stage upload failed"));
               rehydrateCanonical(payload);
               const hydrated = state.authoritativeWheelSet.wheels.find((entry) => entry.wheelId === wheel.wheelId);
               draft.presentation.stage_background_image_url = hydrated?.presentation.stage_background_image_url || draft.presentation.stage_background_image_url;
@@ -1636,9 +1716,35 @@
         shareRow("Stage URL", stageUrl(false));
         if (artifact.shortlinkSlug) shareRow("Shortlink", `https://ssvx.cc/${artifact.shortlinkSlug}`);
         body.appendChild(element("p", "wheel-results-note", "Directly opened OBS, Studio, iframe, or browser-source Stage instances use independent local result sessions until a later authoritative synchronized-session milestone."));
-        if (isOwner) {
+        if (canEdit) {
+          const titleField = element("label", "wheel-editor-field");
+          const titleInput = element("input"); titleInput.type = "text"; titleInput.maxLength = 160; titleInput.value = artifact.title;
+          titleField.append(element("span", "", "Wheel-set title"), titleInput);
+          const descriptionField = element("label", "wheel-editor-field");
+          const descriptionInput = element("textarea"); descriptionInput.maxLength = 2000; descriptionInput.value = text(artifact.description);
+          descriptionField.append(element("span", "", "Description"), descriptionInput);
+          const saveIdentity = element("button", "wheel-production-primary", "Save wheel-set details");
+          saveIdentity.addEventListener("click", async () => {
+            const status = modalStatus(body); status.textContent = "Saving…";
+            try {
+              await mutateArtifact({ title: titleInput.value, description: descriptionInput.value });
+              status.textContent = "Wheel-set details saved.";
+            } catch (error) {
+              status.textContent = error instanceof Error ? error.message : "Save failed.";
+            }
+          });
           const delayField = element("label", "wheel-editor-field"); const delay = element("input"); delay.type = "number"; delay.min = "100"; delay.max = "1000"; delay.value = state.authoritativeWheelSet.spinAll.delayMs; delayField.append(element("span", "", "Spin All stagger delay (ms)"), delay);
           const save = element("button", "wheel-production-primary", "Save Spin All timing"); save.addEventListener("click", async () => { const status = modalStatus(body); status.textContent = "Saving…"; try { await mutate({ type: "update_spin_all", spin_all: { mode: "staggered", delay_ms: Number(delay.value) } }); status.textContent = "Spin All timing saved."; } catch (error) { status.textContent = error instanceof Error ? error.message : "Save failed."; } }); body.append(delayField, save);
+          const exportButton = element("button", "wheel-production-secondary", "Export wheel set (.sswheel)");
+          exportButton.addEventListener("click", async () => {
+            const status = modalStatus(body); status.textContent = "Preparing canonical export…";
+            try { await exportWheelSet(); status.textContent = "Export downloaded."; }
+            catch (error) { status.textContent = error instanceof Error ? error.message : "Export failed."; }
+          });
+          body.prepend(titleField, descriptionField, saveIdentity);
+          body.appendChild(exportButton);
+        } else if (isOwner) {
+          body.appendChild(element("div", "wheel-editor-status", "Wheel editing requires the current Runtime wheel service. Viewing and local play remain available."));
         }
       });
     }
@@ -1727,21 +1833,21 @@
           panel.appendChild(detailCard);
           panel.append(element("strong", "", `${wheel.entries.length} unique · ${wheel.entries.reduce((sum, entry) => sum + entryUnits(entry), 0)} total tickets · ${enabled.length} enabled`));
           wheel.entries.slice(0, 5).forEach((entry) => panel.appendChild(element("p", "", `${entryName(entry)} · ${entryUnits(entry)} × ${entry.weight} · ${((effectiveWeight(entry) / (wheel.entries.reduce((sum, item) => sum + effectiveWeight(item), 0) || 1)) * 100).toFixed(1)}%`)));
-          if (isOwner) { const button = element("button", "wheel-production-secondary", "Manage entrants"); button.addEventListener("click", entrantManagerModal); panel.appendChild(button); }
+          if (canEdit) { const button = element("button", "wheel-production-secondary", "Manage entrants"); button.addEventListener("click", entrantManagerModal); panel.appendChild(button); }
           return panel;
         }],
         ["rules", "Rules", () => {
           const panel = element("section", "wheel-inspector-panel"); panel.append(element("p", "", `Winner limit ${wheel.winnerLimit}`), element("p", "", wheel.allowDuplicates ? "Duplicate winners allowed" : "Duplicate winners blocked"), element("p", "", wheel.autoRemoveWinner ? "Winner auto-removes locally" : "Winner remains eligible"), element("p", "", wheel.presentation.spin_owner_only ? "Owner-only spin" : "Public local spin"));
-          if (isOwner) { const button = element("button", "wheel-production-secondary", "Advanced rules"); button.addEventListener("click", rulesModal); panel.appendChild(button); }
+          if (canEdit) { const button = element("button", "wheel-production-secondary", "Advanced rules"); button.addEventListener("click", rulesModal); panel.appendChild(button); }
           return panel;
         }],
         ["appearance", "Appearance", () => {
           const panel = element("section", "wheel-inspector-panel"); const palette = element("div", "wheel-palette-preview"); [wheel.palette.accent_color, wheel.palette.trim_color, wheel.palette.glow_color, ...wheel.palette.segment_colors.slice(0, 5)].forEach((color) => { const swatch = element("span"); swatch.style.background = color; palette.appendChild(swatch); }); panel.append(palette, element("p", "", `${wheel.presentation.slice_label_mode.replace("_", " ")} labels`)); const image = element("img", "wheel-inspector-center-image"); image.src = wheel.presentation.center_image_url; image.alt = "Current centre image"; panel.appendChild(image);
-          if (isOwner) { const appearance = element("button", "wheel-production-secondary", "Edit appearance"); appearance.addEventListener("click", appearanceModal); const celebration = element("button", "wheel-production-secondary", "Celebration"); celebration.addEventListener("click", celebrationModal); panel.append(appearance, celebration); }
+          if (canEdit) { const appearance = element("button", "wheel-production-secondary", "Edit appearance"); appearance.addEventListener("click", appearanceModal); const celebration = element("button", "wheel-production-secondary", "Celebration"); celebration.addEventListener("click", celebrationModal); panel.append(appearance, celebration); }
           return panel;
         }],
         ["sound", "Sound", () => {
-          const panel = element("section", "wheel-inspector-panel"); panel.append(element("p", "", wheel.presentation.sound_enabled ? "Sound enabled" : "Sound disabled"), element("p", "", `Winner cue: ${text(wheel.presentation.sound?.winner?.asset_id, SOUND_LIBRARY.winner[0])}`)); if (isOwner) { const button = element("button", "wheel-production-secondary", "Sound settings"); button.addEventListener("click", soundModal); panel.appendChild(button); } return panel;
+          const panel = element("section", "wheel-inspector-panel"); panel.append(element("p", "", wheel.presentation.sound_enabled ? "Sound enabled" : "Sound disabled"), element("p", "", `Winner cue: ${text(wheel.presentation.sound?.winner?.asset_id, SOUND_LIBRARY.winner[0])}`)); if (canEdit) { const button = element("button", "wheel-production-secondary", "Sound settings"); button.addEventListener("click", soundModal); panel.appendChild(button); } return panel;
         }],
         ["share", "Share", () => {
           const panel = element("section", "wheel-inspector-panel"); panel.append(element("p", "", publicUrl()), element("p", "", stagePath()), element("p", "", `Saved default: ${state.authorityDefaultWheelId === wheel.wheelId ? wheel.name : state.authoritativeWheelSet.wheels.find((entry) => entry.wheelId === state.authorityDefaultWheelId)?.name || "Wheel"}`)); const button = element("button", "wheel-production-secondary", "Share settings"); button.addEventListener("click", shareModal); panel.appendChild(button); return panel;

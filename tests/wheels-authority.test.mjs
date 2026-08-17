@@ -18,7 +18,7 @@ test("public data hub hydrates wheels from the authoritative live API first and 
   assert.match(source, /fetch\(`\$\{API_BASE\}\$\{WHEELS_API_PATH\}`/);
   assert.match(source, /const wheelsPayload = wheelsApiPayload && Array\.isArray\(wheelsApiPayload\.items\)/);
   assert.match(source, /mode: wheelsApiPayload && Array\.isArray\(wheelsApiPayload\.items\) \? "api" : "mirror"/);
-  assert.match(source, /function normalizeWheel\(raw, index, profiles, authorityArtifacts = null\)/);
+  assert.match(source, /function normalizeWheel\(raw, index, profiles, authorityArtifacts = null, wheelService = null\)/);
   assert.match(source, /function buildScoreboardLensFromWheel\(wheel\)/);
   assert.match(source, /const rawWheelSet = raw\?\.wheel_set/);
   assert.match(source, /const activeWheel = normalizedChildren\.find\(\(wheel\) => wheel\.wheelId === requestedActiveWheelId\) \|\| normalizedChildren\[0\];/);
@@ -30,8 +30,36 @@ test("public data hub hydrates wheels from the authoritative live API first and 
   assert.match(source, /stage_background_image_url:/);
   assert.match(source, /effectiveWeight/);
   assert.match(source, /resolvedEntries \* resolvedWeight/);
-  assert.match(source, /const wheels = sortByUpdated\(toArray\(wheelsPayload\)\.map\(\(item, index\) => normalizeWheel\(item, index, profilesMap, authorityArtifacts\)\)\);/);
+  assert.match(source, /const wheelService = wheelsApiPayload\?\.wheel_service/);
+  assert.match(source, /normalizeWheel\(item, index, profilesMap, authorityArtifacts, wheelService\)/);
   assert.match(source, /const scoreboards = sortByUpdated\(wheels\.map\(\(item\) => buildScoreboardLensFromWheel\(item\)\)\);/);
+});
+
+test("wheels gallery exposes capability-aware create, owned list, import, and truthful failure states", () => {
+  const app = read("js/public-pages-app.js");
+  const css = read("css/public-shell.css");
+
+  assert.match(app, /function renderWheelsLifecycle\(ctx\)/);
+  assert.match(app, /Create wheel set/);
+  assert.match(app, /Import \.sswheel/);
+  assert.match(app, /My Wheel Sets/);
+  assert.match(app, /Public Gallery/);
+  assert.match(app, /\?summary=1&limit=50&offset=0/);
+  assert.match(app, /credentials: "include"/);
+  assert.match(app, /Wheel editing requires the current Runtime wheel service/);
+  assert.match(app, /This is a network or Runtime error, not an empty gallery/);
+  assert.match(app, /Your public wheel sets are already shown under My Wheel Sets/);
+  assert.match(app, /starter_entrants/);
+  assert.match(app, /stage_background_preset/);
+  assert.match(app, /payload_text: await selected\.text\(\)/);
+  assert.match(app, /navigateToCanonicalWheel\(payload\)/);
+  assert.match(app, /wheelRefreshDeferred/);
+  assert.match(app, /document\.body\.classList\.contains\("wheel-editor-open"\)/);
+  assert.match(app, /streamsuites:wheel-editor-closed/);
+  assert.match(css, /\.wheel-gallery-hero/);
+  assert.match(css, /\.wheel-lifecycle-modal/);
+  assert.match(css, /body\.public-shell-page\.modal-open :is\(\.ss-status-widget-host, \[data-status-widget-host\]\)/);
+  assert.match(css, /@media \(max-width: 760px\)/);
 });
 
 test("public wheels route preserves the shell and provides clean list/detail artifact routes", () => {

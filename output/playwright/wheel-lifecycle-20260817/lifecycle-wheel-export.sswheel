@@ -1,0 +1,605 @@
+{
+  "schema_version": "streamsuites.wheel-set.v2",
+  "portable_format": "sswheel",
+  "artifact_type": "wheel",
+  "title": "Lifecycle Wheel A Edited",
+  "description": "Canonical edits survive reload and restart",
+  "notes": "",
+  "default_display_mode": "wheel",
+  "wheel_set": {
+    "active_wheel_id": "whl_4b101dfe77b218936918",
+    "spin_all": {
+      "mode": "staggered",
+      "delay_ms": 250
+    },
+    "wheels": [
+      {
+        "wheel_id": "whl_4b101dfe77b218936918",
+        "name": "Second Wheel",
+        "winner_limit": 1,
+        "allow_duplicates": true,
+        "auto_remove_winner": false,
+        "entries": [
+          {
+            "entry_id": "ent_bdbc3a6e38150ae08709",
+            "label": "Entry 1",
+            "display_name": "Entry 1",
+            "avatar_url": "",
+            "entries": 1,
+            "weight": 1,
+            "enabled": true,
+            "color": "#ff6b6b",
+            "notes": "",
+            "assignment": {
+              "user_code": "",
+              "public_slug": "",
+              "display_name": "",
+              "avatar_url": "",
+              "role": "",
+              "tier": "",
+              "badges": [],
+              "public_profile": {
+                "public_slug": "",
+                "bio": "",
+                "cover_image_url": "",
+                "banner_image_url": "",
+                "background_image_url": "",
+                "is_listed": true
+              }
+            },
+            "role_badges": [],
+            "stats_stub": {
+              "xp": null,
+              "rank": null,
+              "level": null,
+              "season": ""
+            },
+            "effective_weight": 1,
+            "probability": 0.5,
+            "share": 1
+          },
+          {
+            "entry_id": "ent_53cc5ffa410a08fa296b",
+            "label": "Entry 2",
+            "display_name": "Entry 2",
+            "avatar_url": "",
+            "entries": 1,
+            "weight": 1,
+            "enabled": true,
+            "color": "#ffd166",
+            "notes": "",
+            "assignment": {
+              "user_code": "",
+              "public_slug": "",
+              "display_name": "",
+              "avatar_url": "",
+              "role": "",
+              "tier": "",
+              "badges": [],
+              "public_profile": {
+                "public_slug": "",
+                "bio": "",
+                "cover_image_url": "",
+                "banner_image_url": "",
+                "background_image_url": "",
+                "is_listed": true
+              }
+            },
+            "role_badges": [],
+            "stats_stub": {
+              "xp": null,
+              "rank": null,
+              "level": null,
+              "season": ""
+            },
+            "effective_weight": 1,
+            "probability": 0.5,
+            "share": 1
+          }
+        ],
+        "palette": {
+          "segment_colors": [
+            "#ff6b6b",
+            "#ffd166",
+            "#06d6a0",
+            "#118ab2",
+            "#9b5de5",
+            "#f15bb5"
+          ],
+          "background_color": "#0f172a",
+          "text_color": "#f8fafc",
+          "accent_color": "#38bdf8",
+          "trim_color": "#38bdf8",
+          "glow_color": "#38bdf8"
+        },
+        "presentation": {
+          "animation_enabled": true,
+          "sound_enabled": true,
+          "sound": {
+            "music": {
+              "enabled": true,
+              "asset_id": "music0.mp3",
+              "options": [
+                "music0.mp3",
+                "music1.mp3",
+                "music2.mp3",
+                "music3.mp3",
+                "music4.mp3",
+                "music5.mp3",
+                "music6.mp3"
+              ]
+            },
+            "startspin": {
+              "enabled": true,
+              "asset_id": "startspin0.mp3",
+              "options": [
+                "startspin0.mp3",
+                "startspin1.mp3",
+                "startspin2.mp3"
+              ]
+            },
+            "respin": {
+              "enabled": true,
+              "asset_id": "respin0.mp3",
+              "options": [
+                "respin0.mp3",
+                "respin1.mp3"
+              ]
+            },
+            "click": {
+              "enabled": true,
+              "asset_id": "click0.mp3",
+              "options": [
+                "click0.mp3",
+                "click1.mp3",
+                "click2.mp3",
+                "click3.mp3",
+                "click4.mp3",
+                "click5.mp3",
+                "click6.mp3"
+              ]
+            },
+            "winner": {
+              "enabled": true,
+              "asset_id": "winner0.mp3",
+              "options": [
+                "winner0.mp3",
+                "winner1.mp3",
+                "winner2.mp3",
+                "winner3.mp3",
+                "winner4.mp3",
+                "winner5.mp3",
+                "winner6.mp3"
+              ]
+            }
+          },
+          "celebration_enabled": false,
+          "confetti_enabled": false,
+          "show_entry_labels": true,
+          "show_display_names_on_slices": true,
+          "slice_label_mode": "full_name",
+          "center_image_url": "/assets/placeholders/wheelcenterdefault.webp",
+          "stage_background_preset": "cinematic_chamber",
+          "stage_background_color": "#38bdf8",
+          "stage_background_image_url": "",
+          "spin_owner_only": false,
+          "slow_drift_enabled": true,
+          "spin_duration_ms": 8500,
+          "scoreboard_max_rows": 24
+        }
+      },
+      {
+        "wheel_id": "whl_dc9b4dc691ae32ec5486",
+        "name": "First Wheel Renamed",
+        "winner_limit": 5,
+        "allow_duplicates": false,
+        "auto_remove_winner": true,
+        "entries": [
+          {
+            "entry_id": "ent_11e190307bcc84b6477c",
+            "label": "Alpha",
+            "display_name": "Alpha",
+            "avatar_url": "",
+            "entries": 3,
+            "weight": 1.5,
+            "enabled": true,
+            "color": "#ff6b6b",
+            "notes": "",
+            "assignment": {
+              "user_code": "",
+              "public_slug": "",
+              "display_name": "Alpha",
+              "avatar_url": "",
+              "role": "",
+              "tier": "",
+              "badges": [],
+              "public_profile": {
+                "public_slug": "",
+                "bio": "",
+                "cover_image_url": "",
+                "banner_image_url": "",
+                "background_image_url": "",
+                "is_listed": true
+              }
+            },
+            "role_badges": [],
+            "stats_stub": {
+              "xp": null,
+              "rank": null,
+              "level": null,
+              "season": ""
+            },
+            "effective_weight": 4.5,
+            "probability": 0.33333333,
+            "share": 4.5
+          },
+          {
+            "entry_id": "ent_f9232783b83b399976cb",
+            "label": "Charlie",
+            "display_name": "Charlie",
+            "avatar_url": "",
+            "entries": 1,
+            "weight": 1,
+            "enabled": true,
+            "color": "#06d6a0",
+            "notes": "",
+            "assignment": {
+              "user_code": "",
+              "public_slug": "",
+              "display_name": "Charlie",
+              "avatar_url": "",
+              "role": "",
+              "tier": "",
+              "badges": [],
+              "public_profile": {
+                "public_slug": "",
+                "bio": "",
+                "cover_image_url": "",
+                "banner_image_url": "",
+                "background_image_url": "",
+                "is_listed": true
+              }
+            },
+            "role_badges": [],
+            "stats_stub": {
+              "xp": null,
+              "rank": null,
+              "level": null,
+              "season": ""
+            },
+            "effective_weight": 1,
+            "probability": 0.07407407,
+            "share": 1
+          },
+          {
+            "entry_id": "entry-3",
+            "label": "Delta",
+            "display_name": "Delta",
+            "avatar_url": "",
+            "entries": 4,
+            "weight": 2,
+            "enabled": true,
+            "color": "#06d6a0",
+            "notes": "",
+            "assignment": {
+              "user_code": "",
+              "public_slug": "",
+              "display_name": "Delta",
+              "avatar_url": "",
+              "role": "",
+              "tier": "",
+              "badges": [],
+              "public_profile": {
+                "public_slug": "",
+                "bio": "",
+                "cover_image_url": "",
+                "banner_image_url": "",
+                "background_image_url": "",
+                "is_listed": true
+              }
+            },
+            "role_badges": [],
+            "stats_stub": {
+              "xp": null,
+              "rank": null,
+              "level": null,
+              "season": ""
+            },
+            "effective_weight": 8,
+            "probability": 0.59259259,
+            "share": 8
+          }
+        ],
+        "palette": {
+          "segment_colors": [
+            "#ff6b6b",
+            "#ffd166",
+            "#06d6a0",
+            "#118ab2",
+            "#9b5de5",
+            "#f15bb5"
+          ],
+          "background_color": "#0f172a",
+          "text_color": "#f8fafc",
+          "accent_color": "#e54b6b",
+          "trim_color": "#38bdf8",
+          "glow_color": "#38bdf8"
+        },
+        "presentation": {
+          "animation_enabled": true,
+          "sound_enabled": true,
+          "sound": {
+            "music": {
+              "enabled": true,
+              "asset_id": "music0.mp3",
+              "options": [
+                "music0.mp3",
+                "music1.mp3",
+                "music2.mp3",
+                "music3.mp3",
+                "music4.mp3",
+                "music5.mp3",
+                "music6.mp3"
+              ]
+            },
+            "startspin": {
+              "enabled": true,
+              "asset_id": "startspin0.mp3",
+              "options": [
+                "startspin0.mp3",
+                "startspin1.mp3",
+                "startspin2.mp3"
+              ]
+            },
+            "respin": {
+              "enabled": true,
+              "asset_id": "respin0.mp3",
+              "options": [
+                "respin0.mp3",
+                "respin1.mp3"
+              ]
+            },
+            "click": {
+              "enabled": true,
+              "asset_id": "click0.mp3",
+              "options": [
+                "click0.mp3",
+                "click1.mp3",
+                "click2.mp3",
+                "click3.mp3",
+                "click4.mp3",
+                "click5.mp3",
+                "click6.mp3"
+              ]
+            },
+            "winner": {
+              "enabled": true,
+              "asset_id": "winner2.mp3",
+              "options": [
+                "winner0.mp3",
+                "winner1.mp3",
+                "winner2.mp3",
+                "winner3.mp3",
+                "winner4.mp3",
+                "winner5.mp3",
+                "winner6.mp3"
+              ]
+            }
+          },
+          "celebration_enabled": true,
+          "confetti_enabled": true,
+          "show_entry_labels": true,
+          "show_display_names_on_slices": true,
+          "slice_label_mode": "full_name",
+          "center_image_url": "/assets/placeholders/wheelcenterdefault.webp",
+          "stage_background_preset": "prism_grid",
+          "stage_background_color": "#6b3fd4",
+          "stage_background_image_url": "",
+          "spin_owner_only": true,
+          "slow_drift_enabled": true,
+          "spin_duration_ms": 8500,
+          "scoreboard_max_rows": 24
+        }
+      }
+    ]
+  },
+  "capabilities": {
+    "max_wheels_per_artifact": 12,
+    "max_entrants_per_wheel": 256,
+    "max_wheel_name_length": 120,
+    "max_entrant_label_length": 120,
+    "max_entries_per_entrant": 1000000,
+    "max_weight_per_entrant": 1000000,
+    "spin_all_modes": [
+      "staggered"
+    ],
+    "spin_all_delay_min_ms": 100,
+    "spin_all_delay_max_ms": 1000,
+    "spin_all_delay_default_ms": 250,
+    "results_authority": "local_browser_session"
+  },
+  "compatibility": {
+    "source_schema_version": "streamsuites.wheel-set.v2",
+    "minimum_wheel_service_contract": "streamsuites.wheel-service.v1"
+  },
+  "compatibility_projection": "first_active_wheel_v1",
+  "winner_limit": 1,
+  "allow_duplicates": true,
+  "auto_remove_winner": false,
+  "entries": [
+    {
+      "entry_id": "ent_bdbc3a6e38150ae08709",
+      "label": "Entry 1",
+      "display_name": "Entry 1",
+      "avatar_url": "",
+      "entries": 1,
+      "weight": 1,
+      "enabled": true,
+      "color": "#ff6b6b",
+      "notes": "",
+      "assignment": {
+        "user_code": "",
+        "public_slug": "",
+        "display_name": "",
+        "avatar_url": "",
+        "role": "",
+        "tier": "",
+        "badges": [],
+        "public_profile": {
+          "public_slug": "",
+          "bio": "",
+          "cover_image_url": "",
+          "banner_image_url": "",
+          "background_image_url": "",
+          "is_listed": true
+        }
+      },
+      "role_badges": [],
+      "stats_stub": {
+        "xp": null,
+        "rank": null,
+        "level": null,
+        "season": ""
+      },
+      "effective_weight": 1,
+      "probability": 0.5,
+      "share": 1
+    },
+    {
+      "entry_id": "ent_53cc5ffa410a08fa296b",
+      "label": "Entry 2",
+      "display_name": "Entry 2",
+      "avatar_url": "",
+      "entries": 1,
+      "weight": 1,
+      "enabled": true,
+      "color": "#ffd166",
+      "notes": "",
+      "assignment": {
+        "user_code": "",
+        "public_slug": "",
+        "display_name": "",
+        "avatar_url": "",
+        "role": "",
+        "tier": "",
+        "badges": [],
+        "public_profile": {
+          "public_slug": "",
+          "bio": "",
+          "cover_image_url": "",
+          "banner_image_url": "",
+          "background_image_url": "",
+          "is_listed": true
+        }
+      },
+      "role_badges": [],
+      "stats_stub": {
+        "xp": null,
+        "rank": null,
+        "level": null,
+        "season": ""
+      },
+      "effective_weight": 1,
+      "probability": 0.5,
+      "share": 1
+    }
+  ],
+  "palette": {
+    "segment_colors": [
+      "#ff6b6b",
+      "#ffd166",
+      "#06d6a0",
+      "#118ab2",
+      "#9b5de5",
+      "#f15bb5"
+    ],
+    "background_color": "#0f172a",
+    "text_color": "#f8fafc",
+    "accent_color": "#38bdf8",
+    "trim_color": "#38bdf8",
+    "glow_color": "#38bdf8"
+  },
+  "presentation": {
+    "animation_enabled": true,
+    "sound_enabled": true,
+    "sound": {
+      "music": {
+        "enabled": true,
+        "asset_id": "music0.mp3",
+        "options": [
+          "music0.mp3",
+          "music1.mp3",
+          "music2.mp3",
+          "music3.mp3",
+          "music4.mp3",
+          "music5.mp3",
+          "music6.mp3"
+        ]
+      },
+      "startspin": {
+        "enabled": true,
+        "asset_id": "startspin0.mp3",
+        "options": [
+          "startspin0.mp3",
+          "startspin1.mp3",
+          "startspin2.mp3"
+        ]
+      },
+      "respin": {
+        "enabled": true,
+        "asset_id": "respin0.mp3",
+        "options": [
+          "respin0.mp3",
+          "respin1.mp3"
+        ]
+      },
+      "click": {
+        "enabled": true,
+        "asset_id": "click0.mp3",
+        "options": [
+          "click0.mp3",
+          "click1.mp3",
+          "click2.mp3",
+          "click3.mp3",
+          "click4.mp3",
+          "click5.mp3",
+          "click6.mp3"
+        ]
+      },
+      "winner": {
+        "enabled": true,
+        "asset_id": "winner0.mp3",
+        "options": [
+          "winner0.mp3",
+          "winner1.mp3",
+          "winner2.mp3",
+          "winner3.mp3",
+          "winner4.mp3",
+          "winner5.mp3",
+          "winner6.mp3"
+        ]
+      }
+    },
+    "celebration_enabled": false,
+    "confetti_enabled": false,
+    "show_entry_labels": true,
+    "show_display_names_on_slices": true,
+    "slice_label_mode": "full_name",
+    "center_image_url": "/assets/placeholders/wheelcenterdefault.webp",
+    "stage_background_preset": "cinematic_chamber",
+    "stage_background_color": "#38bdf8",
+    "stage_background_image_url": "",
+    "spin_owner_only": false,
+    "slow_drift_enabled": true,
+    "spin_duration_ms": 8500,
+    "scoreboard_max_rows": 24
+  },
+  "import_provenance": {
+    "source_format": "manual",
+    "source_name": "",
+    "imported_at": null,
+    "exact_source_available": true,
+    "unsupported_fields": [],
+    "notes": ""
+  }
+}

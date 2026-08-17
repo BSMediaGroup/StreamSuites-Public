@@ -134,7 +134,7 @@ test("production chrome is one compact toolbar with secondary actions in an acce
   for (const action of ["Add wheel", "Manage wheels", "Set as default", "Reset wheel", "Reset all"]) {
     assert.match(toolbar, new RegExp(action));
   }
-  assert.match(toolbar, /if \(isOwner\)[\s\S]*Add wheel[\s\S]*Manage wheels/);
+  assert.match(toolbar, /if \(canEdit\)[\s\S]*Add wheel[\s\S]*Manage wheels/);
   assert.match(toolbar, /if \(state\.selectedWheelId !== state\.authorityDefaultWheelId\)[\s\S]*Set as default/);
   assert.match(toolbar, /if \(!stageMode\)[\s\S]*wheel-production-more/);
   assert.doesNotMatch(source, /wheel-workspace-header|wheel-owner-bar|wheel-production-rail/);
@@ -202,6 +202,27 @@ test("Appearance lightbox owns Stage presets, colour, upload preview, cleanup, a
   assert.match(appearance, /URL\.createObjectURL/);
   assert.match(appearance, /URL\.revokeObjectURL/);
   assert.match(appearance, /rehydrateCanonical/);
+});
+
+test("owner mutations share capability gating, structured errors, canonical rehydration, and export", () => {
+  const source = read("js/wheel-workspace.js");
+  assert.match(source, /artifact\.wheelService\?\.schema_version === "streamsuites\.wheel-set\.v2"/);
+  assert.match(source, /Wheel editing requires the current Runtime wheel service/);
+  assert.match(source, /async function mutatePayload\(body\)/);
+  assert.match(source, /credentials: "include"/);
+  assert.match(source, /responseErrorMessage\(payload, response\.status/);
+  assert.match(source, /rehydrateCanonical\(payload\)/);
+  assert.match(source, /wheelService: canonical\.wheelService \|\| canonical\.wheel_service \|\| payload\?\.wheel_service \|\| artifact\.wheelService/);
+  assert.match(source, /state\.pendingCanonicalRender/);
+  assert.match(source, /streamsuites:wheel-editor-closed/);
+  assert.match(source, /const validIds = new Set/);
+  assert.match(source, /state\.resultsByWheel\.delete\(id\)/);
+  assert.match(source, /async function mutateArtifact\(updates\)/);
+  assert.match(source, /Save wheel-set details/);
+  assert.match(source, /async function exportWheelSet\(\)/);
+  assert.match(source, /Export wheel set \(\.sswheel\)/);
+  assert.match(source, /URL\.revokeObjectURL\(href\)/);
+  assert.match(source, /\["127\.0\.0\.1", "localhost"\]/);
 });
 
 test("mundane wheel controls inherit the canonical Public Blinker token", () => {

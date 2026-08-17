@@ -1499,7 +1499,7 @@
     });
   }
 
-  function normalizeWheel(raw, index, profiles, authorityArtifacts = null) {
+  function normalizeWheel(raw, index, profiles, authorityArtifacts = null, wheelService = null) {
     const artifactCode = String(raw?.artifact_code || raw?.artifactCode || raw?.id || `wheel-${index + 1}`).trim();
     const defaultSlug = String(raw?.default_slug || raw?.defaultSlug || raw?.slug || "").trim();
     const customSlug = String(raw?.custom_slug || raw?.customSlug || "").trim();
@@ -1602,6 +1602,7 @@
       type: "wheels",
       title: raw?.title || raw?.name || `Wheel ${index + 1}`,
       schemaVersion: String(raw?.schema_version || raw?.schemaVersion || "streamsuites.wheel-set.v2").trim(),
+      wheelService: wheelService && typeof wheelService === "object" ? wheelService : null,
       wheelSet,
       activeWheel,
       activeWheelId: activeWheel.wheelId,
@@ -1821,7 +1822,10 @@
       const wheelsPayload = wheelsApiPayload && Array.isArray(wheelsApiPayload.items)
         ? { wheels: wheelsApiPayload.items }
         : wheelsMirrorPayload;
-      const wheels = sortByUpdated(toArray(wheelsPayload).map((item, index) => normalizeWheel(item, index, profilesMap, authorityArtifacts)));
+      const wheelService = wheelsApiPayload?.wheel_service && typeof wheelsApiPayload.wheel_service === "object"
+        ? wheelsApiPayload.wheel_service
+        : null;
+      const wheels = sortByUpdated(toArray(wheelsPayload).map((item, index) => normalizeWheel(item, index, profilesMap, authorityArtifacts, wheelService)));
       const scoreboards = sortByUpdated(wheels.map((item) => buildScoreboardLensFromWheel(item)));
       const tallies = sortByUpdated(toArray(talliesPayload).map((item, index) => normalizeTally(item, index, profilesMap, authorityArtifacts)));
       const notices = sortByUpdated(toArray(noticesPayload).map((item, index) => normalizeNotice(item, index, profilesMap)));
@@ -1854,6 +1858,7 @@
         clips,
         polls,
         wheels,
+        wheelService,
         scoreboards,
         tallies,
         notices,

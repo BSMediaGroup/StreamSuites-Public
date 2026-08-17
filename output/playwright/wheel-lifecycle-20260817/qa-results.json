@@ -1,0 +1,67 @@
+{
+  "originalCode": "artifact-e90aad6417464eb0add0e4d90aedd0ae",
+  "originalChildId": "whl_dc9b4dc691ae32ec5486",
+  "importedCode": "artifact-d3ff47bc2833465095e738526afa1e15",
+  "originalPath": "/wheels/eZOgcv",
+  "importedPath": "/wheels/6EcUi6",
+  "pageErrors": [],
+  "wheelHttp500": [],
+  "wheelResponseCount": 57,
+  "portable": {
+    "schema": "streamsuites.wheel-set.v2",
+    "wheelCount": 2,
+    "hasArtifactCode": false,
+    "hasPrivatePaths": false
+  },
+  "afterReload": {
+    "title": "Lifecycle Wheel A Edited",
+    "wheelCount": 2,
+    "firstWheelId": "whl_4b101dfe77b218936918"
+  },
+  "afterRestart": {
+    "originalTitle": "Lifecycle Wheel A Edited",
+    "importedTitle": "Lifecycle Wheel A Edited",
+    "originalWheelCount": 2,
+    "importedWheelCount": 2
+  },
+  "final": {
+    "title": "Lifecycle Wheel A Edited",
+    "wheelCount": 2,
+    "originalFirstWeight": 1,
+    "importedFirstWeight": 2.25
+  },
+  "galleryCounts": {
+    "ownedCards": 2,
+    "publicCards": 0,
+    "lifecycleModals": 0
+  },
+  "performance": {
+    "mutationPatchCount": 16,
+    "longTaskObservation": "not_captured"
+  },
+  "metrics": {
+    "width": 1440,
+    "clientWidth": 1440,
+    "objectUrlsInDom": 0
+  },
+  "screenshots": [
+    "01-signed-out-gallery-1440x900.png",
+    "02-empty-owned-wheels-1600x1000.png",
+    "03-create-modal-1440x900.png",
+    "04-new-wheel-detail-1920x1080.png",
+    "05-new-stage-1440x900.png",
+    "06-owner-editor-title-save-1440x900.png",
+    "07-entrant-save-success-1440x900.png",
+    "08-appearance-save-success-1440x900.png",
+    "09-manage-wheels-reorder-1600x1000.png",
+    "10-export-action-1440x900.png",
+    "11-import-modal-1440x900.png",
+    "12-imported-wheel-set-1440x900.png",
+    "13-owned-gallery-1920x1080.png",
+    "14-owned-gallery-1024x768.png",
+    "15-mobile-owned-gallery-390x844.png",
+    "16-mobile-create-flow-390x844.png",
+    "17-structured-save-error-1440x900.png",
+    "18-stale-runtime-768x1024.png"
+  ]
+}

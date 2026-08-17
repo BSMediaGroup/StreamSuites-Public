@@ -6,6 +6,20 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-17 - Complete wheel lifecycle and canonical save correction
+
+#### Technical notes
+
+- Turned `/wheels` into the complete lifecycle entrypoint: capability-gated Create and `.sswheel` Import, bounded Runtime/Auth owner-summary cards under `My Wheel Sets`, a distinct Public Gallery, canonical workspace/Stage links, and truthful signed-out, ineligible, stale-Runtime, network, and empty states.
+- Wired all owner editors and child-wheel operations through the shared structured-error mutation path, added artifact title/description editing plus canonical export, and kept local result maps/selection keyed by stable child IDs. Canonical rehydrate now normalizes the response directly instead of allowing stale camelCase state to shadow newly saved snake_case wheel sets.
+- Deferred artifact-level SSE DOM replacement while an editor is open and replayed it on close, preserving save feedback and multi-action management without weakening live refresh. Mobile lifecycle modals now sit above and suppress pointer input from the floating status widget.
+- Added lifecycle/source contracts and isolated Playwright evidence under `output/playwright/wheel-lifecycle-20260817/`. The passing run exercised create, reload, all editors, media, every child operation, portable export/import with fresh identity, isolated Runtime restart, post-restart edit, structured failure, stale-service fallback, and responsive layouts without production writes, restart, deployment, version change, commit, or push.
+- The complete Public gate passes 206/206 tests. Final browser acceptance recorded 57 wheel responses, 16 successful/expected PATCH attempts, zero target page exceptions, zero wheel HTTP 500 responses, two owned summary cards with duplicate public cards removed, no leaked lifecycle modal or blob URL, and no horizontal overflow; long-task timing was not captured.
+
+#### Human-readable summary
+
+Wheel owners can now start at `/wheels`, create or import a set, see everything they own, edit every supported setting, manage child wheels, export safely, and reopen the same canonical work after a Runtime restart. Visitors still get public viewing and local play, and older Runtime deployments show a precise compatibility state instead of broken controls.
+
 ### 2026-08-17 - Milestone 2.2 corrective premium wheel and Stage restoration
 
 #### Technical notes
