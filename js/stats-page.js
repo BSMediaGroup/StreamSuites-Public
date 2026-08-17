@@ -242,15 +242,20 @@
     [["0%", "var(--stats-accent-a)"], ["52%", "var(--stats-accent-b)"], ["100%", "var(--stats-accent-c)"]].forEach(([offset, color]) => lineGradient.appendChild(svgElement("stop", { offset, "stop-color": color })));
     const areaGradient = svgElement("linearGradient", { id: `${key}-area-gradient`, x1: "0", y1: "0", x2: "0", y2: "1" });
     areaGradient.append(svgElement("stop", { offset: "0%", "stop-color": "var(--stats-accent-a)", "stop-opacity": ".38" }), svgElement("stop", { offset: "100%", "stop-color": "var(--stats-accent-a)", "stop-opacity": "0" }));
-    defs.append(lineGradient, areaGradient);
+    const revealId = `${key}-plot-reveal`;
+    const revealClip = svgElement("clipPath", { id: revealId, clipPathUnits: "userSpaceOnUse" });
+    revealClip.appendChild(svgElement("rect", { class: "stats-graph__reveal", x: "0", y: "0", width, height }));
+    defs.append(lineGradient, areaGradient, revealClip);
     svg.append(title, defs);
     for (let index = 0; index <= 4; index += 1) {
       const y = inset.top + index / 4 * plotHeight;
       svg.appendChild(svgElement("line", { class: "stats-graph__grid", x1: inset.left, x2: width - inset.right, y1: y, y2: y }));
     }
     const area = svgElement("path", { class: "stats-graph__area", d: areaData, fill: `url(#${key}-area-gradient)` });
-    const line = svgElement("path", { class: "stats-graph__line", d: pathData, pathLength: "1", stroke: `url(#${key}-line-gradient)` });
-    svg.append(area, line);
+    const line = svgElement("path", { class: "stats-graph__line", d: pathData, stroke: `url(#${key}-line-gradient)` });
+    const plot = svgElement("g", { class: "stats-graph__plot", "clip-path": `url(#${revealId})` });
+    plot.append(area, line);
+    svg.appendChild(plot);
     coordinates.forEach((point, index) => {
       const circle = svgElement("circle", { class: "stats-graph__point", cx: point.x, cy: point.y, r: "9", tabindex: "0", role: "button", "aria-label": `${formatDate(point.periodStart, graphDateOptions(key))}: ${numberFormatter.format(point.count)}` });
       circle.addEventListener("mouseenter", () => showPointTooltip(host, point, point.x, point.y, key));

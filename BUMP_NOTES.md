@@ -6,6 +6,18 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-18 - Stats traffic graph line and fill synchronization repair
+
+#### Technical notes
+
+- Replaced the `/stats` traffic line's normalized `pathLength="1"` stroke-dash entrance, which could visually settle before the end of a long sharply varying SVG path in Chromium even though the underlying 30-day series was complete.
+- The traffic line and shaded area now live in one SVG plot group and use the same finite left-to-right clip-path reveal. This keeps both layers synchronized without changing the API payload, data points, axes, palette, tooltips, keyboard inspection, responsive layout, or reduced-motion behavior.
+- Added focused regression coverage for the shared reveal boundary and the removal of normalized stroke-dash animation. Installed-Edge validation used the current live 30-day response against the local renderer at desktop, mobile, and reduced-motion settings; captures are retained under `output/playwright/stats-graph-corrective-20260818/`. This is local source validation with live read-only data, not a Public deployment.
+
+#### Human-readable summary
+
+The Page views over time line now reaches every point represented by the shaded area instead of stopping early while the fill continues on its own.
+
 ### 2026-08-17 - Wheel custom-media CDN delivery repair
 
 #### Technical notes

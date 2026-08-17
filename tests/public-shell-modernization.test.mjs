@@ -177,8 +177,12 @@ test("stats uses the public aggregate contract and retains finite graph-entry mo
   assert.match(statsSource, /payload\.account_roles/);
   assert.match(statsSource, /data-scaffold-stat/);
   assert.match(statsSource, /data-stats-orbit-value/);
-  assert.match(statsCss, /stroke-dashoffset:\s*1/);
-  assert.match(statsCss, /stroke-dashoffset 1500ms/);
+  assert.match(statsSource, /const revealClip = svgElement\("clipPath"/);
+  assert.match(statsSource, /class: "stats-graph__plot", "clip-path": `url\(#\$\{revealId\}\)`/);
+  assert.doesNotMatch(statsSource, /pathLength: "1"/);
+  assert.match(statsCss, /\.stats-graph\.is-plot-primed \.stats-graph__reveal\s*\{\s*transform:\s*scaleX\(0\)/);
+  assert.match(statsCss, /\.stats-graph\.is-plot-visible \.stats-graph__reveal\s*\{[^}]*transform 1500ms/);
+  assert.doesNotMatch(statsCss, /\.stats-graph[^{]*\{[^}]*stroke-dash(?:array|offset)/);
   assert.match(statsCss, /data-public-appearance="light"/);
   assert.match(statsCss, /body\.stats-page \.stats-hero h1/);
   assert.match(statsCss, /max-width:\s*100%;\s*font-size:\s*clamp\(2\.05rem/);

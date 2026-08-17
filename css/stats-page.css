@@ -340,10 +340,9 @@ body.stats-page .stats-method h2 { color: var(--stats-text); text-shadow: none; 
 .stats-graph__grid { stroke: var(--stats-border); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .stats-graph__area { opacity: .5; }
 .stats-graph__line { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
-.stats-graph.is-plot-primed .stats-graph__line { stroke-dasharray: 1; stroke-dashoffset: 1; }
-.stats-graph.is-plot-visible .stats-graph__line { stroke-dashoffset: 0; transition: stroke-dashoffset 1500ms cubic-bezier(.22,.76,.2,1); }
-.stats-graph.is-plot-primed .stats-graph__area { opacity: 0; transform: scaleY(0); transform-origin: bottom; }
-.stats-graph.is-plot-visible .stats-graph__area { opacity: .5; transform: scaleY(1); transition: opacity 300ms ease 1300ms, transform 300ms ease 1300ms; }
+.stats-graph__reveal { transform-box: fill-box; transform-origin: left center; }
+.stats-graph.is-plot-primed .stats-graph__reveal { transform: scaleX(0); }
+.stats-graph.is-plot-visible .stats-graph__reveal { transform: scaleX(1); transition: transform 1500ms cubic-bezier(.22,.76,.2,1); }
 .stats-graph__point { fill: transparent; stroke: transparent; stroke-width: 12; cursor: pointer; }
 .stats-graph__point:is(:hover, :focus) { fill: var(--stats-card-raised); stroke: var(--stats-accent-c); stroke-width: 4; outline: none; }
 .stats-graph__label { fill: var(--stats-muted); font: 18px var(--public-font-mono); }
@@ -449,8 +448,7 @@ body.stats-page .stats-method h2 { color: var(--stats-text); text-shadow: none; 
   .stats-constellation__core,
   .stats-constellation__node { animation: none; }
   .stats-constellation__signal { opacity: .42; stroke-dashoffset: 0; }
-  .stats-graph.is-plot-primed .stats-graph__line { stroke-dashoffset: 0; transition: none; }
-  .stats-graph.is-plot-primed .stats-graph__area { opacity: .5; transform: none; transition: none; }
+  .stats-graph.is-plot-primed .stats-graph__reveal { transform: none; transition: none; }
   .stats-bar__fill { transition: none; }
 }
 
