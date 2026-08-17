@@ -6,6 +6,19 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-17 - Production wheel API-origin corrective repair
+
+#### Technical notes
+
+- Proved the literal production failure: with no injected API-base global, deployed `public-pages-app.js` built `POST https://streamsuites.app/api/creator/wheels`; Cloudflare Pages returned JSON 404 `Not Found` before Runtime/Auth was reached. The canonical `https://api.streamsuites.app/api/creator/wheels` route is live and advertises credentialed CORS for the Public origin.
+- Added `js/wheel-api-client.js` as the single owner-operation boundary for Create, owned list, import, artifact/child PATCH, export, and both multipart media routes. Production now resolves to the canonical Runtime/Auth origin, local acceptance remains on port 18087, every request includes credentials, multipart leaves its boundary header browser-owned, canonical payloads return unchanged, and bare text/HTML failures become safe structured client errors.
+- Removed the duplicate gallery/workspace fetch-and-parse implementations and loaded the shared client before wheel data/workspace/page controllers on list, detail, and shell-free Stage routes. Public wheel reads also use the canonical production origin when no explicit base is injected; unrelated Public auth routes and Pages Functions were not redesigned.
+- Extended focused Public tests for production/local/configured origin resolution, exact methods/paths, credential inclusion, multipart behavior, safe `Not Found` normalization, shared-client use, capability gating, canonical rehydration, and preserved wheel UI/gameplay contracts. The isolated lifecycle harness now accepts fresh temp/evidence roots and emits sanitized action/method/URL/status/code network evidence without cookies.
+
+#### Human-readable summary
+
+Wheel creation and editing now go to the real Runtime/Auth service instead of a missing Public-site route. Entrants, colours, images, rules, child-wheel management, import, and export share one reliable save path, while an outdated or unreachable Runtime is explained instead of showing a mysterious `Not Found`.
+
 ### 2026-08-17 - Complete wheel lifecycle and canonical save correction
 
 #### Technical notes

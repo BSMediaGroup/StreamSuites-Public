@@ -37,6 +37,7 @@ test("public data hub hydrates wheels from the authoritative live API first and 
 
 test("wheels gallery exposes capability-aware create, owned list, import, and truthful failure states", () => {
   const app = read("js/public-pages-app.js");
+  const client = read("js/wheel-api-client.js");
   const css = read("css/public-shell.css");
 
   assert.match(app, /function renderWheelsLifecycle\(ctx\)/);
@@ -45,7 +46,9 @@ test("wheels gallery exposes capability-aware create, owned list, import, and tr
   assert.match(app, /My Wheel Sets/);
   assert.match(app, /Public Gallery/);
   assert.match(app, /\?summary=1&limit=50&offset=0/);
-  assert.match(app, /credentials: "include"/);
+  assert.match(app, /WHEEL_API\.requestCreator/);
+  assert.match(client, /credentials: "include"/);
+  assert.match(client, /return "https:\/\/api\.streamsuites\.app"/);
   assert.match(app, /Wheel editing requires the current Runtime wheel service/);
   assert.match(app, /This is a network or Runtime error, not an empty gallery/);
   assert.match(app, /Your public wheel sets are already shown under My Wheel Sets/);
@@ -72,6 +75,7 @@ test("public wheels route preserves the shell and provides clean list/detail art
   const detailFn = read("functions/wheels/[[artifact]].js");
   const stageHtml = read("wheels/stage.html");
   const workspace = read("js/wheel-workspace.js");
+  const wheelClient = read("js/wheel-api-client.js");
   const workspaceCss = read("css/wheel-workspace.css");
   const leaderboardsFn = read("functions/leaderboards/index.js");
   const css = read("css/public-shell.css");
@@ -105,7 +109,10 @@ test("public wheels route preserves the shell and provides clean list/detail art
   assert.match(workspace, /function weightedWinner\(entries, random = Math\.random\)/);
   assert.match(workspace, /dialog\.setAttribute\("aria-modal", "true"\)/);
   assert.match(workspace, /window\.matchMedia\?\.\("\(prefers-reduced-motion: reduce\)"\)/);
-  assert.match(app, /const PUBLIC_WHEEL_EVENTS_URL = `\$\{AUTH_API_BASE\}\/api\/public\/wheels\/events`;/);
+  assert.match(app, /const PUBLIC_WHEEL_EVENTS_URL = WHEEL_API\?\.publicEventsUrl/);
+  assert.match(detailHtml, /wheel-api-client\.js/);
+  assert.match(stageHtml, /wheel-api-client\.js/);
+  assert.match(wheelClient, /publicEventsUrl: `\$\{apiBase\}\$\{PUBLIC_WHEELS_PATH\}\/events`/);
   assert.match(app, /function syncWheelLiveSubscription\(\)/);
   assert.match(app, /wheelEventSource = new EventSource\(PUBLIC_WHEEL_EVENTS_URL, \{ withCredentials: true \}\);/);
   assert.match(app, /wheelEventSource\.addEventListener\("wheel\.changed"/);

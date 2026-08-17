@@ -206,11 +206,14 @@ test("Appearance lightbox owns Stage presets, colour, upload preview, cleanup, a
 
 test("owner mutations share capability gating, structured errors, canonical rehydration, and export", () => {
   const source = read("js/wheel-workspace.js");
+  const client = read("js/wheel-api-client.js");
   assert.match(source, /artifact\.wheelService\?\.schema_version === "streamsuites\.wheel-set\.v2"/);
   assert.match(source, /Wheel editing requires the current Runtime wheel service/);
   assert.match(source, /async function mutatePayload\(body\)/);
-  assert.match(source, /credentials: "include"/);
-  assert.match(source, /responseErrorMessage\(payload, response\.status/);
+  assert.match(source, /WHEEL_API\.updateArtifact\(artifact\.artifactCode, body\)/);
+  assert.match(source, /WHEEL_API\.uploadMedia/);
+  assert.match(client, /credentials: "include"/);
+  assert.match(client, /throw normalizedError\(payload, response\.status\)/);
   assert.match(source, /rehydrateCanonical\(payload\)/);
   assert.match(source, /wheelService: canonical\.wheelService \|\| canonical\.wheel_service \|\| payload\?\.wheel_service \|\| artifact\.wheelService/);
   assert.match(source, /state\.pendingCanonicalRender/);

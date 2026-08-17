@@ -2,10 +2,11 @@
   "use strict";
 
   const DEFAULT_CENTER_IMAGE = "/assets/placeholders/wheelcenterdefault.webp";
+  const WHEEL_API = window.StreamSuitesWheelApi || null;
   const localApiBase = ["127.0.0.1", "localhost"].includes(String(window.location?.hostname || "").toLowerCase())
     ? "http://127.0.0.1:18087"
     : "https://api.streamsuites.app";
-  const API_BASE = String(window.StreamSuitesPublicConfig?.AUTH_API_BASE || localApiBase).replace(/\/$/, "");
+  const API_BASE = String(WHEEL_API?.apiBase || window.StreamSuitesPublicConfig?.AUTH_API_BASE || localApiBase).replace(/\/$/, "");
   const VIEW_MODES = new Set(["focus", "grid", "results"]);
   const STAGE_BACKGROUND_PRESETS = Object.freeze([
     Object.freeze({ id: "cinematic_chamber", name: "Cinematic Chamber" }),
@@ -1266,17 +1267,6 @@
       return { backdrop, dialog, body, dismiss };
     }
 
-    async function parseResponse(response) {
-      try { return await response.json(); } catch (_error) { return {}; }
-    }
-
-    function responseErrorMessage(payload, status, fallback = "Wheel request failed") {
-      if (payload?.error && typeof payload.error === "object") {
-        return text(payload.error.message, `${fallback} (${status})`);
-      }
-      return text(payload?.error, `${fallback} (${status})`);
-    }
-
     function rehydrateCanonical(payload) {
       const canonical = payload?.wheel || payload;
       if (!canonical || typeof canonical !== "object") return;
@@ -1298,15 +1288,8 @@
 
     async function mutatePayload(body) {
       if (!canEdit) throw new Error("Wheel editing requires the current Runtime wheel service");
-      const response = await fetch(`${API_BASE}/api/creator/wheels/${encodeURIComponent(artifact.artifactCode)}`, {
-        method: "PATCH",
-        cache: "no-store",
-        credentials: "include",
-        headers: { Accept: "application/json", "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-      const payload = await parseResponse(response);
-      if (!response.ok || payload?.success === false) throw new Error(responseErrorMessage(payload, response.status, "Save failed"));
+      if (!WHEEL_API) throw new Error("Wheel editing requires the current Runtime wheel service");
+      const payload = await WHEEL_API.updateArtifact(artifact.artifactCode, body);
       rehydrateCanonical(payload);
       const warning = Array.isArray(payload?.warnings) ? payload.warnings.find((item) => item?.message) : null;
       if (warning?.message) announce(warning.message);
@@ -1323,14 +1306,8 @@
 
     async function exportWheelSet() {
       if (!canEdit || serviceFeatures.export !== true) throw new Error("Wheel export requires the current Runtime wheel service");
-      const response = await fetch(`${API_BASE}/api/creator/wheels/${encodeURIComponent(artifact.artifactCode)}/export`, {
-        method: "GET",
-        cache: "no-store",
-        credentials: "include",
-        headers: { Accept: "application/json" }
-      });
-      const payload = await parseResponse(response);
-      if (!response.ok || payload?.success === false) throw new Error(responseErrorMessage(payload, response.status, "Export failed"));
+      if (!WHEEL_API) throw new Error("Wheel export requires the current Runtime wheel service");
+      const payload = await WHEEL_API.exportArtifact(artifact.artifactCode);
       const portable = payload?.export?.payload;
       if (!portable || typeof portable !== "object") throw new Error("Runtime returned no portable wheel document");
       const blob = new Blob([JSON.stringify(portable, null, 2)], { type: "application/json" });
@@ -1623,10 +1600,8 @@
           const status = modalStatus(body); status.textContent = "Saving…";
           try {
             if (selectedCenterFile) {
-              const form = new FormData(); form.append("file", selectedCenterFile);
-              const response = await fetch(`${API_BASE}/api/creator/wheels/${encodeURIComponent(artifact.artifactCode)}/wheels/${encodeURIComponent(wheel.wheelId)}/center-image`, { method: "POST", credentials: "include", cache: "no-store", headers: { Accept: "application/json" }, body: form });
-              const payload = await parseResponse(response);
-              if (!response.ok || payload?.success === false) throw new Error(responseErrorMessage(payload, response.status, "Upload failed"));
+              if (!WHEEL_API) throw new Error("Wheel media upload requires the current Runtime wheel service");
+              const payload = await WHEEL_API.uploadMedia(artifact.artifactCode, wheel.wheelId, "center-image", selectedCenterFile);
               rehydrateCanonical(payload);
               const hydrated = state.authoritativeWheelSet.wheels.find((entry) => entry.wheelId === wheel.wheelId);
               draft.presentation.center_image_url = hydrated?.presentation.center_image_url || draft.presentation.center_image_url;
@@ -1634,10 +1609,8 @@
               draft.presentation.center_image_url = url.value || DEFAULT_CENTER_IMAGE;
             }
             if (selectedStageFile) {
-              const form = new FormData(); form.append("file", selectedStageFile);
-              const response = await fetch(`${API_BASE}/api/creator/wheels/${encodeURIComponent(artifact.artifactCode)}/wheels/${encodeURIComponent(wheel.wheelId)}/stage-background-image`, { method: "POST", credentials: "include", cache: "no-store", headers: { Accept: "application/json" }, body: form });
-              const payload = await parseResponse(response);
-              if (!response.ok || payload?.success === false) throw new Error(responseErrorMessage(payload, response.status, "Stage upload failed"));
+              if (!WHEEL_API) throw new Error("Wheel media upload requires the current Runtime wheel service");
+              const payload = await WHEEL_API.uploadMedia(artifact.artifactCode, wheel.wheelId, "stage-background-image", selectedStageFile);
               rehydrateCanonical(payload);
               const hydrated = state.authoritativeWheelSet.wheels.find((entry) => entry.wheelId === wheel.wheelId);
               draft.presentation.stage_background_image_url = hydrated?.presentation.stage_background_image_url || draft.presentation.stage_background_image_url;

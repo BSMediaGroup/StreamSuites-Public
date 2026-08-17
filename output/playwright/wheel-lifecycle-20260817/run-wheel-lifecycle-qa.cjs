@@ -6,7 +6,8 @@ const { spawn } = require("child_process");
 
 const publicRoot = path.resolve(__dirname, "../../..");
 const runtimeRoot = "C:/NEPTUNE LOCAL/GIT/StreamSuites";
-const isolatedRoot = "C:/Temp/streamsuites-wheel-lifecycle-20260817-run13";
+const isolatedRoot = process.env.STREAMSUITES_WHEEL_ACCEPTANCE_ROOT || "C:/Temp/streamsuites-wheel-lifecycle-20260817-run13";
+const evidenceRoot = process.env.STREAMSUITES_WHEEL_ACCEPTANCE_OUTPUT || __dirname;
 const contextPath = path.join(isolatedRoot, "context.json");
 const runtimeScript = path.join(runtimeRoot, "tools/isolated-wheel-acceptance-server.py");
 const fixtureImage = path.join(publicRoot, "output/playwright/wheel-detail-v3-corrective/flattened-stage-1600x1000.png");
@@ -15,6 +16,7 @@ const apiUrl = "http://127.0.0.1:18087";
 
 fs.mkdirSync(__dirname, { recursive: true });
 fs.mkdirSync(isolatedRoot, { recursive: true });
+fs.mkdirSync(evidenceRoot, { recursive: true });
 
 function contentType(file) {
   const ext = path.extname(file).toLowerCase();
@@ -74,7 +76,19 @@ async function stopRuntime(runtime) {
 
 async function screenshot(page, name, viewport) {
   if (viewport) await page.setViewportSize(viewport);
-  await page.screenshot({ path: path.join(__dirname, name), fullPage: true });
+  await page.screenshot({ path: path.join(evidenceRoot, name), fullPage: true });
+}
+
+function wheelAction(method, url) {
+  const pathName = new URL(url).pathname;
+  if (method === "POST" && pathName.endsWith("/import")) return "import";
+  if (method === "POST" && /\/(?:center-image|stage-background-image)$/.test(pathName)) return "media_upload";
+  if (method === "POST" && pathName === "/api/creator/wheels") return "create";
+  if (method === "PATCH") return "owner_mutation";
+  if (method === "GET" && pathName.endsWith("/export")) return "export";
+  if (method === "GET" && pathName === "/api/creator/wheels") return "owned_list";
+  if (method === "GET" && pathName === "/api/public/wheels") return "public_list";
+  return "wheel_read";
 }
 
 async function apiJson(page, method, urlPath, body) {
@@ -117,7 +131,15 @@ async function main() {
   const pageErrors = [];
   const wheelResponses = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
-  page.on("response", (response) => { if (/\/api\/(?:creator|public)\/wheels/i.test(response.url())) wheelResponses.push({ method: response.request().method(), url: response.url(), status: response.status() }); });
+  page.on("response", async (response) => {
+    if (!/\/api\/(?:creator|public)\/wheels/i.test(response.url())) return;
+    const entry = { action: wheelAction(response.request().method(), response.url()), method: response.request().method(), url: response.url(), status: response.status(), code: response.status() >= 200 && response.status() < 300 ? "success" : null };
+    try {
+      const payload = await response.json();
+      entry.code = payload?.error?.code || payload?.code || (payload?.success === true ? "success" : null);
+    } catch (_error) {}
+    wheelResponses.push(entry);
+  });
 
   await page.goto(`${baseUrl}/wheels`, { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: "Sign in to create" }).waitFor();
@@ -168,6 +190,8 @@ async function main() {
   const entrantRows = page.locator(".wheel-entrant-row");
   await entrantRows.nth(0).getByLabel(/entries$/).fill("3");
   await entrantRows.nth(0).getByLabel(/weight$/).fill("1.5");
+  await entrantRows.nth(0).getByLabel(/colour$/).fill("#123456");
+  await entrantRows.nth(0).getByLabel(/enabled$/).uncheck();
   await entrantRows.nth(1).getByRole("button", { name: "Remove" }).click();
   await page.getByRole("button", { name: "Add entrant" }).click();
   const lastEntrant = page.locator(".wheel-entrant-row").last();
@@ -253,7 +277,7 @@ async function main() {
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("menuitem", { name: "Export wheel set (.sswheel)" }).click();
   const download = await downloadPromise;
-  const exportPath = path.join(__dirname, "lifecycle-wheel-export.sswheel");
+  const exportPath = path.join(evidenceRoot, "lifecycle-wheel-export.sswheel");
   await download.saveAs(exportPath);
   const portable = await readJsonEventually(exportPath);
   await screenshot(page, "10-export-action-1440x900.png", { width: 1440, height: 900 });
@@ -262,6 +286,7 @@ async function main() {
   await page.locator(".wheel-workspace").waitFor();
   detail = (await apiJson(page, "GET", `/api/creator/wheels/${originalCode}`)).body.wheel;
   const afterReload = detail;
+  const originalChildAfterReload = afterReload.wheel_set.wheels.find((wheel) => wheel.wheel_id === originalChildId);
 
   await page.goto(`${baseUrl}/wheels`, { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: "Import .sswheel" }).click();
@@ -338,21 +363,23 @@ async function main() {
     wheelHttp500: wheelResponses.filter((entry) => entry.status === 500),
     wheelResponseCount: wheelResponses.length,
     portable: { schema: portable.schema_version, wheelCount: portable.wheel_set.wheels.length, hasArtifactCode: Object.hasOwn(portable, "artifact_code"), hasPrivatePaths: /(?:storage_path|temp_path|linked_account_id|owner_account_id)/i.test(JSON.stringify(portable)) },
-    afterReload: { title: afterReload.title, wheelCount: afterReload.wheel_set.wheels.length, firstWheelId: afterReload.wheel_set.wheels[0].wheel_id },
+    afterReload: { title: afterReload.title, wheelCount: afterReload.wheel_set.wheels.length, firstWheelId: afterReload.wheel_set.wheels[0].wheel_id, editedEntrantColor: originalChildAfterReload?.entries?.[0]?.color, editedEntrantEnabled: originalChildAfterReload?.entries?.[0]?.enabled },
     afterRestart: { originalTitle: originalAfterRestart.title, importedTitle: importedAfterRestart.title, originalWheelCount: originalAfterRestart.wheel_set.wheels.length, importedWheelCount: importedAfterRestart.wheel_set.wheels.length },
     final: { title: finalOriginal.title, wheelCount: finalOriginal.wheel_set.wheels.length, originalFirstWeight: finalOriginal.wheel_set.wheels[0].entries[0].weight, importedFirstWeight: finalImported.wheel_set.wheels[0].entries[0].weight },
     galleryCounts,
     performance: { mutationPatchCount: wheelResponses.filter((item) => item.method === "PATCH").length, longTaskObservation: "not_captured" },
     metrics,
-    screenshots: fs.readdirSync(__dirname).filter((name) => /^\d{2}-.*\.png$/.test(name)).sort()
+    screenshots: fs.readdirSync(evidenceRoot).filter((name) => /^\d{2}-.*\.png$/.test(name)).sort()
   };
-  fs.writeFileSync(path.join(__dirname, "qa-results.json"), JSON.stringify(result, null, 2));
+  fs.writeFileSync(path.join(evidenceRoot, "qa-results.json"), JSON.stringify(result, null, 2));
+  fs.writeFileSync(path.join(evidenceRoot, "network-results.json"), JSON.stringify(wheelResponses, null, 2));
   if (pageErrors.length) throw new Error(`Page exceptions: ${pageErrors.join(" | ")}`);
   if (result.wheelHttp500.length) throw new Error(`Wheel HTTP 500 responses: ${JSON.stringify(result.wheelHttp500)}`);
   if (metrics.width > metrics.clientWidth) throw new Error(`Horizontal overflow ${metrics.width} > ${metrics.clientWidth}`);
   if (portable.schema_version !== "streamsuites.wheel-set.v2" || result.portable.hasArtifactCode || result.portable.hasPrivatePaths) throw new Error("Portable export contract failed");
   if (originalCode === importedCode || originalPath === importedPath) throw new Error("Import did not receive new canonical identity");
   if (originalAfterRestart.title !== "Lifecycle Wheel A Edited" || importedAfterRestart.wheel_set.wheels.length !== portable.wheel_set.wheels.length) throw new Error("Restart persistence failed");
+  if (originalChildAfterReload?.entries?.[0]?.color !== "#123456" || originalChildAfterReload?.entries?.[0]?.enabled !== false) throw new Error("Entrant colour/enabled persistence failed");
   if (finalImported.wheel_set.wheels[0].entries[0].weight !== 2.25) throw new Error("Post-restart imported edit did not persist");
   if (galleryCounts.ownedCards !== 2 || galleryCounts.publicCards !== 0 || galleryCounts.lifecycleModals !== 0) throw new Error(`Gallery/modal cleanup contract failed: ${JSON.stringify(galleryCounts)}`);
 
@@ -366,7 +393,7 @@ async function main() {
 }
 
 main().catch(async (error) => {
-  fs.writeFileSync(path.join(__dirname, "qa-failure.txt"), `${error.stack || error}\n`);
+  fs.writeFileSync(path.join(evidenceRoot, "qa-failure.txt"), `${error.stack || error}\n`);
   process.stderr.write(`${error.stack || error}\n`);
   await activeBrowser?.close().catch(() => {});
   activeStaticServer?.close();

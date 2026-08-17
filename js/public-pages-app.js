@@ -32,6 +32,7 @@
     }
     return detectFallbackAuthApiBase();
   })();
+  const WHEEL_API = window.StreamSuitesWheelApi || null;
   const AUTH_ME_URL = `${AUTH_API_BASE}/api/public/me`;
   const AUTH_PUBLIC_PROFILE_URL = `${AUTH_API_BASE}/api/public/profile`;
   const AUTH_PUBLIC_PROFILE_ME_URL = `${AUTH_API_BASE}/api/public/profile/me`;
@@ -79,7 +80,7 @@
     ])
   });
   const AUTH_PUBLIC_ARTIFACTS_URL = `${AUTH_API_BASE}/api/public/artifacts`;
-  const PUBLIC_WHEEL_EVENTS_URL = `${AUTH_API_BASE}/api/public/wheels/events`;
+  const PUBLIC_WHEEL_EVENTS_URL = WHEEL_API?.publicEventsUrl || `${AUTH_API_BASE}/api/public/wheels/events`;
   const PUBLIC_XP_ICON_PATH = "/assets/games/xpstar.webp";
   const LEADERBOARD_PLACEMENT_ASSETS = Object.freeze({
     1: "/assets/games/lb-first.webp",
@@ -424,8 +425,6 @@
     click: ["click0.mp3", "click1.mp3", "click2.mp3", "click3.mp3", "click4.mp3", "click5.mp3", "click6.mp3"],
     winner: ["winner0.mp3", "winner1.mp3", "winner2.mp3", "winner3.mp3", "winner4.mp3", "winner5.mp3", "winner6.mp3"]
   });
-  const CREATOR_WHEELS_API_URL = `${AUTH_API_BASE}/api/creator/wheels`;
-  const CREATOR_WHEEL_ACCOUNT_LOOKUP_URL = `${AUTH_API_BASE}/api/creator/wheels/account-lookup`;
   const WHEEL_SERVICE_SCHEMA = "streamsuites.wheel-set.v2";
   const WHEEL_IMPORT_FALLBACK_MAX_BYTES = 2 * 1024 * 1024;
   const MEMBER_PAGE_SIZE = 20;
@@ -3330,32 +3329,12 @@
     host.appendChild(statusSection);
   }
 
-  function wheelLifecycleErrorMessage(payload, status) {
-    if (payload?.error && typeof payload.error === "object") {
-      return String(payload.error.message || payload.error.code || `Wheel request failed (${status}).`).trim();
-    }
-    return resolveAuthorityErrorMessage(payload, status);
-  }
-
   async function wheelLifecycleRequest(path, options = {}) {
-    const response = await fetch(`${CREATOR_WHEELS_API_URL}${path}`, {
+    if (!WHEEL_API) throw new Error("Wheel editing requires the current Runtime wheel service");
+    return WHEEL_API.requestCreator(path, {
       method: options.method || "GET",
-      cache: "no-store",
-      credentials: "include",
-      headers: {
-        Accept: "application/json",
-        ...(options.body ? { "Content-Type": "application/json" } : {})
-      },
-      ...(options.body ? { body: JSON.stringify(options.body) } : {})
+      ...(Object.prototype.hasOwnProperty.call(options, "body") ? { json: options.body } : {})
     });
-    const payload = await parseJsonResponse(response);
-    if (!response.ok || payload?.success === false) {
-      const error = new Error(wheelLifecycleErrorMessage(payload, response.status));
-      error.status = response.status;
-      error.payload = payload;
-      throw error;
-    }
-    return payload;
   }
 
   function openWheelLifecycleModal(title, description, buildBody) {

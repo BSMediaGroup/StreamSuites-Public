@@ -216,7 +216,7 @@
     if (host === "localhost" || host === "127.0.0.1") {
       return "http://127.0.0.1:18087";
     }
-    return "";
+    return "https://api.streamsuites.app";
   }
 
   function resolveApiBase() {

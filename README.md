@@ -110,6 +110,7 @@ flowchart TD
 - `/community/my-data.html` now reads the signed-in user’s real public XP/level progression from `/api/public/progression/me`, wallet/inventory state from `/api/public/economy/me`, and public-authority request history from the authoritative `/api/public/authority/requests/mine` contract.
 - `/wheels` remains the canonical public route for Runtime/Auth-owned wheel artifacts and wheel sets; `/scoreboards` remains the legacy list-view lens over that same authority, while `/leaderboards` reads the public progression leaderboard. Public hydration stays API-first against `/api/public/wheels`, with shared-state/runtime-export copies only as fallback mirrors and the existing single artifact-level `wheel.changed` SSE subscription driving refetches—never one stream or polling loop per child wheel.
 - `/wheels` now separates signed-in `My Wheel Sets` summary cards from the read-only `Public Gallery`, with capability-gated Create and `.sswheel` Import flows. Create preserves entered values on server failure, starts with one Runtime-generated child, and routes to the canonical detail workspace; import validates the bounded portable file through Runtime/Auth, receives a new identity, and routes to that canonical artifact. Signed-out, ineligible, stale-Runtime, network-failure, empty-owned, and empty-public states remain distinct.
+- `js/wheel-api-client.js` is the one credentialed client for wheel creation, owned listing, artifact/child mutations, canonical export/import, and centre/Stage media uploads. It honors an explicitly injected Runtime/Auth base, uses `http://127.0.0.1:18087` for local Public acceptance, and otherwise targets `https://api.streamsuites.app`; owner writes never fall back to an unimplemented `streamsuites.app/api/creator/wheels` Pages route. JSON, multipart, non-JSON, HTML, network, and cancellation failures normalize to safe wheel errors before editor code sees them.
 - Public now renders the versioned multi-wheel projection through `js/wheel-workspace.js`, the single shared implementation used by both the normal detail route and shell-free Stage route. Runtime/Auth's stable `active_wheel_id` selects the initial child; when multiple children exist, the Stage title card becomes the stable-ID keyboard selector. Focus, paged Grid, and combined Results views render only the visible wheel presentation. Spin All schedules the authoritative bounded stagger delay, guards stale runs, and produces one final celebration after every child result is ready. The obsolete embedded Wheel Detail renderer/editor fallback was removed from `js/public-pages-app.js`; the Public app now only orchestrates the shared workspace.
 - Canonical child entrants use separate ticket `entries` and independent `weight`; eligible probability is `entries × weight` over the eligible total, and disabled entrants do not enter the draw. The owner editor writes the active child's settings back inside the existing authoritative wheel-set PATCH document while artifact title/description/default view/share slug remain artifact-level. Temporary result state is keyed by the stable child wheel ID and stays browser-session-local.
 - The accepted `wheelpocv3` presentation remains intact inside the multi-wheel workspace: cinematic bounded arena, premium chassis/pointer/hub treatment, radial labels, focus-managed winner reveals, and a compact inspector beside the stage. The former hero, permanent owner-management row, separate full-width play rail, and separate wheel-selector deck are gone. One slim production toolbar stays above the arena, while the compact Stage title card exposes the child-wheel dropdown only when needed. Spin, contextual Re-spin, Spin All, Focus/Grid/Results, and Pop Out remain immediate; owner Add/Manage/contextual default plus browser-local resets live in the accessible More menu. Owner-only dedicated lightbox workspaces continue to handle wheel management, entrants, appearance and canonical centre-image upload, celebration, sound, rules, and share/presentation settings without moving authority into Public.
@@ -382,6 +383,7 @@ StreamSuites-Public/
 │   ├── status-report.js
 │   ├── stats-page.js
 │   ├── public-toast.js
+│   ├── wheel-api-client.js
 │   ├── wheel-stage-app.js
 │   ├── wheel-workspace.js
 │   ├── studioapp-extensions.js
@@ -434,6 +436,7 @@ StreamSuites-Public/
 │   ├── status-center.test.mjs
 │   ├── status-report.test.mjs
 │   ├── version-page.test.mjs
+│   ├── wheel-api-client.test.mjs
 │   ├── wheel-workspace.test.mjs
 │   └── wheels-authority.test.mjs
 ├── output/
