@@ -125,6 +125,9 @@ test("production chrome is one compact toolbar with secondary actions in an acce
   assert.match(toolbar, /wheel-production-toolbar/);
   assert.match(toolbar, /wheel-production-identity/);
   assert.match(toolbar, /Spin All/);
+  assert.match(source, /\[\["focus", "Focus", "wheelpie"\], \["grid", "Grid", "wheelgrid"\], \["results", "Results", "wheelresults"\]\]/);
+  assert.match(source, /button\.setAttribute\("aria-label", `\$\{label\} view`\)/);
+  assert.match(source, /button\.appendChild\(productionIcon\(icon\)\)/);
   assert.match(toolbar, /if \(result\.latestResult\) play\.appendChild\(respin\)/);
   assert.match(toolbar, /buildViewSelector\(\)/);
   assert.match(toolbar, /Pop out/);
@@ -160,9 +163,13 @@ test("multi-wheel selection is consolidated into the accessible Stage title card
 
 test("responsive workspace contracts keep desktop, tablet, and mobile stage-first", () => {
   const css = read("css/wheel-workspace.css");
+  assert.match(css, /\.wheel-workspace-view-tab\s*\{[^}]*width:\s*34px;[^}]*min-width:\s*34px;[^}]*padding:\s*0;/s);
+  assert.match(css, /\.wheel-workspace-view-tab \.wheel-production-icon\s*\{[^}]*width:\s*17px;[^}]*height:\s*17px;/s);
   assert.match(css, /\.wheel-production-toolbar\s*\{[\s\S]*grid-template-columns/);
   assert.match(css, /\.wheel-title-selector__menu\s*\{[\s\S]*position:\s*absolute/);
   assert.match(css, /@media \(max-width: 820px\)[\s\S]*grid-template-areas:[\s\S]*"identity play"[\s\S]*"utilities utilities"/);
+  assert.match(css, /@media \(max-width: 820px\)[\s\S]*\.wheel-production-utilities \.wheel-workspace-view-tabs\s*\{\s*flex:\s*0 0 auto/);
+  assert.doesNotMatch(css, /\.wheel-production-utilities \.wheel-workspace-view-tabs\s*\{\s*flex:\s*1 1 auto/);
   assert.match(css, /@media \(max-width: 820px\)[\s\S]*\.wheel-workspace-content\s*\{\s*grid-template-columns:\s*1fr/);
   assert.match(css, /@media \(max-width: 520px\)[\s\S]*\.wheel-production-presentation/);
   assert.match(css, /@media \(max-width: 520px\)[\s\S]*\.wheel-title-overlay/);
@@ -221,7 +228,13 @@ test("owner mutations share capability gating, structured errors, canonical rehy
   assert.match(source, /const validIds = new Set/);
   assert.match(source, /state\.resultsByWheel\.delete\(id\)/);
   assert.match(source, /async function mutateArtifact\(updates\)/);
-  assert.match(source, /Save wheel-set details/);
+  assert.match(source, /function wheelSetDetailsModal\(\)/);
+  assert.match(source, /function buildWheelSetDetailsEditor\(body\)/);
+  assert.match(source, /Edit Wheel Set details/);
+  assert.match(source, /Save Wheel Set details/);
+  assert.match(source, /Containing Wheel Set/);
+  assert.match(source, /body\.append\(setDetails, childrenHeading, add, importLabel, list\)/);
+  assert.doesNotMatch(source, /function shareModal\(\)[\s\S]{0,1800}Wheel-set title/);
   assert.match(source, /async function exportWheelSet\(\)/);
   assert.match(source, /Export Stage \(\.stg\)/);
   assert.match(source, /async function exportChildWheel\(wheel = selectedWheel\(\)\)/);

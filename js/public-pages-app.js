@@ -3681,15 +3681,63 @@
     );
   }
 
-  function buildWheelLibraryMenu(set, wheel = null) {
+  function openEditWheelSetModal(set, onUpdated) {
+    openWheelLifecycleModal(
+      "Edit Wheel Set details",
+      "Rename the containing Wheel Set or update its public description. Individual Wheel names remain separate.",
+      (body, dismiss) => {
+        const form = create("form", "wheel-lifecycle-form");
+        const titleField = create("label", "wheel-lifecycle-field");
+        titleField.appendChild(create("span", "", "Wheel Set title"));
+        const titleInput = create("input"); titleInput.type = "text"; titleInput.required = true; titleInput.maxLength = 160; titleInput.value = String(set?.title || "");
+        titleField.appendChild(titleInput);
+        const descriptionField = create("label", "wheel-lifecycle-field");
+        descriptionField.appendChild(create("span", "", "Description"));
+        const descriptionInput = create("textarea"); descriptionInput.maxLength = 2000; descriptionInput.rows = 5; descriptionInput.value = String(set?.description || "");
+        descriptionField.appendChild(descriptionInput);
+        const actions = create("div", "wheel-lifecycle-actions");
+        const cancel = create("button", "wheel-production-secondary", "Cancel"); cancel.type = "button";
+        const submit = create("button", "wheel-production-primary", "Save Wheel Set details"); submit.type = "submit";
+        actions.append(cancel, submit); form.append(titleField, descriptionField, actions); body.appendChild(form);
+        cancel.addEventListener("click", dismiss);
+        form.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const title = titleInput.value.trim();
+          if (!title) { wheelLifecycleStatus(body, "Enter a Wheel Set title."); titleInput.focus(); return; }
+          submit.disabled = true;
+          wheelLifecycleStatus(body, "Saving Wheel Set details through Runtime/Auth…");
+          try {
+            const payload = await WHEEL_API.updateArtifact(set.artifactCode, { title, description: descriptionInput.value.trim() });
+            const canonical = payload?.wheel || {};
+            const saved = {
+              artifactCode: set.artifactCode,
+              title: String(canonical.title || title),
+              description: String(canonical.description ?? descriptionInput.value.trim())
+            };
+            window.StreamSuitesPublicData?.invalidateCache?.();
+            onUpdated?.(saved);
+            titleInput.value = saved.title;
+            descriptionInput.value = saved.description;
+            wheelLifecycleStatus(body, "Wheel Set details saved and rehydrated from Runtime/Auth.");
+          } catch (error) {
+            wheelLifecycleStatus(body, error instanceof Error ? error.message : "Wheel Set details could not be saved.");
+          } finally { submit.disabled = false; }
+        });
+      }
+    );
+  }
+
+  function buildWheelLibraryMenu(set, wheel = null, onIdentityUpdated = null) {
     const wrap = create("div", "wheel-library-menu");
     const trigger = create("button", "wheel-library-menu__trigger", "⋯"); trigger.type = "button"; trigger.setAttribute("aria-label", `Actions for ${wheel?.name || set.title}`); trigger.setAttribute("aria-haspopup", "menu"); trigger.setAttribute("aria-expanded", "false");
     const menu = create("div", "wheel-library-menu__panel"); menu.setAttribute("role", "menu"); menu.hidden = true;
+    const edit = create("button", "", "Edit Wheel Set details"); edit.type = "button"; edit.setAttribute("role", "menuitem");
     const action = create("button", "", wheel ? "Export wheel (.swl)" : "Export Stage (.stg)"); action.type = "button"; action.setAttribute("role", "menuitem");
     const close = (returnFocus = false) => { menu.hidden = true; trigger.setAttribute("aria-expanded", "false"); if (returnFocus) trigger.focus(); };
-    trigger.addEventListener("click", () => { const opening = menu.hidden; menu.hidden = !opening; trigger.setAttribute("aria-expanded", opening ? "true" : "false"); if (opening) action.focus(); });
+    trigger.addEventListener("click", () => { const opening = menu.hidden; menu.hidden = !opening; trigger.setAttribute("aria-expanded", opening ? "true" : "false"); if (opening) edit.focus(); });
     wrap.addEventListener("keydown", (event) => { if (event.key === "Escape" && !menu.hidden) { event.preventDefault(); close(true); } });
     wrap.addEventListener("focusout", () => window.setTimeout(() => { if (!wrap.contains(document.activeElement)) close(false); }, 0));
+    edit.addEventListener("click", () => { close(false); openEditWheelSetModal(set, onIdentityUpdated); });
     action.addEventListener("click", async () => {
       action.disabled = true;
       try {
@@ -3701,10 +3749,10 @@
       } catch (error) { action.textContent = error instanceof Error ? error.message : "Export failed"; }
       finally { action.disabled = false; }
     });
-    menu.appendChild(action); wrap.append(trigger, menu); return wrap;
+    menu.append(edit, action); wrap.append(trigger, menu); return wrap;
   }
 
-  function buildWheelSetLibraryCard(set) {
+  function buildWheelSetLibraryCard(set, onIdentityUpdated = null) {
     const card = create("article", "wheel-library-card wheel-library-card--set"); card.dataset.wheelArtifactCode = set.artifactCode; card.style.setProperty("--wheel-card-stage", set.defaultWheel.presentation.stageColor);
     const link = create("a", "wheel-library-card__link"); link.href = set.href; link.setAttribute("aria-label", `Wheel Set: ${set.title}, ${set.wheels.length} wheels`);
     const preview = create("div", "wheel-library-card__preview"); preview.appendChild(buildMiniWheelThumbnail(set.defaultWheel));
@@ -3712,10 +3760,10 @@
     if (set.description) copy.appendChild(create("p", "wheel-library-card__description", set.description));
     const meta = create("div", "item-meta"); meta.append(create("span", "meta-pill", `${set.wheels.length} wheel${set.wheels.length === 1 ? "" : "s"}`), create("span", "meta-pill", `${set.entrantCount} entrants`));
     if (set.yours) meta.appendChild(create("span", "meta-pill wheel-library-yours", "Yours"));
-    copy.appendChild(meta); link.append(preview, copy); card.appendChild(link); if (set.owned) card.appendChild(buildWheelLibraryMenu(set)); return card;
+    copy.appendChild(meta); link.append(preview, copy); card.appendChild(link); if (set.owned) card.appendChild(buildWheelLibraryMenu(set, null, onIdentityUpdated)); return card;
   }
 
-  function buildChildWheelLibraryCard(set, wheel) {
+  function buildChildWheelLibraryCard(set, wheel, onIdentityUpdated = null) {
     const card = create("article", "wheel-library-card wheel-library-card--wheel"); card.dataset.wheelArtifactCode = set.artifactCode; card.dataset.wheelId = wheel.wheelId; card.style.setProperty("--wheel-card-stage", wheel.presentation.stageColor);
     const link = create("a", "wheel-library-card__link"); link.href = wheelChildHref(set, wheel.wheelId); link.setAttribute("aria-label", `Wheel: ${wheel.name}, from Wheel Set ${set.title}`);
     const preview = create("div", "wheel-library-card__preview"); preview.appendChild(buildMiniWheelThumbnail(wheel));
@@ -3723,10 +3771,10 @@
     const meta = create("div", "item-meta"); meta.append(create("span", "meta-pill", `${wheel.entrantCount} entrants`));
     if (wheel.isDefault) meta.appendChild(create("span", "meta-pill", "Default"));
     if (set.yours) meta.appendChild(create("span", "meta-pill wheel-library-yours", "Yours"));
-    copy.appendChild(meta); link.append(preview, copy); card.appendChild(link); if (set.owned) card.appendChild(buildWheelLibraryMenu(set, wheel)); return card;
+    copy.appendChild(meta); link.append(preview, copy); card.appendChild(link); if (set.owned) card.appendChild(buildWheelLibraryMenu(set, wheel, onIdentityUpdated)); return card;
   }
 
-  function createWheelLibrarySection(title, badgeText, query) {
+  function createWheelLibrarySection(title, badgeText, query, options = {}) {
     const section = create("section", "section wheel-library-section");
     const head = create("div", "section-heading"); const badge = create("span", "meta-pill", badgeText); head.append(create("h2", "", title), badge);
     const tabs = create("div", "wheel-library-tabs"); tabs.setAttribute("role", "tablist"); tabs.setAttribute("aria-label", `${title} collections`);
@@ -3747,13 +3795,24 @@
       if (status.loading) { grid.appendChild(create("div", "wheel-gallery-loading", "Loading wheel library…")); return; }
       if (status.error) { grid.appendChild(create("div", "empty-state is-error", status.error)); return; }
       let count = 0;
-      if (active === "sets") sets.filter((set) => matches(set)).forEach((set) => { grid.appendChild(buildWheelSetLibraryCard(set)); count += 1; });
-      else sets.forEach((set) => set.wheels.filter((wheel) => matches(set, wheel)).forEach((wheel) => { grid.appendChild(buildChildWheelLibraryCard(set, wheel)); count += 1; }));
+      if (active === "sets") sets.filter((set) => matches(set)).forEach((set) => { grid.appendChild(buildWheelSetLibraryCard(set, options.onIdentityUpdated)); count += 1; });
+      else sets.forEach((set) => set.wheels.filter((wheel) => matches(set, wheel)).forEach((wheel) => { grid.appendChild(buildChildWheelLibraryCard(set, wheel, options.onIdentityUpdated)); count += 1; }));
       badge.textContent = `${count} ${active === "sets" ? "set" : "wheel"}${count === 1 ? "" : "s"}`;
       if (!count) grid.appendChild(create("div", "empty-state", status.empty || `No ${active === "sets" ? "Wheel Sets" : "Wheels"} match this search.`));
     };
     setsTab.addEventListener("click", () => { active = "sets"; render(); }); wheelsTab.addEventListener("click", () => { active = "wheels"; render(); });
-    return { section, update(nextSets, nextStatus = {}) { sets = nextSets; status = { loading: false, error: "", empty: "", ...nextStatus }; render(); } };
+    return {
+      section,
+      update(nextSets, nextStatus = {}) { sets = nextSets; status = { loading: false, error: "", empty: "", ...nextStatus }; render(); },
+      updateIdentity(update) {
+        sets.forEach((set) => {
+          if (set.artifactCode !== update.artifactCode) return;
+          set.title = update.title;
+          set.description = update.description;
+        });
+        render();
+      }
+    };
   }
 
   function renderWheelsLifecycle(ctx) {
@@ -3793,7 +3852,13 @@
     }
     hero.append(heroCopy, actions); host.appendChild(hero);
 
-    const ownedLibrary = createWheelLibrarySection("My Library", authenticated ? "Runtime/Auth owned" : "Sign in required", state.query);
+    let ownedLibrary = null;
+    let publicGallery = null;
+    const applyIdentityUpdate = (update) => {
+      ownedLibrary?.updateIdentity(update);
+      publicGallery?.updateIdentity(update);
+    };
+    ownedLibrary = createWheelLibrarySection("My Library", authenticated ? "Runtime/Auth owned" : "Sign in required", state.query, { onIdentityUpdated: applyIdentityUpdate });
     host.appendChild(ownedLibrary.section);
     if (!authenticated) ownedLibrary.update([], { empty: "Sign in to see your Wheel Sets and individual Wheels." });
     else if (!eligible) ownedLibrary.update([], { empty: "Owned wheel management is unavailable for this account under the current Runtime capability policy." });
@@ -3801,7 +3866,7 @@
 
     const publicItems = filterItemsByType(data, "wheels", "");
     const publicSets = publicItems.map((item) => wheelLibrarySet(item, { yours: isArtifactOwner(authState || null, item) }));
-    const publicGallery = createWheelLibrarySection("Public Gallery", `${publicSets.length} published`, state.query);
+    publicGallery = createWheelLibrarySection("Public Gallery", `${publicSets.length} published`, state.query, { onIdentityUpdated: applyIdentityUpdate });
     const publicFailed = data?.sourceStatus?.wheels?.ok === false;
     publicGallery.update(publicSets, { error: publicFailed ? "Public wheel gallery could not be loaded. This is a network or Runtime error, not an empty gallery." : "", empty: "No public Wheel Sets or Wheels match this search." });
     host.appendChild(publicGallery.section);

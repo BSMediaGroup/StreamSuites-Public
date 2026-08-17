@@ -811,11 +811,14 @@
       const tabs = element("div", "wheel-workspace-view-tabs");
       tabs.setAttribute("role", "tablist");
       tabs.setAttribute("aria-label", "Wheel workspace view");
-      [["focus", "Focus"], ["grid", "Grid"], ["results", "Results"]].forEach(([key, label]) => {
-        const button = element("button", `wheel-workspace-view-tab${state.viewMode === key ? " is-active" : ""}`, label);
+      [["focus", "Focus", "wheelpie"], ["grid", "Grid", "wheelgrid"], ["results", "Results", "wheelresults"]].forEach(([key, label, icon]) => {
+        const button = element("button", `wheel-workspace-view-tab${state.viewMode === key ? " is-active" : ""}`);
         button.type = "button";
         button.setAttribute("role", "tab");
+        button.setAttribute("aria-label", `${label} view`);
         button.setAttribute("aria-selected", state.viewMode === key ? "true" : "false");
+        button.title = `${label} view`;
+        button.appendChild(productionIcon(icon));
         button.addEventListener("click", () => setView(key));
         tabs.appendChild(button);
       });
@@ -934,6 +937,7 @@
         };
         if (canEdit) {
           addHeading("Wheel management");
+          addAction("Edit Wheel Set details", wheelSetDetailsModal);
           addAction("Add wheel", async () => {
             try { await mutate({ type: "add", wheel: { name: `Wheel ${state.authoritativeWheelSet.wheels.length + 1}`, entries: ["Entry 1", "Entry 2"] } }); announce("Wheel added."); }
             catch (error) { announce(error instanceof Error ? error.message : "Add failed."); }
@@ -1407,8 +1411,49 @@
       return status;
     }
 
+    function buildWheelSetDetailsEditor(body) {
+      const section = element("section", "wheel-manager-set-details");
+      section.append(element("span", "wheel-console-section-label", "Containing Wheel Set"), element("h3", "", artifact.title));
+      const form = element("form", "wheel-editor-form");
+      const titleField = element("label", "wheel-editor-field");
+      const titleInput = element("input"); titleInput.type = "text"; titleInput.required = true; titleInput.maxLength = 160; titleInput.value = artifact.title;
+      titleField.append(element("span", "", "Wheel Set title"), titleInput);
+      const descriptionField = element("label", "wheel-editor-field");
+      const descriptionInput = element("textarea"); descriptionInput.maxLength = 2000; descriptionInput.rows = 4; descriptionInput.value = text(artifact.description);
+      descriptionField.append(element("span", "", "Description"), descriptionInput);
+      const save = element("button", "wheel-production-primary", "Save Wheel Set details"); save.type = "submit";
+      form.append(titleField, descriptionField, save);
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const title = titleInput.value.trim();
+        const status = modalStatus(body);
+        if (!title) { status.textContent = "Enter a Wheel Set title."; titleInput.focus(); return; }
+        save.disabled = true;
+        status.textContent = "Saving Wheel Set details…";
+        try {
+          await mutateArtifact({ title, description: descriptionInput.value.trim() });
+          titleInput.value = artifact.title;
+          descriptionInput.value = text(artifact.description);
+          section.querySelector("h3").textContent = artifact.title;
+          status.textContent = "Wheel Set details saved and rehydrated from Runtime/Auth.";
+        } catch (error) {
+          status.textContent = error instanceof Error ? error.message : "Wheel Set details could not be saved.";
+        } finally { save.disabled = false; }
+      });
+      section.appendChild(form);
+      return section;
+    }
+
+    function wheelSetDetailsModal() {
+      openModal("Edit Wheel Set details", "Rename the containing Wheel Set or update its public description. Individual Wheel names remain separate.", (body) => {
+        body.appendChild(buildWheelSetDetailsEditor(body));
+      });
+    }
+
     function manageWheelsModal() {
-      openModal("Manage wheels", "Add, import, export, duplicate, rename, reorder, choose the saved default, or remove child wheels.", (body) => {
+      openModal("Manage wheels", "Edit the containing Wheel Set, then add, import, export, duplicate, rename, reorder, choose the saved default, or remove child wheels.", (body) => {
+        const setDetails = buildWheelSetDetailsEditor(body);
+        const childrenHeading = element("h3", "wheel-manager-heading", "Child wheels");
         const list = element("div", "wheel-manager-list");
         function rebuild() {
           list.replaceChildren();
@@ -1480,7 +1525,7 @@
             status.textContent = error instanceof Error ? error.message : "Wheel import failed.";
           }
         });
-        body.append(add, importLabel, list);
+        body.append(setDetails, childrenHeading, add, importLabel, list);
       });
     }
 
@@ -1780,22 +1825,6 @@
         if (artifact.shortlinkSlug) shareRow("Shortlink", `https://ssvx.cc/${artifact.shortlinkSlug}`);
         body.appendChild(element("p", "wheel-results-note", "Directly opened OBS, Studio, iframe, or browser-source Stage instances use independent local result sessions until a later authoritative synchronized-session milestone."));
         if (canEdit) {
-          const titleField = element("label", "wheel-editor-field");
-          const titleInput = element("input"); titleInput.type = "text"; titleInput.maxLength = 160; titleInput.value = artifact.title;
-          titleField.append(element("span", "", "Wheel-set title"), titleInput);
-          const descriptionField = element("label", "wheel-editor-field");
-          const descriptionInput = element("textarea"); descriptionInput.maxLength = 2000; descriptionInput.value = text(artifact.description);
-          descriptionField.append(element("span", "", "Description"), descriptionInput);
-          const saveIdentity = element("button", "wheel-production-primary", "Save wheel-set details");
-          saveIdentity.addEventListener("click", async () => {
-            const status = modalStatus(body); status.textContent = "Saving…";
-            try {
-              await mutateArtifact({ title: titleInput.value, description: descriptionInput.value });
-              status.textContent = "Wheel-set details saved.";
-            } catch (error) {
-              status.textContent = error instanceof Error ? error.message : "Save failed.";
-            }
-          });
           const delayField = element("label", "wheel-editor-field"); const delay = element("input"); delay.type = "number"; delay.min = "100"; delay.max = "1000"; delay.value = state.authoritativeWheelSet.spinAll.delayMs; delayField.append(element("span", "", "Spin All stagger delay (ms)"), delay);
           const save = element("button", "wheel-production-primary", "Save Spin All timing"); save.addEventListener("click", async () => { const status = modalStatus(body); status.textContent = "Saving…"; try { await mutate({ type: "update_spin_all", spin_all: { mode: "staggered", delay_ms: Number(delay.value) } }); status.textContent = "Spin All timing saved."; } catch (error) { status.textContent = error instanceof Error ? error.message : "Save failed."; } }); body.append(delayField, save);
           const exportButton = element("button", "wheel-production-secondary", "Export Stage (.stg)");
@@ -1804,7 +1833,6 @@
             try { await exportWheelSet(); status.textContent = "Export downloaded."; }
             catch (error) { status.textContent = error instanceof Error ? error.message : "Export failed."; }
           });
-          body.prepend(titleField, descriptionField, saveIdentity);
           const exportWheelButton = element("button", "wheel-production-secondary", "Export wheel (.swl)");
           exportWheelButton.addEventListener("click", async () => {
             const status = modalStatus(body); status.textContent = "Preparing wheel export…";

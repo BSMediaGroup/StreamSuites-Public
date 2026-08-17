@@ -56,8 +56,14 @@ test("wheels library exposes portable formats, owned/public tabs, child cards, a
   assert.doesNotMatch(app, /Your public wheel sets are already shown under My Wheel Sets/);
   assert.doesNotMatch(app, /Open workspace|Open Stage/);
   assert.match(app, /function buildMiniWheelThumbnail\(wheel\)/);
-  assert.match(app, /function buildWheelSetLibraryCard\(set\)/);
-  assert.match(app, /function buildChildWheelLibraryCard\(set, wheel\)/);
+  assert.match(app, /function buildWheelSetLibraryCard\(set, onIdentityUpdated = null\)/);
+  assert.match(app, /function buildChildWheelLibraryCard\(set, wheel, onIdentityUpdated = null\)/);
+  assert.match(app, /function openEditWheelSetModal\(set, onUpdated\)/);
+  assert.match(app, /Edit Wheel Set details/);
+  assert.match(app, /Save Wheel Set details/);
+  assert.match(app, /WHEEL_API\.updateArtifact\(set\.artifactCode, \{ title, description:/);
+  assert.match(app, /ownedLibrary\?\.updateIdentity\(update\)/);
+  assert.match(app, /publicGallery\?\.updateIdentity\(update\)/);
   assert.match(app, /url\.searchParams\.set\("wheel", wheelId\)/);
   assert.match(app, /nextUrl\.search = window\.location\.search;/);
   assert.match(app, /nextUrl\.hash = window\.location\.hash;/);

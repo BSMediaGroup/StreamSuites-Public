@@ -1,0 +1,89 @@
+{
+  "pageErrors": [],
+  "desktop": {
+    "tabs": [
+      {
+        "label": "Focus view",
+        "title": "Focus view",
+        "selected": "true",
+        "visibleText": "",
+        "width": 34,
+        "height": 34,
+        "iconWidth": 17,
+        "iconHeight": 17,
+        "iconMask": "url(\"http://127.0.0.1:18744/assets/icons/ui/wheelpie.svg\")",
+        "color": "rgb(255, 255, 255)"
+      },
+      {
+        "label": "Grid view",
+        "title": "Grid view",
+        "selected": "false",
+        "visibleText": "",
+        "width": 34,
+        "height": 34,
+        "iconWidth": 17,
+        "iconHeight": 17,
+        "iconMask": "url(\"http://127.0.0.1:18744/assets/icons/ui/wheelgrid.svg\")",
+        "color": "rgb(154, 168, 186)"
+      },
+      {
+        "label": "Results view",
+        "title": "Results view",
+        "selected": "false",
+        "visibleText": "",
+        "width": 34,
+        "height": 34,
+        "iconWidth": 17,
+        "iconHeight": 17,
+        "iconMask": "url(\"http://127.0.0.1:18744/assets/icons/ui/wheelresults.svg\")",
+        "color": "rgb(154, 168, 186)"
+      }
+    ],
+    "selectorWidth": 112,
+    "overflow": 0
+  },
+  "gridSelected": "true",
+  "resultsSelected": "true",
+  "mobile": {
+    "tabs": [
+      {
+        "label": "Focus view",
+        "title": "Focus view",
+        "selected": "false",
+        "visibleText": "",
+        "width": 34,
+        "height": 32,
+        "iconWidth": 17,
+        "iconHeight": 17,
+        "iconMask": "url(\"http://127.0.0.1:18744/assets/icons/ui/wheelpie.svg\")",
+        "color": "rgb(154, 168, 186)"
+      },
+      {
+        "label": "Grid view",
+        "title": "Grid view",
+        "selected": "false",
+        "visibleText": "",
+        "width": 34,
+        "height": 32,
+        "iconWidth": 17,
+        "iconHeight": 17,
+        "iconMask": "url(\"http://127.0.0.1:18744/assets/icons/ui/wheelgrid.svg\")",
+        "color": "rgb(154, 168, 186)"
+      },
+      {
+        "label": "Results view",
+        "title": "Results view",
+        "selected": "true",
+        "visibleText": "",
+        "width": 34,
+        "height": 32,
+        "iconWidth": 17,
+        "iconHeight": 17,
+        "iconMask": "url(\"http://127.0.0.1:18744/assets/icons/ui/wheelresults.svg\")",
+        "color": "rgb(255, 255, 255)"
+      }
+    ],
+    "selectorWidth": 112,
+    "overflow": 0
+  }
+}

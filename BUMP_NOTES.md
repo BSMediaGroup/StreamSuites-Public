@@ -6,6 +6,30 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-17 - Icon-only workspace view selector
+
+#### Technical notes
+
+- Replaced the visible Focus, Grid, and Results labels in the compact Wheel workspace view selector with the supplied `wheelpie.svg`, `wheelgrid.svg`, and `wheelresults.svg` assets. Each control is now a 34px-wide icon button, reducing toolbar width without changing view state or selection behavior.
+- Preserved the existing tablist/tab semantics and active, hover, and keyboard-focus treatment. Every icon-only tab has an explicit accessible name and native tooltip so its purpose remains available without visible text.
+- Retained installed-Edge evidence under `output/playwright/wheel-icon-selector-20260817/`. Desktop and 390px mobile both render the three requested 17px SVG masks inside a 112px selector, preserve each selected view, and record zero document overflow and zero page exceptions. This is isolated local rendering evidence, not deployed-service proof.
+
+#### Human-readable summary
+
+Focus, Grid, and Results now use compact icon-only buttons, leaving more room in the Wheel production toolbar while keeping each view clearly identifiable.
+
+### 2026-08-17 - Discoverable Wheel Set title and description editing
+
+#### Technical notes
+
+- Added an owner-only `Edit Wheel Set details` action to owned Wheel Set cards, owned child-Wheel card menus, and the workspace More menu. The dedicated editor writes the existing Runtime/Auth-owned artifact `title` and `description` fields and rehydrates both My Library and Public Gallery from the canonical response.
+- Extended Manage Wheels with a clearly separated `Containing Wheel Set` editor above the existing child-Wheel controls, so Set identity and child-Wheel renaming are available together without conflating them. The title/description inputs were relocated out of the unrelated Share and presentation dialog; share visibility, slug, embed, and export behavior remain unchanged.
+- Added focused structure/authority tests and retained isolated installed-Edge evidence under `output/playwright/wheel-library-20260817/` for desktop library and workspace entry points, the edit dialog, persisted library identity, and the combined mobile Set/child manager. The browser probe recorded zero page errors and zero document overflow and confirmed that renaming the Set preserves its child Wheel name. This is local isolated-Runtime evidence, not a production deployment or production-data write.
+
+#### Human-readable summary
+
+Wheel Set owners can now change the Set title and description directly from the Library or workspace. Manage Wheels also shows the containing Set details above the individual Wheel controls, and renaming a Set no longer implies renaming its child Wheel.
+
 ### 2026-08-17 - Real web traffic and manual-download Stats hydration
 
 #### Technical notes
