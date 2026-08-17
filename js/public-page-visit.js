@@ -12,7 +12,31 @@
     const raw = String(value || "").trim();
     if (!raw) return "/";
     const base = raw.split("#", 1)[0].split("?", 1)[0] || raw;
-    return base.startsWith("/") ? base : `/${base.replace(/^\/+/, "")}`;
+    const path = base.startsWith("/") ? base : `/${base.replace(/^\/+/, "")}`;
+    const normalized = path.length > 1 ? path.replace(/\/+$/, "") : path;
+    if (/^\/(?:u\/|@|profile\/)[^/]+/i.test(normalized)) return "/u/:slug";
+    for (const family of ["wheels", "polls", "clips", "tallies", "scoreboards"]) {
+      if (new RegExp(`^/${family}/[^/]+`, "i").test(normalized)) return `/${family}/:artifact`;
+    }
+    return normalized;
+  };
+
+  const createEventId = () => {
+    try {
+      if (typeof crypto?.randomUUID === "function") return `pv-${crypto.randomUUID()}`;
+    } catch (_error) {
+      // Use the bounded non-identity fallback below.
+    }
+    return `pv-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 14)}`;
+  };
+
+  const routeCacheKey = (value) => {
+    let hash = 2166136261;
+    for (const character of String(value || "/")) {
+      hash ^= character.charCodeAt(0);
+      hash = Math.imul(hash, 16777619);
+    }
+    return `route-${(hash >>> 0).toString(16)}`;
   };
 
   const readVisitCache = () => {
@@ -34,36 +58,23 @@
     }
   };
 
-  const ensureSessionMarker = () => {
-    const cache = readVisitCache();
-    if (typeof cache.sessionMarker === "string" && cache.sessionMarker) {
-      return cache.sessionMarker;
-    }
-    const marker = `pv-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-    cache.sessionMarker = marker;
-    writeVisitCache(cache);
-    return marker;
-  };
-
   const reportPageVisit = () => {
-    const pagePath = normalizePath(window.location.pathname);
+    const rawPagePath = String(window.location.pathname || "/");
+    const pagePath = normalizePath(rawPagePath);
+    const cacheKey = routeCacheKey(rawPagePath);
     const cache = readVisitCache();
     const pageVisits = cache.pageVisits && typeof cache.pageVisits === "object" ? cache.pageVisits : {};
-    const lastVisitAt = Date.parse(pageVisits[pagePath] || "");
+    const lastVisitAt = Date.parse(pageVisits[cacheKey] || "");
     if (Number.isFinite(lastVisitAt) && Date.now() - lastVisitAt < VISIT_DEDUPE_MS) return;
 
-    pageVisits[pagePath] = new Date().toISOString();
+    pageVisits[cacheKey] = new Date().toISOString();
     cache.pageVisits = pageVisits;
-    cache.sessionMarker = cache.sessionMarker || ensureSessionMarker();
     writeVisitCache(cache);
 
     const payload = {
+      surface: "public",
       path: pagePath,
-      title: document.title || null,
-      page_key: document.body?.dataset?.page || null,
-      referrer: document.referrer || null,
-      timestamp: new Date().toISOString(),
-      session_marker: cache.sessionMarker,
+      event_id: createEventId(),
     };
     const body = JSON.stringify(payload);
 

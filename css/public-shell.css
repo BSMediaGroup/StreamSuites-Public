@@ -8021,6 +8021,53 @@ body.public-shell-page .wheel-create-menu { position: relative; }
 body.public-shell-page .wheel-create-menu__panel { position: absolute; z-index: 20; top: calc(100% + 7px); right: 0; min-width: 230px; padding: 6px; border: 1px solid var(--ss-border-neutral); border-radius: 12px; background: var(--ss-surface-card-raised); box-shadow: var(--ss-shadow-float); }
 body.public-shell-page .wheel-create-menu__panel button { display: block; width: 100%; min-height: 40px; padding: 8px 11px; border: 0; border-radius: 8px; background: transparent; color: var(--ss-text-primary); text-align: left; cursor: pointer; }
 body.public-shell-page .wheel-create-menu__panel button:is(:hover, :focus-visible) { background: var(--ss-accent-wash); }
+body.public-shell-page :is(.wheel-gallery-actions, .wheel-lifecycle-actions) :is(.wheel-production-primary, .wheel-production-secondary) {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 9px 16px;
+  border: 1px solid var(--ss-border-strong);
+  border-radius: 11px;
+  background: var(--ss-control-neutral);
+  color: var(--ss-text-primary);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 7%, transparent);
+  font: 700 .78rem/1 var(--public-font-body);
+  letter-spacing: .01em;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease, filter .16s ease;
+}
+body.public-shell-page :is(.wheel-gallery-actions, .wheel-lifecycle-actions) .wheel-production-primary {
+  border-color: var(--ss-accent-border);
+  background: var(--ss-control-primary);
+  color: var(--ss-text-inverse);
+  box-shadow: var(--ss-accent-glow), inset 0 1px 0 color-mix(in srgb, white 18%, transparent);
+}
+body.public-shell-page :is(.wheel-gallery-actions, .wheel-lifecycle-actions) .wheel-production-primary:is(:hover, :focus-visible) {
+  border-color: color-mix(in srgb, var(--ss-accent-tertiary) 70%, white);
+  background: var(--ss-accent-hover);
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--ss-accent-primary) 28%, transparent), inset 0 1px 0 color-mix(in srgb, white 24%, transparent);
+  filter: brightness(1.04);
+  transform: translateY(-1px);
+}
+body.public-shell-page :is(.wheel-gallery-actions, .wheel-lifecycle-actions) .wheel-production-secondary:is(:hover, :focus-visible) {
+  border-color: var(--ss-accent-border);
+  background: var(--ss-control-themed-subtle);
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--ss-accent-primary) 14%, transparent), inset 0 1px 0 color-mix(in srgb, white 10%, transparent);
+  transform: translateY(-1px);
+}
+body.public-shell-page :is(.wheel-gallery-actions, .wheel-lifecycle-actions) :is(.wheel-production-primary, .wheel-production-secondary):active {
+  transform: translateY(0);
+}
+body.public-shell-page :is(.wheel-gallery-actions, .wheel-lifecycle-actions) :is(.wheel-production-primary, .wheel-production-secondary):disabled {
+  cursor: not-allowed;
+  opacity: .46;
+  filter: none;
+  transform: none;
+}
 body.public-shell-page .wheel-import-types { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0; padding: 0; border: 0; }
 body.public-shell-page .wheel-import-types legend { grid-column: 1 / -1; margin-bottom: 2px; color: var(--ss-text-secondary); font-size: .72rem; font-weight: 650; }
 body.public-shell-page .wheel-import-type { display: grid; grid-template-columns: auto 1fr; align-items: start; gap: 10px; padding: 13px; border: 1px solid var(--ss-border-neutral); border-radius: 13px; background: var(--ss-surface-inset); cursor: pointer; }
@@ -8040,6 +8087,8 @@ body.public-shell-page .wheel-import-destination :is(select, input[type="text"],
   body.public-shell-page .wheel-mini-preview { width: 88px; height: 88px; }
   body.public-shell-page .wheel-import-types { grid-template-columns: 1fr; }
   body.public-shell-page .wheel-import-types > * { grid-column: 1; }
+  body.public-shell-page .wheel-gallery-actions .wheel-create-menu,
+  body.public-shell-page .wheel-gallery-actions .wheel-create-menu > .wheel-production-primary { width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) { body.public-shell-page .wheel-library-card { transition: none; } }

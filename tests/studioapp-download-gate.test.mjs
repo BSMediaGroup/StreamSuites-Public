@@ -340,6 +340,40 @@ test("release metadata stays visible while locked and controlled download fails 
     assert.match(authorized.headers.get("Content-Disposition"), /attachment/);
 });
 
+test("authorized manual redirect queues bounded Runtime download-start telemetry without delaying the response", async () => {
+  const latestFunction = await importFunction("functions/api/downloads/studioapp/latest.js");
+  const originalFetch = globalThis.fetch;
+  const requests = [];
+  let pending = null;
+  globalThis.fetch = async (url, init) => {
+    requests.push({ url: String(url), init });
+    return json({ success: true }, 202);
+  };
+  try {
+    const queued = latestFunction.queueManualDownloadStart({
+      env: { STREAMSUITES_API_ORIGIN: "http://127.0.0.1:18087" },
+      request: new Request("https://streamsuites.app/api/downloads/studioapp/latest", {
+        headers: { "CF-Ray": "abc12345-SYD" },
+      }),
+      waitUntil(promise) { pending = promise; },
+    });
+    assert.equal(queued, true);
+    assert.ok(pending);
+    await pending;
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0].url, "http://127.0.0.1:18087/api/public/analytics/download-start");
+    assert.deepEqual(JSON.parse(requests[0].init.body), {
+      product: "studioapp",
+      platform: "windows_x64",
+      channel: "manual",
+      event_id: "download-abc12345-SYD",
+    });
+    assert.equal(requests[0].init.headers.Origin, "https://streamsuites.app");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("access state reports configuration blockers without exposing the bypass secret", async () => {
   const accessFunction = await importFunction("functions/api/downloads/studioapp/access-state.js");
   const response = await accessFunction.onRequestGet({

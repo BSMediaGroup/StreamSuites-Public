@@ -954,3 +954,9 @@ Upgrade to `wrangler@4.123.0` to remove this warning.
 [wrangler:info] GET /status 200 OK (11ms)
 [wrangler:info] GET /health 200 OK (9ms)
 [wrangler:info] GET /version 200 OK (9ms)
+                                                                                                                                                                                                    ✨ Compiled Worker successfully
+⎔ Reloading local server...
+⎔ Local server updated and ready
+✨ Compiled Worker successfully
+⎔ Reloading local server...
+⎔ Local server updated and ready

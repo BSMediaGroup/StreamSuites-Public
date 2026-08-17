@@ -76,6 +76,10 @@ test("wheels library exposes portable formats, owned/public tabs, child cards, a
   assert.match(css, /\.wheel-library-grid/);
   assert.match(css, /grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
   assert.match(css, /data-public-appearance="light"/);
+  assert.match(css, /:is\(\.wheel-gallery-actions, \.wheel-lifecycle-actions\) :is\(\.wheel-production-primary, \.wheel-production-secondary\)/);
+  assert.match(css, /\.wheel-production-primary[\s\S]*background: var\(--ss-control-primary\)/);
+  assert.match(css, /\.wheel-production-secondary:is\(:hover, :focus-visible\)[\s\S]*background: var\(--ss-control-themed-subtle\)/);
+  assert.match(css, /\.wheel-gallery-actions \.wheel-create-menu > \.wheel-production-primary \{ width: 100%; \}/);
 });
 
 test("public wheels route preserves the shell and provides clean list/detail artifact routes", () => {

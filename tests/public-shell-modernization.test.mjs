@@ -158,17 +158,22 @@ test("the shared wheel workspace behavior survives shell modernization", () => {
 test("stats uses the public aggregate contract and retains finite graph-entry motion", () => {
   assert.doesNotMatch(`${statsHtml}\n${statsSource}`, /STATS_PLACEHOLDER|89400|3248000|Live placeholder/i);
   assert.match(statsSource, /\/api\/public\/stats/);
-  assert.match(statsSource, /schema_version\s*!==\s*"public-stats-v1"/);
+  assert.match(statsSource, /"public-stats-v1",\s*"public-stats-v2"/);
   assert.match(statsSource, /is-plot-primed/);
   assert.match(statsSource, /IntersectionObserver/);
   assert.match(statsSource, /prefers-reduced-motion/);
   assert.match(statsSource, /No totals have been substituted or treated as zero/);
-  for (const heading of ["Total Site Visits", "Runtime Event Breakdown", "Total Users", "Active Installations", "Runtime Events", "Performance Analytics", "Milestones &amp; Bragging Rights"]) {
+  for (const heading of ["Recorded web page views", "Runtime Event Breakdown", "Total Users", "Manual download starts", "Active Installations", "Runtime Events", "Performance Analytics", "Milestones &amp; Bragging Rights"]) {
     assert.match(statsHtml, new RegExp(heading));
   }
-  assert.match(statsHtml, /No authoritative visits aggregate is published/);
-  assert.match(statsHtml, /No public installation aggregate is published/);
+  assert.match(statsHtml, /data-traffic-surface="public"/);
+  assert.match(statsHtml, /data-traffic-surface="creator"/);
+  assert.match(statsHtml, /data-traffic-surface="studio"/);
+  assert.match(statsHtml, /No installation-completion authority exists/);
   assert.match(statsHtml, /No public event-volume aggregate is published/);
+  assert.match(statsSource, /renderTraffic\(model\.traffic\)/);
+  assert.match(statsSource, /renderDownloads\(model\.downloads\)/);
+  assert.match(statsSource, /value === null \|\| value === undefined/);
   assert.match(statsSource, /payload\.account_roles/);
   assert.match(statsSource, /data-scaffold-stat/);
   assert.match(statsSource, /data-stats-orbit-value/);

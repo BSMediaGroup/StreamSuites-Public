@@ -1,0 +1,52 @@
+{
+  "defaultMetrics": {
+    "create": {
+      "label": "Create",
+      "width": 69,
+      "height": 42,
+      "backgroundImage": "linear-gradient(135deg, color(srgb 0.574824 0.538118 1), color(srgb 0.723922 0.545098 0.959216))",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "borderRadius": "11px",
+      "fontSize": "12.48px",
+      "fontWeight": "700",
+      "cursor": "pointer"
+    },
+    "import": {
+      "label": "Import",
+      "width": 70,
+      "height": 42,
+      "backgroundImage": "none",
+      "backgroundColor": "color(srgb 0.0666667 0.109804 0.160784 / 0.86)",
+      "borderRadius": "11px",
+      "fontSize": "12.48px",
+      "fontWeight": "700",
+      "cursor": "pointer"
+    }
+  },
+  "modalMetrics": {
+    "submit": {
+      "label": "Create wheel set",
+      "width": 122,
+      "height": 42,
+      "backgroundImage": "linear-gradient(135deg, rgb(116, 104, 255), rgb(167, 110, 242) 52%, rgb(112, 158, 255))",
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "borderRadius": "11px",
+      "fontSize": "12.48px",
+      "fontWeight": "700",
+      "cursor": "pointer"
+    },
+    "cancel": {
+      "label": "Cancel",
+      "width": 69,
+      "height": 42,
+      "backgroundImage": "none",
+      "backgroundColor": "color(srgb 0.0666667 0.109804 0.160784 / 0.86)",
+      "borderRadius": "11px",
+      "fontSize": "12.48px",
+      "fontWeight": "700",
+      "cursor": "pointer"
+    }
+  },
+  "pageErrors": [],
+  "overflow": false
+}

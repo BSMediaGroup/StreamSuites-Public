@@ -20,13 +20,14 @@
   }
 
   function finiteCount(value) {
+    if (value === null || value === undefined || value === "" || typeof value === "boolean") return null;
     const numeric = Number(value);
     return Number.isFinite(numeric) && numeric >= 0 ? Math.round(numeric) : null;
   }
 
-  function normalizeSeries(value) {
+  function normalizeSeries(value, limit = 24) {
     if (!Array.isArray(value)) return [];
-    return value.slice(0, 24).map((item) => {
+    return value.slice(0, limit).map((item) => {
       const timestamp = Date.parse(String(item?.period_start || ""));
       const count = finiteCount(item?.count);
       return Number.isFinite(timestamp) && count !== null
@@ -35,8 +36,61 @@
     }).filter(Boolean).sort((a, b) => a.periodStart.localeCompare(b.periodStart));
   }
 
+  function normalizeMetricState(value) {
+    const state = String(value || "unavailable").trim().toLowerCase();
+    return ["measured", "derived", "partial", "stale", "unavailable"].includes(state)
+      ? state
+      : "unavailable";
+  }
+
+  function normalizeWindowCounts(value) {
+    return Object.fromEntries(
+      ["24h", "7d", "30d"].map((key) => [key, finiteCount(value?.[key])])
+    );
+  }
+
+  function normalizeTraffic(value) {
+    if (!value || typeof value !== "object") return null;
+    const availability = normalizeMetricState(value.availability);
+    const total = finiteCount(value?.total?.all_time);
+    const surfaces = Object.fromEntries(["public", "creator", "studio"].map((surface) => {
+      const raw = value?.surfaces?.[surface];
+      return [surface, {
+        availability: normalizeMetricState(raw?.availability),
+        coverageStartedAt: String(raw?.coverage_started_at || ""),
+        allTime: finiteCount(raw?.all_time),
+        windows: normalizeWindowCounts(raw?.windows)
+      }];
+    }));
+    return {
+      availability,
+      quality: normalizeMetricState(value.quality),
+      coverageStartedAt: String(value.coverage_started_at || ""),
+      total,
+      windows: normalizeWindowCounts(value?.total?.windows),
+      surfaces,
+      daily: normalizeSeries(value.daily, 90)
+    };
+  }
+
+  function normalizeDownloads(value) {
+    if (!value || typeof value !== "object") return null;
+    const studioApp = Array.isArray(value.items)
+      ? value.items.find((item) => item?.product === "studioapp" && item?.platform === "windows_x64" && item?.channel === "manual")
+      : null;
+    return {
+      availability: normalizeMetricState(value.availability),
+      allTime: finiteCount(value.all_time),
+      item: studioApp ? {
+        availability: normalizeMetricState(studioApp.availability),
+        allTime: finiteCount(studioApp.all_time),
+        coverageStartedAt: String(studioApp.coverage_started_at || "")
+      } : null
+    };
+  }
+
   function normalizeStats(payload) {
-    if (!payload || payload.schema_version !== "public-stats-v1") throw new Error("Unsupported statistics response.");
+    if (!payload || !["public-stats-v1", "public-stats-v2"].includes(payload.schema_version)) throw new Error("Unsupported statistics response.");
     const totals = {
       active_accounts: finiteCount(payload?.totals?.active_accounts),
       listed_public_profiles: finiteCount(payload?.totals?.listed_public_profiles),
@@ -61,10 +115,15 @@
       coverage: payload.coverage && typeof payload.coverage === "object" ? payload.coverage : {},
       totals,
       accountRoles,
+      profiles: payload.profiles && typeof payload.profiles === "object" ? payload.profiles : null,
+      publicIdentities: payload.public_identities && typeof payload.public_identities === "object" ? payload.public_identities : null,
       artifactsByType,
+      traffic: normalizeTraffic(payload.traffic),
+      downloads: normalizeDownloads(payload.downloads),
       series: {
         account_creations: normalizeSeries(payload?.series?.account_creations),
-        artifact_creations: normalizeSeries(payload?.series?.artifact_creations)
+        artifact_creations: normalizeSeries(payload?.series?.artifact_creations),
+        page_views: normalizeSeries(payload?.traffic?.daily, 90)
       }
     };
   }
@@ -103,12 +162,18 @@
     requestAnimationFrame(frame);
   }
 
-  function showPointTooltip(host, point, x, y) {
+  function graphDateOptions(key, { compact = false } = {}) {
+    return key === "page_views"
+      ? { month: "short", day: "numeric", ...(compact ? {} : { year: "numeric" }), timeZone: "UTC" }
+      : { month: compact ? "short" : "long", year: compact ? "2-digit" : "numeric", timeZone: "UTC" };
+  }
+
+  function showPointTooltip(host, point, x, y, key) {
     host.querySelector(".stats-graph__tooltip")?.remove();
     const tooltip = element(
       "div",
       "stats-graph__tooltip",
-      `${formatDate(point.periodStart, { month: "long", year: "numeric", timeZone: "UTC" })}: ${numberFormatter.format(point.count)}`
+      `${formatDate(point.periodStart, graphDateOptions(key))}: ${numberFormatter.format(point.count)}`
     );
     tooltip.style.left = `${(x / 720) * 100}%`;
     tooltip.style.top = `${(y / 240) * 100}%`;
@@ -147,8 +212,11 @@
     delete host.dataset.plotActivated;
     if (!points.length || points.every((point) => point.count === 0)) {
       host.className = "stats-graph";
-      host.appendChild(element("div", "stats-graph__empty", "No real creation events fall inside this retained UTC window yet."));
-      if (summary) summary.textContent = `${points.length || 0} monthly buckets · no recorded creations`;
+      const emptyText = key === "page_views"
+        ? "No recorded page views fall inside the measured UTC window yet."
+        : "No real creation events fall inside this retained UTC window yet.";
+      host.appendChild(element("div", "stats-graph__empty", emptyText));
+      if (summary) summary.textContent = `${points.length || 0} ${key === "page_views" ? "daily" : "monthly"} buckets · no recorded activity`;
       return;
     }
 
@@ -165,9 +233,10 @@
     }));
     const pathData = coordinates.map((point, index) => `${index ? "L" : "M"}${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(" ");
     const areaData = `${pathData} L${coordinates.at(-1).x.toFixed(2)} ${(inset.top + plotHeight).toFixed(2)} L${coordinates[0].x.toFixed(2)} ${(inset.top + plotHeight).toFixed(2)} Z`;
-    const svg = svgElement("svg", { viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": `${key.replace(/_/g, " ")} across ${points.length} UTC calendar months` });
+    const periodLabel = key === "page_views" ? "days" : "months";
+    const svg = svgElement("svg", { viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": `${key.replace(/_/g, " ")} across ${points.length} UTC calendar ${periodLabel}` });
     const title = svgElement("title");
-    title.textContent = `${key.replace(/_/g, " ")}: ${numberFormatter.format(points.reduce((sum, point) => sum + point.count, 0))} records across ${points.length} months.`;
+    title.textContent = `${key.replace(/_/g, " ")}: ${numberFormatter.format(points.reduce((sum, point) => sum + point.count, 0))} records across ${points.length} ${periodLabel}.`;
     const defs = svgElement("defs");
     const lineGradient = svgElement("linearGradient", { id: `${key}-line-gradient`, x1: "0", x2: "1" });
     [["0%", "var(--stats-accent-a)"], ["52%", "var(--stats-accent-b)"], ["100%", "var(--stats-accent-c)"]].forEach(([offset, color]) => lineGradient.appendChild(svgElement("stop", { offset, "stop-color": color })));
@@ -183,20 +252,20 @@
     const line = svgElement("path", { class: "stats-graph__line", d: pathData, pathLength: "1", stroke: `url(#${key}-line-gradient)` });
     svg.append(area, line);
     coordinates.forEach((point, index) => {
-      const circle = svgElement("circle", { class: "stats-graph__point", cx: point.x, cy: point.y, r: "9", tabindex: "0", role: "button", "aria-label": `${formatDate(point.periodStart, { month: "long", year: "numeric", timeZone: "UTC" })}: ${numberFormatter.format(point.count)}` });
-      circle.addEventListener("mouseenter", () => showPointTooltip(host, point, point.x, point.y));
-      circle.addEventListener("focus", () => showPointTooltip(host, point, point.x, point.y));
+      const circle = svgElement("circle", { class: "stats-graph__point", cx: point.x, cy: point.y, r: "9", tabindex: "0", role: "button", "aria-label": `${formatDate(point.periodStart, graphDateOptions(key))}: ${numberFormatter.format(point.count)}` });
+      circle.addEventListener("mouseenter", () => showPointTooltip(host, point, point.x, point.y, key));
+      circle.addEventListener("focus", () => showPointTooltip(host, point, point.x, point.y, key));
       circle.addEventListener("mouseleave", () => hidePointTooltip(host));
       circle.addEventListener("blur", () => hidePointTooltip(host));
       svg.appendChild(circle);
       if (index === 0 || index === coordinates.length - 1 || index === Math.floor((coordinates.length - 1) / 2)) {
         const label = svgElement("text", { class: "stats-graph__label", x: point.x, y: height - 14, "text-anchor": index === 0 ? "start" : index === coordinates.length - 1 ? "end" : "middle" });
-        label.textContent = formatDate(point.periodStart, { month: "short", year: "2-digit", timeZone: "UTC" });
+        label.textContent = formatDate(point.periodStart, graphDateOptions(key, { compact: true }));
         svg.appendChild(label);
       }
     });
     host.appendChild(svg);
-    if (summary) summary.textContent = `${numberFormatter.format(points.reduce((sum, point) => sum + point.count, 0))} total · ${points.length} UTC months`;
+    if (summary) summary.textContent = `${numberFormatter.format(points.reduce((sum, point) => sum + point.count, 0))} total · ${points.length} UTC ${periodLabel}`;
     queueGraphEntrance(host);
   }
 
@@ -223,6 +292,69 @@
     });
   }
 
+  function setMeasuredCount(node, value) {
+    if (!node) return;
+    if (value === null) {
+      node.textContent = "Unavailable";
+      node.classList.add("stats-unavailable-value");
+      return;
+    }
+    node.classList.remove("stats-unavailable-value");
+    animateNumber(node, value);
+  }
+
+  function renderTraffic(traffic) {
+    const totalNode = document.querySelector("[data-traffic-total]");
+    const stateNode = document.querySelector("[data-traffic-state]");
+    const coverageNode = document.querySelector("[data-traffic-coverage]");
+    const available = traffic && traffic.availability !== "unavailable" && traffic.total !== null;
+    setMeasuredCount(totalNode, available ? traffic.total : null);
+    if (stateNode) {
+      stateNode.textContent = available
+        ? "Runtime/Auth aggregate · recorded page views"
+        : "Traffic aggregate is currently unavailable";
+    }
+    if (coverageNode) {
+      coverageNode.textContent = available && traffic.coverageStartedAt
+        ? `Traffic measurement available since ${formatDate(traffic.coverageStartedAt, { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}. Counts represent recorded views, not unique visitors.`
+        : "No traffic coverage timestamp is currently published; no zero has been substituted.";
+    }
+    ["public", "creator", "studio"].forEach((surface) => {
+      const card = document.querySelector(`[data-traffic-surface="${surface}"]`);
+      const metric = traffic?.surfaces?.[surface];
+      const surfaceAvailable = metric && metric.availability !== "unavailable" && metric.allTime !== null;
+      card?.toggleAttribute("data-unavailable", !surfaceAvailable);
+      setMeasuredCount(card?.querySelector('[data-traffic-value="all_time"]'), surfaceAvailable ? metric.allTime : null);
+      ["24h", "7d", "30d"].forEach((windowKey) => {
+        setMeasuredCount(
+          card?.querySelector(`[data-traffic-value="${windowKey}"]`),
+          surfaceAvailable ? metric.windows[windowKey] : null
+        );
+      });
+    });
+    if (available) {
+      renderGraph("page_views", traffic.daily);
+    } else {
+      const graph = document.querySelector('[data-graph-host="page_views"]');
+      const summary = document.querySelector('[data-graph-summary="page_views"]');
+      graph?.replaceChildren(element("div", "stats-graph__empty", "Authoritative traffic history unavailable."));
+      if (graph) graph.className = "stats-graph";
+      if (summary) summary.textContent = "Unavailable · no zero substituted";
+    }
+  }
+
+  function renderDownloads(downloads) {
+    const totalNode = document.querySelector("[data-download-total]");
+    const stateNode = document.querySelector("[data-download-state]");
+    const item = downloads?.item;
+    const available = item && item.availability !== "unavailable" && item.allTime !== null;
+    setMeasuredCount(totalNode, available ? item.allTime : null);
+    if (!stateNode) return;
+    stateNode.textContent = available
+      ? `StudioApp Windows x64 · measured since ${formatDate(item.coverageStartedAt, { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}`
+      : "StudioApp manual redirect coverage is unavailable";
+  }
+
   function render(model) {
     Object.entries(model.totals).forEach(([key, value]) => {
       animateNumber(document.querySelector(`[data-stat-total="${key}"]`), value);
@@ -231,7 +363,9 @@
     const scaffoldValues = {
       active_accounts: model.totals.active_accounts,
       creator_accounts: model.accountRoles ? (model.accountRoles.creator || 0) : null,
-      public_accounts: model.accountRoles ? (model.accountRoles.public || 0) : null
+      public_accounts: model.accountRoles ? (model.accountRoles.public || 0) : null,
+      assigned_public_identities: finiteCount(model.publicIdentities?.assigned),
+      enabled_profiles: finiteCount(model.profiles?.enabled)
     };
     Object.entries(scaffoldValues).forEach(([key, value]) => {
       const node = document.querySelector(`[data-scaffold-stat="${key}"]`);
@@ -241,6 +375,8 @@
     });
     renderGraph("account_creations", model.series.account_creations);
     renderGraph("artifact_creations", model.series.artifact_creations);
+    renderTraffic(model.traffic);
+    renderDownloads(model.downloads);
     renderArtifactBars(Object.entries(model.artifactsByType));
     const generated = new Date(model.generatedAt);
     setState(
@@ -253,7 +389,13 @@
   }
 
   function setError(error) {
-    document.querySelectorAll("[data-stat-total], [data-scaffold-stat], [data-stats-orbit-value]").forEach((node) => { node.textContent = "—"; });
+    document.querySelectorAll("[data-stat-total], [data-scaffold-stat], [data-stats-orbit-value], [data-traffic-total], [data-traffic-value], [data-download-total]").forEach((node) => { node.textContent = "—"; });
+    const trafficState = document.querySelector("[data-traffic-state]");
+    const trafficCoverage = document.querySelector("[data-traffic-coverage]");
+    const downloadState = document.querySelector("[data-download-state]");
+    if (trafficState) trafficState.textContent = "Traffic unavailable with the snapshot";
+    if (trafficCoverage) trafficCoverage.textContent = "No traffic value has been substituted or treated as zero.";
+    if (downloadState) downloadState.textContent = "Download-start authority unavailable with the snapshot";
     document.querySelectorAll("[data-graph-host]").forEach((host) => {
       host.replaceChildren(element("div", "stats-graph__empty", "Authoritative history unavailable."));
       host.className = "stats-graph";

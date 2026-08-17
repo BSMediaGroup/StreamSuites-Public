@@ -6,6 +6,33 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-17 - Real web traffic and manual-download Stats hydration
+
+#### Technical notes
+
+- Extended the existing premium `/stats` renderer for additive `public-stats-v2` data while retaining v1 compatibility, standalone header/footer, fixed observability palette, finite graph entrance, keyboard point inspection, Dark/Light behavior, and immediate reduced-motion rendering. The page now shows recorded total/Public/Creator/Browser Studio views, all-time and rolling traffic windows, coverage start, a real combined 30-day daily graph, assigned public identities, enabled profiles, and independently available StudioApp manual redirect starts.
+- Tightened centralized Public page-view reporting to the common privacy-minimal `{surface, path, event_id}` contract. Dynamic profile/artifact paths are reduced to route families, query/hash state does not create a second event, a 30-second local route guard prevents duplicate reload reporting, and Beacon/fetch failures remain silent and non-blocking.
+- Extended the existing authorized StudioApp Windows x64 Pages redirect to queue one bounded Runtime download-start event after manifest/version/access validation and before returning the unchanged allowlisted 302. The event is explicitly a manual redirect start, not a completed download, update, launch, or install; no installer URL or caller redirect target enters telemetry.
+- Added focused Public telemetry/download/Stats contracts. Active Installations, the undefined Runtime Events aggregate, and milestone timestamps remain visible and unavailable rather than receiving fabricated values. No `/status`, `/health`, `/version`, landing, profile, Wheel, version/build, deployment, commit, or push behavior changed.
+- Retained isolated installed-Edge evidence under `output/playwright/stats-hydration-20260817/` for the exact clean `/stats` route, five responsive viewports, populated Dark/Light data, partial download availability, measured zero-yet coverage, endpoint failure, and reduced motion. The normal clean-route pass had zero console errors and zero document overflow; this is local fixture evidence, not deployed-service proof.
+
+#### Human-readable summary
+
+Stats now shows real recorded traffic from Public, Creator, and Browser Studio, grows a daily history automatically, and shows StudioApp manual download starts where the existing secure download gate can measure them. Unsupported figures still say Unavailable instead of pretending to be zero.
+
+### 2026-08-17 - Wheel Library action-button style ownership correction
+
+#### Technical notes
+
+- Restored the intended Create, Import, lifecycle submit, and lifecycle cancel presentation on `/wheels`. These controls reused workspace class names, but their definitions lived only in `wheel-workspace.css`, which the lightweight library route correctly does not load; the unmatched classes therefore fell through to browser-default buttons.
+- Added narrowly scoped, theme-token-driven primary/secondary action rules to `public-shell.css`, including hover, keyboard focus, pressed, disabled, and full-width narrow-layout behavior. The library still does not load the full workspace stylesheet or instantiate workspace renderers on cards.
+- Added structural regression coverage for the list-route selectors, primary/secondary theme surfaces, and mobile Create width. No route, API, Runtime/Auth authority, wheel data, version, deployment, commit, or push changed.
+- Installed-Edge proof is retained in `output/playwright/wheel-library-20260817/` for Dark desktop, the create modal, 390px mobile, and Light keyboard focus. All four action types computed to 42px high with 11px radii and themed surfaces; the probe recorded zero page exceptions and zero horizontal overflow. This is isolated local rendering evidence, not deployed-service proof.
+
+#### Human-readable summary
+
+The Wheel Library's Create and Import controls are full-size themed actions again instead of tiny browser-default buttons, and the same fix covers the matching buttons inside its create/import dialogs.
+
 ### 2026-08-17 - Wheel Library, portable packages, and celebration restoration
 
 #### Technical notes

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Statistics • StreamSuites™</title>
-  <meta name="description" content="A public, Runtime-authoritative view of StreamSuites accounts, profiles, and published artifacts." />
+  <meta name="description" content="A public, Runtime-authoritative view of StreamSuites accounts, artifacts, recorded web traffic, and measurable product activity." />
   <link rel="canonical" href="https://streamsuites.app/stats.html" />
   <meta property="og:title" content="Statistics • StreamSuites™" />
   <meta property="og:description" content="Real public-safe aggregate statistics from StreamSuites Runtime/Auth." />
@@ -62,7 +62,7 @@
       <div class="stats-hero__copy">
         <p class="stats-eyebrow"><span></span>Runtime/Auth authority · Aggregate only</p>
         <h1 id="stats-title">The public shape<br /><span class="stats-hero__feature-line">of StreamSuites.</span></h1>
-        <p>Real account, visible-profile, and published-artifact totals—derived from canonical Runtime/Auth storage without exposing people, identifiers, or private activity.</p>
+        <p>Real account, visible-profile, published-artifact, traffic, and measurable download-start totals—derived from canonical Runtime/Auth storage without exposing people or visitor identifiers.</p>
         <div class="stats-hero__actions">
           <a class="stats-button stats-button--primary" href="/home">Explore the Public dashboard</a>
           <button class="stats-button" type="button" data-stats-refresh>Refresh snapshot</button>
@@ -130,18 +130,23 @@
     <section class="stats-telemetry" aria-labelledby="stats-telemetry-title">
       <header class="stats-section-heading">
         <div><p class="stats-eyebrow">Extended metric coverage</p><h2 id="stats-telemetry-title">Platform telemetry scaffolds</h2></div>
-        <p>The previous metric groups remain visible. Values render only where Runtime/Auth currently publishes an authoritative aggregate.</p>
+        <p>Measured aggregates hydrate independently. Metrics without a stable authority remain deliberately unavailable.</p>
       </header>
 
       <div class="stats-telemetry__highlights">
         <article class="stats-legacy-card stats-legacy-card--spotlight">
           <div>
             <p class="stats-eyebrow">Spotlight metric</p>
-            <h3>Total Site Visits</h3>
-            <strong class="stats-unavailable-value">Unavailable</strong>
-            <span class="stats-source-state">No authoritative visits aggregate is published</span>
+            <h3>Recorded web page views</h3>
+            <strong data-traffic-total>—</strong>
+            <span class="stats-source-state" data-traffic-state>Loading Runtime/Auth traffic aggregate</span>
           </div>
-          <p>Cross-platform traffic remains scaffolded here without substituting browser-local, sample, or invented analytics.</p>
+          <p data-traffic-coverage>Coverage begins with the first real aggregate or a verified historical page-visit event.</p>
+          <div class="stats-traffic-surfaces" aria-label="Recorded page views by product surface">
+            <article data-traffic-surface="public"><p>Public</p><strong data-traffic-value="all_time">—</strong><small><span data-traffic-value="24h">—</span> 24h · <span data-traffic-value="7d">—</span> 7d · <span data-traffic-value="30d">—</span> 30d</small></article>
+            <article data-traffic-surface="creator"><p>Creator</p><strong data-traffic-value="all_time">—</strong><small><span data-traffic-value="24h">—</span> 24h · <span data-traffic-value="7d">—</span> 7d · <span data-traffic-value="30d">—</span> 30d</small></article>
+            <article data-traffic-surface="studio"><p>Browser Studio</p><strong data-traffic-value="all_time">—</strong><small><span data-traffic-value="24h">—</span> 24h · <span data-traffic-value="7d">—</span> 7d · <span data-traffic-value="30d">—</span> 30d</small></article>
+          </div>
         </article>
 
         <article class="stats-legacy-card">
@@ -155,7 +160,8 @@
 
       <div class="stats-telemetry__compact" aria-label="Platform metric cards">
         <article class="stats-legacy-card stats-legacy-card--compact"><p>Total Users</p><strong data-scaffold-stat="active_accounts">—</strong><small>Current active accounts · Runtime/Auth</small></article>
-        <article class="stats-legacy-card stats-legacy-card--compact"><p>Active Installations</p><strong class="stats-unavailable-value">Unavailable</strong><small>No public installation aggregate is published</small></article>
+        <article class="stats-legacy-card stats-legacy-card--compact"><p>Manual download starts</p><strong data-download-total>—</strong><small data-download-state>StudioApp Windows x64 · loading coverage</small></article>
+        <article class="stats-legacy-card stats-legacy-card--compact"><p>Active Installations</p><strong class="stats-unavailable-value">Unavailable</strong><small>No installation-completion authority exists</small></article>
         <article class="stats-legacy-card stats-legacy-card--compact"><p>Runtime Events</p><strong class="stats-unavailable-value">Unavailable</strong><small>No public event-volume aggregate is published</small></article>
       </div>
 
@@ -165,6 +171,8 @@
           <div class="stats-performance__accounts">
             <div><p>Total creators</p><strong data-scaffold-stat="creator_accounts">—</strong><small>Active creator-role accounts</small></div>
             <div><p>Viewer accounts</p><strong data-scaffold-stat="public_accounts">—</strong><small>Active public-role accounts</small></div>
+            <div><p>Assigned public identities</p><strong data-scaffold-stat="assigned_public_identities">—</strong><small>Runtime-linked community identities</small></div>
+            <div><p>Enabled profiles</p><strong data-scaffold-stat="enabled_profiles">—</strong><small>Active StreamSuites profile surfaces</small></div>
           </div>
           <div class="stats-performance__unavailable"><strong>Seven-day Runtime activity</strong><span>Not currently measured by the public statistics contract.</span></div>
         </article>
@@ -184,6 +192,13 @@
     </section>
 
     <section class="stats-dashboard" aria-label="Historical aggregate graphs">
+      <article class="stats-graph-card stats-graph-card--wide" data-stats-graph="page_views">
+        <header>
+          <div><p class="stats-eyebrow">Recorded traffic</p><h2>Page views over time</h2></div>
+          <span data-graph-summary="page_views">Loading…</span>
+        </header>
+        <div class="stats-graph" data-graph-host="page_views" aria-live="polite"></div>
+      </article>
       <article class="stats-graph-card" data-stats-graph="account_creations">
         <header>
           <div><p class="stats-eyebrow">Account growth</p><h2>New active accounts</h2></div>
@@ -213,7 +228,9 @@
       <dl>
         <div><dt>Authority</dt><dd>Canonical Runtime/Auth account, profile-settings, and public-artifact tables.</dd></div>
         <div><dt>Privacy</dt><dd>Aggregate counts only—no emails, IDs, handles, raw events, IP data, or private analytics.</dd></div>
-        <div><dt>History</dt><dd>UTC calendar-month buckets from real creation timestamps. Gaps are shown as zero, never smoothed or backfilled.</dd></div>
+        <div><dt>History</dt><dd>UTC calendar-month creation buckets and daily recorded page-view buckets. Gaps before traffic coverage remain outside the measured series.</dd></div>
+        <div><dt>Traffic</dt><dd>Recorded page views—not unique people—from Public, Creator, and Browser Studio. Routes are reduced to safe families before aggregation.</dd></div>
+        <div><dt>Downloads</dt><dd>Manual download starts are authorized StudioApp installer redirects, not completed downloads, updates, launches, or installs.</dd></div>
         <div><dt>Failure semantics</dt><dd>An unavailable network stays unavailable; it is never presented as a zero-valued platform.</dd></div>
       </dl>
     </section>
