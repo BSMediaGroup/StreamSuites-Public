@@ -379,10 +379,14 @@
     const root = element("article", `wheel-workspace${stageMode ? " wheel-workspace--stage" : ""}`);
     root.dataset.wheelWorkspace = stageMode ? "stage" : "detail";
     root.dataset.artifactCode = artifact.artifactCode;
+    const requestedWheelId = text(new URLSearchParams(window.location.search).get("wheel"));
+    const initialWheelId = artifact.wheelSet.wheels.some((wheel) => wheel.wheelId === requestedWheelId)
+      ? requestedWheelId
+      : artifact.wheelSet.activeWheelId;
     const state = {
       authoritativeWheelSet: artifact.wheelSet,
       authorityDefaultWheelId: artifact.wheelSet.activeWheelId,
-      selectedWheelId: artifact.wheelSet.activeWheelId,
+      selectedWheelId: initialWheelId,
       viewMode: "focus",
       gridPage: 0,
       resultsByWheel: new Map(),
@@ -720,6 +724,11 @@
     function selectWheel(wheelId, focusSelector = false) {
       if (!state.authoritativeWheelSet.wheels.some((wheel) => wheel.wheelId === wheelId)) return;
       state.selectedWheelId = wheelId;
+      if (!stageMode) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("wheel", wheelId);
+        window.history.pushState({ ...window.history.state, streamsuitesWheelId: wheelId }, "", url);
+      }
       render();
       if (focusSelector) root.querySelector(".wheel-title-selector")?.focus();
       publish("state");
@@ -730,6 +739,42 @@
       state.viewMode = viewMode;
       render();
       publish("state");
+    }
+
+    function startWinnerCelebration(canvas, overlay, wheel) {
+      if ((wheel.presentation.celebration_enabled === false && wheel.presentation.confetti_enabled !== true) || wheel.presentation.animation_enabled === false || window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return () => {};
+      const bounds = overlay.getBoundingClientRect();
+      const width = Math.max(1, bounds.width); const height = Math.max(1, bounds.height); const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(width * pixelRatio); canvas.height = Math.round(height * pixelRatio); canvas.style.width = `${width}px`; canvas.style.height = `${height}px`;
+      const context = canvas.getContext("2d"); if (!context) return () => {};
+      context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+      const palette = [wheel.palette.accent_color, ...wheel.palette.segment_colors, "#4be1ff", "#ffe176", "#ffffff"].filter(Boolean);
+      const confetti = Array.from({ length: 190 }, (_, index) => ({
+        x: Math.random() * width, y: -24 + Math.random() * height * 0.56, vx: (Math.random() - 0.5) * 2.8, vy: 1.7 + Math.random() * 3.2,
+        gravity: 0.035 + Math.random() * 0.026, width: 4 + Math.random() * 7, height: 2 + Math.random() * 5,
+        rotation: Math.random() * Math.PI, rotationVelocity: (Math.random() - 0.5) * 0.24, color: palette[index % palette.length], alpha: 0.76 + Math.random() * 0.24
+      }));
+      const fireworks = []; const burstTimes = [0, 260, 560, 880, 1240]; const burstPositions = [[0.16, 0.28], [0.84, 0.24], [0.31, 0.14], [0.72, 0.36], [0.48, 0.18]];
+      const startTime = performance.now(); let spawnedBursts = 0; let frame = 0;
+      const spawnFirework = (x, y) => {
+        const color = palette[Math.floor(Math.random() * palette.length)];
+        for (let index = 0; index < 54; index += 1) {
+          const angle = (Math.PI * 2 * index) / 54 + (Math.random() - 0.5) * 0.08; const speed = 1.2 + Math.random() * 3.4;
+          fireworks.push({ x, y, previousX: x, previousY: y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: 1, decay: 0.012 + Math.random() * 0.008, color });
+        }
+      };
+      const draw = (now) => {
+        if (!overlay.isConnected) return;
+        const elapsed = now - startTime; context.clearRect(0, 0, width, height); context.globalCompositeOperation = "lighter";
+        while (spawnedBursts < burstTimes.length && elapsed >= burstTimes[spawnedBursts]) { const [x, y] = burstPositions[spawnedBursts]; spawnFirework(width * x, height * y); spawnedBursts += 1; }
+        fireworks.forEach((particle) => { particle.previousX = particle.x; particle.previousY = particle.y; particle.x += particle.vx; particle.y += particle.vy; particle.vx *= 0.986; particle.vy = particle.vy * 0.986 + 0.016; particle.life -= particle.decay; context.globalAlpha = Math.max(0, particle.life); context.strokeStyle = particle.color; context.lineWidth = 1.5; context.beginPath(); context.moveTo(particle.previousX, particle.previousY); context.lineTo(particle.x, particle.y); context.stroke(); });
+        for (let index = fireworks.length - 1; index >= 0; index -= 1) if (fireworks[index].life <= 0) fireworks.splice(index, 1);
+        context.globalCompositeOperation = "source-over";
+        confetti.forEach((particle) => { particle.x += particle.vx; particle.y += particle.vy; particle.vy += particle.gravity; particle.rotation += particle.rotationVelocity; if (particle.y > height + 30) { particle.y = -20; particle.x = Math.random() * width; particle.vy = 1.4 + Math.random() * 2.2; } context.save(); context.translate(particle.x, particle.y); context.rotate(particle.rotation); context.globalAlpha = particle.alpha * Math.max(0, 1 - Math.max(0, elapsed - 5200) / 1400); context.fillStyle = particle.color; context.fillRect(-particle.width / 2, -particle.height / 2, particle.width, particle.height); context.restore(); });
+        context.globalAlpha = 1; if (elapsed < 6600) frame = window.requestAnimationFrame(draw);
+      };
+      frame = window.requestAnimationFrame(draw);
+      return () => { window.cancelAnimationFrame(frame); context.setTransform(1, 0, 0, 1, 0, 0); context.clearRect(0, 0, canvas.width, canvas.height); };
     }
 
     function showWinner(record, wheel) {
@@ -750,9 +795,11 @@
       again.type = "button";
       actions.append(view, again);
       dialog.appendChild(actions);
-      overlay.append(element("div", "wheel-winner-rays"), element("div", "wheel-winner-halo"), dialog);
+      const celebrationCanvas = element("canvas", "wheel-celebration-layer"); celebrationCanvas.setAttribute("aria-hidden", "true");
+      overlay.append(celebrationCanvas, element("div", "wheel-winner-rays"), element("div", "wheel-winner-halo"), dialog);
       root.appendChild(overlay);
-      const remove = () => overlay.remove();
+      const stopCelebration = startWinnerCelebration(celebrationCanvas, overlay, wheel);
+      const remove = () => { stopCelebration(); overlay.remove(); };
       close.addEventListener("click", remove);
       overlay.addEventListener("click", (event) => { if (event.target === overlay) remove(); });
       view.addEventListener("click", () => { remove(); setView("results"); });
@@ -893,8 +940,12 @@
           });
           addAction("Manage wheels", manageWheelsModal);
           if (serviceFeatures.export === true) {
-            addAction("Export wheel set (.sswheel)", async () => {
+            addAction("Export Stage (.stg)", async () => {
               try { await exportWheelSet(); announce("Canonical wheel-set export downloaded."); }
+              catch (error) { announce(error instanceof Error ? error.message : "Export failed."); }
+            });
+            addAction("Export wheel (.swl)", async () => {
+              try { await exportChildWheel(); announce("Selected wheel export downloaded."); }
               catch (error) { announce(error instanceof Error ? error.message : "Export failed."); }
             });
           }
@@ -1310,12 +1361,32 @@
       const payload = await WHEEL_API.exportArtifact(artifact.artifactCode);
       const portable = payload?.export?.payload;
       if (!portable || typeof portable !== "object") throw new Error("Runtime returned no portable wheel document");
-      const blob = new Blob([JSON.stringify(portable, null, 2)], { type: "application/json" });
+      const blob = new Blob([JSON.stringify(portable, null, 2)], { type: text(payload?.export?.content_type, "application/vnd.streamsuites.stage+json") });
       const href = URL.createObjectURL(blob);
       try {
         const anchor = element("a");
         anchor.href = href;
-        anchor.download = text(payload?.export?.filename, `${artifact.slug || "wheel-set"}.sswheel`);
+        anchor.download = text(payload?.export?.filename, `${artifact.slug || "wheel-set"}.stg`);
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+      } finally {
+        URL.revokeObjectURL(href);
+      }
+      return payload;
+    }
+
+    async function exportChildWheel(wheel = selectedWheel()) {
+      if (!canEdit || serviceFeatures.export !== true || !WHEEL_API?.exportWheel) throw new Error("Wheel export requires the current Runtime wheel service");
+      const payload = await WHEEL_API.exportWheel(artifact.artifactCode, wheel.wheelId);
+      const portable = payload?.export?.payload;
+      if (!portable || typeof portable !== "object") throw new Error("Runtime returned no portable wheel package");
+      const blob = new Blob([JSON.stringify(portable, null, 2)], { type: text(payload?.export?.content_type, "application/vnd.streamsuites.wheel+json") });
+      const href = URL.createObjectURL(blob);
+      try {
+        const anchor = element("a");
+        anchor.href = href;
+        anchor.download = text(payload?.export?.filename, `${wheel.name || "wheel"}.swl`);
         document.body.appendChild(anchor);
         anchor.click();
         anchor.remove();
@@ -1337,7 +1408,7 @@
     }
 
     function manageWheelsModal() {
-      openModal("Manage wheels", "Add, duplicate, rename, reorder, choose the saved default, or remove child wheels.", (body) => {
+      openModal("Manage wheels", "Add, import, export, duplicate, rename, reorder, choose the saved default, or remove child wheels.", (body) => {
         const list = element("div", "wheel-manager-list");
         function rebuild() {
           list.replaceChildren();
@@ -1373,6 +1444,7 @@
               return mutate({ type: "reorder", wheel_ids: ids });
             }, index === state.authoritativeWheelSet.wheels.length - 1);
             action("Set as default", () => mutate({ type: "set_active", wheel_id: wheel.wheelId }), wheel.wheelId === state.authorityDefaultWheelId);
+            action("Export wheel (.swl)", () => exportChildWheel(wheel));
             action("Remove", () => {
               if (!window.confirm(`Remove “${wheel.name}”? This cannot remove the final wheel.`)) return Promise.resolve();
               return mutate({ type: "remove", wheel_id: wheel.wheelId });
@@ -1390,7 +1462,25 @@
           try { await mutate({ type: "add", wheel: { name: `Wheel ${state.authoritativeWheelSet.wheels.length + 1}`, entries: ["Entry 1", "Entry 2"] } }); status.textContent = "Wheel added."; rebuild(); }
           catch (error) { status.textContent = error instanceof Error ? error.message : "Add failed."; }
         });
-        body.append(add, list);
+        const importLabel = element("label", "wheel-production-secondary", "Import wheel (.swl)");
+        const importInput = element("input"); importInput.type = "file"; importInput.accept = ".swl,application/vnd.streamsuites.wheel+json"; importInput.hidden = true;
+        importLabel.appendChild(importInput);
+        importInput.addEventListener("change", async () => {
+          const file = importInput.files?.[0];
+          if (!file) return;
+          const status = modalStatus(body); status.textContent = "Importing wheel package…";
+          try {
+            const payload = await WHEEL_API.importWheel(artifact.artifactCode, { source_name: file.name, payload_text: await file.text() });
+            rehydrateCanonical(payload);
+            const importedId = text(payload?.import_summary?.wheel_id);
+            if (importedId) selectWheel(importedId);
+            status.textContent = "Wheel imported into this set.";
+            rebuild();
+          } catch (error) {
+            status.textContent = error instanceof Error ? error.message : "Wheel import failed.";
+          }
+        });
+        body.append(add, importLabel, list);
       });
     }
 
@@ -1708,14 +1798,20 @@
           });
           const delayField = element("label", "wheel-editor-field"); const delay = element("input"); delay.type = "number"; delay.min = "100"; delay.max = "1000"; delay.value = state.authoritativeWheelSet.spinAll.delayMs; delayField.append(element("span", "", "Spin All stagger delay (ms)"), delay);
           const save = element("button", "wheel-production-primary", "Save Spin All timing"); save.addEventListener("click", async () => { const status = modalStatus(body); status.textContent = "Saving…"; try { await mutate({ type: "update_spin_all", spin_all: { mode: "staggered", delay_ms: Number(delay.value) } }); status.textContent = "Spin All timing saved."; } catch (error) { status.textContent = error instanceof Error ? error.message : "Save failed."; } }); body.append(delayField, save);
-          const exportButton = element("button", "wheel-production-secondary", "Export wheel set (.sswheel)");
+          const exportButton = element("button", "wheel-production-secondary", "Export Stage (.stg)");
           exportButton.addEventListener("click", async () => {
             const status = modalStatus(body); status.textContent = "Preparing canonical export…";
             try { await exportWheelSet(); status.textContent = "Export downloaded."; }
             catch (error) { status.textContent = error instanceof Error ? error.message : "Export failed."; }
           });
           body.prepend(titleField, descriptionField, saveIdentity);
-          body.appendChild(exportButton);
+          const exportWheelButton = element("button", "wheel-production-secondary", "Export wheel (.swl)");
+          exportWheelButton.addEventListener("click", async () => {
+            const status = modalStatus(body); status.textContent = "Preparing wheel export…";
+            try { await exportChildWheel(wheel); status.textContent = "Wheel export downloaded."; }
+            catch (error) { status.textContent = error instanceof Error ? error.message : "Wheel export failed."; }
+          });
+          body.append(exportButton, exportWheelButton);
         } else if (isOwner) {
           body.appendChild(element("div", "wheel-editor-status", "Wheel editing requires the current Runtime wheel service. Viewing and local play remain available."));
         }
@@ -1921,13 +2017,23 @@
       state.channel?.close?.();
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("pagehide", handlePageHide);
+      window.removeEventListener("popstate", handlePopState);
     }
 
     let resizeTimer = 0;
     function handleResize() { window.clearTimeout(resizeTimer); resizeTimer = window.setTimeout(render, 120); }
     function handlePageHide() { if (stageMode && sessionId) publish("closing"); }
+    function handlePopState() {
+      if (stageMode) return;
+      const requested = text(new URLSearchParams(window.location.search).get("wheel"));
+      state.selectedWheelId = state.authoritativeWheelSet.wheels.some((wheel) => wheel.wheelId === requested)
+        ? requested
+        : state.authorityDefaultWheelId;
+      render();
+    }
     window.addEventListener("resize", handleResize, { passive: true });
     window.addEventListener("pagehide", handlePageHide);
+    window.addEventListener("popstate", handlePopState);
     attachChannel();
     render();
     root._cleanupWheelWorkspace = destroy;

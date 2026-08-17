@@ -118,6 +118,14 @@
     return requestCreator(`/${encodeURIComponent(artifactCode)}/export`, options);
   }
 
+  function importWheel(artifactCode, payload, options = {}) {
+    return requestCreator(`/${encodeURIComponent(artifactCode)}/wheels/import`, { ...options, method: "POST", json: payload });
+  }
+
+  function exportWheel(artifactCode, wheelId, options = {}) {
+    return requestCreator(`/${encodeURIComponent(artifactCode)}/wheels/${encodeURIComponent(wheelId)}/export`, options);
+  }
+
   function uploadMedia(artifactCode, wheelId, kind, file, options = {}) {
     if (!new Set(["center-image", "stage-background-image"]).has(kind)) {
       return Promise.reject(new Error("Unsupported wheel media operation"));
@@ -147,6 +155,8 @@
     getArtifact,
     updateArtifact,
     exportArtifact,
+    importWheel,
+    exportWheel,
     uploadMedia,
     supports,
     publicEventsUrl: `${apiBase}${PUBLIC_WHEELS_PATH}/events`

@@ -1,0 +1,719 @@
+{
+  "portable_schema": "streamsuites.stage-package.v1",
+  "artifact_schema": "streamsuites.wheel-set.v2",
+  "schema_version": "streamsuites.wheel-set.v2",
+  "portable_format": "stg",
+  "artifact_type": "wheel",
+  "title": "Library Set A",
+  "description": "Portable gallery lifecycle acceptance",
+  "notes": "",
+  "default_display_mode": "wheel",
+  "wheel_set": {
+    "active_wheel_id": "whl_12a618a88b1be0ea3653",
+    "spin_all": {
+      "mode": "staggered",
+      "delay_ms": 250
+    },
+    "wheels": [
+      {
+        "wheel_id": "whl_12a618a88b1be0ea3653",
+        "name": "Wheel A1",
+        "winner_limit": 1,
+        "allow_duplicates": true,
+        "auto_remove_winner": false,
+        "entries": [
+          {
+            "entry_id": "ent_f9422fce51112cc96987",
+            "label": "Alpha",
+            "display_name": "Alpha",
+            "avatar_url": "",
+            "entries": 1,
+            "weight": 1,
+            "enabled": true,
+            "color": "#ff6b6b",
+            "notes": "",
+            "assignment": {
+              "user_code": "",
+              "public_slug": "",
+              "display_name": "",
+              "avatar_url": "",
+              "role": "",
+              "tier": "",
+              "badges": [],
+              "public_profile": {
+                "public_slug": "",
+                "bio": "",
+                "cover_image_url": "",
+                "banner_image_url": "",
+                "background_image_url": "",
+                "is_listed": true
+              }
+            },
+            "role_badges": [],
+            "stats_stub": {
+              "xp": null,
+              "rank": null,
+              "level": null,
+              "season": ""
+            },
+            "effective_weight": 1,
+            "probability": 0.33333333,
+            "share": 1
+          },
+          {
+            "entry_id": "ent_ed92cb448f8ef50d106d",
+            "label": "Bravo",
+            "display_name": "Bravo",
+            "avatar_url": "",
+            "entries": 1,
+            "weight": 1,
+            "enabled": true,
+            "color": "#ffd166",
+            "notes": "",
+            "assignment": {
+              "user_code": "",
+              "public_slug": "",
+              "display_name": "",
+              "avatar_url": "",
+              "role": "",
+              "tier": "",
+              "badges": [],
+              "public_profile": {
+                "public_slug": "",
+                "bio": "",
+                "cover_image_url": "",
+                "banner_image_url": "",
+                "background_image_url": "",
+                "is_listed": true
+              }
+            },
+            "role_badges": [],
+            "stats_stub": {
+              "xp": null,
+              "rank": null,
+              "level": null,
+              "season": ""
+            },
+            "effective_weight": 1,
+            "probability": 0.33333333,
+            "share": 1
+          },
+          {
+            "entry_id": "ent_7496434c88cb38b25a45",
+            "label": "Charlie",
+            "display_name": "Charlie",
+            "avatar_url": "",
+            "entries": 1,
+            "weight": 1,
+            "enabled": true,
+            "color": "#06d6a0",
+            "notes": "",
+            "assignment": {
+              "user_code": "",
+              "public_slug": "",
+              "display_name": "",
+              "avatar_url": "",
+              "role": "",
+              "tier": "",
+              "badges": [],
+              "public_profile": {
+                "public_slug": "",
+                "bio": "",
+                "cover_image_url": "",
+                "banner_image_url": "",
+                "background_image_url": "",
+                "is_listed": true
+              }
+            },
+            "role_badges": [],
+            "stats_stub": {
+              "xp": null,
+              "rank": null,
+              "level": null,
+              "season": ""
+            },
+            "effective_weight": 1,
+            "probability": 0.33333333,
+            "share": 1
+          }
+        ],
+        "palette": {
+          "segment_colors": [
+            "#ff6b6b",
+            "#ffd166",
+            "#06d6a0",
+            "#118ab2",
+            "#9b5de5",
+            "#f15bb5"
+          ],
+          "background_color": "#0f172a",
+          "text_color": "#f8fafc",
+          "accent_color": "#38bdf8",
+          "trim_color": "#38bdf8",
+          "glow_color": "#38bdf8"
+        },
+        "presentation": {
+          "animation_enabled": true,
+          "sound_enabled": true,
+          "sound": {
+            "music": {
+              "enabled": true,
+              "asset_id": "music0.mp3",
+              "options": [
+                "music0.mp3",
+                "music1.mp3",
+                "music2.mp3",
+                "music3.mp3",
+                "music4.mp3",
+                "music5.mp3",
+                "music6.mp3"
+              ]
+            },
+            "startspin": {
+              "enabled": true,
+              "asset_id": "startspin0.mp3",
+              "options": [
+                "startspin0.mp3",
+                "startspin1.mp3",
+                "startspin2.mp3"
+              ]
+            },
+            "respin": {
+              "enabled": true,
+              "asset_id": "respin0.mp3",
+              "options": [
+                "respin0.mp3",
+                "respin1.mp3"
+              ]
+            },
+            "click": {
+              "enabled": true,
+              "asset_id": "click0.mp3",
+              "options": [
+                "click0.mp3",
+                "click1.mp3",
+                "click2.mp3",
+                "click3.mp3",
+                "click4.mp3",
+                "click5.mp3",
+                "click6.mp3"
+              ]
+            },
+            "winner": {
+              "enabled": true,
+              "asset_id": "winner0.mp3",
+              "options": [
+                "winner0.mp3",
+                "winner1.mp3",
+                "winner2.mp3",
+                "winner3.mp3",
+                "winner4.mp3",
+                "winner5.mp3",
+                "winner6.mp3"
+              ]
+            }
+          },
+          "celebration_enabled": false,
+          "confetti_enabled": false,
+          "show_entry_labels": true,
+          "show_display_names_on_slices": true,
+          "slice_label_mode": "full_name",
+          "center_image_url": "/assets/placeholders/wheelcenterdefault.webp",
+          "stage_background_preset": "cinematic_chamber",
+          "stage_background_color": "#38bdf8",
+          "stage_background_image_url": "",
+          "spin_owner_only": false,
+          "slow_drift_enabled": true,
+          "spin_duration_ms": 8500,
+          "scoreboard_max_rows": 24
+        }
+      },
+      {
+        "wheel_id": "whl_91a353709ed9412e34a2",
+        "name": "Wheel A2",
+        "winner_limit": 1,
+        "allow_duplicates": true,
+        "auto_remove_winner": false,
+        "entries": [
+          {
+            "entry_id": "ent_b38fabb3911e5116cbb9",
+            "label": "Delta",
+            "display_name": "Delta",
+            "avatar_url": "",
+            "entries": 1,
+            "weight": 1,
+            "enabled": true,
+            "color": "#ff385c",
+            "notes": "",
+            "assignment": {
+              "user_code": "",
+              "public_slug": "",
+              "display_name": "",
+              "avatar_url": "",
+              "role": "",
+              "tier": "",
+              "badges": [],
+              "public_profile": {
+                "public_slug": "",
+                "bio": "",
+                "cover_image_url": "",
+                "banner_image_url": "",
+                "background_image_url": "",
+                "is_listed": true
+              }
+            },
+            "role_badges": [],
+            "stats_stub": {
+              "xp": null,
+              "rank": null,
+              "level": null,
+              "season": ""
+            },
+            "effective_weight": 1,
+            "probability": 0.25,
+            "share": 1
+          },
+          {
+            "entry_id": "ent_ee6936cc00b2325c6611",
+            "label": "Echo",
+            "display_name": "Echo",
+            "avatar_url": "",
+            "entries": 1,
+            "weight": 1,
+            "enabled": true,
+            "color": "#ffd166",
+            "notes": "",
+            "assignment": {
+              "user_code": "",
+              "public_slug": "",
+              "display_name": "",
+              "avatar_url": "",
+              "role": "",
+              "tier": "",
+              "badges": [],
+              "public_profile": {
+                "public_slug": "",
+                "bio": "",
+                "cover_image_url": "",
+                "banner_image_url": "",
+                "background_image_url": "",
+                "is_listed": true
+              }
+            },
+            "role_badges": [],
+            "stats_stub": {
+              "xp": null,
+              "rank": null,
+              "level": null,
+              "season": ""
+            },
+            "effective_weight": 1,
+            "probability": 0.25,
+            "share": 1
+          },
+          {
+            "entry_id": "ent_efc6b0c7ab52fe489915",
+            "label": "Foxtrot",
+            "display_name": "Foxtrot",
+            "avatar_url": "",
+            "entries": 1,
+            "weight": 1,
+            "enabled": true,
+            "color": "#22d3a7",
+            "notes": "",
+            "assignment": {
+              "user_code": "",
+              "public_slug": "",
+              "display_name": "",
+              "avatar_url": "",
+              "role": "",
+              "tier": "",
+              "badges": [],
+              "public_profile": {
+                "public_slug": "",
+                "bio": "",
+                "cover_image_url": "",
+                "banner_image_url": "",
+                "background_image_url": "",
+                "is_listed": true
+              }
+            },
+            "role_badges": [],
+            "stats_stub": {
+              "xp": null,
+              "rank": null,
+              "level": null,
+              "season": ""
+            },
+            "effective_weight": 1,
+            "probability": 0.25,
+            "share": 1
+          },
+          {
+            "entry_id": "ent_33b7782452dcc1ded967",
+            "label": "Golf",
+            "display_name": "Golf",
+            "avatar_url": "",
+            "entries": 1,
+            "weight": 1,
+            "enabled": true,
+            "color": "#6d7cff",
+            "notes": "",
+            "assignment": {
+              "user_code": "",
+              "public_slug": "",
+              "display_name": "",
+              "avatar_url": "",
+              "role": "",
+              "tier": "",
+              "badges": [],
+              "public_profile": {
+                "public_slug": "",
+                "bio": "",
+                "cover_image_url": "",
+                "banner_image_url": "",
+                "background_image_url": "",
+                "is_listed": true
+              }
+            },
+            "role_badges": [],
+            "stats_stub": {
+              "xp": null,
+              "rank": null,
+              "level": null,
+              "season": ""
+            },
+            "effective_weight": 1,
+            "probability": 0.25,
+            "share": 1
+          }
+        ],
+        "palette": {
+          "segment_colors": [
+            "#ff385c",
+            "#ffd166",
+            "#22d3a7",
+            "#6d7cff"
+          ],
+          "background_color": "#0f172a",
+          "text_color": "#f8fafc",
+          "accent_color": "#ff385c",
+          "trim_color": "#ffd166",
+          "glow_color": "#ff385c"
+        },
+        "presentation": {
+          "animation_enabled": true,
+          "sound_enabled": true,
+          "sound": {
+            "music": {
+              "enabled": true,
+              "asset_id": "music0.mp3",
+              "options": [
+                "music0.mp3",
+                "music1.mp3",
+                "music2.mp3",
+                "music3.mp3",
+                "music4.mp3",
+                "music5.mp3",
+                "music6.mp3"
+              ]
+            },
+            "startspin": {
+              "enabled": true,
+              "asset_id": "startspin0.mp3",
+              "options": [
+                "startspin0.mp3",
+                "startspin1.mp3",
+                "startspin2.mp3"
+              ]
+            },
+            "respin": {
+              "enabled": true,
+              "asset_id": "respin0.mp3",
+              "options": [
+                "respin0.mp3",
+                "respin1.mp3"
+              ]
+            },
+            "click": {
+              "enabled": true,
+              "asset_id": "click0.mp3",
+              "options": [
+                "click0.mp3",
+                "click1.mp3",
+                "click2.mp3",
+                "click3.mp3",
+                "click4.mp3",
+                "click5.mp3",
+                "click6.mp3"
+              ]
+            },
+            "winner": {
+              "enabled": true,
+              "asset_id": "winner0.mp3",
+              "options": [
+                "winner0.mp3",
+                "winner1.mp3",
+                "winner2.mp3",
+                "winner3.mp3",
+                "winner4.mp3",
+                "winner5.mp3",
+                "winner6.mp3"
+              ]
+            }
+          },
+          "celebration_enabled": true,
+          "confetti_enabled": true,
+          "show_entry_labels": true,
+          "show_display_names_on_slices": true,
+          "slice_label_mode": "full_name",
+          "center_image_url": "/assets/placeholders/wheelcenterdefault.webp",
+          "stage_background_preset": "prism_grid",
+          "stage_background_color": "#ff385c",
+          "stage_background_image_url": "",
+          "spin_owner_only": false,
+          "slow_drift_enabled": true,
+          "spin_duration_ms": 2000,
+          "scoreboard_max_rows": 24
+        }
+      }
+    ]
+  },
+  "capabilities": {
+    "max_wheels_per_artifact": 12,
+    "max_entrants_per_wheel": 256,
+    "max_wheel_name_length": 120,
+    "max_entrant_label_length": 120,
+    "max_entries_per_entrant": 1000000,
+    "max_weight_per_entrant": 1000000,
+    "spin_all_modes": [
+      "staggered"
+    ],
+    "spin_all_delay_min_ms": 100,
+    "spin_all_delay_max_ms": 1000,
+    "spin_all_delay_default_ms": 250,
+    "results_authority": "local_browser_session"
+  },
+  "compatibility": {
+    "source_schema_version": "streamsuites.wheel-set.v2",
+    "minimum_wheel_service_contract": "streamsuites.wheel-service.v1"
+  },
+  "compatibility_projection": "first_active_wheel_v1",
+  "winner_limit": 1,
+  "allow_duplicates": true,
+  "auto_remove_winner": false,
+  "entries": [
+    {
+      "entry_id": "ent_f9422fce51112cc96987",
+      "label": "Alpha",
+      "display_name": "Alpha",
+      "avatar_url": "",
+      "entries": 1,
+      "weight": 1,
+      "enabled": true,
+      "color": "#ff6b6b",
+      "notes": "",
+      "assignment": {
+        "user_code": "",
+        "public_slug": "",
+        "display_name": "",
+        "avatar_url": "",
+        "role": "",
+        "tier": "",
+        "badges": [],
+        "public_profile": {
+          "public_slug": "",
+          "bio": "",
+          "cover_image_url": "",
+          "banner_image_url": "",
+          "background_image_url": "",
+          "is_listed": true
+        }
+      },
+      "role_badges": [],
+      "stats_stub": {
+        "xp": null,
+        "rank": null,
+        "level": null,
+        "season": ""
+      },
+      "effective_weight": 1,
+      "probability": 0.33333333,
+      "share": 1
+    },
+    {
+      "entry_id": "ent_ed92cb448f8ef50d106d",
+      "label": "Bravo",
+      "display_name": "Bravo",
+      "avatar_url": "",
+      "entries": 1,
+      "weight": 1,
+      "enabled": true,
+      "color": "#ffd166",
+      "notes": "",
+      "assignment": {
+        "user_code": "",
+        "public_slug": "",
+        "display_name": "",
+        "avatar_url": "",
+        "role": "",
+        "tier": "",
+        "badges": [],
+        "public_profile": {
+          "public_slug": "",
+          "bio": "",
+          "cover_image_url": "",
+          "banner_image_url": "",
+          "background_image_url": "",
+          "is_listed": true
+        }
+      },
+      "role_badges": [],
+      "stats_stub": {
+        "xp": null,
+        "rank": null,
+        "level": null,
+        "season": ""
+      },
+      "effective_weight": 1,
+      "probability": 0.33333333,
+      "share": 1
+    },
+    {
+      "entry_id": "ent_7496434c88cb38b25a45",
+      "label": "Charlie",
+      "display_name": "Charlie",
+      "avatar_url": "",
+      "entries": 1,
+      "weight": 1,
+      "enabled": true,
+      "color": "#06d6a0",
+      "notes": "",
+      "assignment": {
+        "user_code": "",
+        "public_slug": "",
+        "display_name": "",
+        "avatar_url": "",
+        "role": "",
+        "tier": "",
+        "badges": [],
+        "public_profile": {
+          "public_slug": "",
+          "bio": "",
+          "cover_image_url": "",
+          "banner_image_url": "",
+          "background_image_url": "",
+          "is_listed": true
+        }
+      },
+      "role_badges": [],
+      "stats_stub": {
+        "xp": null,
+        "rank": null,
+        "level": null,
+        "season": ""
+      },
+      "effective_weight": 1,
+      "probability": 0.33333333,
+      "share": 1
+    }
+  ],
+  "palette": {
+    "segment_colors": [
+      "#ff6b6b",
+      "#ffd166",
+      "#06d6a0",
+      "#118ab2",
+      "#9b5de5",
+      "#f15bb5"
+    ],
+    "background_color": "#0f172a",
+    "text_color": "#f8fafc",
+    "accent_color": "#38bdf8",
+    "trim_color": "#38bdf8",
+    "glow_color": "#38bdf8"
+  },
+  "presentation": {
+    "animation_enabled": true,
+    "sound_enabled": true,
+    "sound": {
+      "music": {
+        "enabled": true,
+        "asset_id": "music0.mp3",
+        "options": [
+          "music0.mp3",
+          "music1.mp3",
+          "music2.mp3",
+          "music3.mp3",
+          "music4.mp3",
+          "music5.mp3",
+          "music6.mp3"
+        ]
+      },
+      "startspin": {
+        "enabled": true,
+        "asset_id": "startspin0.mp3",
+        "options": [
+          "startspin0.mp3",
+          "startspin1.mp3",
+          "startspin2.mp3"
+        ]
+      },
+      "respin": {
+        "enabled": true,
+        "asset_id": "respin0.mp3",
+        "options": [
+          "respin0.mp3",
+          "respin1.mp3"
+        ]
+      },
+      "click": {
+        "enabled": true,
+        "asset_id": "click0.mp3",
+        "options": [
+          "click0.mp3",
+          "click1.mp3",
+          "click2.mp3",
+          "click3.mp3",
+          "click4.mp3",
+          "click5.mp3",
+          "click6.mp3"
+        ]
+      },
+      "winner": {
+        "enabled": true,
+        "asset_id": "winner0.mp3",
+        "options": [
+          "winner0.mp3",
+          "winner1.mp3",
+          "winner2.mp3",
+          "winner3.mp3",
+          "winner4.mp3",
+          "winner5.mp3",
+          "winner6.mp3"
+        ]
+      }
+    },
+    "celebration_enabled": false,
+    "confetti_enabled": false,
+    "show_entry_labels": true,
+    "show_display_names_on_slices": true,
+    "slice_label_mode": "full_name",
+    "center_image_url": "/assets/placeholders/wheelcenterdefault.webp",
+    "stage_background_preset": "cinematic_chamber",
+    "stage_background_color": "#38bdf8",
+    "stage_background_image_url": "",
+    "spin_owner_only": false,
+    "slow_drift_enabled": true,
+    "spin_duration_ms": 8500,
+    "scoreboard_max_rows": 24
+  },
+  "import_provenance": {
+    "source_format": "manual",
+    "source_name": "",
+    "imported_at": null,
+    "exact_source_available": true,
+    "unsupported_fields": [],
+    "notes": ""
+  }
+}

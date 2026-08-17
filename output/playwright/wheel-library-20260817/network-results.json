@@ -1,0 +1,187 @@
+[
+  {
+    "method": "GET",
+    "path": "/api/public/wheels",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/public/wheels/events",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/public/wheels",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/public/wheels/events",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/creator/wheels",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/creator/wheels",
+    "status": 201
+  },
+  {
+    "method": "GET",
+    "path": "/api/public/wheels",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/public/wheels/events",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/creator/wheels",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/creator/wheels/artifact-635d2373ce4a45c38c00cdb6a12d7e31",
+    "status": 200
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/creator/wheels/artifact-635d2373ce4a45c38c00cdb6a12d7e31",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/public/wheels",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/public/wheels",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/public/wheels/events",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/creator/wheels",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/public/wheels",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/public/wheels/events",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/creator/wheels/artifact-635d2373ce4a45c38c00cdb6a12d7e31",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/public/wheels",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/public/wheels/events",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/creator/wheels/artifact-635d2373ce4a45c38c00cdb6a12d7e31/export",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/creator/wheels/artifact-635d2373ce4a45c38c00cdb6a12d7e31/wheels/whl_91a353709ed9412e34a2/export",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/creator/wheels/import",
+    "status": 201
+  },
+  {
+    "method": "GET",
+    "path": "/api/public/wheels",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/creator/wheels/artifact-ec6844cc70064d24bb426fd8b2c2cb7d/wheels/import",
+    "status": 201
+  },
+  {
+    "method": "GET",
+    "path": "/api/public/wheels",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/creator/wheels/import",
+    "status": 201
+  },
+  {
+    "method": "GET",
+    "path": "/api/public/wheels",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/creator/wheels/import",
+    "status": 201
+  },
+  {
+    "method": "GET",
+    "path": "/api/public/wheels",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/public/wheels/events",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/creator/wheels",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/creator/wheels",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/public/wheels",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/public/wheels/events",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/creator/wheels",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/creator/wheels",
+    "status": 200
+  }
+]

@@ -223,9 +223,35 @@ test("owner mutations share capability gating, structured errors, canonical rehy
   assert.match(source, /async function mutateArtifact\(updates\)/);
   assert.match(source, /Save wheel-set details/);
   assert.match(source, /async function exportWheelSet\(\)/);
-  assert.match(source, /Export wheel set \(\.sswheel\)/);
+  assert.match(source, /Export Stage \(\.stg\)/);
+  assert.match(source, /async function exportChildWheel\(wheel = selectedWheel\(\)\)/);
+  assert.match(source, /Export wheel \(\.swl\)/);
+  assert.match(source, /Import wheel \(\.swl\)/);
   assert.match(source, /URL\.revokeObjectURL\(href\)/);
   assert.match(source, /\["127\.0\.0\.1", "localhost"\]/);
+});
+
+test("child deep links select locally, survive reload, and never mutate the authority default", () => {
+  const source = read("js/wheel-workspace.js");
+  assert.match(source, /new URLSearchParams\(window\.location\.search\)\.get\("wheel"\)/);
+  assert.match(source, /initialWheelId/);
+  assert.match(source, /window\.history\.pushState/);
+  assert.match(source, /window\.addEventListener\("popstate", handlePopState\)/);
+  assert.match(source, /state\.authorityDefaultWheelId/);
+  assert.doesNotMatch(source, /handlePopState[\s\S]{0,500}type: "set_active"/);
+});
+
+test("winner celebration restores bounded canvas confetti and fireworks with reduced-motion cleanup", () => {
+  const source = read("js/wheel-workspace.js");
+  const css = read("css/wheel-workspace.css");
+  assert.match(source, /function startWinnerCelebration\(canvas, overlay, wheel\)/);
+  assert.match(source, /Array\.from\(\{ length: 190 \}/);
+  assert.match(source, /const fireworks = \[\]/);
+  assert.match(source, /elapsed < 6600/);
+  assert.match(source, /window\.cancelAnimationFrame\(frame\)/);
+  assert.match(source, /prefers-reduced-motion: reduce/);
+  assert.match(css, /\.wheel-celebration-layer/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.wheel-celebration-layer/);
 });
 
 test("mundane wheel controls inherit the canonical Public Blinker token", () => {

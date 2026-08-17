@@ -3337,6 +3337,111 @@
     });
   }
 
+  function wheelLibraryChild(raw, index = 0) {
+    const palette = raw?.palette && typeof raw.palette === "object" ? raw.palette : {};
+    const presentation = raw?.presentation && typeof raw.presentation === "object" ? raw.presentation : {};
+    const entries = Array.isArray(raw?.entries) ? raw.entries : [];
+    return {
+      wheelId: String(raw?.wheelId || raw?.wheel_id || `wheel-${index + 1}`).trim(),
+      name: String(raw?.name || raw?.title || `Wheel ${index + 1}`).trim(),
+      entrantCount: Number(raw?.entrantCount ?? raw?.entrant_count ?? raw?.entryCount ?? entries.length) || 0,
+      entries,
+      palette: {
+        segmentColors: Array.isArray(palette.segment_colors) && palette.segment_colors.length ? palette.segment_colors : ["#38bdf8", "#7c5cff", "#f472b6", "#22d3a7"],
+        accent: String(palette.accent_color || "#38bdf8"),
+        trim: String(palette.trim_color || palette.accent_color || "#7c92ff")
+      },
+      presentation: {
+        stageColor: String(presentation.stage_background_color || presentation.stageBackgroundColor || "#38bdf8"),
+        stagePreset: String(presentation.stage_background_preset || presentation.stageBackgroundPreset || "cinematic_chamber"),
+        centerImage: String(presentation.center_image_url || presentation.centerImageUrl || "")
+      },
+      isDefault: raw?.is_default === true || raw?.isDefault === true
+    };
+  }
+
+  function wheelLibrarySet(item, { owned = false, yours = false } = {}) {
+    const rawSet = item?.wheelSet || item?.wheel_set || {};
+    const rawWheels = Array.isArray(rawSet?.wheels) && rawSet.wheels.length
+      ? rawSet.wheels
+      : Array.isArray(item?.wheels) && item.wheels.length
+        ? item.wheels
+        : item?.activeWheel ? [item.activeWheel] : [];
+    const activeId = String(rawSet?.activeWheelId || rawSet?.active_wheel_id || item?.activeWheelId || item?.active_wheel_id || "").trim();
+    const wheels = rawWheels.map(wheelLibraryChild).map((wheel) => ({ ...wheel, isDefault: wheel.isDefault || wheel.wheelId === activeId }));
+    const routeId = String(item?.routeId || item?.slug || item?.artifact_code || item?.artifactCode || item?.id || "").trim();
+    const href = String(item?.href || item?.public_path || `/wheels/${encodeURIComponent(routeId)}`);
+    const creator = String(item?.creator?.displayName || item?.creator?.display_name || item?.creator?.username || "StreamSuites creator").trim();
+    return {
+      artifactCode: String(item?.artifactCode || item?.artifact_code || item?.id || "").trim(),
+      title: String(item?.title || "Untitled wheel set").trim(),
+      description: String(item?.description || item?.summary || "").trim(),
+      slug: routeId,
+      href,
+      creator,
+      wheels,
+      defaultWheel: wheels.find((wheel) => wheel.isDefault) || wheels[0] || wheelLibraryChild({}, 0),
+      entrantCount: Number(item?.entrant_count) || wheels.reduce((sum, wheel) => sum + wheel.entrantCount, 0),
+      updatedAt: item?.updatedAt || item?.updated_at || null,
+      visibility: String(item?.visibility_state || item?.visibility || "listed"),
+      owned,
+      yours
+    };
+  }
+
+  function buildMiniWheelThumbnail(wheel) {
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("class", "wheel-mini-preview");
+    svg.setAttribute("viewBox", "0 0 120 120");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("focusable", "false");
+    const make = (name, attrs) => {
+      const node = document.createElementNS(ns, name);
+      Object.entries(attrs || {}).forEach(([key, value]) => node.setAttribute(key, String(value)));
+      svg.appendChild(node);
+      return node;
+    };
+    make("circle", { cx: 60, cy: 60, r: 54, fill: "#070b12", stroke: wheel.palette.trim, "stroke-width": 3 });
+    const sourceEntries = wheel.entries.slice(0, 12);
+    const weights = sourceEntries.length
+      ? sourceEntries.map((entry) => Math.max(0.001, Number(entry?.effectiveWeight ?? entry?.weight ?? entry?.entries ?? 1) || 1))
+      : Array.from({ length: Math.max(2, Math.min(12, wheel.entrantCount || wheel.palette.segmentColors.length)) }, () => 1);
+    const total = weights.reduce((sum, value) => sum + value, 0) || 1;
+    const point = (angle, radius = 49) => [60 + Math.cos(angle) * radius, 60 + Math.sin(angle) * radius];
+    let angle = -Math.PI / 2;
+    weights.forEach((weight, index) => {
+      const next = angle + (weight / total) * Math.PI * 2;
+      const [x1, y1] = point(angle); const [x2, y2] = point(next);
+      make("path", {
+        d: `M 60 60 L ${x1.toFixed(3)} ${y1.toFixed(3)} A 49 49 0 ${next - angle > Math.PI ? 1 : 0} 1 ${x2.toFixed(3)} ${y2.toFixed(3)} Z`,
+        fill: wheel.palette.segmentColors[index % wheel.palette.segmentColors.length],
+        stroke: "rgba(255,255,255,.18)", "stroke-width": 0.8
+      });
+      angle = next;
+    });
+    make("circle", { cx: 60, cy: 60, r: 13, fill: "#101827", stroke: "#dcecff", "stroke-width": 2 });
+    make("circle", { cx: 60, cy: 60, r: 5, fill: wheel.palette.accent });
+    make("path", { d: "M 108 52 L 118 60 L 108 68 Z", fill: "#f8fbff", stroke: "#0a101b", "stroke-width": 1.5 });
+    return svg;
+  }
+
+  function wheelChildHref(set, wheelId) {
+    const url = new URL(set.href, window.location.origin);
+    url.searchParams.set("wheel", wheelId);
+    return `${url.pathname}${url.search}${url.hash}`;
+  }
+
+  function downloadWheelPortable(payload, fallbackName) {
+    const portable = payload?.export?.payload;
+    if (!portable || typeof portable !== "object") throw new Error("Runtime returned no portable package");
+    const blob = new Blob([JSON.stringify(portable, null, 2)], { type: String(payload?.export?.content_type || "application/json") });
+    const href = URL.createObjectURL(blob);
+    try {
+      const anchor = create("a"); anchor.href = href; anchor.download = String(payload?.export?.filename || fallbackName); document.body.appendChild(anchor); anchor.click(); anchor.remove();
+    } finally { URL.revokeObjectURL(href); }
+  }
+
   function openWheelLifecycleModal(title, description, buildBody) {
     const restoreFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const backdrop = create("div", "wheel-lifecycle-modal-backdrop");
@@ -3387,12 +3492,14 @@
     return status;
   }
 
-  function navigateToCanonicalWheel(payload) {
+  function navigateToCanonicalWheel(payload, wheelId = "") {
     const wheel = payload?.wheel || {};
     const path = String(wheel.public_path || "").trim();
     if (!path) throw new Error("Runtime returned no canonical wheel route");
     window.StreamSuitesPublicData?.invalidateCache?.();
-    window.location.assign(path);
+    const url = new URL(path, window.location.origin);
+    if (wheelId) url.searchParams.set("wheel", wheelId);
+    window.location.assign(`${url.pathname}${url.search}`);
   }
 
   function openCreateWheelSetModal(service) {
@@ -3445,31 +3552,104 @@
     );
   }
 
-  function openImportWheelSetModal(service) {
+  function openAddWheelToSetModal(service) {
     openWheelLifecycleModal(
-      "Import .sswheel",
-      "Runtime/Auth validates v1 or v2 portable JSON, assigns the current account, and creates a new artifact identity.",
+      "Add wheel to existing set",
+      "Choose the Runtime/Auth-owned parent. The new child keeps that set's identity and automatic Stage route.",
       (body) => {
-        const maxBytes = Number(service?.limits?.max_import_bytes) || WHEEL_IMPORT_FALLBACK_MAX_BYTES;
-        const drop = create("label", "wheel-import-drop");
-        const input = create("input"); input.type = "file"; input.accept = ".sswheel,application/json";
-        const filename = create("strong", "", "Choose or drop a .sswheel file");
-        const details = create("span", "", `Portable v1/v2 JSON · maximum ${Math.round(maxBytes / 1024 / 1024)} MiB`);
-        drop.append(filename, details, input);
-        const summary = create("div", "wheel-import-summary", "No file selected.");
+        const form = create("form", "wheel-lifecycle-form");
+        const field = (label, input) => { const wrap = create("label", "wheel-lifecycle-field"); wrap.append(create("span", "", label), input); return wrap; };
+        const destination = create("select"); destination.required = true; destination.disabled = true;
+        const name = create("input"); name.required = true; name.maxLength = 120; name.value = "New wheel";
+        const entrants = create("textarea"); entrants.rows = 5; entrants.placeholder = "One entrant per line";
+        const preset = create("select");
+        [["cinematic_chamber", "Cinematic Chamber"], ["aurora_vault", "Aurora Vault"], ["prism_grid", "Prism Grid"], ["eclipse_halo", "Eclipse Halo"]].forEach(([value, label]) => { const option = create("option", "", label); option.value = value; preset.appendChild(option); });
+        const colour = create("input"); colour.type = "color"; colour.value = "#38bdf8";
         const actions = create("div", "wheel-lifecycle-actions");
         const cancel = create("button", "wheel-production-secondary", "Cancel"); cancel.type = "button";
-        const submit = create("button", "wheel-production-primary", "Import wheel set"); submit.type = "button"; submit.disabled = true;
-        actions.append(cancel, submit); body.append(drop, summary, actions);
+        const submit = create("button", "wheel-production-primary", "Add wheel"); submit.type = "submit"; submit.disabled = true;
+        actions.append(cancel, submit);
+        form.append(field("Destination Wheel Set", destination), field("Wheel name", name), field("Starter entrants (optional)", entrants), field("Stage preset", preset), field("Stage colour", colour), actions);
+        body.appendChild(form);
+        cancel.addEventListener("click", () => body.closest(".wheel-lifecycle-modal-backdrop")?.querySelector(".wheel-lifecycle-modal-close")?.click());
+        wheelLifecycleStatus(body, "Loading your Wheel Sets…");
+        wheelLifecycleRequest("?summary=1&limit=100&offset=0").then((payload) => {
+          const items = Array.isArray(payload?.items) ? payload.items : [];
+          destination.replaceChildren();
+          items.forEach((item) => { const option = create("option", "", item.title || "Untitled wheel set"); option.value = String(item.artifact_code || ""); destination.appendChild(option); });
+          destination.disabled = !items.length; submit.disabled = !items.length;
+          wheelLifecycleStatus(body, items.length ? "" : "Create a Wheel Set first; individual wheels cannot exist without a parent.");
+        }).catch((error) => wheelLifecycleStatus(body, error instanceof Error ? error.message : "Wheel Sets could not be loaded."));
+        form.addEventListener("submit", async (event) => {
+          event.preventDefault(); if (!form.reportValidity() || !destination.value) return;
+          submit.disabled = true; wheelLifecycleStatus(body, "Adding child wheel through Runtime/Auth…");
+          try {
+            const payload = await wheelLifecycleRequest(`/${encodeURIComponent(destination.value)}`, { method: "PATCH", body: { operation: { type: "add", wheel: { name: name.value, entries: entrants.value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean), presentation: { stage_background_preset: preset.value, stage_background_color: colour.value } } } } });
+            const wheels = payload?.wheel?.wheel_set?.wheels || [];
+            navigateToCanonicalWheel(payload, String(wheels[wheels.length - 1]?.wheel_id || ""));
+          } catch (error) { wheelLifecycleStatus(body, error instanceof Error ? error.message : "Wheel could not be added."); submit.disabled = false; }
+        });
+      }
+    );
+  }
+
+  function openImportWheelSetModal(service) {
+    openWheelLifecycleModal(
+      "Import",
+      "Import a complete Stage / Wheel Set or place one individual wheel into a Runtime/Auth-owned parent.",
+      (body) => {
+        const maxBytes = Number(service?.limits?.max_import_bytes) || WHEEL_IMPORT_FALLBACK_MAX_BYTES;
+        const choices = create("fieldset", "wheel-import-types");
+        choices.appendChild(create("legend", "", "Portable package type"));
+        const makeChoice = (value, title, copy, checked = false) => {
+          const label = create("label", "wheel-import-type");
+          const radio = create("input"); radio.type = "radio"; radio.name = "wheel-import-type"; radio.value = value; radio.checked = checked;
+          const textWrap = create("span"); textWrap.append(create("strong", "", title), create("small", "", copy)); label.append(radio, textWrap); choices.appendChild(label); return radio;
+        };
+        const stageType = makeChoice("stg", "Stage / Wheel Set (.stg)", "Creates a new owned Wheel Set with all children and portable Stage settings.", true);
+        const wheelType = makeChoice("swl", "Individual Wheel (.swl)", "Adds one child to an existing set or creates a new set from it.");
+        choices.appendChild(create("p", "wheel-lifecycle-help", "Legacy .sswheel files are also supported and import as a new Wheel Set."));
+        const drop = create("label", "wheel-import-drop");
+        const input = create("input"); input.type = "file"; input.accept = ".stg,.swl,.sswheel,application/vnd.streamsuites.stage+json,application/vnd.streamsuites.wheel+json";
+        const filename = create("strong", "", "Choose or drop a portable wheel file");
+        const details = create("span", "", `.stg · .swl · legacy .sswheel · maximum ${Math.round(maxBytes / 1024 / 1024)} MiB`);
+        drop.append(filename, details, input);
+        const summary = create("div", "wheel-import-summary", "No file selected.");
+        const destinationGroup = create("fieldset", "wheel-lifecycle-group wheel-import-destination"); destinationGroup.hidden = true;
+        destinationGroup.appendChild(create("legend", "", "Individual Wheel destination"));
+        const existingLabel = create("label", "wheel-import-destination-option"); const existingRadio = create("input"); existingRadio.type = "radio"; existingRadio.name = "swl-destination"; existingRadio.value = "existing"; existingRadio.disabled = true; existingLabel.append(existingRadio, create("span", "", "Add to an existing Wheel Set"));
+        const destination = create("select"); destination.setAttribute("aria-label", "Destination Wheel Set");
+        const newLabel = create("label", "wheel-import-destination-option"); const newRadio = create("input"); newRadio.type = "radio"; newRadio.name = "swl-destination"; newRadio.value = "new"; newRadio.checked = true; newLabel.append(newRadio, create("span", "", "Create a new Wheel Set from this wheel"));
+        const newTitle = create("input"); newTitle.maxLength = 160; newTitle.placeholder = "New Wheel Set title"; newTitle.setAttribute("aria-label", "New Wheel Set title");
+        destinationGroup.append(existingLabel, destination, newLabel, newTitle);
+        const actions = create("div", "wheel-lifecycle-actions");
+        const cancel = create("button", "wheel-production-secondary", "Cancel"); cancel.type = "button";
+        const submit = create("button", "wheel-production-primary", "Import"); submit.type = "button"; submit.disabled = true;
+        actions.append(cancel, submit); body.append(choices, drop, destinationGroup, summary, actions);
         let selected = null;
+        let ownedSets = [];
+        wheelLifecycleRequest("?summary=1&limit=100&offset=0").then((payload) => {
+          ownedSets = Array.isArray(payload?.items) ? payload.items : [];
+          destination.replaceChildren();
+          ownedSets.forEach((item) => { const option = create("option", "", item.title || "Untitled wheel set"); option.value = String(item.artifact_code || ""); destination.appendChild(option); });
+          if (ownedSets.length) { existingRadio.disabled = false; existingRadio.checked = true; newRadio.checked = false; newTitle.disabled = true; destination.disabled = false; }
+          else { existingRadio.disabled = true; existingRadio.checked = false; newRadio.checked = true; newTitle.disabled = false; destination.disabled = true; }
+        }).catch(() => { ownedSets = []; existingRadio.disabled = true; });
+        const selectedType = () => wheelType.checked ? "swl" : "stg";
+        const updateDestination = () => { destinationGroup.hidden = selectedType() !== "swl"; const useNew = newRadio.checked || !ownedSets.length; destination.disabled = useNew; newTitle.disabled = !useNew; };
+        [stageType, wheelType, existingRadio, newRadio].forEach((control) => control.addEventListener("change", updateDestination));
         const selectFile = (file) => {
           selected = file || null;
-          if (!selected) { filename.textContent = "Choose or drop a .sswheel file"; summary.textContent = "No file selected."; submit.disabled = true; return; }
+          if (!selected) { filename.textContent = "Choose or drop a portable wheel file"; summary.textContent = "No file selected."; submit.disabled = true; return; }
           filename.textContent = selected.name;
           summary.textContent = `${formatNumber(selected.size)} bytes selected. Runtime will validate schema, wheel count, entrants, media references, and ownership.`;
-          submit.disabled = selected.size <= 0 || selected.size > maxBytes || !/\.(?:sswheel|json)$/i.test(selected.name);
+          const extension = selected.name.match(/\.(stg|swl|sswheel)$/i)?.[1]?.toLowerCase() || "";
+          if (extension === "swl") wheelType.checked = true;
+          else if (extension === "stg" || extension === "sswheel") stageType.checked = true;
+          updateDestination();
+          submit.disabled = selected.size <= 0 || selected.size > maxBytes || !extension;
           if (selected.size > maxBytes) summary.textContent = `File exceeds the ${Math.round(maxBytes / 1024 / 1024)} MiB import limit.`;
-          else if (!/\.(?:sswheel|json)$/i.test(selected.name)) summary.textContent = "Choose a .sswheel or JSON portable document.";
+          else if (!extension) summary.textContent = "Choose a .stg, .swl, or legacy .sswheel file.";
         };
         input.addEventListener("change", () => selectFile(input.files?.[0]));
         drop.addEventListener("dragover", (event) => { event.preventDefault(); drop.classList.add("is-dragging"); });
@@ -3479,12 +3659,19 @@
         submit.addEventListener("click", async () => {
           if (!selected || submit.disabled) return;
           submit.disabled = true;
-          wheelLifecycleStatus(body, "Uploading portable document for canonical validation…");
+          wheelLifecycleStatus(body, "Validating portable package with Runtime/Auth…");
           try {
-            const payload = await wheelLifecycleRequest("/import", { method: "POST", body: { source_name: selected.name, payload_text: await selected.text(), exact_source_available: true } });
+            const payloadText = await selected.text();
+            let payload;
+            if (selectedType() === "swl" && existingRadio.checked && destination.value) {
+              payload = await WHEEL_API.importWheel(destination.value, { source_name: selected.name, payload_text: payloadText, exact_source_available: true });
+            } else {
+              if (selectedType() === "swl" && !newTitle.value.trim()) { newTitle.focus(); throw new Error("Enter a title for the new Wheel Set"); }
+              payload = await wheelLifecycleRequest("/import", { method: "POST", body: { source_name: selected.name, payload_text: payloadText, exact_source_available: true, ...(selectedType() === "swl" ? { title: newTitle.value.trim() } : {}) } });
+            }
             const imported = payload?.import_summary || {};
-            wheelLifecycleStatus(body, `Imported ${Number(imported.wheel_count) || 1} wheel(s) and ${Number(imported.entrant_count) || 0} entrant(s). Opening the new artifact…`);
-            navigateToCanonicalWheel(payload);
+            wheelLifecycleStatus(body, `Imported ${Number(imported.wheel_count) || 1} wheel(s). Opening the containing Wheel Set…`);
+            navigateToCanonicalWheel(payload, String(imported.wheel_id || ""));
           } catch (error) {
             wheelLifecycleStatus(body, error instanceof Error ? error.message : "Wheel import failed.");
             submit.disabled = false;
@@ -3494,19 +3681,79 @@
     );
   }
 
-  function buildOwnedWheelCard(item) {
-    const card = create("article", "wheel-owned-card");
-    card.dataset.wheelArtifactCode = String(item?.artifact_code || "").trim();
-    const copy = create("div", "wheel-owned-card-copy");
-    copy.append(create("span", "dashboard-card-kicker", item?.visibility_state === "listed" ? "Published wheel set" : "Private wheel set"), create("h3", "", item?.title || "Untitled wheel set"));
-    if (item?.description) copy.appendChild(create("p", "", item.description));
-    const meta = create("div", "item-meta");
-    meta.append(create("span", "meta-pill", `${Number(item?.wheel_count) || 1} wheel${Number(item?.wheel_count) === 1 ? "" : "s"}`), create("span", "meta-pill", `${Number(item?.entrant_count) || 0} entrants`), create("span", "meta-pill", `Updated ${item?.updated_at ? new Date(item.updated_at).toLocaleDateString() : "recently"}`));
-    copy.appendChild(meta);
-    const actions = create("div", "wheel-owned-card-actions");
-    const edit = create("a", "wheel-production-primary", "Open workspace"); edit.href = item?.public_path || `/wheels/${encodeURIComponent(item?.slug || item?.artifact_code || "")}`;
-    const stage = create("a", "wheel-production-secondary", "Open Stage"); stage.href = item?.stage_path || `${edit.href}/stage`; stage.target = "_blank"; stage.rel = "noopener noreferrer";
-    actions.append(edit, stage); card.append(copy, actions); return card;
+  function buildWheelLibraryMenu(set, wheel = null) {
+    const wrap = create("div", "wheel-library-menu");
+    const trigger = create("button", "wheel-library-menu__trigger", "⋯"); trigger.type = "button"; trigger.setAttribute("aria-label", `Actions for ${wheel?.name || set.title}`); trigger.setAttribute("aria-haspopup", "menu"); trigger.setAttribute("aria-expanded", "false");
+    const menu = create("div", "wheel-library-menu__panel"); menu.setAttribute("role", "menu"); menu.hidden = true;
+    const action = create("button", "", wheel ? "Export wheel (.swl)" : "Export Stage (.stg)"); action.type = "button"; action.setAttribute("role", "menuitem");
+    const close = (returnFocus = false) => { menu.hidden = true; trigger.setAttribute("aria-expanded", "false"); if (returnFocus) trigger.focus(); };
+    trigger.addEventListener("click", () => { const opening = menu.hidden; menu.hidden = !opening; trigger.setAttribute("aria-expanded", opening ? "true" : "false"); if (opening) action.focus(); });
+    wrap.addEventListener("keydown", (event) => { if (event.key === "Escape" && !menu.hidden) { event.preventDefault(); close(true); } });
+    wrap.addEventListener("focusout", () => window.setTimeout(() => { if (!wrap.contains(document.activeElement)) close(false); }, 0));
+    action.addEventListener("click", async () => {
+      action.disabled = true;
+      try {
+        const payload = wheel
+          ? await WHEEL_API.exportWheel(set.artifactCode, wheel.wheelId)
+          : await WHEEL_API.exportArtifact(set.artifactCode);
+        downloadWheelPortable(payload, wheel ? `${wheel.name || "wheel"}.swl` : `${set.slug || "wheel-set"}.stg`);
+        close(true);
+      } catch (error) { action.textContent = error instanceof Error ? error.message : "Export failed"; }
+      finally { action.disabled = false; }
+    });
+    menu.appendChild(action); wrap.append(trigger, menu); return wrap;
+  }
+
+  function buildWheelSetLibraryCard(set) {
+    const card = create("article", "wheel-library-card wheel-library-card--set"); card.dataset.wheelArtifactCode = set.artifactCode; card.style.setProperty("--wheel-card-stage", set.defaultWheel.presentation.stageColor);
+    const link = create("a", "wheel-library-card__link"); link.href = set.href; link.setAttribute("aria-label", `Wheel Set: ${set.title}, ${set.wheels.length} wheels`);
+    const preview = create("div", "wheel-library-card__preview"); preview.appendChild(buildMiniWheelThumbnail(set.defaultWheel));
+    const copy = create("div", "wheel-library-card__copy"); copy.append(create("span", "dashboard-card-kicker", "WHEEL SET"), create("h3", "", set.title));
+    if (set.description) copy.appendChild(create("p", "wheel-library-card__description", set.description));
+    const meta = create("div", "item-meta"); meta.append(create("span", "meta-pill", `${set.wheels.length} wheel${set.wheels.length === 1 ? "" : "s"}`), create("span", "meta-pill", `${set.entrantCount} entrants`));
+    if (set.yours) meta.appendChild(create("span", "meta-pill wheel-library-yours", "Yours"));
+    copy.appendChild(meta); link.append(preview, copy); card.appendChild(link); if (set.owned) card.appendChild(buildWheelLibraryMenu(set)); return card;
+  }
+
+  function buildChildWheelLibraryCard(set, wheel) {
+    const card = create("article", "wheel-library-card wheel-library-card--wheel"); card.dataset.wheelArtifactCode = set.artifactCode; card.dataset.wheelId = wheel.wheelId; card.style.setProperty("--wheel-card-stage", wheel.presentation.stageColor);
+    const link = create("a", "wheel-library-card__link"); link.href = wheelChildHref(set, wheel.wheelId); link.setAttribute("aria-label", `Wheel: ${wheel.name}, from Wheel Set ${set.title}`);
+    const preview = create("div", "wheel-library-card__preview"); preview.appendChild(buildMiniWheelThumbnail(wheel));
+    const copy = create("div", "wheel-library-card__copy"); copy.append(create("span", "dashboard-card-kicker", "WHEEL"), create("h3", "", wheel.name), create("p", "wheel-library-parent", `from ${set.title}`));
+    const meta = create("div", "item-meta"); meta.append(create("span", "meta-pill", `${wheel.entrantCount} entrants`));
+    if (wheel.isDefault) meta.appendChild(create("span", "meta-pill", "Default"));
+    if (set.yours) meta.appendChild(create("span", "meta-pill wheel-library-yours", "Yours"));
+    copy.appendChild(meta); link.append(preview, copy); card.appendChild(link); if (set.owned) card.appendChild(buildWheelLibraryMenu(set, wheel)); return card;
+  }
+
+  function createWheelLibrarySection(title, badgeText, query) {
+    const section = create("section", "section wheel-library-section");
+    const head = create("div", "section-heading"); const badge = create("span", "meta-pill", badgeText); head.append(create("h2", "", title), badge);
+    const tabs = create("div", "wheel-library-tabs"); tabs.setAttribute("role", "tablist"); tabs.setAttribute("aria-label", `${title} collections`);
+    const setsTab = create("button", "wheel-library-tab is-active", "Wheel Sets"); const wheelsTab = create("button", "wheel-library-tab", "Wheels");
+    [setsTab, wheelsTab].forEach((button) => { button.type = "button"; button.setAttribute("role", "tab"); });
+    setsTab.setAttribute("aria-selected", "true"); wheelsTab.setAttribute("aria-selected", "false"); tabs.append(setsTab, wheelsTab);
+    const grid = create("div", "wheel-library-grid"); grid.setAttribute("role", "tabpanel");
+    section.append(head, tabs, grid);
+    let active = "sets"; let sets = []; let status = { loading: true, error: "", empty: "" };
+    const matches = (set, wheel = null) => {
+      const needle = String(query || "").trim().toLowerCase(); if (!needle) return true;
+      const values = wheel ? [wheel.name, set.title, set.creator] : [set.title, set.description, set.creator, set.slug];
+      return values.some((value) => String(value || "").toLowerCase().includes(needle));
+    };
+    const render = () => {
+      grid.replaceChildren();
+      setsTab.classList.toggle("is-active", active === "sets"); wheelsTab.classList.toggle("is-active", active === "wheels"); setsTab.setAttribute("aria-selected", active === "sets" ? "true" : "false"); wheelsTab.setAttribute("aria-selected", active === "wheels" ? "true" : "false");
+      if (status.loading) { grid.appendChild(create("div", "wheel-gallery-loading", "Loading wheel library…")); return; }
+      if (status.error) { grid.appendChild(create("div", "empty-state is-error", status.error)); return; }
+      let count = 0;
+      if (active === "sets") sets.filter((set) => matches(set)).forEach((set) => { grid.appendChild(buildWheelSetLibraryCard(set)); count += 1; });
+      else sets.forEach((set) => set.wheels.filter((wheel) => matches(set, wheel)).forEach((wheel) => { grid.appendChild(buildChildWheelLibraryCard(set, wheel)); count += 1; }));
+      badge.textContent = `${count} ${active === "sets" ? "set" : "wheel"}${count === 1 ? "" : "s"}`;
+      if (!count) grid.appendChild(create("div", "empty-state", status.empty || `No ${active === "sets" ? "Wheel Sets" : "Wheels"} match this search.`));
+    };
+    setsTab.addEventListener("click", () => { active = "sets"; render(); }); wheelsTab.addEventListener("click", () => { active = "wheels"; render(); });
+    return { section, update(nextSets, nextStatus = {}) { sets = nextSets; status = { loading: false, error: "", empty: "", ...nextStatus }; render(); } };
   }
 
   function renderWheelsLifecycle(ctx) {
@@ -3521,7 +3768,7 @@
     const eligible = authenticated && (authState?.creatorWorkspaceAccess?.allowed === true || authState?.creatorCapable === true);
     const hero = create("section", "wheel-gallery-hero");
     const heroCopy = create("div", "wheel-gallery-hero-copy");
-    heroCopy.append(create("span", "dashboard-eyebrow", "Create · customize · present"), create("h1", "", "Wheels"), create("p", "", "Create or import an owned wheel set, then use its canonical workspace and automatically available shell-free Stage."));
+    heroCopy.append(create("span", "dashboard-eyebrow", "Create · organize · discover"), create("h1", "", "Wheels"), create("p", "", "Your Wheel Library and the public gallery, with every individual wheel kept inside its Runtime/Auth-owned Wheel Set."));
     const actions = create("div", "wheel-gallery-actions");
     if (!authenticated) {
       const signIn = create("button", "wheel-production-primary", "Sign in to create"); signIn.addEventListener("click", () => openAuthModal?.("login")); actions.appendChild(signIn);
@@ -3531,32 +3778,33 @@
     } else if (!currentService) {
       actions.appendChild(create("div", "wheel-gallery-compatibility", "Wheel editing requires the current Runtime wheel service. Public viewing and local play remain available."));
     } else {
-      const createButton = create("button", "wheel-production-primary", "Create wheel set"); createButton.addEventListener("click", () => openCreateWheelSetModal(service));
-      const importButton = create("button", "wheel-production-secondary", "Import .sswheel"); importButton.addEventListener("click", () => openImportWheelSetModal(service));
-      actions.append(createButton, importButton);
+      const createWrap = create("div", "wheel-create-menu");
+      const createButton = create("button", "wheel-production-primary", "Create"); createButton.type = "button"; createButton.setAttribute("aria-haspopup", "menu"); createButton.setAttribute("aria-expanded", "false");
+      const createMenu = create("div", "wheel-create-menu__panel"); createMenu.setAttribute("role", "menu"); createMenu.hidden = true;
+      const newSet = create("button", "", "New Wheel Set"); newSet.type = "button"; newSet.setAttribute("role", "menuitem");
+      const addWheel = create("button", "", "Add Wheel to Existing Set"); addWheel.type = "button"; addWheel.setAttribute("role", "menuitem");
+      createMenu.append(newSet, addWheel); createWrap.append(createButton, createMenu);
+      const closeCreate = (restore = false) => { createMenu.hidden = true; createButton.setAttribute("aria-expanded", "false"); if (restore) createButton.focus(); };
+      createButton.addEventListener("click", () => { const opening = createMenu.hidden; createMenu.hidden = !opening; createButton.setAttribute("aria-expanded", opening ? "true" : "false"); if (opening) newSet.focus(); });
+      createWrap.addEventListener("keydown", (event) => { if (event.key === "Escape" && !createMenu.hidden) { event.preventDefault(); closeCreate(true); } });
+      newSet.addEventListener("click", () => { closeCreate(); openCreateWheelSetModal(service); }); addWheel.addEventListener("click", () => { closeCreate(); openAddWheelToSetModal(service); });
+      const importButton = create("button", "wheel-production-secondary", "Import"); importButton.addEventListener("click", () => openImportWheelSetModal(service));
+      actions.append(createWrap, importButton);
     }
     hero.append(heroCopy, actions); host.appendChild(hero);
 
-    const owned = create("section", "section wheel-owned-section");
-    const ownedHead = create("div", "section-heading"); ownedHead.append(create("h2", "", "My Wheel Sets"), create("span", "meta-pill", authenticated ? "Runtime/Auth owned" : "Sign in required"));
-    const ownedBody = create("div", "wheel-owned-grid");
-    if (!authenticated) ownedBody.appendChild(create("div", "empty-state", "Sign in to see wheel sets owned by your account."));
-    else if (!eligible) ownedBody.appendChild(create("div", "empty-state", "Owned wheel management is unavailable for this account under the current Runtime capability policy."));
-    else if (!currentService) ownedBody.appendChild(create("div", "empty-state", "Owned wheel listing is unavailable until the current Runtime wheel service is connected."));
-    else ownedBody.appendChild(create("div", "wheel-gallery-loading", "Loading owned wheel summaries…"));
-    owned.append(ownedHead, ownedBody); host.appendChild(owned);
+    const ownedLibrary = createWheelLibrarySection("My Library", authenticated ? "Runtime/Auth owned" : "Sign in required", state.query);
+    host.appendChild(ownedLibrary.section);
+    if (!authenticated) ownedLibrary.update([], { empty: "Sign in to see your Wheel Sets and individual Wheels." });
+    else if (!eligible) ownedLibrary.update([], { empty: "Owned wheel management is unavailable for this account under the current Runtime capability policy." });
+    else if (!currentService) ownedLibrary.update([], { empty: "Owned wheel listing is unavailable until the current Runtime wheel service is connected." });
 
-    const gallery = create("section", "section wheel-public-gallery");
-    const publicItems = filterItemsByType(data, "wheels", state.query);
-    const galleryHead = create("div", "section-heading"); galleryHead.append(create("h2", "", "Public Gallery"), create("span", "meta-pill", `${publicItems.length} published`));
-    const publicGrid = create("div", "media-grid");
-    publicItems.forEach((item) => publicGrid.appendChild(buildWheelCard(item)));
-    gallery.append(galleryHead, publicGrid);
-    if (!publicItems.length) {
-      const failed = data?.sourceStatus?.wheels?.ok === false;
-      gallery.appendChild(create("div", `empty-state${failed ? " is-error" : ""}`, failed ? "Public wheel gallery could not be loaded. This is a network or Runtime error, not an empty gallery." : "No public wheel sets match this search."));
-    }
-    host.appendChild(gallery);
+    const publicItems = filterItemsByType(data, "wheels", "");
+    const publicSets = publicItems.map((item) => wheelLibrarySet(item, { yours: isArtifactOwner(authState || null, item) }));
+    const publicGallery = createWheelLibrarySection("Public Gallery", `${publicSets.length} published`, state.query);
+    const publicFailed = data?.sourceStatus?.wheels?.ok === false;
+    publicGallery.update(publicSets, { error: publicFailed ? "Public wheel gallery could not be loaded. This is a network or Runtime error, not an empty gallery." : "", empty: "No public Wheel Sets or Wheels match this search." });
+    host.appendChild(publicGallery.section);
 
     if (eligible && currentService) {
       (async () => {
@@ -3564,21 +3812,10 @@
           const payload = await wheelLifecycleRequest("?summary=1&limit=50&offset=0");
           if (!host.isConnected || host.dataset.wheelLifecycleRender !== renderKey) return;
           const items = Array.isArray(payload?.items) ? payload.items : [];
-          ownedBody.replaceChildren();
-          items.forEach((item) => ownedBody.appendChild(buildOwnedWheelCard(item)));
-          if (!items.length) {
-            const empty = create("div", "empty-state", "You do not own any wheel sets yet.");
-            const createButton = create("button", "wheel-production-primary", "Create your first wheel set"); createButton.addEventListener("click", () => openCreateWheelSetModal(service)); empty.appendChild(createButton); ownedBody.appendChild(empty);
-          }
-          const ownedCodes = new Set(items.map((item) => String(item?.artifact_code || "").trim()).filter(Boolean));
-          publicGrid.querySelectorAll("[data-wheel-artifact-code]").forEach((card) => { if (ownedCodes.has(card.dataset.wheelArtifactCode)) card.remove(); });
-          const visiblePublicCount = publicGrid.querySelectorAll("[data-wheel-artifact-code]").length;
-          galleryHead.querySelector(".meta-pill").textContent = `${visiblePublicCount} published`;
-          if (!visiblePublicCount && publicItems.length) publicGrid.appendChild(create("div", "empty-state", "Your public wheel sets are already shown under My Wheel Sets."));
-          ownedHead.querySelector(".meta-pill").textContent = `${items.length} owned`;
+          ownedLibrary.update(items.map((item) => wheelLibrarySet(item, { owned: true, yours: true })), { empty: "You do not own any Wheel Sets yet. Use Create to start one, or Import to bring in a .stg or .swl package." });
         } catch (error) {
           if (!host.isConnected || host.dataset.wheelLifecycleRender !== renderKey) return;
-          ownedBody.replaceChildren(create("div", "empty-state is-error", error instanceof Error ? error.message : "Owned wheel sets could not be loaded."));
+          ownedLibrary.update([], { error: error instanceof Error ? error.message : "Owned Wheel Sets could not be loaded." });
         }
       })();
     }
@@ -6520,7 +6757,13 @@
     if (!item || !config || config.detailType === "tallies") return;
     const canonicalPath = buildArtifactDetailHref(item);
     const nextUrl = new URL(canonicalPath, window.location.origin);
-    if (normalizePath(window.location.pathname) === normalizePath(nextUrl.pathname) && !window.location.search) {
+    nextUrl.search = window.location.search;
+    nextUrl.hash = window.location.hash;
+    if (
+      normalizePath(window.location.pathname) === normalizePath(nextUrl.pathname) &&
+      nextUrl.search === window.location.search &&
+      nextUrl.hash === window.location.hash
+    ) {
       return;
     }
     window.history.replaceState(window.history.state, "", nextUrl.toString());

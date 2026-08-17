@@ -73,3 +73,13 @@ test("media upload uses the exact child route without overriding multipart conte
   assert.equal(calls[0][1].headers["Content-Type"], undefined);
   assert.ok(calls[0][1].body instanceof FormData);
 });
+
+test("portable child import and export use the containing Wheel Set routes", async () => {
+  const { api, calls } = loadClient();
+  await api.importWheel("artifact-a", { source_name: "prize.swl", payload_text: "{}" });
+  await api.exportWheel("artifact-a", "whl_prize");
+  assert.equal(calls[0][0], "https://api.streamsuites.app/api/creator/wheels/artifact-a/wheels/import");
+  assert.equal(calls[0][1].method, "POST");
+  assert.equal(calls[1][0], "https://api.streamsuites.app/api/creator/wheels/artifact-a/wheels/whl_prize/export");
+  assert.equal(calls[1][1].method, "GET");
+});

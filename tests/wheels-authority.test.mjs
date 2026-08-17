@@ -35,15 +35,17 @@ test("public data hub hydrates wheels from the authoritative live API first and 
   assert.match(source, /const scoreboards = sortByUpdated\(wheels\.map\(\(item\) => buildScoreboardLensFromWheel\(item\)\)\);/);
 });
 
-test("wheels gallery exposes capability-aware create, owned list, import, and truthful failure states", () => {
+test("wheels library exposes portable formats, owned/public tabs, child cards, and truthful failure states", () => {
   const app = read("js/public-pages-app.js");
   const client = read("js/wheel-api-client.js");
   const css = read("css/public-shell.css");
 
   assert.match(app, /function renderWheelsLifecycle\(ctx\)/);
-  assert.match(app, /Create wheel set/);
-  assert.match(app, /Import \.sswheel/);
-  assert.match(app, /My Wheel Sets/);
+  assert.match(app, /New Wheel Set/);
+  assert.match(app, /Add Wheel to Existing Set/);
+  assert.match(app, /Stage \/ Wheel Set \(\.stg\)/);
+  assert.match(app, /Individual Wheel \(\.swl\)/);
+  assert.match(app, /My Library/);
   assert.match(app, /Public Gallery/);
   assert.match(app, /\?summary=1&limit=50&offset=0/);
   assert.match(app, /WHEEL_API\.requestCreator/);
@@ -51,11 +53,19 @@ test("wheels gallery exposes capability-aware create, owned list, import, and tr
   assert.match(client, /return "https:\/\/api\.streamsuites\.app"/);
   assert.match(app, /Wheel editing requires the current Runtime wheel service/);
   assert.match(app, /This is a network or Runtime error, not an empty gallery/);
-  assert.match(app, /Your public wheel sets are already shown under My Wheel Sets/);
+  assert.doesNotMatch(app, /Your public wheel sets are already shown under My Wheel Sets/);
+  assert.doesNotMatch(app, /Open workspace|Open Stage/);
+  assert.match(app, /function buildMiniWheelThumbnail\(wheel\)/);
+  assert.match(app, /function buildWheelSetLibraryCard\(set\)/);
+  assert.match(app, /function buildChildWheelLibraryCard\(set, wheel\)/);
+  assert.match(app, /url\.searchParams\.set\("wheel", wheelId\)/);
+  assert.match(app, /nextUrl\.search = window\.location\.search;/);
+  assert.match(app, /nextUrl\.hash = window\.location\.hash;/);
+  assert.match(app, /role", "tablist"/);
   assert.match(app, /starter_entrants/);
   assert.match(app, /stage_background_preset/);
-  assert.match(app, /payload_text: await selected\.text\(\)/);
-  assert.match(app, /navigateToCanonicalWheel\(payload\)/);
+  assert.match(app, /payloadText = await selected\.text\(\)/);
+  assert.match(app, /navigateToCanonicalWheel\(payload, String\(imported\.wheel_id/);
   assert.match(app, /wheelRefreshDeferred/);
   assert.match(app, /document\.body\.classList\.contains\("wheel-editor-open"\)/);
   assert.match(app, /streamsuites:wheel-editor-closed/);
@@ -63,6 +73,9 @@ test("wheels gallery exposes capability-aware create, owned list, import, and tr
   assert.match(css, /\.wheel-lifecycle-modal/);
   assert.match(css, /body\.public-shell-page\.modal-open :is\(\.ss-status-widget-host, \[data-status-widget-host\]\)/);
   assert.match(css, /@media \(max-width: 760px\)/);
+  assert.match(css, /\.wheel-library-grid/);
+  assert.match(css, /grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(css, /data-public-appearance="light"/);
 });
 
 test("public wheels route preserves the shell and provides clean list/detail artifact routes", () => {
@@ -109,6 +122,10 @@ test("public wheels route preserves the shell and provides clean list/detail art
   assert.match(workspace, /function weightedWinner\(entries, random = Math\.random\)/);
   assert.match(workspace, /dialog\.setAttribute\("aria-modal", "true"\)/);
   assert.match(workspace, /window\.matchMedia\?\.\("\(prefers-reduced-motion: reduce\)"\)/);
+  assert.match(workspace, /function startWinnerCelebration\(canvas, overlay, wheel\)/);
+  assert.match(workspace, /Array\.from\(\{ length: 190 \}/);
+  assert.match(workspace, /const fireworks = \[\]/);
+  assert.match(workspace, /wheel-celebration-layer/);
   assert.match(app, /const PUBLIC_WHEEL_EVENTS_URL = WHEEL_API\?\.publicEventsUrl/);
   assert.match(detailHtml, /wheel-api-client\.js/);
   assert.match(stageHtml, /wheel-api-client\.js/);
@@ -169,4 +186,5 @@ test("public wheels route preserves the shell and provides clean list/detail art
   assert.match(workspaceCss, /body\.wheel-stage-document/);
   assert.match(workspaceCss, /\.wheel-workspace--stage/);
   assert.match(workspaceCss, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(workspaceCss, /\.wheel-celebration-layer/);
 });

@@ -1,0 +1,63 @@
+{
+  "isolatedRoot": "C:\\Users\\jupit\\AppData\\Local\\Temp\\streamsuites-wheel-library-1786947549305",
+  "identities": {
+    "setA": "artifact-635d2373ce4a45c38c00cdb6a12d7e31",
+    "setB": "artifact-ec6844cc70064d24bb426fd8b2c2cb7d",
+    "setC": "artifact-86c57cd042d641cb8b36c75b0fcf3f64",
+    "legacy": "artifact-156cd07eb3c44e9dba580ef2579cda8c",
+    "wheelA2": "whl_91a353709ed9412e34a2",
+    "savedDefault": "whl_12a618a88b1be0ea3653"
+  },
+  "portable": {
+    "stageFilename": "Ga9u2W.stg",
+    "stageSchema": "streamsuites.stage-package.v1",
+    "wheelFilename": "Wheel-A2.swl",
+    "wheelSchema": "streamsuites.wheel-package.v1",
+    "stageHasOwner": false,
+    "wheelHasOwner": false
+  },
+  "imports": {
+    "setBWheelCount": 3,
+    "setCWheelCount": 1,
+    "legacyFormat": "sswheel"
+  },
+  "celebrationPixels": {
+    "width": 1294,
+    "height": 824
+  },
+  "persistedSetCount": 4,
+  "galleryMetrics": {
+    "setCards": 8,
+    "wheelCards": 0,
+    "svgPreviews": 8,
+    "fullWorkspaceCards": 0,
+    "animationCanvases": 0,
+    "overflow": false
+  },
+  "network": {
+    "wheelResponseCount": 37,
+    "wheelHttp500": [],
+    "publicListCalls": 12,
+    "ownerListCalls": 7
+  },
+  "pageErrors": [],
+  "screenshots": [
+    "01-wheels-hero-signed-out-1440x900.png",
+    "02-create-menu-1440x900.png",
+    "03-new-wheel-set-modal-1440x900.png",
+    "04-my-library-wheel-sets-hover-1920x1080.png",
+    "05-my-library-wheels-hover-1440x900.png",
+    "06-child-wheel-deep-link-1440x900.png",
+    "07-stg-swl-export-actions-1440x900.png",
+    "08-restored-confetti-fireworks-1440x900.png",
+    "09-import-modal-stg-swl-1440x900.png",
+    "10-swl-destination-selection-1440x900.png",
+    "11-imported-my-library-1920x1080.png",
+    "12-public-gallery-wheel-sets-1440x900.png",
+    "13-public-gallery-wheels-1440x900.png",
+    "14-library-1024x768.png",
+    "14-library-390x844.png",
+    "14-library-768x1024.png",
+    "15-light-theme-library-1440x900.png"
+  ]
+}

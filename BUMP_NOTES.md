@@ -6,6 +6,21 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-17 - Wheel Library, portable packages, and celebration restoration
+
+#### Technical notes
+
+- Rebuilt `/wheels` as one responsive Wheel Library plus real Public Gallery. Both surfaces use accessible Wheel Sets/Wheels tabs, shared compact cards, active-collection search, actual palette-driven static SVG mini wheels, parent-aware child metadata, truthful empty/error states, and 3–4/2/1-column desktop/tablet/mobile layouts. Owned public content is no longer suppressed and is marked `Yours`.
+- Wheel Set cards and child Wheel cards are meaningful keyboard-focusable links with no duplicate Workspace/Stage/Popout buttons. Child cards deep-link to the canonical parent using `?wheel=<stable-id>`; reload and browser history restore selection without mutating the saved Runtime default. Stage/Popout/Dock controls remain inside the workspace.
+- Replaced the gallery actions with `Create` (New Wheel Set or Add Wheel to Existing Set) and one premium `Import` dialog. `.stg` creates a new owned set, `.swl` targets an existing set or creates a new parent, and legacy `.sswheel` appears only as a compatibility note. Workspace Share/Presentation and Manage Wheels now expose `.stg` set export plus `.swl` child export/import.
+- Restored the accepted bounded canvas celebration in the shared multi-wheel workspace: 190 palette-driven confetti particles, five fireworks bursts, six-second cleanup, winner-dialog layering, reduced-motion/animation gates, and no Runtime winner write. This repairs the regression where the multi-wheel workspace retained celebration flags and winner rays but omitted the actual confetti renderer.
+- Extended shared Runtime client and focused contracts for child import/export routes, portable copy, real gallery content, lightweight thumbnail structure, tab/card accessibility, deep-link non-mutation, responsive theming, and confetti/fireworks cleanup. No full V3 renderer, animation loop, EventSource, or per-child request is instantiated by gallery cards.
+- Retained the isolated installed-Edge lifecycle harness and evidence under `output/playwright/wheel-library-20260817/`. It proves signed-out/owner surfaces, real Set/Wheel cards, stable child reload, `.stg`/`.swl` export and all three import destinations, legacy compatibility, a rendered confetti/fireworks frame, 1920/1440/1024/768/390 responsive states, Light appearance, zero document overflow, zero page exceptions or wheel HTTP 500s, no per-card canvas/workspace renderer, and four-set persistence across an isolated Runtime restart. The complete Public gate passes 213/213; this is local evidence, not deployed-service or production-data proof.
+
+#### Human-readable summary
+
+Wheel Sets now use `.stg`, individual Wheels use `.swl`, and old `.sswheel` files still import. My Library and Public Gallery show both Sets and their Wheels with real mini previews; clicking a card opens it directly, and Stage controls stay inside the workspace. Confetti and fireworks are restored to winner celebrations.
+
 ### 2026-08-17 - Production wheel API-origin corrective repair
 
 #### Technical notes
