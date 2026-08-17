@@ -1,0 +1,35 @@
+{
+  "pageErrors": [],
+  "idleConditions": {
+    "reducedMotion": false,
+    "animationEnabled": true,
+    "spinState": "idle",
+    "hovered": false,
+    "containsFocus": false,
+    "activeElement": "public-shell-page"
+  },
+  "idleDriftDegrees": 0.899,
+  "pointerSelection": {
+    "inspectorTab": "true",
+    "inspectorText": "B\nSELECTED ENTRANT\nBig Balloon\nWheel entrant · no linked public identity\nENTRIES\n1\nWEIGHT\n1\nEFFECTIVE PROBABILITY\n20%\nENABLED\nYes\nColour\n#8b5cf6",
+    "overlayText": "SELECTED ENTRANT\nBig Balloon",
+    "selectedClass": true
+  },
+  "keyboardSelection": {
+    "inspectorText": "T\nSELECTED ENTRANT\nTully\nWheel entrant · no linked public identity\nENTRIES\n1\nWEIGHT\n1\nEFFECTIVE PROBABILITY\n20%\nENABLED\nYes\nColour\n#f59e0b",
+    "selectedClass": true
+  },
+  "centerButton": {
+    "count": 1,
+    "enabled": true,
+    "width": 128.1,
+    "centerImage": "/assets/placeholders/wheelcenterdefault.webp"
+  },
+  "centerSpinState": "spinning",
+  "centerDisabledDuringSpin": true,
+  "reducedMotionDriftDegrees": 0,
+  "mobile": {
+    "inspectorText": "D\nSELECTED ENTRANT\nDaniel\nWheel entrant · no linked public identity\nENTRIES\n3\nWEIGHT\n1\nEFFECTIVE PROBABILITY\n60%\nENABLED\nYes\nColour\n#38bdf8",
+    "overflow": 0
+  }
+}

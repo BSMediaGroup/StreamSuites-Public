@@ -216,7 +216,8 @@
     if (host === "localhost" || host === "127.0.0.1") {
       return "http://127.0.0.1:18087";
     }
-    return "https://api.streamsuites.app";
+    const origin = String(window.location?.origin || "").trim();
+    return /^https?:\/\//.test(origin) ? origin.replace(/\/$/, "") : "https://streamsuites.app";
   }
 
   function resolveApiBase() {

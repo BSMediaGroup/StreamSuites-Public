@@ -8,6 +8,7 @@
     : "https://api.streamsuites.app";
   const API_BASE = String(WHEEL_API?.apiBase || window.StreamSuitesPublicConfig?.AUTH_API_BASE || localApiBase).replace(/\/$/, "");
   const VIEW_MODES = new Set(["focus", "grid", "results"]);
+  const IDLE_DRIFT_DEGREES_PER_MS = 0.00075;
   const STAGE_BACKGROUND_PRESETS = Object.freeze([
     Object.freeze({ id: "cinematic_chamber", name: "Cinematic Chamber" }),
     Object.freeze({ id: "aurora_vault", name: "Aurora Vault" }),
@@ -286,10 +287,11 @@
     return `M 240 240 L ${from.x} ${from.y} A 214 214 0 ${end - start > 180 ? 1 : 0} 1 ${to.x} ${to.y} Z`;
   }
 
-  function buildWheelGraphic(wheel, compact = false) {
+  function buildWheelGraphic(wheel, compact = false, options = {}) {
     const entries = wheel.entries.filter((entry) => entry.enabled !== false && effectiveWeight(entry) > 0);
     const total = entries.reduce((sum, entry) => sum + effectiveWeight(entry), 0) || 1;
-    const svg = svgElement("svg", { viewBox: "0 0 480 480", role: "img", "aria-label": `${wheel.name}, ${entries.length} eligible entrants` });
+    const canSelectEntrants = !compact && typeof options.onSelectEntrant === "function";
+    const svg = svgElement("svg", { viewBox: "0 0 480 480", role: canSelectEntrants ? "group" : "img", "aria-label": `${wheel.name}, ${entries.length} eligible entrants` });
     svg.classList.add("wheel-svg");
     const graphicId = `wheel-${++wheelGraphicSequence}`;
     const defs = svgElement("defs");
@@ -309,6 +311,19 @@
       const sweep = (effectiveWeight(entry) / total) * 360;
       const group = svgElement("g", { "data-wheel-entry-id": entry.entryId });
       group.classList.add("wheel-slice-group");
+      if (canSelectEntrants) {
+        group.classList.add("is-interactive");
+        group.classList.toggle("is-selected", options.selectedEntrantId === entry.entryId);
+        group.setAttribute("role", "button");
+        group.setAttribute("tabindex", "0");
+        group.setAttribute("aria-label", `Select ${entryName(entry)}. ${entryUnits(entry)} entries, weight ${Number(entry.weight) || 1}.`);
+        group.addEventListener("click", () => options.onSelectEntrant(entry.entryId));
+        group.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          options.onSelectEntrant(entry.entryId);
+        });
+      }
       const sliceColor = normalizedColor(entry.color || wheel.palette.segment_colors[index % Math.max(1, wheel.palette.segment_colors.length)], "#64748b");
       const gradientId = `${graphicId}-slice-${index}`;
       const gradient = svgElement("radialGradient", { id: gradientId, cx: "38%", cy: "28%", r: "82%" });
@@ -549,18 +564,48 @@
       return wheel.entries.find((entry) => entry.entryId === entrantIdValue) || null;
     }
 
+    function entrantIndicatorLabel(result, entrant) {
+      if (result.spinState === "spinning") return "Current entrant";
+      if (entrant && result.latestResult?.entryId === entrant.entryId) return "Winner";
+      return entrant ? "Selected entrant" : "Current entrant";
+    }
+
     function updateCurrentEntrantSurfaces(wheel) {
       const result = resultFor(wheel.wheelId);
       const entrant = entrantForState(wheel, result);
       root.querySelectorAll(`[data-wheel-render-id="${CSS.escape(wheel.wheelId)}"]`).forEach((surface) => {
+        const eyebrow = surface.querySelector(".wheel-current-entrant__eyebrow");
+        if (eyebrow) eyebrow.textContent = entrantIndicatorLabel(result, entrant);
         const value = surface.querySelector(".wheel-current-entrant__value");
         if (value) value.textContent = result.spinState === "idle" && !entrant ? "Ready" : entrant ? entryName(entrant) : "Ready";
+        surface.querySelectorAll(".wheel-slice-group[data-wheel-entry-id]").forEach((group) => {
+          group.classList.toggle("is-selected", group.dataset.wheelEntryId === entrant?.entryId);
+        });
         const card = surface.querySelector(".wheel-entry-detail-card");
         if (card) renderEntrantDetailCard(card, wheel, entrant, result);
       });
       root.querySelectorAll(`.wheel-quick-inspector[data-wheel-id="${CSS.escape(wheel.wheelId)}"] .wheel-entry-detail-card`).forEach((card) => {
         renderEntrantDetailCard(card, wheel, entrant, result);
       });
+    }
+
+    function selectEntrant(wheel, entryId) {
+      const result = resultFor(wheel.wheelId);
+      if (result.spinState === "spinning") return false;
+      const entrant = wheel.entries.find((entry) => entry.entryId === entryId && entry.enabled !== false && effectiveWeight(entry) > 0);
+      if (!entrant) return false;
+      result.currentEntrantId = entrant.entryId;
+      if (state.inspectorCollapsed && !stageMode) {
+        state.inspectorCollapsed = false;
+        writeLocalFlag(`${presentationStateKey}.inspector`, false);
+        render();
+      } else {
+        updateCurrentEntrantSurfaces(wheel);
+        root.querySelector('.wheel-inspector-tab[data-key="entries"]')?.click();
+      }
+      announce(`${entryName(entrant)} selected in the inspector.`);
+      publish("state");
+      return true;
     }
 
     function startEntrantTraversal(wheel, duration) {
@@ -1021,13 +1066,25 @@
       return atmosphere;
     }
 
-    function buildWheelAssembly(wheel, result, compact = false) {
+    function buildWheelAssembly(wheel, result, compact = false, interactive = true) {
       const assembly = element("div", compact ? "wheel-grid-assembly" : "wheel-stage-assembly");
+      assembly.dataset.state = result.spinState;
       const trim = element("div", compact ? "wheel-grid-trim" : "wheel-stage-trim");
       trim.dataset.state = result.spinState;
       const disc = element("div", compact ? "wheel-grid-disc" : "wheel-spin-disc wheel-spin-disc-premium");
       disc.style.transform = `rotate(${result.rotation}deg)`;
-      disc.appendChild(buildWheelGraphic(wheel, compact));
+      disc.appendChild(buildWheelGraphic(wheel, compact, {
+        selectedEntrantId: result.currentEntrantId,
+        onSelectEntrant: interactive ? (entryId) => selectEntrant(wheel, entryId) : null
+      }));
+      const centerSpin = interactive ? element("button", `wheel-center-spin${compact ? " wheel-center-spin--compact" : ""}`) : null;
+      if (centerSpin) {
+        centerSpin.type = "button";
+        centerSpin.disabled = !canSpin(wheel);
+        centerSpin.setAttribute("aria-label", `Spin ${wheel.name}`);
+        centerSpin.title = `Spin ${wheel.name}`;
+        centerSpin.addEventListener("click", () => performSpin(wheel, { celebrate: !compact }));
+      }
       const pointer = element("div", compact ? "wheel-grid-pointer-hardware" : "wheel-hardware-pointer");
       pointer.append(element("span", "wheel-pointer-mount"), element("span", "wheel-pointer-tip"));
       assembly.append(
@@ -1043,6 +1100,7 @@
         trim,
         ...(compact ? [] : [element("div", "wheel-stage-inner-bezel")]),
         disc,
+        ...(centerSpin ? [centerSpin] : []),
         pointer
       );
       return assembly;
@@ -1157,7 +1215,7 @@
       const entrant = entrantForState(wheel, result);
       const indicator = element("div", "wheel-current-entrant");
       indicator.append(
-        element("span", "wheel-current-entrant__eyebrow", "Current entrant"),
+        element("span", "wheel-current-entrant__eyebrow", entrantIndicatorLabel(result, entrant)),
         element("strong", "wheel-current-entrant__value", result.spinState === "idle" && !entrant ? "Ready" : entrant ? entryName(entrant) : "Ready")
       );
       return indicator;
@@ -1622,7 +1680,7 @@
           const stage = element("div", "wheel-spin-stage wheel-spin-stage-premium");
           stage.dataset.state = "idle";
           const previewResult = { spinState: "idle", rotation: 0, latestResult: null, currentEntrantId: "" };
-          stage.append(buildStageAtmosphere(draft), buildCurrentEntrantIndicator(draft, previewResult), buildWheelAssembly(draft, previewResult));
+          stage.append(buildStageAtmosphere(draft), buildCurrentEntrantIndicator(draft, previewResult), buildWheelAssembly(draft, previewResult, false, false));
           arena.appendChild(stage);
           preview.replaceChildren(arena);
           refreshPresetSelection();
@@ -1854,7 +1912,7 @@
         card.append(
           element("span", "wheel-entry-detail-card__eyebrow", "Selected entrant"),
           element("strong", "wheel-entry-detail-card__empty-title", "No entrant selected"),
-          element("p", "", "Spin the wheel to follow the current entrant. A winner remains selected after the result.")
+          element("p", "", "Select a slice on the wheel or spin to follow the current entrant. A winner remains selected after the result.")
         );
         return;
       }
@@ -1986,6 +2044,36 @@
       return placeholder;
     }
 
+    function startIdleDrift() {
+      if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
+      const visible = new Map();
+      root.querySelectorAll("[data-wheel-render-id]").forEach((surface) => {
+        const wheelId = text(surface.dataset.wheelRenderId);
+        const wheel = state.authoritativeWheelSet.wheels.find((candidate) => candidate.wheelId === wheelId);
+        const result = wheel ? resultFor(wheelId) : null;
+        const disc = surface.querySelector(".wheel-spin-disc, .wheel-grid-disc");
+        if (!wheel || !result || !disc || result.spinState !== "idle" || wheel.presentation.animation_enabled === false) return;
+        if (!visible.has(wheelId)) visible.set(wheelId, { result, discs: [], assemblies: new Set() });
+        visible.get(wheelId).discs.push(disc);
+        visible.get(wheelId).assemblies.add(disc.closest(".wheel-stage-assembly, .wheel-grid-assembly"));
+      });
+      if (!visible.size) return;
+      let previous = performance.now();
+      const drift = () => {
+        const now = performance.now();
+        const elapsed = Math.min(200, Math.max(0, now - previous));
+        previous = now;
+        visible.forEach(({ result, discs, assemblies }) => {
+          if (result.spinState !== "idle") return;
+          if ([...assemblies].some((assembly) => assembly?.matches(":hover") || assembly?.contains(document.activeElement))) return;
+          result.rotation = (result.rotation + elapsed * IDLE_DRIFT_DEGREES_PER_MS) % 360;
+          discs.forEach((disc) => { disc.style.transform = `rotate(${result.rotation}deg)`; });
+        });
+      };
+      const timer = window.setInterval(drift, 100);
+      registerRenderCleanup(() => window.clearInterval(timer));
+    }
+
     function render() {
       if (state.destroyed) return;
       const savedScroll = window.scrollY;
@@ -2006,6 +2094,7 @@
         content.appendChild(buildInspector());
       }
       root.appendChild(content);
+      startIdleDrift();
       window.scrollTo({ top: savedScroll, behavior: "instant" });
     }
 

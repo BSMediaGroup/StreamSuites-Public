@@ -1,15 +1,15 @@
 {
-  "isolatedRoot": "C:\\Users\\jupit\\AppData\\Local\\Temp\\streamsuites-wheel-library-1786947549305",
+  "isolatedRoot": "C:\\Users\\jupit\\AppData\\Local\\Temp\\streamsuites-wheel-library-1786958674130",
   "identities": {
-    "setA": "artifact-635d2373ce4a45c38c00cdb6a12d7e31",
-    "setB": "artifact-ec6844cc70064d24bb426fd8b2c2cb7d",
-    "setC": "artifact-86c57cd042d641cb8b36c75b0fcf3f64",
-    "legacy": "artifact-156cd07eb3c44e9dba580ef2579cda8c",
-    "wheelA2": "whl_91a353709ed9412e34a2",
-    "savedDefault": "whl_12a618a88b1be0ea3653"
+    "setA": "artifact-c4378c07f4e34bb19e7292624a8edaff",
+    "setB": "artifact-aaee343af73b46e3a9acbd4b9a32ef58",
+    "setC": "artifact-56d877ae6b3346bb860ef00072937a4a",
+    "legacy": "artifact-669b62b6721d48ba9f9599d4abbf87b2",
+    "wheelA2": "whl_15ffd40ba055d394b1b8",
+    "savedDefault": "whl_e453718d05c7a2423c88"
   },
   "portable": {
-    "stageFilename": "Ga9u2W.stg",
+    "stageFilename": "iy08H6.stg",
     "stageSchema": "streamsuites.stage-package.v1",
     "wheelFilename": "Wheel-A2.swl",
     "wheelSchema": "streamsuites.wheel-package.v1",
@@ -58,6 +58,11 @@
     "14-library-1024x768.png",
     "14-library-390x844.png",
     "14-library-768x1024.png",
-    "15-light-theme-library-1440x900.png"
+    "15-light-theme-library-1440x900.png",
+    "20-wheel-set-edit-library-menu-1440x900.png",
+    "21-wheel-set-edit-dialog-1440x900.png",
+    "22-wheel-set-renamed-library-1440x900.png",
+    "23-wheel-set-edit-workspace-menu-1440x900.png",
+    "24-wheel-set-details-manage-mobile-390x844.png"
   ]
 }

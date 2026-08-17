@@ -197,6 +197,28 @@ test("premium Stage structure restores hardware, overlays, inspector detail, and
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.wheel-arena-atmosphere::after/);
 });
 
+test("wheel slices select inspector entrants, idle discs drift, and centre hubs reuse spin controls", () => {
+  const source = read("js/wheel-workspace.js");
+  const css = read("css/wheel-workspace.css");
+  assert.match(source, /const IDLE_DRIFT_DEGREES_PER_MS = 0\.00075/);
+  assert.match(source, /function selectEntrant\(wheel, entryId\)/);
+  assert.match(source, /group\.setAttribute\("role", "button"\)/);
+  assert.match(source, /group\.setAttribute\("tabindex", "0"\)/);
+  assert.match(source, /options\.onSelectEntrant\(entry\.entryId\)/);
+  assert.match(source, /root\.querySelector\('\.wheel-inspector-tab\[data-key="entries"\]'\)\?\.click\(\)/);
+  assert.match(source, /function startIdleDrift\(\)/);
+  assert.match(source, /window\.setInterval\(drift, 100\)/);
+  assert.match(source, /registerRenderCleanup\(\(\) => window\.clearInterval\(timer\)\)/);
+  assert.match(source, /result\.rotation = \(result\.rotation \+ elapsed \* IDLE_DRIFT_DEGREES_PER_MS\) % 360/);
+  assert.match(source, /assembly\?\.matches\(":hover"\) \|\| assembly\?\.contains\(document\.activeElement\)/);
+  assert.match(source, /window\.matchMedia\?\.\("\(prefers-reduced-motion: reduce\)"\)/);
+  assert.match(source, /centerSpin\.disabled = !canSpin\(wheel\)/);
+  assert.match(source, /centerSpin\.addEventListener\("click", \(\) => performSpin\(wheel, \{ celebrate: !compact \}\)\)/);
+  assert.match(css, /\.wheel-slice-group\.is-interactive:focus-visible \.wheel-slice/);
+  assert.match(css, /\.wheel-center-spin:not\(:disabled\):is\(:hover, :focus-visible\)/);
+  assert.match(css, /\.wheel-stage-assembly\[data-state="idle"\] \.wheel-spin-disc/);
+});
+
 test("Appearance lightbox owns Stage presets, colour, upload preview, cleanup, and canonical save", () => {
   const source = read("js/wheel-workspace.js");
   const appearance = source.slice(source.indexOf("function appearanceModal"), source.indexOf("function rulesModal"));

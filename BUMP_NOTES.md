@@ -6,6 +6,31 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-17 - Wheel Library production session and discoverability repair
+
+#### Technical notes
+
+- Moved production Wheel reads and owner operations onto the existing same-origin Cloudflare Pages API transport, with a narrow new allowlist for `/api/creator/wheels` and its descendants. Runtime/Auth remains the sole authority; Public only forwards the authenticated first-party browser session and preserves explicit local/configured Runtime bases for isolated acceptance.
+- Removed the lifecycle deadlock that refused to request the owner library unless the separate public capability request had already succeeded. Eligible signed-in users now probe the owner list directly, adopt the returned current service capability, and enable Create/Import only after that authoritative response.
+- Kept valid fallback-mirror Wheel Sets and their child Wheels discoverable when live public refresh fails. A reconnect notice no longer replaces non-empty gallery data, while a genuinely empty failed source remains a network error rather than a fabricated empty library.
+- Added focused regression coverage for the same-origin client/proxy boundary, direct owned-list probing, owner-response capability adoption, and non-empty mirror rendering. No Runtime data, production process, version, deployment, commit, or push was changed.
+
+#### Human-readable summary
+
+Owned Wheel Sets no longer disappear because a separate public service check failed, and published Wheel Sets remain browsable during a live-refresh interruption. Production Wheel requests now travel through the same signed-in site path as the rest of Public instead of losing the browser session at a second origin.
+
+### 2026-08-17 - Direct wheel interaction and idle life
+
+#### Technical notes
+
+- Made every eligible Focus-wheel slice a pointer- and keyboard-selectable control using its existing stable entrant ID. Selection updates the current-entrant presentation, opens the inspector when collapsed, activates Entries, renders the existing entrant identity/ticket/weight/probability details, and remains browser-session-local.
+- Added a cleanup-bound 100ms idle drift at 0.75 degrees per second for visible idle Focus and Grid discs. The low-frequency loop updates the existing local rotation value so a subsequent spin starts from the exact displayed position, pauses while the wheel is hovered or contains keyboard focus, stops on rerender/spin, is naturally throttled in background tabs, caps resumed-tick deltas, honors the wheel animation gate, and is absent under reduced motion.
+- Added a real transparent centre-hub button to Focus and Grid wheels. It preserves the supplied centre image and premium hub presentation while reusing the existing `canSpin` and `performSpin` path, including owner-only, popup, winner-limit, eligibility, reduced-motion, and local-result behavior.
+
+#### Human-readable summary
+
+You can now click or keyboard-select a name directly on the wheel to inspect that entrant, click the centre hub to spin that wheel, and see idle wheels drift very slowly instead of looking frozen.
+
 ### 2026-08-17 - Icon-only workspace view selector
 
 #### Technical notes

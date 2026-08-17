@@ -16,10 +16,10 @@ function response(status, payload, contentType = "application/json") {
   };
 }
 
-function loadClient({ hostname = "streamsuites.app", configuredBase = "", fetchImpl } = {}) {
+function loadClient({ hostname = "streamsuites.app", origin = "https://streamsuites.app", configuredBase = "", fetchImpl } = {}) {
   const calls = [];
   const window = {
-    location: { hostname },
+    location: { hostname, origin },
     StreamSuitesPublicConfig: configuredBase ? { AUTH_API_BASE: configuredBase } : {},
     StreamSuitesAuth: {}
   };
@@ -37,12 +37,12 @@ function loadClient({ hostname = "streamsuites.app", configuredBase = "", fetchI
   return { api: window.StreamSuitesWheelApi, calls };
 }
 
-test("production wheel operations use the canonical Runtime origin with credentials", async () => {
+test("production wheel operations use the authenticated same-origin proxy with credentials", async () => {
   const { api, calls } = loadClient();
   await api.createWheelSet({ title: "Friday giveaway" });
-  assert.equal(api.apiBase, "https://api.streamsuites.app");
+  assert.equal(api.apiBase, "https://streamsuites.app");
   assert.equal(calls.length, 1);
-  assert.equal(calls[0][0], "https://api.streamsuites.app/api/creator/wheels");
+  assert.equal(calls[0][0], "https://streamsuites.app/api/creator/wheels");
   assert.equal(calls[0][1].method, "POST");
   assert.equal(calls[0][1].credentials, "include");
   assert.equal(calls[0][1].headers["Content-Type"], "application/json");
@@ -50,7 +50,7 @@ test("production wheel operations use the canonical Runtime origin with credenti
 });
 
 test("local and explicitly configured Runtime origins remain supported", () => {
-  assert.equal(loadClient({ hostname: "localhost" }).api.apiBase, "http://127.0.0.1:18087");
+  assert.equal(loadClient({ hostname: "localhost", origin: "http://localhost:8080" }).api.apiBase, "http://127.0.0.1:18087");
   assert.equal(loadClient({ configuredBase: "https://runtime.example.test/" }).api.apiBase, "https://runtime.example.test");
 });
 
@@ -68,7 +68,7 @@ test("bare or HTML route failures become safe structured wheel errors", async ()
 test("media upload uses the exact child route without overriding multipart content type", async () => {
   const { api, calls } = loadClient();
   await api.uploadMedia("artifact-a", "whl_b", "stage-background-image", new Blob(["image"]));
-  assert.equal(calls[0][0], "https://api.streamsuites.app/api/creator/wheels/artifact-a/wheels/whl_b/stage-background-image");
+  assert.equal(calls[0][0], "https://streamsuites.app/api/creator/wheels/artifact-a/wheels/whl_b/stage-background-image");
   assert.equal(calls[0][1].method, "POST");
   assert.equal(calls[0][1].headers["Content-Type"], undefined);
   assert.ok(calls[0][1].body instanceof FormData);
@@ -78,8 +78,8 @@ test("portable child import and export use the containing Wheel Set routes", asy
   const { api, calls } = loadClient();
   await api.importWheel("artifact-a", { source_name: "prize.swl", payload_text: "{}" });
   await api.exportWheel("artifact-a", "whl_prize");
-  assert.equal(calls[0][0], "https://api.streamsuites.app/api/creator/wheels/artifact-a/wheels/import");
+  assert.equal(calls[0][0], "https://streamsuites.app/api/creator/wheels/artifact-a/wheels/import");
   assert.equal(calls[0][1].method, "POST");
-  assert.equal(calls[1][0], "https://api.streamsuites.app/api/creator/wheels/artifact-a/wheels/whl_prize/export");
+  assert.equal(calls[1][0], "https://streamsuites.app/api/creator/wheels/artifact-a/wheels/whl_prize/export");
   assert.equal(calls[1][1].method, "GET");
 });

@@ -38,6 +38,8 @@ test("public data hub hydrates wheels from the authoritative live API first and 
 test("wheels library exposes portable formats, owned/public tabs, child cards, and truthful failure states", () => {
   const app = read("js/public-pages-app.js");
   const client = read("js/wheel-api-client.js");
+  const dataHub = read("js/public-data-hub.js");
+  const proxy = read("functions/api/[[path]].js");
   const css = read("css/public-shell.css");
 
   assert.match(app, /function renderWheelsLifecycle\(ctx\)/);
@@ -50,8 +52,14 @@ test("wheels library exposes portable formats, owned/public tabs, child cards, a
   assert.match(app, /\?summary=1&limit=50&offset=0/);
   assert.match(app, /WHEEL_API\.requestCreator/);
   assert.match(client, /credentials: "include"/);
-  assert.match(client, /return "https:\/\/api\.streamsuites\.app"/);
-  assert.match(app, /Wheel editing requires the current Runtime wheel service/);
+  assert.match(client, /window\.location\?\.origin/);
+  assert.match(dataHub, /window\.location\?\.origin/);
+  assert.match(proxy, /\^\\\/api\\\/creator\\\/wheels/);
+  assert.match(app, /Connecting to the current Runtime wheel service/);
+  assert.match(app, /if \(eligible && WHEEL_API\)/);
+  assert.match(app, /isCurrentWheelService\(payload\?\.wheel_service\)/);
+  assert.match(app, /Showing the last published Runtime mirror while live Wheel refresh reconnects/);
+  assert.match(app, /publicFailed && !publicSets\.length/);
   assert.match(app, /This is a network or Runtime error, not an empty gallery/);
   assert.doesNotMatch(app, /Your public wheel sets are already shown under My Wheel Sets/);
   assert.doesNotMatch(app, /Open workspace|Open Stage/);

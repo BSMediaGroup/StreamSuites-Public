@@ -511,6 +511,11 @@ body[data-public-page="detail-wheel"].public-shell-page .public-content {
   will-change: transform;
 }
 
+.wheel-stage-assembly[data-state="idle"] .wheel-spin-disc,
+.wheel-grid-assembly[data-state="idle"] .wheel-grid-disc {
+  transition: none;
+}
+
 .wheel-spin-stage-premium[data-state="spinning"] .wheel-spin-disc {
   transition-duration: 8.5s;
 }
@@ -533,6 +538,50 @@ body[data-public-page="detail-wheel"].public-shell-page .public-content {
 
 .wheel-svg image {
   clip-path: circle(50% at 50% 50%);
+}
+
+.wheel-slice-group.is-interactive {
+  outline: none;
+  cursor: pointer;
+}
+
+.wheel-slice-group.is-interactive .wheel-slice {
+  transition: filter 150ms ease, stroke 150ms ease, stroke-width 150ms ease;
+}
+
+.wheel-slice-group.is-interactive:is(:hover, .is-selected) .wheel-slice {
+  stroke: rgba(255, 255, 255, 0.82);
+  stroke-width: 5px;
+  filter: brightness(1.13) saturate(1.08);
+}
+
+.wheel-slice-group.is-interactive:focus-visible .wheel-slice {
+  stroke: #fff;
+  stroke-width: 7px;
+  filter: brightness(1.18) drop-shadow(0 0 8px rgba(101, 230, 255, 0.88));
+}
+
+.wheel-center-spin {
+  position: absolute;
+  z-index: 6;
+  width: 21%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.wheel-center-spin:not(:disabled):is(:hover, :focus-visible) {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.8);
+  background: rgba(101, 230, 255, 0.08);
+  box-shadow: 0 0 0 4px rgba(101, 230, 255, 0.2), 0 0 24px rgba(101, 230, 255, 0.34);
+}
+
+.wheel-center-spin:disabled {
+  cursor: not-allowed;
 }
 
 .wheel-hardware-pointer {
@@ -1830,6 +1879,7 @@ body[data-public-page="detail-wheel"].public-shell-page .public-content {
 .wheel-grid-trim { z-index: 2; inset: 5%; border: 4px solid var(--wheel-trim-color); box-shadow: 0 0 9px color-mix(in srgb, var(--wheel-glow-color) 42%, transparent); }
 .wheel-grid-disc { z-index: 3; inset: 9%; overflow: hidden; }
 .wheel-grid-pointer-hardware { z-index: 4; top: -3px; left: 50%; width: 40px; height: 48px; transform: translateX(-50%); }
+.wheel-grid-assembly .wheel-center-spin { width: 22%; }
 .wheel-grid-pointer-hardware .wheel-pointer-mount { width: 34px; height: 16px; }
 .wheel-grid-pointer-hardware .wheel-pointer-tip { top: 9px; width: 20px; height: 31px; }
 
@@ -1901,4 +1951,7 @@ body[data-public-page="detail-wheel"].public-shell-page .public-content {
   .wheel-arena-atmosphere::after,
   .wheel-stage-trim,
   .wheel-stage-marker-ring { animation: none !important; }
+
+  .wheel-spin-disc,
+  .wheel-grid-disc { transition-duration: 0s !important; }
 }

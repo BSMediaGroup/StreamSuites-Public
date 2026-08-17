@@ -3820,36 +3820,44 @@
     clear(host);
     const renderKey = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     host.dataset.wheelLifecycleRender = renderKey;
-    const service = data.wheelService && typeof data.wheelService === "object" ? data.wheelService : null;
-    const features = service?.features && typeof service.features === "object" ? service.features : {};
-    const currentService = service?.schema_version === WHEEL_SERVICE_SCHEMA && features.create === true && features.list_owned === true && features.import === true;
+    let service = data.wheelService && typeof data.wheelService === "object" ? data.wheelService : null;
+    const isCurrentWheelService = (candidate) => {
+      const features = candidate?.features && typeof candidate.features === "object" ? candidate.features : {};
+      return candidate?.schema_version === WHEEL_SERVICE_SCHEMA && features.create === true && features.list_owned === true && features.import === true;
+    };
+    let currentService = isCurrentWheelService(service);
+    let serviceError = "";
     const authenticated = Boolean(authState?.authenticated);
     const eligible = authenticated && (authState?.creatorWorkspaceAccess?.allowed === true || authState?.creatorCapable === true);
     const hero = create("section", "wheel-gallery-hero");
     const heroCopy = create("div", "wheel-gallery-hero-copy");
     heroCopy.append(create("span", "dashboard-eyebrow", "Create · organize · discover"), create("h1", "", "Wheels"), create("p", "", "Your Wheel Library and the public gallery, with every individual wheel kept inside its Runtime/Auth-owned Wheel Set."));
     const actions = create("div", "wheel-gallery-actions");
-    if (!authenticated) {
-      const signIn = create("button", "wheel-production-primary", "Sign in to create"); signIn.addEventListener("click", () => openAuthModal?.("login")); actions.appendChild(signIn);
-    } else if (!eligible) {
-      const reason = String(authState?.creatorWorkspaceAccess?.reason || authState?.creatorWorkspaceAccess?.message || "This account does not currently have wheel creation capability.").replace(/_/g, " ");
-      actions.appendChild(create("div", "wheel-gallery-compatibility", reason));
-    } else if (!currentService) {
-      actions.appendChild(create("div", "wheel-gallery-compatibility", "Wheel editing requires the current Runtime wheel service. Public viewing and local play remain available."));
-    } else {
-      const createWrap = create("div", "wheel-create-menu");
-      const createButton = create("button", "wheel-production-primary", "Create"); createButton.type = "button"; createButton.setAttribute("aria-haspopup", "menu"); createButton.setAttribute("aria-expanded", "false");
-      const createMenu = create("div", "wheel-create-menu__panel"); createMenu.setAttribute("role", "menu"); createMenu.hidden = true;
-      const newSet = create("button", "", "New Wheel Set"); newSet.type = "button"; newSet.setAttribute("role", "menuitem");
-      const addWheel = create("button", "", "Add Wheel to Existing Set"); addWheel.type = "button"; addWheel.setAttribute("role", "menuitem");
-      createMenu.append(newSet, addWheel); createWrap.append(createButton, createMenu);
-      const closeCreate = (restore = false) => { createMenu.hidden = true; createButton.setAttribute("aria-expanded", "false"); if (restore) createButton.focus(); };
-      createButton.addEventListener("click", () => { const opening = createMenu.hidden; createMenu.hidden = !opening; createButton.setAttribute("aria-expanded", opening ? "true" : "false"); if (opening) newSet.focus(); });
-      createWrap.addEventListener("keydown", (event) => { if (event.key === "Escape" && !createMenu.hidden) { event.preventDefault(); closeCreate(true); } });
-      newSet.addEventListener("click", () => { closeCreate(); openCreateWheelSetModal(service); }); addWheel.addEventListener("click", () => { closeCreate(); openAddWheelToSetModal(service); });
-      const importButton = create("button", "wheel-production-secondary", "Import"); importButton.addEventListener("click", () => openImportWheelSetModal(service));
-      actions.append(createWrap, importButton);
-    }
+    const renderActions = () => {
+      actions.replaceChildren();
+      if (!authenticated) {
+        const signIn = create("button", "wheel-production-primary", "Sign in to create"); signIn.addEventListener("click", () => openAuthModal?.("login")); actions.appendChild(signIn);
+      } else if (!eligible) {
+        const reason = String(authState?.creatorWorkspaceAccess?.reason || authState?.creatorWorkspaceAccess?.message || "This account does not currently have wheel creation capability.").replace(/_/g, " ");
+        actions.appendChild(create("div", "wheel-gallery-compatibility", reason));
+      } else if (!currentService) {
+        actions.appendChild(create("div", "wheel-gallery-compatibility", serviceError || "Connecting to the current Runtime wheel service…"));
+      } else {
+        const createWrap = create("div", "wheel-create-menu");
+        const createButton = create("button", "wheel-production-primary", "Create"); createButton.type = "button"; createButton.setAttribute("aria-haspopup", "menu"); createButton.setAttribute("aria-expanded", "false");
+        const createMenu = create("div", "wheel-create-menu__panel"); createMenu.setAttribute("role", "menu"); createMenu.hidden = true;
+        const newSet = create("button", "", "New Wheel Set"); newSet.type = "button"; newSet.setAttribute("role", "menuitem");
+        const addWheel = create("button", "", "Add Wheel to Existing Set"); addWheel.type = "button"; addWheel.setAttribute("role", "menuitem");
+        createMenu.append(newSet, addWheel); createWrap.append(createButton, createMenu);
+        const closeCreate = (restore = false) => { createMenu.hidden = true; createButton.setAttribute("aria-expanded", "false"); if (restore) createButton.focus(); };
+        createButton.addEventListener("click", () => { const opening = createMenu.hidden; createMenu.hidden = !opening; createButton.setAttribute("aria-expanded", opening ? "true" : "false"); if (opening) newSet.focus(); });
+        createWrap.addEventListener("keydown", (event) => { if (event.key === "Escape" && !createMenu.hidden) { event.preventDefault(); closeCreate(true); } });
+        newSet.addEventListener("click", () => { closeCreate(); openCreateWheelSetModal(service); }); addWheel.addEventListener("click", () => { closeCreate(); openAddWheelToSetModal(service); });
+        const importButton = create("button", "wheel-production-secondary", "Import"); importButton.addEventListener("click", () => openImportWheelSetModal(service));
+        actions.append(createWrap, importButton);
+      }
+    };
+    renderActions();
     hero.append(heroCopy, actions); host.appendChild(hero);
 
     let ownedLibrary = null;
@@ -3862,25 +3870,33 @@
     host.appendChild(ownedLibrary.section);
     if (!authenticated) ownedLibrary.update([], { empty: "Sign in to see your Wheel Sets and individual Wheels." });
     else if (!eligible) ownedLibrary.update([], { empty: "Owned wheel management is unavailable for this account under the current Runtime capability policy." });
-    else if (!currentService) ownedLibrary.update([], { empty: "Owned wheel listing is unavailable until the current Runtime wheel service is connected." });
+    else if (!WHEEL_API) ownedLibrary.update([], { error: "The Wheel API client did not load. Reload this page to reconnect safely." });
 
     const publicItems = filterItemsByType(data, "wheels", "");
     const publicSets = publicItems.map((item) => wheelLibrarySet(item, { yours: isArtifactOwner(authState || null, item) }));
     publicGallery = createWheelLibrarySection("Public Gallery", `${publicSets.length} published`, state.query, { onIdentityUpdated: applyIdentityUpdate });
     const publicFailed = data?.sourceStatus?.wheels?.ok === false;
-    publicGallery.update(publicSets, { error: publicFailed ? "Public wheel gallery could not be loaded. This is a network or Runtime error, not an empty gallery." : "", empty: "No public Wheel Sets or Wheels match this search." });
+    if (publicFailed && publicSets.length) host.appendChild(create("div", "wheel-gallery-compatibility", "Showing the last published Runtime mirror while live Wheel refresh reconnects."));
+    publicGallery.update(publicSets, { error: publicFailed && !publicSets.length ? "Public wheel gallery could not be loaded. This is a network or Runtime error, not an empty gallery." : "", empty: "No public Wheel Sets or Wheels match this search." });
     host.appendChild(publicGallery.section);
 
-    if (eligible && currentService) {
+    if (eligible && WHEEL_API) {
       (async () => {
         try {
           const payload = await wheelLifecycleRequest("?summary=1&limit=50&offset=0");
           if (!host.isConnected || host.dataset.wheelLifecycleRender !== renderKey) return;
+          if (isCurrentWheelService(payload?.wheel_service)) {
+            service = payload.wheel_service;
+            currentService = true;
+            renderActions();
+          }
           const items = Array.isArray(payload?.items) ? payload.items : [];
           ownedLibrary.update(items.map((item) => wheelLibrarySet(item, { owned: true, yours: true })), { empty: "You do not own any Wheel Sets yet. Use Create to start one, or Import to bring in a .stg or .swl package." });
         } catch (error) {
           if (!host.isConnected || host.dataset.wheelLifecycleRender !== renderKey) return;
-          ownedLibrary.update([], { error: error instanceof Error ? error.message : "Owned Wheel Sets could not be loaded." });
+          serviceError = error instanceof Error ? error.message : "Owned Wheel Sets could not be loaded.";
+          renderActions();
+          ownedLibrary.update([], { error: serviceError });
         }
       })();
     }

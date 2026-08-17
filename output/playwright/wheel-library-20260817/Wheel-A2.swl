@@ -3,14 +3,14 @@
   "artifact_schema": "streamsuites.wheel-set.v2",
   "portable_format": "swl",
   "wheel": {
-    "wheel_id": "whl_91a353709ed9412e34a2",
+    "wheel_id": "whl_15ffd40ba055d394b1b8",
     "name": "Wheel A2",
     "winner_limit": 1,
     "allow_duplicates": true,
     "auto_remove_winner": false,
     "entries": [
       {
-        "entry_id": "ent_b38fabb3911e5116cbb9",
+        "entry_id": "ent_34e4ad73c437a4824120",
         "label": "Delta",
         "display_name": "Delta",
         "avatar_url": "",
@@ -48,7 +48,7 @@
         "share": 1
       },
       {
-        "entry_id": "ent_ee6936cc00b2325c6611",
+        "entry_id": "ent_70db24e5b215c1a5ffc8",
         "label": "Echo",
         "display_name": "Echo",
         "avatar_url": "",
@@ -86,7 +86,7 @@
         "share": 1
       },
       {
-        "entry_id": "ent_efc6b0c7ab52fe489915",
+        "entry_id": "ent_b155c0b8d2f2b1de0307",
         "label": "Foxtrot",
         "display_name": "Foxtrot",
         "avatar_url": "",
@@ -124,7 +124,7 @@
         "share": 1
       },
       {
-        "entry_id": "ent_33b7782452dcc1ded967",
+        "entry_id": "ent_10933cdee15f2b9d78d1",
         "label": "Golf",
         "display_name": "Golf",
         "avatar_url": "",
