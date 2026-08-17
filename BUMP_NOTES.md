@@ -6,6 +6,18 @@ Packaged / released and no longer the active pending bucket. Preserve new notes 
 
 ## CURRENT VER= 0.5.4-alpha / PENDING VER= 0.5.5-alpha
 
+### 2026-08-17 - Wheel custom-media CDN delivery repair
+
+#### Technical notes
+
+- Routed exact immutable Wheel centre and Stage-background references through `https://cdn.streamsuites.app/api/public/wheel-media/...` at the presentation boundary. Existing canonical API/Public-origin references remain unchanged in saved Wheel data and portable packages, while the Focus wheel, Grid signature, Stage background, and inspector preview all resolve through the CDN transport.
+- Kept root-relative placeholders, isolated loopback media, Blob upload previews, unsafe URL rejection, Runtime/Auth storage authority, and query-free opaque asset paths unchanged. The repair does not re-upload, replace, delete, or rewrite existing media objects.
+- Validation passed all 218 Public Node tests, changed-JavaScript syntax, and `git diff --check`. In the signed-in production browser, the exact saved API-origin centre reference reproduced a Cloudflare 403, while its identical CDN path decoded as a 785×787 WebP and the saved Stage background decoded as a 1672×941 WebP. This is live read-only transport evidence; no Public deployment was performed.
+
+#### Human-readable notes
+
+Existing custom wheel centre and background images load from the StreamSuites CDN again without requiring owners to upload them again or changing their saved Wheel settings.
+
 ### 2026-08-17 - Wheel Library production session and discoverability repair
 
 #### Technical notes

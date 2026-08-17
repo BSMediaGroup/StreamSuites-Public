@@ -10,8 +10,8 @@ function read(relativePath) {
   return fs.readFileSync(path.join(root, relativePath), "utf8");
 }
 
-function loadWorkspaceApi() {
-  const window = { StreamSuitesPublicConfig: {} };
+function loadWorkspaceApi({ hostname = "", origin = "" } = {}) {
+  const window = { StreamSuitesPublicConfig: {}, location: { hostname, origin } };
   const context = vm.createContext({ window, structuredClone, URL, URLSearchParams, console });
   vm.runInContext(read("js/wheel-workspace.js"), context, { filename: "wheel-workspace.js" });
   return window.StreamSuitesWheelWorkspace;
@@ -90,6 +90,41 @@ test("child Stage presentation normalizes exactly four presets, colour, and immu
   assert.equal(unsafe.stage_background_preset, "cinematic_chamber");
   assert.equal(unsafe.stage_background_color, "#38bdf8");
   assert.equal(unsafe.stage_background_image_url, "");
+});
+
+test("legacy Wheel media renders through the canonical CDN without mutating saved URLs", () => {
+  const api = loadWorkspaceApi({ hostname: "streamsuites.app", origin: "https://streamsuites.app" });
+  const centerUrl = "https://api.streamsuites.app/api/public/wheel-media/artifact-a/whl_alpha/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.webp";
+  const backgroundUrl = "https://api.streamsuites.app/api/public/wheel-media/artifact-a/whl_alpha/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.webp";
+  const artifact = api.normalizeArtifact({
+    artifact_code: "artifact-a",
+    wheel_set: {
+      wheels: [{
+        wheel_id: "whl_alpha",
+        entries: [{ label: "A" }],
+        presentation: { center_image_url: centerUrl, stage_background_image_url: backgroundUrl }
+      }]
+    }
+  });
+  const presentation = artifact.wheelSet.wheels[0].presentation;
+
+  assert.equal(presentation.center_image_url, centerUrl);
+  assert.equal(presentation.stage_background_image_url, backgroundUrl);
+  assert.equal(api.renderWheelMediaUrl(centerUrl), centerUrl.replace("https://api.streamsuites.app", "https://cdn.streamsuites.app"));
+  assert.equal(api.renderWheelMediaUrl(backgroundUrl), backgroundUrl.replace("https://api.streamsuites.app", "https://cdn.streamsuites.app"));
+  assert.equal(
+    api.renderWheelMediaUrl(centerUrl.replace("https://api.streamsuites.app", "https://streamsuites.app")),
+    centerUrl.replace("https://api.streamsuites.app", "https://cdn.streamsuites.app")
+  );
+  assert.equal(api.renderWheelMediaUrl(centerUrl.replace("https://api.streamsuites.app", "https://cdn.streamsuites.app")), centerUrl.replace("https://api.streamsuites.app", "https://cdn.streamsuites.app"));
+  assert.equal(api.renderWheelMediaUrl("/assets/placeholders/wheelcenterdefault.webp"), "/assets/placeholders/wheelcenterdefault.webp");
+  assert.equal(api.renderWheelMediaUrl("blob:https://streamsuites.app/local-preview"), "blob:https://streamsuites.app/local-preview");
+
+  const source = read("js/wheel-workspace.js");
+  assert.match(source, /href: centerImageUrl/);
+  assert.match(source, /const stageImageUrl = renderWheelMediaUrl\(wheel\.presentation\.stage_background_image_url\)/);
+  assert.match(source, /signature\.style\.backgroundImage = `url\("\$\{stageImageUrl/);
+  assert.match(source, /image\.src = renderWheelMediaUrl\(wheel\.presentation\.center_image_url\)/);
 });
 
 test("workspace source contains stable wheel-keyed local state, staggered cancellation, and one final celebration", () => {

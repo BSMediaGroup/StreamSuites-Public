@@ -68,6 +68,23 @@
     }
   }
 
+  function renderWheelMediaUrl(value) {
+    const candidate = text(value);
+    if (!candidate) return candidate;
+    try {
+      const parsed = new URL(candidate);
+      const legacyTransportOrigin = parsed.origin === "https://api.streamsuites.app"
+        || parsed.origin === "https://streamsuites.app";
+      const canonicalRuntimeMedia = /^\/api\/public\/wheel-media\/[A-Za-z0-9_-]+\/whl_[A-Za-z0-9_-]+\/[a-f0-9]{32}\.webp$/i.test(parsed.pathname);
+      if (legacyTransportOrigin && canonicalRuntimeMedia && !parsed.search && !parsed.hash) {
+        return `https://cdn.streamsuites.app${parsed.pathname}`;
+      }
+    } catch (_error) {
+      // Keep the already-normalized source value when it is not an absolute URL.
+    }
+    return candidate;
+  }
+
   function shadeHex(value, amount) {
     const hex = normalizedColor(value, "#64748b").slice(1);
     const channels = [0, 2, 4].map((offset) => parseInt(hex.slice(offset, offset + 2), 16));
@@ -364,9 +381,10 @@
       svgElement("circle", { class: "wheel-hub-bezel", cx: 240, cy: 240, r: compact ? 44 : 53, fill: wheel.palette.background_color, stroke: wheel.palette.accent_color, "stroke-width": compact ? 5 : 7 }),
       svgElement("circle", { cx: 240, cy: 240, r: compact ? 39 : 47, fill: "rgba(7,12,21,0.88)", stroke: "rgba(255,255,255,0.18)", "stroke-width": 2 })
     );
-    if (wheel.presentation.center_image_url) {
+    const centerImageUrl = renderWheelMediaUrl(wheel.presentation.center_image_url);
+    if (centerImageUrl) {
       const image = svgElement("image", {
-        href: wheel.presentation.center_image_url,
+        href: centerImageUrl,
         x: compact ? 203 : 195,
         y: compact ? 203 : 195,
         width: compact ? 74 : 90,
@@ -1051,8 +1069,9 @@
       const atmosphere = element("div", "wheel-arena-atmosphere");
       atmosphere.setAttribute("aria-hidden", "true");
       const customImage = element("div", "wheel-stage-custom-image");
-      if (wheel.presentation.stage_background_image_url) {
-        customImage.style.backgroundImage = `url("${wheel.presentation.stage_background_image_url.replace(/["\\]/g, "")}")`;
+      const stageImageUrl = renderWheelMediaUrl(wheel.presentation.stage_background_image_url);
+      if (stageImageUrl) {
+        customImage.style.backgroundImage = `url("${stageImageUrl.replace(/["\\]/g, "")}")`;
       }
       atmosphere.append(
         customImage,
@@ -1258,7 +1277,8 @@
         const graphic = element("div", "wheel-grid-graphic");
         applyStageAppearance(graphic, wheel);
         const signature = element("div", "wheel-grid-background-signature");
-        if (wheel.presentation.stage_background_image_url) signature.style.backgroundImage = `url("${wheel.presentation.stage_background_image_url.replace(/["\\]/g, "")}")`;
+        const stageImageUrl = renderWheelMediaUrl(wheel.presentation.stage_background_image_url);
+        if (stageImageUrl) signature.style.backgroundImage = `url("${stageImageUrl.replace(/["\\]/g, "")}")`;
         graphic.append(signature, buildWheelAssembly(wheel, result, true));
         const copy = element("div", "wheel-grid-copy");
         copy.append(element("h2", "", wheel.name), element("p", "", `${wheel.entries.length} entrants`), element("strong", "", result.spinState === "spinning" ? "Spinning…" : result.latestResult?.winner || "No local result"));
@@ -1997,7 +2017,7 @@
           return panel;
         }],
         ["appearance", "Appearance", () => {
-          const panel = element("section", "wheel-inspector-panel"); const palette = element("div", "wheel-palette-preview"); [wheel.palette.accent_color, wheel.palette.trim_color, wheel.palette.glow_color, ...wheel.palette.segment_colors.slice(0, 5)].forEach((color) => { const swatch = element("span"); swatch.style.background = color; palette.appendChild(swatch); }); panel.append(palette, element("p", "", `${wheel.presentation.slice_label_mode.replace("_", " ")} labels`)); const image = element("img", "wheel-inspector-center-image"); image.src = wheel.presentation.center_image_url; image.alt = "Current centre image"; panel.appendChild(image);
+          const panel = element("section", "wheel-inspector-panel"); const palette = element("div", "wheel-palette-preview"); [wheel.palette.accent_color, wheel.palette.trim_color, wheel.palette.glow_color, ...wheel.palette.segment_colors.slice(0, 5)].forEach((color) => { const swatch = element("span"); swatch.style.background = color; palette.appendChild(swatch); }); panel.append(palette, element("p", "", `${wheel.presentation.slice_label_mode.replace("_", " ")} labels`)); const image = element("img", "wheel-inspector-center-image"); image.src = renderWheelMediaUrl(wheel.presentation.center_image_url); image.alt = "Current centre image"; panel.appendChild(image);
           if (canEdit) { const appearance = element("button", "wheel-production-secondary", "Edit appearance"); appearance.addEventListener("click", appearanceModal); const celebration = element("button", "wheel-production-secondary", "Celebration"); celebration.addEventListener("click", celebrationModal); panel.append(appearance, celebration); }
           return panel;
         }],
@@ -2163,6 +2183,7 @@
     normalizeArtifact,
     weightedWinner,
     radialLabelRotation,
+    renderWheelMediaUrl,
     serializeChild,
     constants: Object.freeze({ DEFAULT_CENTER_IMAGE, VIEW_MODES: [...VIEW_MODES], STAGE_BACKGROUND_PRESETS, API_BASE })
   });
